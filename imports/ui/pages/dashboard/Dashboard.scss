@@ -1,0 +1,10 @@
+.dashboard {
+	.table tbody tr td {
+		padding-left: 12px;
+		padding-right: 12px;
+	}
+
+	.table tbody tr:hover {
+		cursor: pointer;
+	}	
+}
