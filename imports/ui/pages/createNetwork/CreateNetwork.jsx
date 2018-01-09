@@ -21,7 +21,6 @@ class CreateNetwork extends Component {
         Meteor.call("createNetwork", this.networkName.value, (error) => {
             if(!error) {
                 this.setState({
-                    loading: false,
                     formSubmitError: ''
                 });
 
@@ -29,7 +28,7 @@ class CreateNetwork extends Component {
 
                 $("body").pgNotification({
                     style: "circle",
-                    message: "Initializing network",
+                    message: "Initializing node",
                     position: "bottom-right",
                     timeout: 5000,
                     type: "success",
@@ -80,7 +79,7 @@ class CreateNetwork extends Component {
                                         </div>
                                         <div className="col-md-6">
                                             <div className="form-group form-group-default ">
-                                                <label>Peer Type</label>
+                                                <label>Node Type</label>
                                                 <input type="text" className="form-control" name="firstName" required disabled value="Validator" />
                                             </div>
                                             

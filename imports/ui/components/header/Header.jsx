@@ -22,7 +22,7 @@ class Navbar extends Component {
                             <Link to={"/app/create"} className="header-icon fa fa-plus"></Link>
                         </li>
                         <li className="p-r-10 inline">
-                            <a href="#" className="header-icon fa fa-group"></a>
+                            <Link to={"/app/join"} className="header-icon fa fa-group"></Link>
                         </li>
                         <li className="p-r-10 inline">
                             <a href="#" className="header-icon fa fa-book"></a>

@@ -9,6 +9,7 @@ import Footer from "../../components/footer/Footer.jsx"
 
 import Dashboard from "../../pages/dashboard/Dashboard.jsx"
 import CreateNetwork from "../../pages/createNetwork/CreateNetwork.jsx"
+import JoinNetwork from "../../pages/joinNetwork/JoinNetwork.jsx"
 import ViewEditNetwork from "../../pages/viewEditNetwork/ViewEditNetwork.jsx"
 
 export default class AuthorizedRoute extends Component {
@@ -24,6 +25,7 @@ export default class AuthorizedRoute extends Component {
                             	<Route exact path="/app" component={Dashboard} />
 								<Route exact path="/app/create" component={CreateNetwork} />
 								<Route exact path="/app/network/:id" component={ViewEditNetwork} />
+								<Route exact path="/app/join" component={JoinNetwork} />
 		                    </div>
 		                </div>
 		            </div>
