@@ -10,6 +10,7 @@
     "eth-lightwallet": "^3.0.1",
     "fibers": "^2.0.0",
     "history": "^4.7.2",
+    "jsonminify": "^0.4.1",
     "meteor-node-stubs": "^0.3.2",
     "node-cmd": "^3.0.0",
     "react": "^16.2.0",

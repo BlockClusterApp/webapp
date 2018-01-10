@@ -2,6 +2,7 @@ import {Networks, Utilities} from "../imports/startup/server/"
 var Future = Npm.require("fibers/future");
 var lightwallet = Npm.require("eth-lightwallet");
 import Web3 from "web3";
+var jsonminify = require("jsonminify");
 
 Meteor.methods({
 	"createNetwork": function(networkName){
@@ -17,7 +18,6 @@ Meteor.methods({
 			if(error) {
 				myFuture.throw("An unknown error occured");
 			} else {
-				myFuture.return();
 				HTTP.call("POST", "http://127.0.0.1:8000/apis/apps/v1beta1/namespaces/default/deployments", { 
 					"content": `apiVersion: apps/v1beta1
 kind: Deployment
@@ -34,11 +34,11 @@ spec:
       containers:
       - name: quorum
         image: quorum:latest
-        command: [ "bin/bash", "-c", "./setup.sh" ]
+        command: [ 'bin/bash', '-c', './setup.sh' ]
         imagePullPolicy: Never
         ports:
         - containerPort: 8545
-        - containerPort: 2300
+        - containerPort: 23000
         - containerPort: 9001
         - containerPort: 6382`,
 					"headers": {
@@ -60,7 +60,7 @@ spec:
     - name: constellation
       port: 9001
     - name: eth
-      port: 2300
+      port: 23000
     - name: readfile
       port: 6382
   selector:
@@ -88,9 +88,15 @@ spec:
 												rpcNodePort: response.data.spec.ports[0].nodePort,
 												constellationNodePort: response.data.spec.ports[1].nodePort,
 												ethNodePort: response.data.spec.ports[2].nodePort,
-												readFile: response.data.spec.ports[3].nodePort
+												readFile: response.data.spec.ports[3].nodePort,
+												clusterIP: response.data.spec.clusterIP,
+												realRPCNodePort: 8545,
+												realConstellationNodePort: 9001,
+												realEthNodePort: 23000
 											}
 										})
+
+										myFuture.return();
 
 										var minikube_ip = Utilities.find({"name": "minikube-ip"}).fetch()[0].value;
 
@@ -200,23 +206,21 @@ spec:
 			"user": this.userId,
 			"createdOn": Date.now(),
 			"totalENodes": totalENodes,
-			"totalConstellationNodes": totalConstellationNodes
+			"totalConstellationNodes": totalConstellationNodes,
+			"totalENodes": totalENodes,
+			"genesisBlock": genesisFileContent
 		}, function(error, id){
+
 			if(error) {
 				myFuture.throw("An unknown error occured");
 			} else {
-				myFuture.return();
 
-				if(nodeType === "validator") {
-					var command = ["bin/bash", "-c", "./setup.sh", JSON.stringify(totalConstellationNodes), JSON.stringify(totalENodes), JSON.stringify(genesisFileContent), "mine"];	
-				} else {
-					var command = ["bin/bash", "-c", "./setup.sh", JSON.stringify(totalConstellationNodes), JSON.stringify(totalENodes), JSON.stringify(genesisFileContent)];
-				}
+				totalConstellationNodes = JSON.stringify(totalConstellationNodes).replace(/\"/g,'\\"').replace(/\"/g,'\\"').replace(/\"/g,'\\"')
+				totalENodes = JSON.stringify(totalENodes).replace(/\"/g,'\\"').replace(/\"/g,'\\"').replace(/\"/g,'\\"')
+				genesisFileContent = jsonminify(genesisFileContent.toString()).replace(/\"/g,'\\"')
 
-				command = JSON.stringify(command);
-
-				HTTP.call("POST", "http://127.0.0.1:8000/apis/apps/v1beta1/namespaces/default/deployments", { 
-					"content": `apiVersion: apps/v1beta1
+				if(nodeType === "authority") {
+					var content = `apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: ${id.toLowerCase()}
@@ -231,13 +235,41 @@ spec:
       containers:
       - name: quorum
         image: quorum:latest
-        command: ${command}
+        command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
         imagePullPolicy: Never
         ports:
         - containerPort: 8545
-        - containerPort: 2300
+        - containerPort: 23000
         - containerPort: 9001
-        - containerPort: 6382`,
+        - containerPort: 6382`;
+				} else {
+					var content = `apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: ${id.toLowerCase()}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      labels:
+        app: quorum-node-${id.toLowerCase()}
+    spec:
+      containers:
+      - name: quorum
+        image: quorum:latest
+        command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8545
+        - containerPort: 23000
+        - containerPort: 9001
+        - containerPort: 6382`;
+				}
+
+
+				HTTP.call("POST", "http://127.0.0.1:8000/apis/apps/v1beta1/namespaces/default/deployments", { 
+					"content": content,
 					"headers": {
 						"Content-Type": "application/yaml"
 					}
@@ -257,7 +289,7 @@ spec:
     - name: constellation
       port: 9001
     - name: eth
-      port: 2300
+      port: 23000
     - name: readfile
       port: 6382
   selector:
@@ -285,9 +317,15 @@ spec:
 												rpcNodePort: response.data.spec.ports[0].nodePort,
 												constellationNodePort: response.data.spec.ports[1].nodePort,
 												ethNodePort: response.data.spec.ports[2].nodePort,
-												readFile: response.data.spec.ports[3].nodePort
+												readFile: response.data.spec.ports[3].nodePort,
+												clusterIP: response.data.spec.clusterIP,
+												realRPCNodePort: 8545,
+												realConstellationNodePort: 9001,
+												realEthNodePort: 23000
 											}
 										})
+
+										myFuture.return();
 
 										var minikube_ip = Utilities.find({"name": "minikube-ip"}).fetch()[0].value;
 
@@ -303,7 +341,6 @@ spec:
 														_id: id
 													}, {
 														$set: {
-															genesisBlock: data.genesis,
 															nodeKey: data.nodekey,
 															nodeEthAddress: "0x" + lightwallet.keystore._computeAddressFromPrivKey(data.nodekey),
 															constellationPubKey: data.constellationPublicKey
@@ -355,7 +392,7 @@ spec:
 											        }))
 												}
 											})
-										}, 10000)
+										}, 15000)
 									}
 								})
 							}
@@ -364,6 +401,49 @@ spec:
 				});
 			}
 		})
+
+		return myFuture.wait();
+	},
+	"vote": function(networkId, toVote){
+		var myFuture = new Future();
+		var network = Networks.find({_id: networkId}).fetch()[0];
+		var minikube_ip = Utilities.find({"name": "minikube-ip"}).fetch()[0].value;
+		let web3 = new Web3(new Web3.providers.HttpProvider("http://" + minikube_ip + ":" + network.rpcNodePort));
+		web3.currentProvider.sendAsync({
+		    method: "istanbul_propose",
+		    params: [toVote, true],
+		    jsonrpc: "2.0",
+		    id: new Date().getTime()
+		}, Meteor.bindEnvironment(function(error, result) {
+			if(error) {
+    			console.log(error)
+
+				myFuture.throw("An unknown error occured");
+			} else {
+				myFuture.return();
+			}
+		}))
+
+		return myFuture.wait();
+	},
+	"unVote": function(networkId, toVote){
+		var myFuture = new Future();
+
+		var network = Networks.find({_id: networkId}).fetch()[0];
+		var minikube_ip = Utilities.find({"name": "minikube-ip"}).fetch()[0].value;
+		let web3 = new Web3(new Web3.providers.HttpProvider("http://" + minikube_ip + ":" + network.rpcNodePort));
+		web3.currentProvider.sendAsync({
+		    method: "istanbul_propose",
+		    params: [toVote, false],
+		    jsonrpc: "2.0",
+		    id: new Date().getTime()
+		}, Meteor.bindEnvironment(function(error, result) {
+			if(error) {
+				myFuture.throw("An unknown error occured");
+			} else {
+				myFuture.return();
+			}
+		}))
 
 		return myFuture.wait();
 	}

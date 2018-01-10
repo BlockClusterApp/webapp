@@ -146,7 +146,7 @@ class JoinNetwork extends Component {
                                             <div className="form-group form-group-default required">
                                                 <label>Node Type</label>
                                                 <select className="form-control" ref={(input) => {this.nodeType = input;}}>
-                                                    <option value="validator">Validator</option>
+                                                    <option value="authority">Validator</option>
                                                     <option value="peer">Peer</option>
                                                 </select>
                                             </div>
@@ -228,7 +228,7 @@ class JoinNetwork extends Component {
                                                                         <label>ENode URL</label>
                                                                         <input type="text" className="form-control usd" required placeholder="enode://pubkey@ip:port" onChange={(event) => {this.onENodeChange(index, event)}} value={item} />
                                                                     </div>
-                                                                    <div className="input-group-addon" onClick={() => {this.deleteENodeURL(index)}}>
+                                                                    <div className="input-group-addon delete-button" onClick={() => {this.deleteENodeURL(index)}}>
                                                                         <i className="fa fa-trash" aria-hidden="true"></i>
                                                                     </div>
                                                                 </div>
@@ -257,7 +257,7 @@ class JoinNetwork extends Component {
                                                                         <label>URL</label>
                                                                         <input type="text" className="form-control usd" required placeholder="ip:port" onChange={(event) => {this.onConstellationChange(index, event)}} value={item} value={item} />
                                                                     </div>
-                                                                    <div className="input-group-addon" onClick={() => {this.deleteConstellationURL(index)}}>
+                                                                    <div className="input-group-addon delete-button" onClick={() => {this.deleteConstellationURL(index)}}>
                                                                         <i className="fa fa-trash" aria-hidden="true"></i>
                                                                     </div>
                                                                 </div>

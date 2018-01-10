@@ -41,6 +41,58 @@ class ViewEditNetwork extends Component {
     	})
     }
 
+    vote = (e) => {
+    	e.preventDefault()
+    	Meteor.call("vote", this.props.network[0]._id, this.authorityAddress.value, (error) => {
+    		if(error) {
+    			$("body").pgNotification({
+                    style: "circle",
+                    message: "An error occured",
+                    position: "bottom-right",
+                    timeout: 5000,
+                    type: "error",
+                    thumbnail: '<img width="40" height="40" style="display: inline-block;" src="/assets/img/icons/profile.png" alt="">'
+                }).show();
+    		} else {
+                $("body").pgNotification({
+                    style: "circle",
+                    message: "Voted Successfully",
+                    position: "bottom-right",
+                    timeout: 5000,
+                    type: "success",
+                    thumbnail: '<img width="40" height="40" style="display: inline-block;" src="/assets/img/icons/profile.png" alt="">'
+                }).show();
+    			this.authorityAddress.value = "";
+    		}
+    	})
+    }
+
+    unVote = (e) => {
+    	e.preventDefault()
+    	Meteor.call("unVote", this.props.network[0]._id, this.authorityAddress.value, (error) => {
+    		if(error) {
+    			$("body").pgNotification({
+                    style: "circle",
+                    message: "An error occured",
+                    position: "bottom-right",
+                    timeout: 5000,
+                    type: "error",
+                    thumbnail: '<img width="40" height="40" style="display: inline-block;" src="/assets/img/icons/profile.png" alt="">'
+                }).show();
+    		} else {
+                $("body").pgNotification({
+                    style: "circle",
+                    message: "Voted Successfully",
+                    position: "bottom-right",
+                    timeout: 5000,
+                    type: "success",
+                    thumbnail: '<img width="40" height="40" style="display: inline-block;" src="/assets/img/icons/profile.png" alt="">'
+                }).show();
+                this.authorityAddress.value = "";
+    		}
+    	})
+    }
+
 	render(){
 		return (
             <div className="row viewEditNetwork">
@@ -86,7 +138,7 @@ class ViewEditNetwork extends Component {
 				       							if (this.props.network.length === 1) {
 				       								if("nodeId" in this.props.network[0]) {
 				       									return (
-				       										"enode://" + this.props.network[0].nodeId + "@" + Utilities.find({"name": "minikube-ip"}).fetch()[0].value + ":" + this.props.network[0].ethNodePort
+				       										"enode://" + this.props.network[0].nodeId + "@" + this.props.network[0].clusterIP + ":" + this.props.network[0].realEthNodePort
 				       									)
 				       								}
 				       							}
@@ -104,7 +156,7 @@ class ViewEditNetwork extends Component {
 				       							if (this.props.network.length === 1) {
 				       								if("rpcNodePort" in this.props.network[0]) {
 				       									return (
-				       										"http://" + Utilities.find({"name": "minikube-ip"}).fetch()[0].value + ":" + this.props.network[0].rpcNodePort
+				       										"http://" + Utilities.find({"name": "minikube-ip"}).fetch()[0].value + ":" + this.props.network[0].realRPCNodePort
 				       									)
 				       								}
 				       							}
@@ -122,7 +174,7 @@ class ViewEditNetwork extends Component {
 				       							if (this.props.network.length === 1) {
 				       								if("constellationNodePort" in this.props.network[0]) {
 				       									return (
-				       										Utilities.find({"name": "minikube-ip"}).fetch()[0].value + ":" + this.props.network[0].constellationNodePort
+				       										this.props.network[0].clusterIP + ":" + this.props.network[0].realConstellationNodePort
 				       									)
 				       								}
 				       							}
@@ -159,11 +211,11 @@ class ViewEditNetwork extends Component {
 						                            <div className="col-md-9">
 					                            		<form className="row form-horizontal">
 					                            			<div className="col-md-6">
-						                                        <input type="text" className="form-control" required placeholder="Authority Identity Address" />
+						                                        <input type="text" className="form-control" required placeholder="Authority Identity Address" ref={(input) => {this.authorityAddress = input;}} />
 						                                    </div>
 						                                    <div className="col-md-6">
-						                                    	<button className="btn btn-complete btn-cons"><i className="fa fa-thumbs-up" aria-hidden="true"></i>&nbsp;Vote</button>
-						                                    	<button className="btn btn-warning btn-cons"><i className="fa fa-thumbs-down" aria-hidden="true"></i>&nbsp;Unvote</button>
+						                                    	<button className="btn btn-complete btn-cons" onClick={this.vote}><i className="fa fa-thumbs-up" aria-hidden="true"></i>&nbsp;Vote</button>
+						                                    	<button className="btn btn-warning btn-cons" onClick={this.unVote}><i className="fa fa-thumbs-down" aria-hidden="true"></i>&nbsp;Unvote</button>
 						                                    </div>
 					                            		</form>
 						                            </div>
@@ -189,6 +241,7 @@ class ViewEditNetwork extends Component {
 	          						}		
 	   							})()
 							}
+
 							<div className="form-group row">
 	                            <div className="col-md-3">
 	                                <p>You can download and share the genesis block for other's to connect to this network. </p>
@@ -225,7 +278,7 @@ class ViewEditNetwork extends Component {
 							<div className="form-group row">
 	                            <label className="col-md-3 control-label">Current Network Authorities</label>
 	                            <div className="col-md-9">
-	                            	<ul className="currentValidatorsList">
+	                            	<ul className="customList">
 	                            		{
 				   							(() => {
 				       							if (this.props.network.length === 1) {
@@ -246,6 +299,76 @@ class ViewEditNetwork extends Component {
 	                            	</ul>
 	                            </div>
                         	</div>
+
+                        	{
+	   							(() => {
+	       							if (this.props.network.length === 1) {
+	       								if(this.props.network[0].type === "join") {
+	       									return (
+	       										<div className="form-group row">
+						                            <label className="col-md-3 control-label">Ethereum Nodes Connected To</label>
+						                            <div className="col-md-9">
+						                                <ul className="customList">
+						                            		{
+									   							(() => {
+									       							if (this.props.network.length === 1) {
+									       								if("totalENodes" in this.props.network[0]) {
+									       									return (
+									       										<div style={{"wordWrap": "break-word"}}>
+									       											{this.props.network[0].totalENodes.map((item, index) => {
+												                                        return (
+												                                            <li key={item}>{item}</li>
+												                                        )
+												                                    })}
+									       										</div>
+									       									)
+									       								}
+									       							}
+									       						})()
+									   						}
+						                            	</ul>
+						                            </div>
+						                        </div>
+	       									)
+	       								}
+	          						}		
+	   							})()
+							}
+
+							{
+	   							(() => {
+	       							if (this.props.network.length === 1) {
+	       								if(this.props.network[0].type === "join") {
+	       									return (
+	       										<div className="form-group row">
+						                            <label className="col-md-3 control-label">Constellation Nodes Connected To</label>
+						                            <div className="col-md-9">
+						                                <ul className="customList">
+						                            		{
+									   							(() => {
+									       							if (this.props.network.length === 1) {
+									       								if("totalConstellationNodes" in this.props.network[0]) {
+									       									return (
+									       										<div>
+									       											{this.props.network[0].totalConstellationNodes.map((item, index) => {
+												                                        return (
+												                                            <li key={item}>{item}</li>
+												                                        )
+												                                    })}
+									       										</div>
+									       									)
+									       								}
+									       							}
+									       						})()
+									   						}
+						                            	</ul>
+						                            </div>
+						                        </div>
+	       									)
+	       								}
+	          						}		
+	   							})()
+							}
 	                        {/*<div className="form-group row">
 	                            <label className="col-md-3 control-label">Work</label>
 	                            <div className="col-md-9">
