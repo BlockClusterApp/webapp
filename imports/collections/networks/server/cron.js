@@ -7,7 +7,7 @@ function updateNodeStatus() {
 		var nodes = Networks.find({}).fetch()
 		nodes.forEach(function(item, index){
 			if(item.currentValidators !== undefined) {
-				HTTP.call("GET", "http://127.0.0.1:8000/apis/apps/v1beta2/namespaces/default/deployments/" + item._id.toLowerCase(), function(error, response){
+				HTTP.call("GET", "http://127.0.0.1:8000/apis/apps/v1beta2/namespaces/default/deployments/" + item.instanceId, function(error, response){
 					if(error) {
 						Networks.update({
 							_id: item._id

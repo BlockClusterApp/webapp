@@ -20,14 +20,10 @@ export default class AuthorizedRoute extends Component {
 				<div className="page-container">
 					<Header />
 					<div className="page-content-wrapper ">
-		                <div className="content ">
-		                    <div className="m-t-20 container-fluid container-fixed-lg bg-white">
-                            	<Route exact path="/app" component={Dashboard} />
-								<Route exact path="/app/create" component={CreateNetwork} />
-								<Route exact path="/app/network/:id" component={ViewEditNetwork} />
-								<Route exact path="/app/join" component={JoinNetwork} />
-		                    </div>
-		                </div>
+                    	<Route exact path="/app" component={Dashboard} />
+						<Route exact path="/app/create" component={CreateNetwork} />
+						<Route exact path="/app/network/:id" component={ViewEditNetwork} />
+						<Route exact path="/app/join" component={JoinNetwork} />
 		            </div>
 				</div>
 				<Footer />

@@ -54,10 +54,10 @@ class Navbar extends Component {
 	                        <span className="icon-thumbnail"><i className="fa fa-list"></i></span>
 	                    </li>
 	                    <li className="">
-	                        <a href="email.html" className="detailed">
-	                        <span className="title">IPFS</span>
-	                        <span className="details">Store Files</span>
-	                        </a>
+		                    <Link to={"http://localhost:5001/ipfs/QmPhnvn747LqwPYMJmQVorMaGbMSgA7mRRoyyZYz3DoZRQ/#/home"} target="_blank" className="detailed">
+	                    		<span className="title">IPFS</span>
+	                        	<span className="details">Store Files</span>
+	                    	</Link>
 	                        <span className="icon-thumbnail"><i className="fa fa-globe"></i></span>
 	                    </li>
 	                    <li className="">
@@ -66,13 +66,6 @@ class Navbar extends Component {
 	                        <span className="details">Create and Transfer</span>
 	                        </a>
 	                        <span className="icon-thumbnail"><i className="pg-note"></i></span>
-	                    </li>
-	                    <li className="">
-	                        <a href="email.html" className="detailed">
-	                        <span className="title">Contracts</span>
-	                        <span className="details">Write and Deploy</span>
-	                        </a>
-	                        <span className="icon-thumbnail"><i className="fa fa-code"></i></span>
 	                    </li>
 	                    {(this.props.minikubeIP[0] !== undefined) &&
 	                    	<li className="">
