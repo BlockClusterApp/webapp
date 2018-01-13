@@ -10,7 +10,7 @@ Meteor.methods({
 		var myFuture = new Future();
 		var instanceId = helpers.instanceIDGenerate();
 		Networks.insert({
-			"instanceId": instanceId, 
+			"instanceId": instanceId,
 			"name": networkName,
 			"type": "new",
 			"status": "initializing",
@@ -23,7 +23,7 @@ Meteor.methods({
 			if(error) {
 				myFuture.throw("An unknown error occured");
 			} else {
-				HTTP.call("POST", "http://127.0.0.1:8000/apis/apps/v1beta1/namespaces/default/deployments", { 
+				HTTP.call("POST", "http://127.0.0.1:8000/apis/apps/v1beta1/namespaces/default/deployments", {
 					"content": `apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
@@ -197,14 +197,14 @@ spec:
 				})
 			}
 		})
-		
+
 		return myFuture.wait();
 	},
 	"joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, userId) {
 		var myFuture = new Future();
 		var instanceId = helpers.instanceIDGenerate();
 		Networks.insert({
-			"instanceId": instanceId, 
+			"instanceId": instanceId,
 			"name": networkName,
 			"type": "join",
 			"status": "initializing",
@@ -272,7 +272,7 @@ spec:
 				}
 
 
-				HTTP.call("POST", "http://127.0.0.1:8000/apis/apps/v1beta1/namespaces/default/deployments", { 
+				HTTP.call("POST", "http://127.0.0.1:8000/apis/apps/v1beta1/namespaces/default/deployments", {
 					"content": content,
 					"headers": {
 						"Content-Type": "application/yaml"
@@ -453,10 +453,10 @@ spec:
 		var network = Networks.find({_id: networkId}).fetch()[0];
 		if(user) {
 			Meteor.call(
-				"joinNetwork", 
-				network.name, 
-				nodeType, 
-				network.genesisBlock.toString(), 
+				"joinNetwork",
+				network.name,
+				nodeType,
+				network.genesisBlock.toString(),
 				["enode://" + network.nodeId + "@" + network.clusterIP + ":" + network.realEthNodePort].concat(network.totalENodes),
 				[network.clusterIP + ":" + network.realConstellationNodePort].concat(network.totalConstellationNodes),
 				user._id

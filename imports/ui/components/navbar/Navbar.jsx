@@ -9,7 +9,7 @@ class Navbar extends Component {
       		s.stop();
     	});
   	}
-  	
+
 	render(){
 		return (
 			<nav className="page-sidebar" data-pages="sidebar">

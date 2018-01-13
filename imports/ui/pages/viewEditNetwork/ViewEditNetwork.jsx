@@ -98,7 +98,7 @@ class ViewEditNetwork extends Component {
 						       							if (this.props.network.length === 1) {
 						       								if("nodeId" in this.props.network[0]) {
 						       									return (
-						       										"enode://" + this.props.network[0].nodeId + "@" + this.props.network[0].clusterIP + ":" + this.props.network[0].realEthNodePort
+						       										"enode://" + this.props.network[0].nodeId + "@" + this.props.minikubeIP[0].value + ":" + this.props.network[0].ethNodePort
 						       									)
 						       								}
 						       							}
@@ -116,7 +116,7 @@ class ViewEditNetwork extends Component {
 						       							if (this.props.network.length === 1) {
 						       								if("rpcNodePort" in this.props.network[0]) {
 						       									return (
-						       										"http://" + Utilities.find({"name": "minikube-ip"}).fetch()[0].value + ":" + this.props.network[0].realRPCNodePort
+						       										"http://" + this.props.minikubeIP[0].value + ":" + this.props.network[0].rpcNodePort
 						       									)
 						       								}
 						       							}
@@ -134,7 +134,7 @@ class ViewEditNetwork extends Component {
 						       							if (this.props.network.length === 1) {
 						       								if("constellationNodePort" in this.props.network[0]) {
 						       									return (
-						       										this.props.network[0].clusterIP + ":" + this.props.network[0].realConstellationNodePort
+						       										this.props.minikubeIP[0].value + ":" + this.props.network[0].constellationNodePort
 						       									)
 						       								}
 						       							}
@@ -182,7 +182,7 @@ class ViewEditNetwork extends Component {
 								                        </div>
 			       									)
 			       								}
-			          						}		
+			          						}
 			   							})()
 									}
 									{
@@ -198,7 +198,7 @@ class ViewEditNetwork extends Component {
 								                        </div>
 			       									)
 			       								}
-			          						}		
+			          						}
 			   							})()
 									}
 
@@ -234,7 +234,7 @@ class ViewEditNetwork extends Component {
 			                                }}><i className="fa fa-download" aria-hidden="true"></i>&nbsp;Download Genesis File</button>
 			                            </div>
 			                        </div>
-			                        
+
 									<div className="form-group row">
 			                            <label className="col-md-3 control-label">Current Network Authorities</label>
 			                            <div className="col-md-9">
@@ -291,7 +291,7 @@ class ViewEditNetwork extends Component {
 								                        </div>
 			       									)
 			       								}
-			          						}		
+			          						}
 			   							})()
 									}
 
@@ -326,7 +326,7 @@ class ViewEditNetwork extends Component {
 								                        </div>
 			       									)
 			       								}
-			          						}		
+			          						}
 			   							})()
 									}
 			                        {/*<div className="form-group row">
@@ -365,11 +365,12 @@ class ViewEditNetwork extends Component {
 export default withTracker(function(props) {
     return {
         network: Networks.find({_id: props.match.params.id}).fetch(),
+		minikubeIP: Utilities.find({"name": "minikube-ip"}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
         		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
         			props.history.push("/app");
-        		} 
+        		}
         	}
         }), Meteor.subscribe("utilities")]
     }
