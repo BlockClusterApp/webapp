@@ -68,7 +68,7 @@ class ViewEditNetwork extends Component {
 			                        <div className="form-group row">
 			                            <label htmlFor="fname" className="col-md-3 control-label">Instance ID</label>
 			                            <div className="col-md-9">
-			                                <span className="value-valign-middle">{this.props.network.length === 1 ? this.props.network[0]._instanceId : ""}</span>
+			                                <span className="value-valign-middle">{this.props.network.length === 1 ? this.props.network[0].instanceId : ""}</span>
 			                            </div>
 			                        </div>
 			                        <div className="form-group row">
