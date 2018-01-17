@@ -45,7 +45,9 @@ spec:
         - containerPort: 8545
         - containerPort: 23000
         - containerPort: 9001
-        - containerPort: 6382`,
+        - containerPort: 6382
+      imagePullSecrets:
+      - name: regsecret`,
 					"headers": {
 						"Content-Type": "application/yaml"
 					}
@@ -245,7 +247,9 @@ spec:
         - containerPort: 8545
         - containerPort: 23000
         - containerPort: 9001
-        - containerPort: 6382`;
+		- containerPort: 6382
+      imagePullSecrets:
+      - name: regsecret`;
 				} else {
 					var content = `apiVersion: apps/v1beta1
 kind: Deployment
@@ -268,7 +272,9 @@ spec:
         - containerPort: 8545
         - containerPort: 23000
         - containerPort: 9001
-        - containerPort: 6382`;
+		- containerPort: 6382
+      imagePullSecrets:
+      - name: regsecret`;
 				}
 
 
