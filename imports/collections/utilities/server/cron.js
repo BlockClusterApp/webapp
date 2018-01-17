@@ -7,7 +7,7 @@ function updateMinikubeIP() {
 		name: "minikube-ip",
 	}, {
 		$set: {
-			"value": "192.168.1.100"
+			"value": "54.149.176.42"
 		}
 	});
 	/*Meteor.setInterval(function(){
