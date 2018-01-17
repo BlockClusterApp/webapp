@@ -38,7 +38,7 @@ spec:
     spec:
       containers:
       - name: quorum
-        image: quorum:latest
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum
         command: [ 'bin/bash', '-c', './setup.sh' ]
         imagePullPolicy: Always
         ports:
@@ -238,7 +238,7 @@ spec:
     spec:
       containers:
       - name: quorum
-        image: quorum:latest
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum
         command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
         imagePullPolicy: Always
         ports:
@@ -261,7 +261,7 @@ spec:
     spec:
       containers:
       - name: quorum
-        image: quorum:latest
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum
         command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
         imagePullPolicy: Always
         ports:
