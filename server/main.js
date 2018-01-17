@@ -40,6 +40,7 @@ spec:
       - name: quorum
         image: quorum:latest
         command: [ 'bin/bash', '-c', './setup.sh' ]
+        imagePullPolicy: Always
         ports:
         - containerPort: 8545
         - containerPort: 23000
@@ -239,6 +240,7 @@ spec:
       - name: quorum
         image: quorum:latest
         command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
+        imagePullPolicy: Always
         ports:
         - containerPort: 8545
         - containerPort: 23000
@@ -261,6 +263,7 @@ spec:
       - name: quorum
         image: quorum:latest
         command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
+        imagePullPolicy: Always
         ports:
         - containerPort: 8545
         - containerPort: 23000
