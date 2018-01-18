@@ -262,7 +262,7 @@ spec:
         - containerPort: 8545
         - containerPort: 23000
         - containerPort: 9001
-		- containerPort: 6382
+        - containerPort: 6382
       imagePullSecrets:
       - name: regsecret`;
 				} else {
@@ -287,11 +287,10 @@ spec:
         - containerPort: 8545
         - containerPort: 23000
         - containerPort: 9001
-		- containerPort: 6382
+        - containerPort: 6382
       imagePullSecrets:
       - name: regsecret`;
 				}
-
 
 				HTTP.call("POST", `http://${kuberREST_IP}:8000/apis/apps/v1beta1/namespaces/default/deployments`, {
 					"content": content,
