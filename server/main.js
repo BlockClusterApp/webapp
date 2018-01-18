@@ -23,7 +23,7 @@ Meteor.methods({
 			"totalENodes": [],
 			"totalConstellationNodes": []
 		}, function(error, id){
-			if(error) {
+			if(error) {console.log(error);
 				myFuture.throw("An unknown error occured");
 			} else {
 				HTTP.call("POST", `http://${kuberREST_IP}:8000/apis/apps/v1beta1/namespaces/default/deployments`, {
@@ -55,7 +55,7 @@ spec:
 						"Content-Type": "application/yaml"
 					}
 				}, function(error, response) {
-					if(error) {
+					if(error) {console.log(error);
 						Networks.remove({_id: id});
 					} else {
 						HTTP.call("POST", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services`, {
@@ -80,12 +80,12 @@ spec:
   								"Content-Type": "application/yaml"
   							}
 						}, function(error, response){
-							if(error) {
+							if(error) {console.log(error);
 								Networks.remove({_id: id});
 								HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
 							} else {
 								HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, {}, function(error, response){
-									if(error) {
+									if(error) {console.log(error);
 										Networks.remove({_id: id});
 										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
 										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
@@ -112,7 +112,7 @@ spec:
 
 										Meteor.setTimeout(() => {
 											HTTP.call("GET", `http://` + workerNodeIP + ":" + response.data.spec.ports[3].nodePort, function(error, response){
-												if(error) {
+												if(error) {console.log(error);
 													Networks.remove({_id: id});
 													HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
 													HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
@@ -136,7 +136,7 @@ spec:
 											            jsonrpc: "2.0",
 											            id: new Date().getTime()
 											        }, Meteor.bindEnvironment(function(error, result) {
-											            if(error) {
+											            if(error) {console.log(error);
 											            	Networks.remove({_id: id});
 															HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
 															HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
@@ -155,7 +155,7 @@ spec:
 															    jsonrpc: "2.0",
 															    id: new Date().getTime()
 															}, Meteor.bindEnvironment(function(error, result) {
-																if(error) {
+																if(error) {console.log(error);
 																	Networks.remove({_id: id});
 																	HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + id.toLowerCase())
 																	HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + id.toLowerCase())
@@ -189,11 +189,11 @@ spec:
 	"deleteNetwork": function(id){
 		var myFuture = new Future();
 		HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + id, function(error, response){
-			if(error) {
+			if(error) {console.log(error);
 				myFuture.throw("An unknown error occured");
 			} else {
 				HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + id, function(error, response){
-					if(error) {
+					if(error) {console.log(error);
 						myFuture.throw("An unknown error occured");
 					} else {
 						Networks.remove({instanceId: id});
@@ -220,7 +220,7 @@ spec:
 			"totalConstellationNodes": totalConstellationNodes,
 			"genesisBlock": genesisFileContent
 		}, function(error, id){
-			if(error) {
+			if(error) {console.log(error);
 				myFuture.throw("An unknown error occured");
 			} else {
 
@@ -287,7 +287,7 @@ spec:
 						"Content-Type": "application/yaml"
 					}
 				}, function(error, response) {
-					if(error) {
+					if(error) {console.log(error);
 						Networks.remove({_id: id});
 					} else {
 						HTTP.call("POST", "http://${kuberREST_IP}:8000/api/v1/namespaces/default/services", {
@@ -312,12 +312,12 @@ spec:
   								"Content-Type": "application/yaml"
   							}
 						}, function(error, response){
-							if(error) {
+							if(error) {console.log(error);
 								Networks.remove({_id: id});
 								HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
 							} else {
 								HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, {}, function(error, response){
-									if(error) {
+									if(error) {console.log(error);
 										Networks.remove({_id: id});
 										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
 										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
@@ -344,7 +344,7 @@ spec:
 
 										Meteor.setTimeout(() => {
 											HTTP.call("GET", "http://" + workerNodeIP + ":" + response.data.spec.ports[3].nodePort, function(error, response){
-												if(error) {
+												if(error) {console.log(error);
 													Networks.remove({_id: id});
 													HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
 													HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
@@ -367,7 +367,7 @@ spec:
 											            jsonrpc: "2.0",
 											            id: new Date().getTime()
 											        }, Meteor.bindEnvironment(function(error, result) {
-											            if(error) {
+											            if(error) {console.log(error);
 											            	Networks.remove({_id: id});
 															HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
 															HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
@@ -386,7 +386,7 @@ spec:
 															    jsonrpc: "2.0",
 															    id: new Date().getTime()
 															}, Meteor.bindEnvironment(function(error, result) {
-																if(error) {
+																if(error) {console.log(error);
 																	Networks.remove({_id: id});
 																	HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
 																	HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
@@ -428,7 +428,7 @@ spec:
 		    jsonrpc: "2.0",
 		    id: new Date().getTime()
 		}, Meteor.bindEnvironment(function(error, result) {
-			if(error) {
+			if(error) {console.log(error);
 				myFuture.throw("An unknown error occured");
 			} else {
 				myFuture.return();
@@ -448,7 +448,7 @@ spec:
 		    jsonrpc: "2.0",
 		    id: new Date().getTime()
 		}, Meteor.bindEnvironment(function(error, result) {
-			if(error) {
+			if(error) {console.log(error);
 				myFuture.throw("An unknown error occured");
 			} else {
 				myFuture.return();
