@@ -293,7 +293,7 @@ spec:
 				}
 
 
-				HTTP.call("POST", "http://${kuberREST_IP}:8000/apis/apps/v1beta1/namespaces/default/deployments", {
+				HTTP.call("POST", `http://${kuberREST_IP}:8000/apis/apps/v1beta1/namespaces/default/deployments`, {
 					"content": content,
 					"headers": {
 						"Content-Type": "application/yaml"
@@ -303,7 +303,7 @@ spec:
 						console.log(error);
 						Networks.remove({_id: id});
 					} else {
-						HTTP.call("POST", "http://${kuberREST_IP}:8000/api/v1/namespaces/default/services", {
+						HTTP.call("POST", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services`, {
 							"content": `kind: Service
 apiVersion: v1
 metadata:
