@@ -46,8 +46,8 @@ function updateAuthoritiesList() {
 		var nodes = Networks.find({}).fetch()
 		nodes.forEach(function(item, index){
 			if(item.currentValidators !== undefined) {
-				var minikube_ip = Utilities.find({"name": "minikube-ip"}).fetch()[0].value;
-				let web3 = new Web3(new Web3.providers.HttpProvider("http://" + minikube_ip + ":" + item.rpcNodePort));
+				var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+				let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + item.rpcNodePort));
 				web3.currentProvider.sendAsync({
 				    method: "istanbul_getValidators",
 				    params: [],

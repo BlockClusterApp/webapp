@@ -4,10 +4,11 @@ import {Utilities} from "../../collections/utilities/utilities.js"
 require("../../collections/networks/server/publications.js")
 require("../../collections/utilities/server/publications.js")
 
-import {updateMinikubeIP} from "../../collections/utilities/server/cron.js"
+import {updateWorkerNodeIP, updateKuberREST_IP} from "../../collections/utilities/server/cron.js"
 import {updateNodeStatus, updateAuthoritiesList} from "../../collections/networks/server/cron.js"
 
-updateMinikubeIP()
+updateWorkerNodeIP()
+updateKuberREST_IP()
 updateNodeStatus()
 updateAuthoritiesList()
 

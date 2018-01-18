@@ -8,6 +8,9 @@ import helpers from "../imports/modules/helpers"
 Meteor.methods({
 	"createNetwork": function(networkName){
 		var myFuture = new Future();
+
+		var kuberREST_IP = Utilities.find({"name": "kuberREST_IP"}).fetch()[0].value;
+
 		var instanceId = helpers.instanceIDGenerate();
 		Networks.insert({
 			"instanceId": instanceId,
@@ -23,7 +26,7 @@ Meteor.methods({
 			if(error) {
 				myFuture.throw("An unknown error occured");
 			} else {
-				HTTP.call("POST", "http://127.0.0.1:8000/apis/apps/v1beta1/namespaces/default/deployments", {
+				HTTP.call("POST", `http://${kuberREST_IP}:8000/apis/apps/v1beta1/namespaces/default/deployments`, {
 					"content": `apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
@@ -55,7 +58,7 @@ spec:
 					if(error) {
 						Networks.remove({_id: id});
 					} else {
-						HTTP.call("POST", "http://127.0.0.1:8000/api/v1/namespaces/default/services", {
+						HTTP.call("POST", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services`, {
 							"content": `kind: Service
 apiVersion: v1
 metadata:
@@ -79,13 +82,13 @@ spec:
 						}, function(error, response){
 							if(error) {
 								Networks.remove({_id: id});
-								HTTP.call("DELETE", "http://127.0.0.1:8000/apis/apps/v1beta2/namespaces/default/deployments/" + instanceId)
+								HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
 							} else {
-								HTTP.call("GET", "http://127.0.0.1:8000/api/v1/namespaces/default/services/" + instanceId, {}, function(error, response){
+								HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, {}, function(error, response){
 									if(error) {
 										Networks.remove({_id: id});
-										HTTP.call("DELETE", "http://127.0.0.1:8000/apis/apps/v1beta2/namespaces/default/deployments/" + instanceId)
-										HTTP.call("DELETE", "http://127.0.0.1:8000/api/v1/namespaces/default/services/" + instanceId)
+										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
+										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
 									} else {
 										let rpcNodePort = response.data.spec.ports[0].nodePort
 										Networks.update({
@@ -105,14 +108,14 @@ spec:
 
 										myFuture.return();
 
-										var minikube_ip = Utilities.find({"name": "minikube-ip"}).fetch()[0].value;
+										var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
 
 										Meteor.setTimeout(() => {
-											HTTP.call("GET", "http://" + minikube_ip + ":" + response.data.spec.ports[3].nodePort, function(error, response){
+											HTTP.call("GET", `http://` + workerNodeIP + ":" + response.data.spec.ports[3].nodePort, function(error, response){
 												if(error) {
 													Networks.remove({_id: id});
-													HTTP.call("DELETE", "http://127.0.0.1:8000/apis/apps/v1beta2/namespaces/default/deployments/" + instanceId)
-													HTTP.call("DELETE", "http://127.0.0.1:8000/api/v1/namespaces/default/services/" + instanceId)
+													HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
+													HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
 												} else {
 													var data = JSON.parse(response.content);
 													Networks.update({
@@ -126,7 +129,7 @@ spec:
 														}
 													})
 
-													let web3 = new Web3(new Web3.providers.HttpProvider("http://" + minikube_ip + ":" + rpcNodePort));
+													let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + rpcNodePort));
 													web3.currentProvider.sendAsync({
 											            method: "admin_nodeInfo",
 											            params: [],
@@ -135,8 +138,8 @@ spec:
 											        }, Meteor.bindEnvironment(function(error, result) {
 											            if(error) {
 											            	Networks.remove({_id: id});
-															HTTP.call("DELETE", "http://127.0.0.1:8000/apis/apps/v1beta2/namespaces/default/deployments/" + instanceId)
-															HTTP.call("DELETE", "http://127.0.0.1:8000/api/v1/namespaces/default/services/" + instanceId)
+															HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
+															HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
 											            } else {
 											            	Networks.update({
 																_id: id
@@ -154,8 +157,8 @@ spec:
 															}, Meteor.bindEnvironment(function(error, result) {
 																if(error) {
 																	Networks.remove({_id: id});
-																	HTTP.call("DELETE", "http://127.0.0.1:8000/apis/apps/v1beta2/namespaces/default/deployments/" + id.toLowerCase())
-																	HTTP.call("DELETE", "http://127.0.0.1:8000/api/v1/namespaces/default/services/" + id.toLowerCase())
+																	HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + id.toLowerCase())
+																	HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + id.toLowerCase())
 																} else {
 																	Networks.update({
 																		_id: id
@@ -185,11 +188,11 @@ spec:
 	},
 	"deleteNetwork": function(id){
 		var myFuture = new Future();
-		HTTP.call("DELETE", "http://127.0.0.1:8000/apis/apps/v1beta2/namespaces/default/deployments/" + id, function(error, response){
+		HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + id, function(error, response){
 			if(error) {
 				myFuture.throw("An unknown error occured");
 			} else {
-				HTTP.call("DELETE", "http://127.0.0.1:8000/api/v1/namespaces/default/services/" + id, function(error, response){
+				HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + id, function(error, response){
 					if(error) {
 						myFuture.throw("An unknown error occured");
 					} else {
@@ -278,7 +281,7 @@ spec:
 				}
 
 
-				HTTP.call("POST", "http://127.0.0.1:8000/apis/apps/v1beta1/namespaces/default/deployments", {
+				HTTP.call("POST", "http://${kuberREST_IP}:8000/apis/apps/v1beta1/namespaces/default/deployments", {
 					"content": content,
 					"headers": {
 						"Content-Type": "application/yaml"
@@ -287,7 +290,7 @@ spec:
 					if(error) {
 						Networks.remove({_id: id});
 					} else {
-						HTTP.call("POST", "http://127.0.0.1:8000/api/v1/namespaces/default/services", {
+						HTTP.call("POST", "http://${kuberREST_IP}:8000/api/v1/namespaces/default/services", {
 							"content": `kind: Service
 apiVersion: v1
 metadata:
@@ -311,13 +314,13 @@ spec:
 						}, function(error, response){
 							if(error) {
 								Networks.remove({_id: id});
-								HTTP.call("DELETE", "http://127.0.0.1:8000/apis/apps/v1beta2/namespaces/default/deployments/" + instanceId)
+								HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
 							} else {
-								HTTP.call("GET", "http://127.0.0.1:8000/api/v1/namespaces/default/services/" + instanceId, {}, function(error, response){
+								HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, {}, function(error, response){
 									if(error) {
 										Networks.remove({_id: id});
-										HTTP.call("DELETE", "http://127.0.0.1:8000/apis/apps/v1beta2/namespaces/default/deployments/" + instanceId)
-										HTTP.call("DELETE", "http://127.0.0.1:8000/api/v1/namespaces/default/services/" + instanceId)
+										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
+										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
 									} else {
 										let rpcNodePort = response.data.spec.ports[0].nodePort
 										Networks.update({
@@ -337,14 +340,14 @@ spec:
 
 										myFuture.return();
 
-										var minikube_ip = Utilities.find({"name": "minikube-ip"}).fetch()[0].value;
+										var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
 
 										Meteor.setTimeout(() => {
-											HTTP.call("GET", "http://" + minikube_ip + ":" + response.data.spec.ports[3].nodePort, function(error, response){
+											HTTP.call("GET", "http://" + workerNodeIP + ":" + response.data.spec.ports[3].nodePort, function(error, response){
 												if(error) {
 													Networks.remove({_id: id});
-													HTTP.call("DELETE", "http://127.0.0.1:8000/apis/apps/v1beta2/namespaces/default/deployments/" + instanceId)
-													HTTP.call("DELETE", "http://127.0.0.1:8000/api/v1/namespaces/default/services/" + instanceId)
+													HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
+													HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
 												} else {
 													var data = JSON.parse(response.content);
 													Networks.update({
@@ -357,7 +360,7 @@ spec:
 														}
 													})
 
-													let web3 = new Web3(new Web3.providers.HttpProvider("http://" + minikube_ip + ":" + rpcNodePort));
+													let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + rpcNodePort));
 													web3.currentProvider.sendAsync({
 											            method: "admin_nodeInfo",
 											            params: [],
@@ -366,8 +369,8 @@ spec:
 											        }, Meteor.bindEnvironment(function(error, result) {
 											            if(error) {
 											            	Networks.remove({_id: id});
-															HTTP.call("DELETE", "http://127.0.0.1:8000/apis/apps/v1beta2/namespaces/default/deployments/" + instanceId)
-															HTTP.call("DELETE", "http://127.0.0.1:8000/api/v1/namespaces/default/services/" + instanceId)
+															HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
+															HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
 											            } else {
 											            	Networks.update({
 																_id: id
@@ -385,8 +388,8 @@ spec:
 															}, Meteor.bindEnvironment(function(error, result) {
 																if(error) {
 																	Networks.remove({_id: id});
-																	HTTP.call("DELETE", "http://127.0.0.1:8000/apis/apps/v1beta2/namespaces/default/deployments/" + instanceId)
-																	HTTP.call("DELETE", "http://127.0.0.1:8000/api/v1/namespaces/default/services/" + instanceId)
+																	HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
+																	HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
 																} else {
 																	Networks.update({
 																		_id: id
@@ -417,8 +420,8 @@ spec:
 	"vote": function(networkId, toVote){
 		var myFuture = new Future();
 		var network = Networks.find({_id: networkId}).fetch()[0];
-		var minikube_ip = Utilities.find({"name": "minikube-ip"}).fetch()[0].value;
-		let web3 = new Web3(new Web3.providers.HttpProvider("http://" + minikube_ip + ":" + network.rpcNodePort));
+		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+		let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
 		web3.currentProvider.sendAsync({
 		    method: "istanbul_propose",
 		    params: [toVote, true],
@@ -437,8 +440,8 @@ spec:
 	"unVote": function(networkId, toVote){
 		var myFuture = new Future();
 		var network = Networks.find({_id: networkId}).fetch()[0];
-		var minikube_ip = Utilities.find({"name": "minikube-ip"}).fetch()[0].value;
-		let web3 = new Web3(new Web3.providers.HttpProvider("http://" + minikube_ip + ":" + network.rpcNodePort));
+		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+		let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
 		web3.currentProvider.sendAsync({
 		    method: "istanbul_propose",
 		    params: [toVote, false],

@@ -67,9 +67,9 @@ class Navbar extends Component {
 	                        </a>
 	                        <span className="icon-thumbnail"><i className="pg-note"></i></span>
 	                    </li>
-	                    {(this.props.minikubeIP[0] !== undefined) &&
+	                    {(this.props.workerNodeIP[0] !== undefined) &&
 	                    	<li className="">
-		                    	<Link target="_blank" to={"http://" + this.props.minikubeIP[0].value + ":30000"} className="detailed">
+		                    	<Link target="_blank" to={"http://" + this.props.kuberREST_IP[0].value + ":8000/ui"} className="detailed">
 		                    		<span className="title">Kubernetes</span>
 		                        	<span className="details">View Infrastructure</span>
 		                    	</Link>
@@ -86,7 +86,7 @@ class Navbar extends Component {
 
 export default withTracker(() => {
     return {
-        minikubeIP: Utilities.find({"name": "minikube-ip"}).fetch(),
+        kuberREST_IP: Utilities.find({"name": "kuberREST_IP"}).fetch(),
         subscriptions: [Meteor.subscribe("utilities")]
     }
 })(Navbar)

@@ -98,7 +98,7 @@ class ViewEditNetwork extends Component {
 						       							if (this.props.network.length === 1) {
 						       								if("nodeId" in this.props.network[0]) {
 						       									return (
-						       										"enode://" + this.props.network[0].nodeId + "@" + this.props.minikubeIP[0].value + ":" + this.props.network[0].ethNodePort
+						       										"enode://" + this.props.network[0].nodeId + "@" + this.props.workerNodeIP[0].value + ":" + this.props.network[0].ethNodePort
 						       									)
 						       								}
 						       							}
@@ -116,7 +116,7 @@ class ViewEditNetwork extends Component {
 						       							if (this.props.network.length === 1) {
 						       								if("rpcNodePort" in this.props.network[0]) {
 						       									return (
-						       										"http://" + this.props.minikubeIP[0].value + ":" + this.props.network[0].rpcNodePort
+						       										"http://" + this.props.workerNodeIP[0].value + ":" + this.props.network[0].rpcNodePort
 						       									)
 						       								}
 						       							}
@@ -134,7 +134,7 @@ class ViewEditNetwork extends Component {
 						       							if (this.props.network.length === 1) {
 						       								if("constellationNodePort" in this.props.network[0]) {
 						       									return (
-						       										this.props.minikubeIP[0].value + ":" + this.props.network[0].constellationNodePort
+						       										this.props.workerNodeIP[0].value + ":" + this.props.network[0].constellationNodePort
 						       									)
 						       								}
 						       							}
@@ -365,7 +365,7 @@ class ViewEditNetwork extends Component {
 export default withTracker(function(props) {
     return {
         network: Networks.find({_id: props.match.params.id}).fetch(),
-		minikubeIP: Utilities.find({"name": "minikube-ip"}).fetch(),
+		workerNodeIP: Utilities.find({"name": "workerNodeIP"}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
         		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
