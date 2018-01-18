@@ -195,6 +195,7 @@ spec:
 	},
 	"deleteNetwork": function(id){
 		var myFuture = new Future();
+		var kuberREST_IP = Utilities.find({"name": "kuberREST_IP"}).fetch()[0].value;
 		HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + id, function(error, response){
 			if(error) {
 				console.log(error);
@@ -217,6 +218,7 @@ spec:
 	"joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, userId) {
 		var myFuture = new Future();
 		var instanceId = helpers.instanceIDGenerate();
+		var kuberREST_IP = Utilities.find({"name": "kuberREST_IP"}).fetch()[0].value;
 		Networks.insert({
 			"instanceId": instanceId,
 			"name": networkName,
