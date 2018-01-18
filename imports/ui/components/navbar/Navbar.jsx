@@ -67,9 +67,9 @@ class Navbar extends Component {
 	                        </a>
 	                        <span className="icon-thumbnail"><i className="pg-note"></i></span>
 	                    </li>
-	                    {(this.props.workerNodeIP[0] !== undefined) &&
+	                    {(this.props.kuberREST_IP[0] !== undefined) &&
 	                    	<li className="">
-		                    	<Link target="_blank" to={"http://" + (this.props.kuberREST_IP[0] ? this.props.kuberREST_IP[0].value : "127.0.0.1") + ":8000/ui"} className="detailed">
+		                    	<Link target="_blank" to={"http://" + this.props.kuberREST_IP[0].value + ":8000/ui"} className="detailed">
 		                    		<span className="title">Kubernetes</span>
 		                        	<span className="details">View Infrastructure</span>
 		                    	</Link>
