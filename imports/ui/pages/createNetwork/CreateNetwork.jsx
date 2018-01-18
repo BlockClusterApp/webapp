@@ -6,9 +6,10 @@ import notifications from "../../../modules/notifications"
 class CreateNetwork extends Component {
     constructor() {
         super()
-        
-        this.state = { 
-            formSubmitError: ""
+
+        this.state = {
+            formSubmitError: "",
+            loading: false
         };
     }
 
@@ -16,12 +17,14 @@ class CreateNetwork extends Component {
         e.preventDefault()
 
         this.setState({
-            formSubmitError: ''
+            formSubmitError: '',
+            loading: true
         });
 
         Meteor.call("createNetwork", this.networkName.value, (error) => {
             if(!error) {
                 this.setState({
+                    loading: false,
                     formSubmitError: ''
                 });
 
@@ -29,11 +32,12 @@ class CreateNetwork extends Component {
                 notifications.success("Initializing node")
             } else {
                 this.setState({
-                    formSubmitError: error.reason,
+                    loading: false,
+                    formSubmitError: error.reason
                 })
             }
         });
-    }   
+    }
 
 	render(){
 		return (
@@ -77,7 +81,7 @@ class CreateNetwork extends Component {
                                                         <label>Node Type</label>
                                                         <input type="text" className="form-control" name="firstName" required disabled value="Validator" />
                                                     </div>
-                                                    
+
                                                 </div>
                                             </div>
                                             <div className="row clearfix">
@@ -92,7 +96,7 @@ class CreateNetwork extends Component {
                                                         <label>Gas Price</label>
                                                         <input type="text" className="form-control" name="firstName" required disabled value="0" />
                                                     </div>
-                                                    
+
                                                 </div>
                                             </div>
                                         </div>
@@ -133,7 +137,7 @@ class CreateNetwork extends Component {
                                                     </div>
                                                 </div>
                                             </div>
-                                                
+
                                         </div>
                                         <br />
                                         {this.state.formSubmitError != '' &&
@@ -146,8 +150,18 @@ class CreateNetwork extends Component {
                                                 </div>
                                             </div>
                                         }
-                                        
-                                        <button type="submit" className="btn btn-success"><i className="fa fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;Create</button>
+
+                                        <LaddaButton
+                                            loading={this.state.loading}
+                                            data-size={S}
+                                            data-style={SLIDE_UP}
+                                            data-spinner-size={30}
+                                            data-spinner-lines={12}
+                                            className="btn btn-success"
+                                            type="submit"
+                                        >
+                                            <i className="fa fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;Create
+                                        </LaddaButton>
                                     </form>
                                 </div>
                             </div>

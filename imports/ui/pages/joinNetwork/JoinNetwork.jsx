@@ -10,12 +10,14 @@ import "./JoinNetwork.scss"
 class JoinNetwork extends Component {
     constructor() {
         super()
-        
-        this.state = { 
+
+        this.state = {
             joinFormSubmitError: "",
             inviteFormSubmitError: "",
             totalENodes: [""],
-            totalConstellationNodes: [""]
+            totalConstellationNodes: [""],
+            joinLoading: false,
+            inviteLoading: false
         };
     }
 
@@ -83,13 +85,15 @@ class JoinNetwork extends Component {
             var fileContent = evt.target.result;
 
             this.setState({
-                joinFormSubmitError: ''
+                joinFormSubmitError: '',
+                joinLoading: true
             });
 
             Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, (error) => {
                 if(!error) {
                     this.setState({
-                        joinFormSubmitError: ''
+                        joinFormSubmitError: '',
+                        joinLoading: false
                     });
 
                     this.props.history.push("/app");
@@ -97,6 +101,7 @@ class JoinNetwork extends Component {
                 } else {
                     this.setState({
                         joinFormSubmitError: error.reason,
+                        joinLoading: false
                     })
                 }
             });
@@ -107,18 +112,21 @@ class JoinNetwork extends Component {
                 joinFormSubmitError: 'An error occured while reading genesis file content'
             });
         }
-    }   
+    }
 
     onInviteSubmit = (e) => {
         e.preventDefault()
 
         this.setState({
-            inviteFormSubmitError: ''
+            inviteFormSubmitError: '',
+            inviteLoading: true
         });
+
         Meteor.call("inviteUserToNetwork", this.networkNameInvite.value, this.nodeTypeInvite.value, this.email.value, (error) => {
             if(!error) {
                 this.setState({
-                    inviteFormSubmitError: ''
+                    inviteFormSubmitError: '',
+                    inviteLoading: false
                 });
 
                 this.props.history.push("/app");
@@ -126,10 +134,11 @@ class JoinNetwork extends Component {
             } else {
                 this.setState({
                     inviteFormSubmitError: error.reason,
+                    inviteLoading: false
                 })
             }
         });
-    }   
+    }
 
 	render(){
 		return (
@@ -202,7 +211,7 @@ class JoinNetwork extends Component {
                                                                         <label>Gas Price</label>
                                                                         <input type="text" className="form-control" name="firstName" required disabled value="0" />
                                                                     </div>
-                                                                    
+
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -270,7 +279,7 @@ class JoinNetwork extends Component {
                                                                                                 <i className="fa fa-trash" aria-hidden="true"></i>
                                                                                             </div>
                                                                                         </div>
-                                                                                    </div>               
+                                                                                    </div>
                                                                                 )
                                                                             })}
                                                                             <div className="col-md-12 clearfix">
@@ -299,7 +308,7 @@ class JoinNetwork extends Component {
                                                                                                 <i className="fa fa-trash" aria-hidden="true"></i>
                                                                                             </div>
                                                                                         </div>
-                                                                                    </div>               
+                                                                                    </div>
                                                                                 )
                                                                             })}
                                                                             <div className="col-md-12 clearfix">
@@ -321,8 +330,18 @@ class JoinNetwork extends Component {
                                                                 </div>
                                                             </div>
                                                         }
-                                                        
-                                                        <button className="btn btn-success"><i className="fa fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;Join</button>
+
+                                                        <LaddaButton
+                                                            loading={this.state.joinLoading}
+                                                            data-size={S}
+                                                            data-style={SLIDE_UP}
+                                                            data-spinner-size={30}
+                                                            data-spinner-lines={12}
+                                                            className="btn btn-success"
+                                                            type="submit"
+                                                        >
+                                                            <i className="fa fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;Join
+                                                        </LaddaButton>
                                                     </form>
                                                 </div>
                                             </div>
@@ -394,11 +413,21 @@ class JoinNetwork extends Component {
                                                                 </div>
                                                             </div>
                                                         }
-                                                        
-                                                        <button className="btn btn-success"><i className="fa fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;Invite</button>
+
+                                                        <LaddaButton
+                                                            loading={this.state.inviteLoading}
+                                                            data-size={S}
+                                                            data-style={SLIDE_UP}
+                                                            data-spinner-size={30}
+                                                            data-spinner-lines={12}
+                                                            className="btn btn-success"
+                                                            type="submit"
+                                                        >
+                                                            <i className="fa fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;Invite
+                                                        </LaddaButton>
                                                     </form>
                                                 </div>
-                                            </div>    
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
