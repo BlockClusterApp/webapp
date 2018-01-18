@@ -7,7 +7,7 @@ function updateWorkerNodeIP() {
 		name: "workerNodeIP",
 	}, {
 		$set: {
-			"value": "54.149.176.42"
+			"value": "54.71.6.33"
 		}
 	});
 }
@@ -17,7 +17,7 @@ function updateKuberREST_IP() {
 		name: "kuberREST_IP",
 	}, {
 		$set: {
-			"value": "54.149.176.42"
+			"value": "34.208.153.18"
 		}
 	});
 }
