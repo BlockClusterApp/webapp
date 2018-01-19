@@ -4,6 +4,7 @@ var lightwallet = Npm.require("eth-lightwallet");
 import Web3 from "web3";
 var jsonminify = require("jsonminify");
 import helpers from "../imports/modules/helpers"
+import smartContracts from "../imports/modules/smart-contracts"
 
 Meteor.methods({
 	"createNetwork": function(networkName){
@@ -21,7 +22,9 @@ Meteor.methods({
 			"user": this.userId,
 			"createdOn": Date.now(),
 			"totalENodes": [],
-			"totalConstellationNodes": []
+			"totalConstellationNodes": [],
+			"accounts": [],
+			"accountsPassword": {}
 		}, function(error, id){
 			if(error) {
 				console.log(error);
@@ -171,10 +174,27 @@ spec:
 																		_id: id
 																	}, {
 																		$set: {
-																			currentValidators: result.result,
-																			"status": "running"
+																			currentValidators: result.result
 																		}
 																	})
+
+																	web3.eth.getAccounts(Meteor.bindEnvironment(function(error, result){
+																		if(error) {
+																			console.log(error);
+																			Networks.remove({_id: id});
+																			HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + id.toLowerCase())
+																			HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + id.toLowerCase())
+																		} else {
+																			Networks.update({
+																				_id: id
+																			}, {
+																				$set: {
+																					accounts: result,
+																					"status": "running"
+																				}
+																			})
+																		}
+																	}))
 																}
 															}))
 											            }
@@ -229,13 +249,14 @@ spec:
 			"createdOn": Date.now(),
 			"totalENodes": totalENodes,
 			"totalConstellationNodes": totalConstellationNodes,
-			"genesisBlock": genesisFileContent
+			"genesisBlock": genesisFileContent,
+			"accounts": [],
+			"accountsPassword": {}
 		}, function(error, id){
 			if(error) {
 				console.log(error);
 				myFuture.throw("An unknown error occured");
 			} else {
-
 				totalConstellationNodes = JSON.stringify(totalConstellationNodes).replace(/\"/g,'\\"').replace(/\"/g,'\\"').replace(/\"/g,'\\"')
 				totalENodes = JSON.stringify(totalENodes).replace(/\"/g,'\\"').replace(/\"/g,'\\"').replace(/\"/g,'\\"')
 				genesisFileContent = jsonminify(genesisFileContent.toString()).replace(/\"/g,'\\"')
@@ -413,9 +434,26 @@ spec:
 																	}, {
 																		$set: {
 																			currentValidators: result.result,
-																			"status": "running"
 																		}
 																	})
+
+																	web3.eth.getAccounts(Meteor.bindEnvironment(function(error, result){
+																		if(error) {
+																			console.log(error);
+																			Networks.remove({_id: id});
+																			HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + id.toLowerCase())
+																			HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + id.toLowerCase())
+																		} else {
+																			Networks.update({
+																				_id: id
+																			}, {
+																				$set: {
+																					accounts: result,
+																					"status": "running"
+																				}
+																			})
+																		}
+																	}))
 																}
 															}))
 											            }
@@ -470,6 +508,39 @@ spec:
 				console.log(error);
 				myFuture.throw("An unknown error occured");
 			} else {
+				myFuture.return();
+			}
+		}))
+
+		return myFuture.wait();
+	},
+	"createAccount": function(password, networkId){
+		var myFuture = new Future();
+		var network = Networks.find({_id: networkId}).fetch()[0];
+		var accountsPassword = network.accountsPassword;
+		var accounts = network.accounts;
+		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+		let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+		web3.currentProvider.sendAsync({
+		    method: "personal_newAccount",
+		    params: [password],
+		    jsonrpc: "2.0",
+		    id: new Date().getTime()
+		}, Meteor.bindEnvironment(function(error, result) {
+			if(error) {
+				console.log(error);
+				myFuture.throw("An unknown error occured");
+			} else {
+				accountsPassword[result.result] = password
+				accounts.push(result.result);
+				Networks.update({
+					_id: networkId
+				}, {
+					$set: {
+						accountsPassword: accountsPassword,
+						accounts: accounts
+					}
+				})
 				myFuture.return();
 			}
 		}))

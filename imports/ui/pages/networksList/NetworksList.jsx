@@ -5,9 +5,9 @@ import helpers from "../../../modules/helpers"
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
 import {withRouter} from 'react-router-dom'
 
-import "./Dashboard.scss"
+import "./NetworksList.scss"
 
-class Dashboard extends Component {
+class NetworksList extends Component {
     componentWillUnmount() {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
@@ -15,7 +15,7 @@ class Dashboard extends Component {
     }
 
     openNetwork = (networkId) => {
-        this.props.history.push("/app/network/" + networkId);
+        this.props.history.push("/app/networks/network/" + networkId);
     }
 
 	render(){
@@ -81,4 +81,4 @@ export default withTracker(() => {
         networks: Networks.find({}).fetch(),
         subscriptions: [Meteor.subscribe("networks")]
     }
-})(withRouter(Dashboard))
+})(withRouter(NetworksList))

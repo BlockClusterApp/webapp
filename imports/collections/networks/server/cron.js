@@ -7,7 +7,8 @@ function updateNodeStatus() {
 		var nodes = Networks.find({}).fetch()
 		nodes.forEach(function(item, index){
 			if(item.currentValidators !== undefined) {
-				HTTP.call("GET", "http://127.0.0.1:8000/apis/apps/v1beta2/namespaces/default/deployments/" + item.instanceId, function(error, response){
+				var kuberREST_IP = Utilities.find({"name": "kuberREST_IP"}).fetch()[0].value;
+				HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + item.instanceId, function(error, response){
 					if(error) {
 						Networks.update({
 							_id: item._id
@@ -69,4 +70,23 @@ function updateAuthoritiesList() {
 	}, 5000)
 }
 
-export {updateNodeStatus, updateAuthoritiesList}
+
+function unlockAccounts() {
+	Meteor.setInterval(function(){
+		var nodes = Networks.find({}).fetch()
+		nodes.forEach(function(item, index){
+			var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+			var web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + item.rpcNodePort));
+			for(var count = 0; count < item.accounts.length; count++) {
+				web3.currentProvider.sendAsync({
+				    method: "personal_unlockAccount",
+				    params: [item.accounts[count], item.accountsPassword[item.accounts[count]], 0],
+				    jsonrpc: "2.0",
+				    id: new Date().getTime()
+				}, Meteor.bindEnvironment(function(error, result) {}))
+			}
+		})
+	}, 5000)
+}
+
+export {updateNodeStatus, updateAuthoritiesList, unlockAccounts}

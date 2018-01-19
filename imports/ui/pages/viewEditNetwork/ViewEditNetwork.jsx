@@ -51,6 +51,18 @@ class ViewEditNetwork extends Component {
     	})
     }
 
+	createAccount = (e) => {
+		e.preventDefault();
+		Meteor.call("createAccount", this.accountPassword.value, this.props.network[0]._id, (error) => {
+			if(error) {
+				notifications.error("An error occured")
+			} else {
+				notifications.success("Account created")
+				this.accountPassword.value = "";
+			}
+		})
+	}
+
 	render(){
 		return (
 			<div className="content ">
@@ -203,6 +215,51 @@ class ViewEditNetwork extends Component {
 									}
 
 									<div className="form-group row">
+										<label className="col-md-3 control-label">Accounts</label>
+										<div className="col-md-9">
+											<form className="row form-horizontal">
+												<div className="col-md-3">
+													{
+							   							(() => {
+							       							if (this.props.network.length === 1) {
+							       								if(this.props.network[0].accounts > 0) {
+							       									return (
+							       										<select ref={(input) => {this.accountAddress = input;}}>
+							       											{this.props.network[0].accounts.map((item, index) => {
+										                                        return (
+										                                            <option key={item} value={item}>{item}</option>
+										                                        )
+										                                    })}
+							       										</select>
+							       									)
+							       								} else {
+																	return (
+																		<select ref={(input) => {this.accountAddress = input;}}>
+																			<option>No Accounts</option>
+																		</select>
+																	)
+																}
+							       							} else {
+																return (
+																	<select ref={(input) => {this.accountAddress = input;}}>
+																		<option>Accounts Loading</option>
+																	</select>
+																)
+															}
+							       						})()
+							   						}
+												</div>
+												<div className="col-md-3">
+													<input type="password" className="form-control" required placeholder="New Account Password" ref={(input) => {this.accountPassword = input;}} />
+												</div>
+												<div className="col-md-6">
+													<button className="btn btn-complete btn-cons" onClick={this.createAccount}><i className="fa fa-plus" aria-hidden="true"></i>&nbsp;Create</button>
+												</div>
+											</form>
+										</div>
+									</div>
+
+									<div className="form-group row">
 			                            <div className="col-md-3">
 			                                <p>You can download and share the genesis block for other's to connect to this network. </p>
 			                            </div>
@@ -212,24 +269,10 @@ class ViewEditNetwork extends Component {
 			                                		if(this.props.network[0].genesisBlock !== undefined) {
 			                                			helpers.downloadString(this.props.network[0].genesisBlock, "application/json", "genesis.json")
 			                                		} else {
-			                                			$("body").pgNotification({
-										                    style: "circle",
-										                    message: "Genesis file not ready for download",
-										                    position: "bottom-right",
-										                    timeout: 5000,
-										                    type: "success",
-										                    thumbnail: '<img width="40" height="40" style="display: inline-block;" src="/assets/img/icons/profile.png" alt="">'
-										                }).show();
+														notifications.success("Genesis file not ready for download")
 			                                		}
 			                                	} else {
-		                                			$("body").pgNotification({
-									                    style: "circle",
-									                    message: "Genesis file not ready for download",
-									                    position: "bottom-right",
-									                    timeout: 5000,
-									                    type: "success",
-									                    thumbnail: '<img width="40" height="40" style="display: inline-block;" src="/assets/img/icons/profile.png" alt="">'
-									                }).show();
+													notifications.error("Genesis file not ready for download")
 		                                		}
 			                                }}><i className="fa fa-download" aria-hidden="true"></i>&nbsp;Download Genesis File</button>
 			                            </div>
@@ -369,7 +412,7 @@ export default withTracker(function(props) {
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
         		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
-        			props.history.push("/app");
+        			props.history.push("/app/networks");
         		}
         	}
         }), Meteor.subscribe("utilities")]

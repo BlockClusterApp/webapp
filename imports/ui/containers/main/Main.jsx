@@ -7,23 +7,25 @@ import Navbar from "../../components/navbar/Navbar.jsx"
 import Header from "../../components/header/Header.jsx"
 import Footer from "../../components/footer/Footer.jsx"
 
-import Dashboard from "../../pages/dashboard/Dashboard.jsx"
+import NetworksList from "../../pages/networksList/NetworksList.jsx"
 import CreateNetwork from "../../pages/createNetwork/CreateNetwork.jsx"
 import JoinNetwork from "../../pages/joinNetwork/JoinNetwork.jsx"
 import ViewEditNetwork from "../../pages/viewEditNetwork/ViewEditNetwork.jsx"
+import Assets from "../../pages/assets/Assets.jsx"
 
-export default class AuthorizedRoute extends Component {
+export default class Main extends Component {
 	render(){
 		return (
-			<div className="fixed-header menu-pin menu-behind">
+			<div>
 				<Navbar />
 				<div className="page-container">
 					<Header />
 					<div className="page-content-wrapper ">
-                    	<Route exact path="/app" component={Dashboard} />
-						<Route exact path="/app/create" component={CreateNetwork} />
-						<Route exact path="/app/network/:id" component={ViewEditNetwork} />
-						<Route exact path="/app/join" component={JoinNetwork} />
+                    	<Route exact path="/app/networks" component={NetworksList} />
+						<Route exact path="/app/networks/create" component={CreateNetwork} />
+						<Route exact path="/app/networks/network/:id" component={ViewEditNetwork} />
+						<Route exact path="/app/networks/join" component={JoinNetwork} />
+						<Route exact path="/app/assets" component={Assets} />
 		            </div>
 				</div>
 				<Footer />

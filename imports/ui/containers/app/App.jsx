@@ -19,7 +19,7 @@ class App extends Component {
 				) : (
 				    <Redirect to="/" />
 				)
-			)	
+			)
 		}
 	}
 
@@ -27,11 +27,11 @@ class App extends Component {
 		return () => {
 			return (
 				this.props.userId ? (
-				    <Redirect to="/app" />
+				    <Redirect to="/app/networks" />
 				) : (
 				    <RouteComponent />
 				)
-			)	
+			)
 		}
 	}
 
@@ -85,4 +85,3 @@ this.setState({
     formSubmitError: ''
 });
 */
-

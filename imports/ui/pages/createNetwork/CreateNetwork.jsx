@@ -28,7 +28,7 @@ class CreateNetwork extends Component {
                     formSubmitError: ''
                 });
 
-                this.props.history.push("/app");
+                this.props.history.push("/app/networks");
                 notifications.success("Initializing node")
             } else {
                 this.setState({

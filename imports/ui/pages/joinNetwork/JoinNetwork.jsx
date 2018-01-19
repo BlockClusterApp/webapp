@@ -96,7 +96,7 @@ class JoinNetwork extends Component {
                         joinLoading: false
                     });
 
-                    this.props.history.push("/app");
+                    this.props.history.push("/app/networks");
                     notifications.success("Initializing node")
                 } else {
                     this.setState({
@@ -129,7 +129,7 @@ class JoinNetwork extends Component {
                     inviteLoading: false
                 });
 
-                this.props.history.push("/app");
+                this.props.history.push("/app/networks");
                 notifications.success("Invited Successfully")
             } else {
                 this.setState({
