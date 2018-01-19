@@ -3,7 +3,7 @@ import {Meteor} from "meteor/meteor";
 import {BrowserRouter, Route, Switch, Redirect} from "react-router-dom"
 import {withTracker} from "meteor/react-meteor-data";
 
-import Main from "../main/Main.jsx"
+import Networks from "../networks/Networks.jsx"
 
 import Login from "../../pages/login/Login.jsx"
 import Register from "../../pages/register/Register.jsx"
@@ -19,7 +19,7 @@ class App extends Component {
 				) : (
 				    <Redirect to="/" />
 				)
-			)	
+			)
 		}
 	}
 
@@ -27,11 +27,11 @@ class App extends Component {
 		return () => {
 			return (
 				this.props.userId ? (
-				    <Redirect to="/app" />
+				    <Redirect to="/networks" />
 				) : (
 				    <RouteComponent />
 				)
-			)	
+			)
 		}
 	}
 
@@ -41,7 +41,7 @@ class App extends Component {
 				<Switch>
 					<Route exact path="/" render={this.requireNotLoggedIn(Login)} />
 					<Route exact path="/register" render={this.requireNotLoggedIn(Register)} />
-					<Route path="/app" render={this.requireAuth(Main)} />
+					<Route path="/networks" render={this.requireAuth(Networks)} />
 					{/*<Route component={Notfound} />*/}
 				</Switch>
 			</BrowserRouter>
@@ -85,4 +85,3 @@ this.setState({
     formSubmitError: ''
 });
 */
-

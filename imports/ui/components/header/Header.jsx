@@ -19,10 +19,10 @@ class Navbar extends Component {
                     </div>
                     <ul className="hidden-md-down notification-list no-margin hidden-sm-down b-grey b-l no-style p-l-30 p-r-20">
                         <li className="p-r-10 inline">
-                            <Link to={"/app/create"} className="header-icon fa fa-plus"></Link>
+                            <Link to={"/networks/create"} className="header-icon fa fa-plus"></Link>
                         </li>
                         <li className="p-r-10 inline">
-                            <Link to={"/app/join"} className="header-icon fa fa-group"></Link>
+                            <Link to={"/networks/join"} className="header-icon fa fa-group"></Link>
                         </li>
                         <li className="p-r-10 inline">
                             <a href="#" className="header-icon fa fa-book"></a>
