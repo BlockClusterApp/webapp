@@ -47,8 +47,8 @@ class Navbar extends Component {
 	            <div className="sidebar-menu">
 	                <ul className="menu-items">
 	                    <li className="m-t-30 ">
-	                    	<Link to={"/networks"} className="detailed">
-	                    		<span className="title">Networks</span>
+	                    	<Link to={"/app"} className="detailed">
+	                    		<span className="title">Dashboard</span>
 	                        	<span className="details">List of Nodes</span>
 	                    	</Link>
 	                        <span className="icon-thumbnail"><i className="fa fa-list"></i></span>
@@ -61,10 +61,10 @@ class Navbar extends Component {
 	                        <span className="icon-thumbnail"><i className="fa fa-globe"></i></span>
 	                    </li>
 	                    <li className="">
-							<Link to={"/assets"} className="detailed">
-	                    		<span className="title">Assets</span>
-	                        	<span className="details">Create and Transfe</span>
-	                    	</Link>
+	                        <a href="email.html" className="detailed">
+	                        <span className="title">Assets</span>
+	                        <span className="details">Create and Transfer</span>
+	                        </a>
 	                        <span className="icon-thumbnail"><i className="pg-note"></i></span>
 	                    </li>
 	                    {(this.props.kuberREST_IP[0] !== undefined) &&
