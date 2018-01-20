@@ -14,10 +14,6 @@ class Assets extends Component {
         });
     }
 
-    openNetwork = (networkId) => {
-        this.props.history.push("/app/networks/network/" + networkId);
-    }
-
 	render(){
 		return (
             <div className="content ">
@@ -45,22 +41,191 @@ class Assets extends Component {
                                                 <div className="tab-content bg-white">
                                                     {this.props.networks.map((item, index) => {
                                                         return (
-                                                            <div className={index === 0 ? "tab-pane active" : "tab-pane "} id={"#" + item.instanceId}>
-                                                                <div className="row column-seperation">
-                                                                    <div className="col-lg-6">
-                                                                        <h3>
-                                                                            1
-                                                                            <span className="semi-bold">Sometimes </span>Small things in life
-                                                                            means the most
-                                                                        </h3>
+                                                            <div key={index}>
+                                                                {item.assetsContractAddress === '' &&
+                                                                    <div className={index === 0 ? "tab-pane active" : "tab-pane "} id={"#" + item.instanceId}>
+                                                                        <div className="row column-seperation">
+                                                                            <div className="col-lg-6">
+                                                                                <div className="card-group horizontal" id="accordion" role="tablist" aria-multiselectable="true">
+                                                                                    <div className="card card-default m-b-0">
+                                                                                        <div className="card-header " role="tab" id="headingOne">
+                                                                                            <h4 className="card-title">
+                                                                                                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                                                                                Collapsible Group Item
+                                                                                                </a>
+                                                                                            </h4>
+                                                                                        </div>
+                                                                                        <div id="collapseOne" className="collapse show" role="tabcard" aria-labelledby="headingOne">
+                                                                                            <div className="card-block">
+                                                                                                Click headers to expand/collapse content that is broken into logical sections, much like tabs. Optionally, toggle sections open/closed on mouseover.
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div className="card card-default m-b-0">
+                                                                                        <div className="card-header " role="tab" id="headingTwo">
+                                                                                            <h4 className="card-title">
+                                                                                                <a className="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                                                                                Typography Variables
+                                                                                                </a>
+                                                                                            </h4>
+                                                                                        </div>
+                                                                                        <div id="collapseTwo" className="collapse" role="tabcard" aria-labelledby="headingTwo">
+                                                                                            <div className="card-block">
+                                                                                                <h1 className="light">
+                                                                                                    go explore the <span className="semi-bold">world</span>
+                                                                                                </h1>
+                                                                                                <h4>
+                                                                                                    small things in life matters the most
+                                                                                                </h4>
+                                                                                                <h2>
+                                                                                                    Big Heading <span className="semi-bold">Body</span>,
+                                                                                                    <i>Variations</i>
+                                                                                                </h2>
+                                                                                                <h4>
+                                                                                                    <span className="semi-bold">Open Me</span>, Light , <span className=
+                                                                                                        "semi-bold">Bold</span>, <i>Everything</i>
+                                                                                                </h4>
+                                                                                                <p>
+                                                                                                    is the art and technique of arranging type in order to make language visible. The arrangement of type involves the selection of typefaces, point size, line length, leading (line spacing), adjusting the spaces between groups of letters (tracking)
+                                                                                                </p>
+                                                                                                <p>
+                                                                                                    and adjusting the Case space between pairs of letters (kerning). Type design is a closely related craft, which some consider distinct and others a part of typography
+                                                                                                </p>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div className="card card-default m-b-0">
+                                                                                        <div className="card-header " role="tab" id="headingThree">
+                                                                                            <h4 className="card-title">
+                                                                                                <a className="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                                                                                Easy Edit
+                                                                                                </a>
+                                                                                            </h4>
+                                                                                        </div>
+                                                                                        <div id="collapseThree" className="collapse" role="tabcard" aria-labelledby="headingThree">
+                                                                                            <div className="card-block">
+                                                                                                Click headers to expand/collapse content that is broken into logical sections, much like tabs. Optionally, toggle sections open/closed on mouseover.
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="col-lg-6">
+                                                                                <h3 className="semi-bold">
+                                                                                    great tabs
+                                                                                </h3>
+                                                                                <p>Native boostrap tabs customized to Pages look and feel, simply changing class name you can change color as well as its animations</p>
+                                                                            </div>
+                                                                        </div>
                                                                     </div>
-                                                                    <div className="col-lg-6">
-                                                                        <h3 className="semi-bold">
-                                                                            great tabs
-                                                                        </h3>
-                                                                        <p>Native boostrap tabs customized to Pages look and feel, simply changing class name you can change color as well as its animations</p>
+                                                                }
+                                                                {(item.assetsContractAddress !== undefined && item.assetsContractAddress !== '') &&
+                                                                    <div className={index === 0 ? "tab-pane active" : "tab-pane "} id={"#" + item.instanceId}>
+                                                                        <div className="container">
+                                                                            <div className="row column-seperation">
+                                                                                <div className="col-lg-5">
+                                                                                    <div className="card-group horizontal" id="accordion" role="tablist" aria-multiselectable="true">
+                                                                                        <div className="card card-default m-b-0">
+                                                                                            <div className="card-header " role="tab" id="headingOne">
+                                                                                                <h4 className="card-title">
+                                                                                                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                                                                                    Add Asset Type
+                                                                                                    </a>
+                                                                                                </h4>
+                                                                                            </div>
+                                                                                            <div id="collapseOne" className="collapse show" role="tabcard" aria-labelledby="headingOne">
+                                                                                                <div className="card-block">
+                                                                                                    Click headers to expand/collapse content that is broken into logical sections, much like tabs. Optionally, toggle sections open/closed on mouseover.
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div className="card card-default m-b-0">
+                                                                                            <div className="card-header " role="tab" id="headingTwo">
+                                                                                                <h4 className="card-title">
+                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                                                                                    Issue Bulk Asset
+                                                                                                    </a>
+                                                                                                </h4>
+                                                                                            </div>
+                                                                                            <div id="collapseTwo" className="collapse" role="tabcard" aria-labelledby="headingTwo">
+                                                                                                <div className="card-block">
+                                                                                                    <h1 className="light">
+                                                                                                        go explore the <span className="semi-bold">world</span>
+                                                                                                    </h1>
+                                                                                                    <h4>
+                                                                                                        small things in life matters the most
+                                                                                                    </h4>
+                                                                                                    <h2>
+                                                                                                        Big Heading <span className="semi-bold">Body</span>,
+                                                                                                        <i>Variations</i>
+                                                                                                    </h2>
+                                                                                                    <h4>
+                                                                                                        <span className="semi-bold">Open Me</span>, Light , <span className=
+                                                                                                            "semi-bold">Bold</span>, <i>Everything</i>
+                                                                                                    </h4>
+                                                                                                    <p>
+                                                                                                        is the art and technique of arranging type in order to make language visible. The arrangement of type involves the selection of typefaces, point size, line length, leading (line spacing), adjusting the spaces between groups of letters (tracking)
+                                                                                                    </p>
+                                                                                                    <p>
+                                                                                                        and adjusting the Case space between pairs of letters (kerning). Type design is a closely related craft, which some consider distinct and others a part of typography
+                                                                                                    </p>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div className="card card-default m-b-0">
+                                                                                            <div className="card-header " role="tab" id="headingThree">
+                                                                                                <h4 className="card-title">
+                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                                                                                    Issue Solo Asset
+                                                                                                    </a>
+                                                                                                </h4>
+                                                                                            </div>
+                                                                                            <div id="collapseThree" className="collapse" role="tabcard" aria-labelledby="headingThree">
+                                                                                                <div className="card-block">
+                                                                                                    Click headers to expand/collapse content that is broken into logical sections, much like tabs. Optionally, toggle sections open/closed on mouseover.
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div className="col-lg-7">
+                                                                                    <div className="table-responsive">
+                                                                                        <table className="table table-hover" id="basicTable">
+                                                                                            <thead>
+                                                                                                <tr>
+                                                                                                    <th style={{width: "25%"}}>Asset Name</th>
+                                                                                                    <th style={{width: "25%"}}>Asset Type</th>
+                                                                                                    <th style={{width: "25%"}}>Total Units</th>
+                                                                                                    <th style={{width: "25%"}}>Issuer</th>
+                                                                                                </tr>
+                                                                                            </thead>
+                                                                                            <tbody>
+                                                                                                {this.props.networks.map((item, index) => {
+                                                                                                    return (
+                                                                                                        <tr key={item._id}>
+                                                                                                            <td className="v-align-middle ">
+                                                                                                                License
+                                                                                                            </td>
+                                                                                                            <td className="v-align-middle">
+                                                                                                                Solo
+                                                                                                            </td>
+                                                                                                            <td className="v-align-middle">
+                                                                                                                12312
+                                                                                                            </td>
+                                                                                                            <td className="v-align-middle">
+                                                                                                                0x78348937498327
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                    )
+                                                                                                })}
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
                                                                     </div>
-                                                                </div>
+                                                                }
                                                             </div>
                                                         )
                                                     })}

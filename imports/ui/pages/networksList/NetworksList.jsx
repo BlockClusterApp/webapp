@@ -32,39 +32,39 @@ class NetworksList extends Component {
                                 <div className="card-block">
                                     <div className="table-responsive">
                                         <table className="table table-hover" id="basicTable">
-                                        <thead>
-                                            <tr>
-                                                <th style={{width: "20%"}}>Name</th>
-                                                <th style={{width: "20%"}}>Instance ID</th>
-                                                <th style={{width: "20%"}}>Member Type</th>
-                                                <th style={{width: "20%"}}>Status</th>
-                                                <th style={{width: "20%"}}>Created on</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {this.props.networks.map((item, index) => {
-                                                return (
-                                                    <tr key={item._id} onClick={() => this.openNetwork(item._id)}>
-                                                        <td className="v-align-middle ">
-                                                            {item.name}
-                                                        </td>
-                                                        <td className="v-align-middle">
-                                                            {item.instanceId}
-                                                        </td>
-                                                        <td className="v-align-middle">
-                                                            {helpers.firstLetterCapital(item.peerType)}
-                                                        </td>
-                                                        <td className="v-align-middle">
-                                                            {ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}
-                                                        </td>
-                                                        <td className="v-align-middle">
-                                                            {helpers.timeConverter(item.createdOn / 1000)}
-                                                        </td>
-                                                    </tr>
-                                                )
-                                            })}
-                                        </tbody>
-                                    </table>
+                                            <thead>
+                                                <tr>
+                                                    <th style={{width: "20%"}}>Name</th>
+                                                    <th style={{width: "20%"}}>Instance ID</th>
+                                                    <th style={{width: "20%"}}>Member Type</th>
+                                                    <th style={{width: "20%"}}>Status</th>
+                                                    <th style={{width: "20%"}}>Created on</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {this.props.networks.map((item, index) => {
+                                                    return (
+                                                        <tr key={item._id} onClick={() => this.openNetwork(item._id)}>
+                                                            <td className="v-align-middle ">
+                                                                {item.name}
+                                                            </td>
+                                                            <td className="v-align-middle">
+                                                                {item.instanceId}
+                                                            </td>
+                                                            <td className="v-align-middle">
+                                                                {helpers.firstLetterCapital(item.peerType)}
+                                                            </td>
+                                                            <td className="v-align-middle">
+                                                                {ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}
+                                                            </td>
+                                                            <td className="v-align-middle">
+                                                                {helpers.timeConverter(item.createdOn / 1000)}
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                })}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
