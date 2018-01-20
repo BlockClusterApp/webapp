@@ -21,7 +21,7 @@ class ViewEditNetwork extends Component {
     		if(error) {
     			notifications.error("An error occured")
     		} else {
-    			this.props.history.push("/app");
+    			this.props.history.push("/app/networks");
     			notifications.success("Network deleted successful")
     		}
     	})
@@ -218,41 +218,41 @@ class ViewEditNetwork extends Component {
 										<label className="col-md-3 control-label">Accounts</label>
 										<div className="col-md-9">
 											<form className="row form-horizontal">
-												<div className="col-md-3">
+												<div className="col-md-12">
 													{
 							   							(() => {
 							       							if (this.props.network.length === 1) {
-							       								if(this.props.network[0].accounts > 0) {
+							       								if(this.props.network[0].accounts.length > 0) {
 							       									return (
-							       										<select ref={(input) => {this.accountAddress = input;}}>
+							       										<ul ref={(input) => {this.accountAddress = input;}}>
 							       											{this.props.network[0].accounts.map((item, index) => {
 										                                        return (
-										                                            <option key={item} value={item}>{item}</option>
+										                                            <li key={item}>{item}</li>
 										                                        )
 										                                    })}
-							       										</select>
+							       										</ul>
 							       									)
 							       								} else {
 																	return (
-																		<select ref={(input) => {this.accountAddress = input;}}>
-																			<option>No Accounts</option>
-																		</select>
+																		<span className="value-valign-middle">No Accounts</span>
 																	)
 																}
-							       							} else {
-																return (
-																	<select ref={(input) => {this.accountAddress = input;}}>
-																		<option>Accounts Loading</option>
-																	</select>
-																)
-															}
+							       							}
 							       						})()
 							   						}
 												</div>
-												<div className="col-md-3">
+											</form>
+										</div>
+									</div>
+
+									<div className="form-group row">
+										<label className="col-md-3 control-label">Create Account</label>
+										<div className="col-md-9">
+											<form className="row form-horizontal">
+												<div className="col-md-4">
 													<input type="password" className="form-control" required placeholder="New Account Password" ref={(input) => {this.accountPassword = input;}} />
 												</div>
-												<div className="col-md-6">
+												<div className="col-md-8">
 													<button className="btn btn-complete btn-cons" onClick={this.createAccount}><i className="fa fa-plus" aria-hidden="true"></i>&nbsp;Create</button>
 												</div>
 											</form>

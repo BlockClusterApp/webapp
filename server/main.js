@@ -216,6 +216,7 @@ spec:
 	"deleteNetwork": function(id){
 		var myFuture = new Future();
 		var kuberREST_IP = Utilities.find({"name": "kuberREST_IP"}).fetch()[0].value;
+
 		HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + id, function(error, response){
 			if(error) {
 				console.log(error);
@@ -226,13 +227,41 @@ spec:
 						console.log(error);
 						myFuture.throw("An unknown error occured");
 					} else {
-						Networks.remove({instanceId: id});
-						myFuture.return();
+						HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + id), function(error, response){
+							if(error) {
+								console.log(error);
+								myFuture.throw("An unknown error occured");
+							} else {
+								HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){
+									if(error) {
+										console.log(error);
+										myFuture.throw("An unknown error occured");
+									} else {
+										HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + id), function(error, response){
+											if(error) {
+												console.log(error);
+												myFuture.throw("An unknown error occured");
+											} else {
+												HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){
+													if(error) {
+														console.log(error);
+														myFuture.throw("An unknown error occured");
+													} else {
+														Networks.remove({instanceId: id});
+														myFuture.return();
+													}
+												})
+											}
+										})
+									}
+								})
+							}
+						})
 					}
 				})
 			}
 		})
-
+		
 		return myFuture.wait();
 	},
 	"joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, userId) {
