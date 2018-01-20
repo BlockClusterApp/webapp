@@ -6,7 +6,7 @@ function updateNodeStatus() {
 	Meteor.setInterval(function(){
 		var nodes = Networks.find({}).fetch()
 		nodes.forEach(function(item, index){
-			if(item.currentValidators !== undefined) {
+			if(item.status !== "initializing") {
 				var kuberREST_IP = Utilities.find({"name": "kuberREST_IP"}).fetch()[0].value;
 				HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + item.instanceId, function(error, response){
 					if(error) {

@@ -222,20 +222,22 @@ class ViewEditNetwork extends Component {
 													{
 							   							(() => {
 							       							if (this.props.network.length === 1) {
-							       								if(this.props.network[0].accounts.length > 0) {
-							       									return (
-							       										<ul ref={(input) => {this.accountAddress = input;}}>
-							       											{this.props.network[0].accounts.map((item, index) => {
-										                                        return (
-										                                            <li key={item}>{item}</li>
-										                                        )
-										                                    })}
-							       										</ul>
-							       									)
-							       								} else {
-																	return (
-																		<span className="value-valign-middle">No Accounts</span>
-																	)
+																if(this.props.network[0].accounts !== undefined) {
+																	if(this.props.network[0].accounts.length > 0) {
+								       									return (
+								       										<ul ref={(input) => {this.accountAddress = input;}}>
+								       											{this.props.network[0].accounts.map((item, index) => {
+											                                        return (
+											                                            <li key={item}>{item}</li>
+											                                        )
+											                                    })}
+								       										</ul>
+								       									)
+								       								} else {
+																		return (
+																			<span className="value-valign-middle">No Accounts</span>
+																		)
+																	}
 																}
 							       							}
 							       						})()
@@ -256,6 +258,33 @@ class ViewEditNetwork extends Component {
 													<button className="btn btn-complete btn-cons" onClick={this.createAccount}><i className="fa fa-plus" aria-hidden="true"></i>&nbsp;Create</button>
 												</div>
 											</form>
+										</div>
+									</div>
+
+									<div className="form-group row">
+										<label className="col-md-3 control-label">Assets Smart Contracts</label>
+										<div className="col-md-9">
+											<span className="value-valign-middle">
+												{
+													(() => {
+														if (this.props.network.length === 1) {
+															if(typeof this.props.network[0].assetsContractAddress === undefined ) {
+																return (
+																	""
+																)
+															} else if (this.props.network[0].assetsContractAddress !== "") {
+																return (
+																	this.props.network[0].assetsContractAddress
+																)
+															} else {
+																return (
+																	"Not Found"
+																)
+															}
+														}
+													})()
+												}
+											</span>
 										</div>
 									</div>
 

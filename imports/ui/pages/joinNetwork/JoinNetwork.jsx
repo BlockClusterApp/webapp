@@ -89,7 +89,7 @@ class JoinNetwork extends Component {
                 joinLoading: true
             });
 
-            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, (error) => {
+            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, this.assetsContractAddress.value, (error) => {
                 if(!error) {
                     this.setState({
                         joinFormSubmitError: '',
@@ -211,7 +211,6 @@ class JoinNetwork extends Component {
                                                                         <label>Gas Price</label>
                                                                         <input type="text" className="form-control" name="firstName" required disabled value="0" />
                                                                     </div>
-
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -249,6 +248,14 @@ class JoinNetwork extends Component {
                                                                         <div className="input-group-addon">
                                                                             S
                                                                         </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="row clearfix">
+                                                                <div className="col-md-12">
+                                                                    <div className="form-group form-group-default ">
+                                                                        <label>Assets Contract Address</label>
+                                                                        <input type="text" className="form-control" name="assetsContractAddress" ref={(input) => {this.assetsContractAddress = input;}} placeholder="0x...." />
                                                                     </div>
                                                                 </div>
                                                             </div>

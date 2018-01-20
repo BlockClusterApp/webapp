@@ -9,10 +9,31 @@ import smartContracts from "../imports/modules/smart-contracts"
 Meteor.methods({
 	"createNetwork": function(networkName){
 		var myFuture = new Future();
-
 		var kuberREST_IP = Utilities.find({"name": "kuberREST_IP"}).fetch()[0].value;
-
 		var instanceId = helpers.instanceIDGenerate();
+
+		function deleteNetwork(id) {
+			HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + id, function(error, response){});
+			HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + id, function(error, response){});
+			HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + id), function(error, response){
+				if(!error) {
+					if(JSON.parse(response.content).items.length > 0) {
+						HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){
+							HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + id), function(error, response){
+								if(!error) {
+									if(JSON.parse(response.content).items.length > 0) {
+										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){})
+									}
+								}
+							})
+						})
+					}
+				}
+			})
+
+			Networks.remove({_id: id});
+		}
+
 		Networks.insert({
 			"instanceId": instanceId,
 			"name": networkName,
@@ -22,9 +43,7 @@ Meteor.methods({
 			"user": this.userId,
 			"createdOn": Date.now(),
 			"totalENodes": [],
-			"totalConstellationNodes": [],
-			"accounts": [],
-			"accountsPassword": {}
+			"totalConstellationNodes": []
 		}, function(error, id){
 			if(error) {
 				console.log(error);
@@ -61,7 +80,7 @@ spec:
 				}, function(error, response) {
 					if(error) {
 						console.log(error);
-						Networks.remove({_id: id});
+						deleteNetwork(id)
 					} else {
 						HTTP.call("POST", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services`, {
 							"content": `kind: Service
@@ -87,15 +106,12 @@ spec:
 						}, function(error, response){
 							if(error) {
 								console.log(error);
-								Networks.remove({_id: id});
-								HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
+								deleteNetwork(id)
 							} else {
 								HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, {}, function(error, response){
 									if(error) {
 										console.log(error);
-										Networks.remove({_id: id});
-										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
-										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
+										deleteNetwork(id)
 									} else {
 										let rpcNodePort = response.data.spec.ports[0].nodePort
 										Networks.update({
@@ -121,9 +137,7 @@ spec:
 											HTTP.call("GET", `http://` + workerNodeIP + ":" + response.data.spec.ports[3].nodePort, function(error, response){
 												if(error) {
 													console.log(error);
-													Networks.remove({_id: id});
-													HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
-													HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
+													deleteNetwork(id)
 												} else {
 													var data = JSON.parse(response.content);
 													Networks.update({
@@ -146,9 +160,7 @@ spec:
 											        }, Meteor.bindEnvironment(function(error, result) {
 											            if(error) {
 															console.log(error);
-											            	Networks.remove({_id: id});
-															HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
-															HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
+											            	deleteNetwork(id)
 											            } else {
 											            	Networks.update({
 																_id: id
@@ -166,9 +178,7 @@ spec:
 															}, Meteor.bindEnvironment(function(error, result) {
 																if(error) {
 																	console.log(error);
-																	Networks.remove({_id: id});
-																	HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + id.toLowerCase())
-																	HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + id.toLowerCase())
+																	deleteNetwork(id)
 																} else {
 																	Networks.update({
 																		_id: id
@@ -178,21 +188,63 @@ spec:
 																		}
 																	})
 
-																	web3.eth.getAccounts(Meteor.bindEnvironment(function(error, result){
+																	web3.currentProvider.sendAsync({
+																		method: "personal_newAccount",
+																		params: [""],
+																		jsonrpc: "2.0",
+																		id: new Date().getTime()
+																	}, Meteor.bindEnvironment(function(error, result) {
 																		if(error) {
 																			console.log(error);
-																			Networks.remove({_id: id});
-																			HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + id.toLowerCase())
-																			HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + id.toLowerCase())
+																			deleteNetwork(id)
 																		} else {
+																			let accountsPassword = {};
+																			let accounts = [];
+																			accountsPassword[result.result] = ""
+																			accounts.push(result.result);
 																			Networks.update({
 																				_id: id
 																			}, {
 																				$set: {
-																					accounts: result,
-																					"status": "running"
+																					accountsPassword: {accountsPassword},
+																					accounts: accounts
 																				}
 																			})
+
+																			web3.currentProvider.sendAsync({
+																			    method: "personal_unlockAccount",
+																			    params: [result.result, "", 0],
+																			    jsonrpc: "2.0",
+																			    id: new Date().getTime()
+																			}, Meteor.bindEnvironment(function(error, result) {
+																				if(error) {
+																					console.log(error);
+																					deleteNetwork(id)
+																				} else {
+																					var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+																					var assets = assetsContract.new({
+																						from: web3.eth.accounts[0],
+																						data: smartContracts.assets.bytecode,
+																						gas: '4700000'
+																					}, Meteor.bindEnvironment(function(error, contract){
+																						if(error) {
+																							console.log(error);
+																							deleteNetwork(id)
+																						} else {
+																							if (typeof contract.address !== 'undefined') {
+																								Networks.update({
+																									_id: id
+																								}, {
+																									$set: {
+																										"status": "running",
+																										"assetsContractAddress": contract.address
+																									}
+																								})
+																							}
+																						}
+																					}))
+																				}
+																			}))
 																		}
 																	}))
 																}
@@ -227,22 +279,22 @@ spec:
 						console.log(error);
 						myFuture.throw("An unknown error occured");
 					} else {
-						HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + id), function(error, response){
+						HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + id), function(error, response){
 							if(error) {
 								console.log(error);
 								myFuture.throw("An unknown error occured");
 							} else {
-								HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){
+								HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){
 									if(error) {
 										console.log(error);
 										myFuture.throw("An unknown error occured");
 									} else {
-										HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + id), function(error, response){
+										HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + id), function(error, response){
 											if(error) {
 												console.log(error);
 												myFuture.throw("An unknown error occured");
 											} else {
-												HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){
+												HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){
 													if(error) {
 														console.log(error);
 														myFuture.throw("An unknown error occured");
@@ -261,13 +313,35 @@ spec:
 				})
 			}
 		})
-		
+
 		return myFuture.wait();
 	},
-	"joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, userId) {
+	"joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, userId) {
 		var myFuture = new Future();
 		var instanceId = helpers.instanceIDGenerate();
 		var kuberREST_IP = Utilities.find({"name": "kuberREST_IP"}).fetch()[0].value;
+
+		function deleteNetwork(id) {
+			HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + id, function(error, response){});
+			HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + id, function(error, response){});
+			HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + id), function(error, response){
+				if(!error) {
+					if(JSON.parse(response.content).items.length > 0) {
+						HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){
+							HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + id), function(error, response){
+								if(!error) {
+									if(JSON.parse(response.content).items.length > 0) {
+										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){})
+									}
+								}
+							})
+						})
+					}
+				}
+			})
+			Networks.remove({_id: id});
+		}
+
 		Networks.insert({
 			"instanceId": instanceId,
 			"name": networkName,
@@ -280,7 +354,8 @@ spec:
 			"totalConstellationNodes": totalConstellationNodes,
 			"genesisBlock": genesisFileContent,
 			"accounts": [],
-			"accountsPassword": {}
+			"accountsPassword": {},
+			"assetsContractAddress": assetsContractAddress
 		}, function(error, id){
 			if(error) {
 				console.log(error);
@@ -350,7 +425,7 @@ spec:
 				}, function(error, response) {
 					if(error) {
 						console.log(error);
-						Networks.remove({_id: id});
+						deleteNetwork(id)
 					} else {
 						HTTP.call("POST", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services`, {
 							"content": `kind: Service
@@ -376,15 +451,12 @@ spec:
 						}, function(error, response){
 							if(error) {
 								console.log(error);
-								Networks.remove({_id: id});
-								HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
+								deleteNetwork(id)
 							} else {
 								HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, {}, function(error, response){
 									if(error) {
 										console.log(error);
-										Networks.remove({_id: id});
-										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
-										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
+										deleteNetwork(id)
 									} else {
 										let rpcNodePort = response.data.spec.ports[0].nodePort
 										Networks.update({
@@ -410,9 +482,7 @@ spec:
 											HTTP.call("GET", "http://" + workerNodeIP + ":" + response.data.spec.ports[3].nodePort, function(error, response){
 												if(error) {
 													console.log(error);
-													Networks.remove({_id: id});
-													HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
-													HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
+													deleteNetwork(id)
 												} else {
 													var data = JSON.parse(response.content);
 													Networks.update({
@@ -434,9 +504,7 @@ spec:
 											        }, Meteor.bindEnvironment(function(error, result) {
 											            if(error) {
 															console.log(error);
-											            	Networks.remove({_id: id});
-															HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
-															HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
+											            	deleteNetwork(id)
 											            } else {
 											            	Networks.update({
 																_id: id
@@ -454,35 +522,16 @@ spec:
 															}, Meteor.bindEnvironment(function(error, result) {
 																if(error) {
 																	console.log(error);
-																	Networks.remove({_id: id});
-																	HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId)
-																	HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId)
+																	deleteNetwork(id)
 																} else {
 																	Networks.update({
 																		_id: id
 																	}, {
 																		$set: {
 																			currentValidators: result.result,
+																			"status": "running"
 																		}
 																	})
-
-																	web3.eth.getAccounts(Meteor.bindEnvironment(function(error, result){
-																		if(error) {
-																			console.log(error);
-																			Networks.remove({_id: id});
-																			HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + id.toLowerCase())
-																			HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + id.toLowerCase())
-																		} else {
-																			Networks.update({
-																				_id: id
-																			}, {
-																				$set: {
-																					accounts: result,
-																					"status": "running"
-																				}
-																			})
-																		}
-																	}))
 																}
 															}))
 											            }
@@ -587,6 +636,7 @@ spec:
 				network.genesisBlock.toString(),
 				["enode://" + network.nodeId + "@" + network.clusterIP + ":" + network.realEthNodePort].concat(network.totalENodes),
 				[network.clusterIP + ":" + network.realConstellationNodePort].concat(network.totalConstellationNodes),
+				network.assetsContractAddress,
 				user._id
 			)
 		} else {
