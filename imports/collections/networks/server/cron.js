@@ -77,13 +77,15 @@ function unlockAccounts() {
 		nodes.forEach(function(item, index){
 			var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
 			var web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + item.rpcNodePort));
-			for(var count = 0; count < item.accounts.length; count++) {
-				web3.currentProvider.sendAsync({
-				    method: "personal_unlockAccount",
-				    params: [item.accounts[count], item.accountsPassword[item.accounts[count]], 0],
-				    jsonrpc: "2.0",
-				    id: new Date().getTime()
-				}, Meteor.bindEnvironment(function(error, result) {}))
+			if(item.accounts) {
+				for(var count = 0; count < item.accounts.length; count++) {
+					web3.currentProvider.sendAsync({
+					    method: "personal_unlockAccount",
+					    params: [item.accounts[count], item.accountsPassword[item.accounts[count]], 0],
+					    jsonrpc: "2.0",
+					    id: new Date().getTime()
+					}, Meteor.bindEnvironment(function(error, result) {}))
+				}
 			}
 		})
 	}, 5000)
