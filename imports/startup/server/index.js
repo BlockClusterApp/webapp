@@ -5,12 +5,13 @@ require("../../collections/networks/server/publications.js")
 require("../../collections/utilities/server/publications.js")
 
 import {updateWorkerNodeIP, updateKuberREST_IP} from "../../collections/utilities/server/cron.js"
-import {updateNodeStatus, updateAuthoritiesList, unlockAccounts} from "../../collections/networks/server/cron.js"
+import {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateAssetsInfo} from "../../collections/networks/server/cron.js"
 
 updateWorkerNodeIP()
 updateKuberREST_IP()
 updateNodeStatus()
 updateAuthoritiesList()
 unlockAccounts()
+updateAssetsInfo();
 
 export {Networks, Utilities}

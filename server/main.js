@@ -136,7 +136,6 @@ spec:
 										Meteor.setTimeout(() => {
 											HTTP.call("GET", `http://` + workerNodeIP + ":" + response.data.spec.ports[3].nodePort, function(error, response){
 												if(error) {
-													console.log("Stopped Here");
 													console.log(error);
 													deleteNetwork(id)
 												} else {
@@ -643,6 +642,42 @@ spec:
 		} else {
 			throw new Meteor.Error(500, 'Unknown error occured');
 		}
+	},
+	"createAssetType": function(_id, assetName, assetType, assetIssuer){
+		var myFuture = new Future();
+		var network = Networks.find({_id: _id}).fetch()[0];
+		var accounts = network.accounts;
+		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+		let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+
+		var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+		var assets = assetsContract.at(network.assetsContractAddress);
+
+		if(assetType === "solo") {
+			assets.createSoloAssetType.sendTransaction(assetName, {
+				from: assetIssuer,
+				gas: '4700000'
+			}, function(error, txnHash){
+				if(!error) {
+					myFuture.return();
+				} else {
+					myFuture.throw("An unknown error occured");
+				}
+			})
+		} else {
+			assets.createBulkAssetType.sendTransaction(assetName, {
+				from: assetIssuer,
+				gas: '4700000'
+			}, function(error, txnHash){
+				if(!error) {
+					myFuture.return();
+				} else {
+					myFuture.throw("An unknown error occured");
+				}
+			})
+		}
+
+		return myFuture.wait();
 	}
 })
 

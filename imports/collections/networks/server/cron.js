@@ -1,6 +1,7 @@
 import Web3 from "web3";
 import {Networks} from "../networks.js"
 import {Utilities} from "../../utilities/utilities.js"
+import smartContracts from "../../../modules/smart-contracts"
 
 function updateNodeStatus() {
 	Meteor.setInterval(function(){
@@ -91,4 +92,59 @@ function unlockAccounts() {
 	}, 5000)
 }
 
-export {updateNodeStatus, updateAuthoritiesList, unlockAccounts}
+function updateAssetsInfo() {
+	Meteor.setInterval(function(){
+		var nodes = Networks.find({}).fetch()
+		nodes.forEach(function(item, index){
+			var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+			var web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + item.rpcNodePort));
+			var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+			var assets = assetsContract.at(item.assetsContractAddress);
+			var events = assets.allEvents({fromBlock: 0, toBlock: "latest"});
+
+			events.get(Meteor.bindEnvironment(function(error, events){
+				var assetsTypes = [];
+
+				if(!error) {
+					for(var count = 0; count < events.length; count++) {
+						if(events[count].event === "bulkAssetTypeCreated") {
+							var jjj = 0;
+
+							for(var iii = 0; iii < events.length; iii++) {
+								if(events[iii].event === "bulkAssetsIssued") {
+									if(events[iii].args.assetName === events[count].args.assetName) {
+										jjj = jjj + events[iii].args.units;
+									}
+								}
+							}
+
+							assetsTypes.push({assetName: events[count].args.assetName, uniqueIdentifier: events[count].args.uniqueIdentifier, authorizedIssuer: events[count].args.authorizedIssuer, type: "bulk", units: jjj})
+						} else if(events[count].event === "soloAssetTypeCreated") {
+							var jjj = 0;
+
+							for(var iii = 0; iii < events.length; iii++) {
+								if(events[iii].event === "soloAssetsIssued") {
+									if(events[iii].args.assetName === events[count].args.assetName) {
+										jjj = jjj + 1;
+									}
+								}
+							}
+
+							assetsTypes.push({assetName: events[count].args.assetName, uniqueIdentifier: events[count].args.uniqueIdentifier, authorizedIssuer: events[count].args.authorizedIssuer, type: "solo", units: jjj})
+						}
+					}
+
+					Networks.update({
+						_id: item._id
+					}, {
+						$set: {
+							assetsTypes: assetsTypes
+						}
+					})
+				}
+			}))
+		})
+	}, 5000)
+}
+
+export {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateAssetsInfo}
