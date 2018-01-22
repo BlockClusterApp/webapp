@@ -84,7 +84,7 @@ class Assets extends Component {
                                                 <div className="tab-content bg-white">
                                                     {this.props.networks.map((item, index) => {
                                                         return (
-                                                            <div key={index}>
+                                                            <div key={index} id={"#" + item.instanceId}>
                                                                 {item.assetsContractAddress === '' &&
                                                                     <div className={index === 0 ? "tab-pane active" : "tab-pane "} id={"#" + item.instanceId}>
                                                                         Please deploy smart contract
