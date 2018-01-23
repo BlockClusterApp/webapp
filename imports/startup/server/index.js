@@ -3,6 +3,7 @@ import {Utilities} from "../../collections/utilities/utilities.js"
 
 require("../../collections/networks/server/publications.js")
 require("../../collections/utilities/server/publications.js")
+require("../../api/assets.js")
 
 import {updateWorkerNodeIP, updateKuberREST_IP} from "../../collections/utilities/server/cron.js"
 import {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateAssetsInfo} from "../../collections/networks/server/cron.js"
@@ -14,4 +15,4 @@ updateAuthoritiesList()
 unlockAccounts()
 updateAssetsInfo();
 
-export {Networks, Utilities}
+export {}

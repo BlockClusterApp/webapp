@@ -16,7 +16,7 @@ class Assets extends Component {
         this.state = {}
     }
 
-    createAssetType = (e, _id) => {
+    createAssetType = (e, instanceId) => {
         e.preventDefault();
 
         this.setState({
@@ -24,18 +24,18 @@ class Assets extends Component {
             createAssetType_formloading: true
         });
 
-        Meteor.call("createAssetType", _id, this[_id + "_createAssetType_assetName"].value, this[_id + "_createAssetType_assetType"].value, this[_id + "_createAssetType_assetIssuer"].value, (error) => {
+        Meteor.call("createAssetType", instanceId, this[instanceId + "_createAssetType_assetName"].value, this[instanceId + "_createAssetType_assetType"].value, this[instanceId + "_createAssetType_assetIssuer"].value, (error) => {
             if(!error) {
                 this.setState({
-                    [_id + "_createAssetType_formloading"]: false,
-                    [_id + "_createAssetType_formSubmitError"]: ''
+                    [instanceId + "_createAssetType_formloading"]: false,
+                    [instanceId + "_createAssetType_formSubmitError"]: ''
                 });
 
                 notifications.success("Transaction sent")
             } else {
                 this.setState({
-                    [_id + "_createAssetType_formloading"]: false,
-                    [_id + "_createAssetType_formSubmitError"]: error.reason
+                    [instanceId + "_createAssetType_formloading"]: false,
+                    [instanceId + "_createAssetType_formSubmitError"]: error.reason
                 })
             }
         });
@@ -49,7 +49,7 @@ class Assets extends Component {
 
 	render(){
 		return (
-            <div className="content">
+            <div className="assets content">
                 <div className="m-t-20 container-fluid container-fixed-lg bg-white">
                     <div className="row dashboard">
                         <div className="col-lg-12">
@@ -85,29 +85,29 @@ class Assets extends Component {
                                                                         <div className="container">
                                                                             <div className="row column-seperation">
                                                                                 <div className="col-lg-5">
-                                                                                    <div className="card-group horizontal" id={item._id + "_accordion"} role="tablist" aria-multiselectable="true">
+                                                                                    <div className="card-group horizontal" id={item.instanceId + "_accordion"} role="tablist" aria-multiselectable="true">
                                                                                         <div className="card card-default m-b-0">
-                                                                                            <div className="card-header " role="tab" id={item._id + "_headingOne"}>
+                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingOne"}>
                                                                                                 <h4 className="card-title">
-                                                                                                    <a data-toggle="collapse" data-parent={"#" + item._id + "_accordion"} href={"#" + item._id + "_collapseOne"} aria-expanded="true" aria-controls={item._id + "_collapseOne"}>
+                                                                                                    <a data-toggle="collapse" data-parent={"#" + item.instanceId + "_accordion"} href={"#" + item.instanceId + "_collapseOne"} aria-expanded="true" aria-controls={item.instanceId + "_collapseOne"}>
                                                                                                     Add Asset Type
                                                                                                     </a>
                                                                                                 </h4>
                                                                                             </div>
-                                                                                            <div id={item._id + "_collapseOne"} className="collapse show" role="tabcard" aria-labelledby={item._id + "_headingOne"}>
+                                                                                            <div id={item.instanceId + "_collapseOne"} className="collapse show" role="tabcard" aria-labelledby={item.instanceId + "_headingOne"}>
                                                                                                 <div className="card-block" onSubmit={(e) => {
-                                                                                                        this.createAssetType(e, item._id);
+                                                                                                        this.createAssetType(e, item.instanceId);
                                                                                                     }}>
                                                                                                     <form role="form">
                                                                                                         <div className="form-group">
                                                                                                             <label>Asset Name</label>
                                                                                                             <span className="help"> e.g. "License"</span>
-                                                                                                            <input type="text" className="form-control" required ref={(input) => {this[item._id + "_createAssetType_assetName"] = input}} />
+                                                                                                            <input type="text" className="form-control" required ref={(input) => {this[item.instanceId + "_createAssetType_assetName"] = input}} />
                                                                                                         </div>
                                                                                                         <div className="form-group">
                                                                                                             <label>Asset Type</label>
                                                                                                             <span className="help"> e.g. "Bulk"</span>
-                                                                                                            <select className="form-control" required ref={(input) => {this[item._id + "_createAssetType_assetType"] = input}}>
+                                                                                                            <select className="form-control" required ref={(input) => {this[item.instanceId + "_createAssetType_assetType"] = input}}>
                                                                                                                 <option key="bulk" value="bulk">Bulk</option>
                                                                                                                 <option key="solo" value="solo">Solo</option>
                                                                                                             </select>
@@ -115,7 +115,7 @@ class Assets extends Component {
                                                                                                         <div className="form-group">
                                                                                                             <label>Issuing Address</label>
                                                                                                             <span className="help"> e.g. "0x84eddb1..."</span>
-                                                                                                            <select className="form-control" required ref={(input) => {this[item._id + "_createAssetType_assetIssuer"] = input}}>
+                                                                                                            <select className="form-control" required ref={(input) => {this[item.instanceId + "_createAssetType_assetIssuer"] = input}}>
                                                                                                                 {item.accounts.map((address, addressIndex) => {
                                 											                                        return (
                                                                                                                         <option key={addressIndex}>{address}</option>
@@ -123,18 +123,18 @@ class Assets extends Component {
                                 											                                    })}
                                                                                                             </select>
                                                                                                         </div>
-                                                                                                        {this.state[item._id + "_createAssetType_formSubmitError"] &&
+                                                                                                        {this.state[item.instanceId + "_createAssetType_formSubmitError"] &&
                                                                                                             <div className="row m-t-30">
                                                                                                                 <div className="col-md-12">
                                                                                                                     <div className="m-b-20 alert alert-danger m-b-0" role="alert">
                                                                                                                         <button className="close" data-dismiss="alert"></button>
-                                                                                                                        {this.state[item._id + "_createAssetType_formSubmitError"]}
+                                                                                                                        {this.state[item.instanceId + "_createAssetType_formSubmitError"]}
                                                                                                                     </div>
                                                                                                                 </div>
                                                                                                             </div>
                                                                                                         }
                                                                                                         <LaddaButton
-                                                                                                            loading={this.state[item._id + "_createAssetType_formloading"]}
+                                                                                                            loading={this.state[item.instanceId + "_createAssetType_formloading"]}
                                                                                                             data-size={S}
                                                                                                             data-style={SLIDE_UP}
                                                                                                             data-spinner-size={30}
@@ -149,66 +149,98 @@ class Assets extends Component {
                                                                                             </div>
                                                                                         </div>
                                                                                         <div className="card card-default m-b-0">
-                                                                                            <div className="card-header " role="tab" id={item._id + "_headingTwo"}>
+                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingTwo"}>
                                                                                                 <h4 className="card-title">
-                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item._id + "_accordion"} href={"#" + item._id + "_collapseTwo"} aria-expanded="false" aria-controls={item._id + "_collapseTwo"}>
+                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" +  + "_accordion"} href={"#" + item.instanceId + "_collapseTwo"} aria-expanded="false" aria-controls={item.instanceId + "_collapseTwo"}>
                                                                                                     Issue Assets
                                                                                                     </a>
                                                                                                 </h4>
                                                                                             </div>
-                                                                                            <div id={item._id + "_collapseTwo"} className="collapse" role="tabcard" aria-labelledby={item._id + "_headingTwo"}>
+                                                                                            <div id={item.instanceId + "_collapseTwo"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingTwo"}>
                                                                                                 <div className="card-block">
+                                                                                                    <p><b>Issue Bulk Assets</b></p>
+                                                                                                    <pre>
+                                                                                                        <code>
+                                                                                                            {`POST /networks/${item.instanceId}/assetType/bulk/issueAsset HTTP/1.1
+Host: ${location.host}
+Content-Type: application/json
+
+{
+	"fromAccount": "0x7076cde14830731cd75b4edb51a8edb17ebb1064",
+	"toAccount": "0xee26f465b54eefc096db5f7e7cc538306aebe3ef",
+	"units": 1000,
+	"assetName": "usd"
+}`}
+                                                                                                        </code>
+                                                                                                    </pre>
+                                                                                                    <p><b>Issue Solo Asset</b></p>
+                                                                                                    <pre>
+                                                                                                        <code>
+                                                                                                            {`POST /networks/${item.instanceId}/assetType/solo/issueAsset HTTP/1.1
+Host: ${location.host}
+Content-Type: application/json
+
+{
+	"fromAccount": "0xd803f95b3a8c5ce01eb82c511f9784fc51b9f5e3",
+	"toAccount": "0xee26f465b54eefc096db5f7e7cc538306aebe3ef",
+	"assetName": "cheques",
+	"identifier": "hjsy23asasdd213asdiu2u",
+	"data": {}
+}`}
+                                                                                                        </code>
+                                                                                                    </pre>
+                                                                                                    <small>Change POST request body in above examples according to your's assets information</small>
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
                                                                                         <div className="card card-default m-b-0">
-                                                                                            <div className="card-header " role="tab" id={item._id + "_headingThree"}>
+                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingThree"}>
                                                                                                 <h4 className="card-title">
-                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item._id + "_accordion"} href={"#" + item._id + "_collapseThree"} aria-expanded="false" aria-controls={item._id + "_collapseThree"}>
+                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item.instanceId + "_accordion"} href={"#" + item.instanceId + "_collapseThree"} aria-expanded="false" aria-controls={item.instanceId + "_collapseThree"}>
                                                                                                     Transfer Assets
                                                                                                     </a>
                                                                                                 </h4>
                                                                                             </div>
-                                                                                            <div id={item._id + "_collapseThree"} className="collapse" role="tabcard" aria-labelledby={item._id + "_headingThree"}>
+                                                                                            <div id={item.instanceId + "_collapseThree"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingThree"}>
                                                                                                 <div className="card-block">
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
                                                                                         <div className="card card-default m-b-0">
-                                                                                            <div className="card-header " role="tab" id={item._id + "_headingFour"}>
+                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingFour"}>
                                                                                                 <h4 className="card-title">
-                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item._id + "_accordion"} href={"#" + item._id + "_collapseFour"} aria-expanded="false" aria-controls={item._id + "_collapseFour"}>
+                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item.instanceId + "_accordion"} href={"#" + item.instanceId + "_collapseFour"} aria-expanded="false" aria-controls={item.instanceId + "_collapseFour"}>
                                                                                                     Get Asset Info
                                                                                                     </a>
                                                                                                 </h4>
                                                                                             </div>
-                                                                                            <div id={item._id + "_collapseFour"} className="collapse" role="tabcard" aria-labelledby={item._id + "_headingFour"}>
+                                                                                            <div id={item.instanceId + "_collapseFour"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingFour"}>
                                                                                                 <div className="card-block">
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
                                                                                         <div className="card card-default m-b-0">
-                                                                                            <div className="card-header " role="tab" id={item._id + "_headingFive"}>
+                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingFive"}>
                                                                                                 <h4 className="card-title">
-                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item._id + "_accordion"} href={"#" + item._id + "_collapseFive"} aria-expanded="false" aria-controls={item._id + "_collapseFive"}>
+                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item.instanceId + "_accordion"} href={"#" + item.instanceId + "_collapseFive"} aria-expanded="false" aria-controls={item.instanceId + "_collapseFive"}>
                                                                                                     Add/Update Solo Asset Meta Data
                                                                                                     </a>
                                                                                                 </h4>
                                                                                             </div>
-                                                                                            <div id={item._id + "_collapseFive"} className="collapse" role="tabcard" aria-labelledby={item._id + "_headingFive"}>
+                                                                                            <div id={item.instanceId + "_collapseFive"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingFive"}>
                                                                                                 <div className="card-block">
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
                                                                                         <div className="card card-default m-b-0">
-                                                                                            <div className="card-header " role="tab" id={item._id + "_headingSix"}>
+                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingSix"}>
                                                                                                 <h4 className="card-title">
-                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item._id + "_accordion"} href={"#" + item._id + "_collapseSix"} aria-expanded="false" aria-controls={item._id + "_collapseSix"}>
+                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item.instanceId + "_accordion"} href={"#" + item.instanceId + "_collapseSix"} aria-expanded="false" aria-controls={item.instanceId + "_collapseSix"}>
                                                                                                     Close Solo Asset
                                                                                                     </a>
                                                                                                 </h4>
                                                                                             </div>
-                                                                                            <div id={item._id + "_collapseSix"} className="collapse" role="tabcard" aria-labelledby={item._id + "_headingSix"}>
+                                                                                            <div id={item.instanceId + "_collapseSix"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingSix"}>
                                                                                                 <div className="card-block">
                                                                                                 </div>
                                                                                             </div>
@@ -269,26 +301,26 @@ class Assets extends Component {
                                                                                                             <div className="form-group">
                                                                                                                 <label>Bulk Assets Issued Notification URL</label>
                                                                                                                 <span className="help"> e.g. GET "?assetName=usd&units=1212&to=0x841..."</span>
-                                                                                                                <input type="text" placeholder="http://domain.com/bulkAssetIssued" className="form-control" ref={(input) => {this[item._id + "_updateAssetsIssuedEvents_bulkAssetsIssued"] = input}} />
+                                                                                                                <input type="text" placeholder="http://domain.com/bulkAssetIssued" className="form-control" ref={(input) => {this[item.instanceId + "_updateAssetsIssuedEvents_bulkAssetsIssued"] = input}} />
                                                                                                             </div>
                                                                                                             <div className="form-group">
                                                                                                                 <label>Solo Asset Issued Notification URL</label>
                                                                                                                 <span className="help"> e.g. GET "?assetName=license&identifier=l231&to=0x841..."</span>
-                                                                                                                <input type="text" placeholder="http://domain.com/soloAssetIssued" className="form-control" ref={(input) => {this[item._id + "_updateAssetsIssuedEvents_soloAssetsIssued"] = input}} />
+                                                                                                                <input type="text" placeholder="http://domain.com/soloAssetIssued" className="form-control" ref={(input) => {this[item.instanceId + "_updateAssetsIssuedEvents_soloAssetsIssued"] = input}} />
                                                                                                             </div>
-                                                                                                            {this.state[item._id + "_updateAssetsIssuedEvents_formSubmitError"] &&
+                                                                                                            {this.state[item.instanceId + "_updateAssetsIssuedEvents_formSubmitError"] &&
                                                                                                                 <div className="row m-t-30">
                                                                                                                     <div className="col-md-12">
                                                                                                                         <div className="m-b-20 alert alert-danger m-b-0" role="alert">
                                                                                                                             <button className="close" data-dismiss="alert"></button>
-                                                                                                                            {this.state[item._id + "_updateAssetsIssuedEvents_formSubmitError"]}
+                                                                                                                            {this.state[item.instanceId + "_updateAssetsIssuedEvents_formSubmitError"]}
                                                                                                                         </div>
                                                                                                                     </div>
                                                                                                                 </div>
                                                                                                             }
                                                                                                             <p className="pull-right">
                                                                                                                 <LaddaButton
-                                                                                                                    loading={this.state[item._id + "_updateAssetsIssuedEvents_formloading"]}
+                                                                                                                    loading={this.state[item.instanceId + "_updateAssetsIssuedEvents_formloading"]}
                                                                                                                     data-size={S}
                                                                                                                     data-style={SLIDE_UP}
                                                                                                                     data-spinner-size={30}
@@ -310,26 +342,26 @@ class Assets extends Component {
                                                                                                             <div className="form-group">
                                                                                                                 <label className="m-b-0">Bulk Assets Transferred Notification URL</label>
                                                                                                                 <span className="help"> e.g. GET "?assetName=usd&units=1212&to=0x841...&from=0x841...&fromBalance=12&toBalance=233"</span>
-                                                                                                                <input type="text" placeholder="http://domain.com/bulkAssetIssued" className="form-control" ref={(input) => {this[item._id + "_updateAssetsTransferredEvents_bulkAssetsTransferred"] = input}} />
+                                                                                                                <input type="text" placeholder="http://domain.com/bulkAssetIssued" className="form-control" ref={(input) => {this[item.instanceId + "_updateAssetsTransferredEvents_bulkAssetsTransferred"] = input}} />
                                                                                                             </div>
                                                                                                             <div className="form-group">
                                                                                                                 <label className="m-b-0">Solo Asset Transferred Notification URL</label>
                                                                                                                 <span className="help"> e.g. GET "?assetName=license&identifier=l2362&to=0x841...&from=0x841..."</span>
-                                                                                                                <input type="text" placeholder="http://domain.com/soloAssetIssued" className="form-control" ref={(input) => {this[item._id + "_updateAssetsTransferredEvents_soloAssetTransferred"] = input}} />
+                                                                                                                <input type="text" placeholder="http://domain.com/soloAssetIssued" className="form-control" ref={(input) => {this[item.instanceId + "_updateAssetsTransferredEvents_soloAssetTransferred"] = input}} />
                                                                                                             </div>
-                                                                                                            {this.state[item._id + "_updateAssetsIssuedEvents_formSubmitError"] &&
+                                                                                                            {this.state[item.instanceId + "_updateAssetsIssuedEvents_formSubmitError"] &&
                                                                                                                 <div className="row m-t-30">
                                                                                                                     <div className="col-md-12">
                                                                                                                         <div className="m-b-20 alert alert-danger m-b-0" role="alert">
                                                                                                                             <button className="close" data-dismiss="alert"></button>
-                                                                                                                            {this.state[item._id + "_updateAssetsIssuedEvents_formSubmitError"]}
+                                                                                                                            {this.state[item.instanceId + "_updateAssetsIssuedEvents_formSubmitError"]}
                                                                                                                         </div>
                                                                                                                     </div>
                                                                                                                 </div>
                                                                                                             }
                                                                                                             <p className="pull-right">
                                                                                                                 <LaddaButton
-                                                                                                                    loading={this.state[item._id + "_updateAssetsTransferredEvents_formloading"]}
+                                                                                                                    loading={this.state[item.instanceId + "_updateAssetsTransferredEvents_formloading"]}
                                                                                                                     data-size={S}
                                                                                                                     data-style={SLIDE_UP}
                                                                                                                     data-spinner-size={30}
@@ -351,26 +383,26 @@ class Assets extends Component {
                                                                                                             <div className="form-group">
                                                                                                                 <label className="m-b-0">Solo Asset's Meta Data Added or Updated Notification URL</label>
                                                                                                                 <span className="help"> e.g. GET "?assetName=license&identifier=l2362&key=status&value=pending"</span>
-                                                                                                                <input type="text" placeholder="http://domain.com/bulkAssetIssued" className="form-control" ref={(input) => {this[item._id + "_updateSoloAssetsEvents_addOrUpdateMetaData"] = input}} />
+                                                                                                                <input type="text" placeholder="http://domain.com/bulkAssetIssued" className="form-control" ref={(input) => {this[item.instanceId + "_updateSoloAssetsEvents_addOrUpdateMetaData"] = input}} />
                                                                                                             </div>
                                                                                                             <div className="form-group">
                                                                                                                 <label className="">Solo Asset Transferred Notification URL</label>
                                                                                                                 <span className="help"> e.g. GET "?assetName=license&identifier=l2362"</span>
-                                                                                                                <input type="text" placeholder="http://domain.com/soloAssetIssued" className="form-control" ref={(input) => {this[item._id + "_updateSoloAssetsEvents_closed"] = input}} />
+                                                                                                                <input type="text" placeholder="http://domain.com/soloAssetIssued" className="form-control" ref={(input) => {this[item.instanceId + "_updateSoloAssetsEvents_closed"] = input}} />
                                                                                                             </div>
-                                                                                                            {this.state[item._id + "_updateSoloAssetsEvents_formSubmitError"] &&
+                                                                                                            {this.state[item.instanceId + "_updateSoloAssetsEvents_formSubmitError"] &&
                                                                                                                 <div className="row m-t-30">
                                                                                                                     <div className="col-md-12">
                                                                                                                         <div className="m-b-20 alert alert-danger m-b-0" role="alert">
                                                                                                                             <button className="close" data-dismiss="alert"></button>
-                                                                                                                            {this.state[item._id + "_updateSoloAssetsEvents_formSubmitError"]}
+                                                                                                                            {this.state[item.instanceId + "_updateSoloAssetsEvents_formSubmitError"]}
                                                                                                                         </div>
                                                                                                                     </div>
                                                                                                                 </div>
                                                                                                             }
                                                                                                             <p className="pull-right">
                                                                                                                 <LaddaButton
-                                                                                                                    loading={this.state[item._id + "_updateSoloAssetsEvents_formloading"]}
+                                                                                                                    loading={this.state[item.instanceId + "_updateSoloAssetsEvents_formloading"]}
                                                                                                                     data-size={S}
                                                                                                                     data-style={SLIDE_UP}
                                                                                                                     data-spinner-size={30}

@@ -1,4 +1,6 @@
-import {Networks, Utilities} from "../imports/startup/server/"
+require("../imports/startup/server/")
+import {Networks} from "../imports/collections/networks/networks.js"
+import {Utilities} from "../imports/collections/utilities/utilities.js"
 var Future = Npm.require("fibers/future");
 var lightwallet = Npm.require("eth-lightwallet");
 import Web3 from "web3";
@@ -643,9 +645,9 @@ spec:
 			throw new Meteor.Error(500, 'Unknown error occured');
 		}
 	},
-	"createAssetType": function(_id, assetName, assetType, assetIssuer){
+	"createAssetType": function(instanceId, assetName, assetType, assetIssuer){
 		var myFuture = new Future();
-		var network = Networks.find({_id: _id}).fetch()[0];
+		var network = Networks.find({instanceId: instanceId}).fetch()[0];
 		var accounts = network.accounts;
 		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
 		let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));

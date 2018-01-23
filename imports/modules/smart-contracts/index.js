@@ -30,10 +30,56 @@ export default {
               {
                 "name": "assetName",
                 "type": "string"
+              },
+              {
+                "name": "uniqueAssetIdentifier",
+                "type": "string"
+              }
+            ],
+            "name": "isSoloAssetClosed",
+            "outputs": [
+              {
+                "name": "isClosed",
+                "type": "bool"
+              }
+            ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "assetName",
+                "type": "string"
               }
             ],
             "name": "createSoloAssetType",
             "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "assetName",
+                "type": "string"
+              },
+              {
+                "name": "from",
+                "type": "address"
+              }
+            ],
+            "name": "getBulkAssetUnits",
+            "outputs": [
+              {
+                "name": "units",
+                "type": "int256"
+              }
+            ],
             "payable": false,
             "stateMutability": "nonpayable",
             "type": "function"
@@ -79,15 +125,15 @@ export default {
                 "type": "string"
               },
               {
-                "name": "to",
-                "type": "address"
+                "name": "uniqueAssetIdentifier",
+                "type": "string"
               }
             ],
-            "name": "getBlockAssetUnits",
+            "name": "getSoloAssetDetails",
             "outputs": [
               {
-                "name": "units",
-                "type": "int256"
+                "name": "",
+                "type": "string"
               }
             ],
             "payable": false,
@@ -131,6 +177,28 @@ export default {
               {
                 "name": "uniqueAssetIdentifier",
                 "type": "string"
+              },
+              {
+                "name": "to",
+                "type": "address"
+              }
+            ],
+            "name": "transferOwnershipOfSoloAsset",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "assetName",
+                "type": "string"
+              },
+              {
+                "name": "uniqueAssetIdentifier",
+                "type": "string"
               }
             ],
             "name": "getSoloAssetOwner",
@@ -140,6 +208,24 @@ export default {
                 "type": "address"
               }
             ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "assetName",
+                "type": "string"
+              },
+              {
+                "name": "uniqueAssetIdentifier",
+                "type": "string"
+              }
+            ],
+            "name": "closeSoloAsset",
+            "outputs": [],
             "payable": false,
             "stateMutability": "nonpayable",
             "type": "function"
@@ -185,6 +271,28 @@ export default {
                 "type": "address"
               }
             ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "assetName",
+                "type": "string"
+              },
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "units",
+                "type": "int256"
+              }
+            ],
+            "name": "transferBulkAssetUnits",
+            "outputs": [],
             "payable": false,
             "stateMutability": "nonpayable",
             "type": "function"
@@ -267,6 +375,65 @@ export default {
               },
               {
                 "indexed": false,
+                "name": "units",
+                "type": "int256"
+              },
+              {
+                "indexed": false,
+                "name": "to",
+                "type": "address"
+              }
+            ],
+            "name": "bulkAssetsIssued",
+            "type": "event"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": false,
+                "name": "assetName",
+                "type": "string"
+              },
+              {
+                "indexed": false,
+                "name": "units",
+                "type": "int256"
+              },
+              {
+                "indexed": false,
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "indexed": false,
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "indexed": false,
+                "name": "fromBalance",
+                "type": "int256"
+              },
+              {
+                "indexed": false,
+                "name": "toBalance",
+                "type": "int256"
+              }
+            ],
+            "name": "bulkAssetsTransferred",
+            "type": "event"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": false,
+                "name": "assetName",
+                "type": "string"
+              },
+              {
+                "indexed": false,
                 "name": "uniqueIdentifier",
                 "type": "bytes32"
               },
@@ -289,8 +456,8 @@ export default {
               },
               {
                 "indexed": false,
-                "name": "uints",
-                "type": "int256"
+                "name": "uniqueAssetIdentifier",
+                "type": "string"
               },
               {
                 "indexed": false,
@@ -298,7 +465,34 @@ export default {
                 "type": "address"
               }
             ],
-            "name": "bulkAssetsIssued",
+            "name": "soloAssetIssued",
+            "type": "event"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": false,
+                "name": "assetName",
+                "type": "string"
+              },
+              {
+                "indexed": false,
+                "name": "uniqueAssetIdentifier",
+                "type": "string"
+              },
+              {
+                "indexed": false,
+                "name": "key",
+                "type": "string"
+              },
+              {
+                "indexed": false,
+                "name": "value",
+                "type": "string"
+              }
+            ],
+            "name": "addedOrUpdatedSoloAssetExtraData",
             "type": "event"
           },
           {
@@ -318,9 +512,31 @@ export default {
                 "indexed": false,
                 "name": "to",
                 "type": "address"
+              },
+              {
+                "indexed": false,
+                "name": "from",
+                "type": "address"
               }
             ],
-            "name": "soloAssetIssued",
+            "name": "transferredOwnershipOfSoloAsset",
+            "type": "event"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": false,
+                "name": "assetName",
+                "type": "string"
+              },
+              {
+                "indexed": false,
+                "name": "uniqueIdentifier",
+                "type": "string"
+              }
+            ],
+            "name": "closedSoloAsset",
             "type": "event"
           }
         ]

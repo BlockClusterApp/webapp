@@ -113,7 +113,7 @@ function updateAssetsInfo() {
 							for(var iii = 0; iii < events.length; iii++) {
 								if(events[iii].event === "bulkAssetsIssued") {
 									if(events[iii].args.assetName === events[count].args.assetName) {
-										jjj = jjj + events[iii].args.units;
+										jjj = jjj + parseInt(events[iii].args.units);
 									}
 								}
 							}
@@ -123,7 +123,7 @@ function updateAssetsInfo() {
 							var jjj = 0;
 
 							for(var iii = 0; iii < events.length; iii++) {
-								if(events[iii].event === "soloAssetsIssued") {
+								if(events[iii].event === "soloAssetIssued") {
 									if(events[iii].args.assetName === events[count].args.assetName) {
 										jjj = jjj + 1;
 									}
