@@ -23,7 +23,6 @@ class Assets extends Component {
             createAssetType_formSubmitError: '',
             createAssetType_formloading: true
         });
-
         Meteor.call("createAssetType", instanceId, this[instanceId + "_createAssetType_assetName"].value, this[instanceId + "_createAssetType_assetType"].value, this[instanceId + "_createAssetType_assetIssuer"].value, (error) => {
             if(!error) {
                 this.setState({
@@ -181,11 +180,14 @@ Host: ${location.host}
 Content-Type: application/json
 
 {
-	"fromAccount": "0xd803f95b3a8c5ce01eb82c511f9784fc51b9f5e3",
-	"toAccount": "0xee26f465b54eefc096db5f7e7cc538306aebe3ef",
+	"fromAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f6",
+	"toAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f6",
 	"assetName": "cheques",
 	"identifier": "hjsy23asasdd213asdiu2u",
-	"data": {}
+	"data": {
+		"accountNumber": "012776118765",
+		"bankCode": "66715"
+	}
 }`}
                                                                                                         </code>
                                                                                                     </pre>
@@ -203,6 +205,37 @@ Content-Type: application/json
                                                                                             </div>
                                                                                             <div id={item.instanceId + "_collapseThree"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingThree"}>
                                                                                                 <div className="card-block">
+                                                                                                    <p><b>Transfer Bulk Asset</b></p>
+                                                                                                    <pre>
+                                                                                                        <code>
+                                                                                                            {`POST /networks/${item.instanceId}/assetType/bulk/transferAsset HTTP/1.1
+Host: ${location.host}
+Content-Type: application/json
+
+{
+	"fromAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f6",
+	"toAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af490",
+	"units": 258,
+	"assetName": "usd"
+}`}
+                                                                                                        </code>
+                                                                                                    </pre>
+                                                                                                    <p><b>Transfer Solo Asset</b></p>
+                                                                                                    <pre>
+                                                                                                        <code>
+                                                                                                            {`POST /networks/ottpemjr/assetType/solo/transferAsset HTTP/1.1
+Host: ${location.host}
+Content-Type: application/json
+
+{
+	"fromAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f6",
+	"toAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f9",
+	"assetName": "cheques",
+	"identifier": "hjsy23asasdd213asdiu2u"
+}`}
+                                                                                                        </code>
+                                                                                                    </pre>
+                                                                                                    <small>Change POST request body in above examples according to your's assets information</small>
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
@@ -216,6 +249,34 @@ Content-Type: application/json
                                                                                             </div>
                                                                                             <div id={item.instanceId + "_collapseFour"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingFour"}>
                                                                                                 <div className="card-block">
+                                                                                                    <p><b>Get Bulk Asset Balance of an Account</b></p>
+                                                                                                    <pre>
+                                                                                                        <code>
+                                                                                                            {`POST /networks/${item.instanceId}/assetType/bulk/getAssetInfo HTTP/1.1
+Host: ${location.host}
+Content-Type: application/json
+
+{
+	"account": "0x8d98bf772eea2a85538ecaa1394e8605bb4af490",
+	"assetName": "usd"
+}`}
+                                                                                                        </code>
+                                                                                                    </pre>
+                                                                                                    <p><b>Get Solo Asset Info</b></p>
+                                                                                                    <pre>
+                                                                                                        <code>
+                                                                                                            {`POST /networks/${item.instanceId}/assetType/solo/getAssetInfo HTTP/1.1
+Host: ${location.host}
+Content-Type: application/json
+
+{
+	"identifier": "hjsy23asasdd213asdiu2u",
+	"assetName": "cheques",
+	"extraData": ["accountNumber", "bankCode"]
+}`}
+                                                                                                        </code>
+                                                                                                    </pre>
+                                                                                                    <small>Change POST request body in above examples according to your's assets information</small>
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
@@ -229,6 +290,21 @@ Content-Type: application/json
                                                                                             </div>
                                                                                             <div id={item.instanceId + "_collapseFive"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingFive"}>
                                                                                                 <div className="card-block">
+                                                                                                    <pre>
+                                                                                                        <code>
+                                                                                                            {`POST /networks/${item.instanceId}/addUpdateAssetInfo HTTP/1.1
+Host: ${location.host}
+Content-Type: application/json
+
+{
+	"fromAccount": "0xcb02bb004c82cc7edc90d60d64c752729181e4cd",
+	"assetName": "cheques",
+	"identifier": "hjsy23asasdd213asdiu2u",
+	"key": "accountNumber",
+	"value": "23213"
+}`}
+                                                                                                        </code>
+                                                                                                    </pre>
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
@@ -242,6 +318,19 @@ Content-Type: application/json
                                                                                             </div>
                                                                                             <div id={item.instanceId + "_collapseSix"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingSix"}>
                                                                                                 <div className="card-block">
+                                                                                                    <pre>
+                                                                                                        <code>
+                                                                                                            {`POST /networks/${item.instanceId}/closeAsset HTTP/1.1
+Host: ${location.host}
+Content-Type: application/json
+
+{
+	"fromAccount": "0xcb02bb004c82cc7edc90d60d64c752729181e4cd",
+	"assetName": "cheques",
+	"identifier": "hjsy23asasdd213asdiu2u"
+}`}
+                                                                                                        </code>
+                                                                                                    </pre>
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>

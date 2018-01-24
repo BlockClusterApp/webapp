@@ -104,7 +104,6 @@ function updateAssetsInfo() {
 
 			events.get(Meteor.bindEnvironment(function(error, events){
 				var assetsTypes = [];
-
 				if(!error) {
 					for(var count = 0; count < events.length; count++) {
 						if(events[count].event === "bulkAssetTypeCreated") {
