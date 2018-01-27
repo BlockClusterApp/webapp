@@ -17,7 +17,7 @@ class App extends Component {
 				this.props.userId ? (
 				    <RouteComponent />
 				) : (
-				    <Redirect to="/" />
+				    <Redirect to="/login" />
 				)
 			)
 		}
@@ -39,7 +39,7 @@ class App extends Component {
 		return (
 			<BrowserRouter>
 				<Switch>
-					<Route exact path="/" render={this.requireNotLoggedIn(Login)} />
+					<Route exact path="/login" render={this.requireNotLoggedIn(Login)} />
 					<Route exact path="/register" render={this.requireNotLoggedIn(Register)} />
 					<Route path="/app" render={this.requireAuth(Main)} />
 					{/*<Route component={Notfound} />*/}
