@@ -20,11 +20,12 @@ react-meteor-data
 accounts-password
 fortawesome:fontawesome
 blockcluster:jquery
+blockcluster:modernizr
+blockcluster:jquery-scrollbar
 blockcluster:tether
 blockcluster:bootstrap
 blockcluster:pages
 blockcluster:ladda
 http
 fourseven:scss
-blockcluster:modernizr
 simple:json-routes

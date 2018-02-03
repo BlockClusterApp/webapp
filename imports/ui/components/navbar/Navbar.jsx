@@ -10,6 +10,14 @@ class Navbar extends Component {
     	});
   	}
 
+	componentDidMount() {
+		$.Pages.init();
+	}
+
+	componentDidUpdate() {
+		$.Pages.init();
+	}
+
 	render(){
 		return (
 			<nav className="page-sidebar" data-pages="sidebar">
@@ -60,12 +68,43 @@ class Navbar extends Component {
 	                    	</Link>
 	                        <span className="icon-thumbnail"><i className="fa fa-globe"></i></span>
 	                    </li>
-	                    <li className="">
+						<li className="open active">
+			            	<a href="javascript:;"><span className="title">Assets</span>
+			              	<span className=" open  arrow"></span></a>
+			              	<span className="icon-thumbnail"><i className="pg-note"></i></span>
+			              	<ul className="sub-menu">
+			                	<li>
+									<Link to={"/app/assets/create"}>
+			                    		Create Asset Type
+			                    	</Link>
+			                  		<span className="icon-thumbnail"><i className="fa fa-plus-square"></i></span>
+			                	</li>
+								<li>
+									<Link to={"/app/assets/stats"}>
+			                    		Assets Stats
+			                    	</Link>
+			                  		<span className="icon-thumbnail"><i className="fa fa-signal"></i></span>
+			                	</li>
+								<li className="">
+									<Link to={"/app/assets/apis"}>
+			                    		Assets APIs
+			                    	</Link>
+			                  		<span className="icon-thumbnail"><i className="fa fa-laptop"></i></span>
+			                	</li>
+								<li className="">
+									<Link to={"/app/assets/events"}>
+			                    		Assets Events
+			                    	</Link>
+			                  		<span className="icon-thumbnail"><i className="fa fa-bell"></i></span>
+			                	</li>
+			              	</ul>
+			            </li>
+						<li className="">
 							<Link to={"/app/assets"} className="detailed">
-	                    		<span className="title">Assets</span>
-	                        	<span className="details">Create and Transfer</span>
+	                    		<span className="title">ICO</span>
+	                        	<span className="details">Token Lauch</span>
 	                    	</Link>
-	                        <span className="icon-thumbnail"><i className="pg-note"></i></span>
+	                        <span className="icon-thumbnail"><i className="fa fa-connectdevelop"></i></span>
 	                    </li>
 						{(this.props.kuberREST_IP[0] !== undefined) &&
 	                    	<li className="">

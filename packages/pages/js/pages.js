@@ -763,7 +763,7 @@
  *
  * Licensed under the MIT license.
  * http://www.opensource.org/licenses/mit-license.php
- * 
+ *
  * Copyright 2014, Codrops
  * http://www.codrops.com
  */
@@ -2128,7 +2128,6 @@
          // Toggle sub menus
          // In Angular Binding is done using a pg-sidebar directive
          (typeof angular === 'undefined') && $(document).on('click', '.sidebar-menu a', function(e) {
-
              if ($(this).parent().children('.sub-menu') === false) {
                  return;
              }

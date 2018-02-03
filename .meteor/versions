@@ -9,6 +9,7 @@ binary-heap@1.0.10
 blaze-tools@1.0.10
 blockcluster:bootstrap@0.0.1
 blockcluster:jquery@0.0.1
+blockcluster:jquery-scrollbar@0.0.1
 blockcluster:ladda@0.0.1
 blockcluster:modernizr@0.0.1
 blockcluster:pages@0.0.1
