@@ -24,7 +24,13 @@ class CreateAssetType extends Component {
             createAssetType_formloading: true
         });
 
-        Meteor.call("createAssetType", instanceId, this[instanceId + "_createAssetType_assetName"].value, this[instanceId + "_createAssetType_assetType"].value, this[instanceId + "_createAssetType_assetIssuer"].value, (error) => {
+        let reissuable = false;
+
+        if(this[instanceId + "_createAssetType_assetType"].value === "bulk") {
+            reissuable = this[instanceId + "_createAssetType_reissuable"].value
+        }
+
+        Meteor.call("createAssetType", instanceId, this[instanceId + "_createAssetType_assetName"].value, this[instanceId + "_createAssetType_assetType"].value, this[instanceId + "_createAssetType_assetIssuer"].value, reissuable, (error) => {
             if(!error) {
                 this.setState({
                     [instanceId + "_createAssetType_formloading"]: false,
@@ -45,6 +51,18 @@ class CreateAssetType extends Component {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
         });
+    }
+
+    assetTypeSelectionChanged = (instanceId, e) => {
+        let obj = {}
+
+        if(e.target.value === "bulk") {
+            obj[instanceId + "_showReissuable"] = true;
+        } else {
+            obj[instanceId + "_showReissuable"] = false;
+        }
+
+        this.setState(obj)
     }
 
 	render(){
@@ -97,11 +115,24 @@ class CreateAssetType extends Component {
                                                                                             <div className="form-group">
                                                                                                 <label>Asset Type</label>
                                                                                                 <span className="help"> e.g. "Bulk"</span>
-                                                                                                <select className="form-control" required ref={(input) => {this[item.instanceId + "_createAssetType_assetType"] = input}}>
-                                                                                                    <option key="bulk" value="bulk">Bulk</option>
+                                                                                                <select className="form-control" onChange={(e) => {this.assetTypeSelectionChanged(item.instanceId, e)}} required ref={(input) => {this[item.instanceId + "_createAssetType_assetType"] = input}}>
                                                                                                     <option key="solo" value="solo">Solo</option>
+                                                                                                    <option key="bulk" value="bulk">Bulk</option>
                                                                                                 </select>
                                                                                             </div>
+                                                                                            {this.state[item.instanceId + "_showReissuable"] &&
+                                                                                                <div className="form-group">
+                                                                                                    <label>Re-Issuable</label>
+                                                                                                    <span className="help"> e.g. "Fixed Supply?"</span>
+                                                                                                    <select className="form-control"
+                                                                                                        required
+                                                                                                        ref={(input) => {this[item.instanceId + "_createAssetType_reissuable"] = input}}
+                                                                                                    >
+                                                                                                        <option key="yes" value="true">Yes</option>
+                                                                                                        <option key="no" value="false">No</option>
+                                                                                                    </select>
+                                                                                                </div>
+                                                                                            }
                                                                                             <div className="form-group">
                                                                                                 <label>Issuing Address</label>
                                                                                                 <span className="help"> e.g. "0x84eddb1..."</span>
@@ -113,6 +144,7 @@ class CreateAssetType extends Component {
                                                                                                     })}
                                                                                                 </select>
                                                                                             </div>
+
                                                                                             {this.state[item.instanceId + "_createAssetType_formSubmitError"] &&
                                                                                                 <div className="row m-t-30">
                                                                                                     <div className="col-md-12">

@@ -645,7 +645,7 @@ spec:
 			throw new Meteor.Error(500, 'Unknown error occured');
 		}
 	},
-	"createAssetType": function(instanceId, assetName, assetType, assetIssuer){
+	"createAssetType": function(instanceId, assetName, assetType, assetIssuer, reissuable){
 		var myFuture = new Future();
 		var network = Networks.find({instanceId: instanceId}).fetch()[0];
 		var accounts = network.accounts;
@@ -667,7 +667,7 @@ spec:
 				}
 			})
 		} else {
-			assets.createBulkAssetType.sendTransaction(assetName, {
+			assets.createBulkAssetType.sendTransaction(assetName, (reissuable === "true"), {
 				from: assetIssuer,
 				gas: '4700000'
 			}, function(error, txnHash){
