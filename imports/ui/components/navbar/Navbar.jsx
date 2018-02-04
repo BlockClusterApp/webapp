@@ -68,10 +68,10 @@ class Navbar extends Component {
 	                    	</Link>
 	                        <span className="icon-thumbnail"><i className="fa fa-globe"></i></span>
 	                    </li>
-						<li className="open active">
+						<li className="">
 			            	<a href="javascript:;"><span className="title">Assets</span>
-			              	<span className=" open  arrow"></span></a>
-			              	<span className="icon-thumbnail"><i className="pg-note"></i></span>
+			              	<span className="arrow"></span></a>
+			              	<span className="icon-thumbnail"><i className="fa fa-connectdevelop"></i></span>
 			              	<ul className="sub-menu">
 			                	<li>
 									<Link to={"/app/assets/create"}>
@@ -99,13 +99,6 @@ class Navbar extends Component {
 			                	</li>
 			              	</ul>
 			            </li>
-						<li className="">
-							<Link to={"/app/assets"} className="detailed">
-	                    		<span className="title">ICO</span>
-	                        	<span className="details">Token Lauch</span>
-	                    	</Link>
-	                        <span className="icon-thumbnail"><i className="fa fa-connectdevelop"></i></span>
-	                    </li>
 						{(this.props.kuberREST_IP[0] !== undefined) &&
 	                    	<li className="">
 		                    	<Link target="_blank" to={"http://" + this.props.kuberREST_IP[0].value + ":8090"} className="detailed">
