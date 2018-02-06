@@ -227,7 +227,7 @@ spec:
 																					var assets = assetsContract.new({
 																						from: web3.eth.accounts[0],
 																						data: smartContracts.assets.bytecode,
-																						gas: '4700000'
+																						gas: '999999999999999999'
 																					}, Meteor.bindEnvironment(function(error, contract){
 																						if(error) {
 																							console.log(error);
