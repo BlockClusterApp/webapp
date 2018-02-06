@@ -67,7 +67,7 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #f6f9fa;
+  background-color: #f0f0f0;
   direction: ltr;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -86,10 +86,10 @@ body.mobile .sidebar-menu > ul {
   -webkit-overflow-scrolling: touch !important;
 }
 body.mobile .page-sidebar .sidebar-menu .menu-items li:hover a {
-  color: #627182;
+  color: #85858e;
 }
 body.mobile .page-sidebar .sidebar-menu .menu-items li:hover .icon-thumbnail {
-  color: #627182 !important;
+  color: #85858e !important;
 }
 body.mobile .page-sidebar .sidebar-menu .menu-items li.active > a,
 body.mobile .page-sidebar .sidebar-menu .menu-items li.open > a {
@@ -123,10 +123,10 @@ body.no-header .header {
   border-bottom-color: transparent;
 }
 body.dashboard {
-  background: #f6f9fa;
+  background: #f0f0f0;
 }
 body.dashboard .page-container {
-  background: #f6f9fa;
+  background: #f0f0f0;
 }
 body.rtl [class^="col-"],
 body.rtl [class*="col-"] {
@@ -142,7 +142,7 @@ body.menu-pin .overlay .overlay-brand {
 ------------------------------------
 */
 .pace .pace-progress {
-  background: #007be8;
+  background: #1dbb99;
   height: 3px;
 }
 .pace .pace-progress-inner {
@@ -152,7 +152,7 @@ body.menu-pin .overlay .overlay-brand {
   -webkit-animation: none;
   animation: none;
   top: 73px;
-  background: url('../../img/progress/progress-circle-success.svg') no-repeat top left;
+  background: url('/assets/img/progress/progress-circle-success.svg') no-repeat top left;
   background-size: 100% auto;
   margin: 0 auto;
   border-width: 0;

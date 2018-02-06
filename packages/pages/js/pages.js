@@ -979,7 +979,7 @@
             });
         });
 
-        // close the select element if the target it´s not the select element or one of its descendants..
+        // close the select element if the target itÂ´s not the select element or one of its descendants..
         document.addEventListener('click', function(ev) {
             var target = ev.target;
             if (self._isOpen() && target !== self.selEl && !hasParent(target, self.selEl)) {
@@ -1178,7 +1178,7 @@
         // update current selected value
         this.selPlaceholder.textContent = opt.textContent;
 
-        // change native select element´s value
+        // change native select elementÂ´s value
         this.el.value = opt.getAttribute('data-value');
 
         // remove class cs-selected from old selected option and add it to current selected option
@@ -1188,7 +1188,7 @@
         }
         classie.add(opt, 'cs-selected');
 
-        // if there´s a link defined
+        // if thereÂ´s a link defined
         if (opt.getAttribute('data-link')) {
             // open in new tab?
             if (this.options.newTab) {
@@ -2128,6 +2128,7 @@
          // Toggle sub menus
          // In Angular Binding is done using a pg-sidebar directive
          (typeof angular === 'undefined') && $(document).on('click', '.sidebar-menu a', function(e) {
+
              if ($(this).parent().children('.sub-menu') === false) {
                  return;
              }
