@@ -3,6 +3,8 @@ import {Link} from "react-router-dom"
 import createHistory from "history/createBrowserHistory";
 import {withTracker} from "meteor/react-meteor-data";
 
+import "./Header.scss"
+
 class Navbar extends Component {
     logout = () => {
         Meteor.logout()
@@ -14,7 +16,7 @@ class Navbar extends Component {
                 <a href="#" className="btn-link toggle-sidebar hidden-lg-up pg pg-menu" data-toggle="sidebar">
                 </a>
                 <div className="">
-                    <div className="brand inline  m-l-10 m-r-5">
+                    <div className="brand inline">
                         <img src="/assets/img/logo/black_left_img.png" alt="logo" height="35" />
                     </div>
                     <ul className="hidden-md-down notification-list no-margin hidden-sm-down b-grey b-l no-style p-l-30 p-r-20">

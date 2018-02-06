@@ -80,20 +80,32 @@ class Navbar extends Component {
 			                  		<span className="icon-thumbnail"><i className="fa fa-plus-square"></i></span>
 			                	</li>
 								<li>
+									<Link to={"/app/assets/management"}>
+			                    		Management
+			                    	</Link>
+			                  		<span className="icon-thumbnail"><i className="fa fa-braille"></i></span>
+			                	</li>
+								<li>
 									<Link to={"/app/assets/stats"}>
-			                    		Assets Stats
+			                    		Stats
 			                    	</Link>
 			                  		<span className="icon-thumbnail"><i className="fa fa-signal"></i></span>
 			                	</li>
+								<li>
+									<Link to={"/app/assets/exchange"}>
+			                    		Exchange
+			                    	</Link>
+			                  		<span className="icon-thumbnail"><i className="fa fa-exchange"></i></span>
+			                	</li>
 								<li className="">
 									<Link to={"/app/assets/apis"}>
-			                    		Assets APIs
+			                    		APIs
 			                    	</Link>
-			                  		<span className="icon-thumbnail"><i className="fa fa-laptop"></i></span>
+			                  		<span className="icon-thumbnail"><i className="fa fa-code"></i></span>
 			                	</li>
 								<li className="">
 									<Link to={"/app/assets/events"}>
-			                    		Assets Events
+			                    		Events
 			                    	</Link>
 			                  		<span className="icon-thumbnail"><i className="fa fa-bell"></i></span>
 			                	</li>
