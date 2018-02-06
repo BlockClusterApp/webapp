@@ -17,7 +17,7 @@ Package.onUse(function(api) {
   api.addFiles([
     'css/pages.css',
     'css/pages-icons.css',
-    'css/light.css',
+    'css/corporate.css',
     'js/pages.js'
   ], 'client');
   api.addAssets([
