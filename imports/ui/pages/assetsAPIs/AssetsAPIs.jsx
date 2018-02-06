@@ -96,7 +96,7 @@ Content-Type: application/json
 {
 	"fromAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f6",
 	"toAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f6",
-	"assetName": "cheques",
+	"assetName": "assetName",
 	"identifier": "hjsy23asasdd213asdiu2u",
 	"data": {
 		"accountNumber": "012776118765",
@@ -144,7 +144,7 @@ Content-Type: application/json
 {
 	"fromAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f6",
 	"toAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f9",
-	"assetName": "cheques",
+	"assetName": "assetName",
 	"identifier": "hjsy23asasdd213asdiu2u"
 }`}
                                                                                                         </code>
@@ -185,7 +185,7 @@ Content-Type: application/json
 
 {
 	"identifier": "hjsy23asasdd213asdiu2u",
-	"assetName": "cheques",
+	"assetName": "assetName",
 	"extraData": ["accountNumber", "bankCode"]
 }`}
                                                                                                         </code>
@@ -212,7 +212,7 @@ Content-Type: application/json
 
 {
 	"fromAccount": "0xcb02bb004c82cc7edc90d60d64c752729181e4cd",
-	"assetName": "cheques",
+	"assetName": "assetName",
 	"identifier": "hjsy23asasdd213asdiu2u",
 	"key": "accountNumber",
 	"value": "23213"
@@ -240,7 +240,7 @@ Content-Type: application/json
 
 {
 	"fromAccount": "0xcb02bb004c82cc7edc90d60d64c752729181e4cd",
-	"assetName": "cheques",
+	"assetName": "assetName",
 	"identifier": "hjsy23asasdd213asdiu2u"
 }`}
                                                                                                         </code>
