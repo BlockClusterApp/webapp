@@ -30,27 +30,56 @@ class AssetsManagement extends Component {
             [instanceId + "_addBulkAsset_formloading"]: true
         });
 
-        console.log(
+        Meteor.call(
+            "issueBulkAssets",
+            instanceId,
             this[instanceId + "_addBulkAsset_assetName"].value,
             this[instanceId + "_addBulkAsset_fromAddress"].value,
             this[instanceId + "_addBulkAsset_toAddress"].value,
-            this[instanceId + "_addBulkAsset_units"].value
+            this[instanceId + "_addBulkAsset_units"].value,
+            (error) => {
+                if(error) {
+                    this.setState({
+                        [instanceId + "_addBulkAsset_formSubmitError"]: error.reason,
+                        [instanceId + "_addBulkAsset_formloading"]: false
+                    });
+                } else {
+                    this.setState({
+                        [instanceId + "_addBulkAsset_formSubmitError"]: '',
+                        [instanceId + "_addBulkAsset_formloading"]: false
+                    });
+
+                    notifications.success("Transaction sent");
+                }
+            }
         )
     }
 
     issueSoloAsset(e, instanceId) {
         e.preventDefault();
 
-        this.setState({
-            [instanceId + "_addSoloAsset_formSubmitError"]: '',
-            [instanceId + "_addSoloAsset_formloading"]: true
-        });
-
-        console.log(
+        Meteor.call(
+            "issueSoloAsset",
+            instanceId,
             this[instanceId + "_addSoloAsset_assetName"].value,
             this[instanceId + "_addSoloAsset_fromAddress"].value,
             this[instanceId + "_addSoloAsset_toAddress"].value,
-            this[instanceId + "_addSoloAsset_identifier"].value
+            this[instanceId + "_addSoloAsset_identifier"].value,
+            (error) => {
+                if(error) {
+                    this.setState({
+                        [instanceId + "_addSoloAsset_formSubmitError"]: error.reason,
+                        [instanceId + "_addSoloAsset_formloading"]: false
+                    });
+                } else {
+                    this.setState({
+                        [instanceId + "_addSoloAsset_formSubmitError"]: "",
+                        [instanceId + "_addSoloAsset_formloading"]: false
+                    });
+
+                    notifications.success("Transaction sent");
+                }
+            }
         )
     }
 
@@ -62,11 +91,28 @@ class AssetsManagement extends Component {
             [instanceId + "_transferBulkAsset_formloading"]: true
         });
 
-        console.log(
+        Meteor.call(
+            "transferBulkAssets",
+            instanceId,
             this[instanceId + "_transferBulkAsset_assetName"].value,
             this[instanceId + "_transferBulkAsset_fromAddress"].value,
             this[instanceId + "_transferBulkAsset_toAddress"].value,
-            this[instanceId + "_transferBulkAsset_units"].value
+            this[instanceId + "_transferBulkAsset_units"].value,
+            (error) => {
+                if(error) {
+                    this.setState({
+                        [instanceId + "_transferBulkAsset_formSubmitError"]: error.reason,
+                        [instanceId + "_transferBulkAsset_formloading"]: false
+                    });
+                } else {
+                    this.setState({
+                        [instanceId + "_transferBulkAsset_formSubmitError"]: '',
+                        [instanceId + "_transferBulkAsset_formloading"]: false
+                    });
+
+                    notifications.success("Transaction sent");
+                }
+            }
         )
     }
 
@@ -78,11 +124,28 @@ class AssetsManagement extends Component {
             [instanceId + "_transferSoloAsset_formloading"]: true
         });
 
-        console.log(
+        Meteor.call(
+            "transferSoloAsset",
+            instanceId,
             this[instanceId + "_transferSoloAsset_assetName"].value,
             this[instanceId + "_transferSoloAsset_fromAddress"].value,
             this[instanceId + "_transferSoloAsset_toAddress"].value,
-            this[instanceId + "_transferSoloAsset_identifier"].value
+            this[instanceId + "_transferSoloAsset_identifier"].value,
+            (error) => {
+                if(error) {
+                    this.setState({
+                        [instanceId + "_transferSoloAsset_formSubmitError"]: error.reason,
+                        [instanceId + "_transferSoloAsset_formloading"]: false
+                    });
+                } else {
+                    this.setState({
+                        [instanceId + "_transferSoloAsset_formSubmitError"]: '',
+                        [instanceId + "_transferSoloAsset_formloading"]: false
+                    });
+
+                    notifications.success("Transaction sent");
+                }
+            }
         )
     }
 
@@ -91,12 +154,30 @@ class AssetsManagement extends Component {
 
         this.setState({
             [instanceId + "_getInfoBulkAsset_formloading"]: true,
-            [instanceId + "_getInfoBulkAsset_formSubmitError"]: ''
+            [instanceId + "_getInfoBulkAsset_formSubmitError"]: ""
         });
 
-        console.log(
+        Meteor.call(
+            "getBulkAssetBalance",
+            instanceId,
             this[instanceId + "_getInfoBulkAsset_assetName"].value,
             this[instanceId + "_getInfoBulkAsset_address"].value,
+            (error, units) => {
+                if(error) {
+                    this.setState({
+                        [instanceId + "_getInfoBulkAsset_formloading"]: false,
+                        [instanceId + "_getInfoBulkAsset_formSubmitError"]: error.reason
+                    });
+                } else {
+                    this.setState({
+                        [instanceId + "_getInfoBulkAsset_formloading"]: false,
+                        [instanceId + "_getInfoBulkAsset_formSubmitError"]: '',
+                        bulkAssetBalance: units
+                    });
+
+                    $('#modalSlideLeft_bulkAssetBalance').modal('show')
+                }
+            }
         )
     }
 
@@ -105,12 +186,31 @@ class AssetsManagement extends Component {
 
         this.setState({
             [instanceId + "_getInfoSoloAsset_formloading"]: true,
-            [instanceId + "_getInfoSoloAsset_formSubmitError"]: ''
+            [instanceId + "_getInfoSoloAsset_formSubmitError"]: ""
         });
 
-        console.log(
+        Meteor.call(
+            "getSoloAssetInfo",
+            instanceId,
             this[instanceId + "_getInfoSoloAsset_assetName"].value,
             this[instanceId + "_getInfoSoloAsset_identifier"].value,
+            this[instanceId + "_getInfoSoloAsset_properties"].value,
+            (error, data) => {
+                if(error) {
+                    this.setState({
+                        [instanceId + "_getInfoSoloAsset_formloading"]: false,
+                        [instanceId + "_getInfoSoloAsset_formSubmitError"]: error.reason
+                    });
+                } else {
+                    data.details["identifier"] = this[instanceId + "_getInfoSoloAsset_identifier"].value;
+                    this.setState({
+                        [instanceId + "_getInfoSoloAsset_formloading"]: false,
+                        [instanceId + "_getInfoBulkAsset_formSubmitError"]: '',
+                        data: data
+                    });
+                    $('#modalSlideLeft_soloAssetInfo').modal('show')
+                }
+            }
         )
     }
 
@@ -122,12 +222,29 @@ class AssetsManagement extends Component {
             [instanceId + "_updateSoloAssetInfo_formSubmitError"]: ''
         });
 
-        console.log(
+        Meteor.call(
+            "addUpdateSoloAssetInfo",
+            instanceId,
             this[instanceId + "_updateSoloAssetInfo_assetName"].value,
             this[instanceId + "_updateSoloAssetInfo_fromAddress"].value,
             this[instanceId + "_updateSoloAssetInfo_identifier"].value,
             this[instanceId + "_updateSoloAssetInfo_key"].value,
-            this[instanceId + "_updateSoloAssetInfo_value"].value
+            this[instanceId + "_updateSoloAssetInfo_value"].value,
+            (error) => {
+                if(error) {
+                    this.setState({
+                        [instanceId + "_updateSoloAssetInfo_formloading"]: false,
+                        [instanceId + "_updateSoloAssetInfo_formSubmitError"]: error.reason
+                    });
+                } else {
+                    this.setState({
+                        [instanceId + "_updateSoloAssetInfo_formloading"]: false,
+                        [instanceId + "_updateSoloAssetInfo_formSubmitError"]: ""
+                    });
+
+                    notifications.success("Transaction sent");
+                }
+            }
         )
     }
 
@@ -139,16 +256,138 @@ class AssetsManagement extends Component {
             [instanceId + "_closeAsset_formSubmitError"]: ''
         });
 
-        console.log(
+        Meteor.call(
+            "closeAsset",
+            instanceId,
             this[instanceId + "_closeAsset_assetName"].value,
             this[instanceId + "_closeAsset_fromAddress"].value,
-            this[instanceId + "_closeAsset_identifier"].value
+            this[instanceId + "_closeAsset_identifier"].value,
+            (error) => {
+                if(error) {
+                    this.setState({
+                        [instanceId + "_closeAsset_formloading"]: false,
+                        [instanceId + "_closeAsset_formSubmitError"]: error.reason
+                    });
+                } else {
+                    this.setState({
+                        [instanceId + "_closeAsset_formloading"]: false,
+                        [instanceId + "_closeAsset_formSubmitError"]: ''
+                    });
+
+                    notifications.success("Transaction sent");
+                }
+            }
         )
     }
 
 	render(){
 		return (
             <div className="assetsManagement content">
+                <div className="modal fade slide-right" id="modalSlideLeft_bulkAssetBalance" tabIndex="-1" role="dialog" aria-hidden="true">
+                    <div className="modal-dialog modal-sm">
+                        <div className="modal-content-wrapper">
+                            <div className="modal-content">
+                                <button type="button" className="close" data-dismiss="modal" aria-hidden="true"><i className="pg-close fs-14"></i>
+                                </button>
+                                <div className="container-xs-height full-height">
+                                    <div className="row-xs-height">
+                                        <div className="modal-body col-xs-height col-middle text-center   ">
+                                            <h5 className="text-primary ">Balance: <span className="semi-bold">{this.state.bulkAssetBalance}</span></h5>
+                                            <br />
+                                            <button type="button" className="btn btn-primary btn-block" data-dismiss="modal">Ok</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {this.state.data &&
+                    <div className="modal fade slide-right" id="modalSlideLeft_soloAssetInfo" tabIndex="-1" role="dialog" aria-hidden="true">
+                        <div className="modal-dialog modal-sm">
+                            <div className="modal-content-wrapper">
+                                <div className="modal-content">
+                                    <button type="button" className="close" data-dismiss="modal" aria-hidden="true"><i className="pg-close fs-14"></i>
+                                    </button>
+                                    <div className="container-xs-height full-height">
+                                        <div className="row-xs-height">
+                                            <div className="modal-body col-xs-height col-middle text-center   ">
+                                                <h5 className="text-primary ">Asset: <span className="semi-bold">{this.state.data.details.identifier}</span></h5>
+                                                <br />
+                                                <form role="form" className="modal-assetInfo">
+                                                    <div className="form-group-attached" style={{"textAlign":"left"}}>
+                                                        <div className="row">
+                                                            <div className="col-md-12">
+                                                                <div className="form-group form-group-default">
+                                                                    <label>Is Closed?</label>
+                                                                    <input type="email" className="form-control" disabled value={this.state.data.details.isClosed} />
+                                                                </div>
+                                                            </div>
+                                                            <div className="col-md-12">
+                                                                <div className="form-group form-group-default">
+                                                                    <label>Owner</label>
+                                                                    <input type="email" className="form-control" disabled value={this.state.data.details.owner} />
+                                                                </div>
+                                                            </div>
+                                                            {Object.keys(this.state.data.details.extraData).map((key, index) => {
+                                                                return (
+                                                                    <div key={key} className="col-md-12">
+                                                                        <div className="form-group form-group-default">
+                                                                            <label>{key}</label>
+                                                                            <input type="email" className="form-control" disabled value={this.state.data.details.extraData[key]} />
+                                                                        </div>
+                                                                    </div>
+                                                                )
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                                <br />
+                                                <button type="button" className="btn btn-primary btn-block" data-dismiss="modal">Ok</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+
+                {/*<div className="modal fade slide-up disable-scroll" id="modalSlideUp" tabIndex="-1" role="dialog" aria-hidden="false">
+                    <div className="modal-dialog ">
+                        <div className="modal-content-wrapper">
+                            <div className="modal-content">
+                                <div className="modal-header clearfix text-left">
+                                    <button type="button" className="close" data-dismiss="modal" aria-hidden="true"><i className="pg-close fs-14"></i>
+                                    </button>
+                                    <h5>Payment <span className="semi-bold">Information</span></h5>
+                                    <p className="p-b-10">We need payment information inorder to process your order</p>
+                                </div>
+                                <div className="modal-body">
+
+                                    <div className="row">
+                                        <div className="col-md-8">
+                                            <div className="p-t-20 clearfix p-l-10 p-r-10">
+                                                <div className="pull-left">
+                                                    <p className="bold font-montserrat text-uppercase">TOTAL</p>
+                                                </div>
+                                                <div className="pull-right">
+                                                    <p className="bold font-montserrat text-uppercase">$20.00</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-4 m-t-10 sm-m-t-10">
+                                            <button type="button" className="btn btn-primary btn-block m-t-5">Pay Now</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>*/}
+
                 <div className="m-t-20 container-fluid container-fixed-lg bg-white">
                     <div className="row dashboard">
                         <div className="col-lg-12">
@@ -503,6 +742,11 @@ class AssetsManagement extends Component {
                                                                                                             <div className="form-group">
                                                                                                                 <label>Identifier</label>
                                                                                                                 <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_getInfoSoloAsset_identifier"] = input}} required />
+                                                                                                            </div>
+                                                                                                            <div className="form-group">
+                                                                                                                <label>Properties</label>
+                                                                                                                <span className="help"> e.g. "p1,p2,p3"</span>
+                                                                                                                <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_getInfoSoloAsset_properties"] = input}} />
                                                                                                             </div>
                                                                                                             {this.state[item.instanceId + "_getInfoSoloAsset_formSubmitError"] &&
                                                                                                                 <div className="row m-t-30">

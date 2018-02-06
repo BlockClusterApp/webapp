@@ -268,35 +268,6 @@ class JoinNetwork extends Component {
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <p className="m-t-10">Add other Quorum nodes enode URLs</p>
-                                                        <div className="form-group-attached">
-                                                            {
-                                                                (() => {
-                                                                    return (
-                                                                        <div className="row">
-                                                                            {this.state.totalENodes.map((item, index) => {
-                                                                                return (
-                                                                                    <div className="col-md-12" key={index}>
-                                                                                        <div className="form-group form-group-default input-group">
-                                                                                            <div className="form-input-group">
-                                                                                                <label>ENode URL</label>
-                                                                                                <input type="text" className="form-control usd" required placeholder="enode://pubkey@ip:port" onChange={(event) => {this.onENodeChange(index, event)}} value={item} />
-                                                                                            </div>
-                                                                                            <div className="input-group-addon delete-button" onClick={() => {this.deleteENodeURL(index)}}>
-                                                                                                <i className="fa fa-trash" aria-hidden="true"></i>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                )
-                                                                            })}
-                                                                            <div className="col-md-12 clearfix">
-                                                                                <button className="btn btn-complete btn-xs m-t-10 pull-right add-url" onClick={this.addENodeURL}>&nbsp;<i className="fa fa-plus" aria-hidden="true"></i>&nbsp;</button>
-                                                                            </div>
-                                                                        </div>
-                                                                    )
-                                                                })()
-                                                            }
-                                                        </div>
                                                         <p className="m-t-10">Add other Constellation nodes URLs</p>
                                                         <div className="form-group-attached">
                                                             {
