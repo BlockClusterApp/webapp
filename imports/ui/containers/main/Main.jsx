@@ -16,6 +16,7 @@ import AssetsStats from "../../pages/assetsStats/AssetsStats.jsx"
 import AssetsAPIs from "../../pages/assetsAPIs/AssetsAPIs.jsx"
 import AssetsEvents from "../../pages/assetsEvents/AssetsEvents.jsx"
 import AssetsManagement from "../../pages/assetsManagement/AssetsManagement.jsx"
+import AssetsExchange from "../../pages/assetsExchange/AssetsExchange.jsx"
 
 export default class Main extends Component {
 	render(){
@@ -34,6 +35,7 @@ export default class Main extends Component {
 						<Route exact path="/app/assets/apis" component={AssetsAPIs} />
 						<Route exact path="/app/assets/events" component={AssetsEvents} />
 						<Route exact path="/app/assets/management" component={AssetsManagement} />
+						<Route exact path="/app/assets/exchange" component={AssetsExchange} />
 		            </div>
 				</div>
 				<Footer />

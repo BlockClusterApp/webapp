@@ -333,10 +333,12 @@ class AssetsManagement extends Component {
                                                             {Object.keys(this.state.data.details.extraData).map((key, index) => {
                                                                 return (
                                                                     <div key={key} className="col-md-12">
-                                                                        <div className="form-group form-group-default">
-                                                                            <label>{key}</label>
-                                                                            <input type="email" className="form-control" disabled value={this.state.data.details.extraData[key]} />
-                                                                        </div>
+                                                                        {key != '' &&
+                                                                            <div className="form-group form-group-default">
+                                                                                <label>{key}</label>
+                                                                                <input type="email" className="form-control" readOnly value={this.state.data.details.extraData[key]} />
+                                                                            </div>
+                                                                        }
                                                                     </div>
                                                                 )
                                                             })}

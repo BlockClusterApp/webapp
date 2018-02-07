@@ -146,4 +146,52 @@ function updateAssetsInfo() {
 	}, 5000)
 }
 
-export {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateAssetsInfo}
+function updateOrderBook() {
+	Meteor.setInterval(function(){
+		var nodes = Networks.find({}).fetch()
+		nodes.forEach(function(item, index){
+			var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+			var web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + item.rpcNodePort));
+			var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+			var assets = assetsContract.at(item.assetsContractAddress);
+			var events = assets.allEvents({fromBlock: 0, toBlock: "latest"});
+
+			events.get(Meteor.bindEnvironment(function(error, events){
+				var orderBook = [];
+				if(!error) {
+					for(var count = 0; count < events.length; count++) {
+						if(events[count].event === "orderPlaced") {
+							let orderInfo = assets.getOrderInfo.call(events[count].args.orderId);
+							let order_status_owner = assets.getOrderInfo_Status_Owner.call(events[count].args.orderId);
+
+							orderBook.push({
+								orderId: events[count].args.orderId,
+								fromType: orderInfo[1],
+								toType: orderInfo[0],
+								fromId: orderInfo[3],
+								toId: orderInfo[2],
+								fromUnits: orderInfo[4].toString(),
+								toUnits: orderInfo[5].toString(),
+								fromUniqueIdentifier: orderInfo[6],
+								toUniqueIdentifier: orderInfo[7],
+								seller: order_status_owner[0],
+								buyer: order_status_owner[1],
+								status: order_status_owner[2]
+							})
+						}
+					}
+
+					Networks.update({
+						_id: item._id
+					}, {
+						$set: {
+							orderBook: orderBook
+						}
+					})
+				}
+			}))
+		})
+	}, 5000)
+}
+
+export {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateAssetsInfo, updateOrderBook}

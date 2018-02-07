@@ -848,6 +848,82 @@ spec:
 	    })
 
 		return myFuture.wait();
+	},
+	"placeOrder": function(instanceId, fromType, toType, fromId, toId, fromUnits, toUnits, fromUniqueIdentifier, toUniqueIdentifier, fromAddress) {
+		var myFuture = new Future();
+		var network = Networks.find({instanceId: instanceId}).fetch()[0]
+		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+	    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+		var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+	    var assets = assetsContract.at(network.assetsContractAddress);
+
+		assets.placeOrder.sendTransaction(
+			helpers.instanceIDGenerate(),
+			fromType,
+			toType,
+			fromId,
+			toId,
+			fromUnits,
+			toUnits,
+			fromUniqueIdentifier,
+			toUniqueIdentifier, {
+				from: fromAddress,
+				gas: '99999999999999999'
+			}, function(error, txHash) {
+				if(error) {
+					myFuture.throw("An unknown error occured");
+	            } else {
+					myFuture.return();
+	            }
+			}
+		)
+
+		return myFuture.wait();
+	},
+	"fulfillOrder": function(instanceId, orderId, fromAddress) {
+		var myFuture = new Future();
+		var network = Networks.find({instanceId: instanceId}).fetch()[0]
+		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+	    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+		var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+	    var assets = assetsContract.at(network.assetsContractAddress);
+
+		assets.fulfillOrder.sendTransaction(
+			orderId, {
+				from: fromAddress,
+				gas: '99999999999999999'
+			}, function(error, txHash) {
+				if(error) {
+					myFuture.throw("An unknown error occured");
+	            } else {
+					myFuture.return();
+	            }
+			}
+		)
+
+		return myFuture.wait();
+	},
+	"cancelOrder": function(instanceId, orderId, fromAddress) {
+		var myFuture = new Future();
+		var network = Networks.find({instanceId: instanceId}).fetch()[0]
+		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+	    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+		var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+	    var assets = assetsContract.at(network.assetsContractAddress);
+		assets.cancelOrder.sendTransaction(
+			orderId, {
+				from: fromAddress,
+				gas: '99999999999999999'
+			}, function(error, txHash) {
+				if(error) {
+					myFuture.throw("An unknown error occured");
+	            } else {
+					myFuture.return();
+	            }
+			}
+		)
+
+		return myFuture.wait();
 	}
 })
 
