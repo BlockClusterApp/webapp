@@ -431,7 +431,7 @@ class AssetsManagement extends Component {
                                                                                                                                         <span>{item.toUnits} {item.toId}</span>
                                                                                                                                     }
 
-                                                                                                                                    {item.fromType == "solo" &&
+                                                                                                                                    {item.toType == "solo" &&
                                                                                                                                         <span>{item.toUniqueIdentifier} {item.toId}</span>
                                                                                                                                     }
                                                                                                                                 </td>
