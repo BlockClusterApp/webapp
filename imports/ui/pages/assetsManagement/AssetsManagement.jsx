@@ -428,23 +428,23 @@ class AssetsManagement extends Component {
                                                                                     <div className="card card-transparent">
                                                                                         <ul className="nav nav-tabs nav-tabs-fillup" data-init-reponsive-tabs="dropdownfx">
                                                                                             <li className="nav-item">
-                                                                                                <a href="#" className="active" data-toggle="tab" data-target="#slide1"><span>Issue Assets</span></a>
+                                                                                                <a href="#" className="active" data-toggle="tab" data-target={"#" + item.instanceId + "_slide1"}><span>Issue Assets</span></a>
                                                                                             </li>
                                                                                             <li className="nav-item">
-                                                                                                <a href="#" data-toggle="tab" data-target="#slide2"><span>Transfer Assets</span></a>
+                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide2"}><span>Transfer Assets</span></a>
                                                                                             </li>
                                                                                             <li className="nav-item">
-                                                                                                <a href="#" data-toggle="tab" data-target="#slide3"><span>Get Asset Info</span></a>
+                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide3"}><span>Get Asset Info</span></a>
                                                                                             </li>
                                                                                             <li className="nav-item">
-                                                                                                <a href="#" data-toggle="tab" data-target="#slide4"><span>Add/Update Solo Asset Info</span></a>
+                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide4"}><span>Add/Update Solo Asset Info</span></a>
                                                                                             </li>
                                                                                             <li className="nav-item">
-                                                                                                <a href="#" data-toggle="tab" data-target="#slide5"><span>Close Solo Asset</span></a>
+                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide5"}><span>Close Solo Asset</span></a>
                                                                                             </li>
                                                                                         </ul>
                                                                                         <div className="tab-content p-l-0 p-r-0">
-                                                                                            <div className="tab-pane slide-left active" id="slide1">
+                                                                                            <div className="tab-pane slide-left active" id={item.instanceId + "_slide1"}>
                                                                                                 <div className="row column-seperation">
                                                                                                     <div className="col-lg-6">
                                                                                                         <h4>Issue Bulk Assets</h4>
@@ -560,7 +560,7 @@ class AssetsManagement extends Component {
                                                                                                     </div>
                                                                                                 </div>
                                                                                             </div>
-                                                                                            <div className="tab-pane slide-left" id="slide2">
+                                                                                            <div className="tab-pane slide-left" id={item.instanceId + "_slide2"}>
                                                                                                 <div className="row">
                                                                                                     <div className="col-lg-6">
                                                                                                         <h4>Transfer Bulk Assets</h4>
@@ -676,7 +676,7 @@ class AssetsManagement extends Component {
                                                                                                     </div>
                                                                                                 </div>
                                                                                             </div>
-                                                                                            <div className="tab-pane slide-left" id="slide3">
+                                                                                            <div className="tab-pane slide-left" id={item.instanceId + "_slide3"}>
                                                                                                 <div className="row">
                                                                                                     <div className="col-lg-6">
                                                                                                         <h4>Get Bulk Asset Balance</h4>
@@ -777,7 +777,7 @@ class AssetsManagement extends Component {
                                                                                                     </div>
                                                                                                 </div>
                                                                                             </div>
-                                                                                            <div className="tab-pane slide-left" id="slide4">
+                                                                                            <div className="tab-pane slide-left" id={item.instanceId + "_slide4"}>
                                                                                                 <div className="row">
                                                                                                     <div className="col-lg-12">
                                                                                                         <h4>Add/Update Meta Data</h4>
@@ -841,7 +841,7 @@ class AssetsManagement extends Component {
                                                                                                     </div>
                                                                                                 </div>
                                                                                             </div>
-                                                                                            <div className="tab-pane slide-left" id="slide5">
+                                                                                            <div className="tab-pane slide-left" id={item.instanceId + "_slide5"}>
                                                                                                 <div className="row">
                                                                                                     <div className="col-lg-12">
                                                                                                         <h4>Close Asset</h4>

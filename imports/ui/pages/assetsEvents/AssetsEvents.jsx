@@ -63,17 +63,17 @@ class AssetsEvents extends Component {
                                                                                     <div className="card card-transparent">
                                                                                         <ul className="nav nav-tabs nav-tabs-fillup" data-init-reponsive-tabs="dropdownfx">
                                                                                             <li className="nav-item">
-                                                                                                <a href="#" className="active" data-toggle="tab" data-target="#slide1"><span>Assets Issed Events</span></a>
+                                                                                                <a href="#" className="active" data-toggle="tab" data-target={"#" + item.instanceId + "_slide1"}><span>Assets Issed Events</span></a>
                                                                                             </li>
                                                                                             <li className="nav-item">
-                                                                                                <a href="#" data-toggle="tab" data-target="#slide2"><span>Assets Transferred Events</span></a>
+                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide2"}><span>Assets Transferred Events</span></a>
                                                                                             </li>
                                                                                             <li className="nav-item">
-                                                                                                <a href="#" data-toggle="tab" data-target="#slide3"><span>Solo Assets events</span></a>
+                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide3"}><span>Solo Assets events</span></a>
                                                                                             </li>
                                                                                         </ul>
                                                                                         <div className="tab-content p-l-0 p-r-0">
-                                                                                            <div className="tab-pane slide-left active" id="slide1">
+                                                                                            <div className="tab-pane slide-left active" id={item.instanceId + "_slide1"}>
                                                                                                 <div className="row column-seperation">
                                                                                                     <div className="col-lg-12 p-l-0 p-r-0">
                                                                                                         <form role="form">
@@ -114,7 +114,7 @@ class AssetsEvents extends Component {
                                                                                                     </div>
                                                                                                 </div>
                                                                                             </div>
-                                                                                            <div className="tab-pane slide-left" id="slide2">
+                                                                                            <div className="tab-pane slide-left" id={item.instanceId + "_slide2"}>
                                                                                                 <div className="row">
                                                                                                     <div className="col-lg-12 p-l-0 p-r-0">
                                                                                                         <form role="form">
@@ -155,7 +155,7 @@ class AssetsEvents extends Component {
                                                                                                     </div>
                                                                                                 </div>
                                                                                             </div>
-                                                                                            <div className="tab-pane slide-left" id="slide3">
+                                                                                            <div className="tab-pane slide-left" id={item.instanceId + "_slide3"}>
                                                                                                 <div className="row">
                                                                                                     <div className="col-lg-12 p-l-0 p-r-0">
                                                                                                         <form role="form">
