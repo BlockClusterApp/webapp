@@ -17,7 +17,7 @@ function updateKuberREST_IP() {
 		name: "kuberREST_IP",
 	}, {
 		$set: {
-			"value": "34.208.153.18"
+			"value": "blockcluster.io"
 		}
 	});
 }
