@@ -62,7 +62,7 @@ class Navbar extends Component {
 	                        <span className="icon-thumbnail"><i className="fa fa-list"></i></span>
 	                    </li>
 	                    <li className="">
-		                    <Link to={"http://localhost:5001/ipfs/QmPhnvn747LqwPYMJmQVorMaGbMSgA7mRRoyyZYz3DoZRQ/#/home"} target="_blank" className="detailed">
+		                    <Link to={"http://blockcluster.io:5001/ipfs/QmPhnvn747LqwPYMJmQVorMaGbMSgA7mRRoyyZYz3DoZRQ/#/home"} target="_blank" className="detailed">
 	                    		<span className="title">IPFS</span>
 	                        	<span className="details">Store Files</span>
 	                    	</Link>
