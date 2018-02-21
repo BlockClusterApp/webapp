@@ -20,9 +20,9 @@ class NetworksList extends Component {
 
 	render(){
 		return (
-            <div className="content ">
+            <div className="content networksList">
                 <div className="m-t-20 container-fluid container-fixed-lg bg-white">
-                    <div className="row dashboard">
+                    <div className="row">
                         <div className="col-lg-12">
                             <div className="card card-transparent">
                                 <div className="card-header ">

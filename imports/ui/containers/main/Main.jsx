@@ -17,6 +17,7 @@ import AssetsAPIs from "../../pages/assetsAPIs/AssetsAPIs.jsx"
 import AssetsEvents from "../../pages/assetsEvents/AssetsEvents.jsx"
 import AssetsManagement from "../../pages/assetsManagement/AssetsManagement.jsx"
 import AssetsExchange from "../../pages/assetsExchange/AssetsExchange.jsx"
+import Explorer from "../../pages/explorer/Explorer.jsx"
 
 export default class Main extends Component {
 	render(){
@@ -30,6 +31,7 @@ export default class Main extends Component {
 						<Route exact path="/app/networks/create" component={CreateNetwork} />
 						<Route exact path="/app/networks/network/:id" component={ViewEditNetwork} />
 						<Route exact path="/app/networks/join" component={JoinNetwork} />
+						<Route exact path="/app/explorer" component={Explorer} />
 						<Route exact path="/app/assets/create" component={CreateAssetType} />
 						<Route exact path="/app/assets/stats" component={AssetsStats} />
 						<Route exact path="/app/assets/apis" component={AssetsAPIs} />

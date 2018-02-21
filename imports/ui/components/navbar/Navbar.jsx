@@ -111,15 +111,13 @@ class Navbar extends Component {
 			                	</li>
 			              	</ul>
 			            </li>
-						{(this.props.kuberREST_IP[0] !== undefined) &&
-	                    	<li className="">
-		                    	<Link target="_blank" to={"http://" + this.props.kuberREST_IP[0].value + ":8090"} className="detailed">
-		                    		<span className="title">Explorer</span>
-		                        	<span className="details">View Blockchain Txns</span>
-		                    	</Link>
-		                        <span className="icon-thumbnail"><i className="fa fa-eye"></i></span>
-		                    </li>
-	                    }
+						<li className="">
+	                    	<Link to={"/app/explorer"} className="detailed">
+								<span className="title">Explorer</span>
+								<span className="details">View Blockchain Txns</span>
+	                    	</Link>
+	                        <span className="icon-thumbnail"><i className="fa fa-eye"></i></span>
+	                    </li>
 						{(this.props.kuberREST_IP[0] !== undefined) &&
 	                    	<li className="">
 		                    	<Link target="_blank" to={"http://" + this.props.kuberREST_IP[0].value + ":8000/ui"} className="detailed">
