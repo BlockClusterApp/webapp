@@ -24,7 +24,7 @@ class Explorer extends Component {
     }
 
     componentDidMount() {
-        setTimeout(this.addLatestBlocks, 500);
+        setTimeout(this.addLatestBlocks, 2000);
     }
 
     componentWillUnmount() {
