@@ -5,6 +5,8 @@ import {Utilities} from "../../../collections/utilities/utilities.js"
 import helpers from "../../../modules/helpers"
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
 import {withRouter} from 'react-router-dom'
+import Web3 from "web3";
+
 import "./Explorer.scss"
 
 class Explorer extends Component {
