@@ -7,4 +7,27 @@
     .widget-9 {
         height: auto !important;
     }
+
+    .json-output {
+        height: 400px;
+        background: #272727;
+        opacity: 0.8;
+        color: white;
+        overflow-y: scroll;
+        word-wrap: break-word;
+        word-break: break-all;
+
+        pre {
+            color: white;
+        }
+    }
+
+    .widget-11-2 .widget-11-2-table {
+        height: 515px;
+    }
+
+    .details .form-group-default {
+        border-width: 0px;
+    }
+
 }

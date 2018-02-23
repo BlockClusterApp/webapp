@@ -20,13 +20,15 @@ class Explorer extends Component {
             totalPoolTxns: 0,
             totalPending: 0,
             totalQueued: 0,
-            totalAccounts: 0
+            totalAccounts: 0,
+            blockOrTxnOutput: ''
         }
 
         this.addLatestBlocks = this.addLatestBlocks.bind(this)
         this.loadMoreBlocks = this.loadMoreBlocks.bind(this)
         this.refreshTxpool = this.refreshTxpool.bind(this)
         this.refreshTotalAccounts = this.refreshTotalAccounts.bind(this)
+        this.fetchBlockOrTxn = this.fetchBlockOrTxn.bind(this)
     }
 
     componentDidMount() {
@@ -50,7 +52,8 @@ class Explorer extends Component {
             totalPoolTxns: 0,
             totalPending: 0,
             totalQueued: 0,
-            totalAccounts: 0
+            totalAccounts: 0,
+            blockOrTxnOutput: ''
         })
     }
 
@@ -287,6 +290,55 @@ class Explorer extends Component {
         }
     }
 
+    fetchBlockOrTxn(value) {
+        let action = null;
+
+        if(value.length === 66) {
+            action = "txn"
+        } else if(!Number.isNaN(parseInt(value))) {
+            action = "block"
+        } else {
+            return;
+        }
+
+        let rpc = null;
+        let status = null;
+        if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
+            rpc = "http://" + this.props.workerNodeIP[0].value + ":" + this.props.networks[0].rpcNodePort
+            status = this.props.networks[0].status
+        } else if (this.state.selectedNetwork !== null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
+            for(let count = 0; count < this.props.networks.length; count++) {
+                if(this.state.selectedNetwork === this.props.networks[count].instanceId) {
+                    rpc = "http://" + this.props.workerNodeIP[0].value + ":" + this.props.networks[count].rpcNodePort
+                    status = this.props.networks[count].status
+                    break
+                }
+            }
+        }
+
+        if(status == "running") {
+            let web3 = new Web3(new Web3.providers.HttpProvider(rpc));
+
+            if(action === "block") {
+                web3.eth.getBlock(value, (error, result) => {
+                    if(!error && result != null) {
+                        this.setState({
+                            blockOrTxnOutput: JSON.stringify(result, undefined, 4)
+                        })
+                    }
+                })
+            } else {
+                web3.eth.getTransactionReceipt(value, (error, result) => {
+                    if(!error && result != null) {
+                        this.setState({
+                            blockOrTxnOutput: JSON.stringify(result, undefined, 4)
+                        })
+                    }
+                })
+            }
+        }
+    }
+
 	render(){
         let nodeStatus = null;
         if (this.state.selectedNetwork === null && this.props.networks.length > 0) {
@@ -299,7 +351,7 @@ class Explorer extends Component {
             <div className="content explorer sm-gutter">
                 <div className="container-fluid container-fixed-lg m-t-20 p-l-25 p-r-25 p-t-0 p-b-25 sm-padding-10">
                     <div className="row">
-                        <div className="col-lg-6 col-sm-12  d-flex flex-column">
+                        <div className="col-lg-6 col-sm-12">
                             <div className="row">
                                 <div className="col-lg-12">
                                     <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
@@ -386,9 +438,32 @@ class Explorer extends Component {
                                         </div>
                                     </div>
                                 </div>
+                                <div className="col-lg-12 m-t-10">
+                                    <div className="card no-border no-margin details">
+                                        <hr className="no-margin" />
+                                        <div className="">
+                                            <form role="form">
+                                                <div className="form-group form-group-default input-group m-b-0">
+                                                    <div className="form-input-group">
+                                                        <label>Enter Block Number or Txn Hash for details</label>
+                                                        <input type="email" className="form-control" placeholder="0x...." onChange={(e) => {this.fetchBlockOrTxn(e.target.value)}} />
+                                                    </div>
+                                                    <div className="input-group-addon p-l-20 p-r-20 search-button">
+                                                        <i className="fa fa-search"></i>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        <div className="padding-15 json-output">
+                                            <pre>
+                                                {this.state.blockOrTxnOutput}
+                                            </pre>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div className="col-lg-6 m-b-10 d-flex">
+                        <div className="col-lg-6">
                             <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
                                 <div className="card-header top-right">
                                     <div className="card-controls">
