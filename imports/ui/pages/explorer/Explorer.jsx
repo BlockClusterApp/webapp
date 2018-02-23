@@ -16,15 +16,23 @@ class Explorer extends Component {
             selectedNetwork: null,
             latestBlock: null,
             oldestBlock: null,
-            blocks: []
+            blocks: [],
+            totalPoolTxns: 0,
+            totalPending: 0,
+            totalQueued: 0,
+            totalAccounts: 0
         }
 
         this.addLatestBlocks = this.addLatestBlocks.bind(this)
         this.loadMoreBlocks = this.loadMoreBlocks.bind(this)
+        this.refreshTxpool = this.refreshTxpool.bind(this)
+        this.refreshTotalAccounts = this.refreshTotalAccounts.bind(this)
     }
 
     componentDidMount() {
         setTimeout(this.addLatestBlocks, 2000);
+        setTimeout(this.refreshTxpool, 2000);
+        setTimeout(this.refreshTotalAccounts, 2000);
     }
 
     componentWillUnmount() {
@@ -38,7 +46,11 @@ class Explorer extends Component {
             selectedNetwork: e.target.value,
             latestBlock: null,
             oldestBlock: null,
-            blocks: []
+            blocks: [],
+            totalPoolTxns: 0,
+            totalPending: 0,
+            totalQueued: 0,
+            totalAccounts: 0
         })
     }
 
@@ -53,6 +65,103 @@ class Explorer extends Component {
                     return (<i className="fa fa-circle text-complete fs-11"></i>)
                 }
             }
+        }
+    }
+
+    refreshTotalAccounts() {
+        let rpc = null;
+        let status = null;
+        if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
+            rpc = "http://" + this.props.workerNodeIP[0].value + ":" + this.props.networks[0].rpcNodePort
+            status = this.props.networks[0].status
+        } else if (this.state.selectedNetwork !== null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
+            for(let count = 0; count < this.props.networks.length; count++) {
+                if(this.state.selectedNetwork === this.props.networks[count].instanceId) {
+                    rpc = "http://" + this.props.workerNodeIP[0].value + ":" + this.props.networks[count].rpcNodePort
+                    status = this.props.networks[count].status
+                    break
+                }
+            }
+        }
+
+        if(status == "running") {
+            let web3 = new Web3(new Web3.providers.HttpProvider(rpc));
+            web3.eth.getAccounts((error, result) => {
+                if(!error) {
+                    this.setState({
+                        totalAccounts: result.length
+                    }, () => {
+                        setTimeout(this.refreshTotalAccounts, 500)
+                    })
+                } else {
+                    setTimeout(this.refreshTotalAccounts, 500)
+                }
+            })
+        } else {
+            setTimeout(this.refreshTotalAccounts, 500)
+        }
+    }
+
+    refreshTxpool() {
+        let rpc = null;
+        let status = null;
+        if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
+            rpc = "http://" + this.props.workerNodeIP[0].value + ":" + this.props.networks[0].rpcNodePort
+            status = this.props.networks[0].status
+        } else if (this.state.selectedNetwork !== null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
+            for(let count = 0; count < this.props.networks.length; count++) {
+                if(this.state.selectedNetwork === this.props.networks[count].instanceId) {
+                    rpc = "http://" + this.props.workerNodeIP[0].value + ":" + this.props.networks[count].rpcNodePort
+                    status = this.props.networks[count].status
+                    break
+                }
+            }
+        }
+
+        if(status == "running") {
+            let web3 = new Web3(new Web3.providers.HttpProvider(rpc));
+            web3.eth.getBlockNumber((error, result) => {
+                if(!error) {
+                    web3.currentProvider.sendAsync({
+                        method: "txpool_content",
+                        params: [],
+                        jsonrpc: "2.0",
+                        id: new Date().getTime()
+                    }, (error, result) => {
+                        if(!error) {
+                            let totalPending = 0;
+                            for(let account in result.result.pending) {
+                                for(let txn in result.result.pending[account]) {
+                                    totalPending++;
+                                }
+                            }
+
+                            let totalQueued = 0;
+                            for(let account in result.result.queued) {
+                                for(let txn in result.result.queued[account]) {
+                                    totalQueued++;
+                                }
+                            }
+
+                            this.setState({
+                                totalPoolTxns: totalQueued + totalPending,
+                                totalPending: totalPending,
+                                totalQueued: totalQueued
+                            }, () => {
+                                setTimeout(this.refreshTxpool, 500)
+                            })
+
+                        } else {
+                            setTimeout(this.refreshTxpool, 500);
+                        }
+
+                    })
+                } else {
+                    setTimeout(this.refreshTxpool, 500);
+                }
+            })
+        } else {
+            setTimeout(this.refreshTxpool, 500)
         }
     }
 
@@ -112,10 +221,6 @@ class Explorer extends Component {
                 })
             }
         } else {
-            setTimeout(this.addLatestBlocks, 500);
-        }
-
-        if(this.props.networks.length === 0) {
             setTimeout(this.addLatestBlocks, 500);
         }
     }
@@ -191,28 +296,94 @@ class Explorer extends Component {
         }
 
 		return (
-            <div className="content sm-gutter">
-                <div className="container-fluid m-t-20 p-l-25 p-r-25 p-t-0 p-b-25 sm-padding-10">
+            <div className="content explorer sm-gutter">
+                <div className="container-fluid container-fixed-lg m-t-20 p-l-25 p-r-25 p-t-0 p-b-25 sm-padding-10">
                     <div className="row">
-                        <div className="col-lg-12 col-sm-12  d-flex flex-column">
-                            <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
-                                <div className="card-header ">
-                                    <h5 className="text-primary pull-left fs-12">Select Network </h5>
-                                    <div className="pull-right small hint-text">
-                                        {nodeStatus}
+                        <div className="col-lg-6 col-sm-12  d-flex flex-column">
+                            <div className="row">
+                                <div className="col-lg-12">
+                                    <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
+                                        <div className="card-header ">
+                                            <h5 className="text-primary pull-left fs-12">Select Network </h5>
+                                            <div className="pull-right small hint-text">
+                                                {nodeStatus}
+                                            </div>
+                                            <div className="clearfix"></div>
+                                        </div>
+                                        <div className="card-description m-b-0 p-b-0">
+                                            <div className="radio radio-success">
+                                                {this.props.networks.map((item, index) => {
+                                                    return (
+                                                        <span key={index}>
+                                                            <input type="radio" value={item.instanceId} name="networkId" id={item.instanceId} checked={(this.state.selectedNetwork === item.instanceId ? true : (this.state.selectedNetwork === null && index === 0 ? true : false))} onChange={(e) => {this.selectNetwork(e)}} />
+                                                            <label htmlFor={item.instanceId}>{item.name}</label>
+                                                        </span>
+                                                    )
+                                                })}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="clearfix"></div>
                                 </div>
-                                <div className="card-description m-b-0 p-b-0">
-                                    <div className="radio radio-success">
-                                        {this.props.networks.map((item, index) => {
-                                            return (
-                                                <span key={index}>
-                                                    <input type="radio" value={item.instanceId} name="networkId" id={item.instanceId} checked={(this.state.selectedNetwork === item.instanceId ? true : (this.state.selectedNetwork === null && index === 0 ? true : false))} onChange={(e) => {this.selectNetwork(e)}} />
-                                                    <label htmlFor={item.instanceId}>{item.name}</label>
+                                <div className="col-lg-6">
+                                    <div className="card no-border bg-white no-margin widget-loader-bar">
+                                        <div className="card-header  top-left top-right ">
+                                            <div className="card-title text-black hint-text">
+                                                <span className="font-montserrat fs-11 all-caps">Transaction Pool <i className="fa fa-chevron-right"></i>
                                                 </span>
-                                            )
-                                        })}
+                                            </div>
+                                            <div className="card-controls">
+                                                <ul>
+                                                    <li className="p-l-10">
+                                                        <a data-toggle="refresh" className="card-refresh text-black" href="#">
+                                                            <i className="fa fa-spinner"></i>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div className="card-block p-t-40">
+                                            <div className="row">
+                                                <div className="col-sm-12">
+                                                    <h4 className="no-margin p-b-5 text-danger semi-bold">{this.state.totalPoolTxns} TXNS</h4>
+                                                    <div className="pull-left small">
+                                                        <span>Pending</span>
+                                                        <span className=" text-success font-montserrat">
+                                                        <i className="fa fa-caret-up m-l-10"></i> {this.state.totalPending} Txns
+                                                        </span>
+                                                    </div>
+                                                    <div className="pull-left m-l-20 small">
+                                                        <span>Queue</span>
+                                                        <span className=" text-danger font-montserrat">
+                                                        <i className="fa fa-caret-down m-l-10"></i> {this.state.totalQueued} Txns
+                                                        </span>
+                                                    </div>
+                                                    <div className="clearfix"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="col-lg-6">
+                                    <div className="widget-9 card no-border bg-success no-margin widget-loader-bar">
+                                        <div className="full-height d-flex flex-column">
+                                            <div className="card-header ">
+                                                <div className="card-title text-black">
+                                                    <span className="font-montserrat fs-11 all-caps">Accounts IN NODE <i
+                                                        className="fa fa-chevron-right"></i>
+                                                    </span>
+                                                </div>
+                                                <div className="card-controls">
+                                                    <ul>
+                                                        <li><a href="#" className="card-refresh text-black" data-toggle="refresh"><i
+                                                            className="fa fa-key"></i></a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div className="p-l-20">
+                                                <h3 className="no-margin p-b-30 text-white ">{this.state.totalAccounts}</h3>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
