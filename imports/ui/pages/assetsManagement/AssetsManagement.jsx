@@ -320,13 +320,13 @@ class AssetsManagement extends Component {
                                                             <div className="col-md-12">
                                                                 <div className="form-group form-group-default">
                                                                     <label>Is Closed?</label>
-                                                                    <input type="email" className="form-control" value={this.state.data.details.isClosed} />
+                                                                    <input type="email" className="form-control dark-disabled" readOnly value={this.state.data.details.isClosed} />
                                                                 </div>
                                                             </div>
                                                             <div className="col-md-12">
                                                                 <div className="form-group form-group-default">
                                                                     <label>Owner</label>
-                                                                    <input type="email" className="form-control" value={this.state.data.details.owner} />
+                                                                    <input type="email" className="form-control dark-disabled" readOnly value={this.state.data.details.owner} />
                                                                 </div>
                                                             </div>
                                                             {Object.keys(this.state.data.details.extraData).map((key, index) => {
@@ -335,7 +335,7 @@ class AssetsManagement extends Component {
                                                                         {key != '' &&
                                                                             <div className="form-group form-group-default">
                                                                                 <label>{key}</label>
-                                                                                <input type="email" className="form-control" value={this.state.data.details.extraData[key]} />
+                                                                                <input type="email" className="form-control dark-disabled" readOnly value={this.state.data.details.extraData[key]} />
                                                                             </div>
                                                                         }
                                                                     </div>
