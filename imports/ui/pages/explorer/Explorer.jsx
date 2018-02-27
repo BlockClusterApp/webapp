@@ -510,7 +510,7 @@ class Explorer extends Component {
                                 <div className="padding-25 mt-auto">
                                     <p className="small no-margin">
                                         <a href="#" onClick={(e) => {this.loadMoreBlocks(e)}}><i className="fa fs-16 fa-arrow-circle-o-down text-success m-r-10"></i></a>
-                                        <span className="hint-text ">Show more blocks</span>
+                                        <span className="hint-text ">Show older blocks</span>
                                     </p>
                                 </div>
                             </div>

@@ -194,7 +194,6 @@ class AssetsManagement extends Component {
             instanceId,
             this[instanceId + "_getInfoSoloAsset_assetName"].value,
             this[instanceId + "_getInfoSoloAsset_identifier"].value,
-            this[instanceId + "_getInfoSoloAsset_properties"].value,
             (error, data) => {
                 if(error) {
                     this.setState({
@@ -321,13 +320,13 @@ class AssetsManagement extends Component {
                                                             <div className="col-md-12">
                                                                 <div className="form-group form-group-default">
                                                                     <label>Is Closed?</label>
-                                                                    <input type="email" className="form-control" disabled value={this.state.data.details.isClosed} />
+                                                                    <input type="email" className="form-control" value={this.state.data.details.isClosed} />
                                                                 </div>
                                                             </div>
                                                             <div className="col-md-12">
                                                                 <div className="form-group form-group-default">
                                                                     <label>Owner</label>
-                                                                    <input type="email" className="form-control" disabled value={this.state.data.details.owner} />
+                                                                    <input type="email" className="form-control" value={this.state.data.details.owner} />
                                                                 </div>
                                                             </div>
                                                             {Object.keys(this.state.data.details.extraData).map((key, index) => {
@@ -336,7 +335,7 @@ class AssetsManagement extends Component {
                                                                         {key != '' &&
                                                                             <div className="form-group form-group-default">
                                                                                 <label>{key}</label>
-                                                                                <input type="email" className="form-control" readOnly value={this.state.data.details.extraData[key]} />
+                                                                                <input type="email" className="form-control" value={this.state.data.details.extraData[key]} />
                                                                             </div>
                                                                         }
                                                                     </div>
@@ -744,11 +743,6 @@ class AssetsManagement extends Component {
                                                                                                             <div className="form-group">
                                                                                                                 <label>Identifier</label>
                                                                                                                 <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_getInfoSoloAsset_identifier"] = input}} required />
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Properties</label>
-                                                                                                                <span className="help"> e.g. "p1,p2,p3"</span>
-                                                                                                                <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_getInfoSoloAsset_properties"] = input}} />
                                                                                                             </div>
                                                                                                             {this.state[item.instanceId + "_getInfoSoloAsset_formSubmitError"] &&
                                                                                                                 <div className="row m-t-30">

@@ -770,40 +770,51 @@ spec:
         })
 		return myFuture.wait();
 	},
-	"getSoloAssetInfo": function(instanceId, assetName, identifier, properties){
+	"getSoloAssetInfo": function(instanceId, assetName, identifier){
 		var myFuture = new Future();
 		var network = Networks.find({instanceId: instanceId}).fetch()[0]
 		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
 	    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
 		var assetsContract = web3.eth.contract(smartContracts.assets.abi);
 	    var assets = assetsContract.at(network.assetsContractAddress);
-		properties = properties.split(",");
-		assets.isSoloAssetClosed.call(assetName, identifier, {}, function(error, isClosed){
-            if(!error) {
-                assets.getSoloAssetOwner.call(assetName, identifier, {}, function(error, owner){
-                    if(!error) {
-                        let extraData = {};
+		properties = []
 
-						if(properties.length > 0) {
-							for(let count = 0; count < properties.length; count++){
-	                            extraData[properties[count]] = assets.getSoloAssetExtraData.call(assetName, identifier, properties[count])
-	                        }
-						}
+		let addedOrUpdatedSoloAssetExtraData_events = assets.addedOrUpdatedSoloAssetExtraData({}, {fromBlock: 0, toBlock: "latest"})
+		addedOrUpdatedSoloAssetExtraData_events.get((error, events) => {
+			if(!error) {
+				for(let count = 0; count < events.length; count++) {
+					properties.indexOf(events[count].args.key) === -1 ? properties.push(events[count].args.key) : null;
+				}
+				assets.isSoloAssetClosed.call(assetName, identifier, {}, function(error, isClosed){
+		            if(!error) {
+		                assets.getSoloAssetOwner.call(assetName, identifier, {}, function(error, owner){
+		                    if(!error) {
+		                        let extraData = {};
 
-						myFuture.return({"details": {
-                            isClosed: isClosed,
-                            owner: owner,
-                            extraData: extraData
-                        }});
+								if(properties.length > 0) {
+									for(let count = 0; count < properties.length; count++){
+			                            extraData[properties[count]] = assets.getSoloAssetExtraData.call(assetName, identifier, properties[count])
+			                        }
+								}
 
-                    } else {
-                        myFuture.throw("An unknown error occured");
-                    }
-                })
-            } else {
-                myFuture.throw("An unknown error occured");
-            }
-        })
+								myFuture.return({"details": {
+		                            isClosed: isClosed,
+		                            owner: owner,
+		                            extraData: extraData
+		                        }});
+
+		                    } else {
+		                        myFuture.throw("An unknown error occured");
+		                    }
+		                })
+		            } else {
+		                myFuture.throw("An unknown error occured");
+		            }
+		        })
+			} else {
+				myFuture.throw("An unknown error occured");
+			}
+		})
 
 		return myFuture.wait();
 	},
