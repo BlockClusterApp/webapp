@@ -71,6 +71,82 @@ function updateAuthoritiesList() {
 	}, 5000)
 }
 
+function updateTotalSmartContracts() {
+	fetchTxn = async (web3, txnHash) => {
+		return new Promise((resolve, reject) => {
+			web3.eth.getTransactionReceipt(txnHash, (error, result) => {
+				if (!error && result !== null) {
+					if(result.contractAddress) {
+						resolve(true)
+					} else {
+						resolve(false)
+					}
+				} else {
+					reject(error)
+				}
+			})
+		});
+	}
+
+	fetchBlock = async (web3, blockNumber, totalSmartContracts) => {
+		return new Promise((resolve, reject) => {
+			web3.eth.getBlock(blockNumber, async (error, result) => {
+				if (!error && result !== null) {
+					for(let count = 0; count < result.transactions.length; count++) {
+						try {
+							let isSmartContractDeploy = await fetchTxn(web3, result.transactions[count])
+							if(isSmartContractDeploy) {
+								totalSmartContracts++;
+							}
+						} catch(e) {
+							reject(e)
+							return;
+						}
+					}
+
+					resolve(totalSmartContracts)
+				} else {
+					reject(error)
+				}
+			})
+		});
+	}
+
+	scan = async () => {
+		var nodes = Networks.find({}).fetch()
+
+		for(let count = 0; count < nodes.length; count++) {
+			if(nodes[count].status === "running") {
+				let blockToScan = (nodes[count].blockToScan ? nodes[count].blockToScan : 0);
+				let totalSmartContracts = (nodes[count].totalSmartContracts ? nodes[count].totalSmartContracts : 0);
+				var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+				let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + nodes[count].rpcNodePort));
+				try {
+					totalSmartContracts = await fetchBlock(web3, blockToScan, totalSmartContracts)
+
+					Networks.update({
+						_id: nodes[count]._id
+					}, {
+						$set: {
+							blockToScan: blockToScan + 1,
+							totalSmartContracts: totalSmartContracts
+						}
+					})
+				} catch(e) {
+				}
+			}
+
+			Meteor.setTimeout(scan, 200)
+		}
+
+		if(nodes.length === 0) {
+			Meteor.setTimeout(scan, 200)
+		}
+	}
+
+	Meteor.setTimeout(scan, 200)
+}
+
 
 function unlockAccounts() {
 	Meteor.setInterval(function(){
@@ -154,31 +230,29 @@ function updateOrderBook() {
 			var web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + item.rpcNodePort));
 			var assetsContract = web3.eth.contract(smartContracts.assets.abi);
 			var assets = assetsContract.at(item.assetsContractAddress);
-			var events = assets.allEvents({fromBlock: 0, toBlock: "latest"});
+			var events = assets.orderPlaced({fromBlock: 0, toBlock: "latest"});
 
 			events.get(Meteor.bindEnvironment(function(error, events){
 				var orderBook = [];
 				if(!error) {
 					for(var count = 0; count < events.length; count++) {
-						if(events[count].event === "orderPlaced") {
-							let orderInfo = assets.getOrderInfo.call(events[count].args.orderId);
-							let order_status_owner = assets.getOrderInfo_Status_Owner.call(events[count].args.orderId);
+						let orderInfo = assets.getOrderInfo.call(events[count].args.orderId);
+						let order_status_owner = assets.getOrderInfo_Status_Owner.call(events[count].args.orderId);
 
-							orderBook.push({
-								orderId: events[count].args.orderId,
-								fromType: orderInfo[1],
-								toType: orderInfo[0],
-								fromId: orderInfo[3],
-								toId: orderInfo[2],
-								fromUnits: orderInfo[4].toString(),
-								toUnits: orderInfo[5].toString(),
-								fromUniqueIdentifier: orderInfo[6],
-								toUniqueIdentifier: orderInfo[7],
-								seller: order_status_owner[0],
-								buyer: order_status_owner[1],
-								status: order_status_owner[2]
-							})
-						}
+						orderBook.push({
+							orderId: events[count].args.orderId,
+							fromType: orderInfo[1],
+							toType: orderInfo[0],
+							fromId: orderInfo[3],
+							toId: orderInfo[2],
+							fromUnits: orderInfo[4].toString(),
+							toUnits: orderInfo[5].toString(),
+							fromUniqueIdentifier: orderInfo[6],
+							toUniqueIdentifier: orderInfo[7],
+							seller: order_status_owner[0],
+							buyer: order_status_owner[1],
+							status: order_status_owner[2]
+						})
 					}
 
 					Networks.update({
@@ -194,4 +268,4 @@ function updateOrderBook() {
 	}, 5000)
 }
 
-export {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateAssetsInfo, updateOrderBook}
+export {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateAssetsInfo, updateOrderBook, updateTotalSmartContracts}

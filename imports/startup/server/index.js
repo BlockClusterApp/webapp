@@ -6,7 +6,7 @@ require("../../collections/utilities/server/publications.js")
 require("../../api/assets.js")
 
 import {updateWorkerNodeIP, updateKuberREST_IP} from "../../collections/utilities/server/cron.js"
-import {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateAssetsInfo, updateOrderBook} from "../../collections/networks/server/cron.js"
+import {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateAssetsInfo, updateOrderBook, updateTotalSmartContracts} from "../../collections/networks/server/cron.js"
 
 updateWorkerNodeIP()
 updateKuberREST_IP()
@@ -15,5 +15,6 @@ updateAuthoritiesList()
 unlockAccounts()
 updateAssetsInfo();
 updateOrderBook();
+updateTotalSmartContracts();
 
 export {}

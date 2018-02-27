@@ -21,20 +21,21 @@ class Explorer extends Component {
             totalPending: 0,
             totalQueued: 0,
             totalAccounts: 0,
-            blockOrTxnOutput: ''
+            blockOrTxnOutput: '',
+            totalSmartContracts: 0
         }
 
         this.addLatestBlocks = this.addLatestBlocks.bind(this)
         this.loadMoreBlocks = this.loadMoreBlocks.bind(this)
         this.refreshTxpool = this.refreshTxpool.bind(this)
-        this.refreshTotalAccounts = this.refreshTotalAccounts.bind(this)
+        this.refreshTotalSmartContracts = this.refreshTotalSmartContracts.bind(this)
         this.fetchBlockOrTxn = this.fetchBlockOrTxn.bind(this)
     }
 
     componentDidMount() {
         setTimeout(this.addLatestBlocks, 2000);
         setTimeout(this.refreshTxpool, 2000);
-        setTimeout(this.refreshTotalAccounts, 2000);
+        setTimeout(this.refreshTotalSmartContracts, 2000);
     }
 
     componentWillUnmount() {
@@ -53,7 +54,8 @@ class Explorer extends Component {
             totalPending: 0,
             totalQueued: 0,
             totalAccounts: 0,
-            blockOrTxnOutput: ''
+            blockOrTxnOutput: '',
+            totalSmartContracts: 0
         })
     }
 
@@ -71,37 +73,24 @@ class Explorer extends Component {
         }
     }
 
-    refreshTotalAccounts() {
-        let rpc = null;
-        let status = null;
+    refreshTotalSmartContracts() {
         if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-            rpc = "http://" + this.props.workerNodeIP[0].value + ":" + this.props.networks[0].rpcNodePort
-            status = this.props.networks[0].status
+            this.setState({
+                totalSmartContracts: (this.props.networks[0].totalSmartContracts ? this.props.networks[0].totalSmartContracts : 0)
+            }, () => {
+                setTimeout(this.refreshTotalSmartContracts, 100)
+            })
         } else if (this.state.selectedNetwork !== null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
             for(let count = 0; count < this.props.networks.length; count++) {
                 if(this.state.selectedNetwork === this.props.networks[count].instanceId) {
-                    rpc = "http://" + this.props.workerNodeIP[0].value + ":" + this.props.networks[count].rpcNodePort
-                    status = this.props.networks[count].status
+                    this.setState({
+                        totalSmartContracts: (this.props.networks[count].totalSmartContracts ? this.props.networks[count].totalSmartContracts : 0)
+                    }, () => {
+                        setTimeout(this.refreshTotalSmartContracts, 100)
+                    })
                     break
                 }
             }
-        }
-
-        if(status == "running") {
-            let web3 = new Web3(new Web3.providers.HttpProvider(rpc));
-            web3.eth.getAccounts((error, result) => {
-                if(!error) {
-                    this.setState({
-                        totalAccounts: result.length
-                    }, () => {
-                        setTimeout(this.refreshTotalAccounts, 500)
-                    })
-                } else {
-                    setTimeout(this.refreshTotalAccounts, 500)
-                }
-            })
-        } else {
-            setTimeout(this.refreshTotalAccounts, 500)
         }
     }
 
@@ -328,13 +317,18 @@ class Explorer extends Component {
                     }
                 })
             } else {
-                web3.eth.getTransactionReceipt(value, (error, result) => {
-                    if(!error && result != null) {
-                        this.setState({
-                            blockOrTxnOutput: JSON.stringify(result, undefined, 4)
+                web3.eth.getTransaction(value, (error, result1) => {
+                    if(!error && result1 != null) {
+                        web3.eth.getTransactionReceipt(value, (error, result2) => {
+                            if(!error && result2 != null) {
+                                this.setState({
+                                    blockOrTxnOutput: JSON.stringify(Object.assign(result1, result2), undefined, 4)
+                                })
+                            }
                         })
                     }
                 })
+
             }
         }
     }
@@ -420,20 +414,20 @@ class Explorer extends Component {
                                         <div className="full-height d-flex flex-column">
                                             <div className="card-header ">
                                                 <div className="card-title text-black">
-                                                    <span className="font-montserrat fs-11 all-caps">Accounts IN NODE <i
+                                                    <span className="font-montserrat fs-11 all-caps">Smart Contracts IN NETWORK <i
                                                         className="fa fa-chevron-right"></i>
                                                     </span>
                                                 </div>
                                                 <div className="card-controls">
                                                     <ul>
                                                         <li><a href="#" className="card-refresh text-black" data-toggle="refresh"><i
-                                                            className="fa fa-key"></i></a>
+                                                            className="fa fa-file-o"></i></a>
                                                         </li>
                                                     </ul>
                                                 </div>
                                             </div>
                                             <div className="p-l-20">
-                                                <h3 className="no-margin p-b-30 text-white ">{this.state.totalAccounts}</h3>
+                                                <h3 className="no-margin p-b-30 text-white ">{this.state.totalSmartContracts}</h3>
                                             </div>
                                         </div>
                                     </div>
