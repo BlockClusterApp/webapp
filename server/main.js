@@ -6,6 +6,7 @@ var lightwallet = Npm.require("eth-lightwallet");
 import Web3 from "web3";
 var jsonminify = require("jsonminify");
 import helpers from "../imports/modules/helpers"
+import server_helpers from "../imports/modules/helpers/server"
 import smartContracts from "../imports/modules/smart-contracts"
 
 Meteor.methods({

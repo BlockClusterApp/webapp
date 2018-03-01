@@ -71,7 +71,7 @@ function updateAuthoritiesList() {
 	}, 5000)
 }
 
-function updateTotalSmartContracts() {
+async function updateTotalSmartContracts(web3, blockNumber, totalSmartContracts) {
 	fetchTxn = async (web3, txnHash) => {
 		return new Promise((resolve, reject) => {
 			web3.eth.getTransactionReceipt(txnHash, (error, result) => {
@@ -88,33 +88,44 @@ function updateTotalSmartContracts() {
 		});
 	}
 
-	fetchBlock = async (web3, blockNumber, totalSmartContracts) => {
-		return new Promise((resolve, reject) => {
-			web3.eth.getBlock(blockNumber, async (error, result) => {
-				if (!error && result !== null) {
-					for(let count = 0; count < result.transactions.length; count++) {
-						try {
-							let isSmartContractDeploy = await fetchTxn(web3, result.transactions[count])
-							if(isSmartContractDeploy) {
-								totalSmartContracts++;
-							}
-						} catch(e) {
-							reject(e)
-							return;
+	return new Promise((resolve, reject) => {
+		web3.eth.getBlock(blockNumber, async (error, result) => {
+			if (!error && result !== null) {
+				for(let count = 0; count < result.transactions.length; count++) {
+					try {
+						let isSmartContractDeploy = await fetchTxn(web3, result.transactions[count])
+						if(isSmartContractDeploy) {
+							totalSmartContracts++;
 						}
+					} catch(e) {
+						reject(e)
+						return;
 					}
-
-					resolve(totalSmartContracts)
-				} else {
-					reject(error)
 				}
-			})
-		});
-	}
 
+				resolve(totalSmartContracts)
+			} else {
+				reject(error)
+			}
+		})
+	});
+}
+
+async function indexSoloAssets(web3, blockNumber, collectionName) {
+	return new Promise((resolve, reject) => {
+		if(database) {
+			resolve()
+		} else {
+			reject("Not Connected to database")
+		}
+	});
+
+
+}
+
+function scanBlock() {
 	scan = async () => {
 		var nodes = Networks.find({}).fetch()
-
 		for(let count = 0; count < nodes.length; count++) {
 			if(nodes[count].status === "running") {
 				let blockToScan = (nodes[count].blockToScan ? nodes[count].blockToScan : 0);
@@ -122,8 +133,8 @@ function updateTotalSmartContracts() {
 				var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
 				let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + nodes[count].rpcNodePort));
 				try {
-					totalSmartContracts = await fetchBlock(web3, blockToScan, totalSmartContracts)
-
+					totalSmartContracts = await updateTotalSmartContracts(web3, blockToScan, totalSmartContracts)
+					await indexSoloAssets(web3, blockToScan, nodes[count].instanceId + "_soloAssets")
 					Networks.update({
 						_id: nodes[count]._id
 					}, {
@@ -136,15 +147,15 @@ function updateTotalSmartContracts() {
 				}
 			}
 
-			Meteor.setTimeout(scan, 200)
+			Meteor.setTimeout(scan, 100)
 		}
 
 		if(nodes.length === 0) {
-			Meteor.setTimeout(scan, 200)
+			Meteor.setTimeout(scan, 100)
 		}
 	}
 
-	Meteor.setTimeout(scan, 200)
+	Meteor.setTimeout(scan, 100)
 }
 
 
@@ -268,4 +279,4 @@ function updateOrderBook() {
 	}, 5000)
 }
 
-export {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateAssetsInfo, updateOrderBook, updateTotalSmartContracts}
+export {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateAssetsInfo, updateOrderBook, scanBlock}
