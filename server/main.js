@@ -952,6 +952,9 @@ spec:
 		)
 
 		return myFuture.wait();
+	},
+	"searchSoloAssets": function(instanceId, query){
+		return dataQueryingCollections[instanceId + "_soloAssets"].find(JSON.parse(query)).fetch()
 	}
 })
 

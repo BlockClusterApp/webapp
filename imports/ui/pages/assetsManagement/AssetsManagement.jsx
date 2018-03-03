@@ -286,9 +286,37 @@ class AssetsManagement extends Component {
         )
     }
 
-    advancedQueriesTabClicked(instanceId) {
-        console.log(document.querySelector(".CodeMirror-scroll"))
+    updateQuery(newCode, property) {
+        this[property] = newCode;
+    }
 
+    querySoloAssets(e, instanceId) {
+        e.preventDefault();
+
+        this.setState({
+            [instanceId + "_querySoloAssets_formloading"]: true,
+            [instanceId + "_querySoloAssets_formSubmitError"]: ''
+        });
+
+        Meteor.call(
+            "searchSoloAssets",
+            instanceId,
+            (this[instanceId + "_querySoloAssets_query"] ? this[instanceId + "_querySoloAssets_query"] : JSON.stringify(JSON.parse('{"assetName":"license","uniqueIdentifier":"1234","company":"blockcluster"}'))),
+            (error, result) => {
+                if(error) {
+                    this.setState({
+                        [instanceId + "_querySoloAssets_formloading"]: false,
+                        [instanceId + "_querySoloAssets_formSubmitError"]: error.reason
+                    });
+                } else {
+                    this.setState({
+                        [instanceId + "_querySoloAssets_formloading"]: false,
+                        [instanceId + "_querySoloAssets_formSubmitError"]: '',
+                        [instanceId + "_querySoloAssets_queryResult"]: JSON.stringify(result, undefined, 4)
+                    });
+                }
+            }
+        )
     }
 
 	render(){
@@ -454,7 +482,7 @@ class AssetsManagement extends Component {
                                                                                                 <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide5"}><span>Close Solo Asset</span></a>
                                                                                             </li>
                                                                                             <li className="nav-item">
-                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide6"} onClick={() => {this.advancedQueriesTabClicked(item.instanceId)}}><span>Advanced Queries</span></a>
+                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide6"}><span>Advanced Queries</span></a>
                                                                                             </li>
                                                                                         </ul>
                                                                                         <div className="tab-content p-l-0 p-r-0">
@@ -915,7 +943,7 @@ class AssetsManagement extends Component {
                                                                                                             }}>
                                                                                                             <div className="form-group">
                                                                                                                 <label>JSON Query</label>
-                                                                                                                <CodeMirror value={this.state.defaultJSONQuery} options={{readOnly: false, autofocus: true, indentUnit: 4, theme: "ttcn", mode: {name: "javascript", json: true}}} ref={(input) => {this[item.instanceId + "_querySoloAssets_query"] = input}} required />
+                                                                                                                <CodeMirror value={this.state.defaultJSONQuery} onChange={(newCode) => {this.updateQuery(newCode, item.instanceId + "_querySoloAssets_query")}} options={{readOnly: false, autofocus: true, indentUnit: 4, theme: "ttcn", mode: {name: "javascript", json: true}}} required />
                                                                                                             </div>
                                                                                                             {this.state[item.instanceId + "_querySoloAssets_formSubmitError"] &&
                                                                                                                 <div className="row m-t-30">
@@ -944,10 +972,10 @@ class AssetsManagement extends Component {
                                                                                                     </div>
                                                                                                     <div className="col-lg-6">
                                                                                                         <h4>Query Result</h4>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Array</label>
-                                                                                                                <CodeMirror className="" value={this.state.defaultJSONQueryResult} options={{readOnly: true, autofocus: true, indentUnit: 4, theme: "mdn-like", mode: {name: "javascript", json: true}}} ref={(input) => {this[item.instanceId + "_querySoloAssets_query_result"] = input}} required />
-                                                                                                            </div>
+                                                                                                        <div className="form-group">
+                                                                                                            <label>Array</label>
+                                                                                                            <CodeMirror value={this.state[item.instanceId + "_querySoloAssets_queryResult"]} options={{readOnly: true, autofocus: true, indentUnit: 4, theme: "mdn-like", mode: {name: "javascript", json: true}}} />
+                                                                                                        </div>
                                                                                                     </div>
                                                                                                 </div>
                                                                                             </div>

@@ -128,24 +128,50 @@ async function indexSoloAssets(web3, blockNumber, collectionName, assetsContract
 						for(let count = 0; count < events.length; count++) {
 
 							if (events[count].event === "soloAssetIssued") {
-								dataQueryingCollections[collectionName].upsert({
-									assetName: events[count].args.assetName,
-									uniqueIdentifier: events[count].args.uniqueAssetIdentifier
-								}, {
-									$set: {
-										owner: events[count].args.to,
-										status: "open"
-									}
-								})
+								try {
+									let number = new BigNumber(events[count].args.uniqueAssetIdentifier)
+									dataQueryingCollections[collectionName].upsert({
+										assetName: events[count].args.assetName,
+										uniqueIdentifier: number.toNumber()
+									}, {
+										$set: {
+											owner: events[count].args.to,
+											status: "open"
+										}
+									})
+								} catch(e) {
+									dataQueryingCollections[collectionName].upsert({
+										assetName: events[count].args.assetName,
+										uniqueIdentifier: events[count].args.uniqueAssetIdentifier
+									}, {
+										$set: {
+											owner: events[count].args.to,
+											status: "open"
+										}
+									})
+								}
 							} else if (events[count].event === "addedOrUpdatedSoloAssetExtraData") {
-								dataQueryingCollections[collectionName].upsert({
-									assetName: events[count].args.assetName,
-									uniqueIdentifier: events[count].args.uniqueAssetIdentifier
-								}, {
-									$set: {
-										[events[count].args.key]: events[count].args.value
-									}
-								})
+								try {
+									let number = new BigNumber(events[count].args.value)
+									dataQueryingCollections[collectionName].upsert({
+										assetName: events[count].args.assetName,
+										uniqueIdentifier: events[count].args.uniqueAssetIdentifier
+									}, {
+										$set: {
+											[events[count].args.key]: number.toNumber()
+										}
+									})
+								}
+								catch(e){
+									dataQueryingCollections[collectionName].upsert({
+										assetName: events[count].args.assetName,
+										uniqueIdentifier: events[count].args.uniqueAssetIdentifier
+									}, {
+										$set: {
+											[events[count].args.key]: events[count].args.value
+										}
+									})
+								}
 							} else if (events[count].event === "transferredOwnershipOfSoloAsset") {
 								dataQueryingCollections[collectionName].upsert({
 									assetName: events[count].args.assetName,
