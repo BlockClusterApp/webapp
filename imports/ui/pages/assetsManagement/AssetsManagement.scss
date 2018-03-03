@@ -6,4 +6,16 @@
     .dark-disabled {
         color: #2c2c2c;
     }
+
+    .CodeMirror-scroll {
+        border: 1px solid rgba(0, 0, 0, 0.07);
+        border-radius: 2px;
+        margin: 0 !important;
+        height: 92%;
+        padding: 10px;
+    }
+
+    .CodeMirror-focused div.CodeMirror-cursors {
+        visibility: visible;
+    }
 }

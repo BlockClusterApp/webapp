@@ -6,14 +6,21 @@ import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from
 import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
+var CodeMirror = require('react-codemirror');
 
 import "./AssetsManagement.scss"
+import "/node_modules/codemirror/lib/codemirror.css"
+import "/node_modules/codemirror/theme/mdn-like.css"
+import "/node_modules/codemirror/theme/ttcn.css"
+import "/node_modules/codemirror/mode/javascript/javascript.js"
 
 class AssetsManagement extends Component {
 
     constructor() {
         super()
-        this.state = {}
+        this.state = {
+            defaultJSONQuery: JSON.stringify(JSON.parse('{"assetName":"license","uniqueIdentifier":"1234","company":"blockcluster"}'), undefined, 4)
+        }
     }
 
     componentWillUnmount() {
@@ -279,6 +286,11 @@ class AssetsManagement extends Component {
         )
     }
 
+    advancedQueriesTabClicked(instanceId) {
+        console.log(document.querySelector(".CodeMirror-scroll"))
+
+    }
+
 	render(){
 		return (
             <div className="assetsManagement content">
@@ -440,6 +452,9 @@ class AssetsManagement extends Component {
                                                                                             </li>
                                                                                             <li className="nav-item">
                                                                                                 <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide5"}><span>Close Solo Asset</span></a>
+                                                                                            </li>
+                                                                                            <li className="nav-item">
+                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide6"} onClick={() => {this.advancedQueriesTabClicked(item.instanceId)}}><span>Advanced Queries</span></a>
                                                                                             </li>
                                                                                         </ul>
                                                                                         <div className="tab-content p-l-0 p-r-0">
@@ -888,6 +903,51 @@ class AssetsManagement extends Component {
                                                                                                                 </LaddaButton>
                                                                                                             </p>
                                                                                                         </form>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div className="tab-pane slide-left" id={item.instanceId + "_slide6"}>
+                                                                                                <div className="row">
+                                                                                                    <div className="col-lg-6">
+                                                                                                        <h4>Query Solo Assets</h4>
+                                                                                                        <form role="form" onSubmit={(e) => {
+                                                                                                                this.querySoloAssets(e, item.instanceId);
+                                                                                                            }}>
+                                                                                                            <div className="form-group">
+                                                                                                                <label>JSON Query</label>
+                                                                                                                <CodeMirror value={this.state.defaultJSONQuery} options={{readOnly: false, autofocus: true, indentUnit: 4, theme: "ttcn", mode: {name: "javascript", json: true}}} ref={(input) => {this[item.instanceId + "_querySoloAssets_query"] = input}} required />
+                                                                                                            </div>
+                                                                                                            {this.state[item.instanceId + "_querySoloAssets_formSubmitError"] &&
+                                                                                                                <div className="row m-t-30">
+                                                                                                                    <div className="col-md-12">
+                                                                                                                        <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                                                                            <button className="close" data-dismiss="alert"></button>
+                                                                                                                            {this.state[item.instanceId + "_querySoloAssets_formSubmitError"]}
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            }
+                                                                                                            <p className="pull-right">
+                                                                                                                <LaddaButton
+                                                                                                                    loading={this.state[item.instanceId + "_querySoloAssets_formloading"]}
+                                                                                                                    data-size={S}
+                                                                                                                    data-style={SLIDE_UP}
+                                                                                                                    data-spinner-size={30}
+                                                                                                                    data-spinner-lines={12}
+                                                                                                                    className="btn btn-success m-t-10"
+                                                                                                                    type="submit"
+                                                                                                                >
+                                                                                                                    <i className="fa fa-search" aria-hidden="true"></i>&nbsp;&nbsp;Search
+                                                                                                                </LaddaButton>
+                                                                                                            </p>
+                                                                                                        </form>
+                                                                                                    </div>
+                                                                                                    <div className="col-lg-6">
+                                                                                                        <h4>Query Result</h4>
+                                                                                                            <div className="form-group">
+                                                                                                                <label>Array</label>
+                                                                                                                <CodeMirror className="" value={this.state.defaultJSONQueryResult} options={{readOnly: true, autofocus: true, indentUnit: 4, theme: "mdn-like", mode: {name: "javascript", json: true}}} ref={(input) => {this[item.instanceId + "_querySoloAssets_query_result"] = input}} required />
+                                                                                                            </div>
                                                                                                     </div>
                                                                                                 </div>
                                                                                             </div>

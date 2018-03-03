@@ -3,6 +3,8 @@ import {Networks} from "../networks.js"
 import {Utilities} from "../../utilities/utilities.js"
 import smartContracts from "../../../modules/smart-contracts"
 
+dataQueryingCollections = {}
+
 function updateNodeStatus() {
 	Meteor.setInterval(function(){
 		var nodes = Networks.find({}).fetch()
@@ -111,46 +113,98 @@ async function updateTotalSmartContracts(web3, blockNumber, totalSmartContracts)
 	});
 }
 
-async function indexSoloAssets(web3, blockNumber, collectionName) {
+async function indexSoloAssets(web3, blockNumber, collectionName, assetsContractAddress) {
 	return new Promise((resolve, reject) => {
-		if(database) {
-			resolve()
+		if(dataQueryingCollections[collectionName]) {
+			var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+			var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+			var assets = assetsContract.at(assetsContractAddress);
+			var events = assets.allEvents({fromBlock: blockNumber, toBlock: blockNumber});
+			events.get(Meteor.bindEnvironment(function(error, events){
+				if(error) {
+					reject(error);
+				} else {
+					try {
+						for(let count = 0; count < events.length; count++) {
+
+							if (events[count].event === "soloAssetIssued") {
+								dataQueryingCollections[collectionName].upsert({
+									assetName: events[count].args.assetName,
+									uniqueIdentifier: events[count].args.uniqueAssetIdentifier
+								}, {
+									$set: {
+										owner: events[count].args.to,
+										status: "open"
+									}
+								})
+							} else if (events[count].event === "addedOrUpdatedSoloAssetExtraData") {
+								dataQueryingCollections[collectionName].upsert({
+									assetName: events[count].args.assetName,
+									uniqueIdentifier: events[count].args.uniqueAssetIdentifier
+								}, {
+									$set: {
+										[events[count].args.key]: events[count].args.value
+									}
+								})
+							} else if (events[count].event === "transferredOwnershipOfSoloAsset") {
+								dataQueryingCollections[collectionName].upsert({
+									assetName: events[count].args.assetName,
+									uniqueIdentifier: events[count].args.uniqueAssetIdentifier
+								}, {
+									$set: {
+										owner: events[count].args.to
+									}
+								})
+							} else if(events[count].event === "closedSoloAsset") {
+								dataQueryingCollections[collectionName].upsert({
+									assetName: events[count].args.assetName,
+									uniqueIdentifier: events[count].args.uniqueAssetIdentifier
+								}, {
+									$set: {
+										status: "closed"
+									}
+								})
+							}
+						}
+						resolve();
+					} catch(e) {
+						reject(e)
+					}
+				}
+			}))
 		} else {
-			reject("Not Connected to database")
+			reject();
 		}
 	});
-
-
 }
 
-function scanBlock() {
-	scan = async () => {
-		var nodes = Networks.find({}).fetch()
-		for(let count = 0; count < nodes.length; count++) {
-			if(nodes[count].status === "running") {
-				let blockToScan = (nodes[count].blockToScan ? nodes[count].blockToScan : 0);
-				let totalSmartContracts = (nodes[count].totalSmartContracts ? nodes[count].totalSmartContracts : 0);
-				var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
-				let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + nodes[count].rpcNodePort));
-				try {
-					totalSmartContracts = await updateTotalSmartContracts(web3, blockToScan, totalSmartContracts)
-					await indexSoloAssets(web3, blockToScan, nodes[count].instanceId + "_soloAssets")
-					Networks.update({
-						_id: nodes[count]._id
-					}, {
-						$set: {
-							blockToScan: blockToScan + 1,
-							totalSmartContracts: totalSmartContracts
-						}
-					})
-				} catch(e) {
-				}
-			}
+function scanBlocksOfNode(instanceId) {
 
-			Meteor.setTimeout(scan, 100)
+	let scan = async () => {
+		var nodes = Networks.find({instanceId: instanceId}).fetch()
+
+		let blockToScan = (nodes[0].blockToScan ? nodes[0].blockToScan : 0);
+		let totalSmartContracts = (nodes[0].totalSmartContracts ? nodes[0].totalSmartContracts : 0);
+		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+		let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + nodes[0].rpcNodePort));
+		try {
+			totalSmartContracts = await updateTotalSmartContracts(web3, blockToScan, totalSmartContracts)
+
+			if(nodes[0].assetsContractAddress !== '') {
+				await indexSoloAssets(web3, blockToScan, nodes[0].instanceId + "_soloAssets", nodes[0].assetsContractAddress)
+			}
+			Networks.update({
+				_id: nodes[0]._id
+			}, {
+				$set: {
+					blockToScan: blockToScan + 1,
+					totalSmartContracts: totalSmartContracts
+				}
+			})
+		} catch(e) {
 		}
 
-		if(nodes.length === 0) {
+		if(nodes.length === 1) {
 			Meteor.setTimeout(scan, 100)
 		}
 	}
@@ -158,6 +212,26 @@ function scanBlock() {
 	Meteor.setTimeout(scan, 100)
 }
 
+function scanBlocksOfAllNodes() {
+	var nodes = Networks.find({}).fetch()
+	for(let count = 0; count < nodes.length; count++) {
+		scanBlocksOfNode(nodes[count].instanceId)
+	}
+}
+
+function createQueryingCollections() {
+	var nodes = Networks.find({}).fetch()
+
+	for(let count = 0; count < nodes.length; count++) {
+		if(nodes[count].assetsContractAddress !== '') {
+			if(!dataQueryingCollections[nodes[count].instanceId + "_soloAssets"]) {
+				dataQueryingCollections[nodes[count].instanceId + "_soloAssets"] = new Mongo.Collection(nodes[count].instanceId + "_soloAssets");
+			}
+		}
+	}
+
+	Meteor.setTimeout(createQueryingCollections, 1000)
+}
 
 function unlockAccounts() {
 	Meteor.setInterval(function(){
@@ -279,4 +353,4 @@ function updateOrderBook() {
 	}, 5000)
 }
 
-export {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateAssetsInfo, updateOrderBook, scanBlock}
+export {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateAssetsInfo, updateOrderBook, createQueryingCollections, scanBlocksOfNode, scanBlocksOfAllNodes}

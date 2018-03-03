@@ -22,7 +22,8 @@ class Explorer extends Component {
             totalQueued: 0,
             totalAccounts: 0,
             blockOrTxnOutput: '',
-            totalSmartContracts: 0
+            totalSmartContracts: 0,
+            totalBlocksScanned: 0
         }
 
         this.addLatestBlocks = this.addLatestBlocks.bind(this)
@@ -30,12 +31,14 @@ class Explorer extends Component {
         this.refreshTxpool = this.refreshTxpool.bind(this)
         this.refreshTotalSmartContracts = this.refreshTotalSmartContracts.bind(this)
         this.fetchBlockOrTxn = this.fetchBlockOrTxn.bind(this)
+        this.refreshTotalBlocksScanned = this.refreshTotalBlocksScanned.bind(this)
     }
 
     componentDidMount() {
         setTimeout(this.addLatestBlocks, 2000);
         setTimeout(this.refreshTxpool, 2000);
         setTimeout(this.refreshTotalSmartContracts, 2000);
+        setTimeout(this.refreshTotalBlocksScanned, 2000);
     }
 
     componentWillUnmount() {
@@ -55,7 +58,8 @@ class Explorer extends Component {
             totalQueued: 0,
             totalAccounts: 0,
             blockOrTxnOutput: '',
-            totalSmartContracts: 0
+            totalSmartContracts: 0,
+            totalBlocksScanned: 0
         })
     }
 
@@ -75,20 +79,62 @@ class Explorer extends Component {
 
     refreshTotalSmartContracts() {
         if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-            this.setState({
-                totalSmartContracts: (this.props.networks[0].totalSmartContracts ? this.props.networks[0].totalSmartContracts : 0)
-            }, () => {
+            if(this.props.networks[0].status === "running") {
+                this.setState({
+                    totalSmartContracts: (this.props.networks[0].totalSmartContracts ? this.props.networks[0].totalSmartContracts : 0)
+                }, () => {
+                    setTimeout(this.refreshTotalSmartContracts, 100)
+                })
+            } else {
                 setTimeout(this.refreshTotalSmartContracts, 100)
-            })
+            }
+
         } else if (this.state.selectedNetwork !== null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
             for(let count = 0; count < this.props.networks.length; count++) {
                 if(this.state.selectedNetwork === this.props.networks[count].instanceId) {
-                    this.setState({
-                        totalSmartContracts: (this.props.networks[count].totalSmartContracts ? this.props.networks[count].totalSmartContracts : 0)
-                    }, () => {
+                    if(this.props.networks[count].status === "running") {
+                        this.setState({
+                            totalSmartContracts: (this.props.networks[count].totalSmartContracts ? this.props.networks[count].totalSmartContracts : 0)
+                        }, () => {
+                            setTimeout(this.refreshTotalSmartContracts, 100)
+                        })
+                        break
+                    } else {
                         setTimeout(this.refreshTotalSmartContracts, 100)
-                    })
-                    break
+                        break
+                    }
+                }
+            }
+        }
+    }
+
+    refreshTotalBlocksScanned() {
+        if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
+            if(this.props.networks[0].status === "running") {
+                this.setState({
+                    totalBlocksScanned: (this.props.networks[0].blockToScan ? (this.props.networks[0].blockToScan - 1) : 0)
+                }, () => {
+                    setTimeout(this.refreshTotalBlocksScanned, 100)
+                })
+            } else {
+                setTimeout(this.refreshTotalBlocksScanned, 100)
+            }
+
+        } else if (this.state.selectedNetwork !== null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
+            for(let count = 0; count < this.props.networks.length; count++) {
+                if(this.state.selectedNetwork === this.props.networks[count].instanceId) {
+                    if(this.props.networks[count].status === "running") {
+                        this.setState({
+                            totalBlocksScanned: (this.props.networks[count].blockToScan ? (this.props.networks[count].blockToScan - 1) : 0)
+                        }, () => {
+                            setTimeout(this.refreshTotalBlocksScanned, 100)
+                        })
+                        break
+                    } else {
+                        setTimeout(this.refreshTotalBlocksScanned, 100)
+                        break;
+                    }
+
                 }
             }
         }
@@ -475,7 +521,7 @@ class Explorer extends Component {
                                     </div>
                                     <h3 className="pull-right semi-bold"><sup>
                                         <small className="semi-bold">#</small>
-                                        </sup> {this.state.blocks[0] && <span>{this.state.blocks[0].number}</span>}
+                                        </sup> {this.state.totalBlocksScanned}
                                     </h3>
                                     <div className="clearfix"></div>
                                 </div>

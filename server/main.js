@@ -8,6 +8,7 @@ var jsonminify = require("jsonminify");
 import helpers from "../imports/modules/helpers"
 import server_helpers from "../imports/modules/helpers/server"
 import smartContracts from "../imports/modules/smart-contracts"
+import {scanBlocksOfNode} from "../imports/collections/networks/server/cron.js"
 
 Meteor.methods({
 	"createNetwork": function(networkName){
@@ -111,6 +112,9 @@ spec:
 								console.log(error);
 								deleteNetwork(id)
 							} else {
+
+								scanBlocksOfNode(instanceId) //start scanning blocks.
+
 								HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, {}, function(error, response){
 									if(error) {
 										console.log(error);
@@ -303,6 +307,15 @@ spec:
 														myFuture.throw("An unknown error occured");
 													} else {
 														Networks.remove({instanceId: id});
+														try {
+															if(dataQueryingCollections[id + "_soloAssets"]) {
+																dataQueryingCollections[id + "_soloAssets"].rawCollection().drop();
+																delete dataQueryingCollections[id + "_soloAssets"]
+															}
+														} catch(e) {
+															console.log(e)
+														}
+
 														myFuture.return();
 													}
 												})
@@ -456,6 +469,9 @@ spec:
 								console.log(error);
 								deleteNetwork(id)
 							} else {
+
+								scanBlocksOfNode(instanceId) //start scanning blocks.
+
 								HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, {}, function(error, response){
 									if(error) {
 										console.log(error);
