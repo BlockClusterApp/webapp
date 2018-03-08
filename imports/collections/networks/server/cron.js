@@ -151,7 +151,7 @@ async function indexSoloAssets(web3, blockNumber, collectionName, assetsContract
 								}
 							} else if (events[count].event === "addedOrUpdatedSoloAssetExtraData") {
 								try {
-									let uniqueAssetIdentifierValue = new BigNumber(events[count].args.uniqueAssetIdentifier)
+									var uniqueAssetIdentifierValue = new BigNumber(events[count].args.uniqueAssetIdentifier)
 									uniqueAssetIdentifierValue = uniqueAssetIdentifierValue.toNumber()
 								} catch(e) {
 									uniqueAssetIdentifierValue = events[count].args.uniqueAssetIdentifier
@@ -180,7 +180,7 @@ async function indexSoloAssets(web3, blockNumber, collectionName, assetsContract
 								}
 							} else if (events[count].event === "transferredOwnershipOfSoloAsset") {
 								try {
-									let uniqueAssetIdentifierValue = new BigNumber(events[count].args.uniqueAssetIdentifier)
+									var uniqueAssetIdentifierValue = new BigNumber(events[count].args.uniqueAssetIdentifier)
 									uniqueAssetIdentifierValue = uniqueAssetIdentifierValue.toNumber()
 								} catch(e) {
 									uniqueAssetIdentifierValue = events[count].args.uniqueAssetIdentifier
@@ -196,12 +196,12 @@ async function indexSoloAssets(web3, blockNumber, collectionName, assetsContract
 								})
 							} else if(events[count].event === "closedSoloAsset") {
 								try {
-									let uniqueAssetIdentifierValue = new BigNumber(events[count].args.uniqueAssetIdentifier)
+									var uniqueAssetIdentifierValue = new BigNumber(events[count].args.uniqueAssetIdentifier)
 									uniqueAssetIdentifierValue = uniqueAssetIdentifierValue.toNumber()
 								} catch(e) {
 									uniqueAssetIdentifierValue = events[count].args.uniqueAssetIdentifier
 								}
-								
+
 								dataQueryingCollections[collectionName].upsert({
 									assetName: events[count].args.assetName,
 									uniqueIdentifier: uniqueAssetIdentifierValue
