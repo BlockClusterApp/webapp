@@ -126,7 +126,6 @@ async function indexSoloAssets(web3, blockNumber, collectionName, assetsContract
 				} else {
 					try {
 						for(let count = 0; count < events.length; count++) {
-
 							if (events[count].event === "soloAssetIssued") {
 								try {
 									let number = new BigNumber(events[count].args.uniqueAssetIdentifier)
@@ -152,10 +151,17 @@ async function indexSoloAssets(web3, blockNumber, collectionName, assetsContract
 								}
 							} else if (events[count].event === "addedOrUpdatedSoloAssetExtraData") {
 								try {
+									let uniqueAssetIdentifierValue = new BigNumber(events[count].args.uniqueAssetIdentifier)
+									uniqueAssetIdentifierValue = uniqueAssetIdentifierValue.toNumber()
+								} catch(e) {
+									uniqueAssetIdentifierValue = events[count].args.uniqueAssetIdentifier
+								}
+
+								try {
 									let number = new BigNumber(events[count].args.value)
 									dataQueryingCollections[collectionName].upsert({
 										assetName: events[count].args.assetName,
-										uniqueIdentifier: events[count].args.uniqueAssetIdentifier
+										uniqueIdentifier: uniqueAssetIdentifierValue
 									}, {
 										$set: {
 											[events[count].args.key]: number.toNumber()
@@ -165,7 +171,7 @@ async function indexSoloAssets(web3, blockNumber, collectionName, assetsContract
 								catch(e){
 									dataQueryingCollections[collectionName].upsert({
 										assetName: events[count].args.assetName,
-										uniqueIdentifier: events[count].args.uniqueAssetIdentifier
+										uniqueIdentifier: uniqueAssetIdentifierValue
 									}, {
 										$set: {
 											[events[count].args.key]: events[count].args.value
@@ -173,18 +179,32 @@ async function indexSoloAssets(web3, blockNumber, collectionName, assetsContract
 									})
 								}
 							} else if (events[count].event === "transferredOwnershipOfSoloAsset") {
+								try {
+									let uniqueAssetIdentifierValue = new BigNumber(events[count].args.uniqueAssetIdentifier)
+									uniqueAssetIdentifierValue = uniqueAssetIdentifierValue.toNumber()
+								} catch(e) {
+									uniqueAssetIdentifierValue = events[count].args.uniqueAssetIdentifier
+								}
+
 								dataQueryingCollections[collectionName].upsert({
 									assetName: events[count].args.assetName,
-									uniqueIdentifier: events[count].args.uniqueAssetIdentifier
+									uniqueIdentifier: uniqueAssetIdentifierValue
 								}, {
 									$set: {
 										owner: events[count].args.to
 									}
 								})
 							} else if(events[count].event === "closedSoloAsset") {
+								try {
+									let uniqueAssetIdentifierValue = new BigNumber(events[count].args.uniqueAssetIdentifier)
+									uniqueAssetIdentifierValue = uniqueAssetIdentifierValue.toNumber()
+								} catch(e) {
+									uniqueAssetIdentifierValue = events[count].args.uniqueAssetIdentifier
+								}
+								
 								dataQueryingCollections[collectionName].upsert({
 									assetName: events[count].args.assetName,
-									uniqueIdentifier: events[count].args.uniqueAssetIdentifier
+									uniqueIdentifier: uniqueAssetIdentifierValue
 								}, {
 									$set: {
 										status: "closed"
