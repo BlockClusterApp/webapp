@@ -1,6 +1,5 @@
 import React, {Component} from "react";
 import {Link} from "react-router-dom"
-
 import validations from "../../../modules/validations"
 
 export default class Register extends Component {
@@ -9,6 +8,7 @@ export default class Register extends Component {
 
 		this.state = {
 	      formSubmitError: "",
+		  formSubmitSuccess: false
 	    };
 	}
 
@@ -23,12 +23,21 @@ export default class Register extends Component {
 			}
 		}, (error) => {
 			if(error) {
-				this.setState({
-					formSubmitError: error.reason
-				})
+				if(error.error === "unverified-account-created") {
+					this.setState({
+						formSubmitError: '',
+						formSubmitSuccess: true
+					})
+				} else {
+					this.setState({
+						formSubmitError: error.reason,
+						formSubmitSuccess: false
+					})
+				}
 			} else {
 				this.setState({
-					formSubmitError: ''
+					formSubmitError: '',
+					formSubmitSuccess: false
 				})
 			}
 		})
@@ -49,10 +58,10 @@ export default class Register extends Component {
 		                        <div className="col-md-6">
 		                            <div className="form-group form-group-default">
 		                                <label>First Name</label>
-		                                <input type="text" name="fname" placeholder="John" className="form-control" required 
-		                                	ref={(input) => {this.fname = input;}} 
-		                                	pattern={validations.firstLastName.html} 
-		                                	onInput={() => this.fname.setCustomValidity('')} 
+		                                <input type="text" name="fname" placeholder="John" className="form-control" required
+		                                	ref={(input) => {this.fname = input;}}
+		                                	pattern={validations.firstLastName.html}
+		                                	onInput={() => this.fname.setCustomValidity('')}
 		                                	onInvalid={() => this.fname.value === ''
 							                    ? this.fname.setCustomValidity("You must enter first name")
 							                    : this.fname.setCustomValidity(validations.firstLastName.message)
@@ -63,10 +72,10 @@ export default class Register extends Component {
 		                        <div className="col-md-6">
 		                            <div className="form-group form-group-default">
 		                                <label>Last Names</label>
-		                                <input type="text" name="lname" placeholder="Smith" className="form-control" required 
-		                                	ref={(input) => {this.lname = input;}} 
-		                                	pattern={validations.firstLastName.html} 
-		                                	onInput={() => this.lname.setCustomValidity('')} 
+		                                <input type="text" name="lname" placeholder="Smith" className="form-control" required
+		                                	ref={(input) => {this.lname = input;}}
+		                                	pattern={validations.firstLastName.html}
+		                                	onInput={() => this.lname.setCustomValidity('')}
 		                                	onInvalid={() => this.lname.value === ''
 							                    ? this.lname.setCustomValidity("You must enter last name")
 							                    : this.lname.setCustomValidity(validations.firstLastName.message)
@@ -97,6 +106,16 @@ export default class Register extends Component {
 			                        	<div className="alert alert-danger m-b-0" role="alert">
 	                      					<button className="close" data-dismiss="alert"></button>
 	                      					{this.state.formSubmitError}
+	                    				</div>
+			                        </div>
+			                    </div>
+						    }
+							{this.state.formSubmitSuccess === true &&
+						        <div className="row">
+			                        <div className="col-md-12">
+			                        	<div className="alert alert-success m-b-0" role="alert">
+	                      					<button className="close" data-dismiss="alert"></button>
+	                      					Account created. Please wait for admin to verifiy account before <Link to={'/login'}>login</Link>.
 	                    				</div>
 			                        </div>
 			                    </div>

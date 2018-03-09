@@ -10,6 +10,27 @@ import server_helpers from "../imports/modules/helpers/server"
 import smartContracts from "../imports/modules/smart-contracts"
 import {scanBlocksOfNode} from "../imports/collections/networks/server/cron.js"
 
+Accounts.validateLoginAttempt(function(options) {
+    if (!options.allowed) {
+        return false;
+    }
+
+	if (options.methodName == "createUser") {
+		throw new Meteor.Error("unverified-account-created", "Account created but cannot be logged in until verified");
+	}
+
+    if (options.user.emails[0].verified === true) {
+        return true;
+    } else {
+        throw new Meteor.Error("email-not-verified", "Your email is not approved by the administrator.");
+    }
+});
+
+Accounts.onCreateUser(function(options, user) {
+  	user.firstLogin = false;
+  	return user;
+});
+
 Meteor.methods({
 	"createNetwork": function(networkName){
 		var myFuture = new Future();
