@@ -28,6 +28,11 @@ Accounts.validateLoginAttempt(function(options) {
 
 Accounts.onCreateUser(function(options, user) {
   	user.firstLogin = false;
+    user.profile = options.profile || {};
+    
+    // Assigns first and last names to the newly created user object
+    user.profile.firstName = options.profile.firstName;
+    user.profile.lastName = options.profile.lastName;
   	return user;
 });
 
