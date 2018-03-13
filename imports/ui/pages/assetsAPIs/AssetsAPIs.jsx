@@ -82,7 +82,7 @@ Content-Type: application/json
 	"fromAccount": "0x7076cde14830731cd75b4edb51a8edb17ebb1064",
 	"toAccount": "0xee26f465b54eefc096db5f7e7cc538306aebe3ef",
 	"units": 1000,
-	"assetName": "usd"
+	"assetName": "eINR"
 }`}
                                                                                                         </code>
                                                                                                     </pre>
@@ -96,11 +96,10 @@ Content-Type: application/json
 {
 	"fromAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f6",
 	"toAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f6",
-	"assetName": "assetName",
-	"identifier": "hjsy23asasdd213asdiu2u",
+	"assetName": "Land",
+	"identifier": "123",
 	"data": {
-		"accountNumber": "012776118765",
-		"bankCode": "66715"
+		"owner": "John Smith"
 	}
 }`}
                                                                                                         </code>
@@ -130,7 +129,7 @@ Content-Type: application/json
 	"fromAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f6",
 	"toAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af490",
 	"units": 258,
-	"assetName": "usd"
+	"assetName": "eINR"
 }`}
                                                                                                         </code>
                                                                                                     </pre>
@@ -144,8 +143,8 @@ Content-Type: application/json
 {
 	"fromAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f6",
 	"toAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f9",
-	"assetName": "assetName",
-	"identifier": "hjsy23asasdd213asdiu2u"
+	"assetName": "Land",
+	"identifier": "123"
 }`}
                                                                                                         </code>
                                                                                                     </pre>
@@ -172,7 +171,7 @@ Content-Type: application/json
 
 {
 	"account": "0x8d98bf772eea2a85538ecaa1394e8605bb4af490",
-	"assetName": "usd"
+	"assetName": "eINR"
 }`}
                                                                                                         </code>
                                                                                                     </pre>
@@ -184,8 +183,8 @@ Host: ${location.host}
 Content-Type: application/json
 
 {
-	"identifier": "hjsy23asasdd213asdiu2u",
-	"assetName": "assetName",
+	"identifier": "123",
+	"assetName": "Land",
 	"extraData": ["accountNumber", "bankCode"]
 }`}
                                                                                                         </code>
@@ -212,8 +211,8 @@ Content-Type: application/json
 
 {
 	"fromAccount": "0xcb02bb004c82cc7edc90d60d64c752729181e4cd",
-	"assetName": "assetName",
-	"identifier": "hjsy23asasdd213asdiu2u",
+	"assetName": "Land",
+	"identifier": "123",
 	"key": "accountNumber",
 	"value": "23213"
 }`}
@@ -240,8 +239,8 @@ Content-Type: application/json
 
 {
 	"fromAccount": "0xcb02bb004c82cc7edc90d60d64c752729181e4cd",
-	"assetName": "assetName",
-	"identifier": "hjsy23asasdd213asdiu2u"
+	"assetName": "Land",
+	"identifier": "123"
 }`}
                                                                                                         </code>
                                                                                                     </pre>
