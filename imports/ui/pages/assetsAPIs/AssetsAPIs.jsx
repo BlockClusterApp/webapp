@@ -139,7 +139,7 @@ Content-Type: application/json
 {
 	"fromAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f6",
 	"toAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af490",
-	"units": 258,
+	"units": 1000,
 	"assetName": "eINR"
 }`}
                                                                                                         </code>
@@ -221,7 +221,7 @@ Content-Type: application/json
 {
 	"identifier": "123",
 	"assetName": "Land",
-	"extraData": ["accountNumber", "bankCode"]
+	"extraData": ["key1", "key2"]
 }`}
                                                                                                         </code>
                                                                                                     </pre>
@@ -249,8 +249,8 @@ Content-Type: application/json
 	"fromAccount": "0xcb02bb004c82cc7edc90d60d64c752729181e4cd",
 	"assetName": "Land",
 	"identifier": "123",
-	"key": "accountNumber",
-	"value": "23213"
+	"key": "key",
+	"value": "value"
 }`}
                                                                                                         </code>
                                                                                                     </pre>
