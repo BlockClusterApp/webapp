@@ -65,13 +65,12 @@ class AssetsAPIs extends Component {
                                                                                             <div className="card-header " role="tab" id={item.instanceId + "_headingTwo"}>
                                                                                                 <h4 className="card-title">
                                                                                                     <a className="collapsed" data-toggle="collapse" data-parent={"#" +  + "_accordion"} href={"#" + item.instanceId + "_collapseTwo"} aria-expanded="false" aria-controls={item.instanceId + "_collapseTwo"}>
-                                                                                                    Issue Assets
+                                                                                                    Issue Bulk Assets
                                                                                                     </a>
                                                                                                 </h4>
                                                                                             </div>
                                                                                             <div id={item.instanceId + "_collapseTwo"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingTwo"}>
                                                                                                 <div className="card-block">
-                                                                                                    <p><b>Issue Bulk Assets</b></p>
                                                                                                     <pre>
                                                                                                         <code>
                                                                                                             {`POST /networks/${item.instanceId}/assetType/bulk/issueAsset HTTP/1.1
@@ -86,7 +85,20 @@ Content-Type: application/json
 }`}
                                                                                                         </code>
                                                                                                     </pre>
-                                                                                                    <p><b>Issue Solo Asset</b></p>
+                                                                                                    <small>Change POST request body in above examples according to your's assets information</small>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div className="card card-default m-b-0">
+                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingThree"}>
+                                                                                                <h4 className="card-title">
+                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" +  + "_accordion"} href={"#" + item.instanceId + "_collapseThree"} aria-expanded="false" aria-controls={item.instanceId + "_collapseThree"}>
+                                                                                                    Issue Solo Assets
+                                                                                                    </a>
+                                                                                                </h4>
+                                                                                            </div>
+                                                                                            <div id={item.instanceId + "_collapseThree"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingThree"}>
+                                                                                                <div className="card-block">
                                                                                                     <pre>
                                                                                                         <code>
                                                                                                             {`POST /networks/${item.instanceId}/assetType/solo/issueAsset HTTP/1.1
@@ -109,16 +121,15 @@ Content-Type: application/json
                                                                                             </div>
                                                                                         </div>
                                                                                         <div className="card card-default m-b-0">
-                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingThree"}>
+                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingFour"}>
                                                                                                 <h4 className="card-title">
-                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item.instanceId + "_accordion"} href={"#" + item.instanceId + "_collapseThree"} aria-expanded="false" aria-controls={item.instanceId + "_collapseThree"}>
-                                                                                                    Transfer Assets
+                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item.instanceId + "_accordion"} href={"#" + item.instanceId + "_collapseFour"} aria-expanded="false" aria-controls={item.instanceId + "_collapseFour"}>
+                                                                                                    Transfer Bulk Assets
                                                                                                     </a>
                                                                                                 </h4>
                                                                                             </div>
-                                                                                            <div id={item.instanceId + "_collapseThree"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingThree"}>
+                                                                                            <div id={item.instanceId + "_collapseFour"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingFour"}>
                                                                                                 <div className="card-block">
-                                                                                                    <p><b>Transfer Bulk Asset</b></p>
                                                                                                     <pre>
                                                                                                         <code>
                                                                                                             {`POST /networks/${item.instanceId}/assetType/bulk/transferAsset HTTP/1.1
@@ -133,7 +144,20 @@ Content-Type: application/json
 }`}
                                                                                                         </code>
                                                                                                     </pre>
-                                                                                                    <p><b>Transfer Solo Asset</b></p>
+                                                                                                    <small>Change POST request body in above examples according to your's assets information</small>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div className="card card-default m-b-0">
+                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingFive"}>
+                                                                                                <h4 className="card-title">
+                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item.instanceId + "_accordion"} href={"#" + item.instanceId + "_collapseFive"} aria-expanded="false" aria-controls={item.instanceId + "_collapseFive"}>
+                                                                                                    Transfer Solo Assets
+                                                                                                    </a>
+                                                                                                </h4>
+                                                                                            </div>
+                                                                                            <div id={item.instanceId + "_collapseFive"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingFive"}>
+                                                                                                <div className="card-block">
                                                                                                     <pre>
                                                                                                         <code>
                                                                                                             {`POST /networks/ottpemjr/assetType/solo/transferAsset HTTP/1.1
@@ -153,16 +177,15 @@ Content-Type: application/json
                                                                                             </div>
                                                                                         </div>
                                                                                         <div className="card card-default m-b-0">
-                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingFour"}>
+                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingSix"}>
                                                                                                 <h4 className="card-title">
-                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item.instanceId + "_accordion"} href={"#" + item.instanceId + "_collapseFour"} aria-expanded="false" aria-controls={item.instanceId + "_collapseFour"}>
-                                                                                                    Get Asset Info
+                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item.instanceId + "_accordion"} href={"#" + item.instanceId + "_collapseSix"} aria-expanded="false" aria-controls={item.instanceId + "_collapseSix"}>
+                                                                                                    Get Bulk Asset Balance
                                                                                                     </a>
                                                                                                 </h4>
                                                                                             </div>
-                                                                                            <div id={item.instanceId + "_collapseFour"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingFour"}>
+                                                                                            <div id={item.instanceId + "_collapseSix"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingSix"}>
                                                                                                 <div className="card-block">
-                                                                                                    <p><b>Get Bulk Asset Balance of an Account</b></p>
                                                                                                     <pre>
                                                                                                         <code>
                                                                                                             {`POST /networks/${item.instanceId}/assetType/bulk/getAssetInfo HTTP/1.1
@@ -175,7 +198,20 @@ Content-Type: application/json
 }`}
                                                                                                         </code>
                                                                                                     </pre>
-                                                                                                    <p><b>Get Solo Asset Info</b></p>
+                                                                                                    <small>Change POST request body in above examples according to your's assets information</small>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div className="card card-default m-b-0">
+                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingSeven"}>
+                                                                                                <h4 className="card-title">
+                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item.instanceId + "_accordion"} href={"#" + item.instanceId + "_collapseSeven"} aria-expanded="false" aria-controls={item.instanceId + "_collapseSeven"}>
+                                                                                                    Get Solo Asset Info
+                                                                                                    </a>
+                                                                                                </h4>
+                                                                                            </div>
+                                                                                            <div id={item.instanceId + "_collapseSeven"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingSeven"}>
+                                                                                                <div className="card-block">
                                                                                                     <pre>
                                                                                                         <code>
                                                                                                             {`POST /networks/${item.instanceId}/assetType/solo/getAssetInfo HTTP/1.1
@@ -194,14 +230,14 @@ Content-Type: application/json
                                                                                             </div>
                                                                                         </div>
                                                                                         <div className="card card-default m-b-0">
-                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingFive"}>
+                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingEight"}>
                                                                                                 <h4 className="card-title">
-                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item.instanceId + "_accordion"} href={"#" + item.instanceId + "_collapseFive"} aria-expanded="false" aria-controls={item.instanceId + "_collapseFive"}>
+                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item.instanceId + "_accordion"} href={"#" + item.instanceId + "_collapseEight"} aria-expanded="false" aria-controls={item.instanceId + "_collapseEight"}>
                                                                                                     Add/Update Solo Asset Meta Data
                                                                                                     </a>
                                                                                                 </h4>
                                                                                             </div>
-                                                                                            <div id={item.instanceId + "_collapseFive"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingFive"}>
+                                                                                            <div id={item.instanceId + "_collapseEight"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingEight"}>
                                                                                                 <div className="card-block">
                                                                                                     <pre>
                                                                                                         <code>
@@ -222,14 +258,14 @@ Content-Type: application/json
                                                                                             </div>
                                                                                         </div>
                                                                                         <div className="card card-default m-b-0">
-                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingSix"}>
+                                                                                            <div className="card-header " role="tab" id={item.instanceId + "_headingNine"}>
                                                                                                 <h4 className="card-title">
-                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item.instanceId + "_accordion"} href={"#" + item.instanceId + "_collapseSix"} aria-expanded="false" aria-controls={item.instanceId + "_collapseSix"}>
+                                                                                                    <a className="collapsed" data-toggle="collapse" data-parent={"#" + item.instanceId + "_accordion"} href={"#" + item.instanceId + "_collapseNine"} aria-expanded="false" aria-controls={item.instanceId + "_collapseNine"}>
                                                                                                     Close Solo Asset
                                                                                                     </a>
                                                                                                 </h4>
                                                                                             </div>
-                                                                                            <div id={item.instanceId + "_collapseSix"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingSix"}>
+                                                                                            <div id={item.instanceId + "_collapseNine"} className="collapse" role="tabcard" aria-labelledby={item.instanceId + "_headingNine"}>
                                                                                                 <div className="card-block">
                                                                                                     <pre>
                                                                                                         <code>
