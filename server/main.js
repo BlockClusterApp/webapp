@@ -8,7 +8,13 @@ var jsonminify = require("jsonminify");
 import helpers from "../imports/modules/helpers"
 import server_helpers from "../imports/modules/helpers/server"
 import smartContracts from "../imports/modules/smart-contracts"
-import {scanBlocksOfNode} from "../imports/collections/networks/server/cron.js"
+import {scanBlocksOfNode, nodeStatusCronJob, authoritiesListCronJob} from "../imports/collections/networks/server/cron.js"
+
+SyncedCron.config({
+    log: false
+});
+
+SyncedCron.start();
 
 Accounts.validateLoginAttempt(function(options) {
     if (!options.allowed) {
@@ -29,7 +35,7 @@ Accounts.validateLoginAttempt(function(options) {
 Accounts.onCreateUser(function(options, user) {
   	user.firstLogin = false;
     user.profile = options.profile || {};
-    
+
     // Assigns first and last names to the newly created user object
     user.profile.firstName = options.profile.firstName;
     user.profile.lastName = options.profile.lastName;
@@ -139,7 +145,16 @@ spec:
 								deleteNetwork(id)
 							} else {
 
-								scanBlocksOfNode(instanceId) //start scanning blocks.
+                                SyncedCron.add({
+                        			name: "scanBlocks-" + instanceId,
+                        			schedule: function(parser) {
+                        				let time = new Date(Date.now() + 1000);
+                        				return parser.recur().on(time).fullDate();
+                        			},
+                        			job: () => {
+                        				scanBlocksOfNode(instanceId)
+                        			}
+                        		});
 
 								HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, {}, function(error, response){
 									if(error) {
@@ -273,6 +288,26 @@ spec:
 																										"assetsContractAddress": contract.address
 																									}
 																								})
+
+                                                                                                SyncedCron.add({
+                                                                                    				name: "status-" + instanceId,
+                                                                                    			  	schedule: function(parser) {
+                                                                                    			    	return parser.text("every 5 seconds");
+                                                                                    			  	},
+                                                                                    			  	job: () => {
+                                                                                    					nodeStatusCronJob(instanceId)
+                                                                                    			  	}
+                                                                                    			});
+
+                                                                                                SyncedCron.add({
+                                                                                    				name: "authoritiesList-" + instanceId,
+                                                                                    			  	schedule: function(parser) {
+                                                                                    			    	return parser.text("every 5 seconds");
+                                                                                    			  	},
+                                                                                    			  	job: () => {
+                                                                                    					authoritiesListCronJob(id, rpcNodePort)
+                                                                                    			  	}
+                                                                                    			});
 																							}
 																						}
 																					}))
@@ -342,6 +377,10 @@ spec:
 															console.log(e)
 														}
 
+                                                        SyncedCron.remove("status-" + id)
+                                                        SyncedCron.remove("authoritiesList-" + id)
+                                                        SyncedCron.remove("scanBlocks-" + id)
+                                                        
 														myFuture.return();
 													}
 												})
@@ -496,7 +535,16 @@ spec:
 								deleteNetwork(id)
 							} else {
 
-								scanBlocksOfNode(instanceId) //start scanning blocks.
+                                SyncedCron.add({
+                        			name: "scanBlocks-" + instanceId,
+                        			schedule: function(parser) {
+                        				let time = new Date(Date.now() + 1000);
+                        				return parser.recur().on(time).fullDate();
+                        			},
+                        			job: () => {
+                        				scanBlocksOfNode(instanceId)
+                        			}
+                        		});
 
 								HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, {}, function(error, response){
 									if(error) {
@@ -577,6 +625,26 @@ spec:
 																			"status": "running"
 																		}
 																	})
+
+                                                                    SyncedCron.add({
+                                                                        name: "status-" + instanceId,
+                                                                        schedule: function(parser) {
+                                                                            return parser.text("every 5 seconds");
+                                                                        },
+                                                                        job: () => {
+                                                                            nodeStatusCronJob(instanceId)
+                                                                        }
+                                                                    });
+
+                                                                    SyncedCron.add({
+                                                                        name: "authoritiesList-" + instanceId,
+                                                                        schedule: function(parser) {
+                                                                            return parser.text("every 5 seconds");
+                                                                        },
+                                                                        job: () => {
+                                                                            authoritiesListCronJob(id, rpcNodePort)
+                                                                        }
+                                                                    });
 																}
 															}))
 											            }

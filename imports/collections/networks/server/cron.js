@@ -5,72 +5,92 @@ import smartContracts from "../../../modules/smart-contracts"
 
 dataQueryingCollections = {}
 
-function updateNodeStatus() {
-	Meteor.setInterval(function(){
-		var nodes = Networks.find({}).fetch()
-		nodes.forEach(function(item, index){
-			if(item.status !== "initializing") {
-				var kuberREST_IP = Utilities.find({"name": "kuberREST_IP"}).fetch()[0].value;
-				HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + item.instanceId, function(error, response){
-					if(error) {
-						Networks.update({
-							_id: item._id
-						}, {
-							$set: {
-								"status": "down"
-							}
-						})
-					} else {
-						if(response.data.status.availableReplicas === 1) {
-							Networks.update({
-								_id: item._id
-							}, {
-								$set: {
-									"status": "running"
-								}
-							})
-						} else {
-							Networks.update({
-								_id: item._id
-							}, {
-								$set: {
-									"status": "down"
-								}
-							})
-						}
+function nodeStatusCronJob (instanceId) {
+	var kuberREST_IP = Utilities.find({"name": "kuberREST_IP"}).fetch()[0].value;
+	HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId, function(error, response){
+		if(error) {
+			Networks.update({
+				instanceId: instanceId
+			}, {
+				$set: {
+					"status": "down"
+				}
+			})
+		} else {
+			if(response.data.status.availableReplicas === 1) {
+				Networks.update({
+					instanceId: instanceId
+				}, {
+					$set: {
+						"status": "running"
+					}
+				})
+			} else {
+				Networks.update({
+					instanceId: instanceId
+				}, {
+					$set: {
+						"status": "down"
 					}
 				})
 			}
-		})
-	}, 5000)
+		}
+	})
+}
+
+function updateNodeStatus() {
+	var nodes = Networks.find({}).fetch()
+	nodes.forEach(function(item, index){
+		if(item.status !== "initializing") {
+			SyncedCron.add({
+				name: "status-" + item.instanceId,
+			  	schedule: function(parser) {
+			    	return parser.text("every 5 seconds");
+			  	},
+			  	job: () => {
+					nodeStatusCronJob(item.instanceId)
+			  	}
+			});
+		}
+	})
+}
+
+function authoritiesListCronJob (_id, rpcNodePort) {
+	var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+	let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + rpcNodePort));
+	web3.currentProvider.sendAsync({
+		method: "istanbul_getValidators",
+		params: [],
+		jsonrpc: "2.0",
+		id: new Date().getTime()
+	}, Meteor.bindEnvironment(function(error, result) {
+		if(!error) {
+			Networks.update({
+				_id: _id
+			}, {
+				$set: {
+					currentValidators: result.result
+				}
+			})
+		}
+	}))
 }
 
 function updateAuthoritiesList() {
-	Meteor.setInterval(function(){
-		var nodes = Networks.find({}).fetch()
-		nodes.forEach(function(item, index){
-			if(item.currentValidators !== undefined) {
-				var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
-				let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + item.rpcNodePort));
-				web3.currentProvider.sendAsync({
-				    method: "istanbul_getValidators",
-				    params: [],
-				    jsonrpc: "2.0",
-				    id: new Date().getTime()
-				}, Meteor.bindEnvironment(function(error, result) {
-					if(!error) {
-						Networks.update({
-							_id: item._id
-						}, {
-							$set: {
-								currentValidators: result.result
-							}
-						})
-					}
-				}))
-			}
-		})
-	}, 5000)
+	var nodes = Networks.find({}).fetch()
+	nodes.forEach(function(item, index){
+		if(item.currentValidators !== undefined) {
+			SyncedCron.add({
+				name: "authoritiesList-" + item.instanceId,
+			  	schedule: function(parser) {
+			    	return parser.text("every 5 seconds");
+			  	},
+			  	job: () => {
+					authoritiesListCronJob(item._id, item.rpcNodePort)
+			  	}
+			});
+		}
+	})
 }
 
 async function updateTotalSmartContracts(web3, blockNumber, totalSmartContracts) {
@@ -261,7 +281,16 @@ function scanBlocksOfNode(instanceId) {
 function scanBlocksOfAllNodes() {
 	var nodes = Networks.find({}).fetch()
 	for(let count = 0; count < nodes.length; count++) {
-		scanBlocksOfNode(nodes[count].instanceId)
+		SyncedCron.add({
+			name: "scanBlocks-" + nodes[count].instanceId,
+			schedule: function(parser) {
+				let time = new Date(Date.now() + 1000);
+				return parser.recur().on(time).fullDate();
+			},
+			job: () => {
+				scanBlocksOfNode(nodes[count].instanceId)
+			}
+		});
 	}
 }
 
@@ -275,9 +304,17 @@ function createQueryingCollections() {
 			}
 		}
 	}
-
-	Meteor.setTimeout(createQueryingCollections, 1000)
 }
+
+SyncedCron.add({
+	name: "createQueryingCollections",
+	schedule: function(parser) {
+		return parser.text("every 1 second");
+	},
+	job: () => {
+		createQueryingCollections()
+	}
+});
 
 function unlockAccounts() {
 	Meteor.setInterval(function(){
@@ -401,4 +438,4 @@ function updateOrderBook() {
 	}, 5000)
 }
 
-export {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateAssetsInfo, updateOrderBook, createQueryingCollections, scanBlocksOfNode, scanBlocksOfAllNodes}
+export {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateAssetsInfo, updateOrderBook, createQueryingCollections, scanBlocksOfNode, scanBlocksOfAllNodes, nodeStatusCronJob, authoritiesListCronJob}
