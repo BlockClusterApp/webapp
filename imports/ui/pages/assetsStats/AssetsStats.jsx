@@ -71,20 +71,20 @@ class AssetsStats extends Component {
                                                                                                 </tr>
                                                                                             </thead>
                                                                                             <tbody>
-                                                                                                {item.assetsTypes.reverse().map((item, index) => {
+                                                                                                {Object.keys(item.assetsTypes || {}).reverse().map((key, index) => {
                                                                                                     return (
-                                                                                                        <tr key={item.uniqueIdentifier}>
+                                                                                                        <tr key={item.assetsTypes[key].uniqueIdentifier}>
                                                                                                             <td className="v-align-middle ">
-                                                                                                                {item.assetName}
+                                                                                                                {item.assetsTypes[key].assetName}
                                                                                                             </td>
                                                                                                             <td className="v-align-middle">
-                                                                                                                {item.type}
+                                                                                                                {item.assetsTypes[key].type}
                                                                                                             </td>
                                                                                                             <td className="v-align-middle">
-                                                                                                                {item.units}
+                                                                                                                {item.assetsTypes[key].units}
                                                                                                             </td>
                                                                                                             <td className="v-align-middle">
-                                                                                                                {item.authorizedIssuer}
+                                                                                                                {item.assetsTypes[key].authorizedIssuer}
                                                                                                             </td>
                                                                                                         </tr>
                                                                                                     )

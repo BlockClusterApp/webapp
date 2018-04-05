@@ -2,8 +2,13 @@ import Web3 from "web3";
 import {Networks} from "../networks.js"
 import {Utilities} from "../../utilities/utilities.js"
 import smartContracts from "../../../modules/smart-contracts"
+var MongoClient = require("mongodb").MongoClient;
+var db = null;
 
-dataQueryingCollections = {}
+MongoClient.connect("mongodb://localhost:3001", function(err, database) {
+    db = database.db("meteor");
+});
+
 
 function nodeStatusCronJob (instanceId) {
 	var kuberREST_IP = Utilities.find({"name": "kuberREST_IP"}).fetch()[0].value;
@@ -135,117 +140,196 @@ async function updateTotalSmartContracts(web3, blockNumber, totalSmartContracts)
 
 async function indexSoloAssets(web3, blockNumber, collectionName, assetsContractAddress) {
 	return new Promise((resolve, reject) => {
-		if(dataQueryingCollections[collectionName]) {
-			var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
-			var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-			var assets = assetsContract.at(assetsContractAddress);
-			var events = assets.allEvents({fromBlock: blockNumber, toBlock: blockNumber});
-			events.get(Meteor.bindEnvironment(function(error, events){
-				if(error) {
-					reject(error);
-				} else {
-					try {
-						for(let count = 0; count < events.length; count++) {
-							if (events[count].event === "soloAssetIssued") {
-								try {
-									let number = new BigNumber(events[count].args.uniqueAssetIdentifier)
-									dataQueryingCollections[collectionName].upsert({
-										assetName: events[count].args.assetName,
-										uniqueIdentifier: number.toNumber()
-									}, {
-										$set: {
-											owner: events[count].args.to,
-											status: "open"
-										}
-									})
-								} catch(e) {
-									dataQueryingCollections[collectionName].upsert({
-										assetName: events[count].args.assetName,
-										uniqueIdentifier: events[count].args.uniqueAssetIdentifier
-									}, {
-										$set: {
-											owner: events[count].args.to,
-											status: "open"
-										}
-									})
-								}
-							} else if (events[count].event === "addedOrUpdatedSoloAssetExtraData") {
-								try {
-									var uniqueAssetIdentifierValue = new BigNumber(events[count].args.uniqueAssetIdentifier)
-									uniqueAssetIdentifierValue = uniqueAssetIdentifierValue.toNumber()
-								} catch(e) {
-									uniqueAssetIdentifierValue = events[count].args.uniqueAssetIdentifier
-								}
-
-								try {
-									let number = new BigNumber(events[count].args.value)
-									dataQueryingCollections[collectionName].upsert({
-										assetName: events[count].args.assetName,
-										uniqueIdentifier: uniqueAssetIdentifierValue
-									}, {
-										$set: {
-											[events[count].args.key]: number.toNumber()
-										}
-									})
-								}
-								catch(e){
-									dataQueryingCollections[collectionName].upsert({
-										assetName: events[count].args.assetName,
-										uniqueIdentifier: uniqueAssetIdentifierValue
-									}, {
-										$set: {
-											[events[count].args.key]: events[count].args.value
-										}
-									})
-								}
-							} else if (events[count].event === "transferredOwnershipOfSoloAsset") {
-								try {
-									var uniqueAssetIdentifierValue = new BigNumber(events[count].args.uniqueAssetIdentifier)
-									uniqueAssetIdentifierValue = uniqueAssetIdentifierValue.toNumber()
-								} catch(e) {
-									uniqueAssetIdentifierValue = events[count].args.uniqueAssetIdentifier
-								}
-
-								dataQueryingCollections[collectionName].upsert({
+		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+		var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+		var assets = assetsContract.at(assetsContractAddress);
+		var events = assets.allEvents({fromBlock: blockNumber, toBlock: blockNumber});
+		events.get(Meteor.bindEnvironment(function(error, events){
+			if(error) {
+				reject(error);
+			} else {
+				try {
+					for(let count = 0; count < events.length; count++) {
+						if (events[count].event === "soloAssetIssued") {
+							try {
+								let number = new BigNumber(events[count].args.uniqueAssetIdentifier)
+								db.collection(collectionName).updateMany({
 									assetName: events[count].args.assetName,
-									uniqueIdentifier: uniqueAssetIdentifierValue
+									uniqueIdentifier: number.toNumber()
 								}, {
 									$set: {
-										owner: events[count].args.to
+										owner: events[count].args.to,
+										status: "open"
 									}
+								}, {
+									upsert: true,
+									safe: false
 								})
-							} else if(events[count].event === "closedSoloAsset") {
-								try {
-									var uniqueAssetIdentifierValue = new BigNumber(events[count].args.uniqueAssetIdentifier)
-									uniqueAssetIdentifierValue = uniqueAssetIdentifierValue.toNumber()
-								} catch(e) {
-									uniqueAssetIdentifierValue = events[count].args.uniqueAssetIdentifier
-								}
-
-								dataQueryingCollections[collectionName].upsert({
+							} catch(e) {
+								db.collection(collectionName).updateMany({
 									assetName: events[count].args.assetName,
-									uniqueIdentifier: uniqueAssetIdentifierValue
+									uniqueIdentifier: events[count].args.uniqueAssetIdentifier
 								}, {
 									$set: {
-										status: "closed"
+										owner: events[count].args.to,
+										status: "open"
 									}
+								}, {
+									upsert: true,
+									safe: false
 								})
 							}
+						} else if (events[count].event === "addedOrUpdatedSoloAssetExtraData") {
+							try {
+								var uniqueAssetIdentifierValue = new BigNumber(events[count].args.uniqueAssetIdentifier)
+								uniqueAssetIdentifierValue = uniqueAssetIdentifierValue.toNumber()
+							} catch(e) {
+								uniqueAssetIdentifierValue = events[count].args.uniqueAssetIdentifier
+							}
+
+							try {
+								let number = new BigNumber(events[count].args.value)
+								db.collection(collectionName).updateMany({
+									assetName: events[count].args.assetName,
+									uniqueIdentifier: uniqueAssetIdentifierValue
+								}, {
+									$set: {
+										[events[count].args.key]: number.toNumber()
+									}
+								}, {
+									upsert: true,
+									safe: false
+								})
+							}
+							catch(e){
+								db.collection(collectionName).updateMany({
+									assetName: events[count].args.assetName,
+									uniqueIdentifier: uniqueAssetIdentifierValue
+								}, {
+									$set: {
+										[events[count].args.key]: events[count].args.value
+									}
+								}, {
+									upsert: true,
+									safe: false
+								})
+							}
+						} else if (events[count].event === "transferredOwnershipOfSoloAsset") {
+							try {
+								var uniqueAssetIdentifierValue = new BigNumber(events[count].args.uniqueAssetIdentifier)
+								uniqueAssetIdentifierValue = uniqueAssetIdentifierValue.toNumber()
+							} catch(e) {
+								uniqueAssetIdentifierValue = events[count].args.uniqueAssetIdentifier
+							}
+
+							db.collection(collectionName).updateMany({
+								assetName: events[count].args.assetName,
+								uniqueIdentifier: uniqueAssetIdentifierValue
+							}, {
+								$set: {
+									owner: events[count].args.to
+								}
+							}, {
+								upsert: true,
+								safe: false
+							})
+						} else if(events[count].event === "closedSoloAsset") {
+							try {
+								var uniqueAssetIdentifierValue = new BigNumber(events[count].args.uniqueAssetIdentifier)
+								uniqueAssetIdentifierValue = uniqueAssetIdentifierValue.toNumber()
+							} catch(e) {
+								uniqueAssetIdentifierValue = events[count].args.uniqueAssetIdentifier
+							}
+
+							db.collection(collectionName).updateMany({
+								assetName: events[count].args.assetName,
+								uniqueIdentifier: uniqueAssetIdentifierValue
+							}, {
+								$set: {
+									status: "closed"
+								}
+							}, {
+								upsert: true,
+								safe: false
+							})
 						}
-						resolve();
-					} catch(e) {
-						reject(e)
 					}
+					resolve();
+				} catch(e) {
+					reject(e)
 				}
-			}))
-		} else {
-			reject();
-		}
+			}
+		}))
+	});
+}
+
+async function indexAssets(web3, blockNumber, instanceId, assetsContractAddress) {
+	return new Promise((resolve, reject) => {
+		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+		var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+		var assets = assetsContract.at(assetsContractAddress);
+		var events = assets.allEvents({fromBlock: blockNumber, toBlock: blockNumber});
+		events.get(Meteor.bindEnvironment(function(error, events){
+			if(error) {
+				reject(error);
+			} else {
+				try {
+					for(let count = 0; count < events.length; count++) {
+						if (events[count].event === "bulkAssetTypeCreated") {
+							var assetsTypes = [];
+							var nodes = Networks.find({instanceId: instanceId}).fetch();
+							assetsTypes = nodes[0].assetsTypes || {};
+							assetsTypes[events[count].args.assetName] = {assetName: events[count].args.assetName, uniqueIdentifier: events[count].args.uniqueIdentifier, authorizedIssuer: events[count].args.authorizedIssuer, type: "bulk", units: 0}
+							Networks.update({
+								instanceId: instanceId
+							}, {
+								$set: {
+									assetsTypes: assetsTypes
+								}
+							})
+
+						} else if (events[count].event === "bulkAssetsIssued") {
+							let number = new BigNumber(events[count].args.units)
+							Networks.update({
+								instanceId: instanceId
+							}, {
+								$inc: {
+									["assetsTypes." + events[count].args.assetName + ".units"]: number.toNumber()
+								}
+							})
+						} else if (events[count].event === "soloAssetTypeCreated") {
+							var assetsTypes = [];
+							var nodes = Networks.find({instanceId: instanceId}).fetch();
+							assetsTypes = nodes[0].assetsTypes || {};
+							assetsTypes[events[count].args.assetName] = {assetName: events[count].args.assetName, uniqueIdentifier: events[count].args.uniqueIdentifier, authorizedIssuer: events[count].args.authorizedIssuer, type: "solo", units: 0}
+							Networks.update({
+								instanceId: instanceId
+							}, {
+								$set: {
+									assetsTypes: assetsTypes
+								}
+							})
+
+						} else if (events[count].event === "soloAssetIssued") {
+							Networks.update({
+								instanceId: instanceId
+							}, {
+								$inc: {
+									["assetsTypes." + events[count].args.assetName + ".units"]: 1
+								}
+							})
+						}
+					}
+					resolve();
+				} catch(e) {
+					reject(e)
+				}
+			}
+		}))
 	});
 }
 
 function scanBlocksOfNode(instanceId) {
-
 	let scan = async () => {
 		var nodes = Networks.find({instanceId: instanceId}).fetch()
 
@@ -257,6 +341,7 @@ function scanBlocksOfNode(instanceId) {
 			totalSmartContracts = await updateTotalSmartContracts(web3, blockToScan, totalSmartContracts)
 
 			if(nodes[0].assetsContractAddress !== '') {
+				await indexAssets(web3, blockToScan, nodes[0].instanceId, nodes[0].assetsContractAddress)
 				await indexSoloAssets(web3, blockToScan, nodes[0].instanceId + "_soloAssets", nodes[0].assetsContractAddress)
 			}
 			Networks.update({
@@ -268,6 +353,7 @@ function scanBlocksOfNode(instanceId) {
 				}
 			})
 		} catch(e) {
+			console.log(e)
 		}
 
 		if(nodes.length === 1) {
@@ -279,42 +365,26 @@ function scanBlocksOfNode(instanceId) {
 }
 
 function scanBlocksOfAllNodes() {
-	var nodes = Networks.find({}).fetch()
-	for(let count = 0; count < nodes.length; count++) {
-		SyncedCron.add({
-			name: "scanBlocks-" + nodes[count].instanceId,
-			schedule: function(parser) {
-				let time = new Date(Date.now() + 1000);
-				return parser.recur().on(time).fullDate();
-			},
-			job: () => {
-				scanBlocksOfNode(nodes[count].instanceId)
-			}
-		});
-	}
-}
-
-function createQueryingCollections() {
-	var nodes = Networks.find({}).fetch()
-
-	for(let count = 0; count < nodes.length; count++) {
-		if(nodes[count].assetsContractAddress !== '') {
-			if(!dataQueryingCollections[nodes[count].instanceId + "_soloAssets"]) {
-				dataQueryingCollections[nodes[count].instanceId + "_soloAssets"] = new Mongo.Collection(nodes[count].instanceId + "_soloAssets");
-			}
+	let interval = Meteor.setInterval(() => {
+		if(db != null) {
+			db.collection("networks").find({}).toArray(Meteor.bindEnvironment((e, nodes) => {
+				for(let count = 0; count < nodes.length; count++) {
+					SyncedCron.add({
+						name: "scanBlocks-" + nodes[count].instanceId,
+						schedule: function(parser) {
+							let time = new Date(Date.now() + 2000);
+							return parser.recur().on(time).fullDate();
+						},
+						job: () => {
+							scanBlocksOfNode(nodes[count].instanceId)
+						}
+					});
+				}
+			}))
 		}
-	}
+		Meteor.clearInterval(interval);
+	}, 1000)
 }
-
-SyncedCron.add({
-	name: "createQueryingCollections",
-	schedule: function(parser) {
-		return parser.text("every 1 second");
-	},
-	job: () => {
-		createQueryingCollections()
-	}
-});
 
 function unlockAccounts() {
 	Meteor.setInterval(function(){
@@ -336,59 +406,6 @@ function unlockAccounts() {
 	}, 5000)
 }
 
-function updateAssetsInfo() {
-	Meteor.setInterval(function(){
-		var nodes = Networks.find({}).fetch()
-		nodes.forEach(function(item, index){
-			var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
-			var web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + item.rpcNodePort));
-			var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-			var assets = assetsContract.at(item.assetsContractAddress);
-			var events = assets.allEvents({fromBlock: 0, toBlock: "latest"});
-
-			events.get(Meteor.bindEnvironment(function(error, events){
-				var assetsTypes = [];
-				if(!error) {
-					for(var count = 0; count < events.length; count++) {
-						if(events[count].event === "bulkAssetTypeCreated") {
-							var jjj = 0;
-
-							for(var iii = 0; iii < events.length; iii++) {
-								if(events[iii].event === "bulkAssetsIssued") {
-									if(events[iii].args.assetName === events[count].args.assetName) {
-										jjj = jjj + parseInt(events[iii].args.units);
-									}
-								}
-							}
-
-							assetsTypes.push({assetName: events[count].args.assetName, uniqueIdentifier: events[count].args.uniqueIdentifier, authorizedIssuer: events[count].args.authorizedIssuer, type: "bulk", units: jjj})
-						} else if(events[count].event === "soloAssetTypeCreated") {
-							var jjj = 0;
-
-							for(var iii = 0; iii < events.length; iii++) {
-								if(events[iii].event === "soloAssetIssued") {
-									if(events[iii].args.assetName === events[count].args.assetName) {
-										jjj = jjj + 1;
-									}
-								}
-							}
-
-							assetsTypes.push({assetName: events[count].args.assetName, uniqueIdentifier: events[count].args.uniqueIdentifier, authorizedIssuer: events[count].args.authorizedIssuer, type: "solo", units: jjj})
-						}
-					}
-
-					Networks.update({
-						_id: item._id
-					}, {
-						$set: {
-							assetsTypes: assetsTypes
-						}
-					})
-				}
-			}))
-		})
-	}, 5000)
-}
 
 function updateOrderBook() {
 	Meteor.setInterval(function(){
@@ -438,4 +455,4 @@ function updateOrderBook() {
 	}, 5000)
 }
 
-export {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateAssetsInfo, updateOrderBook, createQueryingCollections, scanBlocksOfNode, scanBlocksOfAllNodes, nodeStatusCronJob, authoritiesListCronJob}
+export {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateOrderBook, scanBlocksOfNode, scanBlocksOfAllNodes, nodeStatusCronJob, authoritiesListCronJob}

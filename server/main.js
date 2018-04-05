@@ -9,6 +9,12 @@ import helpers from "../imports/modules/helpers"
 import server_helpers from "../imports/modules/helpers/server"
 import smartContracts from "../imports/modules/smart-contracts"
 import {scanBlocksOfNode, nodeStatusCronJob, authoritiesListCronJob} from "../imports/collections/networks/server/cron.js"
+var MongoClient = require("mongodb").MongoClient;
+var db = null;
+
+MongoClient.connect("mongodb://localhost:3001", function(err, database) {
+    db = database.db("meteor");
+});
 
 SyncedCron.config({
     log: false
@@ -148,7 +154,7 @@ spec:
                                 SyncedCron.add({
                         			name: "scanBlocks-" + instanceId,
                         			schedule: function(parser) {
-                        				let time = new Date(Date.now() + 1000);
+                        				let time = new Date(Date.now() + 2000);
                         				return parser.recur().on(time).fullDate();
                         			},
                         			job: () => {
@@ -368,19 +374,14 @@ spec:
 														myFuture.throw("An unknown error occured");
 													} else {
 														Networks.remove({instanceId: id});
-														try {
-															if(dataQueryingCollections[id + "_soloAssets"]) {
-																dataQueryingCollections[id + "_soloAssets"].rawCollection().drop();
-																delete dataQueryingCollections[id + "_soloAssets"]
-															}
-														} catch(e) {
-															console.log(e)
-														}
+                                                        db.collection(id + "_soloAssets").drop(function(e, r){
+                                                            console.log(e, r)
+                                                        })
 
                                                         SyncedCron.remove("status-" + id)
                                                         SyncedCron.remove("authoritiesList-" + id)
                                                         SyncedCron.remove("scanBlocks-" + id)
-                                                        
+
 														myFuture.return();
 													}
 												})
@@ -538,7 +539,7 @@ spec:
                                 SyncedCron.add({
                         			name: "scanBlocks-" + instanceId,
                         			schedule: function(parser) {
-                        				let time = new Date(Date.now() + 1000);
+                        				let time = new Date(Date.now() + 2000);
                         				return parser.recur().on(time).fullDate();
                         			},
                         			job: () => {
@@ -1048,7 +1049,11 @@ spec:
 		return myFuture.wait();
 	},
 	"searchSoloAssets": function(instanceId, query){
-		return dataQueryingCollections[instanceId + "_soloAssets"].find(JSON.parse(query)).fetch()
+        var myFuture = new Future();
+        db.collection(instanceId + "_soloAssets").find(JSON.parse(query)).toArray(function(e, result){
+            myFuture.return(JSON.parse(JSON.stringify(result)));
+        })
+        return myFuture.wait();
 	}
 })
 

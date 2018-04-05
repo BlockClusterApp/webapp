@@ -12,6 +12,7 @@
     "history": "4.7.2",
     "jsonminify": "0.4.1",
     "meteor-node-stubs": "0.3.2",
+    "mongodb": "^3.0.5",
     "node-cmd": "3.0.0",
     "react": "16.2.0",
     "react-codemirror": "git://github.com/skidding/react-codemirror.git#106-fix-update",
