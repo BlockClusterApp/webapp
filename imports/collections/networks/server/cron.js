@@ -274,53 +274,22 @@ async function indexAssets(web3, blockNumber, instanceId, assetsContractAddress)
 				reject(error);
 			} else {
 				try {
+                    var assetsTypes = [];
+                    var nodes = Networks.find({instanceId: instanceId}).fetch();
+                    assetsTypes = nodes[0].assetsTypes || {};
 					for(let count = 0; count < events.length; count++) {
 						if (events[count].event === "bulkAssetTypeCreated") {
-							var assetsTypes = [];
-							var nodes = Networks.find({instanceId: instanceId}).fetch();
-							assetsTypes = nodes[0].assetsTypes || {};
 							assetsTypes[events[count].args.assetName] = {assetName: events[count].args.assetName, uniqueIdentifier: events[count].args.uniqueIdentifier, authorizedIssuer: events[count].args.authorizedIssuer, type: "bulk", units: 0}
-							Networks.update({
-								instanceId: instanceId
-							}, {
-								$set: {
-									assetsTypes: assetsTypes
-								}
-							})
-
-						} else if (events[count].event === "bulkAssetsIssued") {
+                        } else if (events[count].event === "bulkAssetsIssued") {
 							let number = new BigNumber(events[count].args.units)
-							Networks.update({
-								instanceId: instanceId
-							}, {
-								$inc: {
-									["assetsTypes." + events[count].args.assetName + ".units"]: number.toNumber()
-								}
-							})
+                            assetsTypes[events[count].args.assetName].units += number.toNumber()
 						} else if (events[count].event === "soloAssetTypeCreated") {
-							var assetsTypes = [];
-							var nodes = Networks.find({instanceId: instanceId}).fetch();
-							assetsTypes = nodes[0].assetsTypes || {};
 							assetsTypes[events[count].args.assetName] = {assetName: events[count].args.assetName, uniqueIdentifier: events[count].args.uniqueIdentifier, authorizedIssuer: events[count].args.authorizedIssuer, type: "solo", units: 0}
-							Networks.update({
-								instanceId: instanceId
-							}, {
-								$set: {
-									assetsTypes: assetsTypes
-								}
-							})
-
 						} else if (events[count].event === "soloAssetIssued") {
-							Networks.update({
-								instanceId: instanceId
-							}, {
-								$inc: {
-									["assetsTypes." + events[count].args.assetName + ".units"]: 1
-								}
-							})
+                            assetsTypes[events[count].args.assetName].units += 1
 						}
 					}
-					resolve();
+					resolve(assetsTypes);
 				} catch(e) {
 					reject(e)
 				}
@@ -341,20 +310,23 @@ function scanBlocksOfNode(instanceId) {
 			totalSmartContracts = await updateTotalSmartContracts(web3, blockToScan, totalSmartContracts)
 
 			if(nodes[0].assetsContractAddress !== '') {
-				await indexAssets(web3, blockToScan, nodes[0].instanceId, nodes[0].assetsContractAddress)
+				assetsTypes = await indexAssets(web3, blockToScan, nodes[0].instanceId, nodes[0].assetsContractAddress)
 				await indexSoloAssets(web3, blockToScan, nodes[0].instanceId + "_soloAssets", nodes[0].assetsContractAddress)
 			}
+
 			Networks.update({
 				_id: nodes[0]._id
 			}, {
 				$set: {
 					blockToScan: blockToScan + 1,
-					totalSmartContracts: totalSmartContracts
+					totalSmartContracts: totalSmartContracts,
+                    assetsTypes: assetsTypes
 				}
 			})
 		} catch(e) {
 			console.log(e)
 		}
+
 
 		if(nodes.length === 1) {
 			Meteor.setTimeout(scan, 100)
