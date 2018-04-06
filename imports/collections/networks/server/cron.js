@@ -381,8 +381,10 @@ function scanBlocksOfAllNodes() {
 					});
 				}
 			}))
+
+			Meteor.clearInterval(interval);
 		}
-		Meteor.clearInterval(interval);
+
 	}, 1000)
 }
 
