@@ -423,43 +423,45 @@ class AssetsManagement extends Component {
                                                                                                                     </tr>
                                                                                                                 </thead>
                                                                                                                 <tbody>
-                                                                                                                    {this.props.orders.map((item, index) => {
-                                                                                                                        return (
-                                                                                                                            <tr key={item.orderId}>
-                                                                                                                                <td className="v-align-middle ">
-                                                                                                                                    {item.orderId}
-                                                                                                                                </td>
-                                                                                                                                <td className="v-align-middle">
-                                                                                                                                    {item.fromType == "bulk" &&
-                                                                                                                                        <span>{item.fromUnits} {item.fromId}</span>
-                                                                                                                                    }
+                                                                                                                    {this.props.orders.map((item1, index) => {
+                                                                                                                        if(item1.instanceId == item.instanceId) {
+                                                                                                                            return (
+                                                                                                                                <tr key={item1.orderId}>
+                                                                                                                                    <td className="v-align-middle ">
+                                                                                                                                        {item1.orderId}
+                                                                                                                                    </td>
+                                                                                                                                    <td className="v-align-middle">
+                                                                                                                                        {item1.fromType == "bulk" &&
+                                                                                                                                            <span>{item1.fromUnits} {item1.fromId}</span>
+                                                                                                                                        }
 
-                                                                                                                                    {item.fromType == "solo" &&
-                                                                                                                                        <span>{item.fromUniqueIdentifier} {item.fromId}</span>
-                                                                                                                                    }
-                                                                                                                                </td>
-                                                                                                                                <td className="v-align-middle">
-                                                                                                                                    {item.toType == "bulk" &&
-                                                                                                                                        <span>{item.toUnits} {item.toId}</span>
-                                                                                                                                    }
+                                                                                                                                        {item1.fromType == "solo" &&
+                                                                                                                                            <span>{item1.fromUniqueIdentifier} {item1.fromId}</span>
+                                                                                                                                        }
+                                                                                                                                    </td>
+                                                                                                                                    <td className="v-align-middle">
+                                                                                                                                        {item1.toType == "bulk" &&
+                                                                                                                                            <span>{item1.toUnits} {item1.toId}</span>
+                                                                                                                                        }
 
-                                                                                                                                    {item.toType == "solo" &&
-                                                                                                                                        <span>{item.toUniqueIdentifier} {item.toId}</span>
-                                                                                                                                    }
-                                                                                                                                </td>
-                                                                                                                                <td className="v-align-middle">
-                                                                                                                                    {item.seller}
-                                                                                                                                </td>
-                                                                                                                                <td className="v-align-middle">
-                                                                                                                                    {item.buyer != "0x0000000000000000000000000000000000000000" &&
-                                                                                                                                        <span>{item.buyer}</span>
-                                                                                                                                    }
-                                                                                                                                </td>
-                                                                                                                                <td className="v-align-middle">
-                                                                                                                                    {ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}
-                                                                                                                                </td>
-                                                                                                                            </tr>
-                                                                                                                        )
+                                                                                                                                        {item1.toType == "solo" &&
+                                                                                                                                            <span>{item1.toUniqueIdentifier} {item1.toId}</span>
+                                                                                                                                        }
+                                                                                                                                    </td>
+                                                                                                                                    <td className="v-align-middle">
+                                                                                                                                        {item1.seller}
+                                                                                                                                    </td>
+                                                                                                                                    <td className="v-align-middle">
+                                                                                                                                        {item1.buyer != "0x0000000000000000000000000000000000000000" &&
+                                                                                                                                            <span>{item1.buyer}</span>
+                                                                                                                                        }
+                                                                                                                                    </td>
+                                                                                                                                    <td className="v-align-middle">
+                                                                                                                                        {ReactHtmlParser(helpers.convertStatusToTag(item1.status, helpers.firstLetterCapital(item1.status)))}
+                                                                                                                                    </td>
+                                                                                                                                </tr>
+                                                                                                                            )
+                                                                                                                        }
                                                                                                                     })}
                                                                                                                 </tbody>
                                                                                                             </table>

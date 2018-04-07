@@ -2,6 +2,7 @@ require("../imports/startup/server/")
 import {Networks} from "../imports/collections/networks/networks.js"
 import {Utilities} from "../imports/collections/utilities/utilities.js"
 import {SoloAssets} from "../imports/collections/soloAssets/soloAssets.js"
+import {Orders} from "../imports/collections/orders/orders.js"
 var Future = Npm.require("fibers/future");
 var lightwallet = Npm.require("eth-lightwallet");
 import Web3 from "web3";
