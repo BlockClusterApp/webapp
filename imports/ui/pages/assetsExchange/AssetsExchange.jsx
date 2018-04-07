@@ -21,13 +21,16 @@ class AssetsManagement extends Component {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
         });
+
+        ordersSubscription.stop();
     }
 
     networkSelected(instanceId) {
         this.setState({
             selectedNetwork: instanceId
         }, () => {
-            Meteor.subscribe("orders", this.state.selectedNetwork)
+            ordersSubscription.stop();
+            ordersSubscription = Meteor.subscribe("orders", this.state.selectedNetwork)
         })
     }
 
@@ -587,9 +590,9 @@ export default withTracker(() => {
         subscriptions: [Meteor.subscribe("networks", {
             onReady: function (){
         		if(Networks.find({}).fetch().length > 0) {
-        			Meteor.subscribe("orders", Networks.find({}).fetch()[0].instanceId)
+        			ordersSubscription = Meteor.subscribe("orders", Networks.find({}).fetch()[0].instanceId)
         		}
         	}
-        }), Meteor.subscribe("orders")]
+        })]
     }
 })(withRouter(AssetsManagement))
