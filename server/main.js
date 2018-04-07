@@ -374,9 +374,8 @@ spec:
 														myFuture.throw("An unknown error occured");
 													} else {
 														Networks.remove({instanceId: id});
-                                                        db.collection(id + "_soloAssets").drop(function(e, r){
-                                                            console.log(e, r)
-                                                        })
+                                                        Orders.remove({instanceId: id});
+                                                        SoloAssets.remove({instanceId: id});
 
                                                         SyncedCron.remove("status-" + id)
                                                         SyncedCron.remove("authoritiesList-" + id)

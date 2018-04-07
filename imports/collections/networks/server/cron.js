@@ -336,18 +336,17 @@ async function indexOrders(web3, blockNumber, instanceId, assetsContractAddress)
 }
 
 function scanBlocksOfNode(instanceId) {
-	let scan = async () => {
+	let scan = async function() {
 		var node = Networks.findOne({instanceId: instanceId})
-		let blockToScan = (node.blockToScan ? node.blockToScan : 0);
-		let totalSmartContracts = (node.totalSmartContracts ? node.totalSmartContracts : 0);
+		var blockToScan = (node.blockToScan ? node.blockToScan : 0);
+		var totalSmartContracts = (node.totalSmartContracts ? node.totalSmartContracts : 0);
 		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
-		let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + node.rpcNodePort));
+		var web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + node.rpcNodePort));
 		try {
 			totalSmartContracts = await updateTotalSmartContracts(web3, blockToScan, totalSmartContracts)
-
-			if(node.assetsContractAddress !== '') {
-				assetsTypes = await indexAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress, node.assetsTypes)
-				//await indexSoloAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress)
+			if(node.assetsContractAddress) {
+				var assetsTypes = await indexAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress, node.assetsTypes)
+                await indexSoloAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress)
                 await indexOrders(web3, blockToScan, node.instanceId, node.assetsContractAddress)
 			}
 
