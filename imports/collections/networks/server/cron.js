@@ -254,7 +254,7 @@ async function indexSoloAssets(web3, blockNumber, instanceId, assetsContractAddr
 	});
 }
 
-async function indexAssets(web3, blockNumber, instanceId, assetsContractAddress) {
+async function indexAssets(web3, blockNumber, instanceId, assetsContractAddress, assetsTypesPrev) {
 	return new Promise((resolve, reject) => {
 		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
 		var assetsContract = web3.eth.contract(smartContracts.assets.abi);
@@ -265,9 +265,8 @@ async function indexAssets(web3, blockNumber, instanceId, assetsContractAddress)
 				reject(error);
 			} else {
 				try {
-                    var assetsTypes = [];
-                    var nodes = Networks.find({instanceId: instanceId}).fetch();
-                    assetsTypes = nodes[0].assetsTypes || {};
+                    var assetsTypes = assetsTypesPrev || {};
+                    console.log(instanceId + " assets before scanning contract " + assetsContractAddress + ": " + JSON.stringify(assetsTypes))
 					for(let count = 0; count < events.length; count++) {
 						if (events[count].event === "bulkAssetTypeCreated") {
 							assetsTypes[events[count].args.assetName] = {assetName: events[count].args.assetName, uniqueIdentifier: events[count].args.uniqueIdentifier, authorizedIssuer: events[count].args.authorizedIssuer, type: "bulk", units: 0}
@@ -280,6 +279,9 @@ async function indexAssets(web3, blockNumber, instanceId, assetsContractAddress)
                             assetsTypes[events[count].args.assetName].units += 1
 						}
 					}
+
+                    console.log(instanceId + " assets after scanning contract " + assetsContractAddress + ": " + JSON.stringify(assetsTypes))
+
 					resolve(assetsTypes);
 				} catch(e) {
 					reject(e)
@@ -337,23 +339,33 @@ async function indexOrders(web3, blockNumber, instanceId, assetsContractAddress)
 
 function scanBlocksOfNode(instanceId) {
 	let scan = async () => {
-		var nodes = Networks.find({instanceId: instanceId}).fetch()
-
-		let blockToScan = (nodes[0].blockToScan ? nodes[0].blockToScan : 0);
-		let totalSmartContracts = (nodes[0].totalSmartContracts ? nodes[0].totalSmartContracts : 0);
+		var node = Networks.findOne({instanceId: instanceId}).fetch()
+		let blockToScan = (node.blockToScan ? node.blockToScan : 0);
+		let totalSmartContracts = (node.totalSmartContracts ? node.totalSmartContracts : 0);
 		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
 		let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + nodes[0].rpcNodePort));
 		try {
 			totalSmartContracts = await updateTotalSmartContracts(web3, blockToScan, totalSmartContracts)
 
 			if(nodes[0].assetsContractAddress !== '') {
-				assetsTypes = await indexAssets(web3, blockToScan, nodes[0].instanceId, nodes[0].assetsContractAddress)
-				await indexSoloAssets(web3, blockToScan, nodes[0].instanceId + "_soloAssets", nodes[0].assetsContractAddress)
-                await indexOrders(web3, blockToScan, nodes[0].instanceId, nodes[0].assetsContractAddress)
+				assetsTypes = await indexAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress, node.assetsTypes)
+				await indexSoloAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress)
+                await indexOrders(web3, blockToScan, node.instanceId, node.assetsContractAddress)
 			}
 
+            /*console.log({
+				_id: node._id
+			}, {
+				$set: {
+					blockToScan: blockToScan + 1,
+					totalSmartContracts: totalSmartContracts,
+                    assetsTypes: JSON.stringify(assetsTypes),
+                    assetsContractAddress: nodes[0].assetsContractAddress
+				}
+			})*/
+
 			Networks.update({
-				_id: nodes[0]._id
+				_id: node._id
 			}, {
 				$set: {
 					blockToScan: blockToScan + 1,
@@ -366,7 +378,7 @@ function scanBlocksOfNode(instanceId) {
 		}
 
 
-		if(nodes.length === 1) {
+		if(node) {
 			Meteor.setTimeout(scan, 100)
 		}
 	}

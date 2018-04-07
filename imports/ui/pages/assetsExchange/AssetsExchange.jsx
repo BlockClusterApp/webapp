@@ -185,7 +185,6 @@ class AssetsManagement extends Component {
     }
 
 	render(){
-        console.log(this.props.orders)
 		return (
             <div className="assetsManagement content">
                 <div className="m-t-20 container-fluid container-fixed-lg bg-white">
