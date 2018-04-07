@@ -1,5 +1,7 @@
 import Web3 from "web3";
 import {Networks} from "../networks.js"
+import {Orders} from "../../orders/orders.js"
+import {SoloAssets} from "../../soloAssets/soloAssets.js"
 import {Utilities} from "../../utilities/utilities.js"
 import smartContracts from "../../../modules/smart-contracts"
 var MongoClient = require("mongodb").MongoClient;
@@ -138,7 +140,7 @@ async function updateTotalSmartContracts(web3, blockNumber, totalSmartContracts)
 	});
 }
 
-async function indexSoloAssets(web3, blockNumber, collectionName, assetsContractAddress) {
+async function indexSoloAssets(web3, blockNumber, instanceId, assetsContractAddress) {
 	return new Promise((resolve, reject) => {
 		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
 		var assetsContract = web3.eth.contract(smartContracts.assets.abi);
@@ -153,31 +155,28 @@ async function indexSoloAssets(web3, blockNumber, collectionName, assetsContract
 						if (events[count].event === "soloAssetIssued") {
 							try {
 								let number = new BigNumber(events[count].args.uniqueAssetIdentifier)
-								db.collection(collectionName).updateMany({
-									assetName: events[count].args.assetName,
+
+                                SoloAssets.upsert({
+                                    instanceId: instanceId,
+                                    assetName: events[count].args.assetName,
 									uniqueIdentifier: number.toNumber()
-								}, {
-									$set: {
+                            	}, {
+                                    $set: {
 										owner: events[count].args.to,
 										status: "open"
 									}
-								}, {
-									upsert: true,
-									safe: false
-								})
+                            	});
 							} catch(e) {
-								db.collection(collectionName).updateMany({
-									assetName: events[count].args.assetName,
+                                SoloAssets.upsert({
+                                    instanceId: instanceId,
+                                    assetName: events[count].args.assetName,
 									uniqueIdentifier: events[count].args.uniqueAssetIdentifier
-								}, {
-									$set: {
-										owner: events[count].args.to,
+                            	}, {
+                                    $set: {
+                                        owner: events[count].args.to,
 										status: "open"
 									}
-								}, {
-									upsert: true,
-									safe: false
-								})
+                            	});
 							}
 						} else if (events[count].event === "addedOrUpdatedSoloAssetExtraData") {
 							try {
@@ -189,30 +188,26 @@ async function indexSoloAssets(web3, blockNumber, collectionName, assetsContract
 
 							try {
 								let number = new BigNumber(events[count].args.value)
-								db.collection(collectionName).updateMany({
-									assetName: events[count].args.assetName,
+                                SoloAssets.upsert({
+                                    instanceId: instanceId,
+                                    assetName: events[count].args.assetName,
 									uniqueIdentifier: uniqueAssetIdentifierValue
-								}, {
-									$set: {
+                            	}, {
+                                    $set: {
 										[events[count].args.key]: number.toNumber()
 									}
-								}, {
-									upsert: true,
-									safe: false
-								})
+                            	});
 							}
 							catch(e){
-								db.collection(collectionName).updateMany({
-									assetName: events[count].args.assetName,
+                                SoloAssets.upsert({
+                                    instanceId: instanceId,
+                                    assetName: events[count].args.assetName,
 									uniqueIdentifier: uniqueAssetIdentifierValue
-								}, {
-									$set: {
+                            	}, {
+                                    $set: {
 										[events[count].args.key]: events[count].args.value
 									}
-								}, {
-									upsert: true,
-									safe: false
-								})
+                            	});
 							}
 						} else if (events[count].event === "transferredOwnershipOfSoloAsset") {
 							try {
@@ -222,17 +217,15 @@ async function indexSoloAssets(web3, blockNumber, collectionName, assetsContract
 								uniqueAssetIdentifierValue = events[count].args.uniqueAssetIdentifier
 							}
 
-							db.collection(collectionName).updateMany({
-								assetName: events[count].args.assetName,
+                            SoloAssets.upsert({
+                                instanceId: instanceId,
+                                assetName: events[count].args.assetName,
 								uniqueIdentifier: uniqueAssetIdentifierValue
-							}, {
-								$set: {
+                            }, {
+                                $set: {
 									owner: events[count].args.to
 								}
-							}, {
-								upsert: true,
-								safe: false
-							})
+                            });
 						} else if(events[count].event === "closedSoloAsset") {
 							try {
 								var uniqueAssetIdentifierValue = new BigNumber(events[count].args.uniqueAssetIdentifier)
@@ -241,17 +234,15 @@ async function indexSoloAssets(web3, blockNumber, collectionName, assetsContract
 								uniqueAssetIdentifierValue = events[count].args.uniqueAssetIdentifier
 							}
 
-							db.collection(collectionName).updateMany({
-								assetName: events[count].args.assetName,
+                            SoloAssets.upsert({
+                                instanceId: instanceId,
+                                assetName: events[count].args.assetName,
 								uniqueIdentifier: uniqueAssetIdentifierValue
-							}, {
-								$set: {
+                            }, {
+                                $set: {
 									status: "closed"
 								}
-							}, {
-								upsert: true,
-								safe: false
-							})
+                            });
 						}
 					}
 					resolve();
@@ -298,6 +289,52 @@ async function indexAssets(web3, blockNumber, instanceId, assetsContractAddress)
 	});
 }
 
+async function indexOrders(web3, blockNumber, instanceId, assetsContractAddress) {
+	return new Promise((resolve, reject) => {
+		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+		var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+		var assets = assetsContract.at(assetsContractAddress);
+		var events = assets.allEvents({fromBlock: blockNumber, toBlock: blockNumber});
+		events.get(Meteor.bindEnvironment(function(error, events){
+			if(error) {
+				reject(error);
+			} else {
+				try {
+					for(let count = 0; count < events.length; count++) {
+						if (events[count].event === "orderPlaced" || events[count].event === "orderFulfilled" || events[count].event === "orderCancelled") {
+                            let orderInfo = assets.getOrderInfo.call(events[count].args.orderId);
+							let order_status_owner = assets.getOrderInfo_Status_Owner.call(events[count].args.orderId);
+
+                            Orders.upsert({
+                                instanceId: instanceId,
+                        		orderId: events[count].args.orderId
+                        	}, {
+                        		$set: {
+                                    fromType: orderInfo[1],
+    								toType: orderInfo[0],
+    								fromId: orderInfo[3],
+    								toId: orderInfo[2],
+    								fromUnits: orderInfo[4].toString(),
+    								toUnits: orderInfo[5].toString(),
+    								fromUniqueIdentifier: orderInfo[6],
+    								toUniqueIdentifier: orderInfo[7],
+    								seller: order_status_owner[0],
+    								buyer: order_status_owner[1],
+    								status: order_status_owner[2]
+                        		}
+                        	});
+                        }
+					}
+
+					resolve();
+				} catch(e) {
+					reject(e)
+				}
+			}
+		}))
+	});
+}
+
 function scanBlocksOfNode(instanceId) {
 	let scan = async () => {
 		var nodes = Networks.find({instanceId: instanceId}).fetch()
@@ -312,6 +349,7 @@ function scanBlocksOfNode(instanceId) {
 			if(nodes[0].assetsContractAddress !== '') {
 				assetsTypes = await indexAssets(web3, blockToScan, nodes[0].instanceId, nodes[0].assetsContractAddress)
 				await indexSoloAssets(web3, blockToScan, nodes[0].instanceId + "_soloAssets", nodes[0].assetsContractAddress)
+                await indexOrders(web3, blockToScan, nodes[0].instanceId, nodes[0].assetsContractAddress)
 			}
 
 			Networks.update({
@@ -380,53 +418,4 @@ function unlockAccounts() {
 	}, 5000)
 }
 
-
-function updateOrderBook() {
-	Meteor.setInterval(function(){
-		var nodes = Networks.find({}).fetch()
-		nodes.forEach(function(item, index){
-			var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
-			var web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + item.rpcNodePort));
-			var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-			var assets = assetsContract.at(item.assetsContractAddress);
-			var events = assets.allEvents({fromBlock: 0, toBlock: "latest"});
-
-			events.get(Meteor.bindEnvironment(function(error, events){
-				var orderBook = [];
-				if(!error) {
-					for(var count = 0; count < events.length; count++) {
-						if(events[count].event === "orderPlaced") {
-							let orderInfo = assets.getOrderInfo.call(events[count].args.orderId);
-							let order_status_owner = assets.getOrderInfo_Status_Owner.call(events[count].args.orderId);
-
-							orderBook.push({
-								orderId: events[count].args.orderId,
-								fromType: orderInfo[1],
-								toType: orderInfo[0],
-								fromId: orderInfo[3],
-								toId: orderInfo[2],
-								fromUnits: orderInfo[4].toString(),
-								toUnits: orderInfo[5].toString(),
-								fromUniqueIdentifier: orderInfo[6],
-								toUniqueIdentifier: orderInfo[7],
-								seller: order_status_owner[0],
-								buyer: order_status_owner[1],
-								status: order_status_owner[2]
-							})
-						}
-					}
-
-					Networks.update({
-						_id: item._id
-					}, {
-						$set: {
-							orderBook: orderBook
-						}
-					})
-				}
-			}))
-		})
-	}, 5000)
-}
-
-export {updateNodeStatus, updateAuthoritiesList, unlockAccounts, updateOrderBook, scanBlocksOfNode, scanBlocksOfAllNodes, nodeStatusCronJob, authoritiesListCronJob}
+export {updateNodeStatus, updateAuthoritiesList, unlockAccounts, scanBlocksOfNode, scanBlocksOfAllNodes, nodeStatusCronJob, authoritiesListCronJob}

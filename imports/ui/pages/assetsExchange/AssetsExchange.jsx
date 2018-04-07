@@ -1,6 +1,7 @@
 import React, {Component} from "react";
 import {withTracker} from "meteor/react-meteor-data";
 import {Networks} from "../../../collections/networks/networks.js"
+import {Orders} from "../../../collections/orders/orders.js"
 import helpers from "../../../modules/helpers"
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
 import {withRouter} from 'react-router-dom'
@@ -20,6 +21,14 @@ class AssetsManagement extends Component {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
         });
+    }
+
+    networkSelected(instanceId) {
+        this.setState({
+            selectedNetwork: instanceId
+        }, () => {
+            Meteor.subscribe("orders", this.state.selectedNetwork)
+        })
     }
 
     sellAsset_assetTypeChange = (e, instanceId) => {
@@ -176,6 +185,7 @@ class AssetsManagement extends Component {
     }
 
 	render(){
+        console.log(this.props.orders)
 		return (
             <div className="assetsManagement content">
                 <div className="m-t-20 container-fluid container-fixed-lg bg-white">
@@ -193,7 +203,7 @@ class AssetsManagement extends Component {
                                                 <ul className="nav nav-tabs nav-tabs-simple nav-tabs-left bg-white" id="tab-3">
                                                     {this.props.networks.map((item, index) => {
                                                         return (
-                                                            <li key={item.instanceId} className="nav-item">
+                                                            <li onClick={() => {this.networkSelected(item.instanceId)}} key={item.instanceId} className="nav-item">
                                                                 <a href="#" className={index === 0 ? "active" : ""} data-toggle="tab" data-target={"#" + item.instanceId}>{item.name}</a>
                                                             </li>
                                                         )
@@ -411,7 +421,7 @@ class AssetsManagement extends Component {
                                                                                                                     </tr>
                                                                                                                 </thead>
                                                                                                                 <tbody>
-                                                                                                                    {item.orderBook.reverse().map((item, index) => {
+                                                                                                                    {this.props.orders.map((item, index) => {
                                                                                                                         return (
                                                                                                                             <tr key={item.orderId}>
                                                                                                                                 <td className="v-align-middle ">
@@ -572,9 +582,15 @@ class AssetsManagement extends Component {
 }
 
 export default withTracker(() => {
-
     return {
         networks: Networks.find({}).fetch(),
-        subscriptions: [Meteor.subscribe("networks")]
+        orders: Orders.find({}).fetch(),
+        subscriptions: [Meteor.subscribe("networks", {
+            onReady: function (){
+        		if(Networks.find({}).fetch().length > 0) {
+        			Meteor.subscribe("orders", Networks.find({}).fetch()[0].instanceId)
+        		}
+        	}
+        }), Meteor.subscribe("orders")]
     }
 })(withRouter(AssetsManagement))
