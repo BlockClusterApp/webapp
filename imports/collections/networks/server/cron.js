@@ -266,7 +266,6 @@ async function indexAssets(web3, blockNumber, instanceId, assetsContractAddress,
 			} else {
 				try {
                     var assetsTypes = assetsTypesPrev || {};
-                    console.log(instanceId + " assets before scanning contract " + assetsContractAddress + ": " + JSON.stringify(assetsTypes))
 					for(let count = 0; count < events.length; count++) {
 						if (events[count].event === "bulkAssetTypeCreated") {
 							assetsTypes[events[count].args.assetName] = {assetName: events[count].args.assetName, uniqueIdentifier: events[count].args.uniqueIdentifier, authorizedIssuer: events[count].args.authorizedIssuer, type: "bulk", units: 0}
@@ -280,7 +279,6 @@ async function indexAssets(web3, blockNumber, instanceId, assetsContractAddress,
 						}
 					}
 
-                    console.log(instanceId + " assets after scanning contract " + assetsContractAddress + ": " + JSON.stringify(assetsTypes))
 
 					resolve(assetsTypes);
 				} catch(e) {
@@ -349,20 +347,9 @@ function scanBlocksOfNode(instanceId) {
 
 			if(node.assetsContractAddress !== '') {
 				assetsTypes = await indexAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress, node.assetsTypes)
-				await indexSoloAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress)
-                await indexOrders(web3, blockToScan, node.instanceId, node.assetsContractAddress)
+				//await indexSoloAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress)
+                //await indexOrders(web3, blockToScan, node.instanceId, node.assetsContractAddress)
 			}
-
-            /*console.log({
-				_id: nodes[0]._id
-			}, {
-				$set: {
-					blockToScan: blockToScan + 1,
-					totalSmartContracts: totalSmartContracts,
-                    assetsTypes: JSON.stringify(assetsTypes),
-                    assetsContractAddress: nodes[0].assetsContractAddress
-				}
-			})*/
 
 			Networks.update({
 				_id: node._id
@@ -370,7 +357,7 @@ function scanBlocksOfNode(instanceId) {
 				$set: {
 					blockToScan: blockToScan + 1,
 					totalSmartContracts: totalSmartContracts,
-                    assetsTypes: assetsTypes
+                    assetsTypes: assetsTypes || {}
 				}
 			})
 		} catch(e) {

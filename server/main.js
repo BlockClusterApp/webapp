@@ -151,7 +151,6 @@ spec:
 								console.log(error);
 								deleteNetwork(id)
 							} else {
-
                                 SyncedCron.add({
                         			name: "scanBlocks-" + instanceId,
                         			schedule: function(parser) {
