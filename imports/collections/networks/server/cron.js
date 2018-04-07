@@ -347,7 +347,7 @@ function scanBlocksOfNode(instanceId) {
 
 			if(node.assetsContractAddress !== '') {
 				assetsTypes = await indexAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress, node.assetsTypes)
-				await indexSoloAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress)
+				//await indexSoloAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress)
                 await indexOrders(web3, blockToScan, node.instanceId, node.assetsContractAddress)
 			}
 
