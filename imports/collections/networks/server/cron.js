@@ -302,7 +302,7 @@ function scanBlocksOfNode(instanceId) {
 		var web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + node.rpcNodePort));
 
         try {
-            blockExists = blockExists(web3, blockToScan);
+            blockExists = await blockExists(web3, blockToScan);
 
             try {
     			totalSmartContracts = await updateTotalSmartContracts(web3, blockToScan, totalSmartContracts)
@@ -354,7 +354,8 @@ function scanBlocksOfNode(instanceId) {
     		if(node) {
     			Meteor.setTimeout(scan, 100)
     		}
-        } catch(e) {}
+        } catch(e) {
+        }
 
 
 	}
