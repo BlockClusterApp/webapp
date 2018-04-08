@@ -23,6 +23,7 @@ async function updateTotalSmartContracts(web3, blockNumber, totalSmartContracts)
 						resolve(false)
 					}
 				} else {
+                    console.log("updateTotalSmartContracts")
 					reject(error)
 				}
 			})
@@ -43,7 +44,7 @@ async function updateTotalSmartContracts(web3, blockNumber, totalSmartContracts)
 						return;
 					}
 				}
-
+                console.log("updateTotalSmartContracts")
 				resolve(totalSmartContracts)
 			} else {
 				reject(error)
@@ -159,6 +160,7 @@ async function indexSoloAssets(web3, blockNumber, instanceId, assetsContractAddr
 					}
 					resolve();
 				} catch(e) {
+                    console.log("indexSoloAssets")
 					reject(e)
 				}
 			}
@@ -194,6 +196,7 @@ async function indexAssets(web3, blockNumber, instanceId, assetsContractAddress,
 
 					resolve(assetsTypes);
 				} catch(e) {
+                    console.log("indexAssets")
 					reject(e)
 				}
 			}
@@ -240,6 +243,7 @@ async function indexOrders(web3, blockNumber, instanceId, assetsContractAddress)
 
 					resolve();
 				} catch(e) {
+                    console.log("indexOrders")
 					reject(e)
 				}
 			}
@@ -258,6 +262,7 @@ async function fetchAuthoritiesList (web3) {
     		if(!error) {
                 resolve(result.result)
     		} else {
+                console.log("fetchAuthoritiesList")
                 reject(error)
             }
     	}))
@@ -322,7 +327,7 @@ function scanBlocksOfNode(instanceId) {
             })
 
 		} catch(e) {
-			console.log(e)
+			//console.log(e)
 
             if(node.status !== "initializing") {
                 Networks.update({
