@@ -302,7 +302,7 @@ function scanBlocksOfNode(instanceId) {
 		var web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + node.rpcNodePort));
 
         try {
-            blockExists = await blockExists(web3, blockToScan);
+            await blockExists(web3, blockToScan); //if block doesn't exist it will throw error
 
             try {
     			totalSmartContracts = await updateTotalSmartContracts(web3, blockToScan, totalSmartContracts)
