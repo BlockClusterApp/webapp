@@ -15,10 +15,10 @@ MongoClient.connect("mongodb://localhost:3001", function(err, database) {
 async function blockExists(web3, blockNumber) {
     return new Promise((resolve, reject) => {
         web3.eth.getBlock(blockNumber, async (error, result) => {
-            if(result == null) {
+            if(error) {
                 reject(error)
-            } else if (error) {
-                reject(error)
+            } else if (result == null) {
+                resolve(false)
             } else {
                 resolve(true)
             }
@@ -302,59 +302,69 @@ function scanBlocksOfNode(instanceId) {
 		var web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + node.rpcNodePort));
 
         try {
-            await blockExists(web3, blockToScan); //if block doesn't exist it will throw error
+            var blockStatus = await blockExists(web3, blockToScan); //if block doesn't exist it will throw error. For all other cases it will return true. Even if node is down
 
-            try {
-    			totalSmartContracts = await updateTotalSmartContracts(web3, blockToScan, totalSmartContracts)
-    			if(node.assetsContractAddress) {
-    				var assetsTypes = await indexAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress, node.assetsTypes)
-                    await indexSoloAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress)
-                    await indexOrders(web3, blockToScan, node.instanceId, node.assetsContractAddress)
-                    var authoritiesList = await fetchAuthoritiesList(web3)
-    			}
+            if(blockStatus == true) {
+                try {
+                    totalSmartContracts = await updateTotalSmartContracts(web3, blockToScan, totalSmartContracts)
+                    if(node.assetsContractAddress) {
+                        var assetsTypes = await indexAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress, node.assetsTypes)
+                        await indexSoloAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress)
+                        await indexOrders(web3, blockToScan, node.instanceId, node.assetsContractAddress)
+                        var authoritiesList = await fetchAuthoritiesList(web3)
+                    }
 
-                if(blockToScan % 5 == 0) {
-                    await unlockAccounts(web3, node.accounts, node.accountsPassword);
+                    if(blockToScan % 5 == 0) {
+                        await unlockAccounts(web3, node.accounts, node.accountsPassword);
+                    }
+
+                    var set  = {};
+                    set.blockToScan = blockToScan + 1;
+                    set.totalSmartContracts = totalSmartContracts;
+                    set.assetsTypes = assetsTypes;
+
+                    if(authoritiesList) {
+                        set.currentValidators = authoritiesList;
+                    }
+
+                    if(node.status !== "initializing") {
+                        set.status = "running";
+                    }
+
+                    Networks.update({
+                        _id: node._id
+                    }, {
+                        $set: set
+                    })
+
+                } catch(e) {
+                    console.log(e)
+
+                    if(node.status !== "initializing") {
+                        Networks.update({
+                            _id: node._id
+                        }, {
+                            $set: {
+                                status: "down"
+                            }
+                        })
+                    }
                 }
-
-                var set  = {};
-                set.blockToScan = blockToScan + 1;
-                set.totalSmartContracts = totalSmartContracts;
-                set.assetsTypes = assetsTypes;
-
-                if(authoritiesList) {
-                    set.currentValidators = authoritiesList;
-                }
-
-                if(node.status !== "initializing") {
-                    set.status = "running";
-                }
-
+            }
+        } catch(e) {
+            if(node.status !== "initializing") {
                 Networks.update({
                     _id: node._id
                 }, {
-                    $set: set
+                    $set: {
+                        status: "down"
+                    }
                 })
+            }
+        }
 
-    		} catch(e) {
-    			console.log(e)
-
-                if(node.status !== "initializing") {
-                    Networks.update({
-        				_id: node._id
-        			}, {
-        				$set: {
-        					status: "down"
-        				}
-        			})
-                }
-    		}
-
-
-    		if(node) {
-    			Meteor.setTimeout(scan, 100)
-    		}
-        } catch(e) {
+        if(node) {
+            Meteor.setTimeout(scan, 100)
         }
 
 
