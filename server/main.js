@@ -10,7 +10,7 @@ var jsonminify = require("jsonminify");
 import helpers from "../imports/modules/helpers"
 import server_helpers from "../imports/modules/helpers/server"
 import smartContracts from "../imports/modules/smart-contracts"
-import {scanBlocksOfNode, nodeStatusCronJob, authoritiesListCronJob} from "../imports/collections/networks/server/cron.js"
+import {scanBlocksOfNode, authoritiesListCronJob} from "../imports/collections/networks/server/cron.js"
 var MongoClient = require("mongodb").MongoClient;
 var db = null;
 
@@ -261,7 +261,7 @@ spec:
 																				_id: id
 																			}, {
 																				$set: {
-																					accountsPassword: {accountsPassword},
+																					accountsPassword: accountsPassword,
 																					accounts: accounts
 																				}
 																			})
@@ -295,26 +295,6 @@ spec:
 																										"assetsContractAddress": contract.address
 																									}
 																								})
-
-                                                                                                SyncedCron.add({
-                                                                                    				name: "status-" + instanceId,
-                                                                                    			  	schedule: function(parser) {
-                                                                                    			    	return parser.text("every 5 seconds");
-                                                                                    			  	},
-                                                                                    			  	job: () => {
-                                                                                    					nodeStatusCronJob(instanceId)
-                                                                                    			  	}
-                                                                                    			});
-
-                                                                                                SyncedCron.add({
-                                                                                    				name: "authoritiesList-" + instanceId,
-                                                                                    			  	schedule: function(parser) {
-                                                                                    			    	return parser.text("every 5 seconds");
-                                                                                    			  	},
-                                                                                    			  	job: () => {
-                                                                                    					authoritiesListCronJob(id, rpcNodePort)
-                                                                                    			  	}
-                                                                                    			});
 																							}
 																						}
 																					}))
@@ -626,26 +606,6 @@ spec:
 																			"status": "running"
 																		}
 																	})
-
-                                                                    SyncedCron.add({
-                                                                        name: "status-" + instanceId,
-                                                                        schedule: function(parser) {
-                                                                            return parser.text("every 5 seconds");
-                                                                        },
-                                                                        job: () => {
-                                                                            nodeStatusCronJob(instanceId)
-                                                                        }
-                                                                    });
-
-                                                                    SyncedCron.add({
-                                                                        name: "authoritiesList-" + instanceId,
-                                                                        schedule: function(parser) {
-                                                                            return parser.text("every 5 seconds");
-                                                                        },
-                                                                        job: () => {
-                                                                            authoritiesListCronJob(id, rpcNodePort)
-                                                                        }
-                                                                    });
 																}
 															}))
 											            }

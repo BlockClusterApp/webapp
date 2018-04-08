@@ -12,94 +12,6 @@ MongoClient.connect("mongodb://localhost:3001", function(err, database) {
 });
 
 
-function nodeStatusCronJob (instanceId) {
-	var kuberREST_IP = Utilities.find({"name": "kuberREST_IP"}).fetch()[0].value;
-	HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId, function(error, response){
-		if(error) {
-			Networks.update({
-				instanceId: instanceId
-			}, {
-				$set: {
-					"status": "down"
-				}
-			})
-		} else {
-			if(response.data.status.availableReplicas === 1) {
-				Networks.update({
-					instanceId: instanceId
-				}, {
-					$set: {
-						"status": "running"
-					}
-				})
-			} else {
-				Networks.update({
-					instanceId: instanceId
-				}, {
-					$set: {
-						"status": "down"
-					}
-				})
-			}
-		}
-	})
-}
-
-function updateNodeStatus() {
-	var nodes = Networks.find({}).fetch()
-	nodes.forEach(function(item, index){
-		if(item.status !== "initializing") {
-			SyncedCron.add({
-				name: "status-" + item.instanceId,
-			  	schedule: function(parser) {
-			    	return parser.text("every 5 seconds");
-			  	},
-			  	job: () => {
-					nodeStatusCronJob(item.instanceId)
-			  	}
-			});
-		}
-	})
-}
-
-function authoritiesListCronJob (_id, rpcNodePort) {
-	var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
-	let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + rpcNodePort));
-	web3.currentProvider.sendAsync({
-		method: "istanbul_getValidators",
-		params: [],
-		jsonrpc: "2.0",
-		id: new Date().getTime()
-	}, Meteor.bindEnvironment(function(error, result) {
-		if(!error) {
-			Networks.update({
-				_id: _id
-			}, {
-				$set: {
-					currentValidators: result.result
-				}
-			})
-		}
-	}))
-}
-
-function updateAuthoritiesList() {
-	var nodes = Networks.find({}).fetch()
-	nodes.forEach(function(item, index){
-		if(item.currentValidators !== undefined) {
-			SyncedCron.add({
-				name: "authoritiesList-" + item.instanceId,
-			  	schedule: function(parser) {
-			    	return parser.text("every 5 seconds");
-			  	},
-			  	job: () => {
-					authoritiesListCronJob(item._id, item.rpcNodePort)
-			  	}
-			});
-		}
-	})
-}
-
 async function updateTotalSmartContracts(web3, blockNumber, totalSmartContracts) {
 	fetchTxn = async (web3, txnHash) => {
 		return new Promise((resolve, reject) => {
@@ -335,6 +247,39 @@ async function indexOrders(web3, blockNumber, instanceId, assetsContractAddress)
 	});
 }
 
+async function fetchAuthoritiesList (web3) {
+    return new Promise((resolve, reject) => {
+        web3.currentProvider.sendAsync({
+    		method: "istanbul_getValidators",
+    		params: [],
+    		jsonrpc: "2.0",
+    		id: new Date().getTime()
+    	}, Meteor.bindEnvironment(function(error, result) {
+    		if(!error) {
+                resolve(result.result)
+    		} else {
+                reject(error)
+            }
+    	}))
+    })
+}
+
+async function unlockAccounts(web3, accounts, accountsPassword) {
+    return new Promise((resolve, reject) => {
+        if(accounts && accountsPassword) {
+            for(var count = 0; count < accounts.length; count++) {
+                web3.currentProvider.sendAsync({
+                    method: "personal_unlockAccount",
+                    params: [accounts[count], accountsPassword[accounts[count]], 0],
+                    jsonrpc: "2.0",
+                    id: new Date().getTime()
+                }, () => {})
+            }
+        }
+        resolve();
+    })
+}
+
 function scanBlocksOfNode(instanceId) {
 	let scan = async function() {
 		var node = Networks.findOne({instanceId: instanceId})
@@ -348,19 +293,45 @@ function scanBlocksOfNode(instanceId) {
 				var assetsTypes = await indexAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress, node.assetsTypes)
                 await indexSoloAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress)
                 await indexOrders(web3, blockToScan, node.instanceId, node.assetsContractAddress)
+                var authoritiesList = await fetchAuthoritiesList(web3)
 			}
 
-			Networks.update({
-				_id: node._id
-			}, {
-				$set: {
-					blockToScan: blockToScan + 1,
-					totalSmartContracts: totalSmartContracts,
-                    assetsTypes: assetsTypes || {}
-				}
-			})
+            if(blockToScan % 5 == 0) {
+                await unlockAccounts(web3, node.accounts, node.accountsPassword);
+            }
+
+            var set  = {};
+            set.blockToScan = blockToScan + 1;
+            set.totalSmartContracts = totalSmartContracts;
+            set.assetsTypes = assetsTypes;
+
+            if(authoritiesList) {
+                set.currentValidators = authoritiesList;
+            }
+
+            if(node.status !== "initializing") {
+                set.status = "running";
+            }
+
+            Networks.update({
+                _id: node._id
+            }, {
+                $set: set
+            })
+
+
 		} catch(e) {
 			console.log(e)
+
+            if(node.status !== "initializing") {
+                Networks.update({
+    				_id: node._id
+    			}, {
+    				$set: {
+    					status: "down"
+    				}
+    			})
+            }
 		}
 
 
@@ -396,24 +367,6 @@ function scanBlocksOfAllNodes() {
 	}, 1000)
 }
 
-function unlockAccounts() {
-	Meteor.setInterval(function(){
-		var nodes = Networks.find({}).fetch()
-		nodes.forEach(function(item, index){
-			var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
-			var web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + item.rpcNodePort));
-			if(item.accounts) {
-				for(var count = 0; count < item.accounts.length; count++) {
-					web3.currentProvider.sendAsync({
-					    method: "personal_unlockAccount",
-					    params: [item.accounts[count], item.accountsPassword[item.accounts[count]], 0],
-					    jsonrpc: "2.0",
-					    id: new Date().getTime()
-					}, Meteor.bindEnvironment(function(error, result) {}))
-				}
-			}
-		})
-	}, 5000)
-}
 
-export {updateNodeStatus, updateAuthoritiesList, unlockAccounts, scanBlocksOfNode, scanBlocksOfAllNodes, nodeStatusCronJob, authoritiesListCronJob}
+
+export {updateNodeStatus, scanBlocksOfNode, scanBlocksOfAllNodes}
