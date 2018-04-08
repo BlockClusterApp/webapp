@@ -24,7 +24,7 @@ async function blockExists(web3, blockNumber) {
             }
         })
     })
-})
+}
 
 async function updateTotalSmartContracts(web3, blockNumber, totalSmartContracts) {
 	fetchTxn = async (web3, txnHash) => {
