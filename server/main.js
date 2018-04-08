@@ -159,9 +159,6 @@ spec:
                         				return parser.recur().on(time).fullDate();
                         			},
                         			job: () => {
-                                        console.log(
-                                            "sadasdas"
-                                        )
                         				scanBlocksOfNode(instanceId)
                         			}
                         		});

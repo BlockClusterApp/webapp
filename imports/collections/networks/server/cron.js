@@ -12,6 +12,20 @@ MongoClient.connect("mongodb://localhost:3001", function(err, database) {
 });
 
 
+async function blockExists(web3, blockNumber) {
+    return new Promise((resolve, reject) => {
+        web3.eth.getBlock(blockNumber, async (error, result) => {
+            if(result == null) {
+                reject(error)
+            } else if (error) {
+                reject(error)
+            } else {
+                resolve(true)
+            }
+        })
+    })
+})
+
 async function updateTotalSmartContracts(web3, blockNumber, totalSmartContracts) {
 	fetchTxn = async (web3, txnHash) => {
 		return new Promise((resolve, reject) => {
@@ -23,7 +37,6 @@ async function updateTotalSmartContracts(web3, blockNumber, totalSmartContracts)
 						resolve(false)
 					}
 				} else {
-                    console.log("updateTotalSmartContracts")
 					reject(error)
 				}
 			})
@@ -44,7 +57,6 @@ async function updateTotalSmartContracts(web3, blockNumber, totalSmartContracts)
 						return;
 					}
 				}
-                console.log("updateTotalSmartContracts")
 				resolve(totalSmartContracts)
 			} else {
 				reject(error)
@@ -160,7 +172,6 @@ async function indexSoloAssets(web3, blockNumber, instanceId, assetsContractAddr
 					}
 					resolve();
 				} catch(e) {
-                    console.log("indexSoloAssets")
 					reject(e)
 				}
 			}
@@ -196,7 +207,6 @@ async function indexAssets(web3, blockNumber, instanceId, assetsContractAddress,
 
 					resolve(assetsTypes);
 				} catch(e) {
-                    console.log("indexAssets")
 					reject(e)
 				}
 			}
@@ -243,7 +253,6 @@ async function indexOrders(web3, blockNumber, instanceId, assetsContractAddress)
 
 					resolve();
 				} catch(e) {
-                    console.log("indexOrders")
 					reject(e)
 				}
 			}
@@ -262,7 +271,6 @@ async function fetchAuthoritiesList (web3) {
     		if(!error) {
                 resolve(result.result)
     		} else {
-                console.log("fetchAuthoritiesList")
                 reject(error)
             }
     	}))
@@ -293,57 +301,62 @@ function scanBlocksOfNode(instanceId) {
 		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
 		var web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + node.rpcNodePort));
 
-		console.log(blockToScan)
-		try {
-			totalSmartContracts = await updateTotalSmartContracts(web3, blockToScan, totalSmartContracts)
-			if(node.assetsContractAddress) {
-				var assetsTypes = await indexAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress, node.assetsTypes)
-                await indexSoloAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress)
-                await indexOrders(web3, blockToScan, node.instanceId, node.assetsContractAddress)
-                var authoritiesList = await fetchAuthoritiesList(web3)
-			}
+        try {
+            blockExists = blockExists(web3, blockToScan);
 
-            if(blockToScan % 5 == 0) {
-                await unlockAccounts(web3, node.accounts, node.accountsPassword);
-            }
+            try {
+    			totalSmartContracts = await updateTotalSmartContracts(web3, blockToScan, totalSmartContracts)
+    			if(node.assetsContractAddress) {
+    				var assetsTypes = await indexAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress, node.assetsTypes)
+                    await indexSoloAssets(web3, blockToScan, node.instanceId, node.assetsContractAddress)
+                    await indexOrders(web3, blockToScan, node.instanceId, node.assetsContractAddress)
+                    var authoritiesList = await fetchAuthoritiesList(web3)
+    			}
 
-            var set  = {};
-            set.blockToScan = blockToScan + 1;
-            set.totalSmartContracts = totalSmartContracts;
-            set.assetsTypes = assetsTypes;
+                if(blockToScan % 5 == 0) {
+                    await unlockAccounts(web3, node.accounts, node.accountsPassword);
+                }
 
-            if(authoritiesList) {
-                set.currentValidators = authoritiesList;
-            }
+                var set  = {};
+                set.blockToScan = blockToScan + 1;
+                set.totalSmartContracts = totalSmartContracts;
+                set.assetsTypes = assetsTypes;
 
-            if(node.status !== "initializing") {
-                set.status = "running";
-            }
+                if(authoritiesList) {
+                    set.currentValidators = authoritiesList;
+                }
 
-            Networks.update({
-                _id: node._id
-            }, {
-                $set: set
-            })
+                if(node.status !== "initializing") {
+                    set.status = "running";
+                }
 
-		} catch(e) {
-			//console.log(e)
-
-            if(node.status !== "initializing") {
                 Networks.update({
-    				_id: node._id
-    			}, {
-    				$set: {
-    					status: "down"
-    				}
-    			})
-            }
-		}
+                    _id: node._id
+                }, {
+                    $set: set
+                })
+
+    		} catch(e) {
+    			console.log(e)
+
+                if(node.status !== "initializing") {
+                    Networks.update({
+        				_id: node._id
+        			}, {
+        				$set: {
+        					status: "down"
+        				}
+        			})
+                }
+    		}
 
 
-		if(node) {
-			Meteor.setTimeout(scan, 100)
-		}
+    		if(node) {
+    			Meteor.setTimeout(scan, 100)
+    		}
+        } catch(e) {}
+
+
 	}
 
 	Meteor.setTimeout(scan, 100)
