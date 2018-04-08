@@ -287,6 +287,8 @@ function scanBlocksOfNode(instanceId) {
 		var totalSmartContracts = (node.totalSmartContracts ? node.totalSmartContracts : 0);
 		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
 		var web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + node.rpcNodePort));
+
+		console.log(blockToScan)
 		try {
 			totalSmartContracts = await updateTotalSmartContracts(web3, blockToScan, totalSmartContracts)
 			if(node.assetsContractAddress) {
@@ -319,7 +321,6 @@ function scanBlocksOfNode(instanceId) {
                 $set: set
             })
 
-
 		} catch(e) {
 			console.log(e)
 
@@ -344,29 +345,19 @@ function scanBlocksOfNode(instanceId) {
 }
 
 function scanBlocksOfAllNodes() {
-	let interval = Meteor.setInterval(() => {
-		if(db != null) {
-			db.collection("networks").find({}).toArray(Meteor.bindEnvironment((e, nodes) => {
-				for(let count = 0; count < nodes.length; count++) {
-					SyncedCron.add({
-						name: "scanBlocks-" + nodes[count].instanceId,
-						schedule: function(parser) {
-							let time = new Date(Date.now() + 2000);
-							return parser.recur().on(time).fullDate();
-						},
-						job: () => {
-							scanBlocksOfNode(nodes[count].instanceId)
-						}
-					});
-				}
-			}))
-
-			Meteor.clearInterval(interval);
-		}
-
-	}, 1000)
+	var nodes = Networks.find({}).fetch()
+	for(let count = 0; count < nodes.length; count++) {
+		SyncedCron.add({
+			name: "scanBlocks-" + nodes[count].instanceId,
+			schedule: function(parser) {
+				let time = new Date(Date.now() + 2000);
+				return parser.recur().on(time).fullDate();
+			},
+			job: () => {
+				scanBlocksOfNode(nodes[count].instanceId)
+			}
+		});
+	}
 }
-
-
 
 export {updateNodeStatus, scanBlocksOfNode, scanBlocksOfAllNodes}
