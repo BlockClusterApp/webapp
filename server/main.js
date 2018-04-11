@@ -11,12 +11,6 @@ import helpers from "../imports/modules/helpers"
 import server_helpers from "../imports/modules/helpers/server"
 import smartContracts from "../imports/modules/smart-contracts"
 import {scanBlocksOfNode, authoritiesListCronJob} from "../imports/collections/networks/server/cron.js"
-var MongoClient = require("mongodb").MongoClient;
-var db = null;
-
-MongoClient.connect("mongodb://localhost:3001", function(err, database) {
-    db = database.db("meteor");
-});
 
 SyncedCron.config({
     log: false
@@ -57,6 +51,7 @@ Meteor.methods({
 		var instanceId = helpers.instanceIDGenerate();
 
 		function deleteNetwork(id) {
+            return;
 			HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId, function(error, response){});
 			HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, function(error, response){});
 			HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + instanceId), function(error, response){
@@ -116,6 +111,12 @@ spec:
         - containerPort: 23000
         - containerPort: 9001
         - containerPort: 6382
+      - name: scanner
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner
+        env:
+        - name: instanceId
+          value: ${instanceId}
+        imagePullPolicy: Always
       imagePullSecrets:
       - name: regsecret`,
 					"headers": {
@@ -152,7 +153,7 @@ spec:
 								console.log(error);
 								deleteNetwork(id)
 							} else {
-                                
+
 
 								HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, {}, function(error, response){
 									if(error) {
@@ -180,17 +181,6 @@ spec:
 										var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
 
 										Meteor.setTimeout(() => {
-											
-											SyncedCron.add({
-			                        			name: "scanBlocks-" + instanceId,
-			                        			schedule: function(parser) {
-			                        				let time = new Date(Date.now() + 2000);
-			                        				return parser.recur().on(time).fullDate();
-			                        			},
-			                        			job: () => {
-			                        				scanBlocksOfNode(instanceId)
-			                        			}
-			                        		});
 
 											HTTP.call("GET", `http://` + workerNodeIP + ":" + response.data.spec.ports[3].nodePort, function(error, response){
 												if(error) {
@@ -360,8 +350,6 @@ spec:
 														Networks.remove({instanceId: id});
                                                         Orders.remove({instanceId: id});
                                                         SoloAssets.remove({instanceId: id});
-
-                                                        SyncedCron.remove("scanBlocks-" + id)
 
 														myFuture.return();
 													}
@@ -543,17 +531,6 @@ spec:
 										var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
 
 										Meteor.setTimeout(() => {
-											
-											SyncedCron.add({
-			                        			name: "scanBlocks-" + instanceId,
-			                        			schedule: function(parser) {
-			                        				let time = new Date(Date.now() + 2000);
-			                        				return parser.recur().on(time).fullDate();
-			                        			},
-			                        			job: () => {
-			                        				scanBlocksOfNode(instanceId)
-			                        			}
-			                        		});
 
 											HTTP.call("GET", "http://" + workerNodeIP + ":" + response.data.spec.ports[3].nodePort, function(error, response){
 												if(error) {

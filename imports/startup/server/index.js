@@ -7,10 +7,8 @@ require("../../collections/orders/server/publications.js")
 require("../../api/assets.js")
 
 import {updateWorkerNodeIP, updateKuberREST_IP} from "../../collections/utilities/server/cron.js"
-import {scanBlocksOfAllNodes} from "../../collections/networks/server/cron.js"
 
 updateWorkerNodeIP()
 updateKuberREST_IP()
-scanBlocksOfAllNodes();
 
 export {}
