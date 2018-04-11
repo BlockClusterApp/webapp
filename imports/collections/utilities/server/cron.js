@@ -7,7 +7,7 @@ function updateWorkerNodeIP() {
 		name: "workerNodeIP",
 	}, {
 		$set: {
-			"value": "54.71.6.33"
+			"value": "52.43.83.54"
 		}
 	});
 }

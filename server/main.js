@@ -152,8 +152,6 @@ spec:
 								console.log(error);
 								deleteNetwork(id)
 							} else {
-
-
 								HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, {}, function(error, response){
 									if(error) {
 										console.log(error);
@@ -178,14 +176,13 @@ spec:
 										myFuture.return();
 
 										var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
-
 										Meteor.setTimeout(() => {
-
 											HTTP.call("GET", `http://` + workerNodeIP + ":" + response.data.spec.ports[3].nodePort, function(error, response){
-												if(error) {
+                                                if(error) {
 													console.log(error);
 													deleteNetwork(id)
 												} else {
+                                                    console.log(response.content)
 													var data = JSON.parse(response.content);
 													Networks.update({
 														_id: id
@@ -300,7 +297,7 @@ spec:
 											        }))
 												}
 											})
-										}, 15000)
+										}, 20000)
 									}
 								})
 							}
@@ -595,7 +592,7 @@ spec:
 											        }))
 												}
 											})
-										}, 15000)
+										}, 20000)
 									}
 								})
 							}
