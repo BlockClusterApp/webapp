@@ -51,7 +51,6 @@ Meteor.methods({
 		var instanceId = helpers.instanceIDGenerate();
 
 		function deleteNetwork(id) {
-            return;
 			HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId, function(error, response){});
 			HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, function(error, response){});
 			HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + instanceId), function(error, response){
@@ -439,6 +438,11 @@ spec:
         - containerPort: 23000
         - containerPort: 9001
         - containerPort: 6382
+      - name: scanner
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner
+        env:
+        - name: instanceId
+          value: ${instanceId}
       imagePullSecrets:
       - name: regsecret`;
 				} else {
