@@ -22,7 +22,10 @@ class AssetsManagement extends Component {
             s.stop();
         });
 
-        ordersSubscription.stop();
+        if(ordersSubscription) {
+            ordersSubscription.stop();
+        }
+
     }
 
     networkSelected(instanceId) {
