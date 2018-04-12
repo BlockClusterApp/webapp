@@ -22,9 +22,10 @@ class AssetsManagement extends Component {
             s.stop();
         });
 
-        if(ordersSubscription) {
+        try {
             ordersSubscription.stop();
-        }
+        } catch(e){}
+
 
     }
 
