@@ -6,10 +6,19 @@ import {withRouter} from 'react-router-dom'
 import helpers from "../../../modules/helpers"
 import notifications from "../../../modules/notifications"
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
+import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 
 import "./ViewEditNetwork.scss"
 
 class ViewEditNetwork extends Component {
+	constructor() {
+        super()
+
+        this.state = {
+            deleting: false
+        };
+    }
+
 	componentWillUnmount() {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
@@ -17,6 +26,10 @@ class ViewEditNetwork extends Component {
     }
 
     deleteNetwork = () => {
+		this.setState({
+            deleting: true
+        });
+
     	Meteor.call("deleteNetwork", this.props.network[0].instanceId, (error) => {
     		if(error) {
     			notifications.error("An error occured")
@@ -24,6 +37,10 @@ class ViewEditNetwork extends Component {
     			this.props.history.push("/app/networks");
     			notifications.success("Network deleted successful")
     		}
+
+			this.setState({
+	            deleting: false
+	        });
     	})
     }
 
@@ -421,7 +438,17 @@ class ViewEditNetwork extends Component {
 			                                <p>You can leave the network if you wish but remember that if you are only one member then all data will be lost.</p>
 			                            </div>
 			                            <div className="col-md-9">
-			                                <button onClick={this.deleteNetwork} className="btn btn-danger btn-cons" type="submit"><i className="fa fa-trash-o" aria-hidden="true"></i>&nbsp;Yes! Leave Network</button>
+											<LaddaButton
+	                                            loading={this.state.deleting}
+	                                            data-size={S}
+	                                            data-style={SLIDE_UP}
+	                                            data-spinner-size={30}
+	                                            data-spinner-lines={12}
+	                                            className="btn btn-danger btn-cons"
+	                                            onClick={this.deleteNetwork}
+	                                        >
+	                                            <i className="fa fa-trash-o" aria-hidden="true"></i>&nbsp;Yes! Leave Network
+	                                        </LaddaButton>
 			                            </div>
 			                        </div>
 			                    </div>
