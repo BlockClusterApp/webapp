@@ -752,6 +752,11 @@ spec:
         - containerPort: 23000
         - containerPort: 9001
         - containerPort: 6382
+      - name: scanner
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner
+        env:
+        - name: instanceId
+          value: ${instanceId}
       imagePullSecrets:
       - name: regsecret`;
 				}
