@@ -15,8 +15,6 @@ var md5 = require("apache-md5");
 var base64 = require('base-64');
 var utf8 = require('utf8');
 
-
-
 SyncedCron.config({
     log: false
 });
@@ -66,25 +64,8 @@ Meteor.methods({
 								if(!error) {
 									if(JSON.parse(response.content).items.length > 0) {
 										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){
-                                            HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId + "-firewall", function(error, response){})
-                                            HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets?labelSelector=app%3D` + encodeURIComponent("ingress-nginx-" + instanceId), function(error, response){
-                                                if(!error) {
-                                					if(JSON.parse(response.content).items.length > 0) {
-                                                        HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){
-                                                            HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods?labelSelector=app%3D` + encodeURIComponent("ingress-nginx-" + instanceId), function(error, response){
-                                                                if(!error) {
-                                                                    if(JSON.parse(response.content).items.length > 0) {
-                                										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){})
-                                                                        HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId + "-firewall", function(error, response){})
-                                                                        HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/secrets/` + "basic-auth-" + instanceId, function(error, response){})
-                                                                        HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/extensions/v1beta1/namespaces/default/ingresses/` + "ingress-" + instanceId, function(error, response){})
-                                                                    }
-                                                                }
-                                                            })
-                                                        })
-                                                    }
-                                                }
-                                            })
+                                            HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/secrets/` + "basic-auth-" + instanceId, function(error, response){})
+                                            HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/extensions/v1beta1/namespaces/default/ingresses/` + "ingress-" + instanceId, function(error, response){})
                                         })
 									}
 								}
@@ -199,315 +180,198 @@ spec:
 											}
 										})
 
-                                        HTTP.call("POST", `http://${kuberREST_IP}:8000/apis/apps/v1beta1/namespaces/default/deployments`, {
-					                        "content": JSON.stringify({
-                                                "apiVersion":"apps/v1beta1",
-                                                "kind":"Deployment",
-                                                "metadata":{
-                                                    "name":instanceId + "-firewall"
+                                        let encryptedPassword = md5(instanceId);
+                                        let auth = base64.encode(utf8.encode(instanceId + ":" + encryptedPassword))
+                                        HTTP.call("POST", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/secrets`, {
+                                            "content": JSON.stringify({
+                                                "apiVersion":"v1",
+                                                "data":{
+                                                    "auth": auth
                                                 },
-                                                "spec":{
-                                                    "replicas":1,
-                                                    "template":{
+                                                "kind":"Secret",
+                                                "metadata":{
+                                                    "name":"basic-auth-" + instanceId
+                                                },
+                                                "type":"Opaque"
+                                            }),
+                                            "headers": {
+                                                "Content-Type": "application/json"
+                                            }
+                                        }, function(error){
+                                            if(error) {
+                                                console.log(error);
+                                                deleteNetwork(id)
+                                            } else {
+                                                HTTP.call("POST", `http://${kuberREST_IP}:8000/apis/extensions/v1beta1/namespaces/default/ingresses`, {
+                                                    "content": JSON.stringify({
+                                                        "apiVersion":"extensions/v1beta1",
+                                                        "kind":"Ingress",
                                                         "metadata":{
-                                                            "labels":{
-                                                                "app":"ingress-nginx-" + instanceId
+                                                            "name":"ingress-" + instanceId,
+                                                            "annotations":{
+                                                                "nginx.ingress.kubernetes.io/rewrite-target":"/",
+                                                                "ingress.kubernetes.io/ssl-redirect":"false",
+                                                                "nginx.ingress.kubernetes.io/auth-type":"basic",
+                                                                "nginx.ingress.kubernetes.io/auth-secret":"basic-auth-" + instanceId,
+                                                                "nginx.ingress.kubernetes.io/auth-realm":"Authentication Required"
                                                             }
                                                         },
                                                         "spec":{
-                                                            "terminationGracePeriodSeconds":60,
-                                                            "containers":[
+                                                            "rules":[
                                                                 {
-                                                                    "image":"quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.12.0",
-                                                                    "name":"ingress-nginx",
-                                                                    "imagePullPolicy":"Always",
-                                                                    "ports":[
-                                                                        {
-                                                                            "name":"http",
-                                                                            "containerPort":80,
-                                                                            "protocol":"TCP"
-                                                                        }
-                                                                    ],
-                                                                    "livenessProbe":{
-                                                                        "httpGet":{
-                                                                            "path":"/healthz",
-                                                                            "port":10254,
-                                                                            "scheme":"HTTP"
-                                                                        },
-                                                                        "initialDelaySeconds":30,
-                                                                        "timeoutSeconds":5
-                                                                    },
-                                                                    "env":[
-                                                                        {
-                                                                            "name":"POD_NAME",
-                                                                            "valueFrom":{
-                                                                                "fieldRef":{
-                                                                                    "fieldPath":"metadata.name"
+                                                                    "http":{
+                                                                        "paths":[
+                                                                            {
+                                                                                "path":"/" + instanceId,
+                                                                                "backend":{
+                                                                                    "serviceName": instanceId,
+                                                                                    "servicePort":8545
                                                                                 }
                                                                             }
-                                                                        },
-                                                                        {
-                                                                            "name":"POD_NAMESPACE",
-                                                                            "valueFrom":{
-                                                                                "fieldRef":{
-                                                                                    "fieldPath":"metadata.namespace"
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    ],
-                                                                    "args":[
-                                                                        "/nginx-ingress-controller",
-                                                                        "--ingress-class=" + instanceId + "-firewall",
-                                                                        "--default-backend-service=$(POD_NAMESPACE)/default-http-backend"
-                                                                    ]
-                                                                }
-                                                            ]
-                                                        }
-                                                    }
-                                                }
-                                            }),
-                        					"headers": {
-                        						"Content-Type": "application/json"
-                        					}
-                        				}, function(error) {
-                        					if(error) {
-                        						console.log(error);
-                                                deleteNetwork(id)
-                                            } else {
-                                                HTTP.call("POST", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services`, {
-                                                    "content": JSON.stringify({
-                                                        "kind":"Service",
-                                                        "apiVersion":"v1",
-                                                        "metadata":{
-                                                            "name": instanceId + "-firewall"
-                                                        },
-                                                        "spec":{
-                                                            "type":"NodePort",
-                                                            "selector":{
-                                                                "app":"ingress-nginx"
-                                                            },
-                                                            "ports":[
-                                                                {
-                                                                    "name":"http",
-                                                                    "port":80,
-                                                                    "targetPort":"http"
-                                                                },
-                                                                {
-                                                                    "name":"https",
-                                                                    "port":443,
-                                                                    "targetPort":"https"
+                                                                        ]
+                                                                    }
                                                                 }
                                                             ]
                                                         }
                                                     }),
                                                     "headers": {
-                                						"Content-Type": "application/json"
-                                					}
-                                                }, function(error){
+                                                        "Content-Type": "application/json"
+                                                    }
+                                                },
+                                                function(error){
                                                     if(error) {
-                                						console.log(error);
+                                                        console.log(error);
                                                         deleteNetwork(id)
                                                     } else {
-                                                        let encryptedPassword = md5(instanceId);
-                                                        let auth = base64.encode(utf8.encode(instanceId + ":" + encryptedPassword))
-                                                        HTTP.call("POST", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/secrets`, {
-                                                            "content": JSON.stringify({
-                                                                "apiVersion":"v1",
-                                                                "data":{
-                                                                    "auth": auth
-                                                                },
-                                                                "kind":"Secret",
-                                                                "metadata":{
-                                                                    "name":"basic-auth-" + instanceId,
-                                                                    "namespace":"default"
-                                                                },
-                                                                "type":"Opaque"
-                                                            }),
-                                                            "headers": {
-                                                                "Content-Type": "application/json"
-                                                            }
-                                                        }, function(error){
-                                                            if(error) {
-                                                                console.log(error);
-                                                                deleteNetwork(id)
-                                                            } else {
-                                                                HTTP.call("POST", `http://${kuberREST_IP}:8000/apis/extensions/v1beta1/namespaces/default/ingresses`, {
-                                                                    "content": JSON.stringify({
-                                                                        "apiVersion":"extensions/v1beta1",
-                                                                        "kind":"Ingress",
-                                                                        "metadata":{
-                                                                            "name":"ingress-" + instanceId,
-                                                                            "annotations":{
-                                                                                "nginx.ingress.kubernetes.io/rewrite-target":"/",
-                                                                                "ingress.kubernetes.io/ssl-redirect":"false",
-                                                                                "nginx.ingress.kubernetes.io/auth-type":"basic",
-                                                                                "nginx.ingress.kubernetes.io/auth-secret":"basic-auth-" + instanceId,
-                                                                                "nginx.ingress.kubernetes.io/auth-realm":"Authentication Required",
-                                                                                "ingress.kubernetes.io/ingress.class": instanceId + "-firewall"
-                                                                            }
-                                                                        },
-                                                                        "spec":{
-                                                                            "rules":[
-                                                                                {
-                                                                                    "http":{
-                                                                                        "paths":[
-                                                                                            {
-                                                                                                "path":"/jsonRPC",
-                                                                                                "backend":{
-                                                                                                    "serviceName": instanceId,
-                                                                                                    "servicePort":8545
-                                                                                                }
-                                                                                            }
-                                                                                        ]
-                                                                                    }
-                                                                                }
-                                                                            ]
+                                                        myFuture.return();
+
+                                                        var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+                                                        Meteor.setTimeout(() => {
+                                                            HTTP.call("GET", `http://` + workerNodeIP + ":" + response.data.spec.ports[3].nodePort, function(error, response){
+                                                                if(error) {
+                                                                    console.log(error);
+                                                                    deleteNetwork(id)
+                                                                } else {
+                                                                    var data = JSON.parse(response.content);
+                                                                    Networks.update({
+                                                                        _id: id
+                                                                    }, {
+                                                                        $set: {
+                                                                            genesisBlock: data.genesis,
+                                                                            nodeKey: data.nodekey,
+                                                                            nodeEthAddress: "0x" + lightwallet.keystore._computeAddressFromPrivKey(data.nodekey),
+                                                                            constellationPubKey: data.constellationPublicKey
                                                                         }
-                                                                    }),
-                                                                    "headers": {
-                                                                        "Content-Type": "application/json"
-                                                                    }
-                                                                },
-                                                                function(error){
-                                                                    if(error) {
-                                                                        console.log(error);
-                                                                        deleteNetwork(id)
-                                                                    } else {
-                                                                        myFuture.return();
+                                                                    })
 
-                                										var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
-                                										Meteor.setTimeout(() => {
-                                											HTTP.call("GET", `http://` + workerNodeIP + ":" + response.data.spec.ports[3].nodePort, function(error, response){
+                                                                    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + rpcNodePort));
+                                                                    web3.currentProvider.sendAsync({
+                                                                        method: "admin_nodeInfo",
+                                                                        params: [],
+                                                                        jsonrpc: "2.0",
+                                                                        id: new Date().getTime()
+                                                                    }, Meteor.bindEnvironment(function(error, result) {
+                                                                        if(error) {
+                                                                            console.log(error);
+                                                                            deleteNetwork(id)
+                                                                        } else {
+                                                                            Networks.update({
+                                                                                _id: id
+                                                                            }, {
+                                                                                $set: {
+                                                                                    nodeId: result.result.id,
+                                                                                }
+                                                                            })
+
+                                                                            web3.currentProvider.sendAsync({
+                                                                                method: "istanbul_getValidators",
+                                                                                params: [],
+                                                                                jsonrpc: "2.0",
+                                                                                id: new Date().getTime()
+                                                                            }, Meteor.bindEnvironment(function(error, result) {
                                                                                 if(error) {
-                                													console.log(error);
-                                													deleteNetwork(id)
-                                												} else {
-                                													var data = JSON.parse(response.content);
-                                													Networks.update({
-                                														_id: id
-                                													}, {
-                                														$set: {
-                                															genesisBlock: data.genesis,
-                                															nodeKey: data.nodekey,
-                                															nodeEthAddress: "0x" + lightwallet.keystore._computeAddressFromPrivKey(data.nodekey),
-                                															constellationPubKey: data.constellationPublicKey
-                                														}
-                                													})
+                                                                                    console.log(error);
+                                                                                    deleteNetwork(id)
+                                                                                } else {
+                                                                                    Networks.update({
+                                                                                        _id: id
+                                                                                    }, {
+                                                                                        $set: {
+                                                                                            currentValidators: result.result
+                                                                                        }
+                                                                                    })
 
-                                													let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + rpcNodePort));
-                                													web3.currentProvider.sendAsync({
-                                											            method: "admin_nodeInfo",
-                                											            params: [],
-                                											            jsonrpc: "2.0",
-                                											            id: new Date().getTime()
-                                											        }, Meteor.bindEnvironment(function(error, result) {
-                                											            if(error) {
-                                															console.log(error);
-                                											            	deleteNetwork(id)
-                                											            } else {
-                                											            	Networks.update({
-                                																_id: id
-                                															}, {
-                                																$set: {
-                                																	nodeId: result.result.id,
-                                																}
-                                															})
+                                                                                    web3.currentProvider.sendAsync({
+                                                                                        method: "personal_newAccount",
+                                                                                        params: [""],
+                                                                                        jsonrpc: "2.0",
+                                                                                        id: new Date().getTime()
+                                                                                    }, Meteor.bindEnvironment(function(error, result) {
+                                                                                        if(error) {
+                                                                                            console.log(error);
+                                                                                            deleteNetwork(id)
+                                                                                        } else {
+                                                                                            let accountsPassword = {};
+                                                                                            let accounts = [];
+                                                                                            accountsPassword[result.result] = ""
+                                                                                            accounts.push(result.result);
+                                                                                            Networks.update({
+                                                                                                _id: id
+                                                                                            }, {
+                                                                                                $set: {
+                                                                                                    accountsPassword: accountsPassword,
+                                                                                                    accounts: accounts
+                                                                                                }
+                                                                                            })
 
-                                															web3.currentProvider.sendAsync({
-                                															    method: "istanbul_getValidators",
-                                															    params: [],
-                                															    jsonrpc: "2.0",
-                                															    id: new Date().getTime()
-                                															}, Meteor.bindEnvironment(function(error, result) {
-                                																if(error) {
-                                																	console.log(error);
-                                																	deleteNetwork(id)
-                                																} else {
-                                																	Networks.update({
-                                																		_id: id
-                                																	}, {
-                                																		$set: {
-                                																			currentValidators: result.result
-                                																		}
-                                																	})
-
-                                																	web3.currentProvider.sendAsync({
-                                																		method: "personal_newAccount",
-                                																		params: [""],
-                                																		jsonrpc: "2.0",
-                                																		id: new Date().getTime()
-                                																	}, Meteor.bindEnvironment(function(error, result) {
-                                																		if(error) {
-                                																			console.log(error);
-                                																			deleteNetwork(id)
-                                																		} else {
-                                																			let accountsPassword = {};
-                                																			let accounts = [];
-                                																			accountsPassword[result.result] = ""
-                                																			accounts.push(result.result);
-                                																			Networks.update({
-                                																				_id: id
-                                																			}, {
-                                																				$set: {
-                                																					accountsPassword: accountsPassword,
-                                																					accounts: accounts
-                                																				}
-                                																			})
-
-                                																			web3.currentProvider.sendAsync({
-                                																			    method: "personal_unlockAccount",
-                                																			    params: [result.result, "", 0],
-                                																			    jsonrpc: "2.0",
-                                																			    id: new Date().getTime()
-                                																			}, Meteor.bindEnvironment(function(error, result) {
-                                																				if(error) {
-                                																					console.log(error);
-                                																					deleteNetwork(id)
-                                																				} else {
-                                																					var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-                                																					var assets = assetsContract.new({
-                                																						from: web3.eth.accounts[0],
-                                																						data: smartContracts.assets.bytecode,
-                                																						gas: '999999999999999999'
-                                																					}, Meteor.bindEnvironment(function(error, contract){
-                                																						if(error) {
-                                																							console.log(error);
-                                																							deleteNetwork(id)
-                                																						} else {
-                                																							if (typeof contract.address !== 'undefined') {
-                                																								Networks.update({
-                                																									_id: id
-                                																								}, {
-                                																									$set: {
-                                																										"status": "running",
-                                																										"assetsContractAddress": contract.address,
-                                                                                                                                        "jsonRPC-password": instanceId
-                                																									}
-                                																								})
-                                																							}
-                                																						}
-                                																					}))
-                                																				}
-                                																			}))
-                                																		}
-                                																	}))
-                                																}
-                                															}))
-                                											            }
-                                											        }))
-                                												}
-                                											})
-                                										}, 20000)
-                                                                    }
-                                                                })
-                                                            }
-                                                        })
+                                                                                            web3.currentProvider.sendAsync({
+                                                                                                method: "personal_unlockAccount",
+                                                                                                params: [result.result, "", 0],
+                                                                                                jsonrpc: "2.0",
+                                                                                                id: new Date().getTime()
+                                                                                            }, Meteor.bindEnvironment(function(error, result) {
+                                                                                                if(error) {
+                                                                                                    console.log(error);
+                                                                                                    deleteNetwork(id)
+                                                                                                } else {
+                                                                                                    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+                                                                                                    var assets = assetsContract.new({
+                                                                                                        from: web3.eth.accounts[0],
+                                                                                                        data: smartContracts.assets.bytecode,
+                                                                                                        gas: '999999999999999999'
+                                                                                                    }, Meteor.bindEnvironment(function(error, contract){
+                                                                                                        if(error) {
+                                                                                                            console.log(error);
+                                                                                                            deleteNetwork(id)
+                                                                                                        } else {
+                                                                                                            if (typeof contract.address !== 'undefined') {
+                                                                                                                Networks.update({
+                                                                                                                    _id: id
+                                                                                                                }, {
+                                                                                                                    $set: {
+                                                                                                                        "status": "running",
+                                                                                                                        "assetsContractAddress": contract.address,
+                                                                                                                        "jsonRPC-password": instanceId
+                                                                                                                    }
+                                                                                                                })
+                                                                                                            }
+                                                                                                        }
+                                                                                                    }))
+                                                                                                }
+                                                                                            }))
+                                                                                        }
+                                                                                    }))
+                                                                                }
+                                                                            }))
+                                                                        }
+                                                                    }))
+                                                                }
+                                                            })
+                                                        }, 20000)
                                                     }
                                                 })
                                             }
                                         })
-
-
 									}
 								})
 							}
@@ -553,64 +417,21 @@ spec:
 														console.log(error);
 														myFuture.throw("An unknown error occured");
 													} else {
-
-                                                        HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + id + "-firewall", function(error, response){
-                                                			if(error) {
-                                                				console.log(error);
-                                                				myFuture.throw("An unknown error occured while deleting deployments");
+                                                        HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/secrets/` + "basic-auth-" + id, function(error, response){
+                                                            if(error) {
+                                                                console.log(error);
+                                                                myFuture.throw("An unknown error occured while deleting secrets");
                                                             } else {
-                                                                HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + id + "-firewall", function(error, response){
-                                                					if(error) {
+                                                                HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/extensions/v1beta1/namespaces/default/ingresses/` + "ingress-" + id, function(error, response){
+                                                                    if(error) {
                                                                         console.log(error);
-                                                        				myFuture.throw("An unknown error occured while deleting services");
+                                                                        myFuture.throw("An unknown error occured while deleting ingresses");
                                                                     } else {
-                                                                        HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets?labelSelector=app%3D` + encodeURIComponent("ingress-nginx-" + id), function(error, response){
-                                                                            if(error) {
-                                                								console.log(error);
-                                                								myFuture.throw("An unknown error occured");
-                                                							} else {
-                                                								HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){
-                                                									if(error) {
-                                                                                        console.log(error);
-                                                        								myFuture.throw("An unknown error occured while deleting replicasets");
-                                                                                    } else {
-                                                                                        HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods?labelSelector=app%3D` + encodeURIComponent("ingress-nginx-" + id), function(error, response){
-                                                											if(error) {
-                                                												console.log(error);
-                                                												myFuture.throw("An unknown error occured");
-                                                											} else {
-                                                                                                HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){
-                                                													if(error) {
-                                                														console.log(error);
-                                                														myFuture.throw("An unknown error occured while deleting pods");
-                                                													} else {
-                                                                                                        HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/secrets/` + "basic-auth-" + id, function(error, response){
-                                                                                                            if(error) {
-                                                                                                                console.log(error);
-                                                                                                				myFuture.throw("An unknown error occured while deleting secrets");
-                                                                                                            } else {
-                                                                                                                HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/extensions/v1beta1/namespaces/default/ingresses/` + "ingress-" + id, function(error, response){
-                                                                                                                    if(error) {
-                                                                                                                        console.log(error);
-                                                                                                                        myFuture.throw("An unknown error occured while deleting ingresses");
-                                                                                                                    } else {
-                                                                                                                        Networks.remove({instanceId: id});
-                                                                                                                        Orders.remove({instanceId: id});
-                                                                                                                        SoloAssets.remove({instanceId: id});
+                                                                        Networks.remove({instanceId: id});
+                                                                        Orders.remove({instanceId: id});
+                                                                        SoloAssets.remove({instanceId: id});
 
-                                                                														myFuture.return();
-                                                                                                                    }
-                                                                                                                })
-                                                                                                            }
-                                                                                                        })
-                                                                                                    }
-                                                                                                })
-                                                                                            }
-                                                                                        })
-                                                                                    }
-                                                                                })
-                                                                            }
-                                                                        })
+                                                                        myFuture.return();
                                                                     }
                                                                 })
                                                             }
@@ -646,25 +467,8 @@ spec:
 								if(!error) {
 									if(JSON.parse(response.content).items.length > 0) {
 										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){
-                                            HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId + "-firewall", function(error, response){})
-                                            HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets?labelSelector=app%3D` + encodeURIComponent("ingress-nginx-" + instanceId), function(error, response){
-                                                if(!error) {
-                                					if(JSON.parse(response.content).items.length > 0) {
-                                                        HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){
-                                                            HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods?labelSelector=app%3D` + encodeURIComponent("ingress-nginx-" + instanceId), function(error, response){
-                                                                if(!error) {
-                                                                    if(JSON.parse(response.content).items.length > 0) {
-                                										HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response){})
-                                                                        HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId + "-firewall", function(error, response){})
-                                                                        HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/secrets/` + "basic-auth-" + instanceId, function(error, response){})
-                                                                        HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/extensions/v1beta1/namespaces/default/ingresses/` + "ingress-" + instanceId, function(error, response){})
-                                                                    }
-                                                                }
-                                                            })
-                                                        })
-                                                    }
-                                                }
-                                            })
+                                            HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/secrets/` + "basic-auth-" + instanceId, function(error, response){})
+                                            HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/extensions/v1beta1/namespaces/default/ingresses/` + "ingress-" + instanceId, function(error, response){})
                                         })
 									}
 								}
@@ -819,251 +623,137 @@ spec:
 											}
 										})
 
-                                        HTTP.call("POST", `http://${kuberREST_IP}:8000/apis/apps/v1beta1/namespaces/default/deployments`, {
-					                        "content": JSON.stringify({
-                                                "apiVersion":"apps/v1beta1",
-                                                "kind":"Deployment",
-                                                "metadata":{
-                                                    "name":instanceId + "-firewall"
+                                        let encryptedPassword = md5(instanceId);
+                                        let auth = base64.encode(utf8.encode(instanceId + ":" + encryptedPassword))
+                                        HTTP.call("POST", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/secrets`, {
+                                            "content": JSON.stringify({
+                                                "apiVersion":"v1",
+                                                "data":{
+                                                    "auth": auth
                                                 },
-                                                "spec":{
-                                                    "replicas":1,
-                                                    "template":{
+                                                "kind":"Secret",
+                                                "metadata":{
+                                                    "name":"basic-auth-" + instanceId,
+                                                    "namespace":"default"
+                                                },
+                                                "type":"Opaque"
+                                            }),
+                                            "headers": {
+                                                "Content-Type": "application/json"
+                                            }
+                                        }, function(error){
+                                            if(error) {
+                                                console.log(error);
+                                                deleteNetwork(id)
+                                            } else {
+                                                HTTP.call("POST", `http://${kuberREST_IP}:8000/apis/extensions/v1beta1/namespaces/default/ingresses`, {
+                                                    "content": JSON.stringify({
+                                                        "apiVersion":"extensions/v1beta1",
+                                                        "kind":"Ingress",
                                                         "metadata":{
-                                                            "labels":{
-                                                                "app":"ingress-nginx-" + instanceId
+                                                            "name":"ingress-" + instanceId,
+                                                            "annotations":{
+                                                                "nginx.ingress.kubernetes.io/rewrite-target":"/",
+                                                                "ingress.kubernetes.io/ssl-redirect":"false",
+                                                                "nginx.ingress.kubernetes.io/auth-type":"basic",
+                                                                "nginx.ingress.kubernetes.io/auth-secret":"basic-auth-" + instanceId,
+                                                                "nginx.ingress.kubernetes.io/auth-realm":"Authentication Required"
                                                             }
                                                         },
                                                         "spec":{
-                                                            "terminationGracePeriodSeconds":60,
-                                                            "containers":[
+                                                            "rules":[
                                                                 {
-                                                                    "image":"quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.12.0",
-                                                                    "name":"ingress-nginx",
-                                                                    "imagePullPolicy":"Always",
-                                                                    "ports":[
-                                                                        {
-                                                                            "name":"http",
-                                                                            "containerPort":80,
-                                                                            "protocol":"TCP"
-                                                                        }
-                                                                    ],
-                                                                    "livenessProbe":{
-                                                                        "httpGet":{
-                                                                            "path":"/healthz",
-                                                                            "port":10254,
-                                                                            "scheme":"HTTP"
-                                                                        },
-                                                                        "initialDelaySeconds":30,
-                                                                        "timeoutSeconds":5
-                                                                    },
-                                                                    "env":[
-                                                                        {
-                                                                            "name":"POD_NAME",
-                                                                            "valueFrom":{
-                                                                                "fieldRef":{
-                                                                                    "fieldPath":"metadata.name"
+                                                                    "http":{
+                                                                        "paths":[
+                                                                            {
+                                                                                "path":"/" + instanceId,
+                                                                                "backend":{
+                                                                                    "serviceName": instanceId,
+                                                                                    "servicePort":8545
                                                                                 }
                                                                             }
-                                                                        },
-                                                                        {
-                                                                            "name":"POD_NAMESPACE",
-                                                                            "valueFrom":{
-                                                                                "fieldRef":{
-                                                                                    "fieldPath":"metadata.namespace"
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    ],
-                                                                    "args":[
-                                                                        "/nginx-ingress-controller",
-                                                                        "--ingress-class=" + instanceId + "-firewall",
-                                                                        "--default-backend-service=$(POD_NAMESPACE)/default-http-backend"
-                                                                    ]
-                                                                }
-                                                            ]
-                                                        }
-                                                    }
-                                                }
-                                            }),
-                        					"headers": {
-                        						"Content-Type": "application/json"
-                        					}
-                        				}, function(error) {
-                        					if(error) {
-                        						console.log(error);
-                                                deleteNetwork(id)
-                                            } else {
-                                                HTTP.call("POST", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services`, {
-                                                    "content": JSON.stringify({
-                                                        "kind":"Service",
-                                                        "apiVersion":"v1",
-                                                        "metadata":{
-                                                            "name": instanceId + "-firewall"
-                                                        },
-                                                        "spec":{
-                                                            "type":"NodePort",
-                                                            "selector":{
-                                                                "app":"ingress-nginx"
-                                                            },
-                                                            "ports":[
-                                                                {
-                                                                    "name":"http",
-                                                                    "port":80,
-                                                                    "targetPort":"http"
-                                                                },
-                                                                {
-                                                                    "name":"https",
-                                                                    "port":443,
-                                                                    "targetPort":"https"
+                                                                        ]
+                                                                    }
                                                                 }
                                                             ]
                                                         }
                                                     }),
                                                     "headers": {
-                                						"Content-Type": "application/json"
-                                					}
-                                                }, function(error){
+                                                        "Content-Type": "application/json"
+                                                    }
+                                                },
+                                                function(error){
                                                     if(error) {
-                                						console.log(error);
+                                                        console.log(error);
                                                         deleteNetwork(id)
                                                     } else {
-                                                        let encryptedPassword = md5(instanceId);
-                                                        let auth = base64.encode(utf8.encode(instanceId + ":" + encryptedPassword))
-                                                        HTTP.call("POST", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/secrets`, {
-                                                            "content": JSON.stringify({
-                                                                "apiVersion":"v1",
-                                                                "data":{
-                                                                    "auth": auth
-                                                                },
-                                                                "kind":"Secret",
-                                                                "metadata":{
-                                                                    "name":"basic-auth-" + instanceId,
-                                                                    "namespace":"default"
-                                                                },
-                                                                "type":"Opaque"
-                                                            }),
-                                                            "headers": {
-                                                                "Content-Type": "application/json"
-                                                            }
-                                                        }, function(error){
-                                                            if(error) {
-                                                                console.log(error);
-                                                                deleteNetwork(id)
-                                                            } else {
-                                                                HTTP.call("POST", `http://${kuberREST_IP}:8000/apis/extensions/v1beta1/namespaces/default/ingresses`, {
-                                                                    "content": JSON.stringify({
-                                                                        "apiVersion":"extensions/v1beta1",
-                                                                        "kind":"Ingress",
-                                                                        "metadata":{
-                                                                            "name":"ingress-" + instanceId,
-                                                                            "annotations":{
-                                                                                "nginx.ingress.kubernetes.io/rewrite-target":"/",
-                                                                                "ingress.kubernetes.io/ssl-redirect":"false",
-                                                                                "nginx.ingress.kubernetes.io/auth-type":"basic",
-                                                                                "nginx.ingress.kubernetes.io/auth-secret":"basic-auth-" + instanceId,
-                                                                                "nginx.ingress.kubernetes.io/auth-realm":"Authentication Required",
-                                                                                "ingress.kubernetes.io/ingress.class": instanceId + "-firewall"
-                                                                            }
-                                                                        },
-                                                                        "spec":{
-                                                                            "rules":[
-                                                                                {
-                                                                                    "http":{
-                                                                                        "paths":[
-                                                                                            {
-                                                                                                "path":"/jsonRPC",
-                                                                                                "backend":{
-                                                                                                    "serviceName": instanceId,
-                                                                                                    "servicePort":8545
-                                                                                                }
-                                                                                            }
-                                                                                        ]
-                                                                                    }
-                                                                                }
-                                                                            ]
+                                                        myFuture.return();
+
+                                                        var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+
+                                                        Meteor.setTimeout(() => {
+
+                                                            HTTP.call("GET", "http://" + workerNodeIP + ":" + response.data.spec.ports[3].nodePort, function(error, response){
+                                                                if(error) {
+                                                                    console.log(error);
+                                                                    deleteNetwork(id)
+                                                                } else {
+                                                                    var data = JSON.parse(response.content);
+                                                                    Networks.update({
+                                                                        _id: id
+                                                                    }, {
+                                                                        $set: {
+                                                                            nodeKey: data.nodekey,
+                                                                            nodeEthAddress: "0x" + lightwallet.keystore._computeAddressFromPrivKey(data.nodekey),
+                                                                            constellationPubKey: data.constellationPublicKey
                                                                         }
-                                                                    }),
-                                                                    "headers": {
-                                                                        "Content-Type": "application/json"
-                                                                    }
-                                                                },
-                                                                function(error){
-                                                                    if(error) {
-                                                                        console.log(error);
-                                                                        deleteNetwork(id)
-                                                                    } else {
-                                                                        myFuture.return();
+                                                                    })
 
-                                										var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+                                                                    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + rpcNodePort));
+                                                                    web3.currentProvider.sendAsync({
+                                                                        method: "admin_nodeInfo",
+                                                                        params: [],
+                                                                        jsonrpc: "2.0",
+                                                                        id: new Date().getTime()
+                                                                    }, Meteor.bindEnvironment(function(error, result) {
+                                                                        if(error) {
+                                                                            console.log(error);
+                                                                            deleteNetwork(id)
+                                                                        } else {
+                                                                            Networks.update({
+                                                                                _id: id
+                                                                            }, {
+                                                                                $set: {
+                                                                                    nodeId: result.result.id,
+                                                                                }
+                                                                            })
 
-                                										Meteor.setTimeout(() => {
-
-                                											HTTP.call("GET", "http://" + workerNodeIP + ":" + response.data.spec.ports[3].nodePort, function(error, response){
-                                												if(error) {
-                                													console.log(error);
-                                													deleteNetwork(id)
-                                												} else {
-                                													var data = JSON.parse(response.content);
-                                													Networks.update({
-                                														_id: id
-                                													}, {
-                                														$set: {
-                                															nodeKey: data.nodekey,
-                                															nodeEthAddress: "0x" + lightwallet.keystore._computeAddressFromPrivKey(data.nodekey),
-                                															constellationPubKey: data.constellationPublicKey
-                                														}
-                                													})
-
-                                													let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + rpcNodePort));
-                                													web3.currentProvider.sendAsync({
-                                											            method: "admin_nodeInfo",
-                                											            params: [],
-                                											            jsonrpc: "2.0",
-                                											            id: new Date().getTime()
-                                											        }, Meteor.bindEnvironment(function(error, result) {
-                                											            if(error) {
-                                															console.log(error);
-                                											            	deleteNetwork(id)
-                                											            } else {
-                                											            	Networks.update({
-                                																_id: id
-                                															}, {
-                                																$set: {
-                                																	nodeId: result.result.id,
-                                																}
-                                															})
-
-                                															web3.currentProvider.sendAsync({
-                                															    method: "istanbul_getValidators",
-                                															    params: [],
-                                															    jsonrpc: "2.0",
-                                															    id: new Date().getTime()
-                                															}, Meteor.bindEnvironment(function(error, result) {
-                                																if(error) {
-                                																	console.log(error);
-                                																	deleteNetwork(id)
-                                																} else {
-                                																	Networks.update({
-                                																		_id: id
-                                																	}, {
-                                																		$set: {
-                                																			currentValidators: result.result,
-                                																			"status": "running",
-                                                                                                            "jsonRPC-password": instanceId
-                                																		}
-                                																	})
-                                																}
-                                															}))
-                                											            }
-                                											        }))
-                                												}
-                                											})
-                                										}, 20000)
-                                                                    }
-                                                                })
-                                                            }
-                                                        })
+                                                                            web3.currentProvider.sendAsync({
+                                                                                method: "istanbul_getValidators",
+                                                                                params: [],
+                                                                                jsonrpc: "2.0",
+                                                                                id: new Date().getTime()
+                                                                            }, Meteor.bindEnvironment(function(error, result) {
+                                                                                if(error) {
+                                                                                    console.log(error);
+                                                                                    deleteNetwork(id)
+                                                                                } else {
+                                                                                    Networks.update({
+                                                                                        _id: id
+                                                                                    }, {
+                                                                                        $set: {
+                                                                                            currentValidators: result.result,
+                                                                                            "status": "running",
+                                                                                            "jsonRPC-password": instanceId
+                                                                                        }
+                                                                                    })
+                                                                                }
+                                                                            }))
+                                                                        }
+                                                                    }))
+                                                                }
+                                                            })
+                                                        }, 20000)
                                                     }
                                                 })
                                             }
