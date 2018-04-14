@@ -190,7 +190,8 @@ spec:
                                                 },
                                                 "kind":"Secret",
                                                 "metadata":{
-                                                    "name":"basic-auth-" + instanceId
+                                                    "name":"basic-auth-" + instanceId,
+                                                    "namespace": "default"
                                                 },
                                                 "type":"Opaque"
                                             }),
@@ -211,9 +212,9 @@ spec:
                                                             "annotations":{
                                                                 "nginx.ingress.kubernetes.io/rewrite-target":"/",
                                                                 "ingress.kubernetes.io/ssl-redirect":"false",
-                                                                "nginx.ingress.kubernetes.io/auth-type":"basic",
-                                                                "nginx.ingress.kubernetes.io/auth-secret":"basic-auth-" + instanceId,
-                                                                "nginx.ingress.kubernetes.io/auth-realm":"Authentication Required"
+                                                                "ingress.kubernetes.io/auth-type":"basic",
+                                                                "ingress.kubernetes.io/auth-secret":"basic-auth-" + instanceId,
+                                                                "ingress.kubernetes.io/auth-realm":"Authentication Required"
                                                             }
                                                         },
                                                         "spec":{
@@ -1174,7 +1175,7 @@ spec:
                         },
                         "kind":"Secret",
                         "metadata":{
-                            "name":"basic-auth-" + password
+                            "name":"basic-auth-" + instanceId
                         },
                         "type":"Opaque"
                     }),
