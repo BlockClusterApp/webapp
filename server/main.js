@@ -1152,11 +1152,56 @@ spec:
 
 		return myFuture.wait();
 	},
-	"searchSoloAssets": function(instanceId, query){
-        var myFuture = new Future();
+	"searchSoloAssets": function(instanceId, query) {
         query.instanceId = instanceId;
         return SoloAssets.find(JSON.parse(query)).fetch();
-	}
+	},
+    "rpcPasswordUpdate": function(instanceId, password) {
+        var myFuture = new Future();
+        var kuberREST_IP = Utilities.find({"name": "kuberREST_IP"}).fetch()[0].value;
+        HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/secrets/` + "basic-auth-" + instanceId, function(error, response){
+            if(error) {
+                console.log(error);
+                myFuture.throw("An unknown error occured while deleting secret");
+            } else {
+                let encryptedPassword = md5(password);
+                let auth = base64.encode(utf8.encode(instanceId + ":" + password))
+                HTTP.call("POST", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/secrets`, {
+                    "content": JSON.stringify({
+                        "apiVersion":"v1",
+                        "data":{
+                            "auth": auth
+                        },
+                        "kind":"Secret",
+                        "metadata":{
+                            "name":"basic-auth-" + password
+                        },
+                        "type":"Opaque"
+                    }),
+                    "headers": {
+                        "Content-Type": "application/json"
+                    }
+                }, function(error){
+                    if(error) {
+                        console.log(error);
+                        myFuture.throw("An unknown error occured while creating secret");
+                    } else {
+                        Networks.update({
+                            instanceId: instanceId
+                        }, {
+                            $set: {
+                                "jsonRPC-password": password
+                            }
+                        })
+
+                        myFuture.return();
+                    }
+                })
+            }
+        })
+
+        return myFuture.wait();
+    }
 })
 
 //Networks.remove({})

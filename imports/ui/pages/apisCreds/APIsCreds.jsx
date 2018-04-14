@@ -12,6 +12,7 @@ class APIsCreds extends Component {
         this.state = {
             updateRPCFormSubmitError: "",
             updateRESTFormSubmitError: "",
+            updateRPCFormSubmitSuccess: "",
             rpcLoading: false,
             restLoading: false
         };
@@ -20,6 +21,32 @@ class APIsCreds extends Component {
     componentWillUnmount() {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
+        });
+    }
+
+    onRPCUpdateSubmit = (e) => {
+        e.preventDefault()
+
+        this.setState({
+            updateRPCFormSubmitError: '',
+            rpcLoading: true
+        });
+
+        Meteor.call("rpcPasswordUpdate", this.networkNameRPCUpdate.value, this.rpcPassword.value, (error) => {
+            if(!error) {
+                this.setState({
+                    updateRPCFormSubmitError: '',
+                    updateRPCFormSubmitSuccess: "Password updated successfully",
+                    rpcLoading: false
+                });
+
+            } else {
+                this.setState({
+                    updateRPCFormSubmitError: 'An error occured while updating password',
+                    updateRPCFormSubmitSuccess: "",
+                    rpcLoading: false
+                });
+            }
         });
     }
 
@@ -43,76 +70,77 @@ class APIsCreds extends Component {
                                         <div className="col-lg-5">
                                             <div className="card card-transparent">
                                                 <div className="card-header ">
-                                                    <div className="card-title">Username and Password of JSON-RPC
+                                                    <div className="card-title">
+                                                        <h5>Update Password of JSON-RPC</h5>
                                                     </div>
                                                 </div>
                                                 <div className="card-block">
-                                                    <h3>
-                                                        Making JSON-RPC Calls
-                                                    </h3>
                                                     <p>BlockCluster's node's JSON-RPC APIs are protected using HTTP Basic Authentication. In web3.js, you can use the below code snippet to easily get your application authenticated:</p>
                                                     <pre>
                                                         let web3 = new Web3(
                                                             new Web3.providers.HttpProvider(
-                                                            	"http://" + "username" + ":" + "password" + "@" + "x.x.x.x/jsonRPC" + ":" + "port"
+                                                            	"http://" + "username" + ":" + "password" + "@" + "x.x.x.x/instanceId" + ":" + "port"
                                                             )
                                                         )
                                                     </pre>
+                                                    <p>Default username and password is your network's instance id</p>
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="col-lg-7">
                                             <div className="card card-transparent">
                                                 <div className="card-block">
-                                                    <form id="form-project" role="form" onSubmit={this.onInviteSubmit} autoComplete="off">
-                                                        <p>Update Credentials</p>
+                                                    <form id="form-project" role="form" onSubmit={this.onRPCUpdateSubmit} autoComplete="off">
+                                                        <p>Set new password</p>
                                                         <div className="form-group-attached">
                                                             <div className="row clearfix">
-                                                                <div className="col-md-6">
+                                                                <div className="col-md-12">
                                                                     <div className="form-group form-group-default required">
                                                                         <label>Network name</label>
-                                                                        <select className="form-control" ref={(input) => {this.networkNameInvite = input;}}>
+                                                                        <select className="form-control" ref={(input) => {this.networkNameRPCUpdate = input;}}>
                                                                             {this.props.networks.map((item, index) => {
                                                                                 return (
-                                                                                    <option value={item._id} key={item._id}>{item.name}</option>
+                                                                                    <option value={item.instanceId} key={item.instanceId}>{item.name}</option>
                                                                                 )
                                                                             })}
                                                                         </select>
                                                                     </div>
                                                                 </div>
-                                                                <div className="col-md-6">
-                                                                    <div className="form-group form-group-default required">
-                                                                        <label>Node Type</label>
-                                                                        <select className="form-control" ref={(input) => {this.nodeTypeInvite = input;}}>
-                                                                            <option value="authority">Validator</option>
-                                                                            <option value="peer">Peer</option>
-                                                                        </select>
-                                                                    </div>
-                                                                </div>
                                                             </div>
                                                             <div className="row clearfix">
                                                                 <div className="col-md-12">
                                                                     <div className="form-group form-group-default required">
-                                                                        <label>User Email</label>
-                                                                        <input ref={(input) => {this.email = input;}} type="email" className="form-control" name="firstName" required placeholder="admin@blockcluster.io" />
+                                                                        <label>Password</label>
+                                                                        <input ref={(input) => {this.rpcPassword = input;}} type="password" className="form-control" name="password" required placeholder="nrx923xrm" />
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                         <br />
-                                                        {this.state.inviteFormSubmitError != '' &&
+                                                        {this.state.updateRPCFormSubmitError != '' &&
                                                             <div className="row">
                                                                 <div className="col-md-12">
                                                                     <div className="m-b-20 alert alert-danger m-b-0" role="alert">
                                                                         <button className="close" data-dismiss="alert"></button>
-                                                                        {this.state.inviteFormSubmitError}
+                                                                        {this.state.updateRPCFormSubmitError}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        }
+
+                                                        {this.state.updateRPCFormSubmitSuccess != '' &&
+                                                            <div className="row">
+                                                                <div className="col-md-12">
+                                                                    <div className="m-b-20 alert alert-success m-b-0" role="alert">
+                                                                        <button className="close" data-dismiss="alert"></button>
+                                                                        {this.state.updateRPCFormSubmitSuccess}
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         }
 
                                                         <LaddaButton
-                                                            loading={this.state.inviteLoading}
+                                                            loading={this.state.rpcLoading}
                                                             data-size={S}
                                                             data-style={SLIDE_UP}
                                                             data-spinner-size={30}
@@ -120,7 +148,7 @@ class APIsCreds extends Component {
                                                             className="btn btn-success"
                                                             type="submit"
                                                         >
-                                                            <i className="fa fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;Invite
+                                                            <i className="fa fa-wrench" aria-hidden="true"></i>&nbsp;&nbsp;Update
                                                         </LaddaButton>
                                                     </form>
                                                 </div>
