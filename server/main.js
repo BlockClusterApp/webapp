@@ -352,7 +352,8 @@ spec:
                                                                                                                     $set: {
                                                                                                                         "status": "running",
                                                                                                                         "assetsContractAddress": contract.address,
-                                                                                                                        "jsonRPC-password": instanceId
+                                                                                                                        "jsonRPC-password": instanceId,
+                                                                                                                        "restAPI-password": instanceId
                                                                                                                     }
                                                                                                                 })
                                                                                                             }
@@ -745,7 +746,8 @@ spec:
                                                                                         $set: {
                                                                                             currentValidators: result.result,
                                                                                             "status": "running",
-                                                                                            "jsonRPC-password": instanceId
+                                                                                            "jsonRPC-password": instanceId,
+                                                                                            "restAPI-password": instanceId
                                                                                         }
                                                                                     })
                                                                                 }
@@ -1202,6 +1204,15 @@ spec:
         })
 
         return myFuture.wait();
+    },
+    "restAPIPasswordUpdate": function(instanceId, password) {
+        Networks.update({
+            instanceId: instanceId
+        }, {
+            $set: {
+                "restAPI-password": password
+            }
+        })
     }
 })
 

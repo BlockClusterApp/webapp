@@ -13,6 +13,7 @@ class APIsCreds extends Component {
             updateRPCFormSubmitError: "",
             updateRESTFormSubmitError: "",
             updateRPCFormSubmitSuccess: "",
+            updateRESTFormSubmitSuccess: "",
             rpcLoading: false,
             restLoading: false
         };
@@ -45,6 +46,26 @@ class APIsCreds extends Component {
                     updateRPCFormSubmitError: 'An error occured while updating password',
                     updateRPCFormSubmitSuccess: "",
                     rpcLoading: false
+                });
+            }
+        });
+    }
+
+    onRESTUpdateSubmit = (e) => {
+        e.preventDefault()
+
+        Meteor.call("restAPIPasswordUpdate", this.networkNameRPCUpdate.value, this.restPassword.value, (error) => {
+            if(!error) {
+                this.setState({
+                    updateRESTFormSubmitError: '',
+                    updateRESTFormSubmitSuccess: "Password updated successfully",
+                    restLoading: false
+                });
+            } else {
+                this.setState({
+                    updateRESTFormSubmitError: 'An error occured while updating password',
+                    updateRESTFormSubmitSuccess: "",
+                    restLoading: false
                 });
             }
         });
@@ -156,7 +177,90 @@ class APIsCreds extends Component {
                                         </div>
                                     </div>
                                 </div>
-                                {/*Add next section here*/}
+                                <div className="tab-pane" id="restapis">
+                                    <div className="row">
+                                        <div className="col-lg-5">
+                                            <div className="card card-transparent">
+                                                <div className="card-header ">
+                                                    <div className="card-title">
+                                                        <h5>Update Password of REST APIs</h5>
+                                                    </div>
+                                                </div>
+                                                <div className="card-block">
+                                                    <p>BlockCluster's Assets APIs are protected using password. While making any of the API calls you need to provide the password for authentication.</p>
+                                                    <p>Default password is your network's instance id</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="col-lg-7">
+                                            <div className="card card-transparent">
+                                                <div className="card-block">
+                                                    <form id="form-project" role="form" onSubmit={this.onRESTUpdateSubmit} autoComplete="off">
+                                                        <p>Set new password</p>
+                                                        <div className="form-group-attached">
+                                                            <div className="row clearfix">
+                                                                <div className="col-md-12">
+                                                                    <div className="form-group form-group-default required">
+                                                                        <label>Network name</label>
+                                                                        <select className="form-control" ref={(input) => {this.networkNameRESTUpdate = input;}}>
+                                                                            {this.props.networks.map((item, index) => {
+                                                                                return (
+                                                                                    <option value={item.instanceId} key={item.instanceId}>{item.name}</option>
+                                                                                )
+                                                                            })}
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="row clearfix">
+                                                                <div className="col-md-12">
+                                                                    <div className="form-group form-group-default required">
+                                                                        <label>Password</label>
+                                                                        <input ref={(input) => {this.restPassword = input;}} type="password" className="form-control" name="password" required placeholder="nrx923xrm" />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <br />
+                                                        {this.state.updateRESTFormSubmitError != '' &&
+                                                            <div className="row">
+                                                                <div className="col-md-12">
+                                                                    <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                        <button className="close" data-dismiss="alert"></button>
+                                                                    {this.state.updateRESTFormSubmitError}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        }
+
+                                                        {this.state.updateRESTFormSubmitSuccess != '' &&
+                                                            <div className="row">
+                                                                <div className="col-md-12">
+                                                                    <div className="m-b-20 alert alert-success m-b-0" role="alert">
+                                                                        <button className="close" data-dismiss="alert"></button>
+                                                                    {this.state.updateRESTFormSubmitSuccess}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        }
+
+                                                        <LaddaButton
+                                                            loading={this.state.restLoading}
+                                                            data-size={S}
+                                                            data-style={SLIDE_UP}
+                                                            data-spinner-size={30}
+                                                            data-spinner-lines={12}
+                                                            className="btn btn-success"
+                                                            type="submit"
+                                                        >
+                                                            <i className="fa fa-wrench" aria-hidden="true"></i>&nbsp;&nbsp;Update
+                                                        </LaddaButton>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
