@@ -73,12 +73,6 @@ class Navbar extends Component {
 			              	<span className="arrow"></span></a>
 			              	<span className="icon-thumbnail"><i className="fa fa-lock"></i></span>
 			              	<ul className="sub-menu">
-			                	<li>
-									<Link to={"/app/security/accounts"}>
-			                    		Accounts
-			                    	</Link>
-			                  		<span className="icon-thumbnail"><i className="fa fa-key"></i></span>
-			                	</li>
 								<li>
 									<Link to={"/app/security/peers"}>
 			                    		Peers
@@ -90,12 +84,6 @@ class Navbar extends Component {
 			                    		APIs Creds
 			                    	</Link>
 			                  		<span className="icon-thumbnail"><i className="fa fa-unlock-alt"></i></span>
-			                	</li>
-								<li>
-									<Link to={"/app/security/whitelist-ips"}>
-			                    		Whitelist IPs
-			                    	</Link>
-			                  		<span className="icon-thumbnail"><i className="fa fa-assistive-listening-systems"></i></span>
 			                	</li>
 			              	</ul>
 			            </li>

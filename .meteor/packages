@@ -31,3 +31,4 @@ fourseven:scss
 simple:json-routes
 3stack:bignumber
 percolate:synced-cron
+blockcluster:abi-decoder
