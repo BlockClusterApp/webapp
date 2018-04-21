@@ -350,7 +350,7 @@ class ViewEditNetwork extends Component {
 		                        	</div>
 
 		                        	{
-			   							(() => {
+			   							/*(() => {
 			       							if (this.props.network.length === 1) {
 			       								if(this.props.network[0].type === "join") {
 			       									return (
@@ -381,11 +381,11 @@ class ViewEditNetwork extends Component {
 			       									)
 			       								}
 			          						}
-			   							})()
+			   							})()*/
 									}
 
 									{
-			   							(() => {
+			   							/*(() => {
 			       							if (this.props.network.length === 1) {
 			       								if(this.props.network[0].type === "join") {
 			       									return (
@@ -416,8 +416,9 @@ class ViewEditNetwork extends Component {
 			       									)
 			       								}
 			          						}
-			   							})()
+			   							})()*/
 									}
+									
 			                        {/*<div className="form-group row">
 			                            <label className="col-md-3 control-label">Work</label>
 			                            <div className="col-md-9">

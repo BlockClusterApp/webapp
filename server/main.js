@@ -1213,7 +1213,24 @@ spec:
                 "restAPI-password": password
             }
         })
-    }
+    },
+    "addPeer": function(instanceId, eNodeURL) {
+		var network = Networks.find({instanceId: instanceId}).fetch()[0]
+
+        if(network.staticPeers == undefined) {
+            network.staticPeers = [eNodeURL]
+        } else {
+            network.staticPeers.push(eNodeURL)
+        }
+
+        Networks.update({
+            instanceId: instanceId
+        }, {
+            $set: {
+                "staticPeers": network.staticPeers
+            }
+        })
+	}
 })
 
 //Networks.remove({})
