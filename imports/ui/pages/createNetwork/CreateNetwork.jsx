@@ -52,7 +52,7 @@ class CreateNetwork extends Component {
                                 </div>
                                 <div className="card-block">
                                     <h3>
-                                        Create Your Own Quorum Network Using IBFT Consensus
+                                        Create Your Own Blockchain Network
                                     </h3>
                                     <p>This is a private network you will be creating. Technically it will create a single node network.</p>
                                     <ul>
@@ -87,13 +87,13 @@ class CreateNetwork extends Component {
                                             <div className="row clearfix">
                                                 <div className="col-md-6">
                                                     <div className="form-group form-group-default ">
-                                                        <label>Constellation</label>
+                                                        <label>Private Transactions</label>
                                                         <input type="text" className="form-control" name="firstName" required disabled value="Enabled" />
                                                     </div>
                                                 </div>
                                                 <div className="col-md-6">
                                                     <div className="form-group form-group-default ">
-                                                        <label>Gas Price</label>
+                                                        <label>Transaction Cost</label>
                                                         <input type="text" className="form-control" name="firstName" required disabled value="0" />
                                                     </div>
 

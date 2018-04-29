@@ -165,7 +165,7 @@ class JoinNetwork extends Component {
                                                 </div>
                                                 <div className="card-block">
                                                     <h3>
-                                                        Join a Quorum Network that uses IBFT Consensus
+                                                        Join a Existing Blockchain Network
                                                     </h3>
                                                     <p>This is a private network you will be joining. Technically you will be a validator or peer.</p>
                                                     <ul>
@@ -268,7 +268,7 @@ class JoinNetwork extends Component {
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <p className="m-t-10">Add other Quorum nodes enode URLs</p>
+                                                        <p className="m-t-10">Add other nodes enode URLs</p>
                                                         <div className="form-group-attached">
                                                             {
                                                                 (() => {
@@ -297,7 +297,7 @@ class JoinNetwork extends Component {
                                                                 })()
                                                             }
                                                         </div>
-                                                        <p className="m-t-10">Add other Constellation nodes URLs</p>
+                                                        <p className="m-t-10">Add other constellation nodes URLs</p>
                                                         <div className="form-group-attached">
                                                             {
                                                                 (() => {

@@ -49,7 +49,7 @@ export default class Register extends Component {
 				<div className="register-container full-height sm-p-t-30">
 		            <div className="d-flex justify-content-center flex-column full-height ">
 		                <img src="assets/img/logo/black_left_img.png" alt="logo" width="250" />
-		                <h3>This BaaS provides the easiest way to create your Quorum network</h3>
+					<h3>This BaaS provides the easiest way to create your blockchain consortiums</h3>
 		                <p>
 		                    Create a BlockCluster account. If you already have an account then click <Link to="/" className="text-info">here</Link> to login
 		                </p>

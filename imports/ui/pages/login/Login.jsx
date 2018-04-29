@@ -35,7 +35,7 @@ export default class Login extends Component {
 	                        Blockchain as a Service for Consortiums
 	                    </h2>
 	                    <p className="small">
-	                    the next generation secure and scalable cloud platform for building private blockchains, powered by Kubernetes and Quorum. 
+	                    the next generation secure and scalable cloud platform for building private blockchains. 
 	                    </p>
 	                </div>
 	            </div>
