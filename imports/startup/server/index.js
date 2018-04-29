@@ -6,9 +6,10 @@ require("../../collections/utilities/server/publications.js")
 require("../../collections/orders/server/publications.js")
 require("../../api/assets.js")
 
-import {updateWorkerNodeIP, updateKuberREST_IP} from "../../collections/utilities/server/cron.js"
+import {updateWorkerNodeIP, updateKuberREST_IP, updateFirewall_Port} from "../../collections/utilities/server/cron.js"
 
 updateWorkerNodeIP()
 updateKuberREST_IP()
+updateFirewall_Port()
 
 export {}

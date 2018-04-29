@@ -22,4 +22,14 @@ function updateKuberREST_IP() {
 	});
 }
 
-export {updateWorkerNodeIP, updateKuberREST_IP}
+function updateFirewall_Port() {
+	Utilities.upsert({
+		name: "firewall_Port",
+	}, {
+		$set: {
+			"value": "31988"
+		}
+	});
+}
+
+export {updateWorkerNodeIP, updateKuberREST_IP, updateFirewall_Port}

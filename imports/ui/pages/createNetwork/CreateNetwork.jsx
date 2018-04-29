@@ -54,7 +54,7 @@ class CreateNetwork extends Component {
                                     <h3>
                                         Create Your Own Blockchain Network
                                     </h3>
-                                    <p>This is a private network you will be creating. Technically it will create a single node network.</p>
+                                    <p>This will create a private and permissioned blockchain network. Technically it will create a single node network.</p>
                                     <ul>
                                         <li><i>Maximum block time</i>: is the maximum time to wait for a new block</li>
                                         <li><i>Minimum block time</i>: is the minimum time to wait for a new block</li>

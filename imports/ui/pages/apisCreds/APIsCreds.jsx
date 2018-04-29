@@ -3,6 +3,7 @@ import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import {withTracker} from "meteor/react-meteor-data";
 import {withRouter} from 'react-router-dom'
 import {Networks} from "../../../collections/networks/networks.js"
+import {Utilities} from "../../../collections/utilities/utilities.js"
 import notifications from "../../../modules/notifications"
 
 class APIsCreds extends Component {
@@ -100,7 +101,7 @@ class APIsCreds extends Component {
                                                     <pre>
                                                         let web3 = new Web3(
                                                             new Web3.providers.HttpProvider(
-                                                            	"http://" + "username" + ":" + "password" + "@" + "x.x.x.x/instanceId" + ":" + "port"
+                                                                {"http://" + "username" + ":" + "password" + "@" + (this.props.workerNodeIP[0] ? this.props.workerNodeIP[0].value : '') + "/instanceId" + ":" + (this.props.firewallPort[0] ? this.props.firewallPort[0].value : '')}
                                                             )
                                                         )
                                                     </pre>
@@ -273,6 +274,8 @@ class APIsCreds extends Component {
 export default withTracker(() => {
     return {
         networks: Networks.find({}).fetch(),
-        subscriptions: [Meteor.subscribe("networks")]
+        workerNodeIP: Utilities.find({"name": "workerNodeIP"}).fetch(),
+        firewallPort: Utilities.find({"name": "firewall_Port"}).fetch(),
+        subscriptions: [Meteor.subscribe("networks"), Meteor.subscribe("utilities")]
     }
 })(withRouter(APIsCreds))

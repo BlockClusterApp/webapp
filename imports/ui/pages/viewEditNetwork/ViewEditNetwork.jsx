@@ -137,24 +137,6 @@ class ViewEditNetwork extends Component {
 			                            </div>
 			                        </div>
 			                        <div className="form-group row">
-			                            <label className="col-md-3 control-label">HTTP-RPC URL</label>
-			                            <div className="col-md-9">
-			                                <b className="value-valign-middle">
-			                                	{
-						   							(() => {
-						       							if (this.props.network.length === 1) {
-						       								if("rpcNodePort" in this.props.network[0]) {
-						       									return (
-						       										"http://" + this.props.workerNodeIP[0].value + ":" + this.props.network[0].rpcNodePort
-						       									)
-						       								}
-						       							}
-						       						})()
-						   						}
-			                                </b>
-			                            </div>
-			                        </div>
-			                        <div className="form-group row">
 			                            <label className="col-md-3 control-label">Constellation IP and Port</label>
 			                            <div className="col-md-9">
 			                                <b className="value-valign-middle">
@@ -418,7 +400,7 @@ class ViewEditNetwork extends Component {
 			          						}
 			   							})()*/
 									}
-									
+
 			                        {/*<div className="form-group row">
 			                            <label className="col-md-3 control-label">Work</label>
 			                            <div className="col-md-9">
