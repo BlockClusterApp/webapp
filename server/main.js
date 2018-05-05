@@ -346,16 +346,42 @@ spec:
                                                                                                             deleteNetwork(id)
                                                                                                         } else {
                                                                                                             if (typeof contract.address !== 'undefined') {
-                                                                                                                Networks.update({
-                                                                                                                    _id: id
-                                                                                                                }, {
-                                                                                                                    $set: {
-                                                                                                                        "status": "running",
-                                                                                                                        "assetsContractAddress": contract.address,
-                                                                                                                        "jsonRPC-password": instanceId,
-                                                                                                                        "restAPI-password": instanceId
+                                                                                                                var assetsContractAddress = contract.address;
+                                                                                                                var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
+                                                                                                                var atomicSwap = atomicSwapContract.new(assetsContractAddress, {
+                                                                                                                    from: web3.eth.accounts[0],
+                                                                                                                    data: smartContracts.atomicSwap.bytecode,
+                                                                                                                    gas: '999999999999999999'
+                                                                                                                }, Meteor.bindEnvironment(function(error, contract){
+                                                                                                                    if(error) {
+                                                                                                                        console.log(error);
+                                                                                                                        deleteNetwork(id)
+                                                                                                                    } else {
+                                                                                                                        if (typeof contract.address !== 'undefined') {
+                                                                                                                            var atomicSwapContractInstance = atomicSwapContract.at(contract.address)
+
+                                                                                                                            atomicSwapContractInstance.genesisBlockHash.call(Meteor.bindEnvironment(function(error, genesisBlockHash){
+                                                                                                                                if(error) {
+                                                                                                                                    console.log(error);
+                                                                                                                                    deleteNetwork(id)
+                                                                                                                                } else {
+                                                                                                                                    Networks.update({
+                                                                                                                                        _id: id
+                                                                                                                                    }, {
+                                                                                                                                        $set: {
+                                                                                                                                            "status": "running",
+                                                                                                                                            "assetsContractAddress": assetsContractAddress,
+                                                                                                                                            "atomicSwapContractAddress": contract.address,
+                                                                                                                                            "jsonRPC-password": instanceId,
+                                                                                                                                            "restAPI-password": instanceId,
+                                                                                                                                            "genesisBlockHash": genesisBlockHash
+                                                                                                                                        }
+                                                                                                                                    })
+                                                                                                                                }
+                                                                                                                            }))
+                                                                                                                        }
                                                                                                                     }
-                                                                                                                })
+                                                                                                                }))
                                                                                                             }
                                                                                                         }
                                                                                                     }))
@@ -453,7 +479,7 @@ spec:
 
 		return myFuture.wait();
 	},
-	"joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, userId) {
+	"joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, userId) {
 		var myFuture = new Future();
 		var instanceId = helpers.instanceIDGenerate();
 		var kuberREST_IP = Utilities.find({"name": "kuberREST_IP"}).fetch()[0].value;
@@ -495,7 +521,8 @@ spec:
 			"genesisBlock": genesisFileContent,
 			"accounts": [],
 			"accountsPassword": {},
-			"assetsContractAddress": assetsContractAddress
+			"assetsContractAddress": assetsContractAddress,
+            "atomicSwapContractAddress": atomicSwapContractAddress
 		}, function(error, id){
 			if(error) {
 				console.log(error);
@@ -740,16 +767,26 @@ spec:
                                                                                     console.log(error);
                                                                                     deleteNetwork(id)
                                                                                 } else {
-                                                                                    Networks.update({
-                                                                                        _id: id
-                                                                                    }, {
-                                                                                        $set: {
-                                                                                            currentValidators: result.result,
-                                                                                            "status": "running",
-                                                                                            "jsonRPC-password": instanceId,
-                                                                                            "restAPI-password": instanceId
+                                                                                    var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
+                                                                                    var atomicSwapContractInstance = atomicSwapContract.at(atomicSwapContractAddress)
+                                                                                    atomicSwapContractInstance.genesisBlockHash.call(Meteor.bindEnvironment(function(error, genesisBlockHash){
+                                                                                        if(error) {
+                                                                                            console.log(error);
+                                                                                            deleteNetwork(id)
+                                                                                        } else {
+                                                                                            Networks.update({
+                                                                                                _id: id
+                                                                                            }, {
+                                                                                                $set: {
+                                                                                                    currentValidators: result.result,
+                                                                                                    "status": "running",
+                                                                                                    "jsonRPC-password": instanceId,
+                                                                                                    "restAPI-password": instanceId,
+                                                                                                    "genesisBlockHash": genesisBlockHash
+                                                                                                }
+                                                                                            })
                                                                                         }
-                                                                                    })
+                                                                                    }))
                                                                                 }
                                                                             }))
                                                                         }
@@ -858,6 +895,7 @@ spec:
 				["enode://" + network.nodeId + "@" + network.clusterIP + ":" + network.realEthNodePort].concat(network.totalENodes),
 				[network.clusterIP + ":" + network.realConstellationNodePort].concat(network.totalConstellationNodes),
 				network.assetsContractAddress,
+                network.atomicSwapContractAddress,
 				user._id
 			)
 		} else {
@@ -1079,7 +1117,7 @@ spec:
 
 		return myFuture.wait();
 	},
-	"placeOrder": function(instanceId, fromType, toType, fromId, toId, fromUnits, toUnits, fromUniqueIdentifier, toUniqueIdentifier, fromAddress) {
+	"placeOrder": function(instanceId, fromType, toType, fromId, toId, fromUnits, toUnits, fromUniqueIdentifier, toUniqueIdentifier, fromAddress, toAddress, toGenesisBlockHash, lockMinutes) {
 		var myFuture = new Future();
 		var network = Networks.find({instanceId: instanceId}).fetch()[0]
 		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;

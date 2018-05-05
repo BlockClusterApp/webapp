@@ -319,9 +319,22 @@ class AssetsManagement extends Component {
                                                                                                                         })}
                                                                                                                     </select>
                                                                                                                 </div>
+
+                                                                                                                <div className="form-group">
+                                                                                                                    <label>Time Period (min)</label>
+                                                                                                                    <input type="number" className="form-control" ref={(input) => {this[item.instanceId + "_sellAsset_timePeriod"] = input}} required />
+                                                                                                                </div>
                                                                                                         </div>
                                                                                                         <div className="col-lg-6">
                                                                                                             <h4>Asset Buy Details</h4>
+                                                                                                                <div className="form-group">
+                                                                                                                    <label>Network To Buy From</label>
+                                                                                                                    <select className="form-control" onChange={(e) => {this.buyAsset_networkChange(e, item.instanceId)}} ref={(input) => {this[item.instanceId + "_buyAsset_networkId"] = input}} required>
+                                                                                                                        {Object.keys(this.props.networks || {}).map((item) => {
+                                                                                                                            return <option value={item.instanceId}>{item.name}</option>
+                                                                                                                        })}
+                                                                                                                    </select>
+                                                                                                                </div>
 
                                                                                                                 <div className="form-group">
                                                                                                                     <label>Asset Type</label>
@@ -383,6 +396,13 @@ class AssetsManagement extends Component {
                                                                                                                         <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_buyAsset_identifier"] = input}} required />
                                                                                                                     </div>
                                                                                                                 }
+
+                                                                                                                <div className="form-group">
+                                                                                                                    <label>To Account</label>
+                                                                                                                    <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_buyAsset_toAddress"] = input}} required />
+                                                                                                                </div>
+
+
                                                                                                                 {this.state[item.instanceId + "_placeOrder_formSubmitError"] &&
                                                                                                                     <div className="row m-t-40">
                                                                                                                         <div className="col-md-12">

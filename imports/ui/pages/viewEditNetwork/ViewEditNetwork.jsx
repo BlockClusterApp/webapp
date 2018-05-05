@@ -286,6 +286,32 @@ class ViewEditNetwork extends Component {
 											</span>
 										</div>
 									</div>
+									<div className="form-group row">
+										<label className="col-md-3 control-label">Atomic Swap Smart Contracts</label>
+										<div className="col-md-9">
+											<span className="value-valign-middle">
+												{
+													(() => {
+														if (this.props.network.length === 1) {
+															if(typeof this.props.network[0].atomicSwapContractAddress === undefined ) {
+																return (
+																	""
+																)
+															} else if (this.props.network[0].atomicSwapContractAddress !== "") {
+																return (
+																	this.props.network[0].atomicSwapContractAddress
+																)
+															} else {
+																return (
+																	"Not Found"
+																)
+															}
+														}
+													})()
+												}
+											</span>
+										</div>
+									</div>
 
 									<div className="form-group row">
 			                            <div className="col-md-3">

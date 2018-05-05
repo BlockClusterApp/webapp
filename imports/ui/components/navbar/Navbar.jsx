@@ -110,12 +110,6 @@ class Navbar extends Component {
 			                    	</Link>
 			                  		<span className="icon-thumbnail"><i className="fa fa-signal"></i></span>
 			                	</li>
-								<li>
-									<Link to={"/app/assets/exchange"}>
-			                    		Exchange
-			                    	</Link>
-			                  		<span className="icon-thumbnail"><i className="fa fa-exchange"></i></span>
-			                	</li>
 								<li className="">
 									<Link to={"/app/assets/apis"}>
 			                    		APIs
@@ -130,6 +124,13 @@ class Navbar extends Component {
 			                	</li>
 			              	</ul>
 			            </li>
+						<li className="">
+	                    	<Link to={"/app/assets/exchange"} className="detailed">
+								<span className="title">Exchange</span>
+								<span className="details">Cross-Chain</span>
+	                    	</Link>
+	                        <span className="icon-thumbnail"><i className="fa fa-exchange"></i></span>
+	                    </li>
 						<li className="">
 	                    	<Link to={"/app/explorer"} className="detailed">
 								<span className="title">Explorer</span>
