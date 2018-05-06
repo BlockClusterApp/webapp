@@ -915,7 +915,7 @@ spec:
 		if(assetType === "solo") {
 			assets.createSoloAssetType.sendTransaction(assetName, {
 				from: assetIssuer,
-				gas: '4700000'
+				gas: '99999999999999999'
 			}, function(error, txnHash){
 				if(!error) {
 					myFuture.return();
@@ -926,7 +926,7 @@ spec:
 		} else {
 			assets.createBulkAssetType.sendTransaction(assetName, (reissuable === "true"), {
 				from: assetIssuer,
-				gas: '4700000'
+				gas: '99999999999999999'
 			}, function(error, txnHash){
 				if(!error) {
 					myFuture.return();
