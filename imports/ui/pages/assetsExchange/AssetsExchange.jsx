@@ -103,11 +103,6 @@ class AssetsManagement extends Component {
             var toUniqueIdentifier = this[instanceId + "_buyAsset_identifier"].value;
         }
 
-        var buyAsset_toAddress = this[instanceId + "_buyAsset_toAddress"].value;
-        var sellAsset_timePeriod = this[instanceId + "_sellAsset_timePeriod"].value;
-
-        var genesisBlockHash = Networks.find({instanceId: buyAsset_networkId}).fetch()[0].genesisBlockHash;
-
         Meteor.call(
             "placeOrder",
             instanceId,
@@ -120,6 +115,9 @@ class AssetsManagement extends Component {
             fromUniqueIdentifier,
             toUniqueIdentifier,
             this[instanceId + "_sellAsset_fromAddress"].value,
+            this[instanceId + "_buyAsset_toAddress"].value,
+            Networks.find({instanceId: buyAsset_networkId}).fetch()[0].genesisBlockHash,
+            this[instanceId + "_sellAsset_timePeriod"].value,
             (error) => {
                 if(error) {
                     this.setState({
@@ -323,7 +321,7 @@ class AssetsManagement extends Component {
 
                                                                                                                 <div className="form-group">
                                                                                                                     <label>Time Period (min)</label>
-                                                                                                                    <input type="number" className="form-control" ref={(input) => {this[item.instanceId + "_sellAsset_timePeriod"] = input}} required />
+                                                                                                                    <input type="number" className="form-control" min="1" step="1" defaultvalue="5" ref={(input) => {this[item.instanceId + "_sellAsset_timePeriod"] = input}} required />
                                                                                                                 </div>
 
                                                                                                                 <div className="form-group">

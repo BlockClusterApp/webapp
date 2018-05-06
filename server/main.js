@@ -3,6 +3,7 @@ import {Networks} from "../imports/collections/networks/networks.js"
 import {Utilities} from "../imports/collections/utilities/utilities.js"
 import {SoloAssets} from "../imports/collections/soloAssets/soloAssets.js"
 import {Orders} from "../imports/collections/orders/orders.js"
+import {Secrets} from "../imports/collections/secrets/secrets.js"
 var Future = Npm.require("fibers/future");
 var lightwallet = Npm.require("eth-lightwallet");
 import Web3 from "web3";
@@ -14,12 +15,6 @@ import {scanBlocksOfNode, authoritiesListCronJob} from "../imports/collections/n
 var md5 = require("apache-md5");
 var base64 = require('base-64');
 var utf8 = require('utf8');
-
-SyncedCron.config({
-    log: false
-});
-
-SyncedCron.start();
 
 Accounts.validateLoginAttempt(function(options) {
     if (!options.allowed) {
@@ -458,7 +453,8 @@ spec:
                                                                         Networks.remove({instanceId: id});
                                                                         Orders.remove({instanceId: id});
                                                                         SoloAssets.remove({instanceId: id});
-
+                                                                        Secrets.remove({instanceId: id});
+                                                                        
                                                                         myFuture.return();
                                                                     }
                                                                 })
@@ -1117,34 +1113,90 @@ spec:
 
 		return myFuture.wait();
 	},
-	"placeOrder": function(instanceId, fromType, toType, fromId, toId, fromUnits, toUnits, fromUniqueIdentifier, toUniqueIdentifier, fromAddress, toAddress, toGenesisBlockHash, lockMinutes) {
+	"placeOrder": function(
+        instanceId,
+        fromType,
+        toType,
+        fromId,
+        toId,
+        fromUnits,
+        toUnits,
+        fromUniqueIdentifier,
+        toUniqueIdentifier,
+        fromAddress,
+        toAddress,
+        toGenesisBlockHash,
+        lockMinutes) {
+
 		var myFuture = new Future();
 		var network = Networks.find({instanceId: instanceId}).fetch()[0]
 		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
 	    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-		var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-	    var assets = assetsContract.at(network.assetsContractAddress);
+		var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
+	    var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
+        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+        var assets = assetsContract.at(network.assetsContractAddress);
 
-		assets.placeOrder.sendTransaction(
-			helpers.instanceIDGenerate(),
-			fromType,
-			toType,
-			fromId,
-			toId,
-			fromUnits,
-			toUnits,
-			fromUniqueIdentifier,
-			toUniqueIdentifier, {
-				from: fromAddress,
-				gas: '99999999999999999'
-			}, function(error, txHash) {
-				if(error) {
-					myFuture.throw("An unknown error occured");
-	            } else {
-					myFuture.return();
-	            }
-			}
-		)
+        var secret = helpers.generateSecret();
+
+        atomicSwap.calculateHash.call(secret, Meteor.bindEnvironment((error, hash) => {
+            if(!error) {
+                Secrets.insert({
+        			"instanceId": instanceId,
+                    "secret": secret,
+                    "hash": hash
+        		}, Meteor.bindEnvironment((error) => {
+                    if(!error) {
+                        assets.approve.sendTransaction(
+                            fromType,
+                            fromId,
+                            fromUniqueIdentifier,
+                            fromUnits,
+                            network.atomicSwapContractAddress,
+                            {
+                                from: fromAddress,
+                                gas: '99999999999999999'
+                            },
+                            Meteor.bindEnvironment((error) => {
+                                if(!error) {
+                                    atomicSwap.lock.sendTransaction(
+                                        toAddress,
+                                        hash,
+                                        lockMinutes,
+                                        fromType,
+                                        fromId,
+                                        fromUniqueIdentifier,
+                                        fromUnits,
+                                        toType,
+                                        toId,
+                                        toUnits,
+                                        toUniqueIdentifier,
+                                        toGenesisBlockHash,
+                                        {
+                                            from: fromAddress,
+                                            gas: '99999999999999999'
+                                        },
+                                        Meteor.bindEnvironment((error) => {
+                                            if(!error) {
+                                                myFuture.return();
+                                            } else {
+                                                myFuture.throw("An unknown error occured");
+                                            }
+                                        }
+                                    ))
+                                } else {
+                                    myFuture.throw("An unknown error occured");
+                                }
+                            })
+                        )
+                    } else {
+                        myFuture.throw("An unknown error occured");
+                    }
+                }))
+            } else {
+                myFuture.throw("An unknown error occured");
+            }
+        }))
 
 		return myFuture.wait();
 	},

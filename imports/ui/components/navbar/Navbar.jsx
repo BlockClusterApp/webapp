@@ -140,16 +140,16 @@ class Navbar extends Component {
 	                    </li>
 						<li className="">
 	                    	<Link to={"/app/explorer"} className="detailed">
-								<span className="title">Explorer</span>
-								<span className="details">View Blockchain Txns</span>
+								<span className="title">Audit</span>
+								<span className="details">Blockchain Explorer</span>
 	                    	</Link>
 	                        <span className="icon-thumbnail"><i className="fa fa-eye"></i></span>
 	                    </li>
 						{(this.props.kuberREST_IP[0] !== undefined) &&
 	                    	<li className="">
 		                    	<Link target="_blank" to={"http://" + this.props.kuberREST_IP[0].value + ":8000/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#!/overview?namespace=default"} className="detailed">
-		                    		<span className="title">Kubernetes</span>
-		                        	<span className="details">View Infrastructure</span>
+		                    		<span className="title">Infrastructure</span>
+		                        	<span className="details">View Kubernetes</span>
 		                    	</Link>
 		                        <span className="icon-thumbnail"><i className="fa fa-cubes"></i></span>
 		                    </li>

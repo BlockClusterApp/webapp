@@ -50,5 +50,15 @@ export default {
             rtn += ALPHABET.charAt(Math.floor(Math.random() * ALPHABET.length));
         }
         return rtn;
+    },
+    generateSecret() {
+        var ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+        var ID_LENGTH = 8;
+
+        var rtn = '';
+        for (var i = 0; i < ID_LENGTH; i++) {
+            rtn += ALPHABET.charAt(Math.floor(Math.random() * ALPHABET.length));
+        }
+        return rtn;
     }
 }
