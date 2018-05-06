@@ -132,6 +132,13 @@ class Navbar extends Component {
 	                        <span className="icon-thumbnail"><i className="fa fa-exchange"></i></span>
 	                    </li>
 						<li className="">
+	                    	<Link to={"/app/assets/search"} className="detailed">
+								<span className="title">Search</span>
+							<span className="details">No-SQL Query</span>
+	                    	</Link>
+	                        <span className="icon-thumbnail"><i className="fa fa-search"></i></span>
+	                    </li>
+						<li className="">
 	                    	<Link to={"/app/explorer"} className="detailed">
 								<span className="title">Explorer</span>
 								<span className="details">View Blockchain Txns</span>
