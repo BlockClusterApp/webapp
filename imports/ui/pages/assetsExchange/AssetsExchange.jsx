@@ -11,7 +11,6 @@ import notifications from "../../../modules/notifications"
 import "./AssetsExchange.scss"
 
 class AssetsManagement extends Component {
-
     constructor() {
         super()
         this.state = {}
@@ -25,8 +24,6 @@ class AssetsManagement extends Component {
         try {
             ordersSubscription.stop();
         } catch(e){}
-
-
     }
 
     networkSelected(instanceId) {
@@ -92,6 +89,8 @@ class AssetsManagement extends Component {
             var fromUniqueIdentifier = this[instanceId + "_sellAsset_identifier"].value;
         }
 
+        var buyAsset_networkId = this[instanceId + "_buyAsset_networkId"].value;
+
         if(this[instanceId + "_buyAsset_assetType"].value == "bulk") {
             var toType = "bulk";
             var toId = this[instanceId + "_buyAsset_assetName"].value;
@@ -103,6 +102,11 @@ class AssetsManagement extends Component {
             var toUnits = "1";
             var toUniqueIdentifier = this[instanceId + "_buyAsset_identifier"].value;
         }
+
+        var buyAsset_toAddress = this[instanceId + "_buyAsset_toAddress"].value;
+        var sellAsset_timePeriod = this[instanceId + "_sellAsset_timePeriod"].value;
+
+        var genesisBlockHash = Networks.find({instanceId: buyAsset_networkId}).fetch()[0].genesisBlockHash;
 
         Meteor.call(
             "placeOrder",
