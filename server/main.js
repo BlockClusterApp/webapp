@@ -1260,7 +1260,7 @@ spec:
                     "secret": secret,
                     "hash": hash,
                     "userId": this.userId,
-                    "used": false //if there are multple peers trying to access this then only one can access this.
+                    "used": false //if there are multple peers trying to access this then only one can access this. so that we prevent multiple claim txns
                 }, Meteor.bindEnvironment((error) => {
                     if (!error) {
                         assets.approve.sendTransaction(
