@@ -454,7 +454,7 @@ spec:
                                                                         Orders.remove({instanceId: id});
                                                                         SoloAssets.remove({instanceId: id});
                                                                         Secrets.remove({instanceId: id});
-                                                                        
+
                                                                         myFuture.return();
                                                                     }
                                                                 })
@@ -1144,7 +1144,9 @@ spec:
                 Secrets.insert({
         			"instanceId": instanceId,
                     "secret": secret,
-                    "hash": hash
+                    "hash": hash,
+                    "userId": this.userId,
+                    "used": false //if there are multple peers trying to access this then only one can access this.
         		}, Meteor.bindEnvironment((error) => {
                     if(!error) {
                         assets.approve.sendTransaction(

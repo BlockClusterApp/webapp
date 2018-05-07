@@ -13,6 +13,17 @@ export default {
             return `<span class="label">${text}</span>`
         }
     },
+    convertOrderStatusToTag: function(status) {
+        if (status === "1") {
+            return `<span class="label label-inverse">Pending</span>`
+        } else if (status === "3") {
+            return `<span class="label label-success">Exchanged</span>`
+        } else if (status === "2") {
+            return `<span class="label label-important">Cancelled</span>`
+        } else {
+            return `<span class="label">Unknown</span>`
+        }
+    },
     timeConverter(UNIX_timestamp) {
         var a = new Date(UNIX_timestamp * 1000);
         var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

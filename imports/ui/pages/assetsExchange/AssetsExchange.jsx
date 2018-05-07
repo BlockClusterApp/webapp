@@ -69,6 +69,37 @@ class AssetsManagement extends Component {
         })
     }
 
+    fullfillOrder_orderIdChange = (e, instanceId) => {
+        let orderId = e.target.value;
+        let genesisBlockHash = Orders.find({instanceId: instanceId, atomicSwapHash: orderId}).fetch();
+
+        if(genesisBlockHash.length === 1) {
+            genesisBlockHash = genesisBlockHash[0].toGenesisBlockHash;
+            this.setState({
+                [instanceId + "_fullOrder_genesisBlockHash"]: genesisBlockHash
+            })
+
+            this[instanceId + "_fullOrder_continueAccountLoop"] = true;
+        } else {
+            this.setState({
+                [instanceId + "_fullOrder_genesisBlockHash"]: undefined,
+                [instanceId + "_fullfillOrder_selectedNetwork"]: undefined
+            })
+
+            this[instanceId + "_fullOrder_continueAccountLoop"] = false;
+        }
+    }
+
+    fullfillOrder_networkChange = (e, instanceId) => {
+        let selectedInstanceId = e.target.value;
+
+        this.setState({
+            [instanceId + "_fullfillOrder_selectedNetwork"]: selectedInstanceId
+        })
+
+        this[instanceId + "_fullOrder_continueAccountLoop"] = true;
+    }
+
     placeOrder = (e, instanceId) => {
         e.preventDefault();
 
@@ -321,7 +352,7 @@ class AssetsManagement extends Component {
 
                                                                                                                 <div className="form-group">
                                                                                                                     <label>Time Period (min)</label>
-                                                                                                                    <input type="number" className="form-control" min="1" step="1" defaultvalue="5" ref={(input) => {this[item.instanceId + "_sellAsset_timePeriod"] = input}} required />
+                                                                                                                    <input type="number" className="form-control" min="1" step="1" defaultValue="5" ref={(input) => {this[item.instanceId + "_sellAsset_timePeriod"] = input}} required />
                                                                                                                 </div>
 
                                                                                                                 <div className="form-group">
@@ -494,38 +525,36 @@ class AssetsManagement extends Component {
                                                                                                                     {this.props.orders.map((item1, index) => {
                                                                                                                         if(item1.instanceId == item.instanceId) {
                                                                                                                             return (
-                                                                                                                                <tr key={item1.orderId}>
+                                                                                                                                <tr key={item1.atomicSwapHash}>
                                                                                                                                     <td className="v-align-middle ">
-                                                                                                                                        {item1.orderId}
+                                                                                                                                        {item1.atomicSwapHash}
                                                                                                                                     </td>
                                                                                                                                     <td className="v-align-middle">
-                                                                                                                                        {item1.fromType == "bulk" &&
-                                                                                                                                            <span>{item1.fromUnits} {item1.fromId}</span>
+                                                                                                                                        {item1.fromAssetType == "bulk" &&
+                                                                                                                                            <span>{item1.fromAssetUnits} {item1.fromAssetName}</span>
                                                                                                                                         }
 
-                                                                                                                                        {item1.fromType == "solo" &&
-                                                                                                                                            <span>{item1.fromUniqueIdentifier} {item1.fromId}</span>
+                                                                                                                                        {item1.fromAssetType == "solo" &&
+                                                                                                                                            <span>{item1.fromAssetId} {item1.fromAssetName}</span>
                                                                                                                                         }
                                                                                                                                     </td>
                                                                                                                                     <td className="v-align-middle">
-                                                                                                                                        {item1.toType == "bulk" &&
-                                                                                                                                            <span>{item1.toUnits} {item1.toId}</span>
+                                                                                                                                        {item1.toAssetType == "bulk" &&
+                                                                                                                                            <span>{item1.toAssetUnits} {item1.toAssetName}</span>
                                                                                                                                         }
 
-                                                                                                                                        {item1.toType == "solo" &&
-                                                                                                                                            <span>{item1.toUniqueIdentifier} {item1.toId}</span>
+                                                                                                                                        {item1.toAssetType == "solo" &&
+                                                                                                                                            <span>{item1.toAssetId} {item1.toAssetName}</span>
                                                                                                                                         }
                                                                                                                                     </td>
                                                                                                                                     <td className="v-align-middle">
-                                                                                                                                        {item1.seller}
+                                                                                                                                        {item1.fromAddress}
                                                                                                                                     </td>
                                                                                                                                     <td className="v-align-middle">
-                                                                                                                                        {item1.buyer != "0x0000000000000000000000000000000000000000" &&
-                                                                                                                                            <span>{item1.buyer}</span>
-                                                                                                                                        }
+                                                                                                                                        <span>{item1.toAddress}</span>
                                                                                                                                     </td>
                                                                                                                                     <td className="v-align-middle">
-                                                                                                                                        {ReactHtmlParser(helpers.convertStatusToTag(item1.status, helpers.firstLetterCapital(item1.status)))}
+                                                                                                                                        {ReactHtmlParser(helpers.convertOrderStatusToTag(item1.status))}
                                                                                                                                     </td>
                                                                                                                                 </tr>
                                                                                                                             )
@@ -546,16 +575,55 @@ class AssetsManagement extends Component {
                                                                                                             }}>
                                                                                                             <div className="form-group">
                                                                                                                 <label>Order ID</label>
-                                                                                                                <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_fullfill_orderID"] = input}} required />
+                                                                                                                <input type="text" className="form-control" onChange={(e) => {this.fullfillOrder_orderIdChange(e, item.instanceId)}} ref={(input) => {this[item.instanceId + "_fullfill_orderID"] = input}} required />
                                                                                                             </div>
+
+                                                                                                            <div className="form-group">
+                                                                                                                <label>Network</label>
+                                                                                                                <select className="form-control" onChange={(e) => {this.fullfillOrder_networkChange(e, item.instanceId)}} ref={(input) => {this[item.instanceId + "_fullfillOrder_networkId"] = input}} required>
+                                                                                                                    {(this.state[item.instanceId + "_fullOrder_genesisBlockHash"] !== undefined) ? (
+                                                                                                                        Object.keys(this.props.networks || {}).map((key) => {
+                                                                                                                            if(this.props.networks[key].genesisBlockHash === this.state[item.instanceId + "_fullOrder_genesisBlockHash"]) {
+                                                                                                                                return <option key={this.props.networks[key].instanceId} value={this.props.networks[key].instanceId}>{this.props.networks[key].name}</option>
+                                                                                                                            }
+                                                                                                                        })
+                                                                                                                    ) : (
+                                                                                                                        ""
+                                                                                                                    )}
+
+                                                                                                                </select>
+                                                                                                            </div>
+
                                                                                                             <div className="form-group">
                                                                                                                 <label>Account</label>
                                                                                                                 <select className="form-control" ref={(input) => {this[item.instanceId + "_fullfill_address"] = input}} required>
-                                                                                                                    {this.props.networks[index].accounts.map((item, index) => {
-                                                                                                                        return <option key={item} value={item}>{item}</option>
-                                                                                                                    })}
+                                                                                                                    {(this.state[item.instanceId + "_fullOrder_genesisBlockHash"] !== undefined && this.state[item.instanceId + "_fullfillOrder_selectedNetwork"] === undefined) ? (
+                                                                                                                        Object.keys(this.props.networks || {}).map((key) => {
+                                                                                                                            if(this.props.networks[key].genesisBlockHash === this.state[item.instanceId + "_fullOrder_genesisBlockHash"] && this[item.instanceId + "_fullOrder_continueAccountLoop"] === true) {
+                                                                                                                                this[item.instanceId + "_fullOrder_continueAccountLoop"] = false;
+                                                                                                                                return this.props.networks[key].accounts.map((item, index) => {
+                                                                                                                                    return <option key={item} value={item}>{item}</option>
+                                                                                                                                })
+                                                                                                                            }
+                                                                                                                        })
+                                                                                                                    ) : (
+                                                                                                                        ""
+                                                                                                                    )}
+
+                                                                                                                    {(this.state[item.instanceId + "_fullOrder_genesisBlockHash"] !== undefined && this.state[item.instanceId + "_fullfillOrder_selectedNetwork"] !== undefined) ? (
+                                                                                                                        Object.keys(this.props.networks || {}).map((key) => {
+                                                                                                                            if(this.state[item.instanceId + "_fullfillOrder_selectedNetwork"] === this.props.networks[key].instanceId) {
+                                                                                                                                return this.props.networks[key].accounts.map((item, index) => {
+                                                                                                                                    return <option key={item} value={item}>{item}</option>
+                                                                                                                                })
+                                                                                                                            }
+                                                                                                                        })
+                                                                                                                    ) : (
+                                                                                                                        ""
+                                                                                                                    )}
                                                                                                                 </select>
                                                                                                             </div>
+
                                                                                                             {this.state[item.instanceId + "_fullfill_formSubmitError"] &&
                                                                                                                 <div className="row m-t-30">
                                                                                                                     <div className="col-md-12">
