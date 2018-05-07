@@ -175,27 +175,87 @@ class AssetsManagement extends Component {
             [instanceId + "_fullfill_formSubmitError"]: ''
         });
 
-        Meteor.call(
-            "fulfillOrder",
-            instanceId,
-            this[instanceId + "_fullfill_orderID"].value,
-            this[instanceId + "_fullfill_address"].value,
-            (error) => {
-                if(error) {
-                    this.setState({
-                        [instanceId + "_fullfill_formloading"]: false,
-                        [instanceId + "_fullfill_formSubmitError"]: error.reason
-                    });
-                } else {
-                    this.setState({
-                        [instanceId + "_fullfill_formloading"]: false,
-                        [instanceId + "_fullfill_formSubmitError"]: ""
-                    });
+        let order = Orders.find({instanceId: instanceId, atomicSwapHash: this[instanceId + "_fullfill_orderID"].value}).fetch()[0];
 
-                    notifications.success("Transaction sent");
+        let otherInstanceId = this[instanceId + "_fullfillOrder_networkId"].value;
+
+        if(Networks.find({instanceId: instanceId}).fetch()[0].genesisBlockHash === order.toGenesisBlockHash) {
+            Meteor.call(
+                "claimOrder",
+                instanceId,
+                this[instanceId + "_fullfill_orderID"].value,
+                this[instanceId + "_fullfill_address"].value,
+                order.toAssetType,
+                order.toAssetName,
+                order.toAssetId,
+                order.toAssetUnits,
+                (error) => {
+                    if(error) {
+                        this.setState({
+                            [instanceId + "_fullfill_formloading"]: false,
+                            [instanceId + "_fullfill_formSubmitError"]: error.reason
+                        });
+                    } else {
+                        this.setState({
+                            [instanceId + "_fullfill_formloading"]: false,
+                            [instanceId + "_fullfill_formSubmitError"]: ""
+                        });
+
+                        notifications.success("Transaction sent");
+                    }
                 }
+            )
+        } else {
+            let expiryTimestamp = order.fromLockPeriod;
+            let currentTimestamp = new Date().getTime() / 1000;
+            let newMin = null;
+
+            if(expiryTimestamp - currentTimestamp <= 0) {
+                this.setState({
+                    [instanceId + "_fullfill_formloading"]: false,
+                    [instanceId + "_fullfill_formSubmitError"]: "Order has expired"
+                });
+
+                return;
+            } else {
+                let temp = currentTimestamp + ((expiryTimestamp - currentTimestamp) / 2)
+                temp = (temp - currentTimestamp) / 60;
+                newMin = temp;
             }
-        )
+
+            Meteor.call(
+                "fulfillOrder",
+                otherInstanceId,
+                order.toAssetType,
+                order.fromAssetType,
+                order.toAssetName,
+                order.fromAssetName,
+                order.toAssetUnits,
+                order.fromAssetUnits,
+                order.toAssetId,
+                order.fromAssetId,
+                order.toAddress,
+                order.fromAddress,
+                Networks.find({instanceId: instanceId}).fetch()[0].genesisBlockHash,
+                newMin,
+                this[instanceId + "_fullfill_orderID"].value,
+                (error) => {
+                    if(error) {
+                        this.setState({
+                            [instanceId + "_fullfill_formloading"]: false,
+                            [instanceId + "_fullfill_formSubmitError"]: error.reason
+                        });
+                    } else {
+                        this.setState({
+                            [instanceId + "_fullfill_formloading"]: false,
+                            [instanceId + "_fullfill_formSubmitError"]: ""
+                        });
+
+                        notifications.success("Transaction sent");
+                    }
+                }
+            )
+        }
     }
 
 
@@ -596,6 +656,10 @@ class AssetsManagement extends Component {
 
                                                                                                             <div className="form-group">
                                                                                                                 <label>Account</label>
+                                                                                                                {(() => {
+                                                                                                                    this[item.instanceId + "_fullOrder_continueAccountLoop"] = true;
+                                                                                                                    return "";
+                                                                                                                })()}
                                                                                                                 <select className="form-control" ref={(input) => {this[item.instanceId + "_fullfill_address"] = input}} required>
                                                                                                                     {(this.state[item.instanceId + "_fullOrder_genesisBlockHash"] !== undefined && this.state[item.instanceId + "_fullfillOrder_selectedNetwork"] === undefined) ? (
                                                                                                                         Object.keys(this.props.networks || {}).map((key) => {

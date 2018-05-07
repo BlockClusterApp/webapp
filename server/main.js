@@ -1202,26 +1202,126 @@ spec:
 
 		return myFuture.wait();
 	},
-	"fulfillOrder": function(instanceId, orderId, fromAddress) {
+    "fulfillOrder": function(
+        instanceId,
+        fromType,
+        toType,
+        fromId,
+        toId,
+        fromUnits,
+        toUnits,
+        fromUniqueIdentifier,
+        toUniqueIdentifier,
+        fromAddress,
+        toAddress,
+        toGenesisBlockHash,
+        lockMinutes,
+        hash) {
+
 		var myFuture = new Future();
 		var network = Networks.find({instanceId: instanceId}).fetch()[0]
 		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
 	    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-		var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-	    var assets = assetsContract.at(network.assetsContractAddress);
+		var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
+	    var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
+        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+        var assets = assetsContract.at(network.assetsContractAddress);
 
-		assets.fulfillOrder.sendTransaction(
-			orderId, {
-				from: fromAddress,
-				gas: '99999999999999999'
-			}, function(error, txHash) {
-				if(error) {
-					myFuture.throw("An unknown error occured");
-	            } else {
-					myFuture.return();
-	            }
-			}
-		)
+
+
+        assets.approve.sendTransaction(
+            fromType,
+            fromId,
+            fromUniqueIdentifier,
+            fromUnits,
+            network.atomicSwapContractAddress,
+            {
+                from: fromAddress,
+                gas: '99999999999999999'
+            },
+            Meteor.bindEnvironment((error) => {
+                if(!error) {
+                    atomicSwap.lock.sendTransaction(
+                        toAddress,
+                        hash,
+                        lockMinutes,
+                        fromType,
+                        fromId,
+                        fromUniqueIdentifier,
+                        fromUnits,
+                        toType,
+                        toId,
+                        toUnits,
+                        toUniqueIdentifier,
+                        toGenesisBlockHash,
+                        {
+                            from: fromAddress,
+                            gas: '99999999999999999'
+                        },
+                        Meteor.bindEnvironment((error) => {
+                            if(!error) {
+                                myFuture.return();
+                            } else {
+                                myFuture.throw("An unknown error occured");
+                            }
+                        }
+                    ))
+                } else {
+                    myFuture.throw("An unknown error occured");
+                }
+            })
+        )
+
+		return myFuture.wait();
+	},
+	"claimOrder": function(instanceId, atomicSwapHash, fromAddress, toAssetType, toAssetName, toAssetId, toAssetUnits) {
+		var myFuture = new Future();
+		var network = Networks.find({instanceId: instanceId}).fetch()[0];
+		var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+	    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+        var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
+	    var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
+        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+        var assets = assetsContract.at(network.assetsContractAddress);
+
+        let secret = Secrets.find({userId: this.userId, instanceId: instanceId, hash: atomicSwapHash}).fetch()[0]
+
+        if(secret) {
+            secret = secret.secret;
+        } else {
+            throw new Meteor.Error(500, 'Unknown error occured');
+        }
+
+        assets.approve.sendTransaction(
+            toAssetType,
+            toAssetName,
+            toAssetId,
+            toAssetUnits,
+            atomicSwapHash,
+            {
+                from: fromAddress,
+                gas: '99999999999999999'
+            }, Meteor.bindEnvironment((error) => {
+                if(!error) {
+                    atomicSwap.claim.sendTransaction(
+            			atomicSwapHash,
+                        secret,
+                        {
+            				from: fromAddress,
+            				gas: '99999999999999999'
+            			}, Meteor.bindEnvironment(function(error, txHash) {
+            				if(error) {
+            					myFuture.throw("An unknown error occured");
+            	            } else {
+            					myFuture.return();
+            	            }
+            			}
+            		))
+                } else {
+                    myFuture.throw("An unknown error occured");
+                }
+            })
+        )
 
 		return myFuture.wait();
 	},
