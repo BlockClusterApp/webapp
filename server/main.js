@@ -14,6 +14,9 @@ import {
 import {
     Secrets
 } from "../imports/collections/secrets/secrets.js"
+import {
+    AcceptedOrders
+} from "../imports/collections/acceptedOrders/acceptedOrders.js"
 var Future = Npm.require("fibers/future");
 var lightwallet = Npm.require("eth-lightwallet");
 import Web3 from "web3";
@@ -1236,7 +1239,9 @@ spec:
         fromAddress,
         toAddress,
         toGenesisBlockHash,
-        lockMinutes) {
+        lockMinutes,
+        otherInstanceId
+    ) {
 
         var myFuture = new Future();
         var network = Networks.find({
@@ -1256,11 +1261,9 @@ spec:
         atomicSwap.calculateHash.call(secret, Meteor.bindEnvironment((error, hash) => {
             if (!error) {
                 Secrets.insert({
-                    "instanceId": instanceId,
+                    "instanceId": otherInstanceId,
                     "secret": secret,
                     "hash": hash,
-                    "userId": this.userId,
-                    "used": false //if there are multple peers trying to access this then only one can access this. so that we prevent multiple claim txns
                 }, Meteor.bindEnvironment((error) => {
                     if (!error) {
                         assets.approve.sendTransaction(
@@ -1313,8 +1316,9 @@ spec:
 
         return myFuture.wait();
     },
-    "fulfillOrder": function(
+    "fullfillOrder": function(
         instanceId,
+        otherInstanceId,
         fromType,
         toType,
         fromId,
@@ -1331,7 +1335,7 @@ spec:
 
         var myFuture = new Future();
         var network = Networks.find({
-            instanceId: instanceId
+            instanceId: otherInstanceId
         }).fetch()[0]
         var workerNodeIP = Utilities.find({
             "name": "workerNodeIP"
@@ -1342,47 +1346,58 @@ spec:
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
 
+        AcceptedOrders.insert({
+            "instanceId": instanceId,
+            "otherAssetId": otherInstanceId,
+            "hash": hash
+        }, Meteor.bindEnvironment((error) => {
+            if (!error) {
+                assets.approve.sendTransaction(
+                    fromType,
+                    fromId,
+                    fromUniqueIdentifier,
+                    fromUnits,
+                    network.atomicSwapContractAddress, {
+                        from: fromAddress,
+                        gas: '99999999999999999'
+                    },
+                    Meteor.bindEnvironment((error) => {
+                        if (!error) {
+                            atomicSwap.lock.sendTransaction(
+                                toAddress,
+                                hash,
+                                lockMinutes,
+                                fromType,
+                                fromId,
+                                fromUniqueIdentifier,
+                                fromUnits,
+                                toType,
+                                toId,
+                                toUnits,
+                                toUniqueIdentifier,
+                                toGenesisBlockHash, {
+                                    from: fromAddress,
+                                    gas: '99999999999999999'
+                                },
+                                Meteor.bindEnvironment((error) => {
+                                    if (!error) {
+                                        myFuture.return();
+                                    } else {
+                                        myFuture.throw("An unknown error occured");
+                                    }
+                                }))
+                        } else {
+                            myFuture.throw("An unknown error occured");
+                        }
+                    })
+                )
+            } else {
+                myFuture.throw("An unknown error occured");
+            }
+        }))
 
 
-        assets.approve.sendTransaction(
-            fromType,
-            fromId,
-            fromUniqueIdentifier,
-            fromUnits,
-            network.atomicSwapContractAddress, {
-                from: fromAddress,
-                gas: '99999999999999999'
-            },
-            Meteor.bindEnvironment((error) => {
-                if (!error) {
-                    atomicSwap.lock.sendTransaction(
-                        toAddress,
-                        hash,
-                        lockMinutes,
-                        fromType,
-                        fromId,
-                        fromUniqueIdentifier,
-                        fromUnits,
-                        toType,
-                        toId,
-                        toUnits,
-                        toUniqueIdentifier,
-                        toGenesisBlockHash, {
-                            from: fromAddress,
-                            gas: '99999999999999999'
-                        },
-                        Meteor.bindEnvironment((error) => {
-                            if (!error) {
-                                myFuture.return();
-                            } else {
-                                myFuture.throw("An unknown error occured");
-                            }
-                        }))
-                } else {
-                    myFuture.throw("An unknown error occured");
-                }
-            })
-        )
+
 
         return myFuture.wait();
     },
