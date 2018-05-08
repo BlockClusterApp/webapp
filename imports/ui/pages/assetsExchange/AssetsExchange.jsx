@@ -149,7 +149,7 @@ class AssetsManagement extends Component {
             this[instanceId + "_buyAsset_toAddress"].value,
             Networks.find({instanceId: buyAsset_networkId}).fetch()[0].genesisBlockHash,
             this[instanceId + "_sellAsset_timePeriod"].value,
-            buyAsset_networkId
+            buyAsset_networkId,
             (error) => {
                 if(error) {
                     this.setState({

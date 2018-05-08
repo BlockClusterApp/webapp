@@ -1318,7 +1318,7 @@ spec:
     },
     "fullfillOrder": function(
         instanceId,
-        otherInstanceId,
+        buyerInstanceId,
         fromType,
         toType,
         fromId,
@@ -1335,7 +1335,7 @@ spec:
 
         var myFuture = new Future();
         var network = Networks.find({
-            instanceId: otherInstanceId
+            instanceId: buyerInstanceId
         }).fetch()[0]
         var workerNodeIP = Utilities.find({
             "name": "workerNodeIP"
@@ -1348,7 +1348,7 @@ spec:
 
         AcceptedOrders.insert({
             "instanceId": instanceId,
-            "otherAssetId": otherInstanceId,
+            "buyerInstanceId": buyerInstanceId,
             "hash": hash
         }, Meteor.bindEnvironment((error) => {
             if (!error) {
@@ -1396,9 +1396,6 @@ spec:
             }
         }))
 
-
-
-
         return myFuture.wait();
     },
     "claimOrder": function(instanceId, atomicSwapHash, fromAddress, toAssetType, toAssetName, toAssetId, toAssetUnits) {
@@ -1415,17 +1412,11 @@ spec:
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
 
-        let secret = Secrets.find({
-            userId: this.userId,
-            instanceId: instanceId,
-            hash: atomicSwapHash
-        }).fetch()[0]
-
-        if (secret) {
-            secret = secret.secret;
-        } else {
-            throw new Meteor.Error(500, 'Unknown error occured');
-        }
+        console.log(atomicSwapHash,
+        "", {
+            from: fromAddress,
+            gas: '99999999999999999'
+        });
 
         assets.approve.sendTransaction(
             toAssetType,
@@ -1439,7 +1430,7 @@ spec:
                 if (!error) {
                     atomicSwap.claim.sendTransaction(
                         atomicSwapHash,
-                        secret, {
+                        "", {
                             from: fromAddress,
                             gas: '99999999999999999'
                         }, Meteor.bindEnvironment(function(error, txHash) {
