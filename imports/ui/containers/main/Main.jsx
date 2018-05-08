@@ -17,6 +17,7 @@ import AssetsAPIs from "../../pages/assetsAPIs/AssetsAPIs.jsx"
 import AssetsEvents from "../../pages/assetsEvents/AssetsEvents.jsx"
 import AssetsManagement from "../../pages/assetsManagement/AssetsManagement.jsx"
 import AssetsExchange from "../../pages/assetsExchange/AssetsExchange.jsx"
+import AssetsSearch from "../../pages/assetsSearch/AssetsSearch.jsx"
 import Explorer from "../../pages/explorer/Explorer.jsx"
 import APIsCreds from "../../pages/apisCreds/APIsCreds.jsx"
 import Peers from "../../pages/peers/Peers.jsx"
@@ -40,6 +41,7 @@ export default class Main extends Component {
 						<Route exact path="/app/assets/events" component={AssetsEvents} />
 						<Route exact path="/app/assets/management" component={AssetsManagement} />
 						<Route exact path="/app/assets/exchange" component={AssetsExchange} />
+						<Route exact path="/app/assets/search" component={AssetsSearch} />
 						<Route exact path="/app/security/apis-creds" component={APIsCreds} />
 						<Route exact path="/app/security/peers" component={Peers} />
 		            </div>
