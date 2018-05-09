@@ -183,7 +183,7 @@ class AssetsManagement extends Component {
         if(Networks.find({instanceId: instanceId}).fetch()[0].genesisBlockHash === order.toGenesisBlockHash) {
             Meteor.call(
                 "claimOrder",
-                instanceId,
+                otherInstanceId,
                 this[instanceId + "_fullfill_orderID"].value,
                 this[instanceId + "_fullfill_address"].value,
                 order.toAssetType,

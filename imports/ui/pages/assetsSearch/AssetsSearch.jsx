@@ -143,7 +143,7 @@ class AssetsSearch extends Component {
                         <div className="col-lg-12">
                             <div className="card card-transparent">
                                 <div className="card-header ">
-                                    <div className="card-title">Assets Management
+                                    <div className="card-title">Assets Search
                                     </div>
                                 </div>
                                 <div className="card-block no-padding">

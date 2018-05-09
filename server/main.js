@@ -1412,18 +1412,12 @@ spec:
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
 
-        console.log(atomicSwapHash,
-        "", {
-            from: fromAddress,
-            gas: '99999999999999999'
-        });
-
         assets.approve.sendTransaction(
             toAssetType,
             toAssetName,
             toAssetId,
             toAssetUnits,
-            atomicSwapHash, {
+            network.atomicSwapContractAddress, {
                 from: fromAddress,
                 gas: '99999999999999999'
             }, Meteor.bindEnvironment((error) => {
