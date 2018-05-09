@@ -1453,7 +1453,10 @@ spec:
         let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
-        assets.cancelOrder.sendTransaction(
+        var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
+        var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
+
+        atomicSwap.unlock.sendTransaction(
             orderId, {
                 from: fromAddress,
                 gas: '99999999999999999'
