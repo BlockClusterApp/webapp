@@ -819,7 +819,7 @@ spec:
                                                                                                     } else {
                                                                                                         var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
                                                                                                         var atomicSwapContractInstance = atomicSwapContract.at(atomicSwapContractAddress)
-                                                                                                        atomicSwapContractInstance.genesisBlockHash.call(Meteor.bindEnvironment(function(error, genesisBlockHash) {
+                                                                                                        atomicSwapContractInstance.getGenesisBlockHash.call(Meteor.bindEnvironment(function(error, genesisBlockHash) {
                                                                                                             if (error) {
                                                                                                                 console.log(error);
                                                                                                                 deleteNetwork(id)
