@@ -824,12 +824,14 @@ spec:
                                                                                                                 console.log(error);
                                                                                                                 deleteNetwork(id)
                                                                                                             } else {
+                                                                                                                console.log("Genesis Block Hash 1: " + genesisBlockHash)
                                                                                                                 if(genesisBlockHash == "0x") {
                                                                                                                     atomicSwapContractInstance.genesisBlockHash.call(Meteor.bindEnvironment(function(error, genesisBlockHash) {
                                                                                                                         if (error) {
                                                                                                                             console.log(error);
                                                                                                                             deleteNetwork(id)
                                                                                                                         } else {
+                                                                                                                            console.log("Genesis Block Hash 2: " + genesisBlockHash)
                                                                                                                             Networks.update({
                                                                                                                                 _id: id
                                                                                                                             }, {
