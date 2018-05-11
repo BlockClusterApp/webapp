@@ -371,10 +371,8 @@ spec:
                                                                                                                             deleteNetwork(id)
                                                                                                                         } else {
                                                                                                                             if (typeof contract.address !== 'undefined') {
-                                                                                                                                var atomicSwapContractInstance = atomicSwapContract.at(contract.address)
-
-                                                                                                                                atomicSwapContractInstance.genesisBlockHash.call(Meteor.bindEnvironment(function(error, genesisBlockHash) {
-                                                                                                                                    if (error) {
+                                                                                                                                web3.eth.getBlock(0, Meteor.bindEnvironment(function(error, block) {
+                                                                                                                                    if(error) {
                                                                                                                                         console.log(error);
                                                                                                                                         deleteNetwork(id)
                                                                                                                                     } else {
@@ -387,7 +385,7 @@ spec:
                                                                                                                                                 "atomicSwapContractAddress": contract.address,
                                                                                                                                                 "jsonRPC-password": instanceId,
                                                                                                                                                 "restAPI-password": instanceId,
-                                                                                                                                                "genesisBlockHash": genesisBlockHash
+                                                                                                                                                "genesisBlockHash": block.hash
                                                                                                                                             }
                                                                                                                                         })
                                                                                                                                     }
@@ -817,52 +815,24 @@ spec:
                                                                                                         console.log(error);
                                                                                                         deleteNetwork(id)
                                                                                                     } else {
-                                                                                                        var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
-                                                                                                        var atomicSwapContractInstance = atomicSwapContract.at(atomicSwapContractAddress)
-                                                                                                        atomicSwapContractInstance.getGenesisBlockHash.call(Meteor.bindEnvironment(function(error, genesisBlockHash) {
-                                                                                                            if (error) {
+                                                                                                        web3.eth.getBlock(0, Meteor.bindEnvironment(function(error, block) {
+                                                                                                            if(error) {
                                                                                                                 console.log(error);
                                                                                                                 deleteNetwork(id)
                                                                                                             } else {
-                                                                                                                console.log("Genesis Block Hash 1: " + genesisBlockHash)
-                                                                                                                if(genesisBlockHash == "0x") {
-                                                                                                                    atomicSwapContractInstance.genesisBlockHash.call(Meteor.bindEnvironment(function(error, genesisBlockHash) {
-                                                                                                                        if (error) {
-                                                                                                                            console.log(error);
-                                                                                                                            deleteNetwork(id)
-                                                                                                                        } else {
-                                                                                                                            console.log("Genesis Block Hash 2: " + genesisBlockHash)
-                                                                                                                            Networks.update({
-                                                                                                                                _id: id
-                                                                                                                            }, {
-                                                                                                                                $set: {
-                                                                                                                                    currentValidators: currentValidators,
-                                                                                                                                    "status": "running",
-                                                                                                                                    "jsonRPC-password": instanceId,
-                                                                                                                                    "restAPI-password": instanceId,
-                                                                                                                                    "genesisBlockHash": genesisBlockHash,
-                                                                                                                                    accountsPassword: accountsPassword,
-                                                                                                                                    accounts: accounts
-                                                                                                                                }
-                                                                                                                            })
-                                                                                                                        }
-                                                                                                                    }))
-                                                                                                                } else {
-                                                                                                                    Networks.update({
-                                                                                                                        _id: id
-                                                                                                                    }, {
-                                                                                                                        $set: {
-                                                                                                                            currentValidators: currentValidators,
-                                                                                                                            "status": "running",
-                                                                                                                            "jsonRPC-password": instanceId,
-                                                                                                                            "restAPI-password": instanceId,
-                                                                                                                            "genesisBlockHash": genesisBlockHash,
-                                                                                                                            accountsPassword: accountsPassword,
-                                                                                                                            accounts: accounts
-                                                                                                                        }
-                                                                                                                    })
-                                                                                                                }
-
+                                                                                                                Networks.update({
+                                                                                                                    _id: id
+                                                                                                                }, {
+                                                                                                                    $set: {
+                                                                                                                        currentValidators: currentValidators,
+                                                                                                                        "status": "running",
+                                                                                                                        "jsonRPC-password": instanceId,
+                                                                                                                        "restAPI-password": instanceId,
+                                                                                                                        "genesisBlockHash": block.hash,
+                                                                                                                        accountsPassword: accountsPassword,
+                                                                                                                        accounts: accounts
+                                                                                                                    }
+                                                                                                                })
                                                                                                             }
                                                                                                         }))
                                                                                                     }
