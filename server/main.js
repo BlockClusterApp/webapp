@@ -824,19 +824,43 @@ spec:
                                                                                                                 console.log(error);
                                                                                                                 deleteNetwork(id)
                                                                                                             } else {
-                                                                                                                Networks.update({
-                                                                                                                    _id: id
-                                                                                                                }, {
-                                                                                                                    $set: {
-                                                                                                                        currentValidators: currentValidators,
-                                                                                                                        "status": "running",
-                                                                                                                        "jsonRPC-password": instanceId,
-                                                                                                                        "restAPI-password": instanceId,
-                                                                                                                        "genesisBlockHash": genesisBlockHash,
-                                                                                                                        accountsPassword: accountsPassword,
-                                                                                                                        accounts: accounts
-                                                                                                                    }
-                                                                                                                })
+                                                                                                                if(genesisBlockHash == "0x") {
+                                                                                                                    atomicSwapContractInstance.genesisBlockHash.call(Meteor.bindEnvironment(function(error, genesisBlockHash) {
+                                                                                                                        if (error) {
+                                                                                                                            console.log(error);
+                                                                                                                            deleteNetwork(id)
+                                                                                                                        } else {
+                                                                                                                            Networks.update({
+                                                                                                                                _id: id
+                                                                                                                            }, {
+                                                                                                                                $set: {
+                                                                                                                                    currentValidators: currentValidators,
+                                                                                                                                    "status": "running",
+                                                                                                                                    "jsonRPC-password": instanceId,
+                                                                                                                                    "restAPI-password": instanceId,
+                                                                                                                                    "genesisBlockHash": genesisBlockHash,
+                                                                                                                                    accountsPassword: accountsPassword,
+                                                                                                                                    accounts: accounts
+                                                                                                                                }
+                                                                                                                            })
+                                                                                                                        }
+                                                                                                                    }))
+                                                                                                                } else {
+                                                                                                                    Networks.update({
+                                                                                                                        _id: id
+                                                                                                                    }, {
+                                                                                                                        $set: {
+                                                                                                                            currentValidators: currentValidators,
+                                                                                                                            "status": "running",
+                                                                                                                            "jsonRPC-password": instanceId,
+                                                                                                                            "restAPI-password": instanceId,
+                                                                                                                            "genesisBlockHash": genesisBlockHash,
+                                                                                                                            accountsPassword: accountsPassword,
+                                                                                                                            accounts: accounts
+                                                                                                                        }
+                                                                                                                    })
+                                                                                                                }
+
                                                                                                             }
                                                                                                         }))
                                                                                                     }
