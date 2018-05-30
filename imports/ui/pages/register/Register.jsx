@@ -48,7 +48,7 @@ export default class Register extends Component {
 			<div className="full-height">
 				<div className="register-container full-height sm-p-t-30">
 		            <div className="d-flex justify-content-center flex-column full-height ">
-		                <img src="assets/img/logo/black_left_img.png" alt="logo" width="250" />
+		                <img src="assets/img/logo/blockcluster.png" alt="logo" width="250" />
 					<h3>This BaaS provides the easiest way to create your blockchain consortiums</h3>
 		                <p>
 		                    Create a BlockCluster account. If you already have an account then click <Link to="/" className="text-info">here</Link> to login
@@ -129,7 +129,7 @@ export default class Register extends Component {
 		                        </div>
 		                    </div>
 
-		                    <button className="btn btn-primary btn-cons m-t-10" type="submit"><i className="fa fa-user-plus" aria-hidden="true"></i>&nbsp;Create a new account</button>
+		                    <button className="btn btn-complete btn-cons m-t-10" type="submit"><i className="fa fa-user-plus" aria-hidden="true"></i>&nbsp;Create a new account</button>
 		                </form>
 		            </div>
 		        </div>
@@ -137,7 +137,7 @@ export default class Register extends Component {
 		            <div className="register-container clearfix">
 		                <div className="m-b-30 sm-m-t-20 sm-p-r-15 sm-p-b-20 clearfix d-flex-md-up">
 		                    <div className="col-md-2 no-padding d-flex align-items-center">
-		                        <img src="assets/img/logo/black.png" alt="" className="" width="60" />
+		                        <img src="assets/img/logo/blockcluster.png" alt="" className="" width="60" />
 		                    </div>
 		                    <div className="col-md-9 no-padding d-flex align-items-center">
 		                        <p className="hinted-text small inline sm-p-t-10">No part of this website or any of its contents may be reproduced, copied, modified or adapted, without the prior written consent of the author, unless otherwise indicated for stand-alone materials.</p>

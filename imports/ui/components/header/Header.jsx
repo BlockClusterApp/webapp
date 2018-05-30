@@ -17,7 +17,7 @@ class Navbar extends Component {
                 </a>
                 <div className="">
                     <div className="brand inline">
-                        <img src="/assets/img/logo/black_left_img.png" alt="logo" height="35" />
+                        <img src="/assets/img/logo/blockcluster.png" alt="logo" height="35" />
                     </div>
                     <ul className="hidden-md-down notification-list no-margin hidden-sm-down b-grey b-l no-style p-l-30 p-r-20">
                         <li className="p-r-10 inline">
