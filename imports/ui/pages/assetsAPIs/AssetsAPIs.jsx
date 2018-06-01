@@ -80,8 +80,8 @@ Content-Type: application/json
 {
 	"fromAccount": "0x7076cde14830731cd75b4edb51a8edb17ebb1064",
 	"toAccount": "0xee26f465b54eefc096db5f7e7cc538306aebe3ef",
-	"units": 1000,
-	"assetName": "eINR"
+	"units": 0,
+	"assetName": ""
 }`}
                                                                                                         </code>
                                                                                                     </pre>
@@ -108,10 +108,10 @@ Content-Type: application/json
 {
 	"fromAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f6",
 	"toAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f6",
-	"assetName": "Land",
-	"identifier": "123",
+	"assetName": "",
+	"identifier": "",
 	"data": {
-		"owner": "John Smith"
+		"key": "value"
 	}
 }`}
                                                                                                         </code>
@@ -139,8 +139,8 @@ Content-Type: application/json
 {
 	"fromAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f6",
 	"toAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af490",
-	"units": 1000,
-	"assetName": "eINR"
+	"units": 0,
+	"assetName": ""
 }`}
                                                                                                         </code>
                                                                                                     </pre>
@@ -167,8 +167,8 @@ Content-Type: application/json
 {
 	"fromAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f6",
 	"toAccount": "0x8d98bf772eea2a85538ecaa1394e8605bb4af3f9",
-	"assetName": "Land",
-	"identifier": "123"
+	"assetName": "",
+	"identifier": ""
 }`}
                                                                                                         </code>
                                                                                                     </pre>
@@ -194,7 +194,7 @@ Content-Type: application/json
 
 {
 	"account": "0x8d98bf772eea2a85538ecaa1394e8605bb4af490",
-	"assetName": "eINR"
+	"assetName": ""
 }`}
                                                                                                         </code>
                                                                                                     </pre>
@@ -219,8 +219,8 @@ Host: ${location.host}
 Content-Type: application/json
 
 {
-	"identifier": "123",
-	"assetName": "Land",
+	"identifier": "",
+	"assetName": "",
 	"extraData": ["key1", "key2"]
 }`}
                                                                                                         </code>
@@ -247,8 +247,8 @@ Content-Type: application/json
 
 {
 	"fromAccount": "0xcb02bb004c82cc7edc90d60d64c752729181e4cd",
-	"assetName": "Land",
-	"identifier": "123",
+	"assetName": "",
+	"identifier": "",
 	"key": "key",
 	"value": "value"
 }`}
@@ -275,8 +275,8 @@ Content-Type: application/json
 
 {
 	"fromAccount": "0xcb02bb004c82cc7edc90d60d64c752729181e4cd",
-	"assetName": "Land",
-	"identifier": "123"
+	"assetName": "",
+	"identifier": ""
 }`}
                                                                                                         </code>
                                                                                                     </pre>
