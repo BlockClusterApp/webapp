@@ -32,4 +32,15 @@ function updateFirewall_Port() {
 	});
 }
 
-export {updateWorkerNodeIP, updateKuberREST_IP, updateFirewall_Port}
+function updateRedis_Info() {
+	Utilities.upsert({
+		name: "redis",
+	}, {
+		$set: {
+			"ip": "52.43.83.54",
+			"port": "30296"
+		}
+	});
+}
+
+export {updateWorkerNodeIP, updateKuberREST_IP, updateFirewall_Port, updateRedis_Info}

@@ -2,6 +2,12 @@ import {Networks} from "../collections/networks/networks.js"
 import {Utilities} from "../collections/utilities/utilities.js"
 import smartContracts from "../modules/smart-contracts"
 import Web3 from "web3";
+import RedisJwt from "redis-jwt";
+
+const jwt = new RedisJwt({
+    host: Utilities.find({"name": "redis"}).fetch()[0].ip,
+    port: Utilities.find({"name": "redis"}).fetch()[0].port
+})
 
 JsonRoutes.add("post", "/networks/:networkId/assetType/:assetType/issueAsset", function (req, res, next) {
     //console.log(req.body)
