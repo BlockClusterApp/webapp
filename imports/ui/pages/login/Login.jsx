@@ -29,7 +29,7 @@ export default class Login extends Component {
 		return (
 			<div className="login-wrapper">
 	            <div className="bg-pic">
-	                <img src="assets/img/pages/login.jpg"  alt="" className="lazy" />
+	                <img src="assets/img/pages/login2.jpg"  alt="" className="lazy" />
 	                <div className="bg-caption pull-bottom sm-pull-bottom text-white p-l-20 m-b-20">
 	                    <h2 className="semi-bold text-white">
 	                        Blockchain as a Service for Consortiums

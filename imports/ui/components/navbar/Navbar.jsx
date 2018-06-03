@@ -44,7 +44,7 @@ class Navbar extends Component {
 	                </div>
 	            </div>
 	            <div className="sidebar-header">
-	                <img src="assets/img/logo/blockcluster.png" alt="logo" className="brand" width="78" height="22" />
+	                <img src="assets/img/logo/blockcluster-bw.png" alt="logo" className="brand" width="78" height="22" />
 	                <div className="sidebar-header-controls">
 	                    <button type="button" className="btn btn-xs sidebar-slide-toggle btn-link m-l-20 hidden-md-down" data-pages-toggle="#appMenu"><i className="fa fa-angle-down fs-16"></i>
 	                    </button>
