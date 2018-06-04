@@ -97,13 +97,13 @@ class APIsCreds extends Component {
                                                     </div>
                                                 </div>
                                                 <div className="card-block">
-                                                    <p>BlockCluster's node's JSON-RPC APIs are protected using HTTP Basic Authentication. In web3.js, you can use the below code snippet to easily get your application authenticated:</p>
+                                                    <p>BlockCluster's node's JSON-RPC APIs are protected using HTTP Basic Authentication. In web3.js (version 0.20.*), you can use the below code snippet to easily get your application authenticated:</p>
                                                     <pre>
-                                                        let web3 = new Web3(
+                                                        var web3 = new Web3(
                                                             new Web3.providers.HttpProvider(
-                                                                {"http://" + "username" + ":" + "password" + "@" + (this.props.workerNodeIP[0] ? this.props.workerNodeIP[0].value : '') + "/instanceId" + ":" + (this.props.firewallPort[0] ? this.props.firewallPort[0].value : '')}
+                                                                {"\"http://" + (this.props.workerNodeIP[0] ? this.props.workerNodeIP[0].value : '') + "/networkId:" + (this.props.firewallPort[0] ? this.props.firewallPort[0].value : '') + "\", 0, " + "\"username\", \"password\""}
                                                             )
-                                                        )
+                                                        );
                                                     </pre>
                                                     <p>Default username and password is your network's instance id</p>
                                                 </div>
