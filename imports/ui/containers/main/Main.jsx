@@ -21,6 +21,9 @@ import AssetsSearch from "../../pages/assetsSearch/AssetsSearch.jsx"
 import Explorer from "../../pages/explorer/Explorer.jsx"
 import APIsCreds from "../../pages/apisCreds/APIsCreds.jsx"
 import Peers from "../../pages/peers/Peers.jsx"
+import CreateStream from "../../pages/createStream/CreateStream.jsx"
+import PublishStream from "../../pages/publishStream/PublishStream.jsx"
+import SubscribeStream from "../../pages/subscribeStream/SubscribeStream.jsx"
 
 export default class Main extends Component {
 	render(){
@@ -44,6 +47,9 @@ export default class Main extends Component {
 						<Route exact path="/app/assets/search" component={AssetsSearch} />
 						<Route exact path="/app/security/apis-creds" component={APIsCreds} />
 						<Route exact path="/app/security/peers" component={Peers} />
+						<Route exact path="/app/streams/create" component={CreateStream} />
+						<Route exact path="/app/streams/publish" component={PublishStream} />
+						<Route exact path="/app/streams/subscribe" component={SubscribeStream} />
 		            </div>
 				</div>
 				<Footer />

@@ -125,6 +125,31 @@ class Navbar extends Component {
 			              	</ul>
 			            </li>
 						<li className="">
+			            	<a href="javascript:;"><span className="title">Streams</span>
+			              	<span className="arrow"></span></a>
+			              	<span className="icon-thumbnail"><i className="fa fa-microchip"></i></span>
+			              	<ul className="sub-menu">
+			                	<li>
+									<Link to={"/app/streams/create"}>
+			                    		Create Stream
+			                    	</Link>
+			                  		<span className="icon-thumbnail"><i className="fa fa-plus-square"></i></span>
+			                	</li>
+								<li>
+									<Link to={"/app/streams/publish"}>
+			                    		Publish
+			                    	</Link>
+			                  		<span className="icon-thumbnail"><i className="fa fa-upload"></i></span>
+			                	</li>
+								<li>
+									<Link to={"/app/streams/subscribe"}>
+			                    		Subscribe
+			                    	</Link>
+			                  		<span className="icon-thumbnail"><i className="fa fa-download"></i></span>
+			                	</li>
+			              	</ul>
+			            </li>
+						<li className="">
 	                    	<Link to={"/app/assets/exchange"} className="detailed">
 								<span className="title">Exchange</span>
 								<span className="details">Cross-Chain</span>

@@ -261,7 +261,7 @@ class ViewEditNetwork extends Component {
 									</div>
 
 									<div className="form-group row">
-										<label className="col-md-3 control-label">Assets Smart Contracts</label>
+										<label className="col-md-3 control-label">Assets Smart Contract</label>
 										<div className="col-md-9">
 											<span className="value-valign-middle">
 												{
@@ -287,7 +287,7 @@ class ViewEditNetwork extends Component {
 										</div>
 									</div>
 									<div className="form-group row">
-										<label className="col-md-3 control-label">Atomic Swap Smart Contracts</label>
+										<label className="col-md-3 control-label">Atomic Swap Smart Contract</label>
 										<div className="col-md-9">
 											<span className="value-valign-middle">
 												{
@@ -300,6 +300,32 @@ class ViewEditNetwork extends Component {
 															} else if (this.props.network[0].atomicSwapContractAddress !== "") {
 																return (
 																	this.props.network[0].atomicSwapContractAddress
+																)
+															} else {
+																return (
+																	"Not Found"
+																)
+															}
+														}
+													})()
+												}
+											</span>
+										</div>
+									</div>
+									<div className="form-group row">
+										<label className="col-md-3 control-label">Streams Smart Contract</label>
+										<div className="col-md-9">
+											<span className="value-valign-middle">
+												{
+													(() => {
+														if (this.props.network.length === 1) {
+															if(typeof this.props.network[0].streamsContractAddress === undefined ) {
+																return (
+																	""
+																)
+															} else if (this.props.network[0].streamsContractAddress !== "") {
+																return (
+																	this.props.network[0].streamsContractAddress
 																)
 															} else {
 																return (

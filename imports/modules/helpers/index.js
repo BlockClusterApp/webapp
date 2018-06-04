@@ -1,3 +1,13 @@
+Array.prototype.remByVal = function(val) {
+    for (var i = 0; i < this.length; i++) {
+        if (this[i] === val) {
+            this.splice(i, 1);
+            i--;
+        }
+    }
+    return this;
+}
+
 export default {
     firstLetterCapital: function(str) {
         return str.charAt(0).toUpperCase() + str.slice(1);

@@ -89,7 +89,7 @@ class JoinNetwork extends Component {
                 joinLoading: true
             });
 
-            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, (error) => {
+            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, (error) => {
                 if(!error) {
                     this.setState({
                         joinFormSubmitError: '',
@@ -252,16 +252,22 @@ class JoinNetwork extends Component {
                                                                 </div>
                                                             </div>
                                                             <div className="row clearfix">
-                                                                <div className="col-md-6">
+                                                                <div className="col-md-4">
                                                                     <div className="form-group form-group-default ">
                                                                         <label>Assets Contract Address</label>
                                                                         <input type="text" className="form-control" name="assetsContractAddress" ref={(input) => {this.assetsContractAddress = input;}} placeholder="0x...." />
                                                                     </div>
                                                                 </div>
-                                                                <div className="col-md-6">
+                                                                <div className="col-md-4">
                                                                     <div className="form-group form-group-default ">
                                                                         <label>Atomic Swap Contract Address</label>
                                                                         <input type="text" className="form-control" name="atomicSwapContractAddress" ref={(input) => {this.atomicSwapContractAddress = input;}} placeholder="0x...." />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="col-md-4">
+                                                                    <div className="form-group form-group-default ">
+                                                                        <label>Streams Contract Address</label>
+                                                                        <input type="text" className="form-control" name="streamsContractAddress" ref={(input) => {this.streamsContractAddress = input;}} placeholder="0x...." />
                                                                     </div>
                                                                 </div>
                                                             </div>

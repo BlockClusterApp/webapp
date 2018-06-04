@@ -371,23 +371,43 @@ spec:
                                                                                                                             deleteNetwork(id)
                                                                                                                         } else {
                                                                                                                             if (typeof contract.address !== 'undefined') {
-                                                                                                                                web3.eth.getBlock(0, Meteor.bindEnvironment(function(error, block) {
-                                                                                                                                    if(error) {
+                                                                                                                                var atomicSwapContractAddress = contract.address;
+
+                                                                                                                                var streamsContract = web3.eth.contract(smartContracts.streams.abi);
+                                                                                                                                var atomicSwap = streamsContract.new({
+                                                                                                                                    from: web3.eth.accounts[0],
+                                                                                                                                    data: smartContracts.streams.bytecode,
+                                                                                                                                    gas: '999999999999999999'
+                                                                                                                                }, Meteor.bindEnvironment(function(error, contract) {
+                                                                                                                                    if (error) {
                                                                                                                                         console.log(error);
                                                                                                                                         deleteNetwork(id)
                                                                                                                                     } else {
-                                                                                                                                        Networks.update({
-                                                                                                                                            _id: id
-                                                                                                                                        }, {
-                                                                                                                                            $set: {
-                                                                                                                                                "status": "running",
-                                                                                                                                                "assetsContractAddress": assetsContractAddress,
-                                                                                                                                                "atomicSwapContractAddress": contract.address,
-                                                                                                                                                "jsonRPC-password": instanceId,
-                                                                                                                                                "restAPI-password": instanceId,
-                                                                                                                                                "genesisBlockHash": block.hash
-                                                                                                                                            }
-                                                                                                                                        })
+                                                                                                                                        if (typeof contract.address !== 'undefined') {
+                                                                                                                                            var streamsContractAddress = contract.address;
+                                                                                                                                            web3.eth.getBlock(0, Meteor.bindEnvironment(function(error, block) {
+                                                                                                                                                if(error) {
+                                                                                                                                                    console.log(error);
+                                                                                                                                                    deleteNetwork(id)
+                                                                                                                                                } else {
+                                                                                                                                                    Networks.update({
+                                                                                                                                                        _id: id
+                                                                                                                                                    }, {
+                                                                                                                                                        $set: {
+                                                                                                                                                            "status": "running",
+                                                                                                                                                            "assetsContractAddress": assetsContractAddress,
+                                                                                                                                                            "atomicSwapContractAddress": atomicSwapContractAddress,
+                                                                                                                                                            "streamsContractAddress": streamsContractAddress,
+                                                                                                                                                            "jsonRPC-password": instanceId,
+                                                                                                                                                            "restAPI-password": instanceId,
+                                                                                                                                                            "genesisBlockHash": block.hash,
+                                                                                                                                                            "streams": [],
+                                                                                                                                                            "subscribedStreams": []
+                                                                                                                                                        }
+                                                                                                                                                    })
+                                                                                                                                                }
+                                                                                                                                            }))
+                                                                                                                                        }
                                                                                                                                     }
                                                                                                                                 }))
                                                                                                                             }
@@ -501,7 +521,7 @@ spec:
 
         return myFuture.wait();
     },
-    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, userId) {
+    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, userId) {
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
         var kuberREST_IP = Utilities.find({
@@ -546,7 +566,8 @@ spec:
             "totalConstellationNodes": totalConstellationNodes,
             "genesisBlock": genesisFileContent,
             "assetsContractAddress": assetsContractAddress,
-            "atomicSwapContractAddress": atomicSwapContractAddress
+            "atomicSwapContractAddress": atomicSwapContractAddress,
+            "streamsContractAddress": streamsContractAddress
         }, function(error, id) {
             if (error) {
                 console.log(error);
@@ -830,7 +851,9 @@ spec:
                                                                                                                         "restAPI-password": instanceId,
                                                                                                                         "genesisBlockHash": block.hash,
                                                                                                                         accountsPassword: accountsPassword,
-                                                                                                                        accounts: accounts
+                                                                                                                        accounts: accounts,
+                                                                                                                        "streams": [],
+                                                                                                                        "subscribedStreams": []
                                                                                                                     }
                                                                                                                 })
                                                                                                             }
@@ -960,6 +983,7 @@ spec:
                 network.genesisBlock.toString(), ["enode://" + network.nodeId + "@" + network.clusterIP + ":" + network.realEthNodePort].concat(network.totalENodes), [network.clusterIP + ":" + network.realConstellationNodePort].concat(network.totalConstellationNodes),
                 network.assetsContractAddress,
                 network.atomicSwapContractAddress,
+                network.streamsContractAddress,
                 user._id
             )
         } else {
@@ -1547,7 +1571,88 @@ spec:
                 "staticPeers": network.staticPeers
             }
         })
+    },
+    "createStream": function(instanceId, name, issuer) {
+        var myFuture = new Future();
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+        var workerNodeIP = Utilities.find({
+            "name": "workerNodeIP"
+        }).fetch()[0].value;
+        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+
+        var streamsContract = web3.eth.contract(smartContracts.streams.abi);
+        var streams = streamsContract.at(network.streamsContractAddress);
+
+        streams.createStream.sendTransaction(name, {
+            from: issuer,
+            gas: '99999999999999999'
+        }, function(error, txnHash) {
+            if (!error) {
+                myFuture.return();
+            } else {
+                myFuture.throw("An unknown error occured");
+            }
+        })
+
+        return myFuture.wait();
+    },
+    "publishStream": function(instanceId, name, issuer, key, data) {
+        var myFuture = new Future();
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+        var workerNodeIP = Utilities.find({
+            "name": "workerNodeIP"
+        }).fetch()[0].value;
+        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+
+        var streamsContract = web3.eth.contract(smartContracts.streams.abi);
+        var streams = streamsContract.at(network.streamsContractAddress);
+
+        streams.publish.sendTransaction(name, key, data, {
+            from: issuer,
+            gas: '99999999999999999'
+        }, function(error, txnHash) {
+            if (!error) {
+                myFuture.return();
+            } else {
+                myFuture.throw("An unknown error occured");
+            }
+        })
+
+        return myFuture.wait();
+    },
+    "subscribeStream": function(instanceId, name) {
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+
+        network.subscribedStreams.remByVal(name);
+        network.subscribedStreams[network.subscribedStreams.length] = name;
+
+        Networks.update({
+            instanceId: instanceId
+        }, {
+            $set: {
+                subscribedStreams: network.subscribedStreams
+            }
+        })
+    },
+    "unsubscribeStream": function(instanceId, name) {
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+
+        network.subscribedStreams.remByVal(name)
+
+        Networks.update({
+            instanceId: instanceId
+        }, {
+            $set: {
+                subscribedStreams: network.subscribedStreams
+            }
+        })
     }
 })
-
-//Networks.remove({})
