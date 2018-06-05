@@ -6,11 +6,73 @@ import RedisJwt from "redis-jwt";
 
 const jwt = new RedisJwt({
     host: Utilities.find({"name": "redis"}).fetch()[0].ip,
-    port: Utilities.find({"name": "redis"}).fetch()[0].port
+    port: Utilities.find({"name": "redis"}).fetch()[0].port,
+    secret: 'rch4nuct90i3t9ik#%$^&u3jrmv29r239cr2',
+    multiple: true
 })
 
+JsonRoutes.add("post", "/login", function(req, res, next) {
+    var network = Networks.find({instanceId: req.body.username}).fetch()[0];
+    function authenticationFailed() {
+        res.end(JSON.stringify({"error": "Wrong username or password"}))
+    }
+
+    if(network) {
+        if(network["restAPI-password"] === req.body.password) {
+            jwt.sign(network.instanceId, {
+                ttl: "1 year"
+            }).then(token => {
+                res.end(JSON.stringify({
+                    token: token
+                }))
+            }).catch(err => {
+                authenticationFailed()
+            })
+        } else {
+            authenticationFailed()
+        }
+    } else {
+        authenticationFailed()
+    }
+})
+
+JsonRoutes.add("post", "/logout", function(req, res, next) {
+    var token = req.headers['x-access-token'];
+    const call = jwt.call();
+    jwt.verify(token).then(decode => {
+        call.destroy(decode.rjwt).then(() => {
+            res.end(JSON.stringify({
+                "message": "Logout successful"
+            }))
+        }).catch(() => {
+            res.end(JSON.stringify({
+                "error": "An unknown error occured"
+            }))
+        })
+    }).catch(err => {
+        res.end(JSON.stringify({"error": "Invalid JWT token"}));
+    })
+
+})
+
+function authMiddleware(req, res, next) {
+    var token = req.headers['x-access-token'];
+    jwt.verify(token).then(decode => {
+        if(decode == false) {
+            res.end(JSON.stringify({"error": "Invalid JWT token"}));
+        } else {
+            req.networkId = decode.id;
+            next();
+        }
+    }).catch(err => {
+        res.end(JSON.stringify({"error": "Invalid JWT token"}));
+    })
+}
+
+JsonRoutes.Middleware.use("/assets", authMiddleware);
+JsonRoutes.Middleware.use("/streams", authMiddleware);
+
 JsonRoutes.add("post", "/networks/:networkId/assetType/:assetType/issueAsset", function (req, res, next) {
-    //console.log(req.body)
     var network = Networks.find({instanceId: req.params.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;

@@ -110,18 +110,6 @@ class Navbar extends Component {
 			                    	</Link>
 			                  		<span className="icon-thumbnail"><i className="fa fa-signal"></i></span>
 			                	</li>
-								<li className="">
-									<Link to={"/app/assets/apis"}>
-			                    		APIs
-			                    	</Link>
-			                  		<span className="icon-thumbnail"><i className="fa fa-code"></i></span>
-			                	</li>
-								<li className="">
-									<Link to={"/app/assets/events"}>
-			                    		Events
-			                    	</Link>
-			                  		<span className="icon-thumbnail"><i className="fa fa-bell"></i></span>
-			                	</li>
 			              	</ul>
 			            </li>
 						<li className="">
@@ -159,10 +147,24 @@ class Navbar extends Component {
 						<li className="">
 	                    	<Link to={"/app/assets/search"} className="detailed">
 								<span className="title">Search</span>
-							<span className="details">No-SQL Query</span>
+								<span className="details">No-SQL Query</span>
 	                    	</Link>
 	                        <span className="icon-thumbnail"><i className="fa fa-search"></i></span>
 	                    </li>
+						<li className="">
+							<Link to={"/app/assets/apis"} className="detailed">
+								<span className="title">APIs</span>
+								<span className="details">Call Smart Contract</span>
+							</Link>
+							<span className="icon-thumbnail"><i className="fa fa-code"></i></span>
+						</li>
+						<li className="">
+							<Link to={"/app/assets/events"} className="detailed">
+								<span className="title">Events</span>
+								<span className="details">Register Callbacks</span>
+							</Link>
+							<span className="icon-thumbnail"><i className="fa fa-bell"></i></span>
+						</li>
 						<li className="">
 	                    	<Link to={"/app/explorer"} className="detailed">
 								<span className="title">Audit</span>

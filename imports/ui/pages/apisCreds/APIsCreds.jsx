@@ -122,7 +122,7 @@ class APIsCreds extends Component {
                                                                         <select className="form-control" ref={(input) => {this.networkNameRPCUpdate = input;}}>
                                                                             {this.props.networks.map((item, index) => {
                                                                                 return (
-                                                                                    <option value={item.instanceId} key={item.instanceId}>{item.name}</option>
+                                                                                    <option value={item.instanceId} key={item.instanceId}>{item.name} ({item.instanceId})</option>
                                                                                 )
                                                                             })}
                                                                         </select>
@@ -206,7 +206,7 @@ class APIsCreds extends Component {
                                                                         <select className="form-control" ref={(input) => {this.networkNameRESTUpdate = input;}}>
                                                                             {this.props.networks.map((item, index) => {
                                                                                 return (
-                                                                                    <option value={item.instanceId} key={item.instanceId}>{item.name}</option>
+                                                                                    <option value={item.instanceId} key={item.instanceId}>{item.name} ({item.instanceId})</option>
                                                                                 )
                                                                             })}
                                                                         </select>
