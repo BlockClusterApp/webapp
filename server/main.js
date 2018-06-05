@@ -6,8 +6,8 @@ import {
     Utilities
 } from "../imports/collections/utilities/utilities.js"
 import {
-    SoloAssets
-} from "../imports/collections/soloAssets/soloAssets.js"
+    SearchBlockchain
+} from "../imports/collections/searchBlockchain/searchBlockchain.js"
 import {
     Orders
 } from "../imports/collections/orders/orders.js"
@@ -494,7 +494,7 @@ spec:
                                                                         Orders.remove({
                                                                             instanceId: id
                                                                         });
-                                                                        SoloAssets.remove({
+                                                                        SearchBlockchain.remove({
                                                                             instanceId: id
                                                                         });
                                                                         Secrets.remove({
@@ -1494,7 +1494,7 @@ spec:
     },
     "searchSoloAssets": function(instanceId, query) {
         query.instanceId = instanceId;
-        return SoloAssets.find(JSON.parse(query)).fetch();
+        return SearchBlockchain.find(JSON.parse(query)).fetch();
     },
     "rpcPasswordUpdate": function(instanceId, password) {
         var myFuture = new Future();
