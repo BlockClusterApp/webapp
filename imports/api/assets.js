@@ -3,6 +3,7 @@ import {Utilities} from "../collections/utilities/utilities.js"
 import smartContracts from "../modules/smart-contracts"
 import Web3 from "web3";
 import RedisJwt from "redis-jwt";
+import {SearchBlockchain} from "../collections/searchBlockchain/searchBlockchain.js"
 
 const jwt = new RedisJwt({
     host: Utilities.find({"name": "redis"}).fetch()[0].ip,
@@ -82,6 +83,7 @@ function authMiddleware(req, res, next) {
 
 JsonRoutes.Middleware.use("/assets", authMiddleware);
 JsonRoutes.Middleware.use("/streams", authMiddleware);
+JsonRoutes.Middleware.use("/search", authMiddleware);
 JsonRoutes.Middleware.use("/logout", authMiddleware);
 
 JsonRoutes.add("post", "/logout", function(req, res, next) {
@@ -146,9 +148,7 @@ JsonRoutes.add("post", "/assets/issueBulkAsset", function (req, res, next) {
     })
 });
 
-/*
-JsonRoutes.add("post", "/networks/:networkId/assetType/:assetType/transferAsset", function (req, res, next) {
-    //console.log(req.body)
+JsonRoutes.add("post", "/assets/transferSoloAsset", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
@@ -156,35 +156,39 @@ JsonRoutes.add("post", "/networks/:networkId/assetType/:assetType/transferAsset"
 
     var assetsContract = web3.eth.contract(smartContracts.assets.abi);
     var assets = assetsContract.at(network.assetsContractAddress);
-    if(req.params.assetType === "bulk") {
-        assets.transferBulkAssetUnits.sendTransaction(req.body.assetName, req.body.toAccount, req.body.units, {
-            from: req.body.fromAccount,
-            gas: '4712388'
-        }, function(error, txnHash){
-            if(error) {
-                res.end(JSON.stringify({"error": error.toString()}))
-            } else {
-                res.end(JSON.stringify({"txnHash": txnHash}))
-            }
-        })
-    } else if (req.params.assetType === "solo") {
-        assets.transferOwnershipOfSoloAsset.sendTransaction(req.body.assetName, req.body.identifier, req.body.toAccount, {
-            from: req.body.fromAccount,
-            gas: '4712388'
-        }, function(error, txnHash){
-            if(error) {
-                res.end(JSON.stringify({"error": error.toString()}))
-            } else {
-                res.end(JSON.stringify({"txnHash": txnHash}))
-            }
-        })
-    } else {
-        res.end(JSON.stringify({"error": "Asset type invalid"}))
-    }
+    assets.transferOwnershipOfSoloAsset.sendTransaction(req.body.assetName, req.body.identifier, req.body.toAccount, {
+        from: req.body.fromAccount,
+        gas: '4712388'
+    }, function(error, txnHash){
+        if(error) {
+            res.end(JSON.stringify({"error": error.toString()}))
+        } else {
+            res.end(JSON.stringify({"txnHash": txnHash}))
+        }
+    })
 });
 
-JsonRoutes.add("post", "/networks/:networkId/assetType/:assetType/getAssetInfo", function (req, res, next) {
-    //console.log(req.body)
+JsonRoutes.add("post", "/assets/transferBulkAsset", function (req, res, next) {
+    var network = Networks.find({instanceId: req.networkId}).fetch()[0]
+    var accounts = network.accounts;
+    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+
+    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    var assets = assetsContract.at(network.assetsContractAddress);
+    assets.transferBulkAssetUnits.sendTransaction(req.body.assetName, req.body.toAccount, req.body.units, {
+        from: req.body.fromAccount,
+        gas: '4712388'
+    }, function(error, txnHash){
+        if(error) {
+            res.end(JSON.stringify({"error": error.toString()}))
+        } else {
+            res.end(JSON.stringify({"txnHash": txnHash}))
+        }
+    })
+});
+
+JsonRoutes.add("post", "/assets/getSoloAssetInfo", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
@@ -193,47 +197,50 @@ JsonRoutes.add("post", "/networks/:networkId/assetType/:assetType/getAssetInfo",
     var assetsContract = web3.eth.contract(smartContracts.assets.abi);
     var assets = assetsContract.at(network.assetsContractAddress);
 
+    assets.isSoloAssetClosed.call(req.body.assetName, req.body.identifier, {from: web3.eth.accounts[0]}, function(error, isClosed){
+        if(!error) {
+            assets.getSoloAssetOwner.call(req.body.assetName, req.body.identifier, {from: web3.eth.accounts[0]}, function(error, owner){
+                if(!error) {
 
-    if(req.params.assetType === "bulk") {
-        assets.getBulkAssetUnits.call(req.body.assetName, req.body.account, {from: web3.eth.accounts[0]}, function(error, units){
-            if(error) {
-                res.end(JSON.stringify({"error": error.toString()}))
-            } else {
-                res.end(JSON.stringify({"units": units.toString()}))
-            }
-        })
-    } else if (req.params.assetType === "solo") {
-        assets.isSoloAssetClosed.call(req.body.assetName, req.body.identifier, {from: web3.eth.accounts[0]}, function(error, isClosed){
-            if(!error) {
-                assets.getSoloAssetOwner.call(req.body.assetName, req.body.identifier, {from: web3.eth.accounts[0]}, function(error, owner){
-                    if(!error) {
+                    let extraData = {};
 
-                        let extraData = {};
-
-                        for(let count = 0; count < req.body.extraData.length; count++){
-                            extraData[req.body.extraData[count]] = assets.getSoloAssetExtraData.call(req.body.assetName, req.body.identifier, req.body.extraData[count])
-                        }
-
-                        res.end(JSON.stringify({"details": {
-                            isClosed: isClosed,
-                            owner: owner,
-                            extraData: extraData
-                        }}))
-                    } else {
-                        res.end(JSON.stringify({"error": error.toString()}))
+                    for(let count = 0; count < req.body.extraData.length; count++){
+                        extraData[req.body.extraData[count]] = assets.getSoloAssetExtraData.call(req.body.assetName, req.body.identifier, req.body.extraData[count])
                     }
-                })
-            } else {
-                res.end(JSON.stringify({"error": error.toString()}))
-            }
-        })
-    } else {
-        res.end(JSON.stringify({"error": "Asset type invalid"}))
-    }
+
+                    res.end(JSON.stringify({"details": {
+                        isClosed: isClosed,
+                        owner: owner,
+                        extraData: extraData
+                    }}))
+                } else {
+                    res.end(JSON.stringify({"error": error.toString()}))
+                }
+            })
+        } else {
+            res.end(JSON.stringify({"error": error.toString()}))
+        }
+    })
 });
 
-JsonRoutes.add("post", "/networks/:networkId/addUpdateAssetInfo", function (req, res, next) {
-    //console.log(req.body)
+JsonRoutes.add("post", "/assets/getBulkAssetBalance", function (req, res, next) {
+    var network = Networks.find({instanceId: req.networkId}).fetch()[0]
+    var accounts = network.accounts;
+    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+
+    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    var assets = assetsContract.at(network.assetsContractAddress);
+    assets.getBulkAssetUnits.call(req.body.assetName, req.body.account, {from: web3.eth.accounts[0]}, function(error, units){
+        if(error) {
+            res.end(JSON.stringify({"error": error.toString()}))
+        } else {
+            res.end(JSON.stringify({"units": units.toString()}))
+        }
+    })
+});
+
+JsonRoutes.add("post", "/assets/updateAssetInfo", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
@@ -254,8 +261,7 @@ JsonRoutes.add("post", "/networks/:networkId/addUpdateAssetInfo", function (req,
     })
 });
 
-JsonRoutes.add("post", "/networks/:networkId/closeAsset", function (req, res, next) {
-    //console.log(req.body)
+JsonRoutes.add("post", "/assets/closeAsset", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
@@ -275,4 +281,32 @@ JsonRoutes.add("post", "/networks/:networkId/closeAsset", function (req, res, ne
         }
     })
 });
-*/
+
+JsonRoutes.add("post", "/search", function (req, res, next) {
+    var network = Networks.find({instanceId: req.networkId}).fetch()[0]
+    var query = req.body;
+    query.instanceId = req.networkId;
+    var result = SearchBlockchain.find(JSON.parse(query)).fetch();
+
+    res.end(JSON.stringify(result))
+});
+
+JsonRoutes.add("post", "/streams/publish", function (req, res, next) {
+    var network = Networks.find({instanceId: req.networkId}).fetch()[0]
+    var accounts = network.accounts;
+    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+
+    var streamsContract = web3.eth.contract(smartContracts.streams.abi);
+    var streams = streamsContract.at(network.streamsContractAddress);
+
+    streams.publish.sendTransaction(req.body.name, req.body.key, req.body.data, {
+        from: req.body.fromAccount
+    }, function(error, txnHash) {
+        if (!error) {
+            res.end(JSON.stringify({"txnHash": txnHash}))
+        } else {
+            res.end(JSON.stringify({"error": error.toString()}))
+        }
+    })
+});

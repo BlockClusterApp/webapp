@@ -1654,5 +1654,22 @@ spec:
                 subscribedStreams: network.subscribedStreams
             }
         })
+    },
+    "updateAssetTypeCreatedNotifyURL": function(instanceId, url) {
+        console.log(instanceId, url)
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+
+        var notificationURLs = network.notificationURLs || {};
+        notificationURLs.assetTypeCreated = url;
+
+        Networks.update({
+            instanceId: instanceId
+        }, {
+            $set: {
+                notificationURLs: notificationURLs
+            }
+        })
     }
 })

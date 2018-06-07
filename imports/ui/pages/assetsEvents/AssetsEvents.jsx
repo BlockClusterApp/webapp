@@ -22,6 +22,31 @@ class AssetsEvents extends Component {
         });
     }
 
+    assetTypeCreatedEvent(e, instanceId) {
+        e.preventDefault();
+
+        this.setState({
+            [instanceId + "_assetTypeCreatedEvents_formloading"]: true,
+            [instanceId + "_assetTypeCreatedEvents_formSubmitError"]: ""
+        });
+
+        Meteor.call("updateAssetTypeCreatedNotifyURL", instanceId, this[instanceId + "_assetTypeCreatedEvents"].value, (error) => {
+            if(error) {
+                this.setState({
+                    [instanceId + "_assetTypeCreatedEvents_formloading"]: false,
+                    [instanceId + "_assetTypeCreatedEvents_formSubmitError"]: "An error occured. Please try again."
+                });
+            } else {
+                this.setState({
+                    [instanceId + "_assetTypeCreatedEvents_formloading"]: false,
+                    [instanceId + "_assetTypeCreatedEvents_formSubmitError"]: ""
+                });
+
+                notifications.success("Updated successfully");
+            }
+        })
+    }
+
 	render(){
 		return (
             <div className="assets content">
@@ -63,7 +88,10 @@ class AssetsEvents extends Component {
                                                                                     <div className="card card-transparent">
                                                                                         <ul className="nav nav-tabs nav-tabs-fillup" data-init-reponsive-tabs="dropdownfx">
                                                                                             <li className="nav-item">
-                                                                                                <a href="#" className="active" data-toggle="tab" data-target={"#" + item.instanceId + "_slide1"}><span>Assets Issed Events</span></a>
+                                                                                                <a href="#" className="active" data-toggle="tab" data-target={"#" + item.instanceId + "_slide0"}><span>Asset Type Created Events</span></a>
+                                                                                            </li>
+                                                                                            <li className="nav-item">
+                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide1"}><span>Assets Issed Events</span></a>
                                                                                             </li>
                                                                                             <li className="nav-item">
                                                                                                 <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide2"}><span>Assets Transferred Events</span></a>
@@ -73,7 +101,45 @@ class AssetsEvents extends Component {
                                                                                             </li>
                                                                                         </ul>
                                                                                         <div className="tab-content p-l-0 p-r-0">
-                                                                                            <div className="tab-pane slide-left active" id={item.instanceId + "_slide1"}>
+                                                                                            <div className="tab-pane slide-left active" id={item.instanceId + "_slide0"}>
+                                                                                                <div className="row column-seperation">
+                                                                                                    <div className="col-lg-12 p-l-0 p-r-0">
+                                                                                                        <form role="form" onSubmit={(e) => {
+                                                                                                                this.assetTypeCreatedEvent(e, item.instanceId);
+                                                                                                            }}>
+                                                                                                            <div className="form-group">
+                                                                                                                <label>Asset Type Created Notification URL</label>
+                                                                                                                <span className="help"> e.g. GET "?assetType=bulk&assetName=usd"</span>
+                                                                                                                <input type="text" placeholder="http://domain.com/assetTypeCreated" className="form-control" ref={(input) => {this[item.instanceId + "_assetTypeCreatedEvents"] = input}} />
+                                                                                                            </div>
+                                                                                                            {this.state[item.instanceId + "_assetTypeCreatedEvents_formSubmitError"] &&
+                                                                                                                <div className="row m-t-30">
+                                                                                                                    <div className="col-md-12">
+                                                                                                                        <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                                                                            <button className="close" data-dismiss="alert"></button>
+                                                                                                                            {this.state[item.instanceId + "_assetTypeCreatedEvents_formSubmitError"]}
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            }
+                                                                                                            <p className="pull-right">
+                                                                                                                <LaddaButton
+                                                                                                                    loading={this.state[item.instanceId + "_assetTypeCreatedEvents_formloading"]}
+                                                                                                                    data-size={S}
+                                                                                                                    data-style={SLIDE_UP}
+                                                                                                                    data-spinner-size={30}
+                                                                                                                    data-spinner-lines={12}
+                                                                                                                    className="btn btn-success m-t-10"
+                                                                                                                    type="submit"
+                                                                                                                >
+                                                                                                                    <i className="fa fa-wrench" aria-hidden="true"></i>&nbsp;&nbsp;Update
+                                                                                                                </LaddaButton>
+                                                                                                            </p>
+                                                                                                        </form>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div className="tab-pane slide-left" id={item.instanceId + "_slide1"}>
                                                                                                 <div className="row column-seperation">
                                                                                                     <div className="col-lg-12 p-l-0 p-r-0">
                                                                                                         <form role="form">
@@ -165,7 +231,7 @@ class AssetsEvents extends Component {
                                                                                                                 <input type="text" placeholder="http://domain.com/bulkAssetIssued" className="form-control" ref={(input) => {this[item.instanceId + "_updateSoloAssetsEvents_addOrUpdateMetaData"] = input}} />
                                                                                                             </div>
                                                                                                             <div className="form-group">
-                                                                                                                <label className="">Solo Asset Transferred Notification URL</label>
+                                                                                                                <label className="">Solo Asset Closed Notification URL</label>
                                                                                                                 <span className="help"> e.g. GET "?assetName=license&identifier=l2362"</span>
                                                                                                                 <input type="text" placeholder="http://domain.com/soloAssetIssued" className="form-control" ref={(input) => {this[item.instanceId + "_updateSoloAssetsEvents_closed"] = input}} />
                                                                                                             </div>
