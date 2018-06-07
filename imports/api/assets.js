@@ -14,7 +14,10 @@ const jwt = new RedisJwt({
 JsonRoutes.add("post", "/login", function(req, res, next) {
     var network = Networks.find({instanceId: req.body.username}).fetch()[0];
     function authenticationFailed() {
-        res.end(JSON.stringify({"error": "Wrong username or password"}))
+        JsonRoutes.sendResult(res, {
+            code: 401,
+            data: {"error": "Wrong username or password"}
+        })
     }
 
     if(network) {
@@ -45,27 +48,36 @@ JsonRoutes.add("post", "/logout", function(req, res, next) {
                 "message": "Logout successful"
             }))
         }).catch(() => {
-            res.end(JSON.stringify({
-                "error": "An unknown error occured"
-            }))
+            JsonRoutes.sendResult(res, {
+                code: 401,
+                data: {"error": "An unknown error occured"}
+            })
         })
     }).catch(err => {
-        res.end(JSON.stringify({"error": "Invalid JWT token"}));
+        JsonRoutes.sendResult(res, {
+            code: 401,
+            data: {"error": "Invalid JWT token"}
+        })
     })
-
 })
 
 function authMiddleware(req, res, next) {
     var token = req.headers['x-access-token'];
     jwt.verify(token).then(decode => {
         if(decode == false) {
-            res.end(JSON.stringify({"error": "Invalid JWT token"}));
+            JsonRoutes.sendResult(res, {
+                code: 401,
+                data: {"error": "Invalid JWT token"}
+            })
         } else {
             req.networkId = decode.id;
             next();
         }
     }).catch(err => {
-        res.end(JSON.stringify({"error": "Invalid JWT token"}));
+        JsonRoutes.sendResult(res, {
+            code: 401,
+            data: {"error": "Invalid JWT token"}
+        })
     })
 }
 
