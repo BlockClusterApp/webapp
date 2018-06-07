@@ -26,7 +26,7 @@ JsonRoutes.add("post", "/login", function(req, res, next) {
                 ttl: "1 year"
             }).then(token => {
                 res.end(JSON.stringify({
-                    token: token
+                    access_token: token
                 }))
             }).catch(err => {
                 authenticationFailed()
@@ -39,30 +39,28 @@ JsonRoutes.add("post", "/login", function(req, res, next) {
     }
 })
 
-JsonRoutes.add("post", "/logout", function(req, res, next) {
-    var token = req.headers['x-access-token'];
-    const call = jwt.call();
-    jwt.verify(token).then(decode => {
-        call.destroy(decode.rjwt).then(() => {
-            res.end(JSON.stringify({
-                "message": "Logout successful"
-            }))
-        }).catch(() => {
-            JsonRoutes.sendResult(res, {
-                code: 401,
-                data: {"error": "An unknown error occured"}
-            })
-        })
-    }).catch(err => {
-        JsonRoutes.sendResult(res, {
-            code: 401,
-            data: {"error": "Invalid JWT token"}
-        })
-    })
-})
+
 
 function authMiddleware(req, res, next) {
-    var token = req.headers['x-access-token'];
+
+    function getToken(req) {
+        if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') { // Authorization: Bearer g1jipjgi1ifjioj
+            // Handle token presented as a Bearer token in the Authorization header
+            return req.headers.authorization.split(' ')[1];
+        } else if (req.query && req.query.token) {
+            // Handle token presented as URI param
+            return req.query.token;
+        } else if (req.cookies && req.cookies.token) {
+            // Handle token presented as a cookie parameter
+            return req.cookies.token;
+        }
+        // If we return null, we couldn't find a token.
+        // In this case, the JWT middleware will return a 401 (unauthorized) to the client for this request
+        return null;
+    }
+
+    var token = getToken(req);
+
     jwt.verify(token).then(decode => {
         if(decode == false) {
             JsonRoutes.sendResult(res, {
@@ -71,6 +69,7 @@ function authMiddleware(req, res, next) {
             })
         } else {
             req.networkId = decode.id;
+            req.rjwt = decode.rjwt;
             next();
         }
     }).catch(err => {
@@ -83,52 +82,74 @@ function authMiddleware(req, res, next) {
 
 JsonRoutes.Middleware.use("/assets", authMiddleware);
 JsonRoutes.Middleware.use("/streams", authMiddleware);
+JsonRoutes.Middleware.use("/logout", authMiddleware);
 
-JsonRoutes.add("post", "/networks/:networkId/assetType/:assetType/issueAsset", function (req, res, next) {
-    var network = Networks.find({instanceId: req.params.networkId}).fetch()[0]
+JsonRoutes.add("post", "/logout", function(req, res, next) {
+    const call = jwt.call();
+    call.destroy(req.rjwt).then(() => {
+        res.end(JSON.stringify({
+            "message": "Logout successful"
+        }))
+    }).catch(() => {
+        JsonRoutes.sendResult(res, {
+            code: 401,
+            data: {"error": "An unknown error occured"}
+        })
+    })
+})
+
+JsonRoutes.add("post", "/assets/issueSoloAsset", function (req, res, next) {
+    var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
     let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
 
     var assetsContract = web3.eth.contract(smartContracts.assets.abi);
     var assets = assetsContract.at(network.assetsContractAddress);
-    if(req.params.assetType === "bulk") {
-        assets.issueBulkAsset.sendTransaction(req.body.assetName, req.body.units, req.body.toAccount, {
-            from: req.body.fromAccount,
-            gas: '4712388'
-        }, function(error, txnHash){
-            if(error) {
-                res.end(JSON.stringify({"error": error.toString()}))
-            } else {
-                res.end(JSON.stringify({"txnHash": txnHash}))
+    assets.issueSoloAsset.sendTransaction(req.body.assetName, req.body.toAccount, req.body.identifier, {
+        from: req.body.fromAccount,
+        gas: '4712388'
+    }, function(error, txnHash){
+        if(error) {
+            res.end(JSON.stringify({"error": error.toString()}))
+        } else {
+            for(let key in req.body.data) {
+                assets.addOrUpdateSoloAssetExtraData.sendTransaction(req.body.assetName, req.body.identifier, key, req.body.data[key], {
+                    from: req.body.fromAccount,
+                    gas: '4712388'
+                })
             }
-        })
-    } else if (req.params.assetType === "solo") {
-        assets.issueSoloAsset.sendTransaction(req.body.assetName, req.body.toAccount, req.body.identifier, {
-            from: req.body.fromAccount,
-            gas: '4712388'
-        }, function(error, txnHash){
-            if(error) {
-                res.end(JSON.stringify({"error": error.toString()}))
-            } else {
-                for(let key in req.body.data) {
-                    assets.addOrUpdateSoloAssetExtraData.sendTransaction(req.body.assetName, req.body.identifier, key, req.body.data[key], {
-                        from: req.body.fromAccount,
-                        gas: '4712388'
-                    })
-                }
 
-                res.end(JSON.stringify({"txnHash": txnHash}))
-            }
-        })
-    } else {
-        res.end(JSON.stringify({"error": "Asset type invalid"}))
-    }
+            res.end(JSON.stringify({"txnHash": txnHash}))
+        }
+    })
 });
 
+JsonRoutes.add("post", "/assets/issueBulkAsset", function (req, res, next) {
+    var network = Networks.find({instanceId: req.networkId}).fetch()[0]
+    var accounts = network.accounts;
+    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+
+    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    var assets = assetsContract.at(network.assetsContractAddress);
+
+    assets.issueBulkAsset.sendTransaction(req.body.assetName, req.body.units, req.body.toAccount, {
+        from: req.body.fromAccount,
+        gas: '4712388'
+    }, function(error, txnHash){
+        if(error) {
+            res.end(JSON.stringify({"error": error.toString()}))
+        } else {
+            res.end(JSON.stringify({"txnHash": txnHash}))
+        }
+    })
+});
+
+/*
 JsonRoutes.add("post", "/networks/:networkId/assetType/:assetType/transferAsset", function (req, res, next) {
     //console.log(req.body)
-    var network = Networks.find({instanceId: req.params.networkId}).fetch()[0]
+    var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
     let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
@@ -164,7 +185,7 @@ JsonRoutes.add("post", "/networks/:networkId/assetType/:assetType/transferAsset"
 
 JsonRoutes.add("post", "/networks/:networkId/assetType/:assetType/getAssetInfo", function (req, res, next) {
     //console.log(req.body)
-    var network = Networks.find({instanceId: req.params.networkId}).fetch()[0]
+    var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
     let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
@@ -213,7 +234,7 @@ JsonRoutes.add("post", "/networks/:networkId/assetType/:assetType/getAssetInfo",
 
 JsonRoutes.add("post", "/networks/:networkId/addUpdateAssetInfo", function (req, res, next) {
     //console.log(req.body)
-    var network = Networks.find({instanceId: req.params.networkId}).fetch()[0]
+    var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
     let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
@@ -235,7 +256,7 @@ JsonRoutes.add("post", "/networks/:networkId/addUpdateAssetInfo", function (req,
 
 JsonRoutes.add("post", "/networks/:networkId/closeAsset", function (req, res, next) {
     //console.log(req.body)
-    var network = Networks.find({instanceId: req.params.networkId}).fetch()[0]
+    var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
     let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
@@ -254,3 +275,4 @@ JsonRoutes.add("post", "/networks/:networkId/closeAsset", function (req, res, ne
         }
     })
 });
+*/
