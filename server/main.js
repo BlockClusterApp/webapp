@@ -1656,7 +1656,6 @@ spec:
         })
     },
     "updateAssetTypeCreatedNotifyURL": function(instanceId, url) {
-        console.log(instanceId, url)
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];

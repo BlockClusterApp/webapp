@@ -4,6 +4,16 @@ import smartContracts from "../modules/smart-contracts"
 import Web3 from "web3";
 import RedisJwt from "redis-jwt";
 import {SearchBlockchain} from "../collections/searchBlockchain/searchBlockchain.js"
+import helpers from "../modules/helpers"
+import {
+    Orders
+} from "../collections/orders/orders.js"
+import {
+    Secrets
+} from "../collections/secrets/secrets.js"
+import {
+    AcceptedOrders
+} from "../collections/acceptedOrders/acceptedOrders.js"
 
 const jwt = new RedisJwt({
     host: Utilities.find({"name": "redis"}).fetch()[0].ip,
@@ -39,8 +49,6 @@ JsonRoutes.add("post", "/login", function(req, res, next) {
         authenticationFailed()
     }
 })
-
-
 
 function authMiddleware(req, res, next) {
 
@@ -282,11 +290,229 @@ JsonRoutes.add("post", "/assets/closeAsset", function (req, res, next) {
     })
 });
 
+JsonRoutes.add("post", "/assets/placeOrder", function (req, res, next) {
+    var network = Networks.find({instanceId: req.networkId}).fetch()[0]
+    var accounts = network.accounts;
+    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+
+    var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
+    var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
+    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    var assets = assetsContract.at(network.assetsContractAddress);
+
+    var secret = helpers.generateSecret();
+    var toGenesisBlockHash = Networks.find({instanceId: req.body.toNetworkId}).fetch()[0].genesisBlockHash;
+
+    atomicSwap.calculateHash.call(secret, Meteor.bindEnvironment((error, hash) => {
+        if (!error) {
+            Secrets.insert({
+                "instanceId": req.body.toNetworkId,
+                "secret": secret,
+                "hash": hash,
+            }, (error) => {
+                if (!error) {
+                    assets.approve.sendTransaction(
+                        req.body.fromAssetType,
+                        req.body.fromAssetName,
+                        req.body.fromAssetUniqueIdentifier,
+                        req.body.fromAssetUnits,
+                        network.atomicSwapContractAddress, {
+                            from: req.body.fromAddress,
+                            gas: '99999999999999999'
+                        },
+                        Meteor.bindEnvironment((error) => {
+                            if (!error) {
+                                atomicSwap.lock.sendTransaction(
+                                    req.body.toAddress,
+                                    hash,
+                                    req.body.fromAssetLockMinutes,
+                                    req.body.fromAssetType,
+                                    req.body.fromAssetName,
+                                    req.body.fromAssetUniqueIdentifier,
+                                    req.body.fromAssetUnits,
+                                    req.body.toAssetType,
+                                    req.body.toAssetName,
+                                    req.body.toAssetUnits,
+                                    req.body.toAssetUniqueIdentifier,
+                                    toGenesisBlockHash, {
+                                        from: req.body.fromAddress,
+                                        gas: '99999999999999999'
+                                    },
+                                    Meteor.bindEnvironment((error, txnHash) => {
+                                        if (!error) {
+                                            res.end(JSON.stringify({"txnHash": txnHash, "orderId": hash}))
+                                        } else {
+                                            res.end(JSON.stringify({"error": error.toString()}))
+                                        }
+                                    }))
+                            } else {
+                                res.end(JSON.stringify({"error": error.toString()}))
+                            }
+                        })
+                    )
+                } else {
+                    res.end(JSON.stringify({"error": error.toString()}))
+                }
+            })
+        } else {
+            res.end(JSON.stringify({"error": error.toString()}))
+        }
+    }))
+})
+
+JsonRoutes.add("post", "/assets/fulfillOrder", function (req, res, next) {
+    var network = Networks.find({instanceId: req.networkId}).fetch()[0]
+    var accounts = network.accounts;
+    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+
+    let order = Orders.find({instanceId: req.networkId, atomicSwapHash: req.body.orderId}).fetch()[0];
+    let toNetwork = Networks.find({instanceId: req.body.toNetworkId}).fetch()[0];
+
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + toNetwork.rpcNodePort));
+    var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
+    var atomicSwap = atomicSwapContract.at(toNetwork.atomicSwapContractAddress);
+    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    var assets = assetsContract.at(toNetwork.assetsContractAddress);
+
+    if(toNetwork.genesisBlockHash === order.toGenesisBlockHash) {
+        assets.approve.sendTransaction(
+            order.toAssetType,
+            order.toAssetName,
+            order.toAssetId,
+            order.toAssetUnits,
+            network.atomicSwapContractAddress, {
+                from: order.toAddress,
+                gas: '99999999999999999'
+            }, Meteor.bindEnvironment((error) => {
+                if (!error) {
+                    atomicSwap.claim.sendTransaction(
+                        req.body.orderId,
+                        "", {
+                            from: order.toAddress,
+                            gas: '99999999999999999'
+                        }, Meteor.bindEnvironment(function(error, txHash) {
+                            if (error) {
+                                res.end(JSON.stringify({"error": error.toString()}))
+                            } else {
+                                res.end(JSON.stringify({"txnHash": txHash}))
+                            }
+                        }))
+                } else {
+                    res.end(JSON.stringify({"error": error.toString()}))
+                }
+            })
+        )
+    } else {
+        AcceptedOrders.insert({
+            "instanceId": req.networkId,
+            "buyerInstanceId": req.body.toNetworkId,
+            "hash": req.body.orderId
+        }, (error) => {
+            if (!error) {
+                assets.approve.sendTransaction(
+                    order.toAssetType,
+                    order.toAssetName,
+                    order.toAssetId,
+                    order.toAssetUnits,
+                    toNetwork.atomicSwapContractAddress, {
+                        from: order.toAddress,
+                        gas: '99999999999999999'
+                    }, (error) => {
+                        if (!error) {
+
+                            let expiryTimestamp = order.fromLockPeriod;
+                            let currentTimestamp = new Date().getTime() / 1000;
+                            let newMin = null;
+
+                            if(expiryTimestamp - currentTimestamp <= 0) {
+                                res.end(JSON.stringify({"error": "Order has expired"}))
+                                return;
+                            } else {
+                                let temp = currentTimestamp + ((expiryTimestamp - currentTimestamp) / 2)
+                                temp = (temp - currentTimestamp) / 60;
+                                newMin = temp;
+                            }
+
+                            atomicSwap.lock.sendTransaction(
+                                order.fromAddress,
+                                req.body.orderId,
+                                newMin,
+                                order.toAssetType,
+                                order.toAssetName,
+                                order.toAssetId,
+                                order.toAssetUnits,
+                                order.fromAssetType,
+                                order.fromAssetName,
+                                order.fromAssetUnits,
+                                order.fromAssetId,
+                                network.genesisBlockHash, {
+                                    from: order.toAddress,
+                                    gas: '99999999999999999'
+                                },
+                                (error, txnHash) => {
+                                    if (!error) {
+                                        res.end(JSON.stringify({"txnHash": txnHash}))
+                                    } else {
+                                        res.end(JSON.stringify({"error": error.toString()}))
+                                    }
+                                })
+                        } else {
+                            res.end(JSON.stringify({"error": error.toString()}))
+                        }
+                    }
+                )
+            } else {
+                res.end(JSON.stringify({"error": error.toString()}))
+            }
+        })
+    }
+})
+
+JsonRoutes.add("post", "/assets/cancelOrder", function (req, res, next) {
+    var network = Networks.find({instanceId: req.networkId}).fetch()[0]
+    var accounts = network.accounts;
+    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+
+    var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
+    var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
+    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    var assets = assetsContract.at(network.assetsContractAddress);
+
+    let order = Orders.find({instanceId: req.networkId, atomicSwapHash: req.body.orderId}).fetch()[0];
+
+    atomicSwap.unlock.sendTransaction(
+        req.body.orderId, {
+            from: order.fromAddress,
+            gas: '99999999999999999'
+        },
+        function(error, txHash) {
+            if (error) {
+                res.end(JSON.stringify({"error": error.toString()}))
+            } else {
+                res.end(JSON.stringify({"txnHash": txHash}))
+            }
+        }
+    )
+})
+
+JsonRoutes.add("post", "/assets/getOrderInfo", function (req, res, next) {
+    var network = Networks.find({instanceId: req.networkId}).fetch()[0]
+    let order = Orders.find({instanceId: req.networkId, atomicSwapHash: req.body.orderId}).fetch();
+
+    if(order[0]) {
+        res.end(JSON.stringify(order[0]))
+    } else {
+        res.end(JSON.stringify({"error": "Order not found"}))
+    }
+})
+
 JsonRoutes.add("post", "/search", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var query = req.body;
     query.instanceId = req.networkId;
-    var result = SearchBlockchain.find(JSON.parse(query)).fetch();
+    var result = SearchBlockchain.find(query).fetch();
 
     res.end(JSON.stringify(result))
 });
@@ -300,7 +526,7 @@ JsonRoutes.add("post", "/streams/publish", function (req, res, next) {
     var streamsContract = web3.eth.contract(smartContracts.streams.abi);
     var streams = streamsContract.at(network.streamsContractAddress);
 
-    streams.publish.sendTransaction(req.body.name, req.body.key, req.body.data, {
+    streams.publish.sendTransaction(req.body.streamName, req.body.key, req.body.data, {
         from: req.body.fromAccount
     }, function(error, txnHash) {
         if (!error) {

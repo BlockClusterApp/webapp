@@ -152,9 +152,9 @@ class Navbar extends Component {
 	                        <span className="icon-thumbnail"><i className="fa fa-search"></i></span>
 	                    </li>
 						<li className="">
-							<Link to={"/app/assets/apis"} className="detailed">
+							<Link target="_blank" to={"https://documenter.getpostman.com/view/943777/RWEav22Z"} className="detailed">
 								<span className="title">APIs</span>
-								<span className="details">Call Smart Contract</span>
+								<span className="details">Integrate DApps</span>
 							</Link>
 							<span className="icon-thumbnail"><i className="fa fa-code"></i></span>
 						</li>
