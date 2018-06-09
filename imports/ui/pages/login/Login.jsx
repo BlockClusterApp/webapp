@@ -32,10 +32,10 @@ export default class Login extends Component {
 	                <img src="assets/img/pages/login2.jpg"  alt="" className="lazy" />
 	                <div className="bg-caption pull-bottom sm-pull-bottom text-white p-l-20 m-b-20">
 	                    <h2 className="semi-bold text-white">
-	                        Blockchain as a Service for Consortiums
+	                        Blockchain Management System for Consortiums
 	                    </h2>
 	                    <p className="small">
-	                    the next generation secure and scalable cloud platform for building private blockchains.
+	                    the next generation secure and scalable cloud platform for building blockchains.
 	                    </p>
 	                </div>
 	            </div>
