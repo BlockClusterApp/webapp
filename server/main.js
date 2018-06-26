@@ -272,14 +272,22 @@ Meteor.methods({
                                                                 "name": "ingress-" + instanceId,
                                                                 "annotations": {
                                                                     "nginx.ingress.kubernetes.io/rewrite-target": "/",
-                                                                    "ingress.kubernetes.io/ssl-redirect": "false",
                                                                     "ingress.kubernetes.io/auth-type": "basic",
                                                                     "ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
                                                                     "ingress.kubernetes.io/auth-realm": "Authentication Required"
                                                                 }
                                                             },
                                                             "spec": {
+                                                                "tls": [
+                                                                    {
+                                                                        "hosts": [
+                                                                            "app.blockcluster.io"
+                                                                        ],
+                                                                        "secretName": "blockcluster-ssl"
+                                                                    }
+                                                                ],
                                                                 "rules": [{
+                                                                    "host": "app.blockcluster.io",
                                                                     "http": {
                                                                         "paths": [{
                                                                             "path": "/" + instanceId,
@@ -852,14 +860,22 @@ Meteor.methods({
                                                                 "name": "ingress-" + instanceId,
                                                                 "annotations": {
                                                                     "nginx.ingress.kubernetes.io/rewrite-target": "/",
-                                                                    "ingress.kubernetes.io/ssl-redirect": "false",
-                                                                    "nginx.ingress.kubernetes.io/auth-type": "basic",
-                                                                    "nginx.ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
-                                                                    "nginx.ingress.kubernetes.io/auth-realm": "Authentication Required"
+                                                                    "ingress.kubernetes.io/auth-type": "basic",
+                                                                    "ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
+                                                                    "ingress.kubernetes.io/auth-realm": "Authentication Required"
                                                                 }
                                                             },
                                                             "spec": {
+                                                                "tls": [
+                                                                    {
+                                                                        "hosts": [
+                                                                            "app.blockcluster.io"
+                                                                        ],
+                                                                        "secretName": "blockcluster-ssl"
+                                                                    }
+                                                                ],
                                                                 "rules": [{
+                                                                    "host": "app.blockcluster.io",
                                                                     "http": {
                                                                         "paths": [{
                                                                             "path": "/" + instanceId,
