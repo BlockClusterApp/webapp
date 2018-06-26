@@ -22,7 +22,7 @@ const jwt = new RedisJwt({
     multiple: true
 })
 
-JsonRoutes.add("post", "/login", function(req, res, next) {
+JsonRoutes.add("post", "/api/login", function(req, res, next) {
     var network = Networks.find({instanceId: req.body.username}).fetch()[0];
     function authenticationFailed() {
         JsonRoutes.sendResult(res, {
@@ -89,12 +89,12 @@ function authMiddleware(req, res, next) {
     })
 }
 
-JsonRoutes.Middleware.use("/assets", authMiddleware);
-JsonRoutes.Middleware.use("/streams", authMiddleware);
-JsonRoutes.Middleware.use("/search", authMiddleware);
-JsonRoutes.Middleware.use("/logout", authMiddleware);
+JsonRoutes.Middleware.use("/api/assets", authMiddleware);
+JsonRoutes.Middleware.use("/api/streams", authMiddleware);
+JsonRoutes.Middleware.use("/api/search", authMiddleware);
+JsonRoutes.Middleware.use("/api/logout", authMiddleware);
 
-JsonRoutes.add("post", "/logout", function(req, res, next) {
+JsonRoutes.add("post", "/api/logout", function(req, res, next) {
     const call = jwt.call();
     call.destroy(req.rjwt).then(() => {
         res.end(JSON.stringify({
@@ -108,7 +108,7 @@ JsonRoutes.add("post", "/logout", function(req, res, next) {
     })
 })
 
-JsonRoutes.add("post", "/assets/issueSoloAsset", function (req, res, next) {
+JsonRoutes.add("post", "/api/assets/issueSoloAsset", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
@@ -135,7 +135,7 @@ JsonRoutes.add("post", "/assets/issueSoloAsset", function (req, res, next) {
     })
 });
 
-JsonRoutes.add("post", "/assets/issueBulkAsset", function (req, res, next) {
+JsonRoutes.add("post", "/api/assets/issueBulkAsset", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
@@ -156,7 +156,7 @@ JsonRoutes.add("post", "/assets/issueBulkAsset", function (req, res, next) {
     })
 });
 
-JsonRoutes.add("post", "/assets/transferSoloAsset", function (req, res, next) {
+JsonRoutes.add("post", "/api/assets/transferSoloAsset", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
@@ -176,7 +176,7 @@ JsonRoutes.add("post", "/assets/transferSoloAsset", function (req, res, next) {
     })
 });
 
-JsonRoutes.add("post", "/assets/transferBulkAsset", function (req, res, next) {
+JsonRoutes.add("post", "/api/assets/transferBulkAsset", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
@@ -196,7 +196,7 @@ JsonRoutes.add("post", "/assets/transferBulkAsset", function (req, res, next) {
     })
 });
 
-JsonRoutes.add("post", "/assets/getSoloAssetInfo", function (req, res, next) {
+JsonRoutes.add("post", "/api/assets/getSoloAssetInfo", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
@@ -231,7 +231,7 @@ JsonRoutes.add("post", "/assets/getSoloAssetInfo", function (req, res, next) {
     })
 });
 
-JsonRoutes.add("post", "/assets/getBulkAssetBalance", function (req, res, next) {
+JsonRoutes.add("post", "/api/assets/getBulkAssetBalance", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
@@ -248,7 +248,7 @@ JsonRoutes.add("post", "/assets/getBulkAssetBalance", function (req, res, next) 
     })
 });
 
-JsonRoutes.add("post", "/assets/updateAssetInfo", function (req, res, next) {
+JsonRoutes.add("post", "/api/assets/updateAssetInfo", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
@@ -269,7 +269,7 @@ JsonRoutes.add("post", "/assets/updateAssetInfo", function (req, res, next) {
     })
 });
 
-JsonRoutes.add("post", "/assets/closeAsset", function (req, res, next) {
+JsonRoutes.add("post", "/api/assets/closeAsset", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
@@ -290,7 +290,7 @@ JsonRoutes.add("post", "/assets/closeAsset", function (req, res, next) {
     })
 });
 
-JsonRoutes.add("post", "/assets/placeOrder", function (req, res, next) {
+JsonRoutes.add("post", "/api/assets/placeOrder", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
@@ -361,7 +361,7 @@ JsonRoutes.add("post", "/assets/placeOrder", function (req, res, next) {
     }))
 })
 
-JsonRoutes.add("post", "/assets/fulfillOrder", function (req, res, next) {
+JsonRoutes.add("post", "/api/assets/fulfillOrder", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
@@ -469,7 +469,7 @@ JsonRoutes.add("post", "/assets/fulfillOrder", function (req, res, next) {
     }
 })
 
-JsonRoutes.add("post", "/assets/cancelOrder", function (req, res, next) {
+JsonRoutes.add("post", "/api/assets/cancelOrder", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
@@ -497,7 +497,7 @@ JsonRoutes.add("post", "/assets/cancelOrder", function (req, res, next) {
     )
 })
 
-JsonRoutes.add("post", "/assets/getOrderInfo", function (req, res, next) {
+JsonRoutes.add("post", "/api/assets/getOrderInfo", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     let order = Orders.find({instanceId: req.networkId, atomicSwapHash: req.body.orderId}).fetch();
 
@@ -508,7 +508,7 @@ JsonRoutes.add("post", "/assets/getOrderInfo", function (req, res, next) {
     }
 })
 
-JsonRoutes.add("post", "/search", function (req, res, next) {
+JsonRoutes.add("post", "/api/search", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var query = req.body;
     query.instanceId = req.networkId;
@@ -517,7 +517,7 @@ JsonRoutes.add("post", "/search", function (req, res, next) {
     res.end(JSON.stringify(result))
 });
 
-JsonRoutes.add("post", "/streams/publish", function (req, res, next) {
+JsonRoutes.add("post", "/api/streams/publish", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
     var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;

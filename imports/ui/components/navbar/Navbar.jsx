@@ -152,7 +152,7 @@ class Navbar extends Component {
 	                        <span className="icon-thumbnail"><i className="fa fa-search"></i></span>
 	                    </li>
 						<li className="">
-							<Link target="_blank" to={"https://documenter.getpostman.com/view/943777/RWEav22Z"} className="detailed">
+							<Link target="_blank" to={"https://api.blockcluster.io/"} className="detailed">
 								<span className="title">APIs</span>
 								<span className="details">Integrate DApps</span>
 							</Link>

@@ -290,7 +290,7 @@ Meteor.methods({
                                                                     "host": "app.blockcluster.io",
                                                                     "http": {
                                                                         "paths": [{
-                                                                            "path": "/" + instanceId,
+                                                                            "path": "/node/" + instanceId,
                                                                             "backend": {
                                                                                 "serviceName": instanceId,
                                                                                 "servicePort": 8545
@@ -878,7 +878,7 @@ Meteor.methods({
                                                                     "host": "app.blockcluster.io",
                                                                     "http": {
                                                                         "paths": [{
-                                                                            "path": "/" + instanceId,
+                                                                            "path": "/node/" + instanceId,
                                                                             "backend": {
                                                                                 "serviceName": instanceId,
                                                                                 "servicePort": 8545
