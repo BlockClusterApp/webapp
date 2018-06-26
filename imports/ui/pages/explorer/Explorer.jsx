@@ -5,7 +5,7 @@ import {Utilities} from "../../../collections/utilities/utilities.js"
 import helpers from "../../../modules/helpers"
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
 import {withRouter} from 'react-router-dom'
-import Web3 from "web3";
+require("web3/dist/web3.min.js")
 
 import "./Explorer.scss"
 
@@ -144,12 +144,18 @@ class Explorer extends Component {
         let rpc = null;
         let status = null;
         if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-            rpc = "http://" + this.props.workerNodeIP[0].value + ":" + this.props.networks[0].rpcNodePort
+            rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.networks[0].instanceId
+            username = this.props.networks[0].instanceId
+            password = this.props.networks[0]["jsonRPC-password"]
+
             status = this.props.networks[0].status
         } else if (this.state.selectedNetwork !== null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
             for(let count = 0; count < this.props.networks.length; count++) {
                 if(this.state.selectedNetwork === this.props.networks[count].instanceId) {
-                    rpc = "http://" + this.props.workerNodeIP[0].value + ":" + this.props.networks[count].rpcNodePort
+                    rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.networks[count].instanceId
+                    username = this.props.networks[count].instanceId
+                    password = this.props.networks[count]["jsonRPC-password"]
+
                     status = this.props.networks[count].status
                     break
                 }
@@ -157,7 +163,7 @@ class Explorer extends Component {
         }
 
         if(status == "running") {
-            let web3 = new Web3(new Web3.providers.HttpProvider(rpc));
+            let web3 = new Web3(new Web3.providers.HttpProvider(rpc, 0, username, password));
             web3.eth.getBlockNumber((error, result) => {
                 if(!error) {
                     web3.currentProvider.sendAsync({
@@ -207,12 +213,17 @@ class Explorer extends Component {
         let rpc = null;
         let status = null;
         if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-            rpc = "http://" + this.props.workerNodeIP[0].value + ":" + this.props.networks[0].rpcNodePort
+            rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.networks[0].instanceId
+            username = this.props.networks[0].instanceId
+            password = this.props.networks[0]["jsonRPC-password"]
+
             status = this.props.networks[0].status
         } else if (this.state.selectedNetwork !== null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
             for(let count = 0; count < this.props.networks.length; count++) {
                 if(this.state.selectedNetwork === this.props.networks[count].instanceId) {
-                    rpc = "http://" + this.props.workerNodeIP[0].value + ":" + this.props.networks[count].rpcNodePort
+                    rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.networks[count].instanceId
+                    username = this.props.networks[count].instanceId
+                    password = this.props.networks[count]["jsonRPC-password"]
                     status = this.props.networks[count].status
                     break
                 }
@@ -220,7 +231,7 @@ class Explorer extends Component {
         }
 
         if(status == "running") {
-            let web3 = new Web3(new Web3.providers.HttpProvider(rpc));
+            let web3 = new Web3(new Web3.providers.HttpProvider(rpc, 0, username, password));
             if(this.state.latestBlock === null && this.state.oldestBlock === null) {
                 web3.eth.getBlockNumber((error, result) => {
                     if(!error) {
@@ -228,6 +239,7 @@ class Explorer extends Component {
                         web3.eth.getBlock(latestBlockNumber, (error, result) => {
                             if (!error) {
                                 let latestBlock = result
+
                                 this.setState({
                                     latestBlock: latestBlockNumber,
                                     oldestBlock: latestBlockNumber,
@@ -277,19 +289,23 @@ class Explorer extends Component {
             let status = null;
 
             if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-                rpc = "http://" + this.props.workerNodeIP[0].value + ":" + this.props.networks[0].rpcNodePort
+                rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.networks[0].instanceId
+                username = this.props.networks[0].instanceId
+                password = this.props.networks[0]["jsonRPC-password"]
                 status = this.props.networks[0].status
             } else if (this.state.selectedNetwork !== null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
                 for(let count = 0; count < this.props.networks.length; count++) {
                     if(this.state.selectedNetwork === this.props.networks[count].instanceId) {
-                        rpc = "http://" + this.props.workerNodeIP[0].value + ":" + this.props.networks[count].rpcNodePort
+                        rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.networks[count].instanceId
+                        username = this.props.networks[count].instanceId
+                        password = this.props.networks[count]["jsonRPC-password"]
                         status = this.props.networks[count].status
                         break
                     }
                 }
             }
 
-            let web3 = new Web3(new Web3.providers.HttpProvider(rpc));
+            let web3 = new Web3(new Web3.providers.HttpProvider(rpc, 0, username, password));
 
             fetchBlock = (blockNumber) => {
                 return new Promise((resolve, reject) => {
@@ -340,9 +356,10 @@ class Explorer extends Component {
         let status = null;
         let atomicSwapContractAddress = null;
         let assetsContractAddress = null;
-
         if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-            rpc = "http://" + this.props.workerNodeIP[0].value + ":" + this.props.networks[0].rpcNodePort
+            rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.networks[0].instanceId
+            username = this.props.networks[0].instanceId
+            password = this.props.networks[0]["jsonRPC-password"]
             status = this.props.networks[0].status
             atomicSwapContractAddress = this.props.networks[0].atomicSwapContractAddress;
             assetsContractAddress = this.props.networks[0].assetsContractAddress;
@@ -350,7 +367,9 @@ class Explorer extends Component {
         } else if (this.state.selectedNetwork !== null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
             for(let count = 0; count < this.props.networks.length; count++) {
                 if(this.state.selectedNetwork === this.props.networks[count].instanceId) {
-                    rpc = "http://" + this.props.workerNodeIP[0].value + ":" + this.props.networks[count].rpcNodePort
+                    rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.networks[count].instanceId
+                    username = this.props.networks[count].instanceId
+                    password = this.props.networks[count]["jsonRPC-password"]
                     status = this.props.networks[count].status
                     atomicSwapContractAddress = this.props.networks[count].atomicSwapContractAddress;
                     assetsContractAddress = this.props.networks[count].assetsContractAddress;
@@ -361,7 +380,7 @@ class Explorer extends Component {
         }
 
         if(status == "running") {
-            let web3 = new Web3(new Web3.providers.HttpProvider(rpc));
+            let web3 = new Web3(new Web3.providers.HttpProvider(rpc, 0, username, password));
 
             if(action === "block") {
                 web3.eth.getBlock(value, (error, result) => {
@@ -375,7 +394,6 @@ class Explorer extends Component {
                 web3.eth.getTransaction(value, (error, result1) => {
                     if(!error && result1 != null) {
                         web3.eth.getTransactionReceipt(value, (error, result2) => {
-                            console.log(result1, result2)
                             if(!error && result2 != null) {
 
                                 if(result1.to == atomicSwapContractAddress) {
@@ -418,6 +436,7 @@ class Explorer extends Component {
         } else {
             nodeStatus = this.nodeStatusIcon(this.state.selectedNetwork)
         }
+
 
 		return (
             <div className="content explorer sm-gutter">
@@ -599,5 +618,6 @@ export default withTracker(() => {
         networks: Networks.find({}).fetch(),
         subscriptions: [Meteor.subscribe("networks"), Meteor.subscribe("utilities")],
         workerNodeIP: Utilities.find({"name": "workerNodeIP"}).fetch(),
+        workerNodeDomainName: Utilities.find({"name": "workerNodeDomainName"}).fetch()
     }
 })(withRouter(Explorer))

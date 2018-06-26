@@ -155,7 +155,7 @@ Meteor.methods({
                                             "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner",
                                             "env":[
                                                 {
-                                                    "name": instanceId,
+                                                    "name": "instanceId",
                                                     "value": instanceId
                                                 }
                                             ],
@@ -274,7 +274,10 @@ Meteor.methods({
                                                                     "nginx.ingress.kubernetes.io/rewrite-target": "/",
                                                                     "ingress.kubernetes.io/auth-type": "basic",
                                                                     "ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
-                                                                    "ingress.kubernetes.io/auth-realm": "Authentication Required"
+                                                                    "ingress.kubernetes.io/auth-realm": "Authentication Required",
+                                                                    "ingress.kubernetes.io/enable-cors": "true",
+                                                                    "ingress.kubernetes.io/cors-credentials": "true",
+                                                                    "ingress.kubernetes.io/cors-allow-origin": "*"
                                                                 }
                                                             },
                                                             "spec": {
@@ -862,7 +865,9 @@ Meteor.methods({
                                                                     "nginx.ingress.kubernetes.io/rewrite-target": "/",
                                                                     "ingress.kubernetes.io/auth-type": "basic",
                                                                     "ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
-                                                                    "ingress.kubernetes.io/auth-realm": "Authentication Required"
+                                                                    "ingress.kubernetes.io/auth-realm": "Authentication Required",
+                                                                    "ingress.kubernetes.io/enable-cors": "true",
+                                                                    "ingress.kubernetes.io/cors-allow-origin": "*"
                                                                 }
                                                             },
                                                             "spec": {
