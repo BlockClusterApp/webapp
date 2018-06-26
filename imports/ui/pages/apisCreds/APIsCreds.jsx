@@ -101,7 +101,7 @@ class APIsCreds extends Component {
                                                     <pre>
                                                         var web3 = new Web3(
                                                             new Web3.providers.HttpProvider(
-                                                                {"\"http://" + (this.props.workerNodeIP[0] ? this.props.workerNodeIP[0].value : '') + "/networkId:" + (this.props.firewallPort[0] ? this.props.firewallPort[0].value : '') + "\", 0, " + "\"username\", \"password\""}
+                                                                {"\"https://" + (this.props.workerNodeDomainName[0] ? this.props.workerNodeDomainName[0].value : '') + "/networkId" + "\", 0, " + "\"username\", \"password\""}
                                                             )
                                                         );
                                                     </pre>
@@ -275,6 +275,7 @@ export default withTracker(() => {
     return {
         networks: Networks.find({}).fetch(),
         workerNodeIP: Utilities.find({"name": "workerNodeIP"}).fetch(),
+        workerNodeDomainName: Utilities.find({"name": "workerNodeDomainName"}).fetch(),
         firewallPort: Utilities.find({"name": "firewall_Port"}).fetch(),
         subscriptions: [Meteor.subscribe("networks"), Meteor.subscribe("utilities")]
     }

@@ -12,6 +12,16 @@ function updateWorkerNodeIP() {
 	});
 }
 
+function updateWorkerNodeDomainName() {
+	Utilities.upsert({
+		name: "workerNodeDomainName",
+	}, {
+		$set: {
+			"value": "app.blockcluster.io"
+		}
+	});
+}
+
 function updateKuberREST_IP() {
 	Utilities.upsert({
 		name: "kuberREST_IP",
@@ -43,4 +53,4 @@ function updateRedis_Info() {
 	});
 }
 
-export {updateWorkerNodeIP, updateKuberREST_IP, updateFirewall_Port, updateRedis_Info}
+export {updateWorkerNodeIP, updateKuberREST_IP, updateFirewall_Port, updateRedis_Info, updateWorkerNodeDomainName}
