@@ -109,38 +109,70 @@ Meteor.methods({
                 myFuture.throw("An unknown error occured");
             } else {
                 HTTP.call("POST", `http://${kuberREST_IP}:8000/apis/apps/v1beta1/namespaces/default/deployments`, {
-                    "content": `apiVersion: apps/v1beta1
-kind: Deployment
-metadata:
-  name: ${instanceId}
-spec:
-  replicas: 1
-  revisionHistoryLimit: 10
-  template:
-    metadata:
-      labels:
-        app: quorum-node-${instanceId}
-    spec:
-      containers:
-      - name: quorum
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum
-        command: [ 'bin/bash', '-c', './setup.sh' ]
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8545
-        - containerPort: 23000
-        - containerPort: 9001
-        - containerPort: 6382
-      - name: scanner
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner
-        env:
-        - name: instanceId
-          value: ${instanceId}
-        imagePullPolicy: Always
-      imagePullSecrets:
-      - name: regsecret`,
+                    "content": JSON.stringify({
+                        "apiVersion":"apps/v1beta1",
+                        "kind":"Deployment",
+                        "metadata":{
+                            "name": instanceId
+                        },
+                        "spec":{
+                            "replicas":1,
+                            "revisionHistoryLimit":10,
+                            "template":{
+                                "metadata":{
+                                    "labels":{
+                                        "app":"quorum-node-" + instanceId
+                                    }
+                                },
+                                "spec":{
+                                    "containers":[
+                                        {
+                                            "name":"quorum",
+                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum",
+                                            "command":[
+                                                "bin/bash",
+                                                "-c",
+                                                "./setup.sh"
+                                            ],
+                                            "imagePullPolicy":"Always",
+                                            "ports":[
+                                                {
+                                                    "containerPort":8545
+                                                },
+                                                {
+                                                    "containerPort":23000
+                                                },
+                                                {
+                                                    "containerPort":9001
+                                                },
+                                                {
+                                                    "containerPort":6382
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "name":"scanner",
+                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner",
+                                            "env":[
+                                                {
+                                                    "name": instanceId,
+                                                    "value": instanceId
+                                                }
+                                            ],
+                                            "imagePullPolicy":"Always"
+                                        }
+                                    ],
+                                    "imagePullSecrets":[
+                                        {
+                                            "name":"regsecret"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }),
                     "headers": {
-                        "Content-Type": "application/yaml"
+                        "Content-Type": "application/json"
                     }
                 }, function(error, response) {
                     if (error) {
@@ -148,25 +180,39 @@ spec:
                         deleteNetwork(id)
                     } else {
                         HTTP.call("POST", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services`, {
-                            "content": `kind: Service
-apiVersion: v1
-metadata:
-  name: ${instanceId}
-spec:
-  ports:
-    - name: rpc
-      port: 8545
-    - name: constellation
-      port: 9001
-    - name: eth
-      port: 23000
-    - name: readfile
-      port: 6382
-  selector:
-      app: quorum-node-${instanceId}
-  type: NodePort`,
+                            "content": JSON.stringify({
+                                "kind":"Service",
+                                "apiVersion":"v1",
+                                "metadata":{
+                                    "name": instanceId
+                                },
+                                "spec":{
+                                    "ports":[
+                                        {
+                                            "name":"rpc",
+                                            "port":8545
+                                        },
+                                        {
+                                            "name":"constellation",
+                                            "port":9001
+                                        },
+                                        {
+                                            "name":"eth",
+                                            "port":23000
+                                        },
+                                        {
+                                            "name":"readfile",
+                                            "port":6382
+                                        }
+                                    ],
+                                    "selector":{
+                                        "app":"quorum-node-" + instanceId
+                                    },
+                                    "type":"NodePort"
+                                }
+                            }),
                             "headers": {
-                                "Content-Type": "application/yaml"
+                                "Content-Type": "application/json"
                             }
                         }, function(error, response) {
                             if (error) {
@@ -578,71 +624,135 @@ spec:
                 genesisFileContent = jsonminify(genesisFileContent.toString()).replace(/\"/g, '\\"')
 
                 if (nodeType === "authority") {
-                    var content = `apiVersion: apps/v1beta1
-kind: Deployment
-metadata:
-  name: ${instanceId}
-spec:
-  replicas: 1
-  revisionHistoryLimit: 10
-  template:
-    metadata:
-      labels:
-        app: quorum-node-${instanceId}
-    spec:
-      containers:
-      - name: quorum
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum
-        command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8545
-        - containerPort: 23000
-        - containerPort: 9001
-        - containerPort: 6382
-      - name: scanner
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner
-        env:
-        - name: instanceId
-          value: ${instanceId}
-      imagePullSecrets:
-      - name: regsecret`;
+                    var content = JSON.stringify({
+                        "apiVersion":"apps/v1beta1",
+                        "kind":"Deployment",
+                        "metadata":{
+                            "name": instanceId
+                        },
+                        "spec":{
+                            "replicas":1,
+                            "revisionHistoryLimit":10,
+                            "template":{
+                                "metadata":{
+                                    "labels":{
+                                        "app":"quorum-node-" + instanceId
+                                    }
+                                },
+                                "spec":{
+                                    "containers":[
+                                        {
+                                            "name":"quorum",
+                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum",
+                                            "command":[
+                                                "bin/bash",
+                                                "-c",
+                                                "./setup.sh" + " " + totalConstellationNodes + " " + totalENodes + " '" +  genesisFileContent + "' mine"
+                                            ],
+                                            "imagePullPolicy":"Always",
+                                            "ports":[
+                                                {
+                                                    "containerPort":8545
+                                                },
+                                                {
+                                                    "containerPort":23000
+                                                },
+                                                {
+                                                    "containerPort":9001
+                                                },
+                                                {
+                                                    "containerPort":6382
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "name":"scanner",
+                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner",
+                                            "env":[
+                                                {
+                                                    "name":"instanceId",
+                                                    "value": instanceId
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "imagePullSecrets":[
+                                        {
+                                            "name":"regsecret"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    });
                 } else {
-                    var content = `apiVersion: apps/v1beta1
-kind: Deployment
-metadata:
-  name: ${instanceId}
-spec:
-  replicas: 1
-  revisionHistoryLimit: 10
-  template:
-    metadata:
-      labels:
-        app: quorum-node-${instanceId}
-    spec:
-      containers:
-      - name: quorum
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum
-        command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8545
-        - containerPort: 23000
-        - containerPort: 9001
-        - containerPort: 6382
-      - name: scanner
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner
-        env:
-        - name: instanceId
-          value: ${instanceId}
-      imagePullSecrets:
-      - name: regsecret`;
+                    var content = JSON.stringify({
+                        "apiVersion":"apps/v1beta1",
+                        "kind":"Deployment",
+                        "metadata":{
+                            "name": instanceId
+                        },
+                        "spec":{
+                            "replicas":1,
+                            "revisionHistoryLimit":10,
+                            "template":{
+                                "metadata":{
+                                    "labels":{
+                                        "app":"quorum-node-" + instanceId
+                                    }
+                                },
+                                "spec":{
+                                    "containers":[
+                                        {
+                                            "name":"quorum",
+                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum",
+                                            "command":[
+                                                "bin/bash",
+                                                "-c",
+                                                "./setup.sh" + " " + totalConstellationNodes + " " + totalENodes + " '" +  genesisFileContent + "'"
+                                            ],
+                                            "imagePullPolicy":"Always",
+                                            "ports":[
+                                                {
+                                                    "containerPort":8545
+                                                },
+                                                {
+                                                    "containerPort":23000
+                                                },
+                                                {
+                                                    "containerPort":9001
+                                                },
+                                                {
+                                                    "containerPort":6382
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "name":"scanner",
+                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner",
+                                            "env":[
+                                                {
+                                                    "name":"instanceId",
+                                                    "value": instanceId
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "imagePullSecrets":[
+                                        {
+                                            "name":"regsecret"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    });
                 }
 
                 HTTP.call("POST", `http://${kuberREST_IP}:8000/apis/apps/v1beta1/namespaces/default/deployments`, {
                     "content": content,
                     "headers": {
-                        "Content-Type": "application/yaml"
+                        "Content-Type": "application/json"
                     }
                 }, function(error, response) {
                     if (error) {
@@ -650,25 +760,39 @@ spec:
                         deleteNetwork(id)
                     } else {
                         HTTP.call("POST", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services`, {
-                            "content": `kind: Service
-apiVersion: v1
-metadata:
-  name: ${instanceId}
-spec:
-  ports:
-    - name: rpc
-      port: 8545
-    - name: constellation
-      port: 9001
-    - name: eth
-      port: 23000
-    - name: readfile
-      port: 6382
-  selector:
-      app: quorum-node-${instanceId}
-  type: NodePort`,
+                            "content": JSON.stringify({
+                                "kind":"Service",
+                                "apiVersion":"v1",
+                                "metadata":{
+                                    "name": instanceId
+                                },
+                                "spec":{
+                                    "ports":[
+                                        {
+                                            "name":"rpc",
+                                            "port":8545
+                                        },
+                                        {
+                                            "name":"constellation",
+                                            "port":9001
+                                        },
+                                        {
+                                            "name":"eth",
+                                            "port":23000
+                                        },
+                                        {
+                                            "name":"readfile",
+                                            "port":6382
+                                        }
+                                    ],
+                                    "selector":{
+                                        "app":"quorum-node-" + instanceId
+                                    },
+                                    "type":"NodePort"
+                                }
+                            }),
                             "headers": {
-                                "Content-Type": "application/yaml"
+                                "Content-Type": "application/json"
                             }
                         }, function(error, response) {
                             if (error) {
