@@ -9,6 +9,7 @@
     "babel-runtime": "^6.26.0",
     "base-64": "*",
     "bcrypt": "1.0.3",
+    "buffer": "^5.1.0",
     "crypto": "^1.0.1",
     "eth-lightwallet": "3.0.1",
     "fibers": "2.0.0",
@@ -26,8 +27,9 @@
     "react-render-html": "0.6.0",
     "react-router": "4.2.0",
     "react-router-dom": "4.2.2",
+    "redis-jwt": "1.4.0",
     "utf8": "*",
-    "web3": "0.20.6",
-    "redis-jwt": "1.4.0"
+    "abi-decoder": "1.1.0",
+    "web3": "0.20.6"
   }
 }

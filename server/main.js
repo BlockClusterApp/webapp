@@ -276,8 +276,7 @@ Meteor.methods({
                                                                     "ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
                                                                     "ingress.kubernetes.io/auth-realm": "Authentication Required",
                                                                     "ingress.kubernetes.io/enable-cors": "true",
-                                                                    "ingress.kubernetes.io/cors-credentials": "true",
-                                                                    "ingress.kubernetes.io/cors-allow-origin": "*"
+                                                                    "ingress.kubernetes.io/cors-credentials": "true"
                                                                 }
                                                             },
                                                             "spec": {

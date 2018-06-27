@@ -8,7 +8,6 @@ babel-runtime@1.1.1
 base64@1.0.10
 binary-heap@1.0.10
 blaze-tools@1.0.10
-blockcluster:abi-decoder@0.0.1
 blockcluster:bootstrap@0.0.1
 blockcluster:jquery@0.0.1
 blockcluster:jquery-scrollbar@0.0.1

@@ -5,7 +5,8 @@ import {Utilities} from "../../../collections/utilities/utilities.js"
 import helpers from "../../../modules/helpers"
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
 import {withRouter} from 'react-router-dom'
-require("web3/dist/web3.min.js")
+var Web3 = require('web3');
+require('abi-decoder'); 
 
 import "./Explorer.scss"
 
@@ -237,6 +238,7 @@ class Explorer extends Component {
                     if(!error) {
                         let latestBlockNumber = result
                         web3.eth.getBlock(latestBlockNumber, (error, result) => {
+
                             if (!error) {
                                 let latestBlock = result
 
