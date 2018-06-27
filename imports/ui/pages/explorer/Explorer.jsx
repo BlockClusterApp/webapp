@@ -6,7 +6,7 @@ import helpers from "../../../modules/helpers"
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
 import {withRouter} from 'react-router-dom'
 var Web3 = require('web3');
-require('abi-decoder'); 
+var abiDecoder = require('abi-decoder');
 
 import "./Explorer.scss"
 
@@ -112,6 +112,7 @@ class Explorer extends Component {
     refreshTotalBlocksScanned() {
         if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
             if(this.props.networks[0].status === "running") {
+
                 this.setState({
                     totalBlocksScanned: (this.props.networks[0].blockToScan ? (this.props.networks[0].blockToScan - 1) : 0)
                 }, () => {
@@ -138,6 +139,8 @@ class Explorer extends Component {
 
                 }
             }
+        } else {
+            setTimeout(this.refreshTotalBlocksScanned, 100)
         }
     }
 
@@ -438,7 +441,6 @@ class Explorer extends Component {
         } else {
             nodeStatus = this.nodeStatusIcon(this.state.selectedNetwork)
         }
-
 
 		return (
             <div className="content explorer sm-gutter">
