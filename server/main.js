@@ -636,135 +636,71 @@ Meteor.methods({
                 genesisFileContent = jsonminify(genesisFileContent.toString()).replace(/\"/g, '\\"')
 
                 if (nodeType === "authority") {
-                    var content = JSON.stringify({
-                        "apiVersion":"apps/v1beta1",
-                        "kind":"Deployment",
-                        "metadata":{
-                            "name": instanceId
-                        },
-                        "spec":{
-                            "replicas":1,
-                            "revisionHistoryLimit":10,
-                            "template":{
-                                "metadata":{
-                                    "labels":{
-                                        "app":"quorum-node-" + instanceId
-                                    }
-                                },
-                                "spec":{
-                                    "containers":[
-                                        {
-                                            "name":"quorum",
-                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum",
-                                            "command":[
-                                                "bin/bash",
-                                                "-c",
-                                                "./setup.sh" + " " + totalConstellationNodes + " " + totalENodes + " '" +  genesisFileContent + "' mine"
-                                            ],
-                                            "imagePullPolicy":"Always",
-                                            "ports":[
-                                                {
-                                                    "containerPort":8545
-                                                },
-                                                {
-                                                    "containerPort":23000
-                                                },
-                                                {
-                                                    "containerPort":9001
-                                                },
-                                                {
-                                                    "containerPort":6382
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name":"scanner",
-                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner",
-                                            "env":[
-                                                {
-                                                    "name":"instanceId",
-                                                    "value": instanceId
-                                                }
-                                            ]
-                                        }
-                                    ],
-                                    "imagePullSecrets":[
-                                        {
-                                            "name":"regsecret"
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    });
+                    var content = `apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: ${instanceId}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      labels:
+        app: quorum-node-${instanceId}
+    spec:
+      containers:
+      - name: quorum
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum
+        command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8545
+        - containerPort: 23000
+        - containerPort: 9001
+        - containerPort: 6382
+      - name: scanner
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner
+        env:
+        - name: instanceId
+          value: ${instanceId}
+      imagePullSecrets:
+      - name: regsecret`
                 } else {
-                    var content = JSON.stringify({
-                        "apiVersion":"apps/v1beta1",
-                        "kind":"Deployment",
-                        "metadata":{
-                            "name": instanceId
-                        },
-                        "spec":{
-                            "replicas":1,
-                            "revisionHistoryLimit":10,
-                            "template":{
-                                "metadata":{
-                                    "labels":{
-                                        "app":"quorum-node-" + instanceId
-                                    }
-                                },
-                                "spec":{
-                                    "containers":[
-                                        {
-                                            "name":"quorum",
-                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum",
-                                            "command":[
-                                                "bin/bash",
-                                                "-c",
-                                                "./setup.sh" + " " + totalConstellationNodes + " " + totalENodes + " '" +  genesisFileContent + "'"
-                                            ],
-                                            "imagePullPolicy":"Always",
-                                            "ports":[
-                                                {
-                                                    "containerPort":8545
-                                                },
-                                                {
-                                                    "containerPort":23000
-                                                },
-                                                {
-                                                    "containerPort":9001
-                                                },
-                                                {
-                                                    "containerPort":6382
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name":"scanner",
-                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner",
-                                            "env":[
-                                                {
-                                                    "name":"instanceId",
-                                                    "value": instanceId
-                                                }
-                                            ]
-                                        }
-                                    ],
-                                    "imagePullSecrets":[
-                                        {
-                                            "name":"regsecret"
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    });
+                    var content = `apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: ${instanceId}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      labels:
+        app: quorum-node-${instanceId}
+    spec:
+      containers:
+      - name: quorum
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum
+        command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8545
+        - containerPort: 23000
+        - containerPort: 9001
+        - containerPort: 6382
+      - name: scanner
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner
+        env:
+        - name: instanceId
+          value: ${instanceId}
+      imagePullSecrets:
+      - name: regsecret`;
                 }
 
                 HTTP.call("POST", `http://${kuberREST_IP}:8000/apis/apps/v1beta1/namespaces/default/deployments`, {
                     "content": content,
                     "headers": {
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/yaml"
                     }
                 }, function(error, response) {
                     if (error) {
@@ -868,7 +804,9 @@ Meteor.methods({
                                                                     "ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
                                                                     "ingress.kubernetes.io/auth-realm": "Authentication Required",
                                                                     "ingress.kubernetes.io/enable-cors": "true",
-                                                                    "ingress.kubernetes.io/cors-allow-origin": "*"
+                                                                    "ingress.kubernetes.io/cors-credentials": "true",
+                                                                    "kubernetes.io/ingress.class": "nginx",
+                                                                    "ingress.kubernetes.io/configuration-snippet": "if ($http_origin ~* (^https?://([^/]+\\.)*(localhost:3000|app.blockcluster.io))) {\n    set $cors \"true\";\n}\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueget\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}\n\nif ($cors = \"truepost\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n}"
                                                                 }
                                                             },
                                                             "spec": {

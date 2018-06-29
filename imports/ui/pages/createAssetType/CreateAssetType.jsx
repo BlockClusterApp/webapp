@@ -58,8 +58,10 @@ class CreateAssetType extends Component {
 
         if(e.target.value === "bulk") {
             obj[instanceId + "_showReissuable"] = true;
+            obj[instanceId + "_showDecimals"] = true;
         } else {
             obj[instanceId + "_showReissuable"] = false;
+            obj[instanceId + "_showDecimals"] = false;
         }
 
         this.setState(obj)
@@ -131,6 +133,13 @@ class CreateAssetType extends Component {
                                                                                                         <option key="yes" value="true">Yes</option>
                                                                                                         <option key="no" value="false">No</option>
                                                                                                     </select>
+                                                                                                </div>
+                                                                                            }
+                                                                                            {this.state[item.instanceId + "_showDecimals"] &&
+                                                                                                <div className="form-group">
+                                                                                                    <label>Decimals</label>
+                                                                                                    <span className="help"> e.g. "12.55896"</span>
+                                                                                                    <input type="number" defaultValue="0" min="0" max="18" className="form-control" ref={(input) => {this[item.instanceId + "_createAssetType_decimals"] = input}} />
                                                                                                 </div>
                                                                                             }
                                                                                             <div className="form-group">
