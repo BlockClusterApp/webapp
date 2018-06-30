@@ -81,5 +81,13 @@ export default {
             rtn += ALPHABET.charAt(Math.floor(Math.random() * ALPHABET.length));
         }
         return rtn;
+    },
+    addZeros(s, n) {
+        s = s.toString();
+        for(let count = 0; count < n; count++) {
+            s = s + "0";
+        }
+
+        return s;
     }
 }

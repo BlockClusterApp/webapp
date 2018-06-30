@@ -31,6 +31,7 @@ import {
 var md5 = require("apache-md5");
 var base64 = require('base-64');
 var utf8 = require('utf8');
+var BigNumber = require('bignumber.js');
 
 Accounts.validateLoginAttempt(function(options) {
     if (!options.allowed) {
@@ -1074,7 +1075,7 @@ spec:
             throw new Meteor.Error(500, 'Unknown error occured');
         }
     },
-    "createAssetType": function(instanceId, assetName, assetType, assetIssuer, reissuable) {
+    "createAssetType": function(instanceId, assetName, assetType, assetIssuer, reissuable, parts) {
         var myFuture = new Future();
         var network = Networks.find({
             instanceId: instanceId
@@ -1100,7 +1101,7 @@ spec:
                 }
             })
         } else {
-            assets.createBulkAssetType.sendTransaction(assetName, (reissuable === "true"), {
+            assets.createBulkAssetType.sendTransaction(assetName, (reissuable === "true"), parts, {
                 from: assetIssuer,
                 gas: '99999999999999999'
             }, function(error, txnHash) {
@@ -1125,7 +1126,9 @@ spec:
         let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
-        assets.issueBulkAsset.sendTransaction(assetName, units, toAddress, {
+        var parts = assets.getBulkAssetParts.call(assetName)
+        units = (new BigNumber(units)).multipliedBy(helpers.addZeros(1, parts))
+        assets.issueBulkAsset.sendTransaction(assetName, units.toString(), toAddress, {
             from: fromAddress,
         }, function(error, txnHash) {
             if (error) {
@@ -1170,6 +1173,8 @@ spec:
         let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
+        var parts = assets.getBulkAssetParts.call(assetName)
+        units = (new BigNumber(units)).multipliedBy(helpers.addZeros(1, parts))
         assets.transferBulkAssetUnits.sendTransaction(assetName, toAddress, units, {
             from: fromAddress
         }, function(error, txnHash) {
@@ -1214,10 +1219,12 @@ spec:
         let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
+        var parts = assets.getBulkAssetParts.call(assetName)
         assets.getBulkAssetUnits.call(assetName, address, {}, function(error, units) {
             if (error) {
                 myFuture.throw("An unknown error occured");
             } else {
+                units = (new BigNumber(units)).dividedBy(helpers.addZeros(1, parts)).toFixed(parseInt(parts))
                 myFuture.return(units.toString());
             }
         })

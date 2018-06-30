@@ -514,7 +514,7 @@ class AssetsManagement extends Component {
                                                                                                             </div>
                                                                                                             <div className="form-group">
                                                                                                                 <label>Units</label>
-                                                                                                                <input type="number" className="form-control" ref={(input) => {this[item.instanceId + "_addBulkAsset_units"] = input}} required />
+                                                                                                                <input type="float" className="form-control" ref={(input) => {this[item.instanceId + "_addBulkAsset_units"] = input}} required />
                                                                                                             </div>
                                                                                                             {this.state[item.instanceId + "_addBulkAsset_formSubmitError"] &&
                                                                                                                 <div className="row m-t-30">
@@ -630,7 +630,7 @@ class AssetsManagement extends Component {
                                                                                                             </div>
                                                                                                             <div className="form-group">
                                                                                                                 <label>Units</label>
-                                                                                                                <input type="number" className="form-control" ref={(input) => {this[item.instanceId + "_transferBulkAsset_units"] = input}} required />
+                                                                                                                <input type="float" className="form-control" ref={(input) => {this[item.instanceId + "_transferBulkAsset_units"] = input}} required />
                                                                                                             </div>
                                                                                                             {this.state[item.instanceId + "_transferBulkAsset_formSubmitError"] &&
                                                                                                                 <div className="row m-t-30">

@@ -28,9 +28,10 @@ class CreateAssetType extends Component {
 
         if(this[instanceId + "_createAssetType_assetType"].value === "bulk") {
             reissuable = this[instanceId + "_createAssetType_reissuable"].value
+            decimals = this[instanceId + "_createAssetType_decimals"].value
         }
 
-        Meteor.call("createAssetType", instanceId, this[instanceId + "_createAssetType_assetName"].value, this[instanceId + "_createAssetType_assetType"].value, this[instanceId + "_createAssetType_assetIssuer"].value, reissuable, (error) => {
+        Meteor.call("createAssetType", instanceId, this[instanceId + "_createAssetType_assetName"].value, this[instanceId + "_createAssetType_assetType"].value, this[instanceId + "_createAssetType_assetIssuer"].value, reissuable, decimals, (error) => {
             if(!error) {
                 this.setState({
                     [instanceId + "_createAssetType_formloading"]: false,

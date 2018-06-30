@@ -14,6 +14,7 @@ import {
 import {
     AcceptedOrders
 } from "../collections/acceptedOrders/acceptedOrders.js"
+var BigNumber = require('bignumber.js');
 
 const jwt = new RedisJwt({
     host: Utilities.find({"name": "redis"}).fetch()[0].ip,
@@ -143,8 +144,9 @@ JsonRoutes.add("post", "/api/assets/issueBulkAsset", function (req, res, next) {
 
     var assetsContract = web3.eth.contract(smartContracts.assets.abi);
     var assets = assetsContract.at(network.assetsContractAddress);
-
-    assets.issueBulkAsset.sendTransaction(req.body.assetName, req.body.units, req.body.toAccount, {
+    var parts = assets.getBulkAssetParts.call(req.body.assetName)
+    let units = (new BigNumber(req.body.units)).multipliedBy(helpers.addZeros(1, parts))
+    assets.issueBulkAsset.sendTransaction(req.body.assetName, units, req.body.toAccount, {
         from: req.body.fromAccount,
         gas: '4712388'
     }, function(error, txnHash){
@@ -184,7 +186,9 @@ JsonRoutes.add("post", "/api/assets/transferBulkAsset", function (req, res, next
 
     var assetsContract = web3.eth.contract(smartContracts.assets.abi);
     var assets = assetsContract.at(network.assetsContractAddress);
-    assets.transferBulkAssetUnits.sendTransaction(req.body.assetName, req.body.toAccount, req.body.units, {
+    var parts = assets.getBulkAssetParts.call(req.body.assetName)
+    let units = (new BigNumber(req.body.units)).multipliedBy(helpers.addZeros(1, parts))
+    assets.transferBulkAssetUnits.sendTransaction(req.body.assetName, req.body.toAccount, units, {
         from: req.body.fromAccount,
         gas: '4712388'
     }, function(error, txnHash){
@@ -239,10 +243,12 @@ JsonRoutes.add("post", "/api/assets/getBulkAssetBalance", function (req, res, ne
 
     var assetsContract = web3.eth.contract(smartContracts.assets.abi);
     var assets = assetsContract.at(network.assetsContractAddress);
+    var parts = assets.getBulkAssetParts.call(assetName)
     assets.getBulkAssetUnits.call(req.body.assetName, req.body.account, {from: web3.eth.accounts[0]}, function(error, units){
         if(error) {
             res.end(JSON.stringify({"error": error.toString()}))
         } else {
+            units = (new BigNumber(units)).dividedBy(helpers.addZeros(1, parts)).toFixed(parseInt(parts))
             res.end(JSON.stringify({"units": units.toString()}))
         }
     })
