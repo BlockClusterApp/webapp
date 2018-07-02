@@ -5,6 +5,9 @@
     "start": "meteor run"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.0-14",
+    "@fortawesome/free-solid-svg-icons": "^5.1.0-11",
+    "@fortawesome/react-fontawesome": "0.1.0-11",
     "abi-decoder": "1.1.0",
     "apache-md5": "*",
     "babel-runtime": "^6.26.0",
@@ -16,10 +19,12 @@
     "eth-lightwallet": "3.0.1",
     "fibers": "2.0.0",
     "history": "4.7.2",
+    "i": "^0.3.6",
     "jsonminify": "0.4.1",
     "meteor-node-stubs": "0.3.2",
     "mongodb": "^3.0.5",
     "node-cmd": "3.0.0",
+    "npm": "^6.1.0",
     "pass": "*",
     "react": "16.2.0",
     "react-codemirror": "git://github.com/skidding/react-codemirror.git#106-fix-update",

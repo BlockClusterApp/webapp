@@ -202,7 +202,7 @@ Meteor.methods({
                                             "port":23000
                                         },
                                         {
-                                            "name":"readfile",
+                                            "name":"utility",
                                             "port":6382
                                         }
                                     ],
@@ -234,11 +234,12 @@ Meteor.methods({
                                                 rpcNodePort: response.data.spec.ports[0].nodePort,
                                                 constellationNodePort: response.data.spec.ports[1].nodePort,
                                                 ethNodePort: response.data.spec.ports[2].nodePort,
-                                                readFile: response.data.spec.ports[3].nodePort,
+                                                utilityPort: response.data.spec.ports[3].nodePort,
                                                 clusterIP: response.data.spec.clusterIP,
                                                 realRPCNodePort: 8545,
                                                 realConstellationNodePort: 9001,
-                                                realEthNodePort: 23000
+                                                realEthNodePort: 23000,
+                                                realUtilityPort: 6382
                                             }
                                         })
 
@@ -374,9 +375,11 @@ Meteor.methods({
                                                                                             }
                                                                                         })
 
+                                                                                        let firstAccPass = helpers.instanceIDGenerate();
+
                                                                                         web3.currentProvider.sendAsync({
                                                                                             method: "personal_newAccount",
-                                                                                            params: [""],
+                                                                                            params: [firstAccPass],
                                                                                             jsonrpc: "2.0",
                                                                                             id: new Date().getTime()
                                                                                         }, Meteor.bindEnvironment(function(error, result) {
@@ -386,7 +389,7 @@ Meteor.methods({
                                                                                             } else {
                                                                                                 let accounts = {};
                                                                                                 accounts[result.result] = {
-                                                                                                    password: helpers.instanceIDGenerate()
+                                                                                                    password:firstAccPass
                                                                                                 }
 
                                                                                                 Networks.update({
@@ -399,7 +402,7 @@ Meteor.methods({
 
                                                                                                 web3.currentProvider.sendAsync({
                                                                                                     method: "personal_unlockAccount",
-                                                                                                    params: [result.result, "", 0],
+                                                                                                    params: [result.result, firstAccPass, 0],
                                                                                                     jsonrpc: "2.0",
                                                                                                     id: new Date().getTime()
                                                                                                 }, Meteor.bindEnvironment(function(error, result) {
@@ -730,7 +733,7 @@ spec:
                                             "port":23000
                                         },
                                         {
-                                            "name":"readfile",
+                                            "name":"utility",
                                             "port":6382
                                         }
                                     ],
@@ -762,11 +765,12 @@ spec:
                                                 rpcNodePort: response.data.spec.ports[0].nodePort,
                                                 constellationNodePort: response.data.spec.ports[1].nodePort,
                                                 ethNodePort: response.data.spec.ports[2].nodePort,
-                                                readFile: response.data.spec.ports[3].nodePort,
+                                                utilityPort: response.data.spec.ports[3].nodePort,
                                                 clusterIP: response.data.spec.clusterIP,
                                                 realRPCNodePort: 8545,
                                                 realConstellationNodePort: 9001,
-                                                realEthNodePort: 23000
+                                                realEthNodePort: 23000,
+                                                realUtilityPort: 6382
                                             }
                                         })
 
@@ -896,9 +900,10 @@ spec:
                                                                                         deleteNetwork(id)
                                                                                     } else {
                                                                                         let currentValidators = result.result;
+                                                                                        let firstAccPass = helpers.instanceIDGenerate();
                                                                                         web3.currentProvider.sendAsync({
                                                                                             method: "personal_newAccount",
-                                                                                            params: [""],
+                                                                                            params: [firstAccPass],
                                                                                             jsonrpc: "2.0",
                                                                                             id: new Date().getTime()
                                                                                         }, Meteor.bindEnvironment(function(error, result) {
@@ -909,12 +914,12 @@ spec:
 
                                                                                                 let accounts = {};
                                                                                                 accounts[result.result] = {
-                                                                                                    password: helpers.instanceIDGenerate()
+                                                                                                    password: firstAccPass
                                                                                                 }
 
                                                                                                 web3.currentProvider.sendAsync({
                                                                                                     method: "personal_unlockAccount",
-                                                                                                    params: [result.result, "", 0],
+                                                                                                    params: [result.result, firstAccPass, 0],
                                                                                                     jsonrpc: "2.0",
                                                                                                     id: new Date().getTime()
                                                                                                 }, Meteor.bindEnvironment(function(error, result) {
@@ -1054,7 +1059,7 @@ spec:
                 myFuture.return();
             }
         }))
-        
+
         return myFuture.wait();
     },
     "inviteUserToNetwork": function(networkId, nodeType, email) {
@@ -1763,5 +1768,26 @@ spec:
                 notificationURLs: notificationURLs
             }
         })
+    },
+    "downloadAccount": function(instanceId, accountAddress) {
+        var myFuture = new Future();
+
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+
+        var workerNodeIP = Utilities.find({
+            "name": "workerNodeIP"
+        }).fetch()[0].value;
+        
+        HTTP.call("GET", `http://${workerNodeIP}:${network.utilityPort}/getPrivateKey?address=${accountAddress}&password=${network.accounts[accountAddress].password}`, function(error, response) {
+            if (error) {
+                myFuture.throw("An unknown error occured");
+            } else {
+                myFuture.return(response.content);
+            }
+        })
+
+        return myFuture.wait();
     }
 })

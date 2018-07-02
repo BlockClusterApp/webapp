@@ -7,6 +7,7 @@ import helpers from "../../../modules/helpers"
 import notifications from "../../../modules/notifications"
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
+import {Link} from "react-router-dom"
 
 import "./ViewEditNetwork.scss"
 
@@ -77,6 +78,25 @@ class ViewEditNetwork extends Component {
 				notifications.success("Account created")
 				this.accountPassword.value = "";
 			}
+		})
+	}
+
+	downloadAccount = (e, address) => {
+		e.preventDefault();
+		this.setState({
+            [address + "_downloading"]: true
+        });
+
+		Meteor.call("downloadAccount", this.props.network[0].instanceId, address, (error, result) => {
+			if(!error) {
+				helpers.downloadString(result, "application/json", "key.json")
+			} else {
+				notifications.error("An error occured")
+			}
+
+			this.setState({
+	            [address + "_downloading"]: false
+	        });
 		})
 	}
 
@@ -227,7 +247,34 @@ class ViewEditNetwork extends Component {
 								       										<ul ref={(input) => {this.accountAddress = input;}}>
 								       											{Object.keys(this.props.network[0].accounts).map((item, index) => {
 											                                        return (
-											                                            <li key={item}>{item}</li>
+											                                            <li key={item}>
+																							{item} &nbsp;
+																							{(this.state[item + "_downloading"] == true) &&
+																								<div className="clickable" style={{width: "14px", height: "14px", "display": "inline-block"}}>
+																								    <div style={{width: "100%", height: "100%"}} className="lds-wedges">
+																								        <div>
+																								            <div>
+																								                <div></div>
+																								            </div>
+																								            <div>
+																								                <div></div>
+																								            </div>
+																								            <div>
+																								                <div></div>
+																								            </div>
+																								            <div>
+																								                <div></div>
+																								            </div>
+																								        </div>
+																								    </div>
+																								    <style type="text/css">
+																								    </style>
+																								</div>
+																							}
+																							{(this.state[item + "_downloading"] != true) &&
+																								<i className="clickable fa fa-download" onClick={(e) => {this.downloadAccount(e, item)}}></i>
+																							}
+																						</li>
 											                                        )
 											                                    })}
 								       										</ul>
