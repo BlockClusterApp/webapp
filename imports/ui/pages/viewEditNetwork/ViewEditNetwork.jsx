@@ -222,10 +222,10 @@ class ViewEditNetwork extends Component {
 							   							(() => {
 							       							if (this.props.network.length === 1) {
 																if(this.props.network[0].accounts !== undefined) {
-																	if(this.props.network[0].accounts.length > 0) {
+																	if(Object.keys(this.props.network[0].accounts).length > 0) {
 								       									return (
 								       										<ul ref={(input) => {this.accountAddress = input;}}>
-								       											{this.props.network[0].accounts.map((item, index) => {
+								       											{Object.keys(this.props.network[0].accounts).map((item, index) => {
 											                                        return (
 											                                            <li key={item}>{item}</li>
 											                                        )

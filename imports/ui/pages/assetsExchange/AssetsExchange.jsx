@@ -420,7 +420,7 @@ class AssetsManagement extends Component {
                                                                                                                 <div className="form-group">
                                                                                                                     <label>Seller Account</label>
                                                                                                                     <select className="form-control" ref={(input) => {this[item.instanceId + "_sellAsset_fromAddress"] = input}} required>
-                                                                                                                        {this.props.networks[index].accounts.map((item, index) => {
+                                                                                                                        {Object.keys(this.props.networks[index].accounts).map((item, index) => {
                                                                                                                             return <option key={item} value={item}>{item}</option>
                                                                                                                         })}
                                                                                                                     </select>
@@ -667,7 +667,7 @@ class AssetsManagement extends Component {
                                                                                                                         Object.keys(this.props.networks || {}).map((key) => {
                                                                                                                             if(this.props.networks[key].genesisBlockHash === this.state[item.instanceId + "_fullOrder_genesisBlockHash"] && this[item.instanceId + "_fullOrder_continueAccountLoop"] === true) {
                                                                                                                                 this[item.instanceId + "_fullOrder_continueAccountLoop"] = false;
-                                                                                                                                return this.props.networks[key].accounts.map((item, index) => {
+                                                                                                                                return Object.keys(this.props.networks[key].accounts).map((item, index) => {
                                                                                                                                     return <option key={item} value={item}>{item}</option>
                                                                                                                                 })
                                                                                                                             }
@@ -679,7 +679,7 @@ class AssetsManagement extends Component {
                                                                                                                     {(this.state[item.instanceId + "_fullOrder_genesisBlockHash"] !== undefined && this.state[item.instanceId + "_fullfillOrder_selectedNetwork"] !== undefined) ? (
                                                                                                                         Object.keys(this.props.networks || {}).map((key) => {
                                                                                                                             if(this.state[item.instanceId + "_fullfillOrder_selectedNetwork"] === this.props.networks[key].instanceId) {
-                                                                                                                                return this.props.networks[key].accounts.map((item, index) => {
+                                                                                                                                return Object.keys(this.props.networks[key].accounts).map((item, index) => {
                                                                                                                                     return <option key={item} value={item}>{item}</option>
                                                                                                                                 })
                                                                                                                             }
@@ -731,7 +731,7 @@ class AssetsManagement extends Component {
                                                                                                             <div className="form-group">
                                                                                                                 <label>Account</label>
                                                                                                                 <select className="form-control" ref={(input) => {this[item.instanceId + "_cancel_address"] = input}} required>
-                                                                                                                    {this.props.networks[index].accounts.map((item, index) => {
+                                                                                                                    {Object.keys(this.props.networks[index].accounts).map((item, index) => {
                                                                                                                         return <option key={item} value={item}>{item}</option>
                                                                                                                     })}
                                                                                                                 </select>

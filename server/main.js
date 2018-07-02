@@ -320,7 +320,7 @@ Meteor.methods({
                                                                 "name": "workerNodeIP"
                                                             }).fetch()[0].value;
                                                             Meteor.setTimeout(() => {
-                                                                HTTP.call("GET", `http://` + workerNodeIP + ":" + response.data.spec.ports[3].nodePort, function(error, response) {
+                                                                HTTP.call("GET", `http://` + workerNodeIP + ":" + response.data.spec.ports[3].nodePort + "/nodeInfo", function(error, response) {
                                                                     if (error) {
                                                                         console.log(error);
                                                                         deleteNetwork(id)
@@ -384,15 +384,15 @@ Meteor.methods({
                                                                                                 console.log(error);
                                                                                                 deleteNetwork(id)
                                                                                             } else {
-                                                                                                let accountsPassword = {};
-                                                                                                let accounts = [];
-                                                                                                accountsPassword[result.result] = ""
-                                                                                                accounts.push(result.result);
+                                                                                                let accounts = {};
+                                                                                                accounts[result.result] = {
+                                                                                                    password: helpers.instanceIDGenerate()
+                                                                                                }
+
                                                                                                 Networks.update({
                                                                                                     _id: id
                                                                                                 }, {
                                                                                                     $set: {
-                                                                                                        accountsPassword: accountsPassword,
                                                                                                         accounts: accounts
                                                                                                     }
                                                                                                 })
@@ -850,7 +850,7 @@ spec:
 
                                                             Meteor.setTimeout(() => {
 
-                                                                HTTP.call("GET", "http://" + workerNodeIP + ":" + response.data.spec.ports[3].nodePort, function(error, response) {
+                                                                HTTP.call("GET", "http://" + workerNodeIP + ":" + response.data.spec.ports[3].nodePort + "/nodeInfo", function(error, response) {
                                                                     if (error) {
                                                                         console.log(error);
                                                                         deleteNetwork(id)
@@ -906,10 +906,11 @@ spec:
                                                                                                 console.log(error);
                                                                                                 deleteNetwork(id)
                                                                                             } else {
-                                                                                                let accountsPassword = {};
-                                                                                                let accounts = [];
-                                                                                                accountsPassword[result.result] = ""
-                                                                                                accounts.push(result.result);
+
+                                                                                                let accounts = {};
+                                                                                                accounts[result.result] = {
+                                                                                                    password: helpers.instanceIDGenerate()
+                                                                                                }
 
                                                                                                 web3.currentProvider.sendAsync({
                                                                                                     method: "personal_unlockAccount",
@@ -935,7 +936,6 @@ spec:
                                                                                                                         "jsonRPC-password": instanceId,
                                                                                                                         "restAPI-password": instanceId,
                                                                                                                         "genesisBlockHash": block.hash,
-                                                                                                                        accountsPassword: accountsPassword,
                                                                                                                         accounts: accounts,
                                                                                                                         "streams": [],
                                                                                                                         "subscribedStreams": []
@@ -1024,7 +1024,6 @@ spec:
         var network = Networks.find({
             _id: networkId
         }).fetch()[0];
-        var accountsPassword = network.accountsPassword;
         var accounts = network.accounts;
         var workerNodeIP = Utilities.find({
             "name": "workerNodeIP"
@@ -1040,19 +1039,22 @@ spec:
                 console.log(error);
                 myFuture.throw("An unknown error occured");
             } else {
-                accountsPassword[result.result] = password
-                accounts.push(result.result);
+
+                accounts[result.result] = {
+                    password: password
+                };
+
                 Networks.update({
                     _id: networkId
                 }, {
                     $set: {
-                        accountsPassword: accountsPassword,
                         accounts: accounts
                     }
                 })
                 myFuture.return();
             }
         }))
+        
         return myFuture.wait();
     },
     "inviteUserToNetwork": function(networkId, nodeType, email) {

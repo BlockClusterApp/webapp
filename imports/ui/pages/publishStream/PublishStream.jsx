@@ -112,7 +112,7 @@ class PublishStream extends Component {
                                                                                                 <label>From Account</label>
                                                                                                 <span className="help"> e.g. "0x84eddb1..."</span>
                                                                                                 <select className="form-control" required ref={(input) => {this[item.instanceId + "_publishStream_issuer"] = input}}>
-                                                                                                    {item.accounts.map((address, addressIndex) => {
+                                                                                                    {Object.keys(item.accounts).map((address, addressIndex) => {
                                                                                                         return (
                                                                                                             <option key={addressIndex}>{address}</option>
                                                                                                         )

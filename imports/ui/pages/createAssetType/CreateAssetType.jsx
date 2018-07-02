@@ -147,7 +147,7 @@ class CreateAssetType extends Component {
                                                                                                 <label>Issuing Address</label>
                                                                                                 <span className="help"> e.g. "0x84eddb1..."</span>
                                                                                                 <select className="form-control" required ref={(input) => {this[item.instanceId + "_createAssetType_assetIssuer"] = input}}>
-                                                                                                    {item.accounts.map((address, addressIndex) => {
+                                                                                                    {Object.keys(item.accounts).map((address, addressIndex) => {
                                                                                                         return (
                                                                                                             <option key={addressIndex}>{address}</option>
                                                                                                         )
