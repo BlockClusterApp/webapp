@@ -25,6 +25,7 @@ class CreateAssetType extends Component {
         });
 
         let reissuable = false;
+        let decimals = 0;
 
         if(this[instanceId + "_createAssetType_assetType"].value === "bulk") {
             reissuable = this[instanceId + "_createAssetType_reissuable"].value
