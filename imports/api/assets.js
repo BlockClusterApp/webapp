@@ -3,7 +3,8 @@ import {Utilities} from "../collections/utilities/utilities.js"
 import smartContracts from "../modules/smart-contracts"
 import Web3 from "web3";
 import RedisJwt from "redis-jwt";
-import {SearchBlockchain} from "../collections/searchBlockchain/searchBlockchain.js"
+import {soloAssets} from "../collections/soloAssets/soloAssets.js"
+import {streams} from "../collections/streams/streams.js"
 import helpers from "../modules/helpers"
 import {
     Orders
@@ -514,11 +515,20 @@ JsonRoutes.add("post", "/api/assets/getOrderInfo", function (req, res, next) {
     }
 })
 
-JsonRoutes.add("post", "/api/search", function (req, res, next) {
+JsonRoutes.add("post", "/api/searchAssets", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var query = req.body;
     query.instanceId = req.networkId;
-    var result = SearchBlockchain.find(query).fetch();
+    var result = soloAssets.find(query).fetch();
+
+    res.end(JSON.stringify(result))
+});
+
+JsonRoutes.add("post", "/api/searchStreams", function (req, res, next) {
+    var network = Networks.find({instanceId: req.networkId}).fetch()[0]
+    var query = req.body;
+    query.instanceId = req.networkId;
+    var result = streams.find(query).fetch();
 
     res.end(JSON.stringify(result))
 });

@@ -6,8 +6,14 @@ import {
     Utilities
 } from "../imports/collections/utilities/utilities.js"
 import {
-    SearchBlockchain
-} from "../imports/collections/searchBlockchain/searchBlockchain.js"
+    SoloAssets
+} from "../imports/collections/soloAssets/soloAssets.js"
+import {
+    Streams
+} from "../imports/collections/streams/streams.js"
+import {
+    AssetTypes
+} from "../imports/collections/assetTypes/assetTypes.js"
 import {
     Orders
 } from "../imports/collections/orders/orders.js"
@@ -556,7 +562,10 @@ Meteor.methods({
                                                                         Orders.remove({
                                                                             instanceId: id
                                                                         });
-                                                                        SearchBlockchain.remove({
+                                                                        SoloAssets.remove({
+                                                                            instanceId: id
+                                                                        });
+                                                                        Streams.remove({
                                                                             instanceId: id
                                                                         });
                                                                         Secrets.remove({
@@ -1592,7 +1601,7 @@ spec:
     },
     "searchSoloAssets": function(instanceId, query) {
         query.instanceId = instanceId;
-        return SearchBlockchain.find(JSON.parse(query)).fetch();
+        return soloAssets.find(JSON.parse(query)).fetch();
     },
     "rpcPasswordUpdate": function(instanceId, password) {
         var myFuture = new Future();
@@ -1779,7 +1788,7 @@ spec:
         var workerNodeIP = Utilities.find({
             "name": "workerNodeIP"
         }).fetch()[0].value;
-        
+
         HTTP.call("GET", `http://${workerNodeIP}:${network.utilityPort}/getPrivateKey?address=${accountAddress}&password=${network.accounts[accountAddress].password}`, function(error, response) {
             if (error) {
                 myFuture.throw("An unknown error occured");
