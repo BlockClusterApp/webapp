@@ -437,511 +437,491 @@ class AssetsManagement extends Component {
                                     <div className="card-title">Assets Management
                                     </div>
                                 </div>
-                                <div className="card-block no-padding">
+                                <div className="card-block">
                                     <div className="row">
                                         <div className="col-xl-12">
-                                            <div className="card card-transparent flex-row">
-                                                <ul className="nav nav-tabs nav-tabs-simple nav-tabs-left bg-white" id="tab-3">
-                                                    {this.props.networks.map((item, index) => {
-                                                        return (
-                                                            <li key={item.instanceId} className="nav-item">
-                                                                <a href="#" className={index === 0 ? "active" : ""} data-toggle="tab" data-target={"#" + item.instanceId}>{item.name}</a>
-                                                            </li>
-                                                        )
-                                                    })}
-                                                </ul>
-                                                <div className="tab-content bg-white">
-                                                    {this.props.networks.map((item, index) => {
-                                                        return (
-                                                            <div key={index} className={index === 0 ? "tab-pane active" : "tab-pane "} id={item.instanceId}>
-                                                                {item.assetsContractAddress === '' &&
-                                                                    <div>
-                                                                        Please deploy smart contract
-                                                                    </div>
-                                                                }
-                                                                {(item.assetsContractAddress !== undefined && item.assetsContractAddress !== '') &&
-                                                                    <div>
-                                                                        <div className="container">
-                                                                            <div className="row column-seperation">
-                                                                                <div className="col-lg-12">
-                                                                                    <div className="card card-transparent">
-                                                                                        <ul className="nav nav-tabs nav-tabs-fillup" data-init-reponsive-tabs="dropdownfx">
-                                                                                            <li className="nav-item">
-                                                                                                <a href="#" className="active" data-toggle="tab" data-target={"#" + item.instanceId + "_slide1"}><span>Issue Assets</span></a>
-                                                                                            </li>
-                                                                                            <li className="nav-item">
-                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide2"}><span>Transfer Assets</span></a>
-                                                                                            </li>
-                                                                                            <li className="nav-item">
-                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide3"}><span>Get Asset Info</span></a>
-                                                                                            </li>
-                                                                                            <li className="nav-item">
-                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide4"}><span>Add/Update Solo Asset Info</span></a>
-                                                                                            </li>
-                                                                                            <li className="nav-item">
-                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide5"}><span>Close Solo Asset</span></a>
-                                                                                            </li>
-                                                                                        </ul>
-                                                                                        <div className="tab-content p-l-0 p-r-0">
-                                                                                            <div className="tab-pane slide-left active" id={item.instanceId + "_slide1"}>
-                                                                                                <div className="row column-seperation">
-                                                                                                    <div className="col-lg-6">
-                                                                                                        <h4>Issue Bulk Assets</h4>
-                                                                                                        <form role="form" onSubmit={(e) => {
-                                                                                                                this.issueBulkAsset(e, item.instanceId);
-                                                                                                            }}>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Asset Name</label>
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_addBulkAsset_assetName"] = input}} required>
-                                                                                                                    {Object.keys(this.props.networks[index].assetsTypes || {}).map((key) => {
-                                                                                                                        if(this.props.networks[index].assetsTypes[key].type == "bulk") {
-                                                                                                                            return <option key={this.props.networks[index].assetsTypes[key].assetName} value={this.props.networks[index].assetsTypes[key].assetName}>{this.props.networks[index].assetsTypes[key].assetName}</option>
-                                                                                                                        }
-                                                                                                                    })}
-                                                                                                                </select>
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>From Account</label>
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_addBulkAsset_fromAddress"] = input}} required>
-                                                                                                                    {Object.keys(this.props.networks[index].accounts).map((item, index) => {
-                                                                                                                        return <option key={item} value={item}>{item}</option>
-                                                                                                                    })}
-                                                                                                                </select>
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>To Account</label>
-                                                                                                                <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_addBulkAsset_toAddress"] = input}} required />
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Units</label>
-                                                                                                                <input type="float" className="form-control" ref={(input) => {this[item.instanceId + "_addBulkAsset_units"] = input}} required />
-                                                                                                            </div>
-                                                                                                            {this.state[item.instanceId + "_addBulkAsset_formSubmitError"] &&
-                                                                                                                <div className="row m-t-30">
-                                                                                                                    <div className="col-md-12">
-                                                                                                                        <div className="m-b-20 alert alert-danger m-b-0" role="alert">
-                                                                                                                            <button className="close" data-dismiss="alert"></button>
-                                                                                                                            {this.state[item.instanceId + "_addBulkAsset_formSubmitError"]}
-                                                                                                                        </div>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                            }
-                                                                                                            <p className="pull-right">
-                                                                                                                <LaddaButton
-                                                                                                                    loading={this.state[item.instanceId + "_addBulkAsset_formloading"]}
-                                                                                                                    data-size={S}
-                                                                                                                    data-style={SLIDE_UP}
-                                                                                                                    data-spinner-size={30}
-                                                                                                                    data-spinner-lines={12}
-                                                                                                                    className="btn btn-success m-t-10"
-                                                                                                                    type="submit"
-                                                                                                                >
-                                                                                                                    <i className="fa fa-plus" aria-hidden="true"></i>&nbsp;&nbsp;Issue Asset
-                                                                                                                </LaddaButton>
-                                                                                                            </p>
-                                                                                                        </form>
-                                                                                                    </div>
-                                                                                                    <div className="col-lg-6">
-                                                                                                        <h4>Issue Solo Asset</h4>
-                                                                                                        <form role="form" onSubmit={(e) => {
-                                                                                                                this.issueSoloAsset(e, item.instanceId);
-                                                                                                            }}>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Asset Name</label>
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_addSoloAsset_assetName"] = input}} required>
-                                                                                                                    {Object.keys(this.props.networks[index].assetsTypes || {}).map((key, ) => {
-                                                                                                                        if(this.props.networks[index].assetsTypes[key].type == "solo") {
-                                                                                                                            return <option key={this.props.networks[index].assetsTypes[key].assetName} value={this.props.networks[index].assetsTypes[key].assetName}>{this.props.networks[index].assetsTypes[key].assetName}</option>
-                                                                                                                        }
-                                                                                                                    })}
-                                                                                                                </select>
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>From Account</label>
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_addSoloAsset_fromAddress"] = input}} required>
-                                                                                                                    {Object.keys(this.props.networks[index].accounts).map((item, index) => {
-                                                                                                                        return <option key={item} value={item}>{item}</option>
-                                                                                                                    })}
-                                                                                                                </select>
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>To Account</label>
-                                                                                                                <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_addSoloAsset_toAddress"] = input}} required />
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Identifier</label>
-                                                                                                                <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_addSoloAsset_identifier"] = input}} required />
-                                                                                                            </div>
-                                                                                                            {this.state[item.instanceId + "_addSoloAsset_formSubmitError"] &&
-                                                                                                                <div className="row m-t-30">
-                                                                                                                    <div className="col-md-12">
-                                                                                                                        <div className="m-b-20 alert alert-danger m-b-0" role="alert">
-                                                                                                                            <button className="close" data-dismiss="alert"></button>
-                                                                                                                            {this.state[item.instanceId + "_addBulkAsset_formSubmitError"]}
-                                                                                                                        </div>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                            }
-                                                                                                            <p className="pull-right">
-                                                                                                                <LaddaButton
-                                                                                                                    loading={this.state[item.instanceId + "_addSoloAsset_formloading"]}
-                                                                                                                    data-size={S}
-                                                                                                                    data-style={SLIDE_UP}
-                                                                                                                    data-spinner-size={30}
-                                                                                                                    data-spinner-lines={12}
-                                                                                                                    className="btn btn-success m-t-10"
-                                                                                                                    type="submit"
-                                                                                                                >
-                                                                                                                    <i className="fa fa-plus" aria-hidden="true"></i>&nbsp;&nbsp;Issue Asset
-                                                                                                                </LaddaButton>
-                                                                                                            </p>
-                                                                                                        </form>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div className="tab-pane slide-left" id={item.instanceId + "_slide2"}>
-                                                                                                <div className="row">
-                                                                                                    <div className="col-lg-6">
-                                                                                                        <h4>Transfer Bulk Assets</h4>
-                                                                                                        <form role="form" onSubmit={(e) => {
-                                                                                                                this.transferBulkAssets(e, item.instanceId);
-                                                                                                            }}>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Asset Name</label>
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_transferBulkAsset_assetName"] = input}} required>
-                                                                                                                    {Object.keys(this.props.networks[index].assetsTypes || {}).map((key) => {
-                                                                                                                        if(this.props.networks[index].assetsTypes[key].type == "bulk") {
-                                                                                                                            return <option key={this.props.networks[index].assetsTypes[key].assetName} value={this.props.networks[index].assetsTypes[key].assetName}>{this.props.networks[index].assetsTypes[key].assetName}</option>
-                                                                                                                        }
-                                                                                                                    })}
-                                                                                                                </select>
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>From Account</label>
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_transferBulkAsset_fromAddress"] = input}} required>
-                                                                                                                    {Object.keys(this.props.networks[index].accounts).map((item, index) => {
-                                                                                                                        return <option key={item} value={item}>{item}</option>
-                                                                                                                    })}
-                                                                                                                </select>
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>To Account</label>
-                                                                                                                <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_transferBulkAsset_toAddress"] = input}} required />
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Units</label>
-                                                                                                                <input type="float" className="form-control" ref={(input) => {this[item.instanceId + "_transferBulkAsset_units"] = input}} required />
-                                                                                                            </div>
-                                                                                                            {this.state[item.instanceId + "_transferBulkAsset_formSubmitError"] &&
-                                                                                                                <div className="row m-t-30">
-                                                                                                                    <div className="col-md-12">
-                                                                                                                        <div className="m-b-20 alert alert-danger m-b-0" role="alert">
-                                                                                                                            <button className="close" data-dismiss="alert"></button>
-                                                                                                                            {this.state[item.instanceId + "_transferBulkAsset_formSubmitError"]}
-                                                                                                                        </div>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                            }
-                                                                                                            <p className="pull-right">
-                                                                                                                <LaddaButton
-                                                                                                                    loading={this.state[item.instanceId + "_transferBulkAsset_formloading"]}
-                                                                                                                    data-size={S}
-                                                                                                                    data-style={SLIDE_UP}
-                                                                                                                    data-spinner-size={30}
-                                                                                                                    data-spinner-lines={12}
-                                                                                                                    className="btn btn-success m-t-10"
-                                                                                                                    type="submit"
-                                                                                                                >
-                                                                                                                    <i className="fa fa-exchange" aria-hidden="true"></i>&nbsp;&nbsp;Transfer Asset
-                                                                                                                </LaddaButton>
-                                                                                                            </p>
-                                                                                                        </form>
-                                                                                                    </div>
-                                                                                                    <div className="col-lg-6">
-                                                                                                        <h4>Transfer Solo Asset</h4>
-                                                                                                        <form role="form" onSubmit={(e) => {
-                                                                                                                this.transferSoloAsset(e, item.instanceId);
-                                                                                                            }}>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Asset Name</label>
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_transferSoloAsset_assetName"] = input}} required>
-                                                                                                                    {Object.keys(this.props.networks[index].assetsTypes || {}).map((key) => {
-                                                                                                                        if(this.props.networks[index].assetsTypes[key].type == "solo") {
-                                                                                                                            return <option key={this.props.networks[index].assetsTypes[key].assetName} value={this.props.networks[index].assetsTypes[key].assetName}>{this.props.networks[index].assetsTypes[key].assetName}</option>
-                                                                                                                        }
-                                                                                                                    })}
-                                                                                                                </select>
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>From Account</label>
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_transferSoloAsset_fromAddress"] = input}} required>
-                                                                                                                    {Object.keys(this.props.networks[index].accounts).map((item, index) => {
-                                                                                                                        return <option key={item} value={item}>{item}</option>
-                                                                                                                    })}
-                                                                                                                </select>
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>To Account</label>
-                                                                                                                <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_transferSoloAsset_toAddress"] = input}} required />
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Identifier</label>
-                                                                                                                <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_transferSoloAsset_identifier"] = input}} required />
-                                                                                                            </div>
-                                                                                                            {this.state[item.instanceId + "_transferSoloAsset_formSubmitError"] &&
-                                                                                                                <div className="row m-t-30">
-                                                                                                                    <div className="col-md-12">
-                                                                                                                        <div className="m-b-20 alert alert-danger m-b-0" role="alert">
-                                                                                                                            <button className="close" data-dismiss="alert"></button>
-                                                                                                                            {this.state[item.instanceId + "_transferSoloAsset_formSubmitError"]}
-                                                                                                                        </div>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                            }
-                                                                                                            <p className="pull-right">
-                                                                                                                <LaddaButton
-                                                                                                                    loading={this.state[item.instanceId + "_transferSoloAsset_formloading"]}
-                                                                                                                    data-size={S}
-                                                                                                                    data-style={SLIDE_UP}
-                                                                                                                    data-spinner-size={30}
-                                                                                                                    data-spinner-lines={12}
-                                                                                                                    className="btn btn-success m-t-10"
-                                                                                                                    type="submit"
-                                                                                                                >
-                                                                                                                    <i className="fa fa-exchange" aria-hidden="true"></i>&nbsp;&nbsp;Issue Asset
-                                                                                                                </LaddaButton>
-                                                                                                            </p>
-                                                                                                        </form>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div className="tab-pane slide-left" id={item.instanceId + "_slide3"}>
-                                                                                                <div className="row">
-                                                                                                    <div className="col-lg-6">
-                                                                                                        <h4>Get Bulk Asset Balance</h4>
-                                                                                                        <form role="form" onSubmit={(e) => {
-                                                                                                                this.getBulkAssetBalance(e, item.instanceId);
-                                                                                                            }}>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Asset Name</label>
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_getInfoBulkAsset_assetName"] = input}} required>
-                                                                                                                    {Object.keys(this.props.networks[index].assetsTypes || {}).map((key) => {
-                                                                                                                        if(this.props.networks[index].assetsTypes[key].type == "bulk") {
-                                                                                                                            return <option key={this.props.networks[index].assetsTypes[key].assetName} value={this.props.networks[index].assetsTypes[key].assetName}>{this.props.networks[index].assetsTypes[key].assetName}</option>
-                                                                                                                        }
-                                                                                                                    })}
-                                                                                                                </select>
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Account</label>
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_getInfoBulkAsset_address"] = input}} required>
-                                                                                                                    {Object.keys(this.props.networks[index].accounts).map((item, index) => {
-                                                                                                                        return <option key={item} value={item}>{item}</option>
-                                                                                                                    })}
-                                                                                                                </select>
-                                                                                                            </div>
-                                                                                                            {this.state[item.instanceId + "_getInfoBulkAsset_formSubmitError"] &&
-                                                                                                                <div className="row m-t-30">
-                                                                                                                    <div className="col-md-12">
-                                                                                                                        <div className="m-b-20 alert alert-danger m-b-0" role="alert">
-                                                                                                                            <button className="close" data-dismiss="alert"></button>
-                                                                                                                            {this.state[item.instanceId + "_getInfoBulkAsset_formSubmitError"]}
-                                                                                                                        </div>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                            }
-                                                                                                            <p className="pull-right">
-                                                                                                                <LaddaButton
-                                                                                                                    loading={this.state[item.instanceId + "_getInfoBulkAsset_formloading"]}
-                                                                                                                    data-size={S}
-                                                                                                                    data-style={SLIDE_UP}
-                                                                                                                    data-spinner-size={30}
-                                                                                                                    data-spinner-lines={12}
-                                                                                                                    className="btn btn-success m-t-10"
-                                                                                                                    type="submit"
-                                                                                                                >
-                                                                                                                    <i className="fa fa-balance-scale" aria-hidden="true"></i>&nbsp;&nbsp;Get Balance
-                                                                                                                </LaddaButton>
-                                                                                                            </p>
-                                                                                                        </form>
-                                                                                                    </div>
-                                                                                                    <div className="col-lg-6">
-                                                                                                        <h4>Get Solo Asset Info</h4>
-                                                                                                        <form role="form" onSubmit={(e) => {
-                                                                                                                this.getSoloAssetInfo(e, item.instanceId);
-                                                                                                            }}>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Asset Name</label>
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_getInfoSoloAsset_assetName"] = input}} required>
-                                                                                                                    {Object.keys(this.props.networks[index].assetsTypes || {}).map((key) => {
-                                                                                                                        if(this.props.networks[index].assetsTypes[key].type == "solo") {
-                                                                                                                            return <option key={this.props.networks[index].assetsTypes[key].assetName} value={this.props.networks[index].assetsTypes[key].assetName}>{this.props.networks[index].assetsTypes[key].assetName}</option>
-                                                                                                                        }
-                                                                                                                    })}
-                                                                                                                </select>
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Identifier</label>
-                                                                                                                <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_getInfoSoloAsset_identifier"] = input}} required />
-                                                                                                            </div>
-                                                                                                            {this.state[item.instanceId + "_getInfoSoloAsset_formSubmitError"] &&
-                                                                                                                <div className="row m-t-30">
-                                                                                                                    <div className="col-md-12">
-                                                                                                                        <div className="m-b-20 alert alert-danger m-b-0" role="alert">
-                                                                                                                            <button className="close" data-dismiss="alert"></button>
-                                                                                                                            {this.state[item.instanceId + "_getInfoSoloAsset_formSubmitError"]}
-                                                                                                                        </div>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                            }
-                                                                                                            <p className="pull-right">
-                                                                                                                <LaddaButton
-                                                                                                                    loading={this.state[item.instanceId + "_getInfoSoloAsset_formloading"]}
-                                                                                                                    data-size={S}
-                                                                                                                    data-style={SLIDE_UP}
-                                                                                                                    data-spinner-size={30}
-                                                                                                                    data-spinner-lines={12}
-                                                                                                                    className="btn btn-success m-t-10"
-                                                                                                                    type="submit"
-                                                                                                                >
-                                                                                                                    <i className="fa fa-info" aria-hidden="true"></i>&nbsp;&nbsp;Get Info
-                                                                                                                </LaddaButton>
-                                                                                                            </p>
-                                                                                                        </form>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div className="tab-pane slide-left" id={item.instanceId + "_slide4"}>
-                                                                                                <div className="row">
-                                                                                                    <div className="col-lg-12">
-                                                                                                        <h4>Add/Update Meta Data</h4>
-                                                                                                        <form role="form" onSubmit={(e) => {
-                                                                                                                this.addUpdateSoloAssetInfo(e, item.instanceId);
-                                                                                                            }}>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Asset Name</label>
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_updateSoloAssetInfo_assetName"] = input}} required>
-                                                                                                                    {Object.keys(this.props.networks[index].assetsTypes || {}).map((key) => {
-                                                                                                                        if(this.props.networks[index].assetsTypes[key].type == "solo") {
-                                                                                                                            return <option key={this.props.networks[index].assetsTypes[key].assetName} value={this.props.networks[index].assetsTypes[key].assetName}>{this.props.networks[index].assetsTypes[key].assetName}</option>
-                                                                                                                        }
-                                                                                                                    })}
-                                                                                                                </select>
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>From Account</label>
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_updateSoloAssetInfo_fromAddress"] = input}} required>
-                                                                                                                    {Object.keys(this.props.networks[index].accounts).map((item, index) => {
-                                                                                                                        return <option key={item} value={item}>{item}</option>
-                                                                                                                    })}
-                                                                                                                </select>
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Identifier</label>
-                                                                                                                <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_updateSoloAssetInfo_identifier"] = input}} required />
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Key</label>
-                                                                                                                <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_updateSoloAssetInfo_key"] = input}} required />
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Value</label>
-                                                                                                                <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_updateSoloAssetInfo_value"] = input}} required />
-                                                                                                            </div>
-                                                                                                            {this.state[item.instanceId + "_updateSoloAssetInfo_formSubmitError"] &&
-                                                                                                                <div className="row m-t-30">
-                                                                                                                    <div className="col-md-12">
-                                                                                                                        <div className="m-b-20 alert alert-danger m-b-0" role="alert">
-                                                                                                                            <button className="close" data-dismiss="alert"></button>
-                                                                                                                            {this.state[item.instanceId + "_updateSoloAssetInfo_formSubmitError"]}
-                                                                                                                        </div>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                            }
-                                                                                                            <p className="pull-right">
-                                                                                                                <LaddaButton
-                                                                                                                    loading={this.state[item.instanceId + "_updateSoloAssetInfo_formloading"]}
-                                                                                                                    data-size={S}
-                                                                                                                    data-style={SLIDE_UP}
-                                                                                                                    data-spinner-size={30}
-                                                                                                                    data-spinner-lines={12}
-                                                                                                                    className="btn btn-success m-t-10"
-                                                                                                                    type="submit"
-                                                                                                                >
-                                                                                                                    <i className="fa fa-wrench" aria-hidden="true"></i>&nbsp;&nbsp;Update
-                                                                                                                </LaddaButton>
-                                                                                                            </p>
-                                                                                                        </form>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div className="tab-pane slide-left" id={item.instanceId + "_slide5"}>
-                                                                                                <div className="row">
-                                                                                                    <div className="col-lg-12">
-                                                                                                        <h4>Close Asset</h4>
-                                                                                                        <form role="form" onSubmit={(e) => {
-                                                                                                                this.closeSoloAsset(e, item.instanceId);
-                                                                                                            }}>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Asset Name</label>
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_closeAsset_assetName"] = input}} required>
-                                                                                                                    {Object.keys(this.props.networks[index].assetsTypes || {}).map((key) => {
-                                                                                                                        if(this.props.networks[index].assetsTypes[key].type == "solo") {
-                                                                                                                            return <option key={this.props.networks[index].assetsTypes[key].assetName} value={this.props.networks[index].assetsTypes[key].assetName}>{this.props.networks[index].assetsTypes[key].assetName}</option>
-                                                                                                                        }
-                                                                                                                    })}
-                                                                                                                </select>
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>From Account</label>
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_closeAsset_fromAddress"] = input}} required>
-                                                                                                                    {Object.keys(this.props.networks[index].accounts).map((item, index) => {
-                                                                                                                        return <option key={item} value={item}>{item}</option>
-                                                                                                                    })}
-                                                                                                                </select>
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Identifier</label>
-                                                                                                                <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_closeAsset_identifier"] = input}} required />
-                                                                                                            </div>
-                                                                                                            {this.state[item.instanceId + "_closeAsset_formSubmitError"] &&
-                                                                                                                <div className="row m-t-30">
-                                                                                                                    <div className="col-md-12">
-                                                                                                                        <div className="m-b-20 alert alert-danger m-b-0" role="alert">
-                                                                                                                            <button className="close" data-dismiss="alert"></button>
-                                                                                                                            {this.state[item.instanceId + "_closeAsset_formSubmitError"]}
-                                                                                                                        </div>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                            }
-                                                                                                            <p className="pull-right">
-                                                                                                                <LaddaButton
-                                                                                                                    loading={this.state[item.instanceId + "_closeAsset_formloading"]}
-                                                                                                                    data-size={S}
-                                                                                                                    data-style={SLIDE_UP}
-                                                                                                                    data-spinner-size={30}
-                                                                                                                    data-spinner-lines={12}
-                                                                                                                    className="btn btn-success m-t-10"
-                                                                                                                    type="submit"
-                                                                                                                >
-                                                                                                                    <i className="fa fa-times-circle" aria-hidden="true"></i>&nbsp;&nbsp;Close
-                                                                                                                </LaddaButton>
-                                                                                                            </p>
-                                                                                                        </form>
-                                                                                                    </div>
+                                            <div className="card card-transparent">
+                                                {this.props.network.length === 1 &&
+                                                    <div>
+                                                        {this.props.network[0].assetsContractAddress === '' &&
+                                                            <div>
+                                                                Please deploy smart contract
+                                                            </div>
+                                                        }
+                                                        {(this.props.network[0].assetsContractAddress !== undefined && this.props.network[0].assetsContractAddress !== '') &&
+                                                            <div>
+
+                                                                <ul className="nav nav-tabs nav-tabs-fillup" data-init-reponsive-tabs="dropdownfx">
+                                                                    <li className="nav-item">
+                                                                        <a href="#" className="active" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide1"}><span>Issue Assets</span></a>
+                                                                    </li>
+                                                                    <li className="nav-item">
+                                                                        <a href="#" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide2"}><span>Transfer Assets</span></a>
+                                                                    </li>
+                                                                    <li className="nav-item">
+                                                                        <a href="#" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide3"}><span>Get Asset Info</span></a>
+                                                                    </li>
+                                                                    <li className="nav-item">
+                                                                        <a href="#" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide4"}><span>Add/Update Solo Asset Info</span></a>
+                                                                    </li>
+                                                                    <li className="nav-item">
+                                                                        <a href="#" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide5"}><span>Close Solo Asset</span></a>
+                                                                    </li>
+                                                                </ul>
+                                                                <div className="tab-content p-l-0 p-r-0">
+                                                                    <div className="tab-pane slide-left active" id={this.props.network[0].instanceId + "_slide1"}>
+                                                                        <div className="row column-seperation">
+                                                                            <div className="col-lg-6">
+                                                                                <h4>Issue Bulk Assets</h4>
+                                                                                <form role="form" onSubmit={(e) => {
+                                                                                        this.issueBulkAsset(e, this.props.network[0].instanceId);
+                                                                                    }}>
+                                                                                    <div className="form-group">
+                                                                                        <label>Asset Name</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_addBulkAsset_assetName"] = input}} required>
+                                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).map((key) => {
+                                                                                                if(this.props.network[0].assetsTypes[key].type == "bulk") {
+                                                                                                    return <option key={this.props.network[0].assetsTypes[key].assetName} value={this.props.network[0].assetsTypes[key].assetName}>{this.props.network[0].assetsTypes[key].assetName}</option>
+                                                                                                }
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>From Account</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_addBulkAsset_fromAddress"] = input}} required>
+                                                                                            {Object.keys(this.props.network[0].accounts).map((item, index) => {
+                                                                                                return <option key={item} value={item}>{item}</option>
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>To Account</label>
+                                                                                        <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_addBulkAsset_toAddress"] = input}} required />
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>Units</label>
+                                                                                        <input type="float" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_addBulkAsset_units"] = input}} required />
+                                                                                    </div>
+                                                                                    {this.state[this.props.network[0].instanceId + "_addBulkAsset_formSubmitError"] &&
+                                                                                        <div className="row m-t-30">
+                                                                                            <div className="col-md-12">
+                                                                                                <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                                                    <button className="close" data-dismiss="alert"></button>
+                                                                                                    {this.state[this.props.network[0].instanceId + "_addBulkAsset_formSubmitError"]}
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
+                                                                                    }
+                                                                                    <p className="pull-right">
+                                                                                        <LaddaButton
+                                                                                            loading={this.state[this.props.network[0].instanceId + "_addBulkAsset_formloading"]}
+                                                                                            data-size={S}
+                                                                                            data-style={SLIDE_UP}
+                                                                                            data-spinner-size={30}
+                                                                                            data-spinner-lines={12}
+                                                                                            className="btn btn-success m-t-10"
+                                                                                            type="submit"
+                                                                                        >
+                                                                                            <i className="fa fa-plus" aria-hidden="true"></i>&nbsp;&nbsp;Issue Asset
+                                                                                        </LaddaButton>
+                                                                                    </p>
+                                                                                </form>
+                                                                            </div>
+                                                                            <div className="col-lg-6">
+                                                                                <h4>Issue Solo Asset</h4>
+                                                                                <form role="form" onSubmit={(e) => {
+                                                                                        this.issueSoloAsset(e, this.props.network[0].instanceId);
+                                                                                    }}>
+                                                                                    <div className="form-group">
+                                                                                        <label>Asset Name</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_addSoloAsset_assetName"] = input}} required>
+                                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).map((key, ) => {
+                                                                                                if(this.props.network[0].assetsTypes[key].type == "solo") {
+                                                                                                    return <option key={this.props.network[0].assetsTypes[key].assetName} value={this.props.network[0].assetsTypes[key].assetName}>{this.props.network[0].assetsTypes[key].assetName}</option>
+                                                                                                }
+                                                                                            })}
+                                                                                        </select>
                                                                                     </div>
-                                                                                </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>From Account</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_addSoloAsset_fromAddress"] = input}} required>
+                                                                                            {Object.keys(this.props.network[0].accounts).map((item, index) => {
+                                                                                                return <option key={item} value={item}>{item}</option>
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>To Account</label>
+                                                                                        <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_addSoloAsset_toAddress"] = input}} required />
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>Identifier</label>
+                                                                                        <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_addSoloAsset_identifier"] = input}} required />
+                                                                                    </div>
+                                                                                    {this.state[this.props.network[0].instanceId + "_addSoloAsset_formSubmitError"] &&
+                                                                                        <div className="row m-t-30">
+                                                                                            <div className="col-md-12">
+                                                                                                <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                                                    <button className="close" data-dismiss="alert"></button>
+                                                                                                    {this.state[this.props.network[0].instanceId + "_addBulkAsset_formSubmitError"]}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    }
+                                                                                    <p className="pull-right">
+                                                                                        <LaddaButton
+                                                                                            loading={this.state[this.props.network[0].instanceId + "_addSoloAsset_formloading"]}
+                                                                                            data-size={S}
+                                                                                            data-style={SLIDE_UP}
+                                                                                            data-spinner-size={30}
+                                                                                            data-spinner-lines={12}
+                                                                                            className="btn btn-success m-t-10"
+                                                                                            type="submit"
+                                                                                        >
+                                                                                            <i className="fa fa-plus" aria-hidden="true"></i>&nbsp;&nbsp;Issue Asset
+                                                                                        </LaddaButton>
+                                                                                    </p>
+                                                                                </form>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                }
+                                                                    <div className="tab-pane slide-left" id={this.props.network[0].instanceId + "_slide2"}>
+                                                                        <div className="row">
+                                                                            <div className="col-lg-6">
+                                                                                <h4>Transfer Bulk Assets</h4>
+                                                                                <form role="form" onSubmit={(e) => {
+                                                                                        this.transferBulkAssets(e, this.props.network[0].instanceId);
+                                                                                    }}>
+                                                                                    <div className="form-group">
+                                                                                        <label>Asset Name</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_transferBulkAsset_assetName"] = input}} required>
+                                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).map((key) => {
+                                                                                                if(this.props.network[0].assetsTypes[key].type == "bulk") {
+                                                                                                    return <option key={this.props.network[0].assetsTypes[key].assetName} value={this.props.network[0].assetsTypes[key].assetName}>{this.props.network[0].assetsTypes[key].assetName}</option>
+                                                                                                }
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>From Account</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_transferBulkAsset_fromAddress"] = input}} required>
+                                                                                            {Object.keys(this.props.network[0].accounts).map((item, index) => {
+                                                                                                return <option key={item} value={item}>{item}</option>
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>To Account</label>
+                                                                                        <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_transferBulkAsset_toAddress"] = input}} required />
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>Units</label>
+                                                                                        <input type="float" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_transferBulkAsset_units"] = input}} required />
+                                                                                    </div>
+                                                                                    {this.state[this.props.network[0].instanceId + "_transferBulkAsset_formSubmitError"] &&
+                                                                                        <div className="row m-t-30">
+                                                                                            <div className="col-md-12">
+                                                                                                <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                                                    <button className="close" data-dismiss="alert"></button>
+                                                                                                    {this.state[this.props.network[0].instanceId + "_transferBulkAsset_formSubmitError"]}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    }
+                                                                                    <p className="pull-right">
+                                                                                        <LaddaButton
+                                                                                            loading={this.state[this.props.network[0].instanceId + "_transferBulkAsset_formloading"]}
+                                                                                            data-size={S}
+                                                                                            data-style={SLIDE_UP}
+                                                                                            data-spinner-size={30}
+                                                                                            data-spinner-lines={12}
+                                                                                            className="btn btn-success m-t-10"
+                                                                                            type="submit"
+                                                                                        >
+                                                                                            <i className="fa fa-exchange" aria-hidden="true"></i>&nbsp;&nbsp;Transfer Asset
+                                                                                        </LaddaButton>
+                                                                                    </p>
+                                                                                </form>
+                                                                            </div>
+                                                                            <div className="col-lg-6">
+                                                                                <h4>Transfer Solo Asset</h4>
+                                                                                <form role="form" onSubmit={(e) => {
+                                                                                        this.transferSoloAsset(e, this.props.network[0].instanceId);
+                                                                                    }}>
+                                                                                    <div className="form-group">
+                                                                                        <label>Asset Name</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_transferSoloAsset_assetName"] = input}} required>
+                                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).map((key) => {
+                                                                                                if(this.props.network[0].assetsTypes[key].type == "solo") {
+                                                                                                    return <option key={this.props.network[0].assetsTypes[key].assetName} value={this.props.network[0].assetsTypes[key].assetName}>{this.props.network[0].assetsTypes[key].assetName}</option>
+                                                                                                }
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>From Account</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_transferSoloAsset_fromAddress"] = input}} required>
+                                                                                            {Object.keys(this.props.network[0].accounts).map((item, index) => {
+                                                                                                return <option key={item} value={item}>{item}</option>
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>To Account</label>
+                                                                                        <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_transferSoloAsset_toAddress"] = input}} required />
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>Identifier</label>
+                                                                                        <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_transferSoloAsset_identifier"] = input}} required />
+                                                                                    </div>
+                                                                                    {this.state[this.props.network[0].instanceId + "_transferSoloAsset_formSubmitError"] &&
+                                                                                        <div className="row m-t-30">
+                                                                                            <div className="col-md-12">
+                                                                                                <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                                                    <button className="close" data-dismiss="alert"></button>
+                                                                                                    {this.state[this.props.network[0].instanceId + "_transferSoloAsset_formSubmitError"]}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    }
+                                                                                    <p className="pull-right">
+                                                                                        <LaddaButton
+                                                                                            loading={this.state[this.props.network[0].instanceId + "_transferSoloAsset_formloading"]}
+                                                                                            data-size={S}
+                                                                                            data-style={SLIDE_UP}
+                                                                                            data-spinner-size={30}
+                                                                                            data-spinner-lines={12}
+                                                                                            className="btn btn-success m-t-10"
+                                                                                            type="submit"
+                                                                                        >
+                                                                                            <i className="fa fa-exchange" aria-hidden="true"></i>&nbsp;&nbsp;Issue Asset
+                                                                                        </LaddaButton>
+                                                                                    </p>
+                                                                                </form>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="tab-pane slide-left" id={this.props.network[0].instanceId + "_slide3"}>
+                                                                        <div className="row">
+                                                                            <div className="col-lg-6">
+                                                                                <h4>Get Bulk Asset Balance</h4>
+                                                                                <form role="form" onSubmit={(e) => {
+                                                                                        this.getBulkAssetBalance(e, this.props.network[0].instanceId);
+                                                                                    }}>
+                                                                                    <div className="form-group">
+                                                                                        <label>Asset Name</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_getInfoBulkAsset_assetName"] = input}} required>
+                                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).map((key) => {
+                                                                                                if(this.props.network[0].assetsTypes[key].type == "bulk") {
+                                                                                                    return <option key={this.props.network[0].assetsTypes[key].assetName} value={this.props.network[0].assetsTypes[key].assetName}>{this.props.network[0].assetsTypes[key].assetName}</option>
+                                                                                                }
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>Account</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_getInfoBulkAsset_address"] = input}} required>
+                                                                                            {Object.keys(this.props.network[0].accounts).map((item, index) => {
+                                                                                                return <option key={item} value={item}>{item}</option>
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    {this.state[this.props.network[0].instanceId + "_getInfoBulkAsset_formSubmitError"] &&
+                                                                                        <div className="row m-t-30">
+                                                                                            <div className="col-md-12">
+                                                                                                <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                                                    <button className="close" data-dismiss="alert"></button>
+                                                                                                    {this.state[this.props.network[0].instanceId + "_getInfoBulkAsset_formSubmitError"]}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    }
+                                                                                    <p className="pull-right">
+                                                                                        <LaddaButton
+                                                                                            loading={this.state[this.props.network[0].instanceId + "_getInfoBulkAsset_formloading"]}
+                                                                                            data-size={S}
+                                                                                            data-style={SLIDE_UP}
+                                                                                            data-spinner-size={30}
+                                                                                            data-spinner-lines={12}
+                                                                                            className="btn btn-success m-t-10"
+                                                                                            type="submit"
+                                                                                        >
+                                                                                            <i className="fa fa-balance-scale" aria-hidden="true"></i>&nbsp;&nbsp;Get Balance
+                                                                                        </LaddaButton>
+                                                                                    </p>
+                                                                                </form>
+                                                                            </div>
+                                                                            <div className="col-lg-6">
+                                                                                <h4>Get Solo Asset Info</h4>
+                                                                                <form role="form" onSubmit={(e) => {
+                                                                                        this.getSoloAssetInfo(e, this.props.network[0].instanceId);
+                                                                                    }}>
+                                                                                    <div className="form-group">
+                                                                                        <label>Asset Name</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_getInfoSoloAsset_assetName"] = input}} required>
+                                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).map((key) => {
+                                                                                                if(this.props.network[0].assetsTypes[key].type == "solo") {
+                                                                                                    return <option key={this.props.network[0].assetsTypes[key].assetName} value={this.props.network[0].assetsTypes[key].assetName}>{this.props.network[0].assetsTypes[key].assetName}</option>
+                                                                                                }
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>Identifier</label>
+                                                                                        <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_getInfoSoloAsset_identifier"] = input}} required />
+                                                                                    </div>
+                                                                                    {this.state[this.props.network[0].instanceId + "_getInfoSoloAsset_formSubmitError"] &&
+                                                                                        <div className="row m-t-30">
+                                                                                            <div className="col-md-12">
+                                                                                                <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                                                    <button className="close" data-dismiss="alert"></button>
+                                                                                                    {this.state[this.props.network[0].instanceId + "_getInfoSoloAsset_formSubmitError"]}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    }
+                                                                                    <p className="pull-right">
+                                                                                        <LaddaButton
+                                                                                            loading={this.state[this.props.network[0].instanceId + "_getInfoSoloAsset_formloading"]}
+                                                                                            data-size={S}
+                                                                                            data-style={SLIDE_UP}
+                                                                                            data-spinner-size={30}
+                                                                                            data-spinner-lines={12}
+                                                                                            className="btn btn-success m-t-10"
+                                                                                            type="submit"
+                                                                                        >
+                                                                                            <i className="fa fa-info" aria-hidden="true"></i>&nbsp;&nbsp;Get Info
+                                                                                        </LaddaButton>
+                                                                                    </p>
+                                                                                </form>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="tab-pane slide-left" id={this.props.network[0].instanceId + "_slide4"}>
+                                                                        <div className="row">
+                                                                            <div className="col-lg-12">
+                                                                                <h4>Add/Update Meta Data</h4>
+                                                                                <form role="form" onSubmit={(e) => {
+                                                                                        this.addUpdateSoloAssetInfo(e, this.props.network[0].instanceId);
+                                                                                    }}>
+                                                                                    <div className="form-group">
+                                                                                        <label>Asset Name</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_updateSoloAssetInfo_assetName"] = input}} required>
+                                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).map((key) => {
+                                                                                                if(this.props.network[0].assetsTypes[key].type == "solo") {
+                                                                                                    return <option key={this.props.network[0].assetsTypes[key].assetName} value={this.props.network[0].assetsTypes[key].assetName}>{this.props.network[0].assetsTypes[key].assetName}</option>
+                                                                                                }
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>From Account</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_updateSoloAssetInfo_fromAddress"] = input}} required>
+                                                                                            {Object.keys(this.props.network[0].accounts).map((item, index) => {
+                                                                                                return <option key={item} value={item}>{item}</option>
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>Identifier</label>
+                                                                                        <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_updateSoloAssetInfo_identifier"] = input}} required />
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>Key</label>
+                                                                                        <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_updateSoloAssetInfo_key"] = input}} required />
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>Value</label>
+                                                                                        <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_updateSoloAssetInfo_value"] = input}} required />
+                                                                                    </div>
+                                                                                    {this.state[this.props.network[0].instanceId + "_updateSoloAssetInfo_formSubmitError"] &&
+                                                                                        <div className="row m-t-30">
+                                                                                            <div className="col-md-12">
+                                                                                                <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                                                    <button className="close" data-dismiss="alert"></button>
+                                                                                                    {this.state[this.props.network[0].instanceId + "_updateSoloAssetInfo_formSubmitError"]}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    }
+                                                                                    <p className="pull-right">
+                                                                                        <LaddaButton
+                                                                                            loading={this.state[this.props.network[0].instanceId + "_updateSoloAssetInfo_formloading"]}
+                                                                                            data-size={S}
+                                                                                            data-style={SLIDE_UP}
+                                                                                            data-spinner-size={30}
+                                                                                            data-spinner-lines={12}
+                                                                                            className="btn btn-success m-t-10"
+                                                                                            type="submit"
+                                                                                        >
+                                                                                            <i className="fa fa-wrench" aria-hidden="true"></i>&nbsp;&nbsp;Update
+                                                                                        </LaddaButton>
+                                                                                    </p>
+                                                                                </form>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="tab-pane slide-left" id={this.props.network[0].instanceId + "_slide5"}>
+                                                                        <div className="row">
+                                                                            <div className="col-lg-12">
+                                                                                <h4>Close Asset</h4>
+                                                                                <form role="form" onSubmit={(e) => {
+                                                                                        this.closeSoloAsset(e, this.props.network[0].instanceId);
+                                                                                    }}>
+                                                                                    <div className="form-group">
+                                                                                        <label>Asset Name</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_closeAsset_assetName"] = input}} required>
+                                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).map((key) => {
+                                                                                                if(this.props.network[0].assetsTypes[key].type == "solo") {
+                                                                                                    return <option key={this.props.network[0].assetsTypes[key].assetName} value={this.props.network[0].assetsTypes[key].assetName}>{this.props.network[0].assetsTypes[key].assetName}</option>
+                                                                                                }
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>From Account</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_closeAsset_fromAddress"] = input}} required>
+                                                                                            {Object.keys(this.props.network[0].accounts).map((item, index) => {
+                                                                                                return <option key={item} value={item}>{item}</option>
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>Identifier</label>
+                                                                                        <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_closeAsset_identifier"] = input}} required />
+                                                                                    </div>
+                                                                                    {this.state[this.props.network[0].instanceId + "_closeAsset_formSubmitError"] &&
+                                                                                        <div className="row m-t-30">
+                                                                                            <div className="col-md-12">
+                                                                                                <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                                                    <button className="close" data-dismiss="alert"></button>
+                                                                                                    {this.state[this.props.network[0].instanceId + "_closeAsset_formSubmitError"]}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    }
+                                                                                    <p className="pull-right">
+                                                                                        <LaddaButton
+                                                                                            loading={this.state[this.props.network[0].instanceId + "_closeAsset_formloading"]}
+                                                                                            data-size={S}
+                                                                                            data-style={SLIDE_UP}
+                                                                                            data-spinner-size={30}
+                                                                                            data-spinner-lines={12}
+                                                                                            className="btn btn-success m-t-10"
+                                                                                            type="submit"
+                                                                                        >
+                                                                                            <i className="fa fa-times-circle" aria-hidden="true"></i>&nbsp;&nbsp;Close
+                                                                                        </LaddaButton>
+                                                                                    </p>
+                                                                                </form>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                        )
-                                                    })}
-                                                </div>
+                                                        }
+                                                    </div>
+                                                }
                                             </div>
                                         </div>
                                     </div>
@@ -955,10 +935,16 @@ class AssetsManagement extends Component {
 	}
 }
 
-export default withTracker(() => {
+export default withTracker((props) => {
 
     return {
-        networks: Networks.find({}).fetch(),
-        subscriptions: [Meteor.subscribe("networks")]
+        network: Networks.find({_id: props.match.params.id}).fetch(),
+        subscriptions: [Meteor.subscribe("networks", {
+        	onReady: function (){
+        		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
+        			props.history.push("/app/networks");
+        		}
+        	}
+        })]
     }
 })(withRouter(AssetsManagement))

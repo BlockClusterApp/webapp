@@ -14,7 +14,6 @@ import "./ViewEditNetwork.scss"
 class ViewEditNetwork extends Component {
 	constructor() {
         super()
-
         this.state = {
             deleting: false
         };

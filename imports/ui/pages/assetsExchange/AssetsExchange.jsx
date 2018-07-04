@@ -20,20 +20,8 @@ class AssetsManagement extends Component {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
         });
-
-        try {
-            ordersSubscription.stop();
-        } catch(e){}
     }
 
-    networkSelected(instanceId) {
-        this.setState({
-            selectedNetwork: instanceId
-        }, () => {
-            ordersSubscription.stop();
-            ordersSubscription = Meteor.subscribe("orders", this.state.selectedNetwork)
-        })
-    }
 
     sellAsset_assetTypeChange = (e, instanceId) => {
         if(e.target.value == "bulk") {
@@ -303,479 +291,456 @@ class AssetsManagement extends Component {
                                     <div className="card-title">Assets Exchange
                                     </div>
                                 </div>
-                                <div className="card-block no-padding">
-                                    <div className="row">
-                                        <div className="col-xl-12">
-                                            <div className="card card-transparent flex-row">
-                                                <ul className="nav nav-tabs nav-tabs-simple nav-tabs-left bg-white" id="tab-3">
-                                                    {this.props.networks.map((item, index) => {
-                                                        return (
-                                                            <li onClick={() => {this.networkSelected(item.instanceId)}} key={item.instanceId} className="nav-item">
-                                                                <a href="#" className={index === 0 ? "active" : ""} data-toggle="tab" data-target={"#" + item.instanceId}>{item.name}</a>
-                                                            </li>
-                                                        )
-                                                    })}
-                                                </ul>
-                                                <div className="tab-content bg-white">
-                                                    {this.props.networks.map((item, index) => {
-                                                        return (
-                                                            <div key={index} className={index === 0 ? "tab-pane active" : "tab-pane "} id={item.instanceId}>
-                                                                {item.assetsContractAddress === '' &&
-                                                                    <div>
-                                                                        Please deploy smart contract
-                                                                    </div>
-                                                                }
-                                                                {(item.assetsContractAddress !== undefined && item.assetsContractAddress !== '') &&
-                                                                    <div>
-                                                                        <div className="container">
-                                                                            <div className="row column-seperation">
-                                                                                <div className="col-lg-12">
-                                                                                    <div className="card card-transparent">
-                                                                                        <ul className="nav nav-tabs nav-tabs-fillup" data-init-reponsive-tabs="dropdownfx">
-                                                                                            <li className="nav-item">
-                                                                                                <a href="#" className="active" data-toggle="tab" data-target={"#" + item.instanceId + "_slide1"}><span>Place Order</span></a>
-                                                                                            </li>
-                                                                                            <li className="nav-item">
-                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide2"}><span>Order Book</span></a>
-                                                                                            </li>
-                                                                                            <li className="nav-item">
-                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide3"}><span>Fulfill Order</span></a>
-                                                                                            </li>
-                                                                                            <li className="nav-item">
-                                                                                                <a href="#" data-toggle="tab" data-target={"#" + item.instanceId + "_slide4"}><span>Cancel Order</span></a>
-                                                                                            </li>
-                                                                                        </ul>
-                                                                                        <div className="tab-content p-l-0 p-r-0">
-                                                                                            <div className="tab-pane slide-left active" id={item.instanceId + "_slide1"}>
-                                                                                                <form onSubmit={(e) => {this.placeOrder(e, item.instanceId)}}>
-                                                                                                    <div className="row column-seperation">
-                                                                                                        <div className="col-lg-6">
-                                                                                                            <h4>Asset Sale Details</h4>
-                                                                                                                <div className="form-group">
-                                                                                                                    <label>Asset Type</label>
-                                                                                                                    <select className="form-control" onChange={(e) => {this.sellAsset_assetTypeChange(e, item.instanceId)}} ref={(input) => {this[item.instanceId + "_sellAsset_assetType"] = input}} required>
-                                                                                                                        <option value="bulk">Bulk</option>
-                                                                                                                        <option value="solo">Solo</option>
-                                                                                                                    </select>
-                                                                                                                </div>
+                                <div className="card-block">
+                                    <div className="card card-transparent">
+                                        {this.props.network.length === 1 &&
+                                            <div>
+                                                {this.props.network[0].assetsContractAddress === '' &&
+                                                    <div>
+                                                        Please deploy smart contract
+                                                    </div>
+                                                }
+                                                {(this.props.network[0].assetsContractAddress !== undefined && this.props.network[0].assetsContractAddress !== '') &&
+                                                    <div>
+                                                        <div className="card card-transparent">
+                                                            <ul className="nav nav-tabs nav-tabs-fillup" data-init-reponsive-tabs="dropdownfx">
+                                                                <li className="nav-item">
+                                                                    <a href="#" className="active" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide1"}><span>Place Order</span></a>
+                                                                </li>
+                                                                <li className="nav-item">
+                                                                    <a href="#" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide2"}><span>Order Book</span></a>
+                                                                </li>
+                                                                <li className="nav-item">
+                                                                    <a href="#" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide3"}><span>Fulfill Order</span></a>
+                                                                </li>
+                                                                <li className="nav-item">
+                                                                    <a href="#" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide4"}><span>Cancel Order</span></a>
+                                                                </li>
+                                                            </ul>
+                                                            <div className="tab-content p-l-0 p-r-0">
+                                                                <div className="tab-pane slide-left active" id={this.props.network[0].instanceId + "_slide1"}>
+                                                                    <form onSubmit={(e) => {this.placeOrder(e, this.props.network[0].instanceId)}}>
+                                                                        <div className="row column-seperation">
+                                                                            <div className="col-lg-6">
+                                                                                <h4>Asset Sale Details</h4>
+                                                                                    <div className="form-group">
+                                                                                        <label>Asset Type</label>
+                                                                                        <select className="form-control" onChange={(e) => {this.sellAsset_assetTypeChange(e, this.props.network[0].instanceId)}} ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_assetType"] = input}} required>
+                                                                                            <option value="bulk">Bulk</option>
+                                                                                            <option value="solo">Solo</option>
+                                                                                        </select>
+                                                                                    </div>
 
-                                                                                                                {this.state[item.instanceId + "_sellAsset_assetType_bulk"] &&
-                                                                                                                    <div className="form-group">
-                                                                                                                        <label>Asset Name</label>
-                                                                                                                        <select className="form-control" ref={(input) => {this[item.instanceId + "_sellAsset_assetName"] = input}} required>
-                                                                                                                            {Object.keys(this.props.networks[index].assetsTypes || {}).map((item) => {
-                                                                                                                                if(this.props.networks[index].assetsTypes[item].type == "bulk") {
-                                                                                                                                    return <option key={this.props.networks[index].assetsTypes[item].assetName} value={this.props.networks[index].assetsTypes[item].assetName}>{this.props.networks[index].assetsTypes[item].assetName}</option>
-                                                                                                                                }
-                                                                                                                            })}
-                                                                                                                        </select>
-                                                                                                                    </div>
+                                                                                    {this.state[this.props.network[0].instanceId + "_sellAsset_assetType_bulk"] &&
+                                                                                        <div className="form-group">
+                                                                                            <label>Asset Name</label>
+                                                                                            <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_assetName"] = input}} required>
+                                                                                                {Object.keys(this.props.network[0].assetsTypes || {}).map((item) => {
+                                                                                                    if(this.props.network[0].assetsTypes[item].type == "bulk") {
+                                                                                                        return <option key={this.props.network[0].assetsTypes[item].assetName} value={this.props.network[0].assetsTypes[item].assetName}>{this.props.network[0].assetsTypes[item].assetName}</option>
+                                                                                                    }
+                                                                                                })}
+                                                                                            </select>
+                                                                                        </div>
+                                                                                    }
+
+                                                                                    {this.state[this.props.network[0].instanceId + "_sellAsset_assetType_solo"] &&
+                                                                                        <div className="form-group">
+                                                                                            <label>Asset Name</label>
+                                                                                            <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_assetName"] = input}} required>
+                                                                                                {Object.keys(this.props.network[0].assetsTypes || {}).map((item) => {
+                                                                                                    if(this.props.network[0].assetsTypes[item].type == "solo") {
+                                                                                                        return <option key={this.props.network[0].assetsTypes[item].assetName} value={this.props.network[0].assetsTypes[item].assetName}>{this.props.network[0].assetsTypes[item].assetName}</option>
+                                                                                                    }
+                                                                                                })}
+                                                                                            </select>
+                                                                                        </div>
+                                                                                    }
+
+                                                                                    {(this.state[this.props.network[0].instanceId + "_sellAsset_assetType_bulk"] == undefined && this.state[this.props.network[0].instanceId + "_sellAsset_assetType_solo"] == undefined) &&
+                                                                                        <div className="form-group">
+                                                                                            <label>Asset Name</label>
+                                                                                            <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_assetName"] = input}} required>
+                                                                                                {Object.keys(this.props.network[0].assetsTypes || {}).map((item) => {
+                                                                                                    if(this.props.network[0].assetsTypes[item].type == "bulk") {
+                                                                                                        return <option key={this.props.network[0].assetsTypes[item].assetName} value={this.props.network[0].assetsTypes[item].assetName}>{this.props.network[0].assetsTypes[item].assetName}</option>
+                                                                                                    }
+                                                                                                })}
+                                                                                            </select>
+                                                                                        </div>
+                                                                                    }
+
+                                                                                    {(this.state[this.props.network[0].instanceId + "_sellAsset_assetType_bulk"] == true || this.state[this.props.network[0].instanceId + "_sellAsset_assetType_bulk"] == undefined) &&
+                                                                                        <div className="form-group">
+                                                                                            <label>Units</label>
+                                                                                            <input type="number" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_units"] = input}} required />
+                                                                                        </div>
+                                                                                    }
+
+                                                                                    {(this.state[this.props.network[0].instanceId + "_sellAsset_assetType_solo"] == true) &&
+                                                                                        <div className="form-group">
+                                                                                            <label>Identifier</label>
+                                                                                            <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_identifier"] = input}} required />
+                                                                                        </div>
+                                                                                    }
+
+                                                                                    <div className="form-group">
+                                                                                        <label>Time Period (min)</label>
+                                                                                        <input type="number" className="form-control" min="1" step="1" defaultValue="5" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_timePeriod"] = input}} required />
+                                                                                    </div>
+
+                                                                                    <div className="form-group">
+                                                                                        <label>Seller Account</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_fromAddress"] = input}} required>
+                                                                                            {Object.keys(this.props.network[0].accounts).map((item, index) => {
+                                                                                                return <option key={item} value={item}>{item}</option>
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                            </div>
+                                                                            <div className="col-lg-6">
+                                                                                <h4>Asset Buy Details</h4>
+                                                                                    <div className="form-group">
+                                                                                        <label>Network To Buy From</label>
+                                                                                        <select className="form-control" onChange={(e) => {this.buyAsset_networkChange(e, this.props.network[0].instanceId)}} ref={(input) => {this[this.props.network[0].instanceId + "_buyAsset_networkId"] = input}} required>
+                                                                                            {Object.keys(this.props.networks || {}).map((key) => {
+                                                                                                return <option key={this.props.networks[key].instanceId} value={this.props.networks[key].instanceId}>{this.props.networks[key].name}</option>
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+
+                                                                                    <div className="form-group">
+                                                                                        <label>Asset Type</label>
+                                                                                        <select className="form-control" onChange={(e) => {this.buyAsset_assetTypeChange(e, this.props.network[0].instanceId)}} ref={(input) => {this[this.props.network[0].instanceId + "_buyAsset_assetType"] = input}} required>
+                                                                                            <option value="bulk">Bulk</option>
+                                                                                            <option value="solo">Solo</option>
+                                                                                        </select>
+                                                                                    </div>
+
+                                                                                    {this.state[this.props.network[0].instanceId + "_buyAsset_assetType_bulk"] &&
+                                                                                        <div className="form-group">
+                                                                                            <label>Asset Name</label>
+                                                                                            <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_buyAsset_assetName"] = input}} required>
+                                                                                                {this.state[this.props.network[0].instanceId + "_buyAsset_selectedNetwork"] === undefined ? (
+                                                                                                    Object.keys(this.props.networks[0].assetsTypes || {}).map((item) => {
+                                                                                                        if(this.props.networks[0].assetsTypes[item].type == "bulk") {
+                                                                                                            return <option key={this.props.networks[0].assetsTypes[item].assetName} value={this.props.networks[0].assetsTypes[item].assetName}>{this.props.networks[0].assetsTypes[item].assetName}</option>
+                                                                                                        }
+                                                                                                    })
+                                                                                                ) : (
+                                                                                                    Object.keys(this.props.networks || {}).map((key) => {
+                                                                                                        if(this.props.networks[key].instanceId === this.state[this.props.network[0].instanceId + "_buyAsset_selectedNetwork"]) {
+                                                                                                            return Object.keys(this.props.networks[key].assetsTypes || {}).map((item) => {
+                                                                                                                if(this.props.networks[key].assetsTypes[item].type == "bulk") {
+                                                                                                                    return <option key={this.props.networks[key].assetsTypes[item].assetName} value={this.props.networks[key].assetsTypes[item].assetName}>{this.props.networks[key].assetsTypes[item].assetName}</option>
                                                                                                                 }
+                                                                                                            })
+                                                                                                        }
+                                                                                                    })
+                                                                                                )}
+                                                                                            </select>
+                                                                                        </div>
+                                                                                    }
 
-                                                                                                                {this.state[item.instanceId + "_sellAsset_assetType_solo"] &&
-                                                                                                                    <div className="form-group">
-                                                                                                                        <label>Asset Name</label>
-                                                                                                                        <select className="form-control" ref={(input) => {this[item.instanceId + "_sellAsset_assetName"] = input}} required>
-                                                                                                                            {Object.keys(this.props.networks[index].assetsTypes || {}).map((item) => {
-                                                                                                                                if(this.props.networks[index].assetsTypes[item].type == "solo") {
-                                                                                                                                    return <option key={this.props.networks[index].assetsTypes[item].assetName} value={this.props.networks[index].assetsTypes[item].assetName}>{this.props.networks[index].assetsTypes[item].assetName}</option>
-                                                                                                                                }
-                                                                                                                            })}
-                                                                                                                        </select>
-                                                                                                                    </div>
+                                                                                    {this.state[this.props.network[0].instanceId + "_buyAsset_assetType_solo"] &&
+                                                                                        <div className="form-group">
+                                                                                            <label>Asset Name</label>
+                                                                                            <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_buyAsset_assetName"] = input}} required>
+                                                                                                {this.state[this.props.network[0].instanceId + "_buyAsset_selectedNetwork"] === undefined ? (
+                                                                                                    Object.keys(this.props.networks[0].assetsTypes || {}).map((item) => {
+                                                                                                        if(this.props.networks[0].assetsTypes[item].type == "solo") {
+                                                                                                            return <option key={this.props.networks[0].assetsTypes[item].assetName} value={this.props.networks[0].assetsTypes[item].assetName}>{this.props.networks[0].assetsTypes[item].assetName}</option>
+                                                                                                        }
+                                                                                                    })
+                                                                                                ) : (
+                                                                                                    Object.keys(this.props.networks || {}).map((key) => {
+                                                                                                        if(this.props.networks[key].instanceId === this.state[this.props.network[0].instanceId + "_buyAsset_selectedNetwork"]) {
+                                                                                                            return Object.keys(this.props.networks[key].assetsTypes || {}).map((item) => {
+                                                                                                                if(this.props.networks[key].assetsTypes[item].type == "solo") {
+                                                                                                                    return <option key={this.props.networks[key].assetsTypes[item].assetName} value={this.props.networks[key].assetsTypes[item].assetName}>{this.props.networks[key].assetsTypes[item].assetName}</option>
                                                                                                                 }
+                                                                                                            })
+                                                                                                        }
+                                                                                                    })
+                                                                                                )}
+                                                                                            </select>
+                                                                                        </div>
+                                                                                    }
 
-                                                                                                                {(this.state[item.instanceId + "_sellAsset_assetType_bulk"] == undefined && this.state[item.instanceId + "_sellAsset_assetType_solo"] == undefined) &&
-                                                                                                                    <div className="form-group">
-                                                                                                                        <label>Asset Name</label>
-                                                                                                                        <select className="form-control" ref={(input) => {this[item.instanceId + "_sellAsset_assetName"] = input}} required>
-                                                                                                                            {Object.keys(this.props.networks[index].assetsTypes || {}).map((item) => {
-                                                                                                                                if(this.props.networks[index].assetsTypes[item].type == "bulk") {
-                                                                                                                                    return <option key={this.props.networks[index].assetsTypes[item].assetName} value={this.props.networks[index].assetsTypes[item].assetName}>{this.props.networks[index].assetsTypes[item].assetName}</option>
-                                                                                                                                }
-                                                                                                                            })}
-                                                                                                                        </select>
-                                                                                                                    </div>
+                                                                                    {(this.state[this.props.network[0].instanceId + "_buyAsset_assetType_bulk"] == undefined && this.state[this.props.network[0].instanceId + "_buyAsset_assetType_solo"] == undefined) &&
+                                                                                        <div className="form-group">
+                                                                                            <label>Asset Name</label>
+                                                                                            <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_buyAsset_assetName"] = input}} required>
+                                                                                                {this.state[this.props.network[0].instanceId + "_buyAsset_selectedNetwork"] === undefined ? (
+                                                                                                    Object.keys(this.props.networks[0].assetsTypes || {}).map((item) => {
+                                                                                                        if(this.props.networks[0].assetsTypes[item].type == "bulk") {
+                                                                                                            return <option key={this.props.networks[0].assetsTypes[item].assetName} value={this.props.networks[0].assetsTypes[item].assetName}>{this.props.networks[0].assetsTypes[item].assetName}</option>
+                                                                                                        }
+                                                                                                    })
+                                                                                                ) : (
+                                                                                                    Object.keys(this.props.networks || {}).map((key) => {
+                                                                                                        if(this.props.networks[key].instanceId === this.state[this.props.network[0].instanceId + "_buyAsset_selectedNetwork"]) {
+                                                                                                            return Object.keys(this.props.networks[key].assetsTypes || {}).map((item) => {
+                                                                                                                if(this.props.networks[key].assetsTypes[item].type == "bulk") {
+                                                                                                                    return <option key={this.props.networks[key].assetsTypes[item].assetName} value={this.props.networks[key].assetsTypes[item].assetName}>{this.props.networks[key].assetsTypes[item].assetName}</option>
                                                                                                                 }
+                                                                                                            })
+                                                                                                        }
+                                                                                                    })
+                                                                                                )}
+                                                                                            </select>
+                                                                                        </div>
+                                                                                    }
 
-                                                                                                                {(this.state[item.instanceId + "_sellAsset_assetType_bulk"] == true || this.state[item.instanceId + "_sellAsset_assetType_bulk"] == undefined) &&
-                                                                                                                    <div className="form-group">
-                                                                                                                        <label>Units</label>
-                                                                                                                        <input type="number" className="form-control" ref={(input) => {this[item.instanceId + "_sellAsset_units"] = input}} required />
-                                                                                                                    </div>
-                                                                                                                }
+                                                                                    {(this.state[this.props.network[0].instanceId + "_buyAsset_assetType_bulk"] == true || this.state[this.props.network[0].instanceId + "_buyAsset_assetType_bulk"] == undefined) &&
+                                                                                        <div className="form-group">
+                                                                                            <label>Units</label>
+                                                                                            <input type="number" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_buyAsset_units"] = input}} required />
+                                                                                        </div>
+                                                                                    }
 
-                                                                                                                {(this.state[item.instanceId + "_sellAsset_assetType_solo"] == true) &&
-                                                                                                                    <div className="form-group">
-                                                                                                                        <label>Identifier</label>
-                                                                                                                        <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_sellAsset_identifier"] = input}} required />
-                                                                                                                    </div>
-                                                                                                                }
+                                                                                    {(this.state[this.props.network[0].instanceId + "_buyAsset_assetType_solo"] == true) &&
+                                                                                        <div className="form-group">
+                                                                                            <label>Identifier</label>
+                                                                                            <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_buyAsset_identifier"] = input}} required />
+                                                                                        </div>
+                                                                                    }
 
-                                                                                                                <div className="form-group">
-                                                                                                                    <label>Time Period (min)</label>
-                                                                                                                    <input type="number" className="form-control" min="1" step="1" defaultValue="5" ref={(input) => {this[item.instanceId + "_sellAsset_timePeriod"] = input}} required />
-                                                                                                                </div>
-
-                                                                                                                <div className="form-group">
-                                                                                                                    <label>Seller Account</label>
-                                                                                                                    <select className="form-control" ref={(input) => {this[item.instanceId + "_sellAsset_fromAddress"] = input}} required>
-                                                                                                                        {Object.keys(this.props.networks[index].accounts).map((item, index) => {
-                                                                                                                            return <option key={item} value={item}>{item}</option>
-                                                                                                                        })}
-                                                                                                                    </select>
-                                                                                                                </div>
-                                                                                                        </div>
-                                                                                                        <div className="col-lg-6">
-                                                                                                            <h4>Asset Buy Details</h4>
-                                                                                                                <div className="form-group">
-                                                                                                                    <label>Network To Buy From</label>
-                                                                                                                    <select className="form-control" onChange={(e) => {this.buyAsset_networkChange(e, item.instanceId)}} ref={(input) => {this[item.instanceId + "_buyAsset_networkId"] = input}} required>
-                                                                                                                        {Object.keys(this.props.networks || {}).map((key) => {
-                                                                                                                            return <option key={this.props.networks[key].instanceId} value={this.props.networks[key].instanceId}>{this.props.networks[key].name}</option>
-                                                                                                                        })}
-                                                                                                                    </select>
-                                                                                                                </div>
-
-                                                                                                                <div className="form-group">
-                                                                                                                    <label>Asset Type</label>
-                                                                                                                    <select className="form-control" onChange={(e) => {this.buyAsset_assetTypeChange(e, item.instanceId)}} ref={(input) => {this[item.instanceId + "_buyAsset_assetType"] = input}} required>
-                                                                                                                        <option value="bulk">Bulk</option>
-                                                                                                                        <option value="solo">Solo</option>
-                                                                                                                    </select>
-                                                                                                                </div>
-
-                                                                                                                {this.state[item.instanceId + "_buyAsset_assetType_bulk"] &&
-                                                                                                                    <div className="form-group">
-                                                                                                                        <label>Asset Name</label>
-                                                                                                                        <select className="form-control" ref={(input) => {this[item.instanceId + "_buyAsset_assetName"] = input}} required>
-                                                                                                                            {this.state[item.instanceId + "_buyAsset_selectedNetwork"] === undefined ? (
-                                                                                                                                Object.keys(this.props.networks[0].assetsTypes || {}).map((item) => {
-                                                                                                                                    if(this.props.networks[0].assetsTypes[item].type == "bulk") {
-                                                                                                                                        return <option key={this.props.networks[0].assetsTypes[item].assetName} value={this.props.networks[0].assetsTypes[item].assetName}>{this.props.networks[0].assetsTypes[item].assetName}</option>
-                                                                                                                                    }
-                                                                                                                                })
-                                                                                                                            ) : (
-                                                                                                                                Object.keys(this.props.networks || {}).map((key) => {
-                                                                                                                                    if(this.props.networks[key].instanceId === this.state[item.instanceId + "_buyAsset_selectedNetwork"]) {
-                                                                                                                                        return Object.keys(this.props.networks[key].assetsTypes || {}).map((item) => {
-                                                                                                                                            if(this.props.networks[key].assetsTypes[item].type == "bulk") {
-                                                                                                                                                return <option key={this.props.networks[key].assetsTypes[item].assetName} value={this.props.networks[key].assetsTypes[item].assetName}>{this.props.networks[key].assetsTypes[item].assetName}</option>
-                                                                                                                                            }
-                                                                                                                                        })
-                                                                                                                                    }
-                                                                                                                                })
-                                                                                                                            )}
-                                                                                                                        </select>
-                                                                                                                    </div>
-                                                                                                                }
-
-                                                                                                                {this.state[item.instanceId + "_buyAsset_assetType_solo"] &&
-                                                                                                                    <div className="form-group">
-                                                                                                                        <label>Asset Name</label>
-                                                                                                                        <select className="form-control" ref={(input) => {this[item.instanceId + "_buyAsset_assetName"] = input}} required>
-                                                                                                                            {this.state[item.instanceId + "_buyAsset_selectedNetwork"] === undefined ? (
-                                                                                                                                Object.keys(this.props.networks[0].assetsTypes || {}).map((item) => {
-                                                                                                                                    if(this.props.networks[0].assetsTypes[item].type == "solo") {
-                                                                                                                                        return <option key={this.props.networks[0].assetsTypes[item].assetName} value={this.props.networks[0].assetsTypes[item].assetName}>{this.props.networks[0].assetsTypes[item].assetName}</option>
-                                                                                                                                    }
-                                                                                                                                })
-                                                                                                                            ) : (
-                                                                                                                                Object.keys(this.props.networks || {}).map((key) => {
-                                                                                                                                    if(this.props.networks[key].instanceId === this.state[item.instanceId + "_buyAsset_selectedNetwork"]) {
-                                                                                                                                        return Object.keys(this.props.networks[key].assetsTypes || {}).map((item) => {
-                                                                                                                                            if(this.props.networks[key].assetsTypes[item].type == "solo") {
-                                                                                                                                                return <option key={this.props.networks[key].assetsTypes[item].assetName} value={this.props.networks[key].assetsTypes[item].assetName}>{this.props.networks[key].assetsTypes[item].assetName}</option>
-                                                                                                                                            }
-                                                                                                                                        })
-                                                                                                                                    }
-                                                                                                                                })
-                                                                                                                            )}
-                                                                                                                        </select>
-                                                                                                                    </div>
-                                                                                                                }
-
-                                                                                                                {(this.state[item.instanceId + "_buyAsset_assetType_bulk"] == undefined && this.state[item.instanceId + "_buyAsset_assetType_solo"] == undefined) &&
-                                                                                                                    <div className="form-group">
-                                                                                                                        <label>Asset Name</label>
-                                                                                                                        <select className="form-control" ref={(input) => {this[item.instanceId + "_buyAsset_assetName"] = input}} required>
-                                                                                                                            {this.state[item.instanceId + "_buyAsset_selectedNetwork"] === undefined ? (
-                                                                                                                                Object.keys(this.props.networks[0].assetsTypes || {}).map((item) => {
-                                                                                                                                    if(this.props.networks[0].assetsTypes[item].type == "bulk") {
-                                                                                                                                        return <option key={this.props.networks[0].assetsTypes[item].assetName} value={this.props.networks[0].assetsTypes[item].assetName}>{this.props.networks[0].assetsTypes[item].assetName}</option>
-                                                                                                                                    }
-                                                                                                                                })
-                                                                                                                            ) : (
-                                                                                                                                Object.keys(this.props.networks || {}).map((key) => {
-                                                                                                                                    if(this.props.networks[key].instanceId === this.state[item.instanceId + "_buyAsset_selectedNetwork"]) {
-                                                                                                                                        return Object.keys(this.props.networks[key].assetsTypes || {}).map((item) => {
-                                                                                                                                            if(this.props.networks[key].assetsTypes[item].type == "bulk") {
-                                                                                                                                                return <option key={this.props.networks[key].assetsTypes[item].assetName} value={this.props.networks[key].assetsTypes[item].assetName}>{this.props.networks[key].assetsTypes[item].assetName}</option>
-                                                                                                                                            }
-                                                                                                                                        })
-                                                                                                                                    }
-                                                                                                                                })
-                                                                                                                            )}
-                                                                                                                        </select>
-                                                                                                                    </div>
-                                                                                                                }
-
-                                                                                                                {(this.state[item.instanceId + "_buyAsset_assetType_bulk"] == true || this.state[item.instanceId + "_buyAsset_assetType_bulk"] == undefined) &&
-                                                                                                                    <div className="form-group">
-                                                                                                                        <label>Units</label>
-                                                                                                                        <input type="number" className="form-control" ref={(input) => {this[item.instanceId + "_buyAsset_units"] = input}} required />
-                                                                                                                    </div>
-                                                                                                                }
-
-                                                                                                                {(this.state[item.instanceId + "_buyAsset_assetType_solo"] == true) &&
-                                                                                                                    <div className="form-group">
-                                                                                                                        <label>Identifier</label>
-                                                                                                                        <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_buyAsset_identifier"] = input}} required />
-                                                                                                                    </div>
-                                                                                                                }
-
-                                                                                                                <div className="form-group">
-                                                                                                                    <label>Buyer Account</label>
-                                                                                                                    <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_buyAsset_toAddress"] = input}} required />
-                                                                                                                </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>Buyer Account</label>
+                                                                                        <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_buyAsset_toAddress"] = input}} required />
+                                                                                    </div>
 
 
-                                                                                                                {this.state[item.instanceId + "_placeOrder_formSubmitError"] &&
-                                                                                                                    <div className="row m-t-40">
-                                                                                                                        <div className="col-md-12">
-                                                                                                                            <div className="m-b-20 alert alert-danger m-b-0" role="alert">
-                                                                                                                                <button className="close" data-dismiss="alert"></button>
-                                                                                                                                {this.state[item.instanceId + "_placeOrder_formSubmitError"]}
-                                                                                                                            </div>
-                                                                                                                        </div>
-                                                                                                                    </div>
-                                                                                                                }
-                                                                                                                <p className="pull-right">
-                                                                                                                    <LaddaButton
-                                                                                                                        loading={this.state[item.instanceId + "_placeOrder_formloading"]}
-                                                                                                                        data-size={S}
-                                                                                                                        data-style={SLIDE_UP}
-                                                                                                                        data-spinner-size={30}
-                                                                                                                        data-spinner-lines={12}
-                                                                                                                        className="btn btn-success m-t-10"
-                                                                                                                        type="submit"
-                                                                                                                    >
-                                                                                                                        <i className="fa fa-plus" aria-hidden="true"></i>&nbsp;&nbsp;Place Order
-                                                                                                                    </LaddaButton>
-                                                                                                                </p>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                </form>
-                                                                                            </div>
-                                                                                            <div className="tab-pane slide-left" id={item.instanceId + "_slide2"}>
-                                                                                                <div className="row">
-                                                                                                    <div className="col-lg-12">
-                                                                                                        <h4>Orders</h4>
-                                                                                                        <div className="table-responsive">
-                                                                                                            <table className="table table-hover" id="basicTable">
-                                                                                                                <thead>
-                                                                                                                    <tr>
-                                                                                                                        <th style={{width: "16%"}}>Order ID</th>
-                                                                                                                        <th style={{width: "16%"}}>Sell Asset</th>
-                                                                                                                        <th style={{width: "16%"}}>Buy Asset</th>
-                                                                                                                        <th style={{width: "16%"}}>Seller</th>
-                                                                                                                        <th style={{width: "16%"}}>Buyer</th>
-                                                                                                                        <th style={{width: "17%"}}>Status</th>
-                                                                                                                    </tr>
-                                                                                                                </thead>
-                                                                                                                <tbody>
-                                                                                                                    {this.props.orders.map((item1, index) => {
-                                                                                                                        if(item1.instanceId == item.instanceId) {
-                                                                                                                            return (
-                                                                                                                                <tr key={item1.atomicSwapHash}>
-                                                                                                                                    <td className="v-align-middle ">
-                                                                                                                                        {item1.atomicSwapHash}
-                                                                                                                                    </td>
-                                                                                                                                    <td className="v-align-middle">
-                                                                                                                                        {item1.fromAssetType == "bulk" &&
-                                                                                                                                            <span>{item1.fromAssetUnits} {item1.fromAssetName}</span>
-                                                                                                                                        }
-
-                                                                                                                                        {item1.fromAssetType == "solo" &&
-                                                                                                                                            <span>{item1.fromAssetId} {item1.fromAssetName}</span>
-                                                                                                                                        }
-                                                                                                                                    </td>
-                                                                                                                                    <td className="v-align-middle">
-                                                                                                                                        {item1.toAssetType == "bulk" &&
-                                                                                                                                            <span>{item1.toAssetUnits} {item1.toAssetName}</span>
-                                                                                                                                        }
-
-                                                                                                                                        {item1.toAssetType == "solo" &&
-                                                                                                                                            <span>{item1.toAssetId} {item1.toAssetName}</span>
-                                                                                                                                        }
-                                                                                                                                    </td>
-                                                                                                                                    <td className="v-align-middle">
-                                                                                                                                        {item1.fromAddress}
-                                                                                                                                    </td>
-                                                                                                                                    <td className="v-align-middle">
-                                                                                                                                        <span>{item1.toAddress}</span>
-                                                                                                                                    </td>
-                                                                                                                                    <td className="v-align-middle">
-                                                                                                                                        {ReactHtmlParser(helpers.convertOrderStatusToTag(item1.status))}
-                                                                                                                                    </td>
-                                                                                                                                </tr>
-                                                                                                                            )
-                                                                                                                        }
-                                                                                                                    })}
-                                                                                                                </tbody>
-                                                                                                            </table>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div className="tab-pane slide-left" id={item.instanceId + "_slide3"}>
-                                                                                                <div className="row">
-                                                                                                    <div className="col-lg-12">
-                                                                                                        <h4>Fulfill Order</h4>
-                                                                                                        <form role="form" onSubmit={(e) => {
-                                                                                                                this.fulfillOrder(e, item.instanceId);
-                                                                                                            }}>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Order ID</label>
-                                                                                                                <input type="text" className="form-control" onChange={(e) => {this.fullfillOrder_orderIdChange(e, item.instanceId)}} ref={(input) => {this[item.instanceId + "_fullfill_orderID"] = input}} required />
-                                                                                                            </div>
-
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Network</label>
-                                                                                                                <select className="form-control" onChange={(e) => {this.fullfillOrder_networkChange(e, item.instanceId)}} ref={(input) => {this[item.instanceId + "_fullfillOrder_networkId"] = input}} required>
-                                                                                                                    {(this.state[item.instanceId + "_fullOrder_genesisBlockHash"] !== undefined) ? (
-                                                                                                                        Object.keys(this.props.networks || {}).map((key) => {
-                                                                                                                            if(this.props.networks[key].genesisBlockHash === this.state[item.instanceId + "_fullOrder_genesisBlockHash"]) {
-                                                                                                                                return <option key={this.props.networks[key].instanceId} value={this.props.networks[key].instanceId}>{this.props.networks[key].name}</option>
-                                                                                                                            }
-                                                                                                                        })
-                                                                                                                    ) : (
-                                                                                                                        ""
-                                                                                                                    )}
-
-                                                                                                                </select>
-                                                                                                            </div>
-
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Account</label>
-                                                                                                                {(() => {
-                                                                                                                    this[item.instanceId + "_fullOrder_continueAccountLoop"] = true;
-                                                                                                                    return "";
-                                                                                                                })()}
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_fullfill_address"] = input}} required>
-                                                                                                                    {(this.state[item.instanceId + "_fullOrder_genesisBlockHash"] !== undefined && this.state[item.instanceId + "_fullfillOrder_selectedNetwork"] === undefined) ? (
-                                                                                                                        Object.keys(this.props.networks || {}).map((key) => {
-                                                                                                                            if(this.props.networks[key].genesisBlockHash === this.state[item.instanceId + "_fullOrder_genesisBlockHash"] && this[item.instanceId + "_fullOrder_continueAccountLoop"] === true) {
-                                                                                                                                this[item.instanceId + "_fullOrder_continueAccountLoop"] = false;
-                                                                                                                                return Object.keys(this.props.networks[key].accounts).map((item, index) => {
-                                                                                                                                    return <option key={item} value={item}>{item}</option>
-                                                                                                                                })
-                                                                                                                            }
-                                                                                                                        })
-                                                                                                                    ) : (
-                                                                                                                        ""
-                                                                                                                    )}
-
-                                                                                                                    {(this.state[item.instanceId + "_fullOrder_genesisBlockHash"] !== undefined && this.state[item.instanceId + "_fullfillOrder_selectedNetwork"] !== undefined) ? (
-                                                                                                                        Object.keys(this.props.networks || {}).map((key) => {
-                                                                                                                            if(this.state[item.instanceId + "_fullfillOrder_selectedNetwork"] === this.props.networks[key].instanceId) {
-                                                                                                                                return Object.keys(this.props.networks[key].accounts).map((item, index) => {
-                                                                                                                                    return <option key={item} value={item}>{item}</option>
-                                                                                                                                })
-                                                                                                                            }
-                                                                                                                        })
-                                                                                                                    ) : (
-                                                                                                                        ""
-                                                                                                                    )}
-                                                                                                                </select>
-                                                                                                            </div>
-
-                                                                                                            {this.state[item.instanceId + "_fullfill_formSubmitError"] &&
-                                                                                                                <div className="row m-t-30">
-                                                                                                                    <div className="col-md-12">
-                                                                                                                        <div className="m-b-20 alert alert-danger m-b-0" role="alert">
-                                                                                                                            <button className="close" data-dismiss="alert"></button>
-                                                                                                                            {this.state[item.instanceId + "_fullfill_formSubmitError"]}
-                                                                                                                        </div>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                            }
-                                                                                                            <p className="pull-right">
-                                                                                                                <LaddaButton
-                                                                                                                    loading={this.state[item.instanceId + "_fullfill_formloading"]}
-                                                                                                                    data-size={S}
-                                                                                                                    data-style={SLIDE_UP}
-                                                                                                                    data-spinner-size={30}
-                                                                                                                    data-spinner-lines={12}
-                                                                                                                    className="btn btn-success m-t-10"
-                                                                                                                    type="submit"
-                                                                                                                >
-                                                                                                                    <i className="fa fa-check" aria-hidden="true"></i>&nbsp;&nbsp;Submit
-                                                                                                                </LaddaButton>
-                                                                                                            </p>
-                                                                                                        </form>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div className="tab-pane slide-left" id={item.instanceId + "_slide4"}>
-                                                                                                <div className="row">
-                                                                                                    <div className="col-lg-12">
-                                                                                                        <h4>Cancel Order</h4>
-                                                                                                        <form role="form" onSubmit={(e) => {
-                                                                                                                this.cancelOrder(e, item.instanceId);
-                                                                                                            }}>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Order ID</label>
-                                                                                                                <input type="text" className="form-control" ref={(input) => {this[item.instanceId + "_cancel_orderID"] = input}} required />
-                                                                                                            </div>
-                                                                                                            <div className="form-group">
-                                                                                                                <label>Account</label>
-                                                                                                                <select className="form-control" ref={(input) => {this[item.instanceId + "_cancel_address"] = input}} required>
-                                                                                                                    {Object.keys(this.props.networks[index].accounts).map((item, index) => {
-                                                                                                                        return <option key={item} value={item}>{item}</option>
-                                                                                                                    })}
-                                                                                                                </select>
-                                                                                                            </div>
-                                                                                                            {this.state[item.instanceId + "_cancel_formSubmitError"] &&
-                                                                                                                <div className="row m-t-30">
-                                                                                                                    <div className="col-md-12">
-                                                                                                                        <div className="m-b-20 alert alert-danger m-b-0" role="alert">
-                                                                                                                            <button className="close" data-dismiss="alert"></button>
-                                                                                                                            {this.state[item.instanceId + "_cancel_formSubmitError"]}
-                                                                                                                        </div>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                            }
-                                                                                                            <p className="pull-right">
-                                                                                                                <LaddaButton
-                                                                                                                    loading={this.state[item.instanceId + "_cancel_formloading"]}
-                                                                                                                    data-size={S}
-                                                                                                                    data-style={SLIDE_UP}
-                                                                                                                    data-spinner-size={30}
-                                                                                                                    data-spinner-lines={12}
-                                                                                                                    className="btn btn-success m-t-10"
-                                                                                                                    type="submit"
-                                                                                                                >
-                                                                                                                    <i className="fa fa-times" aria-hidden="true"></i>&nbsp;&nbsp;Cancel
-                                                                                                                </LaddaButton>
-                                                                                                            </p>
-                                                                                                        </form>
-                                                                                                    </div>
+                                                                                    {this.state[this.props.network[0].instanceId + "_placeOrder_formSubmitError"] &&
+                                                                                        <div className="row m-t-40">
+                                                                                            <div className="col-md-12">
+                                                                                                <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                                                    <button className="close" data-dismiss="alert"></button>
+                                                                                                    {this.state[this.props.network[0].instanceId + "_placeOrder_formSubmitError"]}
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
-                                                                                    </div>
-                                                                                </div>
+                                                                                    }
+                                                                                    <p className="pull-right">
+                                                                                        <LaddaButton
+                                                                                            loading={this.state[this.props.network[0].instanceId + "_placeOrder_formloading"]}
+                                                                                            data-size={S}
+                                                                                            data-style={SLIDE_UP}
+                                                                                            data-spinner-size={30}
+                                                                                            data-spinner-lines={12}
+                                                                                            className="btn btn-success m-t-10"
+                                                                                            type="submit"
+                                                                                        >
+                                                                                            <i className="fa fa-plus" aria-hidden="true"></i>&nbsp;&nbsp;Place Order
+                                                                                        </LaddaButton>
+                                                                                    </p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
+                                                                <div className="tab-pane slide-left" id={this.props.network[0].instanceId + "_slide2"}>
+                                                                    <div className="row">
+                                                                        <div className="col-lg-12">
+                                                                            <h4>Orders</h4>
+                                                                            <div className="table-responsive">
+                                                                                <table className="table table-hover" id="basicTable">
+                                                                                    <thead>
+                                                                                        <tr>
+                                                                                            <th style={{width: "16%"}}>Order ID</th>
+                                                                                            <th style={{width: "16%"}}>Sell Asset</th>
+                                                                                            <th style={{width: "16%"}}>Buy Asset</th>
+                                                                                            <th style={{width: "16%"}}>Seller</th>
+                                                                                            <th style={{width: "16%"}}>Buyer</th>
+                                                                                            <th style={{width: "17%"}}>Status</th>
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        {this.props.orders.map((item1, index) => {
+                                                                                            if(item1.instanceId == this.props.network[0].instanceId) {
+                                                                                                return (
+                                                                                                    <tr key={item1.atomicSwapHash}>
+                                                                                                        <td className="v-align-middle ">
+                                                                                                            {item1.atomicSwapHash}
+                                                                                                        </td>
+                                                                                                        <td className="v-align-middle">
+                                                                                                            {item1.fromAssetType == "bulk" &&
+                                                                                                                <span>{item1.fromAssetUnits} {item1.fromAssetName}</span>
+                                                                                                            }
+
+                                                                                                            {item1.fromAssetType == "solo" &&
+                                                                                                                <span>{item1.fromAssetId} {item1.fromAssetName}</span>
+                                                                                                            }
+                                                                                                        </td>
+                                                                                                        <td className="v-align-middle">
+                                                                                                            {item1.toAssetType == "bulk" &&
+                                                                                                                <span>{item1.toAssetUnits} {item1.toAssetName}</span>
+                                                                                                            }
+
+                                                                                                            {item1.toAssetType == "solo" &&
+                                                                                                                <span>{item1.toAssetId} {item1.toAssetName}</span>
+                                                                                                            }
+                                                                                                        </td>
+                                                                                                        <td className="v-align-middle">
+                                                                                                            {item1.fromAddress}
+                                                                                                        </td>
+                                                                                                        <td className="v-align-middle">
+                                                                                                            <span>{item1.toAddress}</span>
+                                                                                                        </td>
+                                                                                                        <td className="v-align-middle">
+                                                                                                            {ReactHtmlParser(helpers.convertOrderStatusToTag(item1.status))}
+                                                                                                        </td>
+                                                                                                    </tr>
+                                                                                                )
+                                                                                            }
+                                                                                        })}
+                                                                                    </tbody>
+                                                                                </table>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                }
+                                                                </div>
+                                                                <div className="tab-pane slide-left" id={this.props.network[0].instanceId + "_slide3"}>
+                                                                    <div className="row">
+                                                                        <div className="col-lg-12">
+                                                                            <h4>Fulfill Order</h4>
+                                                                            <form role="form" onSubmit={(e) => {
+                                                                                    this.fulfillOrder(e, this.props.network[0].instanceId);
+                                                                                }}>
+                                                                                <div className="form-group">
+                                                                                    <label>Order ID</label>
+                                                                                    <input type="text" className="form-control" onChange={(e) => {this.fullfillOrder_orderIdChange(e, this.props.network[0].instanceId)}} ref={(input) => {this[this.props.network[0].instanceId + "_fullfill_orderID"] = input}} required />
+                                                                                </div>
+
+                                                                                <div className="form-group">
+                                                                                    <label>Network</label>
+                                                                                    <select className="form-control" onChange={(e) => {this.fullfillOrder_networkChange(e, this.props.network[0].instanceId)}} ref={(input) => {this[this.props.network[0].instanceId + "_fullfillOrder_networkId"] = input}} required>
+                                                                                        {(this.state[this.props.network[0].instanceId + "_fullOrder_genesisBlockHash"] !== undefined) ? (
+                                                                                            Object.keys(this.props.networks || {}).map((key) => {
+                                                                                                if(this.props.networks[key].genesisBlockHash === this.state[this.props.network[0].instanceId + "_fullOrder_genesisBlockHash"]) {
+                                                                                                    return <option key={this.props.networks[key].instanceId} value={this.props.networks[key].instanceId}>{this.props.networks[key].name}</option>
+                                                                                                }
+                                                                                            })
+                                                                                        ) : (
+                                                                                            ""
+                                                                                        )}
+
+                                                                                    </select>
+                                                                                </div>
+
+                                                                                <div className="form-group">
+                                                                                    <label>Account</label>
+                                                                                    {(() => {
+                                                                                        this[this.props.network[0].instanceId + "_fullOrder_continueAccountLoop"] = true;
+                                                                                        return "";
+                                                                                    })()}
+                                                                                    <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_fullfill_address"] = input}} required>
+                                                                                        {(this.state[this.props.network[0].instanceId + "_fullOrder_genesisBlockHash"] !== undefined && this.state[this.props.network[0].instanceId + "_fullfillOrder_selectedNetwork"] === undefined) ? (
+                                                                                            Object.keys(this.props.networks || {}).map((key) => {
+                                                                                                if(this.props.networks[key].genesisBlockHash === this.state[this.props.network[0].instanceId + "_fullOrder_genesisBlockHash"] && this[this.props.network[0].instanceId + "_fullOrder_continueAccountLoop"] === true) {
+                                                                                                    this[this.props.network[0].instanceId + "_fullOrder_continueAccountLoop"] = false;
+                                                                                                    return Object.keys(this.props.networks[key].accounts).map((item, index) => {
+                                                                                                        return <option key={item} value={item}>{item}</option>
+                                                                                                    })
+                                                                                                }
+                                                                                            })
+                                                                                        ) : (
+                                                                                            ""
+                                                                                        )}
+
+                                                                                        {(this.state[this.props.network[0].instanceId + "_fullOrder_genesisBlockHash"] !== undefined && this.state[this.props.network[0].instanceId + "_fullfillOrder_selectedNetwork"] !== undefined) ? (
+                                                                                            Object.keys(this.props.networks || {}).map((key) => {
+                                                                                                if(this.state[this.props.network[0].instanceId + "_fullfillOrder_selectedNetwork"] === this.props.networks[key].instanceId) {
+                                                                                                    return Object.keys(this.props.networks[key].accounts).map((item, index) => {
+                                                                                                        return <option key={item} value={item}>{item}</option>
+                                                                                                    })
+                                                                                                }
+                                                                                            })
+                                                                                        ) : (
+                                                                                            ""
+                                                                                        )}
+                                                                                    </select>
+                                                                                </div>
+
+                                                                                {this.state[this.props.network[0].instanceId + "_fullfill_formSubmitError"] &&
+                                                                                    <div className="row m-t-30">
+                                                                                        <div className="col-md-12">
+                                                                                            <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                                                <button className="close" data-dismiss="alert"></button>
+                                                                                                {this.state[this.props.network[0].instanceId + "_fullfill_formSubmitError"]}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                }
+                                                                                <p className="pull-right">
+                                                                                    <LaddaButton
+                                                                                        loading={this.state[this.props.network[0].instanceId + "_fullfill_formloading"]}
+                                                                                        data-size={S}
+                                                                                        data-style={SLIDE_UP}
+                                                                                        data-spinner-size={30}
+                                                                                        data-spinner-lines={12}
+                                                                                        className="btn btn-success m-t-10"
+                                                                                        type="submit"
+                                                                                    >
+                                                                                        <i className="fa fa-check" aria-hidden="true"></i>&nbsp;&nbsp;Submit
+                                                                                    </LaddaButton>
+                                                                                </p>
+                                                                            </form>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="tab-pane slide-left" id={this.props.network[0].instanceId + "_slide4"}>
+                                                                    <div className="row">
+                                                                        <div className="col-lg-12">
+                                                                            <h4>Cancel Order</h4>
+                                                                            <form role="form" onSubmit={(e) => {
+                                                                                    this.cancelOrder(e, this.props.network[0].instanceId);
+                                                                                }}>
+                                                                                <div className="form-group">
+                                                                                    <label>Order ID</label>
+                                                                                    <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_cancel_orderID"] = input}} required />
+                                                                                </div>
+                                                                                <div className="form-group">
+                                                                                    <label>Account</label>
+                                                                                    <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_cancel_address"] = input}} required>
+                                                                                        {Object.keys(this.props.network[0].accounts).map((item, index) => {
+                                                                                            return <option key={item} value={item}>{item}</option>
+                                                                                        })}
+                                                                                    </select>
+                                                                                </div>
+                                                                                {this.state[this.props.network[0].instanceId + "_cancel_formSubmitError"] &&
+                                                                                    <div className="row m-t-30">
+                                                                                        <div className="col-md-12">
+                                                                                            <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                                                <button className="close" data-dismiss="alert"></button>
+                                                                                                {this.state[this.props.network[0].instanceId + "_cancel_formSubmitError"]}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                }
+                                                                                <p className="pull-right">
+                                                                                    <LaddaButton
+                                                                                        loading={this.state[this.props.network[0].instanceId + "_cancel_formloading"]}
+                                                                                        data-size={S}
+                                                                                        data-style={SLIDE_UP}
+                                                                                        data-spinner-size={30}
+                                                                                        data-spinner-lines={12}
+                                                                                        className="btn btn-success m-t-10"
+                                                                                        type="submit"
+                                                                                    >
+                                                                                        <i className="fa fa-times" aria-hidden="true"></i>&nbsp;&nbsp;Cancel
+                                                                                    </LaddaButton>
+                                                                                </p>
+                                                                            </form>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                        )
-                                                    })}
-                                                </div>
+                                                        </div>
+                                                    </div>
+                                                }
                                             </div>
-                                        </div>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -787,16 +752,17 @@ class AssetsManagement extends Component {
 	}
 }
 
-export default withTracker(() => {
+export default withTracker((props) => {
     return {
+        network: Networks.find({_id: props.match.params.id}).fetch(),
         networks: Networks.find({}).fetch(),
         orders: Orders.find({}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
             onReady: function (){
-        		if(Networks.find({}).fetch().length > 0) {
-        			ordersSubscription = Meteor.subscribe("orders", Networks.find({}).fetch()[0].instanceId)
+        		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
+        			props.history.push("/app/networks");
         		}
         	}
-        })]
+        }), Meteor.subscribe("orders", props.match.params.id)]
     }
 })(withRouter(AssetsManagement))

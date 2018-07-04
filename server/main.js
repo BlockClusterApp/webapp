@@ -1601,7 +1601,7 @@ spec:
     },
     "searchSoloAssets": function(instanceId, query) {
         query.instanceId = instanceId;
-        return soloAssets.find(JSON.parse(query)).fetch();
+        return SoloAssets.find(JSON.parse(query)).fetch();
     },
     "rpcPasswordUpdate": function(instanceId, password) {
         var myFuture = new Future();

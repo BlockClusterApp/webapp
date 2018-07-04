@@ -71,109 +71,24 @@ class Navbar extends Component {
 		                    </li>
 						}
 						<li className="">
-			            	<a href="javascript:;"><span className="title">Security</span>
+			            	<a href="javascript:;"><span className="title">APIs</span>
 			              	<span className="arrow"></span></a>
-			              	<span className="icon-thumbnail"><i className="fa fa-lock"></i></span>
+			              	<span className="icon-thumbnail"><i className="fa fa-code"></i></span>
 			              	<ul className="sub-menu">
-								<li>
-									<Link to={"/app/security/peers"}>
-			                    		Peers
-			                    	</Link>
-			                  		<span className="icon-thumbnail"><i className="fa fa-globe"></i></span>
-			                	</li>
-								<li>
+			                	<li>
 									<Link to={"/app/security/apis-creds"}>
-			                    		APIs Creds
+			                    		Creds
 			                    	</Link>
-			                  		<span className="icon-thumbnail"><i className="fa fa-unlock-alt"></i></span>
+			                  		<span className="icon-thumbnail"><i className="fa fa-lock"></i></span>
+			                	</li>
+								<li>
+									<Link target="_blank" to={"https://api.blockcluster.io/"}>
+			                    		Docs
+			                    	</Link>
+			                  		<span className="icon-thumbnail"><i className="fa fa-book"></i></span>
 			                	</li>
 			              	</ul>
 			            </li>
-						<li className="">
-			            	<a href="javascript:;"><span className="title">Assets</span>
-			              	<span className="arrow"></span></a>
-			              	<span className="icon-thumbnail"><i className="fa fa-connectdevelop"></i></span>
-			              	<ul className="sub-menu">
-			                	<li>
-									<Link to={"/app/assets/create"}>
-			                    		Create Asset Type
-			                    	</Link>
-			                  		<span className="icon-thumbnail"><i className="fa fa-plus-square"></i></span>
-			                	</li>
-								<li>
-									<Link to={"/app/assets/management"}>
-			                    		Management
-			                    	</Link>
-			                  		<span className="icon-thumbnail"><i className="fa fa-braille"></i></span>
-			                	</li>
-								<li>
-									<Link to={"/app/assets/stats"}>
-			                    		Stats
-			                    	</Link>
-			                  		<span className="icon-thumbnail"><i className="fa fa-signal"></i></span>
-			                	</li>
-			              	</ul>
-			            </li>
-						<li className="">
-			            	<a href="javascript:;"><span className="title">Streams</span>
-			              	<span className="arrow"></span></a>
-			              	<span className="icon-thumbnail"><i className="fa fa-microchip"></i></span>
-			              	<ul className="sub-menu">
-			                	<li>
-									<Link to={"/app/streams/create"}>
-			                    		Create Stream
-			                    	</Link>
-			                  		<span className="icon-thumbnail"><i className="fa fa-plus-square"></i></span>
-			                	</li>
-								<li>
-									<Link to={"/app/streams/publish"}>
-			                    		Publish
-			                    	</Link>
-			                  		<span className="icon-thumbnail"><i className="fa fa-upload"></i></span>
-			                	</li>
-								<li>
-									<Link to={"/app/streams/subscribe"}>
-			                    		Subscribe
-			                    	</Link>
-			                  		<span className="icon-thumbnail"><i className="fa fa-download"></i></span>
-			                	</li>
-			              	</ul>
-			            </li>
-						<li className="">
-	                    	<Link to={"/app/assets/exchange"} className="detailed">
-								<span className="title">Exchange</span>
-								<span className="details">Cross-Chain</span>
-	                    	</Link>
-	                        <span className="icon-thumbnail"><i className="fa fa-exchange"></i></span>
-	                    </li>
-						<li className="">
-	                    	<Link to={"/app/assets/search"} className="detailed">
-								<span className="title">Search</span>
-								<span className="details">No-SQL Query</span>
-	                    	</Link>
-	                        <span className="icon-thumbnail"><i className="fa fa-search"></i></span>
-	                    </li>
-						<li className="">
-							<Link target="_blank" to={"https://api.blockcluster.io/"} className="detailed">
-								<span className="title">APIs</span>
-								<span className="details">Integrate DApps</span>
-							</Link>
-							<span className="icon-thumbnail"><i className="fa fa-code"></i></span>
-						</li>
-						<li className="">
-							<Link to={"/app/assets/events"} className="detailed">
-								<span className="title">Events</span>
-								<span className="details">Register Callbacks</span>
-							</Link>
-							<span className="icon-thumbnail"><i className="fa fa-bell"></i></span>
-						</li>
-						<li className="">
-	                    	<Link to={"/app/explorer"} className="detailed">
-								<span className="title">Audit</span>
-								<span className="details">Blockchain Explorer</span>
-	                    	</Link>
-	                        <span className="icon-thumbnail"><i className="fa fa-eye"></i></span>
-	                    </li>
 						{(this.props.kuberREST_IP[0] !== undefined) &&
 	                    	<li className="">
 		                    	<Link target="_blank" to={"http://" + this.props.kuberREST_IP[0].value + ":8000/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#!/overview?namespace=default"} className="detailed">

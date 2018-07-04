@@ -64,106 +64,52 @@ class Explorer extends Component {
         })
     }
 
-    nodeStatusIcon(instanceId) {
-        for(let count = 0; count < this.props.networks.length; count++) {
-            if(instanceId === this.props.networks[count].instanceId) {
-                if(this.props.networks[count].status === "running") {
-                    return (<i className="fa fa-circle text-success fs-11"></i>)
-                } else if (this.props.networks[count].status === "down") {
-                    return (<i className="fa fa-circle text-danger fs-11"></i>)
-                } else {
-                    return (<i className="fa fa-circle text-complete fs-11"></i>)
-                }
+    nodeStatusIcon() {
+        if(this.props.network.length === 1) {
+            if(this.props.network[0].status === "running") {
+                return (<i className="fa fa-circle text-success fs-11"></i>)
+            } else if (this.props.network[0].status === "down") {
+                return (<i className="fa fa-circle text-danger fs-11"></i>)
+            } else {
+                return (<i className="fa fa-circle text-complete fs-11"></i>)
             }
         }
     }
 
     refreshTotalSmartContracts() {
-        if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-            if(this.props.networks[0].status === "running") {
-                this.setState({
-                    totalSmartContracts: (this.props.networks[0].totalSmartContracts ? this.props.networks[0].totalSmartContracts : 0)
-                }, () => {
-                    setTimeout(this.refreshTotalSmartContracts, 100)
-                })
-            } else {
+        if(this.props.network.length === 1) {
+            this.setState({
+                totalSmartContracts: (this.props.network[0].totalSmartContracts ? this.props.network[0].totalSmartContracts : 0)
+            }, () => {
                 setTimeout(this.refreshTotalSmartContracts, 100)
-            }
-
-        } else if (this.state.selectedNetwork !== null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-            for(let count = 0; count < this.props.networks.length; count++) {
-                if(this.state.selectedNetwork === this.props.networks[count].instanceId) {
-                    if(this.props.networks[count].status === "running") {
-                        this.setState({
-                            totalSmartContracts: (this.props.networks[count].totalSmartContracts ? this.props.networks[count].totalSmartContracts : 0)
-                        }, () => {
-                            setTimeout(this.refreshTotalSmartContracts, 100)
-                        })
-                        break
-                    } else {
-                        setTimeout(this.refreshTotalSmartContracts, 100)
-                        break
-                    }
-                }
-            }
+            })
+        } else {
+            setTimeout(this.refreshTotalSmartContracts, 1000)
         }
+
     }
 
     refreshTotalBlocksScanned() {
-        if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-            if(this.props.networks[0].status === "running") {
-
-                this.setState({
-                    totalBlocksScanned: (this.props.networks[0].blockToScan ? (this.props.networks[0].blockToScan - 1) : 0)
-                }, () => {
-                    setTimeout(this.refreshTotalBlocksScanned, 100)
-                })
-            } else {
+        if(this.props.network.length === 1) {
+            this.setState({
+                totalBlocksScanned: (this.props.network[0].blockToScan ? (this.props.network[0].blockToScan - 1) : 0)
+            }, () => {
                 setTimeout(this.refreshTotalBlocksScanned, 100)
-            }
-
-        } else if (this.state.selectedNetwork !== null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-            for(let count = 0; count < this.props.networks.length; count++) {
-                if(this.state.selectedNetwork === this.props.networks[count].instanceId) {
-                    if(this.props.networks[count].status === "running") {
-                        this.setState({
-                            totalBlocksScanned: (this.props.networks[count].blockToScan ? (this.props.networks[count].blockToScan - 1) : 0)
-                        }, () => {
-                            setTimeout(this.refreshTotalBlocksScanned, 100)
-                        })
-                        break
-                    } else {
-                        setTimeout(this.refreshTotalBlocksScanned, 100)
-                        break;
-                    }
-
-                }
-            }
+            })
         } else {
-            setTimeout(this.refreshTotalBlocksScanned, 100)
+            setTimeout(this.refreshTotalBlocksScanned, 1000)
         }
     }
 
     refreshTxpool() {
         let rpc = null;
         let status = null;
-        if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-            rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.networks[0].instanceId
-            username = this.props.networks[0].instanceId
-            password = this.props.networks[0]["jsonRPC-password"]
 
-            status = this.props.networks[0].status
-        } else if (this.state.selectedNetwork !== null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-            for(let count = 0; count < this.props.networks.length; count++) {
-                if(this.state.selectedNetwork === this.props.networks[count].instanceId) {
-                    rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.networks[count].instanceId
-                    username = this.props.networks[count].instanceId
-                    password = this.props.networks[count]["jsonRPC-password"]
-
-                    status = this.props.networks[count].status
-                    break
-                }
-            }
+        if(this.props.network.length === 1) {
+            rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.network[0].instanceId
+            username = this.props.network[0].instanceId
+            password = this.props.network[0]["jsonRPC-password"]
+            status = this.props.network[0].status
         }
 
         if(status == "running") {
@@ -209,29 +155,20 @@ class Explorer extends Component {
                 }
             })
         } else {
-            setTimeout(this.refreshTxpool, 500)
+            setTimeout(this.refreshTxpool, 1000)
         }
     }
 
     addLatestBlocks() {
         let rpc = null;
         let status = null;
-        if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-            rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.networks[0].instanceId
-            username = this.props.networks[0].instanceId
-            password = this.props.networks[0]["jsonRPC-password"]
 
-            status = this.props.networks[0].status
-        } else if (this.state.selectedNetwork !== null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-            for(let count = 0; count < this.props.networks.length; count++) {
-                if(this.state.selectedNetwork === this.props.networks[count].instanceId) {
-                    rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.networks[count].instanceId
-                    username = this.props.networks[count].instanceId
-                    password = this.props.networks[count]["jsonRPC-password"]
-                    status = this.props.networks[count].status
-                    break
-                }
-            }
+        if(this.props.network.length === 1) {
+            rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.network[0].instanceId
+            username = this.props.network[0].instanceId
+            password = this.props.network[0]["jsonRPC-password"]
+
+            status = this.props.network[0].status
         }
 
         if(status == "running") {
@@ -293,22 +230,10 @@ class Explorer extends Component {
             let rpc = null;
             let status = null;
 
-            if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-                rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.networks[0].instanceId
-                username = this.props.networks[0].instanceId
-                password = this.props.networks[0]["jsonRPC-password"]
-                status = this.props.networks[0].status
-            } else if (this.state.selectedNetwork !== null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-                for(let count = 0; count < this.props.networks.length; count++) {
-                    if(this.state.selectedNetwork === this.props.networks[count].instanceId) {
-                        rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.networks[count].instanceId
-                        username = this.props.networks[count].instanceId
-                        password = this.props.networks[count]["jsonRPC-password"]
-                        status = this.props.networks[count].status
-                        break
-                    }
-                }
-            }
+            rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.network[0].instanceId
+            username = this.props.network[0].instanceId
+            password = this.props.network[0]["jsonRPC-password"]
+            status = this.props.network[0].status
 
             let web3 = new Web3(new Web3.providers.HttpProvider(rpc, 0, username, password));
 
@@ -361,28 +286,14 @@ class Explorer extends Component {
         let status = null;
         let atomicSwapContractAddress = null;
         let assetsContractAddress = null;
-        if(this.state.selectedNetwork === null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-            rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.networks[0].instanceId
-            username = this.props.networks[0].instanceId
-            password = this.props.networks[0]["jsonRPC-password"]
-            status = this.props.networks[0].status
-            atomicSwapContractAddress = this.props.networks[0].atomicSwapContractAddress;
-            assetsContractAddress = this.props.networks[0].assetsContractAddress;
-            streamsContractAddress = this.props.networks[0].streamsContractAddress;
-        } else if (this.state.selectedNetwork !== null && this.props.networks.length > 0 && this.props.workerNodeIP.length === 1) {
-            for(let count = 0; count < this.props.networks.length; count++) {
-                if(this.state.selectedNetwork === this.props.networks[count].instanceId) {
-                    rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.networks[count].instanceId
-                    username = this.props.networks[count].instanceId
-                    password = this.props.networks[count]["jsonRPC-password"]
-                    status = this.props.networks[count].status
-                    atomicSwapContractAddress = this.props.networks[count].atomicSwapContractAddress;
-                    assetsContractAddress = this.props.networks[count].assetsContractAddress;
-                    streamsContractAddress = this.props.networks[count].streamsContractAddress;
-                    break
-                }
-            }
-        }
+
+        rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.network[0].instanceId
+        username = this.props.network[0].instanceId
+        password = this.props.network[0]["jsonRPC-password"]
+        status = this.props.network[0].status
+        atomicSwapContractAddress = this.props.network[0].atomicSwapContractAddress;
+        assetsContractAddress = this.props.network[0].assetsContractAddress;
+        streamsContractAddress = this.props.network[0].streamsContractAddress;
 
         if(status == "running") {
             let web3 = new Web3(new Web3.providers.HttpProvider(rpc, 0, username, password));
@@ -436,11 +347,7 @@ class Explorer extends Component {
 
 	render(){
         let nodeStatus = null;
-        if (this.state.selectedNetwork === null && this.props.networks.length > 0) {
-            nodeStatus = this.nodeStatusIcon(this.props.networks[0].instanceId)
-        } else {
-            nodeStatus = this.nodeStatusIcon(this.state.selectedNetwork)
-        }
+        nodeStatus = this.nodeStatusIcon()
 
 		return (
             <div className="content explorer sm-gutter">
@@ -448,29 +355,6 @@ class Explorer extends Component {
                     <div className="row">
                         <div className="col-lg-6 col-sm-12">
                             <div className="row">
-                                <div className="col-lg-12">
-                                    <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
-                                        <div className="card-header ">
-                                            <h5 className="text-primary pull-left fs-12">Select Network </h5>
-                                            <div className="pull-right small hint-text">
-                                                {nodeStatus}
-                                            </div>
-                                            <div className="clearfix"></div>
-                                        </div>
-                                        <div className="card-description m-b-0 p-b-0">
-                                            <div className="radio radio-success">
-                                                {this.props.networks.map((item, index) => {
-                                                    return (
-                                                        <span key={index}>
-                                                            <input type="radio" value={item.instanceId} name="networkId" id={item.instanceId} checked={(this.state.selectedNetwork === item.instanceId ? true : (this.state.selectedNetwork === null && index === 0 ? true : false))} onChange={(e) => {this.selectNetwork(e)}} />
-                                                            <label htmlFor={item.instanceId}>{item.name}</label>
-                                                        </span>
-                                                    )
-                                                })}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                                 <div className="col-lg-6">
                                     <div className="card no-border bg-white no-margin widget-loader-bar">
                                         <div className="card-header  top-left top-right ">
@@ -617,10 +501,16 @@ class Explorer extends Component {
 	}
 }
 
-export default withTracker(() => {
+export default withTracker((props) => {
     return {
-        networks: Networks.find({}).fetch(),
-        subscriptions: [Meteor.subscribe("networks"), Meteor.subscribe("utilities")],
+        network: Networks.find({_id: props.match.params.id}).fetch(),
+        subscriptions: [Meteor.subscribe("networks", {
+        	onReady: function (){
+        		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
+        			props.history.push("/app/networks");
+        		}
+        	}
+        }), Meteor.subscribe("utilities")],
         workerNodeIP: Utilities.find({"name": "workerNodeIP"}).fetch(),
         workerNodeDomainName: Utilities.find({"name": "workerNodeDomainName"}).fetch()
     }

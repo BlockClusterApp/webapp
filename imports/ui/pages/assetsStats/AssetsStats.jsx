@@ -33,74 +33,55 @@ class AssetsStats extends Component {
                                     <div className="card-title">Assets Stats
                                     </div>
                                 </div>
-                                <div className="card-block no-padding">
+                                <div className="card-block">
                                     <div className="row">
                                         <div className="col-xl-12">
-                                            <div className="card card-transparent flex-row">
-                                                <ul className="nav nav-tabs nav-tabs-simple nav-tabs-left bg-white" id="tab-3">
-                                                    {this.props.networks.map((item, index) => {
-                                                        return (
-                                                            <li key={item.instanceId} className="nav-item">
-                                                                <a href="#" className={index === 0 ? "active" : ""} data-toggle="tab" data-target={"#" + item.instanceId}>{item.name}</a>
-                                                            </li>
-                                                        )
-                                                    })}
-                                                </ul>
-                                                <div className="tab-content bg-white">
-                                                    {this.props.networks.map((item, index) => {
-                                                        return (
-                                                            <div key={index} className={index === 0 ? "tab-pane active" : "tab-pane "} id={item.instanceId}>
-                                                                {item.assetsContractAddress === '' &&
-                                                                    <div>
-                                                                        Please deploy smart contract
-                                                                    </div>
-                                                                }
-                                                                {(item.assetsContractAddress !== undefined && item.assetsContractAddress !== '') &&
-                                                                    <div>
-                                                                        <div className="container">
-                                                                            <div className="row column-seperation">
-                                                                                <div className="col-lg-12">
-                                                                                    <div className="table-responsive">
-                                                                                        <table className="table table-hover" id="basicTable">
-                                                                                            <thead>
-                                                                                                <tr>
-                                                                                                    <th style={{width: "25%"}}>Asset Name</th>
-                                                                                                    <th style={{width: "25%"}}>Asset Type</th>
-                                                                                                    <th style={{width: "25%"}}>Total Units</th>
-                                                                                                    <th style={{width: "25%"}}>Issuer</th>
-                                                                                                </tr>
-                                                                                            </thead>
-                                                                                            <tbody>
-                                                                                                {Object.keys(item.assetsTypes || {}).reverse().map((key, index) => {
-                                                                                                    return (
-                                                                                                        <tr key={item.assetsTypes[key].uniqueIdentifier}>
-                                                                                                            <td className="v-align-middle ">
-                                                                                                                {item.assetsTypes[key].assetName}
-                                                                                                            </td>
-                                                                                                            <td className="v-align-middle">
-                                                                                                                {item.assetsTypes[key].type}
-                                                                                                            </td>
-                                                                                                            <td className="v-align-middle">
-                                                                                                                {item.assetsTypes[key].units}
-                                                                                                            </td>
-                                                                                                            <td className="v-align-middle">
-                                                                                                                {item.assetsTypes[key].authorizedIssuer}
-                                                                                                            </td>
-                                                                                                        </tr>
-                                                                                                    )
-                                                                                                })}
-                                                                                            </tbody>
-                                                                                        </table>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                }
+                                            <div className="card card-transparent">
+                                                {this.props.network.length === 1 &&
+                                                    <div>
+                                                        {this.props.network[0].assetsContractAddress === '' &&
+                                                            <div>
+                                                                Please deploy smart contract
                                                             </div>
-                                                        )
-                                                    })}
-                                                </div>
+                                                        }
+                                                        {(this.props.network[0].assetsContractAddress !== undefined && this.props.network[0].assetsContractAddress !== '') &&
+                                                            <div>
+                                                                <div className="table-responsive">
+                                                                    <table className="table table-hover" id="basicTable">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th style={{width: "25%"}}>Asset Name</th>
+                                                                                <th style={{width: "25%"}}>Asset Type</th>
+                                                                                <th style={{width: "25%"}}>Total Units</th>
+                                                                                <th style={{width: "25%"}}>Issuer</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).reverse().map((key, index) => {
+                                                                                return (
+                                                                                    <tr key={this.props.network[0].assetsTypes[key].uniqueIdentifier}>
+                                                                                        <td className="v-align-middle ">
+                                                                                            {this.props.network[0].assetsTypes[key].assetName}
+                                                                                        </td>
+                                                                                        <td className="v-align-middle">
+                                                                                            {this.props.network[0].assetsTypes[key].type}
+                                                                                        </td>
+                                                                                        <td className="v-align-middle">
+                                                                                            {this.props.network[0].assetsTypes[key].units}
+                                                                                        </td>
+                                                                                        <td className="v-align-middle">
+                                                                                            {this.props.network[0].assetsTypes[key].authorizedIssuer}
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                )
+                                                                            })}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                }
                                             </div>
                                         </div>
                                     </div>
@@ -114,9 +95,15 @@ class AssetsStats extends Component {
 	}
 }
 
-export default withTracker(() => {
+export default withTracker((props) => {
     return {
-        networks: Networks.find({}).fetch(),
-        subscriptions: [Meteor.subscribe("networks")]
+        network: Networks.find({_id: props.match.params.id}).fetch(),
+        subscriptions: [Meteor.subscribe("networks", {
+        	onReady: function (){
+        		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
+        			props.history.push("/app/networks");
+        		}
+        	}
+        })]
     }
 })(withRouter(AssetsStats))

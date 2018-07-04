@@ -15,7 +15,7 @@ class NetworksList extends Component {
     }
 
     openNetwork = (networkId) => {
-        this.props.history.push("/app/networks/network/" + networkId);
+        this.props.history.push("/app/networks/" + networkId);
     }
 
 	render(){

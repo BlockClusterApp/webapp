@@ -1,0 +1,15 @@
+.viewNetwork {
+    .card .card-header .card-title {
+        text-transform: none;
+    }
+
+    .clickable p {
+        color: #666c79 !important;
+        transition: color 0.1s linear 0s, background-color 0.1s linear 0s, opacity 0.2s linear 0s !important;
+    }
+
+    .clickable:hover p {
+        cursor: pointer;
+        color: #000 !important;
+    }
+}

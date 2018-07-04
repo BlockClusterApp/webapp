@@ -80,116 +80,91 @@ class CreateAssetType extends Component {
                                     <div className="card-title">Create Asset Type
                                     </div>
                                 </div>
-                                <div className="card-block no-padding">
-                                    <div className="row">
-                                        <div className="col-xl-12">
-                                            <div className="card card-transparent flex-row">
-                                                <ul className="nav nav-tabs nav-tabs-simple nav-tabs-left bg-white" id="tab-3">
-                                                    {this.props.networks.map((item, index) => {
-                                                        return (
-                                                            <li key={item.instanceId} className="nav-item">
-                                                                <a href="#" className={index === 0 ? "active" : ""} data-toggle="tab" data-target={"#" + item.instanceId}>{item.name}</a>
-                                                            </li>
-                                                        )
-                                                    })}
-                                                </ul>
-                                                <div className="tab-content bg-white">
-                                                    {this.props.networks.map((item, index) => {
-                                                        return (
-                                                            <div key={index} className={index === 0 ? "tab-pane active" : "tab-pane "} id={item.instanceId}>
-                                                                {item.assetsContractAddress === '' &&
-                                                                    <div>
-                                                                        Please deploy smart contract
-                                                                    </div>
-                                                                }
-                                                                {(item.assetsContractAddress !== undefined && item.assetsContractAddress !== '') &&
-                                                                    <div>
-                                                                        <div className="container">
-                                                                            <div className="row column-seperation">
-                                                                                <div className="col-lg-12">
-                                                                                    <div className="card-block" onSubmit={(e) => {
-                                                                                            this.createAssetType(e, item.instanceId);
-                                                                                        }}>
-                                                                                        <form role="form">
-                                                                                            <div className="form-group">
-                                                                                                <label>Asset Name</label>
-                                                                                                <span className="help"> e.g. "License"</span>
-                                                                                                <input type="text" className="form-control" required ref={(input) => {this[item.instanceId + "_createAssetType_assetName"] = input}} />
-                                                                                            </div>
-                                                                                            <div className="form-group">
-                                                                                                <label>Asset Type</label>
-                                                                                                <span className="help"> e.g. "Bulk"</span>
-                                                                                                <select className="form-control" onChange={(e) => {this.assetTypeSelectionChanged(item.instanceId, e)}} required ref={(input) => {this[item.instanceId + "_createAssetType_assetType"] = input}}>
-                                                                                                    <option key="solo" value="solo">Solo</option>
-                                                                                                    <option key="bulk" value="bulk">Bulk</option>
-                                                                                                </select>
-                                                                                            </div>
-                                                                                            {this.state[item.instanceId + "_showReissuable"] &&
-                                                                                                <div className="form-group">
-                                                                                                    <label>Re-Issuable</label>
-                                                                                                    <span className="help"> e.g. "Fixed Supply?"</span>
-                                                                                                    <select className="form-control"
-                                                                                                        required
-                                                                                                        ref={(input) => {this[item.instanceId + "_createAssetType_reissuable"] = input}}
-                                                                                                    >
-                                                                                                        <option key="yes" value="true">Yes</option>
-                                                                                                        <option key="no" value="false">No</option>
-                                                                                                    </select>
-                                                                                                </div>
-                                                                                            }
-                                                                                            {this.state[item.instanceId + "_showDecimals"] &&
-                                                                                                <div className="form-group">
-                                                                                                    <label>Decimals</label>
-                                                                                                    <span className="help"> e.g. "12.55896"</span>
-                                                                                                    <input type="number" defaultValue="0" min="0" max="18" className="form-control" ref={(input) => {this[item.instanceId + "_createAssetType_decimals"] = input}} />
-                                                                                                </div>
-                                                                                            }
-                                                                                            <div className="form-group">
-                                                                                                <label>Issuing Address</label>
-                                                                                                <span className="help"> e.g. "0x84eddb1..."</span>
-                                                                                                <select className="form-control" required ref={(input) => {this[item.instanceId + "_createAssetType_assetIssuer"] = input}}>
-                                                                                                    {Object.keys(item.accounts).map((address, addressIndex) => {
-                                                                                                        return (
-                                                                                                            <option key={addressIndex}>{address}</option>
-                                                                                                        )
-                                                                                                    })}
-                                                                                                </select>
-                                                                                            </div>
+                                <div className="card-block">
+                                    <div className="card card-transparent ">
+                                        {this.props.network.length === 1 &&
+                                            <div>
+                                                {this.props.network[0].assetsContractAddress === '' &&
+                                                    <div>
+                                                        Please deploy smart contract
+                                                    </div>
+                                                }
+                                                {(this.props.network[0].assetsContractAddress !== undefined && this.props.network[0].assetsContractAddress !== '') &&
+                                                    <div onSubmit={(e) => {
+                                                            this.createAssetType(e, this.props.network[0].instanceId);
+                                                        }}>
+                                                        <form role="form">
+                                                            <div className="form-group">
+                                                                <label>Asset Name</label>
+                                                                <span className="help"> e.g. "License"</span>
+                                                                <input type="text" className="form-control" required ref={(input) => {this[this.props.network[0].instanceId + "_createAssetType_assetName"] = input}} />
+                                                            </div>
+                                                            <div className="form-group">
+                                                                <label>Asset Type</label>
+                                                                <span className="help"> e.g. "Bulk"</span>
+                                                                <select className="form-control" onChange={(e) => {this.assetTypeSelectionChanged(this.props.network[0].instanceId, e)}} required ref={(input) => {this[this.props.network[0].instanceId + "_createAssetType_assetType"] = input}}>
+                                                                    <option key="solo" value="solo">Solo</option>
+                                                                    <option key="bulk" value="bulk">Bulk</option>
+                                                                </select>
+                                                            </div>
+                                                            {this.state[this.props.network[0].instanceId + "_showReissuable"] &&
+                                                                <div className="form-group">
+                                                                    <label>Re-Issuable</label>
+                                                                    <span className="help"> e.g. "Fixed Supply?"</span>
+                                                                    <select className="form-control"
+                                                                        required
+                                                                        ref={(input) => {this[this.props.network[0].instanceId + "_createAssetType_reissuable"] = input}}
+                                                                    >
+                                                                        <option key="yes" value="true">Yes</option>
+                                                                        <option key="no" value="false">No</option>
+                                                                    </select>
+                                                                </div>
+                                                            }
+                                                            {this.state[this.props.network[0].instanceId + "_showDecimals"] &&
+                                                                <div className="form-group">
+                                                                    <label>Decimals</label>
+                                                                    <span className="help"> e.g. "12.55896"</span>
+                                                                    <input type="number" defaultValue="0" min="0" max="18" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_createAssetType_decimals"] = input}} />
+                                                                </div>
+                                                            }
+                                                            <div className="form-group">
+                                                                <label>Issuing Address</label>
+                                                                <span className="help"> e.g. "0x84eddb1..."</span>
+                                                                <select className="form-control" required ref={(input) => {this[this.props.network[0].instanceId + "_createAssetType_assetIssuer"] = input}}>
+                                                                    {Object.keys(this.props.network[0].accounts).map((address, addressIndex) => {
+                                                                        return (
+                                                                            <option key={addressIndex}>{address}</option>
+                                                                        )
+                                                                    })}
+                                                                </select>
+                                                            </div>
 
-                                                                                            {this.state[item.instanceId + "_createAssetType_formSubmitError"] &&
-                                                                                                <div className="row m-t-30">
-                                                                                                    <div className="col-md-12">
-                                                                                                        <div className="m-b-20 alert alert-danger m-b-0" role="alert">
-                                                                                                            <button className="close" data-dismiss="alert"></button>
-                                                                                                            {this.state[item.instanceId + "_createAssetType_formSubmitError"]}
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            }
-                                                                                            <LaddaButton
-                                                                                                loading={this.state[item.instanceId + "_createAssetType_formloading"]}
-                                                                                                data-size={S}
-                                                                                                data-style={SLIDE_UP}
-                                                                                                data-spinner-size={30}
-                                                                                                data-spinner-lines={12}
-                                                                                                className="btn btn-success m-t-10"
-                                                                                                type="submit"
-                                                                                            >
-                                                                                                <i className="fa fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;Create
-                                                                                            </LaddaButton>
-                                                                                        </form>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
+                                                            {this.state[this.props.network[0].instanceId + "_createAssetType_formSubmitError"] &&
+                                                                <div className="row m-t-30">
+                                                                    <div className="col-md-12">
+                                                                        <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                            <button className="close" data-dismiss="alert"></button>
+                                                                            {this.state[this.props.network[0].instanceId + "_createAssetType_formSubmitError"]}
                                                                         </div>
                                                                     </div>
-                                                                }
-                                                            </div>
-                                                        )
-                                                    })}
-                                                </div>
+                                                                </div>
+                                                            }
+                                                            <LaddaButton
+                                                                loading={this.state[this.props.network[0].instanceId + "_createAssetType_formloading"]}
+                                                                data-size={S}
+                                                                data-style={SLIDE_UP}
+                                                                data-spinner-size={30}
+                                                                data-spinner-lines={12}
+                                                                className="btn btn-success m-t-10"
+                                                                type="submit"
+                                                            >
+                                                                <i className="fa fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;Create
+                                                            </LaddaButton>
+                                                        </form>
+                                                    </div>
+                                                }
                                             </div>
-                                        </div>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -201,9 +176,15 @@ class CreateAssetType extends Component {
 	}
 }
 
-export default withTracker(() => {
+export default withTracker((props) => {
     return {
-        networks: Networks.find({}).fetch(),
-        subscriptions: [Meteor.subscribe("networks")]
+        network: Networks.find({_id: props.match.params.id}).fetch(),
+        subscriptions: [Meteor.subscribe("networks", {
+        	onReady: function (){
+        		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
+        			props.history.push("/app/networks");
+        		}
+        	}
+        })]
     }
 })(withRouter(CreateAssetType))

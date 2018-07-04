@@ -11,6 +11,7 @@ import NetworksList from "../../pages/networksList/NetworksList.jsx"
 import CreateNetwork from "../../pages/createNetwork/CreateNetwork.jsx"
 import JoinNetwork from "../../pages/joinNetwork/JoinNetwork.jsx"
 import ViewEditNetwork from "../../pages/viewEditNetwork/ViewEditNetwork.jsx"
+import ViewNetwork from "../../pages/viewNetwork/viewNetwork.jsx"
 import CreateAssetType from "../../pages/createAssetType/CreateAssetType.jsx"
 import AssetsStats from "../../pages/assetsStats/AssetsStats.jsx"
 import AssetsAPIs from "../../pages/assetsAPIs/AssetsAPIs.jsx"
@@ -25,10 +26,8 @@ import CreateStream from "../../pages/createStream/CreateStream.jsx"
 import PublishStream from "../../pages/publishStream/PublishStream.jsx"
 import SubscribeStream from "../../pages/subscribeStream/SubscribeStream.jsx"
 
-
-
 export default class Main extends Component {
-	render(){
+	render() {
 		return (
 			<div>
 				<Navbar />
@@ -36,22 +35,24 @@ export default class Main extends Component {
 					<Header />
 					<div className="page-content-wrapper">
                     	<Route exact path="/app/networks" component={NetworksList} />
-						<Route exact path="/app/networks/create" component={CreateNetwork} />
-						<Route exact path="/app/networks/network/:id" component={ViewEditNetwork} />
-						<Route exact path="/app/networks/join" component={JoinNetwork} />
-						<Route exact path="/app/explorer" component={Explorer} />
-						<Route exact path="/app/assets/create" component={CreateAssetType} />
-						<Route exact path="/app/assets/stats" component={AssetsStats} />
+						<Route exact path="/app/createNetwork" component={CreateNetwork} />
+						<Route exact path="/app/networks/:id/settings" component={ViewEditNetwork} />
+						<Route exact path="/app/networks/:id" component={ViewNetwork} />
+						<Route exact path="/app/joinNetwork" component={JoinNetwork} />
+						<Route exact path="/app/networks/:id/security/peers" component={Peers} />
+						<Route exact path="/app/networks/:id/assets/events" component={AssetsEvents} />
+						<Route exact path="/app/networks/:id/explorer" component={Explorer} />
+						<Route exact path="/app/networks/:id/assets/search" component={AssetsSearch} />
+						<Route exact path="/app/networks/:id/assets/exchange" component={AssetsExchange} />
+						<Route exact path="/app/networks/:id/assets/create" component={CreateAssetType} />
+						<Route exact path="/app/networks/:id/assets/stats" component={AssetsStats} />
+						<Route exact path="/app/networks/:id/assets/management" component={AssetsManagement} />
+						<Route exact path="/app/networks/:id/streams/create" component={CreateStream} />
+						<Route exact path="/app/networks/:id/streams/publish" component={PublishStream} />
+						<Route exact path="/app/networks/:id/streams/subscribe" component={SubscribeStream} />
+
 						<Route exact path="/app/assets/apis" component={AssetsAPIs} />
-						<Route exact path="/app/assets/events" component={AssetsEvents} />
-						<Route exact path="/app/assets/management" component={AssetsManagement} />
-						<Route exact path="/app/assets/exchange" component={AssetsExchange} />
-						<Route exact path="/app/assets/search" component={AssetsSearch} />
 						<Route exact path="/app/security/apis-creds" component={APIsCreds} />
-						<Route exact path="/app/security/peers" component={Peers} />
-						<Route exact path="/app/streams/create" component={CreateStream} />
-						<Route exact path="/app/streams/publish" component={PublishStream} />
-						<Route exact path="/app/streams/subscribe" component={SubscribeStream} />
 		            </div>
 				</div>
 				<Footer />

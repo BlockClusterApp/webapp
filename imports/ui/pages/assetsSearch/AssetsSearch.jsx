@@ -146,87 +146,64 @@ class AssetsSearch extends Component {
                                     <div className="card-title">Assets Search
                                     </div>
                                 </div>
-                                <div className="card-block no-padding">
-                                    <div className="row">
-                                        <div className="col-xl-12">
-                                            <div className="card card-transparent flex-row">
-                                                <ul className="nav nav-tabs nav-tabs-simple nav-tabs-left bg-white" id="tab-3">
-                                                    {this.props.networks.map((item, index) => {
-                                                        return (
-                                                            <li key={item.instanceId} className="nav-item">
-                                                                <a href="#" className={index === 0 ? "active" : ""} data-toggle="tab" data-target={"#" + item.instanceId}>{item.name}</a>
-                                                            </li>
-                                                        )
-                                                    })}
-                                                </ul>
-                                                <div className="tab-content bg-white">
-                                                    {this.props.networks.map((item, index) => {
-                                                        return (
-                                                            <div key={index} className={index === 0 ? "tab-pane active" : "tab-pane "} id={item.instanceId}>
-                                                                {item.assetsContractAddress === '' &&
-                                                                    <div>
-                                                                        Please deploy smart contract
+                                <div className="card-block">
+                                    <div className="card card-transparent">
+                                        {this.props.network.length === 1 &&
+                                            <div>
+                                                {this.props.network[0].assetsContractAddress === '' &&
+                                                    <div>
+                                                        Please deploy smart contract
+                                                    </div>
+                                                }
+                                                {(this.props.network[0].assetsContractAddress !== undefined && this.props.network[0].assetsContractAddress !== '') &&
+                                                    <div>
+                                                        <div className="row">
+                                                            <div className="col-xl-6">
+                                                                <h4>Query Solo Assets</h4>
+                                                                <form role="form" onSubmit={(e) => {
+                                                                        this.querySoloAssets(e, this.props.network[0].instanceId);
+                                                                    }}>
+                                                                    <div className="form-group">
+                                                                        <label>JSON Query</label>
+                                                                        <CodeMirror value={this.state.defaultJSONQuery} onChange={(newCode) => {this.updateQuery(newCode, this.props.network[0].instanceId + "_querySoloAssets_query")}} options={{readOnly: false, autofocus: true, indentUnit: 4, theme: "ttcn", mode: {name: "javascript", json: true}}} required />
                                                                     </div>
-                                                                }
-                                                                {(item.assetsContractAddress !== undefined && item.assetsContractAddress !== '') &&
-                                                                    <div>
-                                                                        <div className="container">
-                                                                            <div className="row column-seperation">
-                                                                                <div className="col-lg-12">
-                                                                                    <div className="row">
-                                                                                        <div className="col-lg-6">
-                                                                                            <h4>Query Solo Assets</h4>
-                                                                                            <form role="form" onSubmit={(e) => {
-                                                                                                    this.querySoloAssets(e, item.instanceId);
-                                                                                                }}>
-                                                                                                <div className="form-group">
-                                                                                                    <label>JSON Query</label>
-                                                                                                    <CodeMirror value={this.state.defaultJSONQuery} onChange={(newCode) => {this.updateQuery(newCode, item.instanceId + "_querySoloAssets_query")}} options={{readOnly: false, autofocus: true, indentUnit: 4, theme: "ttcn", mode: {name: "javascript", json: true}}} required />
-                                                                                                </div>
-                                                                                                {this.state[item.instanceId + "_querySoloAssets_formSubmitError"] &&
-                                                                                                    <div className="row m-t-30">
-                                                                                                        <div className="col-md-12">
-                                                                                                            <div className="m-b-20 alert alert-danger m-b-0" role="alert">
-                                                                                                                <button className="close" data-dismiss="alert"></button>
-                                                                                                                {this.state[item.instanceId + "_querySoloAssets_formSubmitError"]}
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                }
-                                                                                                <p className="pull-right">
-                                                                                                    <LaddaButton
-                                                                                                        loading={this.state[item.instanceId + "_querySoloAssets_formloading"]}
-                                                                                                        data-size={S}
-                                                                                                        data-style={SLIDE_UP}
-                                                                                                        data-spinner-size={30}
-                                                                                                        data-spinner-lines={12}
-                                                                                                        className="btn btn-success m-t-10"
-                                                                                                        type="submit"
-                                                                                                    >
-                                                                                                        <i className="fa fa-search" aria-hidden="true"></i>&nbsp;&nbsp;Search
-                                                                                                    </LaddaButton>
-                                                                                                </p>
-                                                                                            </form>
-                                                                                        </div>
-                                                                                        <div className="col-lg-6">
-                                                                                            <h4>Query Result</h4>
-                                                                                            <div className="form-group">
-                                                                                                <label>Array</label>
-                                                                                                <CodeMirror value={this.state[item.instanceId + "_querySoloAssets_queryResult"]} options={{readOnly: true, autofocus: true, indentUnit: 4, theme: "mdn-like", mode: {name: "javascript", json: true}}} />
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
+                                                                    {this.state[this.props.network[0].instanceId + "_querySoloAssets_formSubmitError"] &&
+                                                                        <div className="row m-t-30">
+                                                                            <div className="col-md-12">
+                                                                                <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                                    <button className="close" data-dismiss="alert"></button>
+                                                                                    {this.state[this.props.network[0].instanceId + "_querySoloAssets_formSubmitError"]}
                                                                                 </div>
                                                                             </div>
                                                                         </div>
-                                                                    </div>
-                                                                }
+                                                                    }
+                                                                    <p className="pull-right">
+                                                                        <LaddaButton
+                                                                            loading={this.state[this.props.network[0].instanceId + "_querySoloAssets_formloading"]}
+                                                                            data-size={S}
+                                                                            data-style={SLIDE_UP}
+                                                                            data-spinner-size={30}
+                                                                            data-spinner-lines={12}
+                                                                            className="btn btn-success m-t-10"
+                                                                            type="submit"
+                                                                        >
+                                                                            <i className="fa fa-search" aria-hidden="true"></i>&nbsp;&nbsp;Search
+                                                                        </LaddaButton>
+                                                                    </p>
+                                                                </form>
                                                             </div>
-                                                        )
-                                                    })}
-                                                </div>
+                                                            <div className="col-xl-6">
+                                                                <h4>Query Result</h4>
+                                                                <div className="form-group">
+                                                                    <label>Array</label>
+                                                                    <CodeMirror value={this.state[this.props.network[0].instanceId + "_querySoloAssets_queryResult"]} options={{readOnly: true, autofocus: true, indentUnit: 4, theme: "mdn-like", mode: {name: "javascript", json: true}}} />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
                                             </div>
-                                        </div>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -238,10 +215,15 @@ class AssetsSearch extends Component {
 	}
 }
 
-export default withTracker(() => {
-
+export default withTracker((props) => {
     return {
-        networks: Networks.find({}).fetch(),
-        subscriptions: [Meteor.subscribe("networks")]
+        network: Networks.find({_id: props.match.params.id}).fetch(),
+        subscriptions: [Meteor.subscribe("networks", {
+        	onReady: function (){
+        		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
+        			props.history.push("/app/networks");
+        		}
+        	}
+        }), Meteor.subscribe("utilities")]
     }
 })(withRouter(AssetsSearch))
