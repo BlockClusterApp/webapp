@@ -9,6 +9,9 @@ import {
     SoloAssets
 } from "../imports/collections/soloAssets/soloAssets.js"
 import {
+    StreamsItems
+} from "../imports/collections/streamsItems/streamsItems.js"
+import {
     Streams
 } from "../imports/collections/streams/streams.js"
 import {
@@ -468,9 +471,7 @@ Meteor.methods({
                                                                                                                                                             "streamsContractAddress": streamsContractAddress,
                                                                                                                                                             "jsonRPC-password": instanceId,
                                                                                                                                                             "restAPI-password": instanceId,
-                                                                                                                                                            "genesisBlockHash": block.hash,
-                                                                                                                                                            "streams": [],
-                                                                                                                                                            "subscribedStreams": []
+                                                                                                                                                            "genesisBlockHash": block.hash
                                                                                                                                                         }
                                                                                                                                                     })
                                                                                                                                                 }
@@ -565,9 +566,12 @@ Meteor.methods({
                                                                         SoloAssets.remove({
                                                                             instanceId: id
                                                                         });
-                                                                        Streams.remove({
+                                                                        StreamsItems.remove({
                                                                             instanceId: id
                                                                         });
+                                                                        AssetTypes.remove({
+                                                                            instanceId: id
+                                                                        })
                                                                         Secrets.remove({
                                                                             instanceId: id
                                                                         });
@@ -950,9 +954,7 @@ spec:
                                                                                                                         "jsonRPC-password": instanceId,
                                                                                                                         "restAPI-password": instanceId,
                                                                                                                         "genesisBlockHash": block.hash,
-                                                                                                                        accounts: accounts,
-                                                                                                                        "streams": [],
-                                                                                                                        "subscribedStreams": []
+                                                                                                                        accounts: accounts
                                                                                                                     }
                                                                                                                 })
                                                                                                             }
@@ -1736,14 +1738,12 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        network.subscribedStreams.remByVal(name);
-        network.subscribedStreams[network.subscribedStreams.length] = name;
-
-        Networks.update({
-            instanceId: instanceId
+        Streams.update({
+            instanceId: instanceId,
+            streamName: name
         }, {
             $set: {
-                subscribedStreams: network.subscribedStreams
+                subscribed: true
             }
         })
     },
@@ -1752,13 +1752,12 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        network.subscribedStreams.remByVal(name)
-
-        Networks.update({
-            instanceId: instanceId
+        Streams.update({
+            instanceId: instanceId,
+            streamName: name
         }, {
             $set: {
-                subscribedStreams: network.subscribedStreams
+                subscribed: false
             }
         })
     },

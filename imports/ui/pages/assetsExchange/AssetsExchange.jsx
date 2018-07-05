@@ -7,6 +7,8 @@ import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from
 import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
+import {AssetTypes} from "../../../collections/assetTypes/assetTypes.js"
+import {Link} from "react-router-dom"
 
 import "./AssetsExchange.scss"
 
@@ -14,12 +16,15 @@ class AssetsManagement extends Component {
     constructor() {
         super()
         this.state = {}
+        Session.set("otherSelectedNetwork", null)
     }
 
     componentWillUnmount() {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
         });
+
+        delete Session.keys['otherSelectedNetwork']
     }
 
 
@@ -52,9 +57,7 @@ class AssetsManagement extends Component {
     }
 
     buyAsset_networkChange = (e, instanceId) => {
-        this.setState({
-            [instanceId + "_buyAsset_selectedNetwork"]: e.target.value
-        })
+        Session.set("otherSelectedNetwork", instanceId)
     }
 
     fullfillOrder_orderIdChange = (e, instanceId) => {
@@ -288,7 +291,8 @@ class AssetsManagement extends Component {
                         <div className="col-lg-12">
                             <div className="card card-transparent">
                                 <div className="card-header ">
-                                    <div className="card-title">Assets Exchange
+                                    <div className="card-title">
+                                        <Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Assets Exchange
                                     </div>
                                 </div>
                                 <div className="card-block">
@@ -335,9 +339,9 @@ class AssetsManagement extends Component {
                                                                                         <div className="form-group">
                                                                                             <label>Asset Name</label>
                                                                                             <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_assetName"] = input}} required>
-                                                                                                {Object.keys(this.props.network[0].assetsTypes || {}).map((item) => {
-                                                                                                    if(this.props.network[0].assetsTypes[item].type == "bulk") {
-                                                                                                        return <option key={this.props.network[0].assetsTypes[item].assetName} value={this.props.network[0].assetsTypes[item].assetName}>{this.props.network[0].assetsTypes[item].assetName}</option>
+                                                                                                {this.props.assetTypes.map((item) => {
+                                                                                                    if(item.type === "bulk") {
+                                                                                                        return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                     }
                                                                                                 })}
                                                                                             </select>
@@ -348,9 +352,9 @@ class AssetsManagement extends Component {
                                                                                         <div className="form-group">
                                                                                             <label>Asset Name</label>
                                                                                             <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_assetName"] = input}} required>
-                                                                                                {Object.keys(this.props.network[0].assetsTypes || {}).map((item) => {
-                                                                                                    if(this.props.network[0].assetsTypes[item].type == "solo") {
-                                                                                                        return <option key={this.props.network[0].assetsTypes[item].assetName} value={this.props.network[0].assetsTypes[item].assetName}>{this.props.network[0].assetsTypes[item].assetName}</option>
+                                                                                                {this.props.assetTypes.map((item) => {
+                                                                                                    if(item.type === "solo") {
+                                                                                                        return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                     }
                                                                                                 })}
                                                                                             </select>
@@ -361,9 +365,9 @@ class AssetsManagement extends Component {
                                                                                         <div className="form-group">
                                                                                             <label>Asset Name</label>
                                                                                             <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_assetName"] = input}} required>
-                                                                                                {Object.keys(this.props.network[0].assetsTypes || {}).map((item) => {
-                                                                                                    if(this.props.network[0].assetsTypes[item].type == "bulk") {
-                                                                                                        return <option key={this.props.network[0].assetsTypes[item].assetName} value={this.props.network[0].assetsTypes[item].assetName}>{this.props.network[0].assetsTypes[item].assetName}</option>
+                                                                                                {this.props.assetTypes.map((item) => {
+                                                                                                    if(item.type === "solo") {
+                                                                                                        return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                     }
                                                                                                 })}
                                                                                             </select>
@@ -421,23 +425,13 @@ class AssetsManagement extends Component {
                                                                                         <div className="form-group">
                                                                                             <label>Asset Name</label>
                                                                                             <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_buyAsset_assetName"] = input}} required>
-                                                                                                {this.state[this.props.network[0].instanceId + "_buyAsset_selectedNetwork"] === undefined ? (
-                                                                                                    Object.keys(this.props.networks[0].assetsTypes || {}).map((item) => {
-                                                                                                        if(this.props.networks[0].assetsTypes[item].type == "bulk") {
-                                                                                                            return <option key={this.props.networks[0].assetsTypes[item].assetName} value={this.props.networks[0].assetsTypes[item].assetName}>{this.props.networks[0].assetsTypes[item].assetName}</option>
+                                                                                                {Session.get("otherSelectedNetwork") &&
+                                                                                                    this.props.otherSelectedNetworkAssetTypes.map((item) => {
+                                                                                                        if(item.type === "bulk") {
+                                                                                                            return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                         }
                                                                                                     })
-                                                                                                ) : (
-                                                                                                    Object.keys(this.props.networks || {}).map((key) => {
-                                                                                                        if(this.props.networks[key].instanceId === this.state[this.props.network[0].instanceId + "_buyAsset_selectedNetwork"]) {
-                                                                                                            return Object.keys(this.props.networks[key].assetsTypes || {}).map((item) => {
-                                                                                                                if(this.props.networks[key].assetsTypes[item].type == "bulk") {
-                                                                                                                    return <option key={this.props.networks[key].assetsTypes[item].assetName} value={this.props.networks[key].assetsTypes[item].assetName}>{this.props.networks[key].assetsTypes[item].assetName}</option>
-                                                                                                                }
-                                                                                                            })
-                                                                                                        }
-                                                                                                    })
-                                                                                                )}
+                                                                                                }
                                                                                             </select>
                                                                                         </div>
                                                                                     }
@@ -446,23 +440,13 @@ class AssetsManagement extends Component {
                                                                                         <div className="form-group">
                                                                                             <label>Asset Name</label>
                                                                                             <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_buyAsset_assetName"] = input}} required>
-                                                                                                {this.state[this.props.network[0].instanceId + "_buyAsset_selectedNetwork"] === undefined ? (
-                                                                                                    Object.keys(this.props.networks[0].assetsTypes || {}).map((item) => {
-                                                                                                        if(this.props.networks[0].assetsTypes[item].type == "solo") {
-                                                                                                            return <option key={this.props.networks[0].assetsTypes[item].assetName} value={this.props.networks[0].assetsTypes[item].assetName}>{this.props.networks[0].assetsTypes[item].assetName}</option>
+                                                                                                {Session.get("otherSelectedNetwork") &&
+                                                                                                    this.props.otherSelectedNetworkAssetTypes.map((item) => {
+                                                                                                        if(item.type === "solo") {
+                                                                                                            return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                         }
                                                                                                     })
-                                                                                                ) : (
-                                                                                                    Object.keys(this.props.networks || {}).map((key) => {
-                                                                                                        if(this.props.networks[key].instanceId === this.state[this.props.network[0].instanceId + "_buyAsset_selectedNetwork"]) {
-                                                                                                            return Object.keys(this.props.networks[key].assetsTypes || {}).map((item) => {
-                                                                                                                if(this.props.networks[key].assetsTypes[item].type == "solo") {
-                                                                                                                    return <option key={this.props.networks[key].assetsTypes[item].assetName} value={this.props.networks[key].assetsTypes[item].assetName}>{this.props.networks[key].assetsTypes[item].assetName}</option>
-                                                                                                                }
-                                                                                                            })
-                                                                                                        }
-                                                                                                    })
-                                                                                                )}
+                                                                                                }
                                                                                             </select>
                                                                                         </div>
                                                                                     }
@@ -471,23 +455,13 @@ class AssetsManagement extends Component {
                                                                                         <div className="form-group">
                                                                                             <label>Asset Name</label>
                                                                                             <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_buyAsset_assetName"] = input}} required>
-                                                                                                {this.state[this.props.network[0].instanceId + "_buyAsset_selectedNetwork"] === undefined ? (
-                                                                                                    Object.keys(this.props.networks[0].assetsTypes || {}).map((item) => {
-                                                                                                        if(this.props.networks[0].assetsTypes[item].type == "bulk") {
-                                                                                                            return <option key={this.props.networks[0].assetsTypes[item].assetName} value={this.props.networks[0].assetsTypes[item].assetName}>{this.props.networks[0].assetsTypes[item].assetName}</option>
+                                                                                                {Session.get("otherSelectedNetwork") &&
+                                                                                                    this.props.otherSelectedNetworkAssetTypes.map((item) => {
+                                                                                                        if(item.type === "bulk") {
+                                                                                                            return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                         }
                                                                                                     })
-                                                                                                ) : (
-                                                                                                    Object.keys(this.props.networks || {}).map((key) => {
-                                                                                                        if(this.props.networks[key].instanceId === this.state[this.props.network[0].instanceId + "_buyAsset_selectedNetwork"]) {
-                                                                                                            return Object.keys(this.props.networks[key].assetsTypes || {}).map((item) => {
-                                                                                                                if(this.props.networks[key].assetsTypes[item].type == "bulk") {
-                                                                                                                    return <option key={this.props.networks[key].assetsTypes[item].assetName} value={this.props.networks[key].assetsTypes[item].assetName}>{this.props.networks[key].assetsTypes[item].assetName}</option>
-                                                                                                                }
-                                                                                                            })
-                                                                                                        }
-                                                                                                    })
-                                                                                                )}
+                                                                                                }
                                                                                             </select>
                                                                                         </div>
                                                                                     }
@@ -754,15 +728,20 @@ class AssetsManagement extends Component {
 
 export default withTracker((props) => {
     return {
-        network: Networks.find({_id: props.match.params.id}).fetch(),
+        network: Networks.find({instanceId: props.match.params.id}).fetch(),
         networks: Networks.find({}).fetch(),
+        otherSelectedNetworkAssetTypes: AssetTypes.find({instanceId: Session.get("otherSelectedNetwork")}).fetch(),
         orders: Orders.find({}).fetch(),
+        assetTypes: AssetTypes.find({instanceId: props.match.params.id}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
             onReady: function (){
-        		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
+        		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
+                if(Session.get("otherSelectedNetwork") === null) {
+                    Session.set("otherSelectedNetwork",  Networks.find({}).fetch()[0].instanceId)
+                }
         	}
-        }), Meteor.subscribe("orders", props.match.params.id)]
+        }), Meteor.subscribe("orders", props.match.params.id), Meteor.subscribe("assetTypes", Session.get("otherSelectedNetwork")), Meteor.subscribe("assetTypes", props.match.params.id)]
     }
 })(withRouter(AssetsManagement))

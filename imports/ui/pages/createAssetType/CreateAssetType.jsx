@@ -6,6 +6,7 @@ import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from
 import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
+import {Link} from "react-router-dom"
 
 import "./CreateAssetType.scss"
 
@@ -77,7 +78,8 @@ class CreateAssetType extends Component {
                         <div className="col-lg-12">
                             <div className="card card-transparent">
                                 <div className="card-header ">
-                                    <div className="card-title">Create Asset Type
+                                    <div className="card-title">
+                                        <Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Create Asset Type
                                     </div>
                                 </div>
                                 <div className="card-block">
@@ -178,10 +180,10 @@ class CreateAssetType extends Component {
 
 export default withTracker((props) => {
     return {
-        network: Networks.find({_id: props.match.params.id}).fetch(),
+        network: Networks.find({instanceId: props.match.params.id}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
-        		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
+        		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
         	}

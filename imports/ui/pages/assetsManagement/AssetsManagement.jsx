@@ -7,6 +7,8 @@ import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
 var CodeMirror = require('react-codemirror');
+import {AssetTypes} from "../../../collections/assetTypes/assetTypes.js"
+import {Link} from "react-router-dom"
 
 import "./AssetsManagement.scss"
 import "/node_modules/codemirror/lib/codemirror.css"
@@ -434,7 +436,8 @@ class AssetsManagement extends Component {
                         <div className="col-lg-12">
                             <div className="card card-transparent">
                                 <div className="card-header ">
-                                    <div className="card-title">Assets Management
+                                    <div className="card-title">
+                                        <Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Assets Management
                                     </div>
                                 </div>
                                 <div className="card-block">
@@ -479,9 +482,9 @@ class AssetsManagement extends Component {
                                                                                     <div className="form-group">
                                                                                         <label>Asset Name</label>
                                                                                         <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_addBulkAsset_assetName"] = input}} required>
-                                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).map((key) => {
-                                                                                                if(this.props.network[0].assetsTypes[key].type == "bulk") {
-                                                                                                    return <option key={this.props.network[0].assetsTypes[key].assetName} value={this.props.network[0].assetsTypes[key].assetName}>{this.props.network[0].assetsTypes[key].assetName}</option>
+                                                                                            {this.props.assetTypes.map((item) => {
+                                                                                                if(item.type === "bulk") {
+                                                                                                    return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                 }
                                                                                             })}
                                                                                         </select>
@@ -535,9 +538,9 @@ class AssetsManagement extends Component {
                                                                                     <div className="form-group">
                                                                                         <label>Asset Name</label>
                                                                                         <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_addSoloAsset_assetName"] = input}} required>
-                                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).map((key, ) => {
-                                                                                                if(this.props.network[0].assetsTypes[key].type == "solo") {
-                                                                                                    return <option key={this.props.network[0].assetsTypes[key].assetName} value={this.props.network[0].assetsTypes[key].assetName}>{this.props.network[0].assetsTypes[key].assetName}</option>
+                                                                                            {this.props.assetTypes.map((item) => {
+                                                                                                if(item.type === "solo") {
+                                                                                                    return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                 }
                                                                                             })}
                                                                                         </select>
@@ -595,9 +598,9 @@ class AssetsManagement extends Component {
                                                                                     <div className="form-group">
                                                                                         <label>Asset Name</label>
                                                                                         <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_transferBulkAsset_assetName"] = input}} required>
-                                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).map((key) => {
-                                                                                                if(this.props.network[0].assetsTypes[key].type == "bulk") {
-                                                                                                    return <option key={this.props.network[0].assetsTypes[key].assetName} value={this.props.network[0].assetsTypes[key].assetName}>{this.props.network[0].assetsTypes[key].assetName}</option>
+                                                                                            {this.props.assetTypes.map((item) => {
+                                                                                                if(item.type === "bulk") {
+                                                                                                    return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                 }
                                                                                             })}
                                                                                         </select>
@@ -651,9 +654,9 @@ class AssetsManagement extends Component {
                                                                                     <div className="form-group">
                                                                                         <label>Asset Name</label>
                                                                                         <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_transferSoloAsset_assetName"] = input}} required>
-                                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).map((key) => {
-                                                                                                if(this.props.network[0].assetsTypes[key].type == "solo") {
-                                                                                                    return <option key={this.props.network[0].assetsTypes[key].assetName} value={this.props.network[0].assetsTypes[key].assetName}>{this.props.network[0].assetsTypes[key].assetName}</option>
+                                                                                            {this.props.assetTypes.map((item) => {
+                                                                                                if(item.type === "solo") {
+                                                                                                    return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                 }
                                                                                             })}
                                                                                         </select>
@@ -711,9 +714,9 @@ class AssetsManagement extends Component {
                                                                                     <div className="form-group">
                                                                                         <label>Asset Name</label>
                                                                                         <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_getInfoBulkAsset_assetName"] = input}} required>
-                                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).map((key) => {
-                                                                                                if(this.props.network[0].assetsTypes[key].type == "bulk") {
-                                                                                                    return <option key={this.props.network[0].assetsTypes[key].assetName} value={this.props.network[0].assetsTypes[key].assetName}>{this.props.network[0].assetsTypes[key].assetName}</option>
+                                                                                            {this.props.assetTypes.map((item) => {
+                                                                                                if(item.type === "bulk") {
+                                                                                                    return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                 }
                                                                                             })}
                                                                                         </select>
@@ -759,9 +762,9 @@ class AssetsManagement extends Component {
                                                                                     <div className="form-group">
                                                                                         <label>Asset Name</label>
                                                                                         <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_getInfoSoloAsset_assetName"] = input}} required>
-                                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).map((key) => {
-                                                                                                if(this.props.network[0].assetsTypes[key].type == "solo") {
-                                                                                                    return <option key={this.props.network[0].assetsTypes[key].assetName} value={this.props.network[0].assetsTypes[key].assetName}>{this.props.network[0].assetsTypes[key].assetName}</option>
+                                                                                            {this.props.assetTypes.map((item) => {
+                                                                                                if(item.type === "solo") {
+                                                                                                    return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                 }
                                                                                             })}
                                                                                         </select>
@@ -807,9 +810,9 @@ class AssetsManagement extends Component {
                                                                                     <div className="form-group">
                                                                                         <label>Asset Name</label>
                                                                                         <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_updateSoloAssetInfo_assetName"] = input}} required>
-                                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).map((key) => {
-                                                                                                if(this.props.network[0].assetsTypes[key].type == "solo") {
-                                                                                                    return <option key={this.props.network[0].assetsTypes[key].assetName} value={this.props.network[0].assetsTypes[key].assetName}>{this.props.network[0].assetsTypes[key].assetName}</option>
+                                                                                            {this.props.assetTypes.map((item) => {
+                                                                                                if(item.type === "solo") {
+                                                                                                    return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                 }
                                                                                             })}
                                                                                         </select>
@@ -871,9 +874,9 @@ class AssetsManagement extends Component {
                                                                                     <div className="form-group">
                                                                                         <label>Asset Name</label>
                                                                                         <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_closeAsset_assetName"] = input}} required>
-                                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).map((key) => {
-                                                                                                if(this.props.network[0].assetsTypes[key].type == "solo") {
-                                                                                                    return <option key={this.props.network[0].assetsTypes[key].assetName} value={this.props.network[0].assetsTypes[key].assetName}>{this.props.network[0].assetsTypes[key].assetName}</option>
+                                                                                            {this.props.assetTypes.map((item) => {
+                                                                                                if(item.type === "solo") {
+                                                                                                    return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                 }
                                                                                             })}
                                                                                         </select>
@@ -936,15 +939,15 @@ class AssetsManagement extends Component {
 }
 
 export default withTracker((props) => {
-
     return {
-        network: Networks.find({_id: props.match.params.id}).fetch(),
+        network: Networks.find({instanceId: props.match.params.id}).fetch(),
+        assetTypes: AssetTypes.find({instanceId: props.match.params.id}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
-        		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
+        		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
         	}
-        })]
+        }), Meteor.subscribe("assetTypes", props.match.params.id)]
     }
 })(withRouter(AssetsManagement))

@@ -23,6 +23,11 @@ class ViewNetwork extends Component {
                     <div className="row">
                         <div className="col-sm-12">
                             <div className="card card-transparent">
+								<div className="card-header ">
+                    				<div className="card-title">
+										<Link to={"/app/networks"}> <i className="fa fa-angle-left"></i> All Networks</Link>
+                    				</div>
+                  				</div>
                                 <div className="card-block">
 									<h2>
 										{this.props.network.length === 1 ? this.props.network[0].name : ""}
@@ -38,25 +43,25 @@ class ViewNetwork extends Component {
                                             </p>
                                             <div className="row m-l-5 m-t-10">
                                                 <div className="col-1 no-padding ">
-                                                    <div className="bg-primary p-t-30 p-b-35"></div>
-                                                    <div className="bg-primary-light p-t-30 p-b-35"></div>
-                                                    <div className="bg-primary-dark p-t-30 p-b-35"></div>
+                                                    <div className="light-black-bg p-t-30 p-b-35"></div>
+                                                    <div className="bg-master-light p-t-30 p-b-35"></div>
+                                                    <div className="light-black-bg p-t-30 p-b-35"></div>
                                                 </div>
                                                 <div className="col-10 bg-white b-a b-grey padding-10">
                                                     <div className="clickable" onClick={() => {
-															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0]._id + "/assets/create") : ""
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/assets/create") : ""
 														}}>
                                                         <p className="no-margin text-black bold text-uppercase fs-12">Create Asset Type</p>
                                                         <p className="no-margin fs-12">Bulk or Solo Asset</p>
                                                     </div>
                                                     <div className="clickable" onClick={() => {
-															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0]._id + "/assets/management") : ""
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/assets/management") : ""
 														}}>
                                                         <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Manage Assets</p>
                                                         <p className="no-margin fs-12">Issue and Transfer</p>
                                                     </div>
                                                     <div className="clickable" onClick={() => {
-															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0]._id + "/assets/stats") : ""
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/assets/stats") : ""
 														}}>
                                                         <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Stats</p>
                                                         <p className="no-margin fs-12">Total Units</p>
@@ -74,25 +79,25 @@ class ViewNetwork extends Component {
                                             </p>
                                             <div className="row m-l-5 m-t-10">
                                                 <div className="col-1 no-padding ">
-                                                    <div className="bg-primary p-t-30 p-b-35"></div>
-                                                    <div className="bg-primary-light p-t-30 p-b-35"></div>
-                                                    <div className="bg-primary-dark p-t-30 p-b-35"></div>
+                                                    <div className="light-black-bg p-t-30 p-b-35"></div>
+                                                    <div className="bg-master-light p-t-30 p-b-35"></div>
+                                                    <div className="light-black-bg p-t-30 p-b-35"></div>
                                                 </div>
                                                 <div className="col-10 bg-white b-a b-grey padding-10">
                                                     <div className="clickable" onClick={() => {
-															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0]._id + "/streams/create") : ""
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/streams/create") : ""
 														}}>
                                                         <p className="no-margin text-black bold text-uppercase fs-12">Create Stream</p>
                                                         <p className="no-margin fs-12">Timestamped Events</p>
                                                     </div>
                                                     <div className="clickable" onClick={() => {
-															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0]._id + "/streams/publish") : ""
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/streams/publish") : ""
 														}}>
                                                         <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Publish</p>
                                                         <p className="no-margin fs-12">Send Event</p>
                                                     </div>
                                                     <div className="clickable" onClick={() => {
-															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0]._id + "/streams/subscribe") : ""
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/streams/subscribe") : ""
 														}}>
                                                         <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Subscribe</p>
                                                         <p className="no-margin fs-12">Receive Event</p>
@@ -111,19 +116,19 @@ class ViewNetwork extends Component {
                                             <p>Advanced Features</p>
                                             <div className="row m-l-5 m-t-10">
                                                 <div className="col-1 no-padding ">
-                                                    <div className="bg-complete p-t-30 p-b-35"></div>
-                                                    <div className="bg-complete-light p-t-30 p-b-35"></div>
-                                                    <div className="bg-complete-dark p-t-30 p-b-35"></div>
+                                                    <div className="light-black-bg p-t-30 p-b-35"></div>
+                                                    <div className="bg-master-light p-t-30 p-b-35"></div>
+                                                    <div className="light-black-bg p-t-30 p-b-35"></div>
                                                 </div>
                                                 <div className="col-10 bg-white b-a b-grey padding-10">
                                                     <div className="clickable" onClick={() => {
-															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0]._id + "/assets/exchange") : ""
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/assets/exchange") : ""
 														}}>
                                                         <p className="no-margin text-black bold text-uppercase fs-12">Exchange</p>
                                                         <p className="no-margin fs-12">Cross-Chain Atomic Swaps</p>
                                                     </div>
                                                     <div className="clickable" onClick={() => {
-															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0]._id + "/assets/search") : ""
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/assets/search") : ""
 														}}>
                                                         <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Search</p>
                                                         <p className="no-margin fs-12">No-SQL Style Queries</p>
@@ -144,9 +149,9 @@ class ViewNetwork extends Component {
                                             <p>Development Tools</p>
                                             <div className="row m-l-5 m-t-10">
                                                 <div className="col-1 no-padding ">
-                                                    <div className="bg-complete p-t-30 p-b-35"></div>
-                                                    <div className="bg-complete-light p-t-30 p-b-35"></div>
-                                                    <div className="bg-complete-dark p-t-30 p-b-35"></div>
+                                                    <div className="light-black-bg p-t-30 p-b-35"></div>
+                                                    <div className="bg-master-light p-t-30 p-b-35"></div>
+                                                    <div className="light-black-bg p-t-30 p-b-35"></div>
                                                 </div>
                                                 <div className="col-10 bg-white b-a b-grey padding-10">
                                                     <div className="clickable">
@@ -172,9 +177,9 @@ class ViewNetwork extends Component {
                                             <p>Miscellaneous</p>
                                             <div className="row m-l-5 m-t-10">
                                                 <div className="col-1 no-padding ">
-                                                    <div className="bg-complete p-t-30 p-b-35"></div>
-                                                    <div className="bg-complete-light p-t-30 p-b-35"></div>
-                                                    <div className="bg-complete-dark p-t-30 p-b-35"></div>
+                                                    <div className="light-black-bg p-t-30 p-b-35"></div>
+                                                    <div className="bg-master-light p-t-30 p-b-35"></div>
+                                                    <div className="light-black-bg p-t-30 p-b-35"></div>
                                                 </div>
                                                 <div className="col-10 bg-white b-a b-grey padding-10">
                                                     <div className="clickable">
@@ -182,13 +187,13 @@ class ViewNetwork extends Component {
                                                         <p className="no-margin fs-12">Store Encrypted Data</p>
                                                     </div>
                                                     <div className="clickable" onClick={() => {
-															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0]._id + "/assets/events") : ""
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/assets/events") : ""
 														}}>
                                                         <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Register Callbacks</p>
                                                         <p className="no-margin fs-12">Add Callback URLs</p>
                                                     </div>
 													<div className="clickable" onClick={() => {
-															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0]._id + "/explorer") : ""
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/explorer") : ""
 														}}>
                                                         <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Audit</p>
                                                         <p className="no-margin fs-12">Blockchain Explorer</p>
@@ -208,20 +213,20 @@ class ViewNetwork extends Component {
                                             </p>
                                             <div className="row m-l-5 m-t-10">
                                                 <div className="col-1 no-padding ">
-                                                    <div className="bg-warning p-t-30 p-b-35"></div>
-                                                    <div className="bg-warning-light p-t-30 p-b-35"></div>
-                                                    <div className="bg-warning-dark p-t-30 p-b-35"></div>
+                                                    <div className="light-black-bg p-t-30 p-b-35"></div>
+                                                    <div className="bg-master-light p-t-30 p-b-35"></div>
+                                                    <div className="light-black-bg p-t-30 p-b-35"></div>
                                                 </div>
                                                 <div className="col-10 bg-white b-a b-grey padding-10">
                                                     <div className="clickable" onClick={() => {
-															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0]._id + "/settings") : ""
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/settings") : ""
 														}}>
                                                         <p className="no-margin text-black bold text-uppercase fs-12">Node Info and Settings</p>
                                                         <p className="no-margin fs-12">Node Authorities and IPs</p>
                                                     </div>
 
                                                     <div className="clickable" onClick={() => {
-															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0]._id + "/security/peers") : ""
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/security/peers") : ""
 														}}>
                                                         <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Node Peers</p>
                                                         <p className="no-margin fs-12">Add or Remove Peers</p>
@@ -250,11 +255,11 @@ class ViewNetwork extends Component {
 
 export default withTracker(function(props) {
     return {
-        network: Networks.find({_id: props.match.params.id}).fetch(),
+        network: Networks.find({instanceId: props.match.params.id}).fetch(),
         workerNodeIP: Utilities.find({"name": "workerNodeIP"}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
-        		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
+        		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
         	}

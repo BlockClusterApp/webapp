@@ -6,6 +6,8 @@ import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from
 import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
+import {Streams} from "../../../collections/streams/streams.js"
+import {Link} from "react-router-dom"
 
 import "./SubscribeStream.scss"
 
@@ -80,7 +82,8 @@ class SubscribeStream extends Component {
                         <div className="col-lg-12">
                             <div className="card card-transparent">
                                 <div className="card-header ">
-                                    <div className="card-title">Subscribe and Unsubscribe Stream
+                                    <div className="card-title">
+                                        <Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Subscribe and Unsubscribe Stream
                                     </div>
                                 </div>
                                 <div className="card-block">
@@ -105,14 +108,16 @@ class SubscribeStream extends Component {
                                                                                 </tr>
                                                                             </thead>
                                                                             <tbody>
-                                                                                {this.props.network[0].subscribedStreams.map((streamName) => {
-                                                                                    return (
-                                                                                        <tr key={streamName}>
-                                                                                            <td className="v-align-middle ">
-                                                                                                {streamName}
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    )
+                                                                                {this.props.streams.map((item) => {
+                                                                                    if(item.subscribed === true) {
+                                                                                        return (
+                                                                                            <tr key={item.streamName}>
+                                                                                                <td className="v-align-middle ">
+                                                                                                    {item.streamName}
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                        )
+                                                                                    }
                                                                                 })}
                                                                             </tbody>
                                                                         </table>
@@ -124,8 +129,8 @@ class SubscribeStream extends Component {
                                                                             <label>Stream Name</label>
                                                                             <span className="help"> e.g. "Renew"</span>
                                                                             <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_subscribeStream_name"] = input}} required>
-                                                                                {this.props.network[0].streams.map((streamName) => {
-                                                                                    return <option key={streamName} value={streamName}>{streamName}</option>
+                                                                                {this.props.streams.map((item) => {
+                                                                                    return <option key={item.streamName} value={item.streamName}>{item.streamName}</option>
                                                                                 })}
                                                                             </select>
                                                                         </div>
@@ -190,14 +195,15 @@ class SubscribeStream extends Component {
 
 export default withTracker((props) => {
     return {
-        network: Networks.find({_id: props.match.params.id}).fetch(),
+        network: Networks.find({instanceId: props.match.params.id}).fetch(),
         networks: Networks.find({}).fetch(),
+        streams: Streams.find({instanceId: props.match.params.id}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
-        		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
+        		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
         	}
-        })]
+        }), Meteor.subscribe("streams", props.match.params.id)]
     }
 })(withRouter(SubscribeStream))

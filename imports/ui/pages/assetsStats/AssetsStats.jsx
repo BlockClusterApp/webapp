@@ -6,6 +6,9 @@ import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from
 import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
+import {AssetTypes} from "../../../collections/assetTypes/assetTypes.js"
+var BigNumber = require('bignumber.js');
+import {Link} from "react-router-dom"
 
 import "./AssetsStats.scss"
 
@@ -30,7 +33,8 @@ class AssetsStats extends Component {
                         <div className="col-lg-12">
                             <div className="card card-transparent">
                                 <div className="card-header ">
-                                    <div className="card-title">Assets Stats
+                                    <div className="card-title">
+                                        <Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Assets Stats
                                     </div>
                                 </div>
                                 <div className="card-block">
@@ -57,23 +61,43 @@ class AssetsStats extends Component {
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
-                                                                            {Object.keys(this.props.network[0].assetsTypes || {}).reverse().map((key, index) => {
-                                                                                return (
-                                                                                    <tr key={this.props.network[0].assetsTypes[key].uniqueIdentifier}>
-                                                                                        <td className="v-align-middle ">
-                                                                                            {this.props.network[0].assetsTypes[key].assetName}
-                                                                                        </td>
-                                                                                        <td className="v-align-middle">
-                                                                                            {this.props.network[0].assetsTypes[key].type}
-                                                                                        </td>
-                                                                                        <td className="v-align-middle">
-                                                                                            {this.props.network[0].assetsTypes[key].units}
-                                                                                        </td>
-                                                                                        <td className="v-align-middle">
-                                                                                            {this.props.network[0].assetsTypes[key].authorizedIssuer}
-                                                                                        </td>
-                                                                                    </tr>
-                                                                                )
+                                                                            {this.props.assetTypes.map((item) => {
+                                                                                if(item.type === "bulk") {
+                                                                                    let units = (new BigNumber(item.units)).dividedBy(helpers.addZeros(1, item.parts)).toFixed(parseInt(item.parts))
+                                                                                    return (
+                                                                                        <tr key={item.uniqueIdentifier}>
+                                                                                            <td className="v-align-middle ">
+                                                                                                {item.assetName}
+                                                                                            </td>
+                                                                                            <td className="v-align-middle">
+                                                                                                {item.type}
+                                                                                            </td>
+                                                                                            <td className="v-align-middle">
+                                                                                                {units.toString()}
+                                                                                            </td>
+                                                                                            <td className="v-align-middle">
+                                                                                                {item.authorizedIssuer}
+                                                                                            </td>
+                                                                                        </tr>
+                                                                                    )
+                                                                                } else if(item.type === "solo") {
+                                                                                    return (
+                                                                                        <tr key={item.uniqueIdentifier}>
+                                                                                            <td className="v-align-middle ">
+                                                                                                {item.assetName}
+                                                                                            </td>
+                                                                                            <td className="v-align-middle">
+                                                                                                {item.type}
+                                                                                            </td>
+                                                                                            <td className="v-align-middle">
+                                                                                                {item.units}
+                                                                                            </td>
+                                                                                            <td className="v-align-middle">
+                                                                                                {item.authorizedIssuer}
+                                                                                            </td>
+                                                                                        </tr>
+                                                                                    )
+                                                                                }
                                                                             })}
                                                                         </tbody>
                                                                     </table>
@@ -97,13 +121,14 @@ class AssetsStats extends Component {
 
 export default withTracker((props) => {
     return {
-        network: Networks.find({_id: props.match.params.id}).fetch(),
+        network: Networks.find({instanceId: props.match.params.id}).fetch(),
+        assetTypes: AssetTypes.find({instanceId: props.match.params.id}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
-        		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
+        		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
         	}
-        })]
+        }), Meteor.subscribe("assetTypes", props.match.params.id)]
     }
 })(withRouter(AssetsStats))

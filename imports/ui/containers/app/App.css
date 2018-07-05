@@ -4,3 +4,12 @@ select {
     background: transparent;
     border-radius: 2px;
 }
+
+.card-header a:not(.btn) {
+    opacity: 0.8 !important;
+    transition: opacity 0.1s linear 0s, background-color 0.1s linear 0s, opacity 0.2s linear 0s !important;
+}
+
+.card-header a:hover {
+    opacity: 1 !important;
+}

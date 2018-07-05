@@ -7,6 +7,7 @@ import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
 var CodeMirror = require('react-codemirror');
+import {Link} from "react-router-dom"
 
 import "./AssetsSearch.scss"
 import "/node_modules/codemirror/lib/codemirror.css"
@@ -143,7 +144,8 @@ class AssetsSearch extends Component {
                         <div className="col-lg-12">
                             <div className="card card-transparent">
                                 <div className="card-header ">
-                                    <div className="card-title">Assets Search
+                                    <div className="card-title">
+                                        <Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Assets Search
                                     </div>
                                 </div>
                                 <div className="card-block">
@@ -217,10 +219,10 @@ class AssetsSearch extends Component {
 
 export default withTracker((props) => {
     return {
-        network: Networks.find({_id: props.match.params.id}).fetch(),
+        network: Networks.find({instanceId: props.match.params.id}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
-        		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
+        		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
         	}

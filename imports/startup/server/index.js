@@ -13,5 +13,6 @@ require("../../collections/networks/server/publications.js")
 require("../../collections/utilities/server/publications.js")
 require("../../collections/orders/server/publications.js")
 require("../../api/assets.js")
-
+require("../../collections/streams/server/publications.js")
+require("../../collections/assetTypes/server/publications.js")
 export {}

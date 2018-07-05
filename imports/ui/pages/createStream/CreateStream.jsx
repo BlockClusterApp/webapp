@@ -6,6 +6,8 @@ import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from
 import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
+import {Streams} from "../../../collections/streams/streams.js"
+import {Link} from "react-router-dom"
 
 import "./CreateStream.scss"
 
@@ -48,6 +50,7 @@ class CreateStream extends Component {
     }
 
 	render(){
+
 		return (
             <div className="createStream content">
                 <div className="m-t-20 container-fluid container-fixed-lg bg-white">
@@ -55,7 +58,8 @@ class CreateStream extends Component {
                         <div className="col-lg-12">
                             <div className="card card-transparent">
                                 <div className="card-header ">
-                                    <div className="card-title">Create Stream
+                                    <div className="card-title">
+                                        <Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Create Stream
                                     </div>
                                 </div>
                                 <div className="card card-transparent ">
@@ -126,13 +130,13 @@ class CreateStream extends Component {
 
 export default withTracker((props) => {
     return {
-        network: Networks.find({_id: props.match.params.id}).fetch(),
+        network: Networks.find({instanceId: props.match.params.id}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
-        		if(Networks.find({_id: props.match.params.id}).fetch().length !== 1) {
+        		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
         	}
-        })]
+        }), Meteor.subscribe("streams", props.match.params.id)]
     }
 })(withRouter(CreateStream))
