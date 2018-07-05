@@ -57,7 +57,7 @@ class AssetsManagement extends Component {
     }
 
     buyAsset_networkChange = (e, instanceId) => {
-        Session.set("otherSelectedNetwork", instanceId)
+        Session.set("otherSelectedNetwork", this[this.props.match.params.id + "_buyAsset_networkId"].value)
     }
 
     fullfillOrder_orderIdChange = (e, instanceId) => {
@@ -366,7 +366,7 @@ class AssetsManagement extends Component {
                                                                                             <label>Asset Name</label>
                                                                                             <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_assetName"] = input}} required>
                                                                                                 {this.props.assetTypes.map((item) => {
-                                                                                                    if(item.type === "solo") {
+                                                                                                    if(item.type === "bulk") {
                                                                                                         return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                     }
                                                                                                 })}

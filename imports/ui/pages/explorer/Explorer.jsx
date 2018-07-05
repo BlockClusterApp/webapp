@@ -7,6 +7,7 @@ import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from
 import {withRouter} from 'react-router-dom'
 var Web3 = require('web3');
 var abiDecoder = require('abi-decoder');
+import {Link} from "react-router-dom"
 
 import "./Explorer.scss"
 
@@ -355,9 +356,15 @@ class Explorer extends Component {
                     <div className="row">
                         <div className="col-lg-6 col-sm-12">
                             <div className="row">
+                                <div className="col-lg-12 m-b-10">
+                                    <Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Explorer
+                                </div>
+                            </div>
+                            <div className="row">
                                 <div className="col-lg-6">
                                     <div className="card no-border bg-white no-margin widget-loader-bar">
                                         <div className="card-header  top-left top-right ">
+
                                             <div className="card-title text-black hint-text">
                                                 <span className="font-montserrat fs-11 all-caps">Transaction Pool <i className="fa fa-chevron-right"></i>
                                                 </span>
@@ -443,6 +450,10 @@ class Explorer extends Component {
                             </div>
                         </div>
                         <div className="col-lg-6">
+                            <div className="row">
+                                <div className="col-lg-12 m-b-30">
+                                </div>
+                            </div>
                             <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
                                 <div className="card-header top-right">
                                     <div className="card-controls">

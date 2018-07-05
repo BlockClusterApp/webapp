@@ -57,7 +57,7 @@ class AssetsStats extends Component {
                                                                                 <th style={{width: "25%"}}>Asset Name</th>
                                                                                 <th style={{width: "25%"}}>Asset Type</th>
                                                                                 <th style={{width: "25%"}}>Total Units</th>
-                                                                                <th style={{width: "25%"}}>Issuer</th>
+                                                                                <th style={{width: "25%"}}>Administrator</th>
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
@@ -76,7 +76,7 @@ class AssetsStats extends Component {
                                                                                                 {units.toString()}
                                                                                             </td>
                                                                                             <td className="v-align-middle">
-                                                                                                {item.authorizedIssuer}
+                                                                                                {item.admin}
                                                                                             </td>
                                                                                         </tr>
                                                                                     )
@@ -93,7 +93,7 @@ class AssetsStats extends Component {
                                                                                                 {item.units}
                                                                                             </td>
                                                                                             <td className="v-align-middle">
-                                                                                                {item.authorizedIssuer}
+                                                                                                {item.admin}
                                                                                             </td>
                                                                                         </tr>
                                                                                     )

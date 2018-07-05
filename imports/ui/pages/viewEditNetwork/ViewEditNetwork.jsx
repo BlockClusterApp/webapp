@@ -106,12 +106,7 @@ class ViewEditNetwork extends Component {
 		            <div className="row viewEditNetwork">
 		                <div className="col-lg-12">
 		                	<div className="m-t-20 m-b-20 m-l-20 m-r-20">
-		                		<h3>Detailed Information of Network "{this.props.network.length === 1 ? this.props.network[0].name : ""}"</h3>
-			                    <p>Here you will find information to connect your DApps to the node, let other's join your network and also allows you to connect to other nodes</p>
-			                    <br />
-			                    <p className="small hint-text">It is recommended that you don't execute commands in VM to read or add
-			                        <br /> any admin related data. Please make changes from here only.
-			                    </p>
+		                		<Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Node Info
 			                    <div className="form-horizontal">
 			                        <div className="form-group row">
 			                            <label htmlFor="fname" className="col-md-3 control-label">Instance ID</label>

@@ -5,6 +5,7 @@ import helpers from "../../../modules/helpers"
 import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
+import {Link} from "react-router-dom"
 
 import "./Peers.scss"
 
@@ -62,7 +63,8 @@ class Peers extends Component {
                         <div className="col-lg-12">
                             <div className="card card-transparent">
                                 <div className="card-header ">
-                                    <div className="card-title">Peers Management
+                                    <div className="card-title">
+                                        <Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Peers Management
                                     </div>
                                 </div>
                                 <div className="card-block">
