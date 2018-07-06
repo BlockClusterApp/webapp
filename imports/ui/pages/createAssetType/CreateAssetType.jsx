@@ -7,6 +7,7 @@ import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
 import {Link} from "react-router-dom"
+import {BCAccounts} from "../../../collections/bcAccounts/bcAccounts.js"
 
 import "./CreateAssetType.scss"
 
@@ -133,10 +134,8 @@ class CreateAssetType extends Component {
                                                                 <label>Issuing Address</label>
                                                                 <span className="help"> e.g. "0x84eddb1..."</span>
                                                                 <select className="form-control" required ref={(input) => {this[this.props.network[0].instanceId + "_createAssetType_assetIssuer"] = input}}>
-                                                                    {Object.keys(this.props.network[0].accounts).map((address, addressIndex) => {
-                                                                        return (
-                                                                            <option key={addressIndex}>{address}</option>
-                                                                        )
+                                                                    {this.props.accounts.map((item) => {
+                                                                        return <option key={item.address} value={item.address}>{item.address}</option>
                                                                     })}
                                                                 </select>
                                                             </div>
@@ -181,12 +180,13 @@ class CreateAssetType extends Component {
 export default withTracker((props) => {
     return {
         network: Networks.find({instanceId: props.match.params.id}).fetch(),
+        accounts: BCAccounts.find({instanceId: props.match.params.id}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
         		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
         	}
-        })]
+        }), Meteor.subscribe("bcAccounts", props.match.params.id)]
     }
 })(withRouter(CreateAssetType))

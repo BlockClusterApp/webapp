@@ -15,4 +15,6 @@ require("../../collections/orders/server/publications.js")
 require("../../api/assets.js")
 require("../../collections/streams/server/publications.js")
 require("../../collections/assetTypes/server/publications.js")
+require("../../collections/bcAccounts/server/publications.js")
+
 export {}

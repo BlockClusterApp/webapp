@@ -162,7 +162,9 @@ class ViewNetwork extends Component {
                                                         <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Add Smart Contracts</p>
                                                         <p className="no-margin fs-12">Auditing, Indexing and APIs</p>
                                                     </div>
-                                                    <div className="clickable">
+                                                    <div className="clickable" onClick={() => {
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/bc-accounts") : ""
+														}}>
                                                         <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Accounts</p>
                                                         <p className="no-margin fs-12">Create, Import and Export Keys</p>
                                                     </div>

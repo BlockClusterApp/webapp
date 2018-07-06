@@ -227,7 +227,7 @@ class ViewEditNetwork extends Component {
 			   							})()
 									}
 
-									<div className="form-group row">
+									{/*<div className="form-group row">
 										<label className="col-md-3 control-label">Accounts</label>
 										<div className="col-md-9">
 											<form className="row form-horizontal">
@@ -285,21 +285,8 @@ class ViewEditNetwork extends Component {
 												</div>
 											</form>
 										</div>
-									</div>
+									</div>*/}
 
-									<div className="form-group row">
-										<label className="col-md-3 control-label">Create Account</label>
-										<div className="col-md-9">
-											<form className="row form-horizontal">
-												<div className="col-md-4">
-													<input type="password" className="form-control" required placeholder="New Account Password" ref={(input) => {this.accountPassword = input;}} />
-												</div>
-												<div className="col-md-8">
-													<button className="btn btn-complete btn-cons" onClick={this.createAccount}><i className="fa fa-plus" aria-hidden="true"></i>&nbsp;Create</button>
-												</div>
-											</form>
-										</div>
-									</div>
 
 									<div className="form-group row">
 										<label className="col-md-3 control-label">Assets Smart Contract</label>

@@ -26,6 +26,10 @@ import {
 import {
     AcceptedOrders
 } from "../imports/collections/acceptedOrders/acceptedOrders.js"
+import {
+    BCAccounts
+} from "../imports/collections/bcAccounts/bcAccounts.js"
+
 var Future = Npm.require("fibers/future");
 var lightwallet = Npm.require("eth-lightwallet");
 import Web3 from "web3";
@@ -89,6 +93,9 @@ Meteor.methods({
                                         HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
                                             HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/secrets/` + "basic-auth-" + instanceId, function(error, response) {})
                                             HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/extensions/v1beta1/namespaces/default/ingresses/` + "ingress-" + instanceId, function(error, response) {})
+                                            BCAccounts.remove({
+                                                instanceId: id
+                                            })
                                         })
                                     }
                                 }
@@ -113,7 +120,7 @@ Meteor.methods({
             "createdOn": Date.now(),
             "totalENodes": [],
             "totalConstellationNodes": []
-        }, function(error, id) {
+        }, (error, id) => {
             if (error) {
                 console.log(error);
                 myFuture.throw("An unknown error occured");
@@ -224,12 +231,12 @@ Meteor.methods({
                             "headers": {
                                 "Content-Type": "application/json"
                             }
-                        }, function(error, response) {
+                        }, (error, response) => {
                             if (error) {
                                 console.log(error);
                                 deleteNetwork(id)
                             } else {
-                                HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, {}, function(error, response) {
+                                HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, {}, (error, response) => {
                                     if (error) {
                                         console.log(error);
                                         deleteNetwork(id)
@@ -270,7 +277,7 @@ Meteor.methods({
                                             "headers": {
                                                 "Content-Type": "application/json"
                                             }
-                                        }, function(error) {
+                                        }, (error) => {
                                             if (error) {
                                                 console.log(error);
                                                 deleteNetwork(id)
@@ -319,7 +326,7 @@ Meteor.methods({
                                                             "Content-Type": "application/json"
                                                         }
                                                     },
-                                                    function(error) {
+                                                    (error) => {
                                                         if (error) {
                                                             console.log(error);
                                                             deleteNetwork(id)
@@ -329,6 +336,7 @@ Meteor.methods({
                                                             var workerNodeIP = Utilities.find({
                                                                 "name": "workerNodeIP"
                                                             }).fetch()[0].value;
+
                                                             Meteor.setTimeout(() => {
                                                                 HTTP.call("GET", `http://` + workerNodeIP + ":" + response.data.spec.ports[3].nodePort + "/nodeInfo", function(error, response) {
                                                                     if (error) {
@@ -353,7 +361,7 @@ Meteor.methods({
                                                                             params: [],
                                                                             jsonrpc: "2.0",
                                                                             id: new Date().getTime()
-                                                                        }, Meteor.bindEnvironment(function(error, result) {
+                                                                        }, Meteor.bindEnvironment((error, result) => {
                                                                             if (error) {
                                                                                 console.log(error);
                                                                                 deleteNetwork(id)
@@ -391,98 +399,97 @@ Meteor.methods({
                                                                                             params: [firstAccPass],
                                                                                             jsonrpc: "2.0",
                                                                                             id: new Date().getTime()
-                                                                                        }, Meteor.bindEnvironment(function(error, result) {
+                                                                                        }, Meteor.bindEnvironment((error, result) => {
                                                                                             if (error) {
                                                                                                 console.log(error);
                                                                                                 deleteNetwork(id)
                                                                                             } else {
-                                                                                                let accounts = {};
-                                                                                                accounts[result.result] = {
-                                                                                                    password:firstAccPass
-                                                                                                }
 
-                                                                                                Networks.update({
-                                                                                                    _id: id
-                                                                                                }, {
-                                                                                                    $set: {
-                                                                                                        accounts: accounts
-                                                                                                    }
-                                                                                                })
-
-                                                                                                web3.currentProvider.sendAsync({
-                                                                                                    method: "personal_unlockAccount",
-                                                                                                    params: [result.result, firstAccPass, 0],
-                                                                                                    jsonrpc: "2.0",
-                                                                                                    id: new Date().getTime()
-                                                                                                }, Meteor.bindEnvironment(function(error, result) {
-                                                                                                    if (error) {
+                                                                                                BCAccounts.insert({
+                                                                                                    "instanceId": instanceId,
+                                                                                                    "address": result.result,
+                                                                                                    "password": firstAccPass
+                                                                                                }, Meteor.bindEnvironment((error) => {
+                                                                                                    if(error) {
                                                                                                         console.log(error);
                                                                                                         deleteNetwork(id)
                                                                                                     } else {
-                                                                                                        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-                                                                                                        var assets = assetsContract.new({
-                                                                                                            from: web3.eth.accounts[0],
-                                                                                                            data: smartContracts.assets.bytecode,
-                                                                                                            gas: '999999999999999999'
-                                                                                                        }, Meteor.bindEnvironment(function(error, contract) {
+                                                                                                        web3.currentProvider.sendAsync({
+                                                                                                            method: "personal_unlockAccount",
+                                                                                                            params: [result.result, firstAccPass, 0],
+                                                                                                            jsonrpc: "2.0",
+                                                                                                            id: new Date().getTime()
+                                                                                                        }, Meteor.bindEnvironment(function(error, result) {
                                                                                                             if (error) {
                                                                                                                 console.log(error);
                                                                                                                 deleteNetwork(id)
                                                                                                             } else {
-                                                                                                                if (typeof contract.address !== 'undefined') {
-                                                                                                                    var assetsContractAddress = contract.address;
-                                                                                                                    var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
-                                                                                                                    var atomicSwap = atomicSwapContract.new(assetsContractAddress, {
-                                                                                                                        from: web3.eth.accounts[0],
-                                                                                                                        data: smartContracts.atomicSwap.bytecode,
-                                                                                                                        gas: '999999999999999999'
-                                                                                                                    }, Meteor.bindEnvironment(function(error, contract) {
-                                                                                                                        if (error) {
-                                                                                                                            console.log(error);
-                                                                                                                            deleteNetwork(id)
-                                                                                                                        } else {
-                                                                                                                            if (typeof contract.address !== 'undefined') {
-                                                                                                                                var atomicSwapContractAddress = contract.address;
+                                                                                                                var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+                                                                                                                var assets = assetsContract.new({
+                                                                                                                    from: web3.eth.accounts[0],
+                                                                                                                    data: smartContracts.assets.bytecode,
+                                                                                                                    gas: '999999999999999999'
+                                                                                                                }, Meteor.bindEnvironment(function(error, contract) {
+                                                                                                                    if (error) {
+                                                                                                                        console.log(error);
+                                                                                                                        deleteNetwork(id)
+                                                                                                                    } else {
+                                                                                                                        if (typeof contract.address !== 'undefined') {
+                                                                                                                            var assetsContractAddress = contract.address;
+                                                                                                                            var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
+                                                                                                                            var atomicSwap = atomicSwapContract.new(assetsContractAddress, {
+                                                                                                                                from: web3.eth.accounts[0],
+                                                                                                                                data: smartContracts.atomicSwap.bytecode,
+                                                                                                                                gas: '999999999999999999'
+                                                                                                                            }, Meteor.bindEnvironment(function(error, contract) {
+                                                                                                                                if (error) {
+                                                                                                                                    console.log(error);
+                                                                                                                                    deleteNetwork(id)
+                                                                                                                                } else {
+                                                                                                                                    if (typeof contract.address !== 'undefined') {
+                                                                                                                                        var atomicSwapContractAddress = contract.address;
 
-                                                                                                                                var streamsContract = web3.eth.contract(smartContracts.streams.abi);
-                                                                                                                                var atomicSwap = streamsContract.new({
-                                                                                                                                    from: web3.eth.accounts[0],
-                                                                                                                                    data: smartContracts.streams.bytecode,
-                                                                                                                                    gas: '999999999999999999'
-                                                                                                                                }, Meteor.bindEnvironment(function(error, contract) {
-                                                                                                                                    if (error) {
-                                                                                                                                        console.log(error);
-                                                                                                                                        deleteNetwork(id)
-                                                                                                                                    } else {
-                                                                                                                                        if (typeof contract.address !== 'undefined') {
-                                                                                                                                            var streamsContractAddress = contract.address;
-                                                                                                                                            web3.eth.getBlock(0, Meteor.bindEnvironment(function(error, block) {
-                                                                                                                                                if(error) {
-                                                                                                                                                    console.log(error);
-                                                                                                                                                    deleteNetwork(id)
-                                                                                                                                                } else {
-                                                                                                                                                    Networks.update({
-                                                                                                                                                        _id: id
-                                                                                                                                                    }, {
-                                                                                                                                                        $set: {
-                                                                                                                                                            "status": "running",
-                                                                                                                                                            "assetsContractAddress": assetsContractAddress,
-                                                                                                                                                            "atomicSwapContractAddress": atomicSwapContractAddress,
-                                                                                                                                                            "streamsContractAddress": streamsContractAddress,
-                                                                                                                                                            "jsonRPC-password": instanceId,
-                                                                                                                                                            "restAPI-password": instanceId,
-                                                                                                                                                            "genesisBlockHash": block.hash
+                                                                                                                                        var streamsContract = web3.eth.contract(smartContracts.streams.abi);
+                                                                                                                                        var atomicSwap = streamsContract.new({
+                                                                                                                                            from: web3.eth.accounts[0],
+                                                                                                                                            data: smartContracts.streams.bytecode,
+                                                                                                                                            gas: '999999999999999999'
+                                                                                                                                        }, Meteor.bindEnvironment(function(error, contract) {
+                                                                                                                                            if (error) {
+                                                                                                                                                console.log(error);
+                                                                                                                                                deleteNetwork(id)
+                                                                                                                                            } else {
+                                                                                                                                                if (typeof contract.address !== 'undefined') {
+                                                                                                                                                    var streamsContractAddress = contract.address;
+                                                                                                                                                    web3.eth.getBlock(0, Meteor.bindEnvironment(function(error, block) {
+                                                                                                                                                        if(error) {
+                                                                                                                                                            console.log(error);
+                                                                                                                                                            deleteNetwork(id)
+                                                                                                                                                        } else {
+                                                                                                                                                            Networks.update({
+                                                                                                                                                                _id: id
+                                                                                                                                                            }, {
+                                                                                                                                                                $set: {
+                                                                                                                                                                    "status": "running",
+                                                                                                                                                                    "assetsContractAddress": assetsContractAddress,
+                                                                                                                                                                    "atomicSwapContractAddress": atomicSwapContractAddress,
+                                                                                                                                                                    "streamsContractAddress": streamsContractAddress,
+                                                                                                                                                                    "jsonRPC-password": instanceId,
+                                                                                                                                                                    "restAPI-password": instanceId,
+                                                                                                                                                                    "genesisBlockHash": block.hash
+                                                                                                                                                                }
+                                                                                                                                                            })
                                                                                                                                                         }
-                                                                                                                                                    })
+                                                                                                                                                    }))
                                                                                                                                                 }
-                                                                                                                                            }))
-                                                                                                                                        }
+                                                                                                                                            }
+                                                                                                                                        }))
                                                                                                                                     }
-                                                                                                                                }))
-                                                                                                                            }
+                                                                                                                                }
+                                                                                                                            }))
                                                                                                                         }
-                                                                                                                    }))
-                                                                                                                }
+                                                                                                                    }
+                                                                                                                }))
                                                                                                             }
                                                                                                         }))
                                                                                                     }
@@ -576,6 +583,10 @@ Meteor.methods({
                                                                             instanceId: id
                                                                         });
 
+                                                                        BCAccounts.remove({
+                                                                            instanceId: id
+                                                                        })
+
                                                                         myFuture.return();
                                                                     }
                                                                 })
@@ -616,6 +627,9 @@ Meteor.methods({
                                         HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
                                             HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/secrets/` + "basic-auth-" + instanceId, function(error, response) {})
                                             HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/extensions/v1beta1/namespaces/default/ingresses/` + "ingress-" + instanceId, function(error, response) {})
+                                            BCAccounts.remove({
+                                                instanceId: id
+                                            })
                                         })
                                     }
                                 }
@@ -924,39 +938,43 @@ spec:
                                                                                                 console.log(error);
                                                                                                 deleteNetwork(id)
                                                                                             } else {
-
-                                                                                                let accounts = {};
-                                                                                                accounts[result.result] = {
-                                                                                                    password: firstAccPass
-                                                                                                }
-
-                                                                                                web3.currentProvider.sendAsync({
-                                                                                                    method: "personal_unlockAccount",
-                                                                                                    params: [result.result, firstAccPass, 0],
-                                                                                                    jsonrpc: "2.0",
-                                                                                                    id: new Date().getTime()
-                                                                                                }, Meteor.bindEnvironment(function(error, result) {
-                                                                                                    if (error) {
+                                                                                                BCAccounts.insert({
+                                                                                                    "instanceId": instanceId,
+                                                                                                    "address": result.result,
+                                                                                                    "password": firstAccPass
+                                                                                                }, Meteor.bindEnvironment((error) => {
+                                                                                                    if(error) {
                                                                                                         console.log(error);
                                                                                                         deleteNetwork(id)
                                                                                                     } else {
-                                                                                                        web3.eth.getBlock(0, Meteor.bindEnvironment(function(error, block) {
-                                                                                                            if(error) {
+                                                                                                        web3.currentProvider.sendAsync({
+                                                                                                            method: "personal_unlockAccount",
+                                                                                                            params: [result.result, firstAccPass, 0],
+                                                                                                            jsonrpc: "2.0",
+                                                                                                            id: new Date().getTime()
+                                                                                                        }, Meteor.bindEnvironment(function(error, result) {
+                                                                                                            if (error) {
                                                                                                                 console.log(error);
                                                                                                                 deleteNetwork(id)
                                                                                                             } else {
-                                                                                                                Networks.update({
-                                                                                                                    _id: id
-                                                                                                                }, {
-                                                                                                                    $set: {
-                                                                                                                        currentValidators: currentValidators,
-                                                                                                                        "status": "running",
-                                                                                                                        "jsonRPC-password": instanceId,
-                                                                                                                        "restAPI-password": instanceId,
-                                                                                                                        "genesisBlockHash": block.hash,
-                                                                                                                        accounts: accounts
+                                                                                                                web3.eth.getBlock(0, Meteor.bindEnvironment(function(error, block) {
+                                                                                                                    if(error) {
+                                                                                                                        console.log(error);
+                                                                                                                        deleteNetwork(id)
+                                                                                                                    } else {
+                                                                                                                        Networks.update({
+                                                                                                                            _id: id
+                                                                                                                        }, {
+                                                                                                                            $set: {
+                                                                                                                                currentValidators: currentValidators,
+                                                                                                                                "status": "running",
+                                                                                                                                "jsonRPC-password": instanceId,
+                                                                                                                                "restAPI-password": instanceId,
+                                                                                                                                "genesisBlockHash": block.hash
+                                                                                                                            }
+                                                                                                                        })
                                                                                                                     }
-                                                                                                                })
+                                                                                                                }))
                                                                                                             }
                                                                                                         }))
                                                                                                     }
@@ -1040,11 +1058,13 @@ spec:
         var network = Networks.find({
             _id: networkId
         }).fetch()[0];
-        var accounts = network.accounts;
+
         var workerNodeIP = Utilities.find({
             "name": "workerNodeIP"
         }).fetch()[0].value;
+
         let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+
         web3.currentProvider.sendAsync({
             method: "personal_newAccount",
             params: [password],
@@ -1055,19 +1075,28 @@ spec:
                 console.log(error);
                 myFuture.throw("An unknown error occured");
             } else {
-
-                accounts[result.result] = {
-                    password: password
-                };
-
-                Networks.update({
-                    _id: networkId
-                }, {
-                    $set: {
-                        accounts: accounts
+                web3.currentProvider.sendAsync({
+                    method: "personal_unlockAccount",
+                    params: [result.result, password, 0],
+                    jsonrpc: "2.0",
+                    id: new Date().getTime()
+                }, Meteor.bindEnvironment(function(error) {
+                    if(!error) {
+                        BCAccounts.insert({
+                            "instanceId": network.instanceId,
+                            "address": result.result,
+                            "password": password
+                        }, Meteor.bindEnvironment((error) => {
+                            if(!error) {
+                                myFuture.return();
+                            } else {
+                                myFuture.throw("An unknown error occured");
+                            }
+                        }))
+                    } else {
+                        myFuture.throw("An unknown error occured");
                     }
-                })
-                myFuture.return();
+                }))
             }
         }))
 
@@ -1098,7 +1127,6 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        var accounts = network.accounts;
         var workerNodeIP = Utilities.find({
             "name": "workerNodeIP"
         }).fetch()[0].value;
@@ -1788,7 +1816,12 @@ spec:
             "name": "workerNodeIP"
         }).fetch()[0].value;
 
-        HTTP.call("GET", `http://${workerNodeIP}:${network.utilityPort}/getPrivateKey?address=${accountAddress}&password=${network.accounts[accountAddress].password}`, function(error, response) {
+        var account = BCAccounts.find({
+            instanceId: instanceId,
+            address: accountAddress
+        }).fetch()[0]
+
+        HTTP.call("GET", `http://${workerNodeIP}:${network.utilityPort}/getPrivateKey?address=${accountAddress}&password=${account.password}`, function(error, response) {
             if (error) {
                 myFuture.throw("An unknown error occured");
             } else {

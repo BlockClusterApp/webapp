@@ -9,6 +9,7 @@ import notifications from "../../../modules/notifications"
 import {AssetTypes} from "../../../collections/assetTypes/assetTypes.js"
 var BigNumber = require('bignumber.js');
 import {Link} from "react-router-dom"
+import {BCAccounts} from "../../../collections/bcAccounts/bcAccounts.js"
 
 import "./AssetsStats.scss"
 

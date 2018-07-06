@@ -8,6 +8,7 @@ import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
 import {AssetTypes} from "../../../collections/assetTypes/assetTypes.js"
+import {BCAccounts} from "../../../collections/bcAccounts/bcAccounts.js"
 import {Link} from "react-router-dom"
 
 import "./AssetsExchange.scss"
@@ -17,6 +18,7 @@ class AssetsManagement extends Component {
         super()
         this.state = {}
         Session.set("otherSelectedNetwork", null)
+        Session.set("fullFillNetwork", null)
     }
 
     componentWillUnmount() {
@@ -25,6 +27,7 @@ class AssetsManagement extends Component {
         });
 
         delete Session.keys['otherSelectedNetwork']
+        delete Session.keys['fullFillNetwork']
     }
 
 
@@ -71,6 +74,14 @@ class AssetsManagement extends Component {
             })
 
             this[instanceId + "_fullOrder_continueAccountLoop"] = true;
+
+            for(let count  = 0; count < this.props.networks.length; count++) {
+                if(this.props.networks[count].genesisBlockHash === genesisBlockHash) {
+                    Session.set("fullFillNetwork", this.props.networks[count].instanceId)
+                    break;
+                }
+            }
+
         } else {
             this.setState({
                 [instanceId + "_fullOrder_genesisBlockHash"]: undefined,
@@ -87,6 +98,8 @@ class AssetsManagement extends Component {
         this.setState({
             [instanceId + "_fullfillOrder_selectedNetwork"]: selectedInstanceId
         })
+
+        Session.set("fullFillNetwork", selectedInstanceId)
 
         this[instanceId + "_fullOrder_continueAccountLoop"] = true;
     }
@@ -396,8 +409,8 @@ class AssetsManagement extends Component {
                                                                                     <div className="form-group">
                                                                                         <label>Seller Account</label>
                                                                                         <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_fromAddress"] = input}} required>
-                                                                                            {Object.keys(this.props.network[0].accounts).map((item, index) => {
-                                                                                                return <option key={item} value={item}>{item}</option>
+                                                                                            {this.props.accounts.map((item) => {
+                                                                                                return <option key={item.address} value={item.address}>{item.address}</option>
                                                                                             })}
                                                                                         </select>
                                                                                     </div>
@@ -609,30 +622,9 @@ class AssetsManagement extends Component {
                                                                                         return "";
                                                                                     })()}
                                                                                     <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_fullfill_address"] = input}} required>
-                                                                                        {(this.state[this.props.network[0].instanceId + "_fullOrder_genesisBlockHash"] !== undefined && this.state[this.props.network[0].instanceId + "_fullfillOrder_selectedNetwork"] === undefined) ? (
-                                                                                            Object.keys(this.props.networks || {}).map((key) => {
-                                                                                                if(this.props.networks[key].genesisBlockHash === this.state[this.props.network[0].instanceId + "_fullOrder_genesisBlockHash"] && this[this.props.network[0].instanceId + "_fullOrder_continueAccountLoop"] === true) {
-                                                                                                    this[this.props.network[0].instanceId + "_fullOrder_continueAccountLoop"] = false;
-                                                                                                    return Object.keys(this.props.networks[key].accounts).map((item, index) => {
-                                                                                                        return <option key={item} value={item}>{item}</option>
-                                                                                                    })
-                                                                                                }
-                                                                                            })
-                                                                                        ) : (
-                                                                                            ""
-                                                                                        )}
-
-                                                                                        {(this.state[this.props.network[0].instanceId + "_fullOrder_genesisBlockHash"] !== undefined && this.state[this.props.network[0].instanceId + "_fullfillOrder_selectedNetwork"] !== undefined) ? (
-                                                                                            Object.keys(this.props.networks || {}).map((key) => {
-                                                                                                if(this.state[this.props.network[0].instanceId + "_fullfillOrder_selectedNetwork"] === this.props.networks[key].instanceId) {
-                                                                                                    return Object.keys(this.props.networks[key].accounts).map((item, index) => {
-                                                                                                        return <option key={item} value={item}>{item}</option>
-                                                                                                    })
-                                                                                                }
-                                                                                            })
-                                                                                        ) : (
-                                                                                            ""
-                                                                                        )}
+                                                                                        {this.props.fullFillNetworkAccounts.map((item) => {
+                                                                                            return <option key={item.address} value={item.address}>{item.address}</option>
+                                                                                        })}
                                                                                     </select>
                                                                                 </div>
 
@@ -677,8 +669,8 @@ class AssetsManagement extends Component {
                                                                                 <div className="form-group">
                                                                                     <label>Account</label>
                                                                                     <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_cancel_address"] = input}} required>
-                                                                                        {Object.keys(this.props.network[0].accounts).map((item, index) => {
-                                                                                            return <option key={item} value={item}>{item}</option>
+                                                                                        {this.props.accounts.map((item) => {
+                                                                                            return <option key={item.address} value={item.address}>{item.address}</option>
                                                                                         })}
                                                                                     </select>
                                                                                 </div>
@@ -733,15 +725,24 @@ export default withTracker((props) => {
         otherSelectedNetworkAssetTypes: AssetTypes.find({instanceId: Session.get("otherSelectedNetwork")}).fetch(),
         orders: Orders.find({}).fetch(),
         assetTypes: AssetTypes.find({instanceId: props.match.params.id}).fetch(),
+        accounts: BCAccounts.find({instanceId: props.match.params.id}).fetch(),
+        fullFillNetworkAccounts: BCAccounts.find({instanceId: Session.get("fullFillNetwork")}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
-            onReady: function (){
+            onReady: function () {
         		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
+
                 if(Session.get("otherSelectedNetwork") === null) {
                     Session.set("otherSelectedNetwork",  Networks.find({}).fetch()[0].instanceId)
                 }
         	}
-        }), Meteor.subscribe("orders", props.match.params.id), Meteor.subscribe("assetTypes", Session.get("otherSelectedNetwork")), Meteor.subscribe("assetTypes", props.match.params.id)]
+        }),
+            Meteor.subscribe("orders", props.match.params.id),
+            Meteor.subscribe("assetTypes", Session.get("otherSelectedNetwork")),
+            Meteor.subscribe("assetTypes", props.match.params.id),
+            Meteor.subscribe("bcAccounts", props.match.params.id),
+            Meteor.subscribe("bcAccounts", Session.get("fullFillNetwork"))
+        ]
     }
 })(withRouter(AssetsManagement))
