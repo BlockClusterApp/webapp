@@ -83,7 +83,7 @@ class BCAccountsView extends Component {
                             <div className="card card-transparent">
                                 <div className="card-header ">
                                     <div className="card-title">
-                                        <Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Peers Management
+                                        <Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Accounts Management
                                     </div>
                                 </div>
                                 <div className="card-block">
