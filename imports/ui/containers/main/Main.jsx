@@ -25,6 +25,7 @@ import CreateStream from "../../pages/createStream/CreateStream.jsx"
 import PublishStream from "../../pages/publishStream/PublishStream.jsx"
 import SubscribeStream from "../../pages/subscribeStream/SubscribeStream.jsx"
 import BCAccountsView from "../../pages/bcAccountsView/BCAccountsView.jsx"
+import AssetsAudit from "../../pages/assetsAudit/AssetsAudit.jsx"
 
 export default class Main extends Component {
 	render() {
@@ -47,6 +48,7 @@ export default class Main extends Component {
 						<Route exact path="/app/networks/:id/assets/create" component={CreateAssetType} />
 						<Route exact path="/app/networks/:id/assets/stats" component={AssetsStats} />
 						<Route exact path="/app/networks/:id/assets/management" component={AssetsManagement} />
+						<Route exact path="/app/networks/:id/assets/audit" component={AssetsAudit} />
 						<Route exact path="/app/networks/:id/streams/create" component={CreateStream} />
 						<Route exact path="/app/networks/:id/streams/publish" component={PublishStream} />
 						<Route exact path="/app/networks/:id/streams/subscribe" component={SubscribeStream} />

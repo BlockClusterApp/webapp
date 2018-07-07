@@ -42,7 +42,7 @@ class ViewNetwork extends Component {
                                                 Assets
                                             </p>
                                             <div className="row m-l-5 m-t-10">
-                                                <div className="col-1 no-padding ">
+                                                <div className="col-1 card-left-piller no-padding ">
                                                     <div className="light-black-bg p-t-30 p-b-35"></div>
                                                     <div className="bg-master-light p-t-30 p-b-35"></div>
                                                     <div className="light-black-bg p-t-30 p-b-35"></div>
@@ -78,7 +78,7 @@ class ViewNetwork extends Component {
                                                 Streams
                                             </p>
                                             <div className="row m-l-5 m-t-10">
-                                                <div className="col-1 no-padding ">
+                                                <div className="col-1 card-left-piller no-padding ">
                                                     <div className="light-black-bg p-t-30 p-b-35"></div>
                                                     <div className="bg-master-light p-t-30 p-b-35"></div>
                                                     <div className="light-black-bg p-t-30 p-b-35"></div>
@@ -115,7 +115,7 @@ class ViewNetwork extends Component {
                                         <div className="col-lg-3">
                                             <p>Advanced Features</p>
                                             <div className="row m-l-5 m-t-10">
-                                                <div className="col-1 no-padding ">
+                                                <div className="col-1 card-left-piller no-padding ">
                                                     <div className="light-black-bg p-t-30 p-b-35"></div>
                                                     <div className="bg-master-light p-t-30 p-b-35"></div>
                                                     <div className="light-black-bg p-t-30 p-b-35"></div>
@@ -133,7 +133,9 @@ class ViewNetwork extends Component {
                                                         <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Search</p>
                                                         <p className="no-margin fs-12">No-SQL Style Queries</p>
                                                     </div>
-													<div className="clickable">
+													<div className="clickable" onClick={() => {
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/assets/audit") : ""
+														}}>
                                                         <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Asset History</p>
                                                         <p className="no-margin fs-12">Get Audit Trial of Asset's Changes</p>
                                                     </div>
@@ -148,7 +150,7 @@ class ViewNetwork extends Component {
                                         <div className="col-lg-3">
                                             <p>Development Tools</p>
                                             <div className="row m-l-5 m-t-10">
-                                                <div className="col-1 no-padding ">
+                                                <div className="col-1 card-left-piller no-padding ">
                                                     <div className="light-black-bg p-t-30 p-b-35"></div>
                                                     <div className="bg-master-light p-t-30 p-b-35"></div>
                                                     <div className="light-black-bg p-t-30 p-b-35"></div>
@@ -178,7 +180,7 @@ class ViewNetwork extends Component {
                                         <div className="col-lg-3">
                                             <p>Miscellaneous</p>
                                             <div className="row m-l-5 m-t-10">
-                                                <div className="col-1 no-padding ">
+                                                <div className="col-1 card-left-piller no-padding ">
                                                     <div className="light-black-bg p-t-30 p-b-35"></div>
                                                     <div className="bg-master-light p-t-30 p-b-35"></div>
                                                     <div className="light-black-bg p-t-30 p-b-35"></div>
@@ -214,7 +216,7 @@ class ViewNetwork extends Component {
                                             <p>Settings
                                             </p>
                                             <div className="row m-l-5 m-t-10">
-                                                <div className="col-1 no-padding ">
+                                                <div className="col-1 card-left-piller no-padding ">
                                                     <div className="light-black-bg p-t-30 p-b-35"></div>
                                                     <div className="bg-master-light p-t-30 p-b-35"></div>
                                                     <div className="light-black-bg p-t-30 p-b-35"></div>
