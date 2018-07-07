@@ -5,6 +5,9 @@ import {withRouter} from 'react-router-dom'
 import {Networks} from "../../../collections/networks/networks.js"
 import {Utilities} from "../../../collections/utilities/utilities.js"
 import notifications from "../../../modules/notifications"
+import {Link} from "react-router-dom"
+
+import "./APIsCreds.scss"
 
 class APIsCreds extends Component {
     constructor() {
@@ -74,9 +77,12 @@ class APIsCreds extends Component {
 
 	render(){
 		return (
-            <div className="content ">
+            <div className="content apis-creds">
                 <div className="m-t-20 container-fluid container-fixed-lg">
                     <div className="row">
+                        <div className="col-lg-12 m-b-10">
+                            <Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> APIs
+                        </div>
                         <div className="card card-borderless card-transparent">
                             <ul className="nav nav-tabs nav-tabs-linetriangle" role="tablist" data-init-reponsive-tabs="dropdownfx">
                                 <li className="nav-item">
@@ -119,13 +125,9 @@ class APIsCreds extends Component {
                                                                 <div className="col-md-12">
                                                                     <div className="form-group form-group-default required">
                                                                         <label>Network name</label>
-                                                                        <select className="form-control" ref={(input) => {this.networkNameRPCUpdate = input;}}>
-                                                                            {this.props.networks.map((item, index) => {
-                                                                                return (
-                                                                                    <option value={item.instanceId} key={item.instanceId}>{item.name} ({item.instanceId})</option>
-                                                                                )
-                                                                            })}
-                                                                        </select>
+                                                                        {this.props.network.length === 1 &&
+                                                                            <input type="text" className="form-control readOnly-Value" ref={(input) => {this.networkNameRPCUpdate = input;}} readOnly value={this.props.network[0].instanceId} />
+                                                                        }
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -133,7 +135,9 @@ class APIsCreds extends Component {
                                                                 <div className="col-md-12">
                                                                     <div className="form-group form-group-default required">
                                                                         <label>Password</label>
-                                                                        <input ref={(input) => {this.rpcPassword = input;}} type="password" className="form-control" name="password" required placeholder="nrx923xrm" />
+                                                                        {this.props.network.length === 1 &&
+                                                                            <input ref={(input) => {this.rpcPassword = input;}} type="password" className="form-control" name="password" required placeholder={this.props.network[0].instanceId} />
+                                                                        }
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -189,7 +193,7 @@ class APIsCreds extends Component {
                                                 </div>
                                                 <div className="card-block">
                                                     <p>BlockCluster's Assets APIs are protected using password. While making any of the API calls you need to provide the password for authentication.</p>
-                                                    <p>Default password is your network's instance id</p>
+                                                    <p>Default password is your network's instance id. <Link target="_blank" to={"http://api.blockcluster.io"}> Click Here</Link> for API Documentation.</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -203,13 +207,9 @@ class APIsCreds extends Component {
                                                                 <div className="col-md-12">
                                                                     <div className="form-group form-group-default required">
                                                                         <label>Network name</label>
-                                                                        <select className="form-control" ref={(input) => {this.networkNameRESTUpdate = input;}}>
-                                                                            {this.props.networks.map((item, index) => {
-                                                                                return (
-                                                                                    <option value={item.instanceId} key={item.instanceId}>{item.name} ({item.instanceId})</option>
-                                                                                )
-                                                                            })}
-                                                                        </select>
+                                                                        {this.props.network.length === 1 &&
+                                                                            <input type="text" className="form-control readOnly-Value" ref={(input) => {this.networkNameRESTUpdate = input;}} readOnly value={this.props.network[0].instanceId} />
+                                                                        }
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -217,7 +217,9 @@ class APIsCreds extends Component {
                                                                 <div className="col-md-12">
                                                                     <div className="form-group form-group-default required">
                                                                         <label>Password</label>
-                                                                        <input ref={(input) => {this.restPassword = input;}} type="password" className="form-control" name="password" required placeholder="nrx923xrm" />
+                                                                        {this.props.network.length === 1 &&
+                                                                            <input ref={(input) => {this.restPassword = input;}} type="password" className="form-control" name="password" required placeholder={this.props.network[0].instanceId} />
+                                                                        }
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -271,12 +273,19 @@ class APIsCreds extends Component {
 	}
 }
 
-export default withTracker(() => {
+export default withTracker((props) => {
     return {
+        network: Networks.find({instanceId: props.match.params.id}).fetch(),
         networks: Networks.find({}).fetch(),
         workerNodeIP: Utilities.find({"name": "workerNodeIP"}).fetch(),
         workerNodeDomainName: Utilities.find({"name": "workerNodeDomainName"}).fetch(),
         firewallPort: Utilities.find({"name": "firewall_Port"}).fetch(),
-        subscriptions: [Meteor.subscribe("networks"), Meteor.subscribe("utilities")]
+        subscriptions: [Meteor.subscribe("networks", {
+            onReady: function (){
+        		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
+        			props.history.push("/app/networks");
+        		}
+        	}
+        }), Meteor.subscribe("utilities")]
     }
 })(withRouter(APIsCreds))

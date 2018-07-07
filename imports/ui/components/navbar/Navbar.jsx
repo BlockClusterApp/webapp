@@ -70,25 +70,6 @@ class Navbar extends Component {
 		                        <span className="icon-thumbnail"><i className="fa fa-database"></i></span>
 		                    </li>
 						}
-						<li className="">
-			            	<a href="javascript:;"><span className="title">APIs</span>
-			              	<span className="arrow"></span></a>
-			              	<span className="icon-thumbnail"><i className="fa fa-code"></i></span>
-			              	<ul className="sub-menu">
-			                	<li>
-									<Link to={"/app/security/apis-creds"}>
-			                    		Creds
-			                    	</Link>
-			                  		<span className="icon-thumbnail"><i className="fa fa-lock"></i></span>
-			                	</li>
-								<li>
-									<Link target="_blank" to={"https://api.blockcluster.io/"}>
-			                    		Docs
-			                    	</Link>
-			                  		<span className="icon-thumbnail"><i className="fa fa-book"></i></span>
-			                	</li>
-			              	</ul>
-			            </li>
 						{(this.props.kuberREST_IP[0] !== undefined) &&
 	                    	<li className="">
 		                    	<Link target="_blank" to={"http://" + this.props.kuberREST_IP[0].value + ":8000/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#!/overview?namespace=default"} className="detailed">

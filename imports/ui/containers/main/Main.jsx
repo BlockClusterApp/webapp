@@ -14,7 +14,6 @@ import ViewEditNetwork from "../../pages/viewEditNetwork/ViewEditNetwork.jsx"
 import ViewNetwork from "../../pages/viewNetwork/viewNetwork.jsx"
 import CreateAssetType from "../../pages/createAssetType/CreateAssetType.jsx"
 import AssetsStats from "../../pages/assetsStats/AssetsStats.jsx"
-import AssetsAPIs from "../../pages/assetsAPIs/AssetsAPIs.jsx"
 import AssetsEvents from "../../pages/assetsEvents/AssetsEvents.jsx"
 import AssetsManagement from "../../pages/assetsManagement/AssetsManagement.jsx"
 import AssetsExchange from "../../pages/assetsExchange/AssetsExchange.jsx"
@@ -52,8 +51,7 @@ export default class Main extends Component {
 						<Route exact path="/app/networks/:id/streams/publish" component={PublishStream} />
 						<Route exact path="/app/networks/:id/streams/subscribe" component={SubscribeStream} />
 						<Route exact path="/app/networks/:id/bc-accounts" component={BCAccountsView} />
-						<Route exact path="/app/assets/apis" component={AssetsAPIs} />
-						<Route exact path="/app/security/apis-creds" component={APIsCreds} />
+						<Route exact path="/app/networks/:id/security/apis" component={APIsCreds} />
 		            </div>
 				</div>
 				<Footer />

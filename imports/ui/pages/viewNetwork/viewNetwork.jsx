@@ -233,9 +233,11 @@ class ViewNetwork extends Component {
                                                         <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Node Peers</p>
                                                         <p className="no-margin fs-12">Add or Remove Peers</p>
                                                     </div>
-                                                    <div className="clickable">
-                                                        <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Node Performance</p>
-                                                        <p className="no-margin fs-12">Memory, CPU and Disk Size</p>
+                                                    <div className="clickable" onClick={() => {
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/security/apis") : ""
+														}}>
+                                                        <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">APIs</p>
+                                                        <p className="no-margin fs-12">Credentials and Docs</p>
                                                     </div>
                                                 </div>
                                             </div>
