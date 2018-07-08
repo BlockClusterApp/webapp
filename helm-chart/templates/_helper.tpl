@@ -22,6 +22,14 @@ dev
 blockcluster-app
 {{- end -}}
 
+{{- define "server.monogUrl" -}}
+mongodb://mongo.default.svc.cluster.local:27017
+{{- end -}}
+
+{{- define "server.host" -}}
+app.{{ .Values.NODE_ENV }}.blockcluster.io
+{{- end -}}
+
 
 {{- define "server.maxReplicas" }}
 {{- if eq .Values.NODE_ENV "production" -}}
