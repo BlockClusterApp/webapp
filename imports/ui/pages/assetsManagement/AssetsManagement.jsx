@@ -322,6 +322,56 @@ class AssetsManagement extends Component {
         )
     }
 
+    subscribeAsset(e, instanceId) {
+        e.preventDefault();
+
+        this.setState({
+            [instanceId + "_subscribeAsset_formloading"]: true,
+            [instanceId + "_subscribeAsset_formSubmitError"]: ''
+        });
+
+        Meteor.call("subscribeAssetType", instanceId, this[instanceId + "_subscribeAsset_name"].value, (error) => {
+            if(!error) {
+                this.setState({
+                    [instanceId + "_subscribeAsset_formloading"]: false,
+                    [instanceId + "_subscribeAsset_formSubmitError"]: ''
+                });
+
+                notifications.success("Subscribed")
+            } else {
+                this.setState({
+                    [instanceId + "_subscribeAsset_formloading"]: false,
+                    [instanceId + "_subscribeAsset_formSubmitError"]: error.reason
+                })
+            }
+        });
+    }
+
+    unsubscribeAsset = (e, instanceId) => {
+        e.preventDefault();
+
+        this.setState({
+            [instanceId + "_unsubscribeAsset_formloading"]: true,
+            [instanceId + "_subscribeAsset_formSubmitError"]: ''
+        });
+
+        Meteor.call("unsubscribeAssetType", instanceId, this[instanceId + "_subscribeAsset_name"].value, (error) => {
+            if(!error) {
+                this.setState({
+                    [instanceId + "_unsubscribeAsset_formloading"]: false,
+                    [instanceId + "_subscribeAsset_formSubmitError"]: ''
+                });
+
+                notifications.success("Unsubscribed")
+            } else {
+                this.setState({
+                    [instanceId + "_unsubscribeAsset_formloading"]: false,
+                    [instanceId + "_subscribeAsset_formSubmitError"]: error.reason
+                })
+            }
+        });
+    }
+
 	render(){
 		return (
             <div className="assetsManagement content">
@@ -470,6 +520,9 @@ class AssetsManagement extends Component {
                                                                     </li>
                                                                     <li className="nav-item">
                                                                         <a href="#" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide5"}><span>Close Solo Asset</span></a>
+                                                                    </li>
+                                                                    <li className="nav-item">
+                                                                        <a href="#" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide6"}><span>Subscribe/Unsubscribe</span></a>
                                                                     </li>
                                                                 </ul>
                                                                 <div className="tab-content p-l-0 p-r-0">
@@ -698,7 +751,7 @@ class AssetsManagement extends Component {
                                                                                             className="btn btn-success m-t-10"
                                                                                             type="submit"
                                                                                         >
-                                                                                            <i className="fa fa-exchange" aria-hidden="true"></i>&nbsp;&nbsp;Issue Asset
+                                                                                            <i className="fa fa-exchange" aria-hidden="true"></i>&nbsp;&nbsp;Transfer Asset
                                                                                         </LaddaButton>
                                                                                     </p>
                                                                                 </form>
@@ -918,6 +971,92 @@ class AssetsManagement extends Component {
                                                                                         </LaddaButton>
                                                                                     </p>
                                                                                 </form>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="tab-pane slide-left" id={this.props.network[0].instanceId + "_slide6"}>
+                                                                        <div className="row">
+                                                                            <div className="col-lg-12">
+                                                                                <h4>Subscribe or Unsubscribe</h4>
+                                                                                <div className="row column-seperation">
+                                                                                    <div className="col-lg-6">
+                                                                                        <div className="table-responsive">
+                                                                                            <table className="table table-hover" id="basicTable">
+                                                                                                <thead>
+                                                                                                    <tr>
+                                                                                                        <th>Subscribed Asset Types</th>
+                                                                                                    </tr>
+                                                                                                </thead>
+                                                                                                <tbody>
+                                                                                                    {this.props.assetTypes.map((item) => {
+                                                                                                        if(item.subscribed === true) {
+                                                                                                            return (
+                                                                                                                <tr key={item.assetName}>
+                                                                                                                    <td className="v-align-middle ">
+                                                                                                                        {item.assetName}
+                                                                                                                    </td>
+                                                                                                                </tr>
+                                                                                                            )
+                                                                                                        }
+                                                                                                    })}
+                                                                                                </tbody>
+                                                                                            </table>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div className="col-lg-6">
+                                                                                        <form role="form">
+                                                                                            <div className="form-group">
+                                                                                                <label>Asset Types Name</label>
+                                                                                                <span className="help"> e.g. "License"</span>
+                                                                                                <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_subscribeAsset_name"] = input}} required>
+                                                                                                    {this.props.assetTypes.map((item) => {
+                                                                                                        return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
+                                                                                                    })}
+                                                                                                </select>
+                                                                                            </div>
+
+                                                                                            {this.state[this.props.network[0].instanceId + "_subscribeAsset_formSubmitError"] &&
+                                                                                                <div className="row m-t-30">
+                                                                                                    <div className="col-md-12">
+                                                                                                        <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                                                            <button className="close" data-dismiss="alert"></button>
+                                                                                                            {this.state[this.props.network[0].instanceId + "_subscribeAsset_formSubmitError"]}
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            }
+                                                                                            <LaddaButton
+                                                                                                loading={this.state[this.props.network[0].instanceId + "_subscribeAsset_formloading"]}
+                                                                                                data-size={S}
+                                                                                                data-style={SLIDE_UP}
+                                                                                                data-spinner-size={30}
+                                                                                                data-spinner-lines={12}
+                                                                                                className="btn btn-success m-t-10"
+                                                                                                type="button"
+                                                                                                onClick={(e) => {
+                                                                                                    this.subscribeAsset(e, this.props.network[0].instanceId);
+                                                                                                }}
+                                                                                            >
+                                                                                                <i className="fa fa-download" aria-hidden="true"></i>&nbsp;&nbsp;Subscribe
+                                                                                            </LaddaButton>
+                                                                                            &nbsp;&nbsp;
+                                                                                            <LaddaButton
+                                                                                                loading={this.state[this.props.network[0].instanceId + "_unsubscribeAsset_formloading"]}
+                                                                                                data-size={S}
+                                                                                                data-style={SLIDE_UP}
+                                                                                                data-spinner-size={30}
+                                                                                                data-spinner-lines={12}
+                                                                                                className="btn btn-success m-t-10"
+                                                                                                type="button"
+                                                                                                onClick={(e) => {
+                                                                                                    this.unsubscribeAsset(e, this.props.network[0].instanceId);
+                                                                                                }}
+                                                                                            >
+                                                                                                <i className="fa fa-ban" aria-hidden="true"></i>&nbsp;&nbsp;Unsubscribe
+                                                                                            </LaddaButton>
+                                                                                        </form>
+                                                                                    </div>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>

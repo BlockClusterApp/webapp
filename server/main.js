@@ -1789,6 +1789,26 @@ spec:
             }
         })
     },
+    "subscribeAssetType": function(instanceId, name) {
+        AssetTypes.update({
+            instanceId: instanceId,
+            assetName: name
+        }, {
+            $set: {
+                subscribed: true
+            }
+        })
+    },
+    "unsubscribeAssetType": function(instanceId, name) {
+        AssetTypes.update({
+            instanceId: instanceId,
+            assetName: name
+        }, {
+            $set: {
+                subscribed: false
+            }
+        })
+    },
     "updateAssetTypeCreatedNotifyURL": function(instanceId, url) {
         var network = Networks.find({
             instanceId: instanceId
