@@ -30,6 +30,9 @@ import {
     BCAccounts
 } from "../imports/collections/bcAccounts/bcAccounts.js"
 
+import Helper from './helpers'
+import HTTP from './helpers/promisified-http';
+
 var Future = Npm.require("fibers/future");
 var lightwallet = Npm.require("eth-lightwallet");
 import Web3 from "web3";
@@ -72,43 +75,47 @@ Accounts.onCreateUser(function(options, user) {
     return user;
 });
 
-Meteor.methods({
-    "createNetwork": function(networkName) {
-        var myFuture = new Future();
+function getKubeAPIUrl(path){
+
+}
+
+
+async function deleteNetwork(id, instanceId) {
+    await HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/${instanceId}` )
+    await HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/${instanceId}`);
+    try{
+    const response = await HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets?labelSelector=app%3D${encodeURIComponent("quorum-node-" + instanceId)}`);
+    
+    if (JSON.parse(response.content).items.length > 0) {
+        const deleteResponse = await HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets/${JSON.parse(response.content).items[0].metadata.name}`);
+        const getResponse = await HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods?labelSelector=app%3D${encodeURIComponent("quorum-node-" + instanceId)}`);
+        if (JSON.parse(getResponse.content).items.length > 0) {
+            await HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods/${JSON.parse(response.content).items[0].metadata.name}`);
+            await Promise.all([
+                HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/secrets/` + "basic-auth-" + instanceId),
+                HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/extensions/v1beta1/namespaces/default/ingresses/` + "ingress-" + instanceId)
+            ]);
+                
+            BCAccounts.remove({
+                    instanceId: id
+            })
+        }
+    }
+    }catch(err){
+        console.log("Delete Network error");
+    }
+    Networks.remove({
+        _id: id
+    });
+}
+
+
+function meteorCreateNetwork(networkName){
+    var myFuture = new Future();
         var kuberREST_IP = Utilities.find({
             "name": "kuberREST_IP"
         }).fetch()[0].value;
         var instanceId = helpers.instanceIDGenerate();
-
-        function deleteNetwork(id) {
-            HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/deployments/` + instanceId, function(error, response) {});
-            HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services/` + instanceId, function(error, response) {});
-            HTTP.call("GET", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + instanceId), function(error, response) {
-                if (!error) {
-                    if (JSON.parse(response.content).items.length > 0) {
-                        HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/apps/v1beta2/namespaces/default/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
-                            HTTP.call("GET", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + instanceId), function(error, response) {
-                                if (!error) {
-                                    if (JSON.parse(response.content).items.length > 0) {
-                                        HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
-                                            HTTP.call("DELETE", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/secrets/` + "basic-auth-" + instanceId, function(error, response) {})
-                                            HTTP.call("DELETE", `http://${kuberREST_IP}:8000/apis/extensions/v1beta1/namespaces/default/ingresses/` + "ingress-" + instanceId, function(error, response) {})
-                                            BCAccounts.remove({
-                                                instanceId: id
-                                            })
-                                        })
-                                    }
-                                }
-                            })
-                        })
-                    }
-                }
-            })
-
-            Networks.remove({
-                _id: id
-            });
-        }
 
         Networks.insert({
             "instanceId": instanceId,
@@ -126,111 +133,16 @@ Meteor.methods({
                 myFuture.throw("An unknown error occured");
             } else {
                 HTTP.call("POST", `http://${kuberREST_IP}:8000/apis/apps/v1beta1/namespaces/default/deployments`, {
-                    "content": JSON.stringify({
-                        "apiVersion":"apps/v1beta1",
-                        "kind":"Deployment",
-                        "metadata":{
-                            "name": instanceId
-                        },
-                        "spec":{
-                            "replicas":1,
-                            "revisionHistoryLimit":10,
-                            "template":{
-                                "metadata":{
-                                    "labels":{
-                                        "app":"quorum-node-" + instanceId
-                                    }
-                                },
-                                "spec":{
-                                    "containers":[
-                                        {
-                                            "name":"quorum",
-                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum",
-                                            "command":[
-                                                "bin/bash",
-                                                "-c",
-                                                "./setup.sh"
-                                            ],
-                                            "imagePullPolicy":"Always",
-                                            "ports":[
-                                                {
-                                                    "containerPort":8545
-                                                },
-                                                {
-                                                    "containerPort":23000
-                                                },
-                                                {
-                                                    "containerPort":9001
-                                                },
-                                                {
-                                                    "containerPort":6382
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name":"scanner",
-                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner",
-                                            "env":[
-                                                {
-                                                    "name": "instanceId",
-                                                    "value": instanceId
-                                                }
-                                            ],
-                                            "imagePullPolicy":"Always"
-                                        }
-                                    ],
-                                    "imagePullSecrets":[
-                                        {
-                                            "name":"regsecret"
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    }),
-                    "headers": {
-                        "Content-Type": "application/json"
-                    }
+                    "content": JSON.stringify(Helper.YamlHelper.CreateNetwork.createQuoramAndScannerDeployment(instanceId)),
+                    "headers": {...Helper.HeaderHelper.ContentTypeJson}
                 }, function(error, response) {
                     if (error) {
                         console.log(error);
                         deleteNetwork(id)
                     } else {
                         HTTP.call("POST", `http://${kuberREST_IP}:8000/api/v1/namespaces/default/services`, {
-                            "content": JSON.stringify({
-                                "kind":"Service",
-                                "apiVersion":"v1",
-                                "metadata":{
-                                    "name": instanceId
-                                },
-                                "spec":{
-                                    "ports":[
-                                        {
-                                            "name":"rpc",
-                                            "port":8545
-                                        },
-                                        {
-                                            "name":"constellation",
-                                            "port":9001
-                                        },
-                                        {
-                                            "name":"eth",
-                                            "port":23000
-                                        },
-                                        {
-                                            "name":"utility",
-                                            "port":6382
-                                        }
-                                    ],
-                                    "selector":{
-                                        "app":"quorum-node-" + instanceId
-                                    },
-                                    "type":"NodePort"
-                                }
-                            }),
-                            "headers": {
-                                "Content-Type": "application/json"
-                            }
+                            "content": JSON.stringify(Helper.YamlHelper.CreateNetwork.createQuoramService(instanceId)),
+                            "headers": {...Helper.HeaderHelper.ContentTypeJson}
                         }, (error, response) => {
                             if (error) {
                                 console.log(error);
@@ -517,9 +429,10 @@ Meteor.methods({
         })
 
         return myFuture.wait();
-    },
-    "deleteNetwork": function(id) {
-        var myFuture = new Future();
+}
+
+function meteorDeleteNetwork(id){
+    var myFuture = new Future();
         var kuberREST_IP = Utilities.find({
             "name": "kuberREST_IP"
         }).fetch()[0].value;
@@ -606,9 +519,10 @@ Meteor.methods({
         })
 
         return myFuture.wait();
-    },
-    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, userId) {
-        var myFuture = new Future();
+}
+
+function meteorJoinNetwork(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, userId){
+    var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
         var kuberREST_IP = Utilities.find({
             "name": "kuberREST_IP"
@@ -1002,34 +916,36 @@ spec:
         })
 
         return myFuture.wait();
-    },
-    "vote": function(networkId, toVote) {
-        var myFuture = new Future();
-        var network = Networks.find({
-            _id: networkId
-        }).fetch()[0];
-        var workerNodeIP = Utilities.find({
-            "name": "workerNodeIP"
-        }).fetch()[0].value;
-        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-        web3.currentProvider.sendAsync({
-            method: "istanbul_propose",
-            params: [toVote, true],
-            jsonrpc: "2.0",
-            id: new Date().getTime()
-        }, Meteor.bindEnvironment(function(error, result) {
-            if (error) {
-                console.log(error);
-                myFuture.throw("An unknown error occured");
-            } else {
-                myFuture.return();
-            }
-        }))
+}
 
-        return myFuture.wait();
-    },
-    "unVote": function(networkId, toVote) {
-        var myFuture = new Future();
+function meteorVote(networkId, toVote){
+    var myFuture = new Future();
+    var network = Networks.find({
+        _id: networkId
+    }).fetch()[0];
+    var workerNodeIP = Utilities.find({
+        "name": "workerNodeIP"
+    }).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+    web3.currentProvider.sendAsync({
+        method: "istanbul_propose",
+        params: [toVote, true],
+        jsonrpc: "2.0",
+        id: new Date().getTime()
+    }, Meteor.bindEnvironment(function(error, result) {
+        if (error) {
+            console.log(error);
+            myFuture.throw("An unknown error occured");
+        } else {
+            myFuture.return();
+        }
+    }))
+
+    return myFuture.wait();
+}
+
+function meteorUnVote(networkId, toVote){
+    var myFuture = new Future();
         var network = Networks.find({
             _id: networkId
         }).fetch()[0];
@@ -1052,9 +968,10 @@ spec:
         }))
 
         return myFuture.wait();
-    },
-    "createAccount": function(password, networkId) {
-        var myFuture = new Future();
+}
+
+function meteorCreateAccount(password, networkId){
+    var myFuture = new Future();
         var network = Networks.find({
             _id: networkId
         }).fetch()[0];
@@ -1101,9 +1018,10 @@ spec:
         }))
 
         return myFuture.wait();
-    },
-    "inviteUserToNetwork": function(networkId, nodeType, email) {
-        let user = Accounts.findUserByEmail(email);
+}
+
+function inviteUserToNetwork(networkId, nodeType, email){
+    let user = Accounts.findUserByEmail(email);
         var network = Networks.find({
             _id: networkId
         }).fetch()[0];
@@ -1121,9 +1039,10 @@ spec:
         } else {
             throw new Meteor.Error(500, 'Unknown error occured');
         }
-    },
-    "createAssetType": function(instanceId, assetName, assetType, assetIssuer, reissuable, parts) {
-        var myFuture = new Future();
+}
+
+function createAssetType(instanceId, assetName, assetType, assetIssuer, reissuable, parts){
+    var myFuture = new Future();
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
@@ -1160,245 +1079,251 @@ spec:
         }
 
         return myFuture.wait();
-    },
-    "issueBulkAssets": function(networkId, assetName, fromAddress, toAddress, units) {
-        var myFuture = new Future();
-        var network = Networks.find({
-            instanceId: networkId
-        }).fetch()[0]
-        var workerNodeIP = Utilities.find({
-            "name": "workerNodeIP"
-        }).fetch()[0].value;
-        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-        var parts = assets.getBulkAssetParts.call(assetName)
-        units = (new BigNumber(units)).multipliedBy(helpers.addZeros(1, parts))
-        assets.issueBulkAsset.sendTransaction(assetName, units.toString(), toAddress, {
-            from: fromAddress,
-        }, function(error, txnHash) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
-            } else {
-                myFuture.return();
-            }
-        })
+}
 
-        return myFuture.wait();
-    },
-    "issueSoloAsset": function(instanceId, assetName, fromAddress, toAddress, identifier) {
-        var myFuture = new Future();
-        var network = Networks.find({
-            instanceId: instanceId
-        }).fetch()[0]
-        var workerNodeIP = Utilities.find({
-            "name": "workerNodeIP"
-        }).fetch()[0].value;
-        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-        assets.issueSoloAsset.sendTransaction(assetName, toAddress, identifier, {
-            from: fromAddress,
-        }, function(error, txnHash) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
-            } else {
-                myFuture.return();
-            }
-        })
-        return myFuture.wait();
-    },
-    "transferBulkAssets": function(instanceId, assetName, fromAddress, toAddress, units) {
-        var myFuture = new Future();
-        var network = Networks.find({
-            instanceId: instanceId
-        }).fetch()[0]
-        var workerNodeIP = Utilities.find({
-            "name": "workerNodeIP"
-        }).fetch()[0].value;
-        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-        var parts = assets.getBulkAssetParts.call(assetName)
-        units = (new BigNumber(units)).multipliedBy(helpers.addZeros(1, parts))
-        assets.transferBulkAssetUnits.sendTransaction(assetName, toAddress, units, {
-            from: fromAddress
-        }, function(error, txnHash) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
-            } else {
-                myFuture.return();
-            }
-        })
-        return myFuture.wait();
-    },
-    "transferSoloAsset": function(instanceId, assetName, fromAddress, toAddress, identifier) {
-        var myFuture = new Future();
-        var network = Networks.find({
-            instanceId: instanceId
-        }).fetch()[0]
-        var workerNodeIP = Utilities.find({
-            "name": "workerNodeIP"
-        }).fetch()[0].value;
-        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-        assets.transferOwnershipOfSoloAsset.sendTransaction(assetName, identifier, toAddress, {
-            from: fromAddress
-        }, function(error, txnHash) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
-            } else {
-                myFuture.return();
-            }
-        })
-        return myFuture.wait();
-    },
-    "getBulkAssetBalance": function(instanceId, assetName, address) {
-        var myFuture = new Future();
-        var network = Networks.find({
-            instanceId: instanceId
-        }).fetch()[0]
-        var workerNodeIP = Utilities.find({
-            "name": "workerNodeIP"
-        }).fetch()[0].value;
-        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-        var parts = assets.getBulkAssetParts.call(assetName)
-        assets.getBulkAssetUnits.call(assetName, address, {}, function(error, units) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
-            } else {
-                units = (new BigNumber(units)).dividedBy(helpers.addZeros(1, parts)).toFixed(parseInt(parts))
-                myFuture.return(units.toString());
-            }
-        })
-        return myFuture.wait();
-    },
-    "getSoloAssetInfo": function(instanceId, assetName, identifier) {
-        var myFuture = new Future();
-        var network = Networks.find({
-            instanceId: instanceId
-        }).fetch()[0]
-        var workerNodeIP = Utilities.find({
-            "name": "workerNodeIP"
-        }).fetch()[0].value;
-        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-        properties = []
+function issueBulkAssets(networkId, assetName, fromAddress, toAddress, units){
+    var myFuture = new Future();
+    var network = Networks.find({
+        instanceId: networkId
+    }).fetch()[0]
+    var workerNodeIP = Utilities.find({
+        "name": "workerNodeIP"
+    }).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    var assets = assetsContract.at(network.assetsContractAddress);
+    var parts = assets.getBulkAssetParts.call(assetName)
+    units = (new BigNumber(units)).multipliedBy(helpers.addZeros(1, parts))
+    assets.issueBulkAsset.sendTransaction(assetName, units.toString(), toAddress, {
+        from: fromAddress,
+    }, function(error, txnHash) {
+        if (error) {
+            myFuture.throw("An unknown error occured");
+        } else {
+            myFuture.return();
+        }
+    })
+    return myFuture.wait();
+}
 
-        let addedOrUpdatedSoloAssetExtraData_events = assets.addedOrUpdatedSoloAssetExtraData({}, {
-            fromBlock: 0,
-            toBlock: "latest"
-        })
-        addedOrUpdatedSoloAssetExtraData_events.get((error, events) => {
-            if (!error) {
-                for (let count = 0; count < events.length; count++) {
-                    properties.indexOf(events[count].args.key) === -1 ? properties.push(events[count].args.key) : null;
-                }
-                assets.isSoloAssetClosed.call(assetName, identifier, {}, function(error, isClosed) {
-                    if (!error) {
-                        assets.getSoloAssetOwner.call(assetName, identifier, {}, function(error, owner) {
-                            if (!error) {
-                                let extraData = {};
+function issueSoloAsset(instanceId, assetName, fromAddress, toAddress, identifier){
+    var myFuture = new Future();
+    var network = Networks.find({
+        instanceId: instanceId
+    }).fetch()[0]
+    var workerNodeIP = Utilities.find({
+        "name": "workerNodeIP"
+    }).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    var assets = assetsContract.at(network.assetsContractAddress);
+    assets.issueSoloAsset.sendTransaction(assetName, toAddress, identifier, {
+        from: fromAddress,
+    }, function(error, txnHash) {
+        if (error) {
+            myFuture.throw("An unknown error occured");
+        } else {
+            myFuture.return();
+        }
+    })
+    return myFuture.wait();
+}
 
-                                if (properties.length > 0) {
-                                    for (let count = 0; count < properties.length; count++) {
-                                        extraData[properties[count]] = assets.getSoloAssetExtraData.call(assetName, identifier, properties[count])
-                                    }
+function transferBulkAssets(instanceId, assetName, fromAddress, toAddress, units){
+    var myFuture = new Future();
+    var network = Networks.find({
+        instanceId: instanceId
+    }).fetch()[0]
+    var workerNodeIP = Utilities.find({
+        "name": "workerNodeIP"
+    }).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    var assets = assetsContract.at(network.assetsContractAddress);
+    var parts = assets.getBulkAssetParts.call(assetName)
+    units = (new BigNumber(units)).multipliedBy(helpers.addZeros(1, parts))
+    assets.transferBulkAssetUnits.sendTransaction(assetName, toAddress, units, {
+        from: fromAddress
+    }, function(error, txnHash) {
+        if (error) {
+            myFuture.throw("An unknown error occured");
+        } else {
+            myFuture.return();
+        }
+    })
+    return myFuture.wait();
+}
+
+function transferSoloAsset(instanceId, assetName, fromAddress, toAddress, identifier){
+    var myFuture = new Future();
+    var network = Networks.find({
+        instanceId: instanceId
+    }).fetch()[0]
+    var workerNodeIP = Utilities.find({
+        "name": "workerNodeIP"
+    }).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    var assets = assetsContract.at(network.assetsContractAddress);
+    assets.transferOwnershipOfSoloAsset.sendTransaction(assetName, identifier, toAddress, {
+        from: fromAddress
+    }, function(error, txnHash) {
+        if (error) {
+            myFuture.throw("An unknown error occured");
+        } else {
+            myFuture.return();
+        }
+    })
+    return myFuture.wait();
+}
+
+function getBulkAssetBalance(instanceId, assetName, address){
+    var myFuture = new Future();
+    var network = Networks.find({
+        instanceId: instanceId
+    }).fetch()[0]
+    var workerNodeIP = Utilities.find({
+        "name": "workerNodeIP"
+    }).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    var assets = assetsContract.at(network.assetsContractAddress);
+    var parts = assets.getBulkAssetParts.call(assetName)
+    assets.getBulkAssetUnits.call(assetName, address, {}, function(error, units) {
+        if (error) {
+            myFuture.throw("An unknown error occured");
+        } else {
+            units = (new BigNumber(units)).dividedBy(helpers.addZeros(1, parts)).toFixed(parseInt(parts))
+            myFuture.return(units.toString());
+        }
+    })
+    return myFuture.wait();
+}
+
+function getSoloAssetInfo(instanceId, assetName, identifier){
+    var myFuture = new Future();
+    var network = Networks.find({
+        instanceId: instanceId
+    }).fetch()[0]
+    var workerNodeIP = Utilities.find({
+        "name": "workerNodeIP"
+    }).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    var assets = assetsContract.at(network.assetsContractAddress);
+    properties = []
+
+    let addedOrUpdatedSoloAssetExtraData_events = assets.addedOrUpdatedSoloAssetExtraData({}, {
+        fromBlock: 0,
+        toBlock: "latest"
+    })
+    addedOrUpdatedSoloAssetExtraData_events.get((error, events) => {
+        if (!error) {
+            for (let count = 0; count < events.length; count++) {
+                properties.indexOf(events[count].args.key) === -1 ? properties.push(events[count].args.key) : null;
+            }
+            assets.isSoloAssetClosed.call(assetName, identifier, {}, function(error, isClosed) {
+                if (!error) {
+                    assets.getSoloAssetOwner.call(assetName, identifier, {}, function(error, owner) {
+                        if (!error) {
+                            let extraData = {};
+
+                            if (properties.length > 0) {
+                                for (let count = 0; count < properties.length; count++) {
+                                    extraData[properties[count]] = assets.getSoloAssetExtraData.call(assetName, identifier, properties[count])
                                 }
-
-                                myFuture.return({
-                                    "details": {
-                                        isClosed: isClosed,
-                                        owner: owner,
-                                        extraData: extraData
-                                    }
-                                });
-
-                            } else {
-                                myFuture.throw("An unknown error occured");
                             }
-                        })
-                    } else {
-                        myFuture.throw("An unknown error occured");
-                    }
-                })
-            } else {
-                myFuture.throw("An unknown error occured");
-            }
-        })
 
-        return myFuture.wait();
-    },
-    "addUpdateSoloAssetInfo": function(instanceId, assetName, fromAddress, identifier, key, value) {
-        var myFuture = new Future();
-        var network = Networks.find({
-            instanceId: instanceId
-        }).fetch()[0]
-        var workerNodeIP = Utilities.find({
-            "name": "workerNodeIP"
-        }).fetch()[0].value;
-        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
+                            myFuture.return({
+                                "details": {
+                                    isClosed: isClosed,
+                                    owner: owner,
+                                    extraData: extraData
+                                }
+                            });
 
-        assets.addOrUpdateSoloAssetExtraData.sendTransaction(assetName, identifier, key, value, {
-            from: fromAddress,
-            gas: '4712388'
-        }, function(error, txnHash) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
-            } else {
-                myFuture.return();
-            }
-        })
+                        } else {
+                            myFuture.throw("An unknown error occured");
+                        }
+                    })
+                } else {
+                    myFuture.throw("An unknown error occured");
+                }
+            })
+        } else {
+            myFuture.throw("An unknown error occured");
+        }
+    })
 
-        return myFuture.wait();
-    },
-    "closeAsset": function(instanceId, assetName, fromAddress, identifier) {
-        var myFuture = new Future();
-        var network = Networks.find({
-            instanceId: instanceId
-        }).fetch()[0]
-        var workerNodeIP = Utilities.find({
-            "name": "workerNodeIP"
-        }).fetch()[0].value;
-        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
+    return myFuture.wait();
+}
 
-        assets.closeSoloAsset.sendTransaction(assetName, identifier, {
-            from: fromAddress,
-            gas: '4712388'
-        }, function(error, txnHash) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
-            } else {
-                myFuture.return();
-            }
-        })
+function addUpdateSoloAssetInfo(instanceId, assetName, fromAddress, identifier, key, value){
+    var myFuture = new Future();
+    var network = Networks.find({
+        instanceId: instanceId
+    }).fetch()[0]
+    var workerNodeIP = Utilities.find({
+        "name": "workerNodeIP"
+    }).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    var assets = assetsContract.at(network.assetsContractAddress);
 
-        return myFuture.wait();
-    },
-    "placeOrder": function(
-        instanceId,
-        fromType,
-        toType,
-        fromId,
-        toId,
-        fromUnits,
-        toUnits,
-        fromUniqueIdentifier,
-        toUniqueIdentifier,
-        fromAddress,
-        toAddress,
-        toGenesisBlockHash,
-        lockMinutes,
-        otherInstanceId
-    ) {
+    assets.addOrUpdateSoloAssetExtraData.sendTransaction(assetName, identifier, key, value, {
+        from: fromAddress,
+        gas: '4712388'
+    }, function(error, txnHash) {
+        if (error) {
+            myFuture.throw("An unknown error occured");
+        } else {
+            myFuture.return();
+        }
+    })
+
+    return myFuture.wait();
+}
+
+function closeAsset(instanceId, assetName, fromAddress, identifier){
+    var myFuture = new Future();
+    var network = Networks.find({
+        instanceId: instanceId
+    }).fetch()[0]
+    var workerNodeIP = Utilities.find({
+        "name": "workerNodeIP"
+    }).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    var assets = assetsContract.at(network.assetsContractAddress);
+
+    assets.closeSoloAsset.sendTransaction(assetName, identifier, {
+        from: fromAddress,
+        gas: '4712388'
+    }, function(error, txnHash) {
+        if (error) {
+            myFuture.throw("An unknown error occured");
+        } else {
+            myFuture.return();
+        }
+    })
+
+    return myFuture.wait();
+}
+
+function placeOrder(instanceId,
+    fromType,
+    toType,
+    fromId,
+    toId,
+    fromUnits,
+    toUnits,
+    fromUniqueIdentifier,
+    toUniqueIdentifier,
+    fromAddress,
+    toAddress,
+    toGenesisBlockHash,
+    lockMinutes,
+    otherInstanceId){
 
         var myFuture = new Future();
         var network = Networks.find({
@@ -1472,23 +1397,23 @@ spec:
         }))
 
         return myFuture.wait();
-    },
-    "fullfillOrder": function(
-        instanceId,
-        buyerInstanceId,
-        fromType,
-        toType,
-        fromId,
-        toId,
-        fromUnits,
-        toUnits,
-        fromUniqueIdentifier,
-        toUniqueIdentifier,
-        fromAddress,
-        toAddress,
-        toGenesisBlockHash,
-        lockMinutes,
-        hash) {
+    }
+
+function fullfillOrder(instanceId,
+    buyerInstanceId,
+    fromType,
+    toType,
+    fromId,
+    toId,
+    fromUnits,
+    toUnits,
+    fromUniqueIdentifier,
+    toUniqueIdentifier,
+    fromAddress,
+    toAddress,
+    toGenesisBlockHash,
+    lockMinutes,
+    hash) {
 
         var myFuture = new Future();
         var network = Networks.find({
@@ -1554,87 +1479,91 @@ spec:
         }))
 
         return myFuture.wait();
-    },
-    "claimOrder": function(instanceId, atomicSwapHash, fromAddress, toAssetType, toAssetName, toAssetId, toAssetUnits) {
-        var myFuture = new Future();
-        var network = Networks.find({
-            instanceId: instanceId
-        }).fetch()[0];
-        var workerNodeIP = Utilities.find({
-            "name": "workerNodeIP"
-        }).fetch()[0].value;
-        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-        var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
-        var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
+    }
 
-        assets.approve.sendTransaction(
-            toAssetType,
-            toAssetName,
-            toAssetId,
-            toAssetUnits,
-            network.atomicSwapContractAddress, {
-                from: fromAddress,
-                gas: '99999999999999999'
-            }, Meteor.bindEnvironment((error) => {
-                if (!error) {
-                    atomicSwap.claim.sendTransaction(
-                        atomicSwapHash,
-                        "", {
-                            from: fromAddress,
-                            gas: '99999999999999999'
-                        }, Meteor.bindEnvironment(function(error, txHash) {
-                            if (error) {
-                                myFuture.throw("An unknown error occured");
-                            } else {
-                                myFuture.return();
-                            }
-                        }))
-                } else {
-                    myFuture.throw("An unknown error occured");
-                }
-            })
-        )
+function claimOrder(instanceId, atomicSwapHash, fromAddress, toAssetType, toAssetName, toAssetId, toAssetUnits) {
+    var myFuture = new Future();
+    var network = Networks.find({
+        instanceId: instanceId
+    }).fetch()[0];
+    var workerNodeIP = Utilities.find({
+        "name": "workerNodeIP"
+    }).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+    var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
+    var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
+    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    var assets = assetsContract.at(network.assetsContractAddress);
 
-        return myFuture.wait();
-    },
-    "cancelOrder": function(instanceId, orderId, fromAddress) {
-        var myFuture = new Future();
-        var network = Networks.find({
-            instanceId: instanceId
-        }).fetch()[0]
-        var workerNodeIP = Utilities.find({
-            "name": "workerNodeIP"
-        }).fetch()[0].value;
-        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-        var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
-        var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
-
-        atomicSwap.unlock.sendTransaction(
-            orderId, {
-                from: fromAddress,
-                gas: '99999999999999999'
-            },
-            function(error, txHash) {
-                if (error) {
-                    myFuture.throw("An unknown error occured");
-                } else {
-                    myFuture.return();
-                }
+    assets.approve.sendTransaction(
+        toAssetType,
+        toAssetName,
+        toAssetId,
+        toAssetUnits,
+        network.atomicSwapContractAddress, {
+            from: fromAddress,
+            gas: '99999999999999999'
+        }, Meteor.bindEnvironment((error) => {
+            if (!error) {
+                atomicSwap.claim.sendTransaction(
+                    atomicSwapHash,
+                    "", {
+                        from: fromAddress,
+                        gas: '99999999999999999'
+                    }, Meteor.bindEnvironment(function(error, txHash) {
+                        if (error) {
+                            myFuture.throw("An unknown error occured");
+                        } else {
+                            myFuture.return();
+                        }
+                    }))
+            } else {
+                myFuture.throw("An unknown error occured");
             }
-        )
+        })
+    )
 
-        return myFuture.wait();
-    },
-    "searchSoloAssets": function(instanceId, query) {
-        query.instanceId = instanceId;
-        return SoloAssets.find(JSON.parse(query)).fetch();
-    },
-    "rpcPasswordUpdate": function(instanceId, password) {
-        var myFuture = new Future();
+    return myFuture.wait();
+}
+
+function cancelOrder(instanceId, orderId, fromAddress) {
+    var myFuture = new Future();
+    var network = Networks.find({
+        instanceId: instanceId
+    }).fetch()[0]
+    var workerNodeIP = Utilities.find({
+        "name": "workerNodeIP"
+    }).fetch()[0].value;
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    var assets = assetsContract.at(network.assetsContractAddress);
+    var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
+    var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
+
+    atomicSwap.unlock.sendTransaction(
+        orderId, {
+            from: fromAddress,
+            gas: '99999999999999999'
+        },
+        function(error, txHash) {
+            if (error) {
+                myFuture.throw("An unknown error occured");
+            } else {
+                myFuture.return();
+            }
+        }
+    )
+
+    return myFuture.wait();
+}
+
+function searchSoloAssets(instanceId, query) {
+    query.instanceId = instanceId;
+    return SoloAssets.find(JSON.parse(query)).fetch();
+}
+
+function rpcPasswordUpdate(instanceId, password){
+    var myFuture = new Future();
         var kuberREST_IP = Utilities.find({
             "name": "kuberREST_IP"
         }).fetch()[0].value;
@@ -1680,7 +1609,61 @@ spec:
         })
 
         return myFuture.wait();
-    },
+}
+
+Meteor.methods({
+    "createNetwork": meteorCreateNetwork(networkName),
+    "deleteNetwork": meteorDeleteNetwork(id),
+    "joinNetwork": meteorJoinNetwork(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, userId),
+    "vote": meteorVote(networkId, toVote),
+    "unVote": meteorUnVote(networkId, toVote),
+    "createAccount": meteorCreateAccount(password, networkId),
+    "inviteUserToNetwork": inviteUserToNetwork(networkId, nodeType, email),
+    "createAssetType": createAssetType(instanceId, assetName, assetType, assetIssuer, reissuable, parts) ,
+    "issueBulkAssets": issueBulkAssets(networkId, assetName, fromAddress, toAddress, units),
+    "issueSoloAsset": issueSoloAsset(instanceId, assetName, fromAddress, toAddress, identifier),
+    "transferBulkAssets": transferBulkAssets(instanceId, assetName, fromAddress, toAddress, units),
+    "transferSoloAsset": transferSoloAsset(instanceId, assetName, fromAddress, toAddress, identifier),
+    "getBulkAssetBalance": getBulkAssetBalance(instanceId, assetName, address),
+    "getSoloAssetInfo": getSoloAssetInfo(instanceId, assetName, identifier),
+    "addUpdateSoloAssetInfo": addUpdateSoloAssetInfo(instanceId, assetName, fromAddress, identifier, key, value),
+    "closeAsset": closeAsset(instanceId, assetName, fromAddress, identifier) ,
+    "placeOrder": placeOrder(
+        instanceId,
+        fromType,
+        toType,
+        fromId,
+        toId,
+        fromUnits,
+        toUnits,
+        fromUniqueIdentifier,
+        toUniqueIdentifier,
+        fromAddress,
+        toAddress,
+        toGenesisBlockHash,
+        lockMinutes,
+        otherInstanceId
+    ) ,
+    "fullfillOrder": fullfillOrder(
+        instanceId,
+        buyerInstanceId,
+        fromType,
+        toType,
+        fromId,
+        toId,
+        fromUnits,
+        toUnits,
+        fromUniqueIdentifier,
+        toUniqueIdentifier,
+        fromAddress,
+        toAddress,
+        toGenesisBlockHash,
+        lockMinutes,
+        hash),
+    "claimOrder": claimOrder(instanceId, atomicSwapHash, fromAddress, toAssetType, toAssetName, toAssetId, toAssetUnits),
+    "cancelOrder": cancelOrder(instanceId, orderId, fromAddress),
+    "searchSoloAssets": searchSoloAssets(instanceId, query),
+    "rpcPasswordUpdate": rpcPasswordUpdate(instanceId, password),
     "restAPIPasswordUpdate": function(instanceId, password) {
         Networks.update({
             instanceId: instanceId
