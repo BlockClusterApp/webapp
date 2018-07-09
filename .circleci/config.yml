@@ -93,7 +93,7 @@ jobs:
       - *restore_repo
       - run:
           name: "Repo Build"
-          command: ./shell-scripts/build.sh
+          command: ./.circleci/build.sh
         
 workflows:
   version: 2
