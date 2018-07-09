@@ -1,0 +1,62 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "server.name" . }}-deploy
+  namespace: {{ template "server.namespace" . }}
+  labels:
+    name: {{ template "server.name" . }}
+    app: {{ template "server.app" . }}
+    release: {{ .Release.Name }}
+spec:
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      name: {{ template "server.name" . }}
+  template:
+    metadata:
+      labels:
+        name: {{ template "server.name" . }}
+        app: {{ template "server.app" . }}
+        env: {{ .Values.NODE_ENV }}
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: {{ template "server.name" . }} 
+        image: {{ .Values.image }}:{{ template "server.image-tag" . }}
+        imagePullPolicy: IfNotPresent
+        args: ["meteor --allow-superuser"]
+        workingDir: /blockcluster
+        env:
+        - name: WEB_ENV
+          value: {{ .Values.NODE_ENV | quote }}
+        - name: NODE_ENV
+          value: {{ .Values.NODE_ENV | quote }}
+        - name: MONGO_URL
+          value: {{ template "server.monogUrl" . }}
+        - name: KUBERNETES_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: KUBERNETES_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NODE_ENV
+          value: {{ .Values.NODE_ENV }}
+        ports:
+        - name: http
+          containerPort: 3000
+          protocol: TCP
+        resources:
+          requests:
+            memory: "0.8Gi"
+            cpu: "800m"
+          limits:
+            memory: "1.5Gi"
+            cpu: "1200m"
+      imagePullSecrets:
+      - name: regsecret
+
+

@@ -1,0 +1,34 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ template "server.name" . }}-ing
+  namespace: {{ template "server.namespace" . }}
+spec:
+{{- if eq .Values.NODE_ENV "staging" }}
+  tls:
+  - hosts:
+    - app.blockcluster.io
+    secretName: blockcluster-ssl
+  rules:
+  - host: app.blockcluster.io
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: {{ template "server.name" . }}-svc
+          servicePort: 80
+{{- else }}
+  tls:
+  - hosts:
+    - {{ template "server.host" . }}
+    secretName: blockcluster-ssl
+  rules:
+  - host: {{ template "server.host" . }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: {{ template "server.name" . }}-svc
+          servicePort: 80
+{{- end -}}
