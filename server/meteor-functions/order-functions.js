@@ -1,51 +1,25 @@
-import HTTP from 'meteor/http';
-require("../../imports/startup/server/")
+/* eslint-disable no-shadow */
+
+import Web3 from "web3";
 import {
     Networks
-} from "../../imports/collections/networks/networks.js"
+} from "../../imports/collections/networks/networks"
 import {
     Utilities
-} from "../../imports/collections/utilities/utilities.js"
-import {
-    SoloAssets
-} from "../../imports/collections/soloAssets/soloAssets.js"
-import {
-    StreamsItems
-} from "../../imports/collections/streamsItems/streamsItems.js"
-import {
-    Streams
-} from "../../imports/collections/streams/streams.js"
-import {
-    AssetTypes
-} from "../../imports/collections/assetTypes/assetTypes.js"
-import {
-    Orders
-} from "../../imports/collections/orders/orders.js"
+} from "../../imports/collections/utilities/utilities"
 import {
     Secrets
-} from "../../imports/collections/secrets/secrets.js"
+} from "../../imports/collections/secrets/secrets"
 import {
     AcceptedOrders
-} from "../../imports/collections/acceptedOrders/acceptedOrders.js"
-import {
-    BCAccounts
-} from "../../imports/collections/bcAccounts/bcAccounts.js"
-
-var Future = Npm.require("fibers/future");
-var lightwallet = Npm.require("eth-lightwallet");
-import Web3 from "web3";
-var jsonminify = require("jsonminify");
+} from "../../imports/collections/acceptedOrders/acceptedOrders"
 import helpers from "../../imports/modules/helpers"
-import server_helpers from "../../imports/modules/helpers/server"
 import smartContracts from "../../imports/modules/smart-contracts"
-import {
-    scanBlocksOfNode,
-    authoritiesListCronJob
-} from "../../imports/collections/networks/server/cron.js"
-var md5 = require("apache-md5");
-var base64 = require('base-64');
-var utf8 = require('utf8');
-var BigNumber = require('bignumber.js');
+
+require("../../imports/startup/server/")
+
+const Future = Npm.require("fibers/future");
+
 
 
 
@@ -64,20 +38,20 @@ function placeOrder(instanceId,
     lockMinutes,
     otherInstanceId){
 
-        var myFuture = new Future();
-        var network = Networks.find({
-            instanceId: instanceId
+        const myFuture = new Future();
+        const network = Networks.find({
+            instanceId
         }).fetch()[0]
-        var workerNodeIP = Utilities.find({
+        const workerNodeIP = Utilities.find({
             "name": "workerNodeIP"
         }).fetch()[0].value;
-        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-        var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
-        var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
+        const web3 = new Web3(new Web3.providers.HttpProvider(`http://${  workerNodeIP  }:${  network.rpcNodePort}`));
+        const atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
+        const atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
+        const assetsContract = web3.eth.contract(smartContracts.assets.abi);
+        const assets = assetsContract.at(network.assetsContractAddress);
 
-        var secret = helpers.generateSecret();
+        const secret = helpers.generateSecret();
 
         atomicSwap.calculateHash.call(secret, Meteor.bindEnvironment((error, hash) => {
             if (!error) {
@@ -154,18 +128,18 @@ function fullfillOrder(instanceId,
     lockMinutes,
     hash) {
 
-        var myFuture = new Future();
-        var network = Networks.find({
+        const myFuture = new Future();
+        const network = Networks.find({
             instanceId: buyerInstanceId
         }).fetch()[0]
-        var workerNodeIP = Utilities.find({
+        const workerNodeIP = Utilities.find({
             "name": "workerNodeIP"
         }).fetch()[0].value;
-        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-        var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
-        var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
+        const web3 = new Web3(new Web3.providers.HttpProvider(`http://${  workerNodeIP  }:${  network.rpcNodePort}`));
+        const atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
+        const atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
+        const assetsContract = web3.eth.contract(smartContracts.assets.abi);
+        const assets = assetsContract.at(network.assetsContractAddress);
 
         AcceptedOrders.insert({
             "instanceId": instanceId,
@@ -221,18 +195,18 @@ function fullfillOrder(instanceId,
     }
 
 function claimOrder(instanceId, atomicSwapHash, fromAddress, toAssetType, toAssetName, toAssetId, toAssetUnits) {
-    var myFuture = new Future();
-    var network = Networks.find({
-        instanceId: instanceId
+    const myFuture = new Future();
+    const network = Networks.find({
+        instanceId
     }).fetch()[0];
-    var workerNodeIP = Utilities.find({
+    const workerNodeIP = Utilities.find({
         "name": "workerNodeIP"
     }).fetch()[0].value;
-    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-    var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
-    var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
-    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-    var assets = assetsContract.at(network.assetsContractAddress);
+    const web3 = new Web3(new Web3.providers.HttpProvider(`http://${  workerNodeIP  }:${  network.rpcNodePort}`));
+    const atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
+    const atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
+    const assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    const assets = assetsContract.at(network.assetsContractAddress);
 
     assets.approve.sendTransaction(
         toAssetType,
@@ -249,7 +223,7 @@ function claimOrder(instanceId, atomicSwapHash, fromAddress, toAssetType, toAsse
                     "", {
                         from: fromAddress,
                         gas: '99999999999999999'
-                    }, Meteor.bindEnvironment(function(error, txHash) {
+                    }, Meteor.bindEnvironment((error) => {
                         if (error) {
                             myFuture.throw("An unknown error occured");
                         } else {
@@ -266,25 +240,24 @@ function claimOrder(instanceId, atomicSwapHash, fromAddress, toAssetType, toAsse
 }
 
 function cancelOrder(instanceId, orderId, fromAddress) {
-    var myFuture = new Future();
-    var network = Networks.find({
-        instanceId: instanceId
+    const myFuture = new Future();
+    const network = Networks.find({
+        instanceId
     }).fetch()[0]
-    var workerNodeIP = Utilities.find({
+    const workerNodeIP = Utilities.find({
         "name": "workerNodeIP"
     }).fetch()[0].value;
-    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-    var assets = assetsContract.at(network.assetsContractAddress);
-    var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
-    var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
+    const web3 = new Web3(new Web3.providers.HttpProvider(`http://${  workerNodeIP  }:${  network.rpcNodePort}`));
+    web3.eth.contract(smartContracts.assets.abi);
+    const atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
+    const atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
 
     atomicSwap.unlock.sendTransaction(
         orderId, {
             from: fromAddress,
             gas: '99999999999999999'
         },
-        function(error, txHash) {
+        (error) => {
             if (error) {
                 myFuture.throw("An unknown error occured");
             } else {

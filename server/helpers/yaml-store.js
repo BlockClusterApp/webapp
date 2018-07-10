@@ -1,4 +1,4 @@
-"use strict";
+
 
 
 const CreateNetwork = {};
@@ -15,7 +15,7 @@ CreateNetwork.createQuoramAndScannerDeployment = (instanceId)=>({
         "template":{
             "metadata":{
                 "labels":{
-                    "app":"quorum-node-" + instanceId
+                    "app":`quorum-node-${  instanceId}`
                 }
             },
             "spec":{
@@ -92,7 +92,7 @@ CreateNetwork.createQuoramService = (instanceId) => ({
             }
         ],
         "selector":{
-            "app":"quorum-node-" + instanceId
+            "app":`quorum-node-${  instanceId}`
         },
         "type":"NodePort"
     }

@@ -4,8 +4,8 @@ const _HTTP = {};
 
 _HTTP.get = function (url, options) {
     return new Promise((resolve, reject) => {
-        HTTP.get(url, options, function(error, response){
-            if(err) return reject(error);
+        HTTP.get(url, options, (error, response) => {
+            if(error) return reject(error);
             return resolve(response);
         });
     });
@@ -13,8 +13,8 @@ _HTTP.get = function (url, options) {
 
 _HTTP.post = function (url, options) {
     return new Promise((resolve, reject) => {
-        HTTP.post(url, options, function(error, response){
-            if(err) return reject(error);
+        HTTP.post(url, options, (error, response) => {
+            if(error) return reject(error);
             return resolve(response);
         });
     });
@@ -22,8 +22,8 @@ _HTTP.post = function (url, options) {
 
 _HTTP.put = function (url, options) {
     return new Promise((resolve, reject) => {
-        HTTP.put(url, options, function(error, response){
-            if(err) return reject(error);
+        HTTP.put(url, options, (error, response) => {
+            if(error) return reject(error);
             return resolve(response);
         });
     });
@@ -31,8 +31,8 @@ _HTTP.put = function (url, options) {
 
 _HTTP.del = function (url, options) {
     return new Promise((resolve, reject) => {
-        HTTP.del(url, options, function(error, response){
-            if(err) return reject(error);
+        HTTP.del(url, options, (error, response) => {
+            if(error) return reject(error);
             return resolve(response);
         });
     });
@@ -40,8 +40,8 @@ _HTTP.del = function (url, options) {
 
 _HTTP.call = function (method, url, options) {
     return new Promise((resolve, reject) => {
-        HTTP.call(method, url, options, function(error, response){
-            if(err) return reject(error);
+        HTTP.call(method, url, options, (error, response) => {
+            if(error) return reject(error);
             return resolve(response);
         });
     });

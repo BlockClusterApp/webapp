@@ -1,71 +1,47 @@
-import HTTP from 'meteor/http';
-require("../../imports/startup/server/")
+/* eslint-disable no-param-reassign */
+/* eslint-disable camelcase */
+
+import Web3 from "web3";
 import {
     Networks
-} from "../../imports/collections/networks/networks.js"
+} from "../../imports/collections/networks/networks"
 import {
     Utilities
-} from "../../imports/collections/utilities/utilities.js"
+} from "../../imports/collections/utilities/utilities"
 import {
     SoloAssets
-} from "../../imports/collections/soloAssets/soloAssets.js"
-import {
-    StreamsItems
-} from "../../imports/collections/streamsItems/streamsItems.js"
-import {
-    Streams
-} from "../../imports/collections/streams/streams.js"
+} from "../../imports/collections/soloAssets/soloAssets"
 import {
     AssetTypes
-} from "../../imports/collections/assetTypes/assetTypes.js"
-import {
-    Orders
-} from "../../imports/collections/orders/orders.js"
-import {
-    Secrets
-} from "../../imports/collections/secrets/secrets.js"
-import {
-    AcceptedOrders
-} from "../../imports/collections/acceptedOrders/acceptedOrders.js"
-import {
-    BCAccounts
-} from "../../imports/collections/bcAccounts/bcAccounts.js"
-
-var Future = Npm.require("fibers/future");
-var lightwallet = Npm.require("eth-lightwallet");
-import Web3 from "web3";
-var jsonminify = require("jsonminify");
+} from "../../imports/collections/assetTypes/assetTypes"
 import helpers from "../../imports/modules/helpers"
-import server_helpers from "../../imports/modules/helpers/server"
 import smartContracts from "../../imports/modules/smart-contracts"
-import {
-    scanBlocksOfNode,
-    authoritiesListCronJob
-} from "../../imports/collections/networks/server/cron.js"
-var md5 = require("apache-md5");
-var base64 = require('base-64');
-var utf8 = require('utf8');
-var BigNumber = require('bignumber.js');
+
+require("../../imports/startup/server/")
+
+const Future = Npm.require("fibers/future");
+
+const BigNumber = require('bignumber.js');
 
 
 function createAssetType(instanceId, assetName, assetType, assetIssuer, reissuable, parts){
-    var myFuture = new Future();
-        var network = Networks.find({
-            instanceId: instanceId
+    const myFuture = new Future();
+        const network = Networks.find({
+            instanceId
         }).fetch()[0];
-        var workerNodeIP = Utilities.find({
+        const workerNodeIP = Utilities.find({
             "name": "workerNodeIP"
         }).fetch()[0].value;
-        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+        const web3 = new Web3(new Web3.providers.HttpProvider(`http://${  workerNodeIP  }:${  network.rpcNodePort}`));
 
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
+        const assetsContract = web3.eth.contract(smartContracts.assets.abi);
+        const assets = assetsContract.at(network.assetsContractAddress);
 
         if (assetType === "solo") {
             assets.createSoloAssetType.sendTransaction(assetName, {
                 from: assetIssuer,
                 gas: '99999999999999999'
-            }, function(error, txnHash) {
+            }, (error) => {
                 if (!error) {
                     myFuture.return();
                 } else {
@@ -76,7 +52,7 @@ function createAssetType(instanceId, assetName, assetType, assetIssuer, reissuab
             assets.createBulkAssetType.sendTransaction(assetName, (reissuable === "true"), parts, {
                 from: assetIssuer,
                 gas: '99999999999999999'
-            }, function(error, txnHash) {
+            }, (error) => {
                 if (!error) {
                     myFuture.return();
                 } else {
@@ -89,21 +65,21 @@ function createAssetType(instanceId, assetName, assetType, assetIssuer, reissuab
 }
 
 function issueBulkAssets(networkId, assetName, fromAddress, toAddress, units){
-    var myFuture = new Future();
-    var network = Networks.find({
+    const myFuture = new Future();
+    const network = Networks.find({
         instanceId: networkId
     }).fetch()[0]
-    var workerNodeIP = Utilities.find({
+    const workerNodeIP = Utilities.find({
         "name": "workerNodeIP"
     }).fetch()[0].value;
-    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-    var assets = assetsContract.at(network.assetsContractAddress);
-    var parts = assets.getBulkAssetParts.call(assetName)
+    const web3 = new Web3(new Web3.providers.HttpProvider(`http://${  workerNodeIP  }:${  network.rpcNodePort}`));
+    const assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    const assets = assetsContract.at(network.assetsContractAddress);
+    const parts = assets.getBulkAssetParts.call(assetName)
     units = (new BigNumber(units)).multipliedBy(helpers.addZeros(1, parts))
     assets.issueBulkAsset.sendTransaction(assetName, units.toString(), toAddress, {
         from: fromAddress,
-    }, function(error, txnHash) {
+    }, (error) => {
         if (error) {
             myFuture.throw("An unknown error occured");
         } else {
@@ -114,19 +90,19 @@ function issueBulkAssets(networkId, assetName, fromAddress, toAddress, units){
 }
 
 function issueSoloAsset(instanceId, assetName, fromAddress, toAddress, identifier){
-    var myFuture = new Future();
-    var network = Networks.find({
-        instanceId: instanceId
+    const myFuture = new Future();
+    const network = Networks.find({
+        instanceId
     }).fetch()[0]
-    var workerNodeIP = Utilities.find({
+    const workerNodeIP = Utilities.find({
         "name": "workerNodeIP"
     }).fetch()[0].value;
-    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-    var assets = assetsContract.at(network.assetsContractAddress);
+    const web3 = new Web3(new Web3.providers.HttpProvider(`http://${  workerNodeIP  }:${  network.rpcNodePort}`));
+    const assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    const assets = assetsContract.at(network.assetsContractAddress);
     assets.issueSoloAsset.sendTransaction(assetName, toAddress, identifier, {
         from: fromAddress,
-    }, function(error, txnHash) {
+    }, (error) => {
         if (error) {
             myFuture.throw("An unknown error occured");
         } else {
@@ -137,21 +113,21 @@ function issueSoloAsset(instanceId, assetName, fromAddress, toAddress, identifie
 }
 
 function transferBulkAssets(instanceId, assetName, fromAddress, toAddress, units){
-    var myFuture = new Future();
-    var network = Networks.find({
-        instanceId: instanceId
+    const myFuture = new Future();
+    const network = Networks.find({
+        instanceId
     }).fetch()[0]
-    var workerNodeIP = Utilities.find({
+    const workerNodeIP = Utilities.find({
         "name": "workerNodeIP"
     }).fetch()[0].value;
-    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-    var assets = assetsContract.at(network.assetsContractAddress);
-    var parts = assets.getBulkAssetParts.call(assetName)
+    const web3 = new Web3(new Web3.providers.HttpProvider(`http://${  workerNodeIP  }:${  network.rpcNodePort}`));
+    const assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    const assets = assetsContract.at(network.assetsContractAddress);
+    const parts = assets.getBulkAssetParts.call(assetName)
     units = (new BigNumber(units)).multipliedBy(helpers.addZeros(1, parts))
     assets.transferBulkAssetUnits.sendTransaction(assetName, toAddress, units, {
         from: fromAddress
-    }, function(error, txnHash) {
+    }, (error) => {
         if (error) {
             myFuture.throw("An unknown error occured");
         } else {
@@ -162,19 +138,19 @@ function transferBulkAssets(instanceId, assetName, fromAddress, toAddress, units
 }
 
 function transferSoloAsset(instanceId, assetName, fromAddress, toAddress, identifier){
-    var myFuture = new Future();
-    var network = Networks.find({
-        instanceId: instanceId
+    const myFuture = new Future();
+    const network = Networks.find({
+        instanceId
     }).fetch()[0]
-    var workerNodeIP = Utilities.find({
+    const workerNodeIP = Utilities.find({
         "name": "workerNodeIP"
     }).fetch()[0].value;
-    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-    var assets = assetsContract.at(network.assetsContractAddress);
+    const web3 = new Web3(new Web3.providers.HttpProvider(`http://${  workerNodeIP  }:${  network.rpcNodePort}`));
+    const assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    const assets = assetsContract.at(network.assetsContractAddress);
     assets.transferOwnershipOfSoloAsset.sendTransaction(assetName, identifier, toAddress, {
         from: fromAddress
-    }, function(error, txnHash) {
+    }, (error) => {
         if (error) {
             myFuture.throw("An unknown error occured");
         } else {
@@ -185,22 +161,22 @@ function transferSoloAsset(instanceId, assetName, fromAddress, toAddress, identi
 }
 
 function getBulkAssetBalance(instanceId, assetName, address){
-    var myFuture = new Future();
-    var network = Networks.find({
-        instanceId: instanceId
+    const myFuture = new Future();
+    const network = Networks.find({
+        instanceId
     }).fetch()[0]
-    var workerNodeIP = Utilities.find({
+    const workerNodeIP = Utilities.find({
         "name": "workerNodeIP"
     }).fetch()[0].value;
-    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-    var assets = assetsContract.at(network.assetsContractAddress);
-    var parts = assets.getBulkAssetParts.call(assetName)
-    assets.getBulkAssetUnits.call(assetName, address, {}, function(error, units) {
+    const web3 = new Web3(new Web3.providers.HttpProvider(`http://${  workerNodeIP  }:${  network.rpcNodePort}`));
+    const assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    const assets = assetsContract.at(network.assetsContractAddress);
+    const parts = assets.getBulkAssetParts.call(assetName)
+    assets.getBulkAssetUnits.call(assetName, address, {}, (error, units) => {
         if (error) {
             myFuture.throw("An unknown error occured");
         } else {
-            units = (new BigNumber(units)).dividedBy(helpers.addZeros(1, parts)).toFixed(parseInt(parts))
+            units = (new BigNumber(units)).dividedBy(helpers.addZeros(1, parts)).toFixed(parseInt(parts, 10))
             myFuture.return(units.toString());
         }
     })
@@ -208,32 +184,33 @@ function getBulkAssetBalance(instanceId, assetName, address){
 }
 
 function getSoloAssetInfo(instanceId, assetName, identifier){
-    var myFuture = new Future();
-    var network = Networks.find({
-        instanceId: instanceId
+    const myFuture = new Future();
+    const network = Networks.find({
+        instanceId
     }).fetch()[0]
-    var workerNodeIP = Utilities.find({
+    const workerNodeIP = Utilities.find({
         "name": "workerNodeIP"
     }).fetch()[0].value;
-    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-    var assets = assetsContract.at(network.assetsContractAddress);
-    properties = []
+    const web3 = new Web3(new Web3.providers.HttpProvider(`http://${  workerNodeIP  }:${  network.rpcNodePort}`));
+    const assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    const assets = assetsContract.at(network.assetsContractAddress);
+    const properties = []
 
-    let addedOrUpdatedSoloAssetExtraData_events = assets.addedOrUpdatedSoloAssetExtraData({}, {
+    const addedOrUpdatedSoloAssetExtraData_events = assets.addedOrUpdatedSoloAssetExtraData({}, {
         fromBlock: 0,
         toBlock: "latest"
     })
     addedOrUpdatedSoloAssetExtraData_events.get((error, events) => {
         if (!error) {
             for (let count = 0; count < events.length; count++) {
+                // eslint-disable-next-line
                 properties.indexOf(events[count].args.key) === -1 ? properties.push(events[count].args.key) : null;
             }
-            assets.isSoloAssetClosed.call(assetName, identifier, {}, function(error, isClosed) {
-                if (!error) {
-                    assets.getSoloAssetOwner.call(assetName, identifier, {}, function(error, owner) {
-                        if (!error) {
-                            let extraData = {};
+            assets.isSoloAssetClosed.call(assetName, identifier, {}, (_error, isClosed) => {
+                if (!_error) {
+                    assets.getSoloAssetOwner.call(assetName, identifier, {}, (__error, owner) => {
+                        if (!__error) {
+                            const extraData = {};
 
                             if (properties.length > 0) {
                                 for (let count = 0; count < properties.length; count++) {
@@ -243,9 +220,9 @@ function getSoloAssetInfo(instanceId, assetName, identifier){
 
                             myFuture.return({
                                 "details": {
-                                    isClosed: isClosed,
-                                    owner: owner,
-                                    extraData: extraData
+                                    isClosed,
+                                    owner,
+                                    extraData
                                 }
                             });
 
@@ -266,21 +243,21 @@ function getSoloAssetInfo(instanceId, assetName, identifier){
 }
 
 function addUpdateSoloAssetInfo(instanceId, assetName, fromAddress, identifier, key, value){
-    var myFuture = new Future();
-    var network = Networks.find({
-        instanceId: instanceId
+    const myFuture = new Future();
+    const network = Networks.find({
+        instanceId
     }).fetch()[0]
-    var workerNodeIP = Utilities.find({
+    const workerNodeIP = Utilities.find({
         "name": "workerNodeIP"
     }).fetch()[0].value;
-    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-    var assets = assetsContract.at(network.assetsContractAddress);
+    const web3 = new Web3(new Web3.providers.HttpProvider(`http://${  workerNodeIP  }:${  network.rpcNodePort}`));
+    const assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    const assets = assetsContract.at(network.assetsContractAddress);
 
     assets.addOrUpdateSoloAssetExtraData.sendTransaction(assetName, identifier, key, value, {
         from: fromAddress,
         gas: '4712388'
-    }, function(error, txnHash) {
+    }, (error) => {
         if (error) {
             myFuture.throw("An unknown error occured");
         } else {
@@ -292,21 +269,21 @@ function addUpdateSoloAssetInfo(instanceId, assetName, fromAddress, identifier, 
 }
 
 function closeAsset(instanceId, assetName, fromAddress, identifier){
-    var myFuture = new Future();
-    var network = Networks.find({
-        instanceId: instanceId
+    const myFuture = new Future();
+    const network = Networks.find({
+        instanceId
     }).fetch()[0]
-    var workerNodeIP = Utilities.find({
+    const workerNodeIP = Utilities.find({
         "name": "workerNodeIP"
     }).fetch()[0].value;
-    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
-    var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-    var assets = assetsContract.at(network.assetsContractAddress);
+    const web3 = new Web3(new Web3.providers.HttpProvider(`http://${  workerNodeIP  }:${  network.rpcNodePort}`));
+    const assetsContract = web3.eth.contract(smartContracts.assets.abi);
+    const assets = assetsContract.at(network.assetsContractAddress);
 
     assets.closeSoloAsset.sendTransaction(assetName, identifier, {
         from: fromAddress,
         gas: '4712388'
-    }, function(error, txnHash) {
+    }, (error) => {
         if (error) {
             myFuture.throw("An unknown error occured");
         } else {
@@ -327,7 +304,7 @@ function searchSoloAssets(instanceId, query) {
 
 function subscribeAssetType(instanceId, name) {
     AssetTypes.update({
-        instanceId: instanceId,
+        instanceId,
         assetName: name
     }, {
         $set: {
@@ -338,7 +315,7 @@ function subscribeAssetType(instanceId, name) {
 
 function unsubscribeAssetType(instanceId, name) {
     AssetTypes.update({
-        instanceId: instanceId,
+        instanceId,
         assetName: name
     }, {
         $set: {
@@ -348,18 +325,18 @@ function unsubscribeAssetType(instanceId, name) {
 }
 
 function updateAssetTypeCreatedNotifyURL(instanceId, url) {
-    var network = Networks.find({
-        instanceId: instanceId
+    const network = Networks.find({
+        instanceId
     }).fetch()[0];
 
-    var notificationURLs = network.notificationURLs || {};
+    const notificationURLs = network.notificationURLs || {};
     notificationURLs.assetTypeCreated = url;
 
     Networks.update({
-        instanceId: instanceId
+        instanceId
     }, {
         $set: {
-            notificationURLs: notificationURLs
+            notificationURLs
         }
     })
 }

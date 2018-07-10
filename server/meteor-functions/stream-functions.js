@@ -1,70 +1,38 @@
-import HTTP from 'meteor/http';
-require("../../imports/startup/server/")
+import Web3 from "web3";
 import {
     Networks
-} from "../../imports/collections/networks/networks.js"
+} from "../../imports/collections/networks/networks"
 import {
     Utilities
-} from "../../imports/collections/utilities/utilities.js"
-import {
-    SoloAssets
-} from "../../imports/collections/soloAssets/soloAssets.js"
-import {
-    StreamsItems
-} from "../../imports/collections/streamsItems/streamsItems.js"
+} from "../../imports/collections/utilities/utilities"
 import {
     Streams
-} from "../../imports/collections/streams/streams.js"
-import {
-    AssetTypes
-} from "../../imports/collections/assetTypes/assetTypes.js"
-import {
-    Orders
-} from "../../imports/collections/orders/orders.js"
-import {
-    Secrets
-} from "../../imports/collections/secrets/secrets.js"
-import {
-    AcceptedOrders
-} from "../../imports/collections/acceptedOrders/acceptedOrders.js"
-import {
-    BCAccounts
-} from "../../imports/collections/bcAccounts/bcAccounts.js"
-
-var Future = Npm.require("fibers/future");
-var lightwallet = Npm.require("eth-lightwallet");
-import Web3 from "web3";
-var jsonminify = require("jsonminify");
-import helpers from "../../imports/modules/helpers"
-import server_helpers from "../../imports/modules/helpers/server"
+} from "../../imports/collections/streams/streams"
 import smartContracts from "../../imports/modules/smart-contracts"
-import {
-    scanBlocksOfNode,
-    authoritiesListCronJob
-} from "../../imports/collections/networks/server/cron.js"
-var md5 = require("apache-md5");
-var base64 = require('base-64');
-var utf8 = require('utf8');
-var BigNumber = require('bignumber.js');
+
+require("../../imports/startup/server/")
+
+const Future = Npm.require("fibers/future");
+
 
 
 function createStream(instanceId, name, issuer) {
-    var myFuture = new Future();
-    var network = Networks.find({
-        instanceId: instanceId
+    const myFuture = new Future();
+    const network = Networks.find({
+        instanceId
     }).fetch()[0];
-    var workerNodeIP = Utilities.find({
+    const workerNodeIP = Utilities.find({
         "name": "workerNodeIP"
     }).fetch()[0].value;
-    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+    const web3 = new Web3(new Web3.providers.HttpProvider(`http://${  workerNodeIP  }:${  network.rpcNodePort}`));
 
-    var streamsContract = web3.eth.contract(smartContracts.streams.abi);
-    var streams = streamsContract.at(network.streamsContractAddress);
+    const streamsContract = web3.eth.contract(smartContracts.streams.abi);
+    const streams = streamsContract.at(network.streamsContractAddress);
 
     streams.createStream.sendTransaction(name, {
         from: issuer,
         gas: '99999999999999999'
-    }, function(error, txnHash) {
+    }, (error) => {
         if (!error) {
             myFuture.return();
         } else {
@@ -76,22 +44,22 @@ function createStream(instanceId, name, issuer) {
 }
 
 function publishStream(instanceId, name, issuer, key, data) {
-    var myFuture = new Future();
-    var network = Networks.find({
-        instanceId: instanceId
+    const myFuture = new Future();
+    const network = Networks.find({
+        instanceId
     }).fetch()[0];
-    var workerNodeIP = Utilities.find({
+    const workerNodeIP = Utilities.find({
         "name": "workerNodeIP"
     }).fetch()[0].value;
-    let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
+    const web3 = new Web3(new Web3.providers.HttpProvider(`http://${  workerNodeIP  }:${  network.rpcNodePort}`));
 
-    var streamsContract = web3.eth.contract(smartContracts.streams.abi);
-    var streams = streamsContract.at(network.streamsContractAddress);
+    const streamsContract = web3.eth.contract(smartContracts.streams.abi);
+    const streams = streamsContract.at(network.streamsContractAddress);
 
     streams.publish.sendTransaction(name, key, data, {
         from: issuer,
         gas: '99999999999999999'
-    }, function(error, txnHash) {
+    }, (error) => {
         if (!error) {
             myFuture.return();
         } else {
@@ -103,12 +71,9 @@ function publishStream(instanceId, name, issuer, key, data) {
 }
 
 function subscribeStream(instanceId, name) {
-    var network = Networks.find({
-        instanceId: instanceId
-    }).fetch()[0];
 
     Streams.update({
-        instanceId: instanceId,
+        instanceId,
         streamName: name
     }, {
         $set: {
@@ -118,12 +83,9 @@ function subscribeStream(instanceId, name) {
 }
 
 function unsubscribeStream(instanceId, name) {
-    var network = Networks.find({
-        instanceId: instanceId
-    }).fetch()[0];
 
     Streams.update({
-        instanceId: instanceId,
+        instanceId,
         streamName: name
     }, {
         $set: {

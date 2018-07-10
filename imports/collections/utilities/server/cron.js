@@ -1,6 +1,6 @@
-import {Utilities} from "../utilities.js"
+import {Utilities} from "../utilities"
 
-//var cmd = require("node-cmd");
+// var cmd = require("node-cmd");
 
 function updateWorkerNodeIP() {
 	Utilities.upsert({
