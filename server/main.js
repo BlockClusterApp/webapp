@@ -69,6 +69,9 @@ Accounts.onCreateUser(function(options, user) {
     // Assigns first and last names to the newly created user object
     user.profile.firstName = options.profile.firstName;
     user.profile.lastName = options.profile.lastName;
+
+    console.log(user);
+
     return user;
 });
 
