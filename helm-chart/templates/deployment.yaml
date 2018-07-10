@@ -35,6 +35,8 @@ spec:
           value: {{ .Values.NODE_ENV | quote }}
         - name: MONGO_URL
           value: {{ template "server.monogUrl" . }}
+        - name: API_HOST
+          value: {{ .Values.API_HOST | quote }}
         - name: KUBERNETES_NODE_NAME
           valueFrom:
             fieldRef:

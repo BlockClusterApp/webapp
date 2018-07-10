@@ -11,7 +11,7 @@ function generateRandomString(email, salt = "I<3BlockCluster") {
 }
 
 function generateCompleteURL(param) {
-  return `${process.env.API_HOST ||
+  return `https://${process.env.API_HOST ||
     "localhost:3000"}/email-verify?key=${param}`;
 }
 
