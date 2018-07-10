@@ -1,50 +1,32 @@
-<style>
-  .confirm-button {
-    background: #48b0f7;
-    border-color: #48b0f7;
-    color: #fff;
-    line-height: 21px;
-    cursor: pointer;
-    text-shadow: none;
-    box-shadow: 2px 1px 3px #ccc;
-    padding: 6px 17px;
-    border-radius: 5px;
-    text-decoration: none;
-  }
-
-  h3,
-  h2 {
-    margin-bottom: 3px;
-  }
-
-  p {
-    margin-top: 2px;
-  }
-
-  a {
-    text-decoration: none;
-  }
-</style>
 <div style="background: #f0f0f0; width: 80%; margin: auto; padding: 20px;">
   <img src="https://app.blockcluster.io/assets/img/logo/blockcluster.png" alt="logo" />
-  <h2>Confirm your email address on BlockCluster.io</h2>
-  <p>
+  <h2 style="margin-bottom: 3px;">Confirm your email address on BlockCluster.io</h2>
+  <p style="margin-top: 2px;">
     Hello
     <%= user.name %>,
       <br /> We just need to verify that
-      <a href="mailto:<%= user.email %>">
+      <a href="mailto:<%= user.email %>" style="text-decoration: none;">
         <%= user.email %>
       </a> is your email address.
       <br /> Click on the following button to confirm:
       <br />
       <br />
-      <a href="<%= verificationLink %>" target="_blank" class="confirm-button">Confirm Email Address</a>
+      <a href="<%= verificationLink %>" target="_blank" style="background: #48b0f7;
+        border-color: #48b0f7;
+        color: #fff;
+        line-height: 21px;
+        cursor: pointer;
+        text-shadow: none;
+        box-shadow: 2px 1px 3px #ccc;
+        padding: 6px 17px;
+        border-radius: 5px;
+        text-decoration: none;">Confirm Email Address</a>
       <br />
       <br />
 
   </p>
-  <h3>Didn't request this email?</h3>
-  <p>No worries! Your address may have been entered by mistake. If you ignore or delete this email, nothing will happen.
+  <h3 style="margin-bottom: 3px;">Didn't request this email?</h3>
+  <p style="margin-top: 2px;">No worries! Your address may have been entered by mistake. If you ignore or delete this email, nothing will happen.
     <br />
     <br />
   </p>

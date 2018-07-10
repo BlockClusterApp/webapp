@@ -1,5 +1,5 @@
 import BaseMongoCollection from "../base-collection";
-import { SimpleSchema } from "meteor/mongo";
+import SimpleSchema from 'simpl-schema';
 
 const EmailSchema = new SimpleSchema({
   content: {
@@ -12,6 +12,6 @@ const EmailSchema = new SimpleSchema({
 
 const EmailModel = new BaseMongoCollection("Email");
 
-EmailModel.attachSchema(EmailSchema);
+// EmailModel.attachSchema(EmailSchema);
 
 export const Email = EmailModel;

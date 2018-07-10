@@ -37,6 +37,16 @@ spec:
           value: {{ template "server.monogUrl" . }}
         - name: API_HOST
           value: {{ .Values.API_HOST | quote }}
+        - name: EMAIL_USER
+          valueFrom:
+            secretKeyRef:
+              name: nodemailer-creds
+              key: user
+        - name: EMAIL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nodemailer-creds
+              key: password
         - name: KUBERNETES_NODE_NAME
           valueFrom:
             fieldRef:

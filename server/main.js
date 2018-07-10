@@ -30,6 +30,8 @@ import {
     BCAccounts
 } from "../imports/collections/bcAccounts/bcAccounts.js"
 
+import Verifier from '../imports/collections/email-verification/server/main'
+
 var Future = Npm.require("fibers/future");
 var lightwallet = Npm.require("eth-lightwallet");
 import Web3 from "web3";
@@ -62,7 +64,7 @@ Accounts.validateLoginAttempt(function(options) {
     }
 });
 
-Accounts.onCreateUser(function(options, user) {
+Accounts.onCreateUser(async function(options, user) {
     user.firstLogin = false;
     user.profile = options.profile || {};
 
@@ -71,6 +73,7 @@ Accounts.onCreateUser(function(options, user) {
     user.profile.lastName = options.profile.lastName;
 
     console.log(user);
+    await Verifier.sendEmailVerification(user);
 
     return user;
 });

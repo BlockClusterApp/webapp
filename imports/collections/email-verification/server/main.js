@@ -1,4 +1,4 @@
-import EmailVerification from "../";
+import EmailVerification from '../';
 import Email from "../../emails";
 import {
   generateRandomString,
@@ -9,32 +9,34 @@ import {
 const Verifier = {};
 
 Verifier.sendEmailVerification = async function(user) {
-  const uniqueString = generateRandomString(user.emails[0].email);
+  const email = user.emails[0].address;
+  const uniqueString = generateRandomString(email);
   const link = generateCompleteURL(uniqueString);
 
-  const ejsTemplate = getEJSTemplate();
+  const ejsTemplate = await getEJSTemplate();
   const finalHTML = ejsTemplate({
     user: {
-      email: user.emails[0].email,
-      name: `${user.profile.first} ${user.profile.last}`
+      email,
+      name: `${user.profile.firstName} ${user.profile.lastName}`
     },
     verificationLink: link
   });
 
   const emailProps = {
     from: "no-reply@blockcluster.io",
-    to: user.emails[0].email,
-    subject: `Confirm ${user.emails[0].email} on blockcluster.io`,
-    text: `Visit the following link to verify your email address. ${verificationLink}`,
+    to: email,
+    subject: `Confirm ${user.emails[0].address} on blockcluster.io`,
+    text: `Visit the following link to verify your email address. ${link}`,
     html: finalHTML
   };
 
+  console.log(emailProps);
   const info = await Email.sendEmail(emailProps);
 
   // TODO: Wrapper around callback insert for async await to work
   await EmailVerification.insert({
     accountId: user._id,
-    emailId: user.emails[0].email,
+    emailId: email,
     uniqueToken: uniqueString,
     messageId: info.messageId
   });

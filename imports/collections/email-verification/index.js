@@ -1,4 +1,5 @@
 import BaseMongoCollection from "../base-collection";
+import SimpleSchema from 'simpl-schema';
 
 const EmailVerificationCollection = new BaseMongoCollection(
   "emailVerification"
@@ -26,6 +27,6 @@ EmailVerificationCollection.schema = new SimpleSchema({
   messageId: { type: String }
 });
 
-EmailVerificationCollection.attachSchema(EmailVerificationCollection.schema);
+// EmailVerificationCollection.attachSchema(EmailVerificationCollection.schema);
 
 export const EmailVerification = EmailVerificationCollection;
