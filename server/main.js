@@ -72,7 +72,6 @@ Accounts.onCreateUser(async function(options, user) {
     user.profile.firstName = options.profile.firstName;
     user.profile.lastName = options.profile.lastName;
 
-    console.log(user);
     await Verifier.sendEmailVerification(user);
 
     return user;

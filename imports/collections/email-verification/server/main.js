@@ -1,4 +1,4 @@
-import EmailVerification from '../';
+import {EmailVerification} from '../';
 import Email from "../../emails";
 import {
   generateRandomString,
@@ -7,6 +7,17 @@ import {
 } from "./helpers";
 
 const Verifier = {};
+
+function insertToEmailVerification(doc) {
+  return new Promise((resolve, reject) => {
+    console.log("Inserting ", doc);
+    EmailVerification.insert(doc, (err, res) => {
+      console.log("Insert result", err, res);
+      if(err) return reject(err);
+      return resolve(res);
+    });
+  })
+}
 
 Verifier.sendEmailVerification = async function(user) {
   const email = user.emails[0].address;
@@ -33,11 +44,13 @@ Verifier.sendEmailVerification = async function(user) {
   await Email.sendEmail(emailProps);
 
   // TODO: Wrapper around callback insert for async await to work
-  await EmailVerification.insert({
+  const reply = await insertToEmailVerification({
     accountId: user._id,
     emailId: email,
     uniqueToken: uniqueString,
   });
+
+  console.log("Reply", reply);
 
   return true;
 };
@@ -56,7 +69,8 @@ Verifier.validateToken = async function(token) {
   const account = await Accounts.updateOne(
     {
       _id: accountId,
-      email: emailVerificationDoc.emailId
+      email: emailVerificationDoc.emailId,
+      verified: false
     },
     {
       $set: {

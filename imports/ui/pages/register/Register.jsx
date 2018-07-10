@@ -115,7 +115,7 @@ export default class Register extends Component {
 			                        <div className="col-md-12">
 			                        	<div className="alert alert-success m-b-0" role="alert">
 	                      					<button className="close" data-dismiss="alert"></button>
-	                      					Account created. Please wait for admin to verifiy account before <Link to={'/login'}>login</Link>.
+	                      					Account created. Please check your email to confirm your email address before <Link to={'/login'}>login</Link>.
 	                    				</div>
 			                        </div>
 			                    </div>
