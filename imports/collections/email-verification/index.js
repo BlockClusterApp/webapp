@@ -23,8 +23,7 @@ EmailVerificationCollection.schema = new SimpleSchema({
   },
   active: {
     type: Boolean
-  },
-  messageId: { type: String }
+  }
 });
 
 // EmailVerificationCollection.attachSchema(EmailVerificationCollection.schema);

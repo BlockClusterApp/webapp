@@ -37,16 +37,11 @@ spec:
           value: {{ template "server.monogUrl" . }}
         - name: API_HOST
           value: {{ .Values.API_HOST | quote }}
-        - name: EMAIL_USER
+        - name: SENDGRID_API_KEY
           valueFrom:
             secretKeyRef:
-              name: nodemailer-creds
-              key: user
-        - name: EMAIL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: nodemailer-creds
-              key: password
+              name: sendgrid-creds
+              key: apiKey
         - name: KUBERNETES_NODE_NAME
           valueFrom:
             fieldRef:
