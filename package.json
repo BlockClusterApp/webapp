@@ -12,13 +12,18 @@
     "apache-md5": "*",
     "babel-runtime": "^6.26.0",
     "base-64": "*",
-    "bcrypt": "1.0.3",
+    "bcrypt": "^1.0.3",
     "bignumber.js": "^7.2.1",
     "buffer": "^5.1.0",
     "crypto": "^1.0.1",
+    "eslint": "^5.1.0",
+    "eslint-config-airbnb-base": "^13.0.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-meteor": "^5.0.0",
     "eth-lightwallet": "3.0.1",
     "fibers": "2.0.0",
     "history": "4.7.2",
+    "html2pdf.js": "^0.9.0",
     "i": "^0.3.6",
     "jsonminify": "0.4.1",
     "meteor-node-stubs": "0.3.2",
@@ -37,5 +42,8 @@
     "redis-jwt": "1.4.0",
     "utf8": "*",
     "web3": "0.20.6"
+  },
+  "devDependencies": {
+    "eslint-plugin-import": "^2.13.0"
   }
 }
