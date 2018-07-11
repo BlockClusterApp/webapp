@@ -1,3 +1,4 @@
+import ModelHelpers from './model-helpers';
 import crypto from "crypto";
 import ejs from "ejs";
 
@@ -11,7 +12,7 @@ function generateRandomString(email, salt = "I<3BlockCluster") {
     .digest("hex");
 }
 
-function generateCompleteURL(param) {
+function generateCompleteURLForEmailVerification(param) {
   return `${
     process.env.API_HOST ? `https://${process.env.API_HOST}` : "http://localhost:3000"
   }/app/email-verify?key=${param}`;
@@ -44,7 +45,8 @@ function getEJSTemplate(
 
 export {
     generateRandomString,
-    generateCompleteURL,
-    getEJSTemplate
+    generateCompleteURLForEmailVerification,
+    getEJSTemplate,
+    ModelHelpers
   }
   

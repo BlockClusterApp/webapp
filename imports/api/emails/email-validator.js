@@ -1,17 +1,17 @@
-import { EmailVerification } from "../collections/email-verification";
+import { EmailVerification } from "../../collections/email-verification";
 import Email from "./email-sender";
 import {
   generateRandomString,
-  generateCompleteURL,
+  generateCompleteURLForEmailVerification,
   getEJSTemplate
-} from "../modules/helpers/server";
+} from "../../modules/helpers/server";
 
 const Verifier = {};
 
 Verifier.sendEmailVerification = async function(user) {
   const email = user.emails[0].address;
   const uniqueString = generateRandomString(email);
-  const link = generateCompleteURL(uniqueString);
+  const link = generateCompleteURLForEmailVerification(uniqueString);
 
   const ejsTemplate = await getEJSTemplate();
   const finalHTML = ejsTemplate({

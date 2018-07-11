@@ -1,4 +1,4 @@
-import { Email } from "../collections/emails";
+import { Email } from "../../collections/emails";
 // import nodemailer from "nodemailer";
 
 import sg from "@sendgrid/mail";
