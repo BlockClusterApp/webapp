@@ -1,4 +1,5 @@
-import BaseMongoCollection from "../base-collection";
+import { Mongo } from 'meteor/mongo';
+import AttachBaseHooks from '../base-collection/attach-hooks';
 import SimpleSchema from 'simpl-schema';
 
 const EmailSchema = new SimpleSchema({
@@ -10,7 +11,10 @@ const EmailSchema = new SimpleSchema({
   subject: { type: String }
 });
 
-const EmailModel = new BaseMongoCollection("Email");
+const EmailModel = new Mongo.Collection("email");
+
+AttachBaseHooks(EmailModel);
+EmailSchema.schema = EmailSchema;
 
 // EmailModel.attachSchema(EmailSchema);
 

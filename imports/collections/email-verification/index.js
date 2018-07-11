@@ -1,30 +1,38 @@
-import BaseMongoCollection from "../base-collection";
+import { Mongo } from 'meteor/mongo'
 import SimpleSchema from 'simpl-schema';
 
-const EmailVerificationCollection = new BaseMongoCollection(
+import AttachBaseHooks from '../base-collection/attach-hooks';
+
+const EmailVerificationCollection = new Mongo.Collection(
   "emailVerification"
 );
 
-// EmailVerificationCollection.schema = new SimpleSchema({
-//   accountId: {
-//     type: Mongo.ObjectID
-//   },
-//   emailId: {
-//     type: String
-//   },
-//   createdAt: {
-//     type: Date
-//   },
-//   updatedAt: {
-//     type: Date
-//   },
-//   uniqueToken: {
-//     type: String
-//   },
-//   active: {
-//     type: Boolean
-//   }
-// });
+AttachBaseHooks(EmailVerificationCollection);
+
+EmailVerificationCollection.insert({
+  test: "Hello"
+});
+
+EmailVerificationCollection.schema = new SimpleSchema({
+  accountId: {
+    type: Mongo.ObjectID
+  },
+  emailId: {
+    type: String
+  },
+  createdAt: {
+    type: Date
+  },
+  updatedAt: {
+    type: Date
+  },
+  uniqueToken: {
+    type: String
+  },
+  active: {
+    type: Boolean
+  }
+});
 
 // EmailVerificationCollection.attachSchema(EmailVerificationCollection.schema);
 

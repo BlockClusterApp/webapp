@@ -10,9 +10,7 @@ const Verifier = {};
 
 function insertToEmailVerification(doc) {
   return new Promise((resolve, reject) => {
-    console.log("Inserting ", doc);
     EmailVerification.insert(doc, (err, res) => {
-      console.log("Insert result", err, res);
       if(err) return reject(err);
       return resolve(res);
     });

@@ -1,7 +1,9 @@
-import Email from "../";
+import Email from "./promisified-functions";
 // import nodemailer from "nodemailer";
 
 import sg from "@sendgrid/mail";
+
+console.log(Email);
 
 // const sendEmail = function(emailOptions) {
 //   return new Promise((resolve, reject) => {
@@ -26,6 +28,7 @@ const sendEmail = function(emailOptions) {
     process.nextTick(async () => {
       sg.setApiKey(process.env.SENDGRID_API_KEY);
       const res = await sg.send(emailOptions);
+      await Email.insert(emailOptions);
       resolve();
     });
   });
