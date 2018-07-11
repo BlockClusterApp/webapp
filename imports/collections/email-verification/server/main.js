@@ -48,8 +48,6 @@ Verifier.sendEmailVerification = async function(user) {
     uniqueToken: uniqueString,
   });
 
-  console.log("Reply", reply);
-
   return true;
 };
 

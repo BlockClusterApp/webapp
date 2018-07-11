@@ -64,7 +64,7 @@ Accounts.validateLoginAttempt(function(options) {
     }
 });
 
-Accounts.onCreateUser(async function(options, user) {
+Accounts.onCreateUser(function(options, user) {
     user.firstLogin = false;
     user.profile = options.profile || {};
 
@@ -72,7 +72,7 @@ Accounts.onCreateUser(async function(options, user) {
     user.profile.firstName = options.profile.firstName;
     user.profile.lastName = options.profile.lastName;
 
-    await Verifier.sendEmailVerification(user);
+    Verifier.sendEmailVerification(user);
 
     return user;
 });

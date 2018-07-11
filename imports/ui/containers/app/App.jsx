@@ -7,6 +7,7 @@ import Main from "../main/Main.jsx"
 
 import Login from "../../pages/login/Login.jsx"
 import Register from "../../pages/register/Register.jsx"
+import EmailVerify from '../../pages/email-verify/EmailVerification.jsx';
 
 import "./App.css"
 
@@ -41,6 +42,7 @@ class App extends Component {
 				<Switch>
 					<Route exact path="/login" render={this.requireNotLoggedIn(Login)} />
 					<Route exact path="/register" render={this.requireNotLoggedIn(Register)} />
+					<Route exact path="/app/email-verify" component={EmailVerify} />
 					<Route path="/app" render={this.requireAuth(Main)} />
 					{/*<Route component={Notfound} />*/}
 				</Switch>

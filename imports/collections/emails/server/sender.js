@@ -3,8 +3,6 @@ import Email from "./promisified-functions";
 
 import sg from "@sendgrid/mail";
 
-console.log(Email);
-
 // const sendEmail = function(emailOptions) {
 //   return new Promise((resolve, reject) => {
 //     let transporter = nodemailer.createTransport({
