@@ -1,5 +1,5 @@
-import React, {Component} from "react";
-import {Link} from "react-router-dom"
+import React, {Component} from 'react';
+import {Link} from 'react-router-dom'
 import validations from "../../../modules/validations"
 
 export default class Register extends Component {
@@ -51,7 +51,7 @@ export default class Register extends Component {
 		                <img src="assets/img/logo/blockcluster.png" alt="logo" width="250" />
 					<h3>This BaaS provides the easiest way to create your blockchain consortiums</h3>
 		                <p>
-		                    Create a BlockCluster account. If you already have an account then click <Link to="/" className="text-info">here</Link> to login
+		                    Create a BlockCluster account. If you already have an account then click <Link to="/login" className="text-info">here</Link> to login
 		                </p>
 		                <form id="form-register" className="p-t-15" role="form" onSubmit={this.createAccount}>
 		                    <div className="row">
@@ -115,7 +115,7 @@ export default class Register extends Component {
 			                        <div className="col-md-12">
 			                        	<div className="alert alert-success m-b-0" role="alert">
 	                      					<button className="close" data-dismiss="alert"></button>
-	                      					Account created. Please wait for admin to verifiy account before <Link to={'/login'}>login</Link>.
+	                      					Account created. Please check your email to confirm your email address before <Link to={'/login'}>login</Link>.
 	                    				</div>
 			                        </div>
 			                    </div>

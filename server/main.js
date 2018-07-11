@@ -30,6 +30,8 @@ import {
     BCAccounts
 } from "../imports/collections/bcAccounts/bcAccounts.js"
 
+import Verifier from '../imports/api/emails/email-validator'
+
 var Future = Npm.require("fibers/future");
 var lightwallet = Npm.require("eth-lightwallet");
 import Web3 from "web3";
@@ -69,6 +71,9 @@ Accounts.onCreateUser(function(options, user) {
     // Assigns first and last names to the newly created user object
     user.profile.firstName = options.profile.firstName;
     user.profile.lastName = options.profile.lastName;
+
+    Verifier.sendEmailVerification(user);
+
     return user;
 });
 
