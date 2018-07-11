@@ -1,9 +1,5 @@
 import React, { Component } from "react";
 import queryString from 'stringquery';
-import { withTracker } from "meteor/react-meteor-data";
-import { withRouter } from 'react-router-dom'
-import LaddaButton, { S, SLIDE_UP } from "react-ladda";
-import { Link } from "react-router-dom"
 
 export default class EmailVerification extends Component {
   constructor(props) {
@@ -34,16 +30,16 @@ export default class EmailVerification extends Component {
         this.setState({
           disabled: true,
           showMessage: true,
-          resultMessage: 'Congrats...!!! Your email has been verified. You would be automatically redirected to login page in 5 seconds. Else <a href="/app/login"> Click here </a>'
+          resultMessage: <p>Congrats...!!! Your email has been verified. You would be automatically redirected to login page in 5 seconds. Else <a href="/app/login"> Click here </a></p>
         });
         setTimeout(() => {
-          window.open('/login');
+          window.open('/login', "_self");
         }, 5 * 1000);
       } else {
         this.setState({
           disabled: false,
           showMessage: true,
-          resultMessage: 'Email id does not match or the link has expired. Kindly try again...'
+          resultMessage: <p>Email id does not match or the link has expired. Kindly try again...</p>
         })
       }
     });
@@ -63,7 +59,7 @@ export default class EmailVerification extends Component {
             </div>
             <button className="btn btn-complete btn-cons m-t-10" onClick={this.submitToVerify.bind(this)} disabled={this.state.disabled}><i className="fa fa-sign-in" aria-hidden="true"></i>&nbsp;&nbsp;Verify</button>
             <br /><br />
-          {this.state.showMessage ? <p>{this.state.resultMessage}</p> : ''}
+          {this.state.showMessage ? this.state.resultMessage: ''}
           <hr style={{ borderTop: "1px solid #ccc" }} />
           <p className="small no-margin pull-left sm-pull-reset" style={{ textAlign: "center", fontSize: "0.9em", color: "#888", width: "100%" }}>
             <span className="hint-text">Copyright &copy; 2017 </span>

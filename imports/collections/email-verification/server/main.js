@@ -1,4 +1,4 @@
-import EmailVerification from "./promisified-functions";
+import {EmailVerification} from "../";
 import Email from "../../emails";
 import {
   generateRandomString,
@@ -33,7 +33,7 @@ Verifier.sendEmailVerification = async function(user) {
   await Email.sendEmail(emailProps);
 
   // TODO: Wrapper around callback insert for async await to work
-  const reply = await EmailVerification.insert({
+  const reply = EmailVerification.insert({
     accountId: user._id,
     emailId: email,
     uniqueToken: uniqueString
@@ -43,40 +43,38 @@ Verifier.sendEmailVerification = async function(user) {
 };
 
 Verifier.validateToken = function(token, emailId) {
-  console.log("Validating token", token, emailId);
   return new Promise(async (resolve, reject) => {
     let emailVerificationDoc;
     try {
-      emailVerificationDoc = await EmailVerification.findOne({
+      emailVerificationDoc = EmailVerification.find({
         uniqueToken: token,
         emailId,
         active: true
-      });
+      }).fetch()[0];
     } catch (err) {
       console.log(err);
       return resolve(false);
     }
 
-    console.log(emailVerificationDoc);
+    if(!emailVerificationDoc) {
+      return resolve(false)
+    }
 
     const accountId = emailVerificationDoc.accountId;
-    Accounts.updateOne(
+    const updateResult = Meteor.users.update(
       {
         _id: accountId,
-        email: emailVerificationDoc.emailId,
-        verified: false
+        "emails.address": emailVerificationDoc.emailId,
+        "emails.verified": false
       },
       {
         $set: {
           "emails.$.verified": true
         }
-      },
-      {
-        upsert: false
-      },
-      async (err, res) => {
-        try {
-          await EmailVerification.updateOne(
+      }
+    );
+        
+    const emailUpdateResult = EmailVerification.update(
             {
               _id: emailVerificationDoc._id
             },
@@ -85,14 +83,9 @@ Verifier.validateToken = function(token, emailId) {
                 active: false
               }
             }
-          );
-        } catch (_err) {
-          return reject(_err);
-        }
-        if (err) return reject(err);
-        return resolve(res);
-      }
-    );
+          ); 
+
+      return resolve(true);
   });
 };
 
