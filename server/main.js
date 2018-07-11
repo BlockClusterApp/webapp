@@ -1,4 +1,6 @@
 require("../imports/startup/server/")
+require('../imports/api/emails/email-validator')
+
 import {
     Networks
 } from "../imports/collections/networks/networks.js"
