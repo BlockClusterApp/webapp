@@ -9,10 +9,6 @@ const EmailVerificationCollection = new Mongo.Collection(
 
 AttachBaseHooks(EmailVerificationCollection);
 
-EmailVerificationCollection.insert({
-  test: "Hello"
-});
-
 EmailVerificationCollection.schema = new SimpleSchema({
   accountId: {
     type: Mongo.ObjectID

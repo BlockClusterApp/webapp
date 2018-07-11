@@ -1,4 +1,4 @@
-import {EmailVerification} from '../';
+import EmailVerification from "./promisified-functions";
 import Email from "../../emails";
 import {
   generateRandomString,
@@ -7,15 +7,6 @@ import {
 } from "./helpers";
 
 const Verifier = {};
-
-function insertToEmailVerification(doc) {
-  return new Promise((resolve, reject) => {
-    EmailVerification.insert(doc, (err, res) => {
-      if(err) return reject(err);
-      return resolve(res);
-    });
-  })
-}
 
 Verifier.sendEmailVerification = async function(user) {
   const email = user.emails[0].address;
@@ -42,43 +33,67 @@ Verifier.sendEmailVerification = async function(user) {
   await Email.sendEmail(emailProps);
 
   // TODO: Wrapper around callback insert for async await to work
-  const reply = await insertToEmailVerification({
+  const reply = await EmailVerification.insert({
     accountId: user._id,
     emailId: email,
-    uniqueToken: uniqueString,
+    uniqueToken: uniqueString
   });
 
   return true;
 };
 
-Verifier.validateToken = async function(token) {
-  const emailVerificationDoc = await EmailVerification.findOne({
-    uniqueToken: token,
-    active: true
-  });
-
-  if (!emailVerificationDoc) {
-    throw new Error("Invalid token");
-  }
-
-  const accountId = emailVerificationDoc.accountId;
-  const account = await Accounts.updateOne(
-    {
-      _id: accountId,
-      email: emailVerificationDoc.emailId,
-      verified: false
-    },
-    {
-      $set: {
-        "emails.$.verified": true
-      }
-    },
-    {
-      upsert: false
+Verifier.validateToken = function(token, emailId) {
+  console.log("Validating token", token, emailId);
+  return new Promise(async (resolve, reject) => {
+    let emailVerificationDoc;
+    try {
+      emailVerificationDoc = await EmailVerification.findOne({
+        uniqueToken: token,
+        emailId,
+        active: true
+      });
+    } catch (err) {
+      console.log(err);
+      return resolve(false);
     }
-  );
 
-  return true;
+    console.log(emailVerificationDoc);
+
+    const accountId = emailVerificationDoc.accountId;
+    Accounts.updateOne(
+      {
+        _id: accountId,
+        email: emailVerificationDoc.emailId,
+        verified: false
+      },
+      {
+        $set: {
+          "emails.$.verified": true
+        }
+      },
+      {
+        upsert: false
+      },
+      async (err, res) => {
+        try {
+          await EmailVerification.updateOne(
+            {
+              _id: emailVerificationDoc._id
+            },
+            {
+              $set: {
+                active: false
+              }
+            }
+          );
+        } catch (_err) {
+          return reject(_err);
+        }
+        if (err) return reject(err);
+        return resolve(res);
+      }
+    );
+  });
 };
 
 export default Verifier;
