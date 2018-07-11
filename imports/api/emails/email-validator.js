@@ -65,11 +65,10 @@ Verifier.validateToken = function(token, emailId) {
       {
         _id: accountId,
         "emails.address": emailVerificationDoc.emailId,
-        "emails.verified": false
       },
       {
         $set: {
-          "emails.$.verified": true
+          "emails.$.emailVerified": true
         }
       }
     );
