@@ -1,5 +1,4 @@
 import {Networks} from "../collections/networks/networks.js"
-import {Utilities} from "../collections/utilities/utilities.js"
 import smartContracts from "../modules/smart-contracts"
 import Web3 from "web3";
 import RedisJwt from "redis-jwt";
@@ -15,11 +14,13 @@ import {
 import {
     AcceptedOrders
 } from "../collections/acceptedOrders/acceptedOrders.js"
+import Config from '../modules/config/server';
+
 var BigNumber = require('bignumber.js');
 
 const jwt = new RedisJwt({
-    host: Utilities.find({"name": "redis"}).fetch()[0].ip,
-    port: Utilities.find({"name": "redis"}).fetch()[0].port,
+    host: Config.redisHost,
+    port: Config.redisPort,
     secret: 'rch4nuct90i3t9ik#%$^&u3jrmv29r239cr2',
     multiple: true
 })
@@ -113,7 +114,7 @@ JsonRoutes.add("post", "/api/logout", function(req, res, next) {
 JsonRoutes.add("post", "/api/assets/issueSoloAsset", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
-    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    var workerNodeIP = Config.workerNodeIP;
     let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
 
     var assetsContract = web3.eth.contract(smartContracts.assets.abi);
@@ -140,7 +141,7 @@ JsonRoutes.add("post", "/api/assets/issueSoloAsset", function (req, res, next) {
 JsonRoutes.add("post", "/api/assets/issueBulkAsset", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
-    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    var workerNodeIP = Config.workerNodeIP;
     let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
 
     var assetsContract = web3.eth.contract(smartContracts.assets.abi);
@@ -162,7 +163,7 @@ JsonRoutes.add("post", "/api/assets/issueBulkAsset", function (req, res, next) {
 JsonRoutes.add("post", "/api/assets/transferSoloAsset", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
-    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    var workerNodeIP = Config.workerNodeIP;
     let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
 
     var assetsContract = web3.eth.contract(smartContracts.assets.abi);
@@ -182,7 +183,7 @@ JsonRoutes.add("post", "/api/assets/transferSoloAsset", function (req, res, next
 JsonRoutes.add("post", "/api/assets/transferBulkAsset", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
-    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    var workerNodeIP = Config.workerNodeIP;
     let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
 
     var assetsContract = web3.eth.contract(smartContracts.assets.abi);
@@ -204,7 +205,7 @@ JsonRoutes.add("post", "/api/assets/transferBulkAsset", function (req, res, next
 JsonRoutes.add("post", "/api/assets/getSoloAssetInfo", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
-    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    var workerNodeIP = Config.workerNodeIP;
     let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
 
     var assetsContract = web3.eth.contract(smartContracts.assets.abi);
@@ -239,7 +240,7 @@ JsonRoutes.add("post", "/api/assets/getSoloAssetInfo", function (req, res, next)
 JsonRoutes.add("post", "/api/assets/getBulkAssetBalance", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
-    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    var workerNodeIP = Config.workerNodeIP;
     let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
 
     var assetsContract = web3.eth.contract(smartContracts.assets.abi);
@@ -258,7 +259,7 @@ JsonRoutes.add("post", "/api/assets/getBulkAssetBalance", function (req, res, ne
 JsonRoutes.add("post", "/api/assets/updateAssetInfo", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
-    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    var workerNodeIP = Config.workerNodeIP;
     let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
 
     var assetsContract = web3.eth.contract(smartContracts.assets.abi);
@@ -279,7 +280,7 @@ JsonRoutes.add("post", "/api/assets/updateAssetInfo", function (req, res, next) 
 JsonRoutes.add("post", "/api/assets/closeAsset", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
-    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    var workerNodeIP = Config.workerNodeIP;
     let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
 
     var assetsContract = web3.eth.contract(smartContracts.assets.abi);
@@ -300,7 +301,7 @@ JsonRoutes.add("post", "/api/assets/closeAsset", function (req, res, next) {
 JsonRoutes.add("post", "/api/assets/placeOrder", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
-    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    var workerNodeIP = Config.workerNodeIP;
     let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
 
     var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
@@ -371,7 +372,7 @@ JsonRoutes.add("post", "/api/assets/placeOrder", function (req, res, next) {
 JsonRoutes.add("post", "/api/assets/fulfillOrder", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
-    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    var workerNodeIP = Config.workerNodeIP;
 
     let order = Orders.find({instanceId: req.networkId, atomicSwapHash: req.body.orderId}).fetch()[0];
     let toNetwork = Networks.find({instanceId: req.body.toNetworkId}).fetch()[0];
@@ -479,7 +480,7 @@ JsonRoutes.add("post", "/api/assets/fulfillOrder", function (req, res, next) {
 JsonRoutes.add("post", "/api/assets/cancelOrder", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
-    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    var workerNodeIP = Config.workerNodeIP;
     let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
 
     var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
@@ -536,7 +537,7 @@ JsonRoutes.add("post", "/api/searchStreamsItems", function (req, res, next) {
 JsonRoutes.add("post", "/api/streams/publish", function (req, res, next) {
     var network = Networks.find({instanceId: req.networkId}).fetch()[0]
     var accounts = network.accounts;
-    var workerNodeIP = Utilities.find({"name": "workerNodeIP"}).fetch()[0].value;
+    var workerNodeIP = Config.workerNodeIP;
     let web3 = new Web3(new Web3.providers.HttpProvider("http://" + workerNodeIP + ":" + network.rpcNodePort));
 
     var streamsContract = web3.eth.contract(smartContracts.streams.abi);
