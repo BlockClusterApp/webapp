@@ -16,6 +16,6 @@ server:
     minReplicas: 1
     maxRepicas: 5
 
-NODE_ENV: dev
-image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/blockcluster-webapp
-commitHash: 9ea5e20fd7ae7f957e3581294d3d99c7a13ba73a
+# NODE_ENV: dev
+# image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/blockcluster-webapp
+# commitHash: 9ea5e20fd7ae7f957e3581294d3d99c7a13ba73a
