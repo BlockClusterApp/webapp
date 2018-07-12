@@ -14,6 +14,7 @@ helm --debug \
   upgrade \
   --install \
   --set ${setVariables} \
+  --namespace ${NODE_ENV} \
   $releaseName \
   ./helm-chart
 

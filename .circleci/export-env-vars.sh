@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+export COMMIT_HASH=${CIRCLE_SHA1}
 if [ "$CIRCLE_TAG" = "production" ];
 then
   export NODE_ENV=production
