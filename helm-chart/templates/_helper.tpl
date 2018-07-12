@@ -57,7 +57,7 @@ mongodb://mongo.{{ template "server.namespace" . }}.svc.cluster.local:27017
 {{- end -}}
 
 {{- define "envs.redisHost" }}
-{{- if eq .NODE_ENV "production" -}}
+{{- if eq .Values.NODE_ENV "production" -}}
 redis.{{ template "server.namespace" . }}.svc.cluster.local
 {{- else -}}
 redis.{{ template "server.namespace" . }}.svc.cluster.local
@@ -69,7 +69,7 @@ redis.{{ template "server.namespace" . }}.svc.cluster.local
 {{- end -}}
 
 {{- define "envs.kubeRestApiHost" -}}
-{{- if eq .NODE_ENV "production" -}}
+{{- if eq .Values.NODE_ENV "production" -}}
 https://api.k8s-production.blockcluster.io
 {{- else -}}
 "http://34.217.101.70:8000"
