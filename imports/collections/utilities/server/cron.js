@@ -1,5 +1,5 @@
 import { Utilities } from "../utilities.js";
-import Config from "../../../../private/config";
+import Config from "../../../modules/config";
 
 //var cmd = require("node-cmd");
 

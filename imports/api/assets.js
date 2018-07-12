@@ -15,11 +15,13 @@ import {
 import {
     AcceptedOrders
 } from "../collections/acceptedOrders/acceptedOrders.js"
+import Config from '../modules/config';
+
 var BigNumber = require('bignumber.js');
 
 const jwt = new RedisJwt({
-    host: Utilities.find({"name": "redis"}).fetch()[0].ip,
-    port: Utilities.find({"name": "redis"}).fetch()[0].port,
+    host: Config.redisHost,
+    port: Config.redisPort,
     secret: 'rch4nuct90i3t9ik#%$^&u3jrmv29r239cr2',
     multiple: true
 })

@@ -33,7 +33,7 @@ import {
 } from "../imports/collections/bcAccounts/bcAccounts.js"
 
 import Verifier from '../imports/api/emails/email-validator'
-import Config from '../private/config';
+import Config from '../imports/modules/config';
 
 var Future = Npm.require("fibers/future");
 var lightwallet = Npm.require("eth-lightwallet");
