@@ -1,57 +1,78 @@
-import {Utilities} from "../utilities.js"
-import Config from '../../../../private/config';
+import { Utilities } from "../utilities.js";
+import Config from "../../../../private/config";
 
 //var cmd = require("node-cmd");
 
 function updateWorkerNodeIP() {
-	Utilities.upsert({
-		name: "workerNodeIP",
-	}, {
-		$set: {
-			"value": Config.workerNodeIP
-		}
-	});
+  Utilities.upsert(
+    {
+      name: "workerNodeIP"
+    },
+    {
+      $set: {
+        value: Config.workerNodeIP
+      }
+    }
+  );
 }
 
 function updateWorkerNodeDomainName() {
-	Utilities.upsert({
-		name: "workerNodeDomainName",
-	}, {
-		$set: {
-			"value": Config.apiHost.split("://")[1]
-		}
-	});
+  Utilities.upsert(
+    {
+      name: "workerNodeDomainName"
+    },
+    {
+      $set: {
+        value: Config.apiHost.split("://")[1]
+      }
+    }
+  );
 }
 
 function updateKuberREST_IP() {
-	Utilities.upsert({
-		name: "kuberREST_IP",
-	}, {
-		$set: {
-			"value": Config.kubeRestApiHost
-		}
-	});
+  Utilities.upsert(
+    {
+      name: "kuberREST_IP"
+    },
+    {
+      $set: {
+        value: Config.kubeRestApiHost
+      }
+    }
+  );
 }
 
 function updateFirewall_Port() {
-	Utilities.upsert({
-		name: "firewall_Port",
-	}, {
-		$set: {
-			"value": Config.firewallPort
-		}
-	});
+  Utilities.upsert(
+    {
+      name: "firewall_Port"
+    },
+    {
+      $set: {
+        value: Config.firewallPort
+      }
+    }
+  );
 }
 
 function updateRedis_Info() {
-	Utilities.upsert({
-		name: "redis",
-	}, {
-		$set: {
-			"ip": Config.redisHost,
-			"port": Config.redisPort
-		}
-	});
+  Utilities.upsert(
+    {
+      name: "redis"
+    },
+    {
+      $set: {
+        ip: Config.redisHost,
+        port: Config.redisPort
+      }
+    }
+  );
 }
 
-export {updateWorkerNodeIP, updateKuberREST_IP, updateFirewall_Port, updateRedis_Info, updateWorkerNodeDomainName}
+export {
+  updateWorkerNodeIP,
+  updateKuberREST_IP,
+  updateFirewall_Port,
+  updateRedis_Info,
+  updateWorkerNodeDomainName
+};
