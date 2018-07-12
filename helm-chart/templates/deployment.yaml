@@ -37,6 +37,18 @@ spec:
           value: {{ template "server.monogUrl" . }}
         - name: API_HOST
           value: {{ .Values.API_HOST | quote }}
+        - name: WORKER_NODE_IP
+          value: {{ template "envs.workerNodeIP" . }}
+        - name: REDIS_HOST
+          value: {{ template "envs.redisHost" . }}
+        - name: REDIS_PORT
+          value: {{ template "envs.redisPort" . }}
+        - name: KUBE_REST_API_HOST
+          value: {{ template "envs.kubeRestApiHost" . }}
+        - name: FIREWALL_PORT
+          value: {{ template "envs.firewallPort" . }}
+        - name: NAMESPACE
+          value: {{ template "server.namespace" . }}
         - name: SENDGRID_API_KEY
           valueFrom:
             secretKeyRef:
