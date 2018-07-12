@@ -12,23 +12,30 @@ function generateRandomString(email, salt = "I<3BlockCluster") {
     .digest("hex");
 }
 
-function generateCompleteURLForEmailVerification(param) {
+function generateURL(route){
   return `${
     process.env.API_HOST ? `https://${process.env.API_HOST}` : "http://localhost:3000"
-  }/app/email-verify?key=${param}`;
+  }${route}`;
 }
 
-function getEJSTemplate(
-  filePath = path.join(
+function generateCompleteURLForEmailVerification(query) {
+  return generateURL(`/app/email-verify?key=${query}`);
+}
+
+function generateCompleteURLForPasswordReset(param) {
+  return generateURL(`/app/reset-password?key=${query}`);
+}
+
+function getEJSTemplate({filePath, fileName}) {
+  const _filePath = filePath || path.join(
     process.cwd().split(".meteor")[0],
     "imports",
     "modules",
     "template",
-    "email-verification.ejs"
-  )
-) {
+    fileName
+    )
   return new Promise((resolve, reject) => {
-    fs.readFile(filePath, (err, buffer) => {
+    fs.readFile(_filePath, (err, buffer) => {
       if (err) {
         return reject(err);
       }
@@ -36,7 +43,7 @@ function getEJSTemplate(
       return resolve(
         ejs.compile(content, {
           cache: true,
-          filename: filePath
+          filename: _filePath
         })
       );
     });
@@ -46,6 +53,7 @@ function getEJSTemplate(
 export {
     generateRandomString,
     generateCompleteURLForEmailVerification,
+    generateCompleteURLForPasswordReset,
     getEJSTemplate,
     ModelHelpers
   }

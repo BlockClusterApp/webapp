@@ -73,8 +73,8 @@ export default class Login extends Component {
 	                                    <label htmlFor="checkbox1">Keep Me Signed in</label>
 	                                </div>
 	                            </div>
-	                            <div className="col-md-6 d-flex align-items-center justify-content-end">
-	                                <a href="#" className="text-info small">Forgot Password?</a> &nbsp;<small>|</small>&nbsp; <Link to="/register" className="text-info">Register</Link>
+	                            <div className="col-md-6 d-flex align-items-center justify-content-end form-links">
+	                                <Link to="/forgot-password" >Forgot Password?</Link> &nbsp;<small>|</small>&nbsp; <Link to="/register" >Register</Link>
 	                            </div>
 	                        </div>
 	                        <button className="btn btn-complete btn-cons m-t-10" type="submit"><i className="fa fa-sign-in" aria-hidden="true"></i>&nbsp;&nbsp;Sign in</button>
