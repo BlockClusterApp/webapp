@@ -1,7 +1,7 @@
 import ModelHelpers from "./model-helpers";
 import crypto from "crypto";
 import ejs from "ejs";
-import Config from '../../config';
+import Config from '../../config/server';
 
 const fs = Npm.require("fs");
 const path = Npm.require("path");

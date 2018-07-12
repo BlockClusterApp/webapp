@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import {Link} from "react-router-dom"
 import {withTracker} from "meteor/react-meteor-data";
-import {Utilities} from "../../../collections/utilities/utilities.js"
+import Config from '../../../modules/config/client';
 
 class Navbar extends Component {
 	componentWillUnmount() {
@@ -108,7 +108,7 @@ class Navbar extends Component {
 
 export default withTracker(() => {
     return {
-        kuberREST_IP: Utilities.find({"name": "kuberREST_IP"}).fetch(),
+        kuberREST_IP: Config.kubeRestApiHost,
         subscriptions: [Meteor.subscribe("utilities")]
     }
 })(Navbar)

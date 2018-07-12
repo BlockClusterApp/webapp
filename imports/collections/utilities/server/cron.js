@@ -1,5 +1,5 @@
 import { Utilities } from "../utilities.js";
-import Config from "../../../modules/config";
+import Config from "../../../modules/config/server";
 
 //var cmd = require("node-cmd");
 
@@ -23,7 +23,7 @@ function updateWorkerNodeDomainName() {
     },
     {
       $set: {
-        value: Config.apiHost.split("://")[1]
+        value: Config.workderNodeDomainName
       }
     }
   );
