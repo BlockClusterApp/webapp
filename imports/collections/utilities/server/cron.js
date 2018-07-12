@@ -1,4 +1,5 @@
 import {Utilities} from "../utilities.js"
+import Config from '../../../../private/config';
 
 //var cmd = require("node-cmd");
 
@@ -7,7 +8,7 @@ function updateWorkerNodeIP() {
 		name: "workerNodeIP",
 	}, {
 		$set: {
-			"value": "52.43.83.54"
+			"value": Config.workerNodeIP
 		}
 	});
 }
@@ -17,7 +18,7 @@ function updateWorkerNodeDomainName() {
 		name: "workerNodeDomainName",
 	}, {
 		$set: {
-			"value": "app.blockcluster.io"
+			"value": Config.apiHost.split("://")[1]
 		}
 	});
 }
@@ -27,7 +28,7 @@ function updateKuberREST_IP() {
 		name: "kuberREST_IP",
 	}, {
 		$set: {
-			"value": "34.208.153.18"
+			"value": Config.kubeRestApiHost
 		}
 	});
 }
@@ -37,7 +38,7 @@ function updateFirewall_Port() {
 		name: "firewall_Port",
 	}, {
 		$set: {
-			"value": "31988"
+			"value": Config.firewallPort
 		}
 	});
 }
@@ -47,8 +48,8 @@ function updateRedis_Info() {
 		name: "redis",
 	}, {
 		$set: {
-			"ip": "52.43.83.54",
-			"port": "30296"
+			"ip": Config.redisHost,
+			"port": Config.redisPort
 		}
 	});
 }

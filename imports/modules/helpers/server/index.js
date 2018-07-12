@@ -1,6 +1,7 @@
-import ModelHelpers from './model-helpers';
+import ModelHelpers from "./model-helpers";
 import crypto from "crypto";
 import ejs from "ejs";
+import config from "../../../../private/config";
 
 const fs = Npm.require("fs");
 const path = Npm.require("path");
@@ -13,9 +14,7 @@ function generateRandomString(email, salt = "I<3BlockCluster") {
 }
 
 function generateCompleteURLForEmailVerification(param) {
-  return `${
-    process.env.API_HOST ? `https://${process.env.API_HOST}` : "http://localhost:3000"
-  }/app/email-verify?key=${param}`;
+  return `${config.apiHost}/app/email-verify?key=${param}`;
 }
 
 function getEJSTemplate(
@@ -44,9 +43,8 @@ function getEJSTemplate(
 }
 
 export {
-    generateRandomString,
-    generateCompleteURLForEmailVerification,
-    getEJSTemplate,
-    ModelHelpers
-  }
-  
+  generateRandomString,
+  generateCompleteURLForEmailVerification,
+  getEJSTemplate,
+  ModelHelpers
+};
