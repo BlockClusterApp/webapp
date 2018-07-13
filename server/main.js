@@ -807,12 +807,12 @@ spec:
 
         return myFuture.wait();
     },
-    "vote": function(networkId, toVote, locationCode="us-west-2") {
+    "vote": function(networkId, toVote) {
         var myFuture = new Future();
         var network = Networks.find({
             _id: networkId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
         web3.currentProvider.sendAsync({
             method: "istanbul_propose",
             params: [toVote, true],
@@ -829,12 +829,12 @@ spec:
 
         return myFuture.wait();
     },
-    "unVote": function(networkId, toVote, locationCode="us-west-2") {
+    "unVote": function(networkId, toVote) {
         var myFuture = new Future();
         var network = Networks.find({
             _id: networkId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
         web3.currentProvider.sendAsync({
             method: "istanbul_propose",
             params: [toVote, false],
@@ -857,7 +857,7 @@ spec:
             _id: networkId
         }).fetch()[0];
 
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
 
         web3.currentProvider.sendAsync({
             method: "personal_newAccount",
@@ -921,7 +921,7 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
 
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
@@ -957,7 +957,7 @@ spec:
         var network = Networks.find({
             instanceId: networkId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
         var parts = assets.getBulkAssetParts.call(assetName)
@@ -979,7 +979,7 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
         assets.issueSoloAsset.sendTransaction(assetName, toAddress, identifier, {
@@ -998,7 +998,7 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
         var parts = assets.getBulkAssetParts.call(assetName)
@@ -1019,7 +1019,7 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
         assets.transferOwnershipOfSoloAsset.sendTransaction(assetName, identifier, toAddress, {
@@ -1038,7 +1038,7 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
         var parts = assets.getBulkAssetParts.call(assetName)
@@ -1057,7 +1057,7 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
         properties = []
@@ -1111,7 +1111,7 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
 
@@ -1133,7 +1133,7 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
 
@@ -1171,7 +1171,7 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
         var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
         var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
@@ -1258,7 +1258,7 @@ spec:
         var network = Networks.find({
             instanceId: buyerInstanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
         var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
         var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
@@ -1321,7 +1321,7 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
         var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
         var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
@@ -1362,7 +1362,7 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
         var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
@@ -1457,7 +1457,7 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
 
         var streamsContract = web3.eth.contract(smartContracts.streams.abi);
         var streams = streamsContract.at(network.streamsContractAddress);
@@ -1480,7 +1480,7 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + network.rpcNodePort));
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
 
         var streamsContract = web3.eth.contract(smartContracts.streams.abi);
         var streams = streamsContract.at(network.streamsContractAddress);

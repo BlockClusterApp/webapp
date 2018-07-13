@@ -10,7 +10,7 @@ function updateWorkerNodeIP() {
     },
     {
       $set: {
-        value: Config.workerNodeIP
+        value: Config.workerNodeIP()
       }
     }
   );
