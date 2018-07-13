@@ -3,9 +3,9 @@ import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import {withTracker} from "meteor/react-meteor-data";
 import {withRouter} from 'react-router-dom'
 import {Networks} from "../../../collections/networks/networks.js"
-import {Utilities} from "../../../collections/utilities/utilities.js"
 import notifications from "../../../modules/notifications"
 import {Link} from "react-router-dom"
+import Config from '../../../modules/config/client';
 
 import "./APIsCreds.scss"
 
@@ -277,15 +277,15 @@ export default withTracker((props) => {
     return {
         network: Networks.find({instanceId: props.match.params.id}).fetch(),
         networks: Networks.find({}).fetch(),
-        workerNodeIP: Utilities.find({"name": "workerNodeIP"}).fetch(),
-        workerNodeDomainName: Utilities.find({"name": "workerNodeDomainName"}).fetch(),
-        firewallPort: Utilities.find({"name": "firewall_Port"}).fetch(),
+        workerNodeIP: Config.workerNodeIP,
+        workerNodeDomainName: Config.workderNodeDomainName,
+        firewallPort: Config.firewallPort,
         subscriptions: [Meteor.subscribe("networks", {
             onReady: function (){
         		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
         	}
-        }), Meteor.subscribe("utilities")]
+        })]
     }
 })(withRouter(APIsCreds))

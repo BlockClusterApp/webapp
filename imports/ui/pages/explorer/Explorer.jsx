@@ -1,13 +1,13 @@
 import React, {Component} from "react";
 import {withTracker} from "meteor/react-meteor-data";
 import {Networks} from "../../../collections/networks/networks.js"
-import {Utilities} from "../../../collections/utilities/utilities.js"
 import helpers from "../../../modules/helpers"
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
 import {withRouter} from 'react-router-dom'
 var Web3 = require('web3');
 var abiDecoder = require('abi-decoder');
-import {Link} from "react-router-dom"
+import {Link} from "react-router-dom";
+import Config from '../../../modules/config/client'
 
 import "./Explorer.scss"
 
@@ -521,8 +521,8 @@ export default withTracker((props) => {
         			props.history.push("/app/networks");
         		}
         	}
-        }), Meteor.subscribe("utilities")],
-        workerNodeIP: Utilities.find({"name": "workerNodeIP"}).fetch(),
-        workerNodeDomainName: Utilities.find({"name": "workerNodeDomainName"}).fetch()
+        })],
+        workerNodeIP: Config.workerNodeIP,
+        workerNodeDomainName: Config.workderNodeDomainName
     }
 })(withRouter(Explorer))

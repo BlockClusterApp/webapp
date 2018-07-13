@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import {Link} from "react-router-dom"
 import {withTracker} from "meteor/react-meteor-data";
-import {Utilities} from "../../../collections/utilities/utilities.js"
+import Config from '../../../modules/config/client';
 
 class Navbar extends Component {
 	componentWillUnmount() {
@@ -63,7 +63,7 @@ class Navbar extends Component {
 	                    </li>
 						{(this.props.kuberREST_IP[0] !== undefined) &&
 							<li className="">
-			                    <Link to={"http://" + this.props.kuberREST_IP[0].value + ":5001/ipfs/QmPhnvn747LqwPYMJmQVorMaGbMSgA7mRRoyyZYz3DoZRQ/#/home"} target="_blank" className="detailed">
+			                    <Link to={this.props.kuberREST_IP.split("://")[1].split(":")[0] + ":5001/ipfs/QmPhnvn747LqwPYMJmQVorMaGbMSgA7mRRoyyZYz3DoZRQ/#/home"} target="_blank" className="detailed">
 		                    		<span className="title">IPFS</span>
 		                        	<span className="details">Store Files</span>
 		                    	</Link>
@@ -91,7 +91,7 @@ class Navbar extends Component {
 			            </li>
 						{(this.props.kuberREST_IP[0] !== undefined) &&
 	                    	<li className="">
-		                    	<Link target="_blank" to={"http://" + this.props.kuberREST_IP[0].value + ":8000/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#!/overview?namespace=default"} className="detailed">
+		                    	<Link target="_blank" to={this.props.kuberREST_IP + "/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#!/overview?namespace=default"} className="detailed">
 		                    		<span className="title">Infrastructure</span>
 		                        	<span className="details">View Kubernetes</span>
 		                    	</Link>
@@ -108,7 +108,7 @@ class Navbar extends Component {
 
 export default withTracker(() => {
     return {
-        kuberREST_IP: Utilities.find({"name": "kuberREST_IP"}).fetch(),
+        kuberREST_IP: Config.kubeRestApiHost,
         subscriptions: [Meteor.subscribe("utilities")]
     }
 })(Navbar)

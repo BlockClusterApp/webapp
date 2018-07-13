@@ -1,13 +1,13 @@
 import React, {Component} from "react";
 import {withTracker} from "meteor/react-meteor-data";
 import {Networks} from "../../../collections/networks/networks.js"
-import {Utilities} from "../../../collections/utilities/utilities.js"
 import {withRouter} from 'react-router-dom'
 import helpers from "../../../modules/helpers"
 import notifications from "../../../modules/notifications"
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
-import {Link} from "react-router-dom"
+import {Link} from "react-router-dom";
+import Config from "../../../modules/config/client";
 
 import "./ViewEditNetwork.scss"
 
@@ -527,13 +527,13 @@ class ViewEditNetwork extends Component {
 export default withTracker(function(props) {
     return {
         network: Networks.find({instanceId: props.match.params.id}).fetch(),
-		workerNodeIP: Utilities.find({"name": "workerNodeIP"}).fetch(),
+		workerNodeIP: Config.workerNodeIP,
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
         		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
         	}
-        }), Meteor.subscribe("utilities")]
+        })]
     }
 })(withRouter(ViewEditNetwork))
