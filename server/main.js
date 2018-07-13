@@ -1,5 +1,6 @@
 require("../imports/startup/server/")
 require('../imports/api/emails/email-validator')
+require('../imports/api/emails/forgot-password')
 
 import {
     Networks
