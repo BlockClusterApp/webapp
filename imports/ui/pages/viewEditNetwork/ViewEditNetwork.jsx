@@ -15,7 +15,8 @@ class ViewEditNetwork extends Component {
 	constructor() {
         super()
         this.state = {
-            deleting: false
+			deleting: false,
+			location: "us-west-2"
         };
     }
 
@@ -30,7 +31,7 @@ class ViewEditNetwork extends Component {
             deleting: true
         });
 
-    	Meteor.call("deleteNetwork", this.props.network[0].instanceId, (error) => {
+    	Meteor.call("deleteNetwork", this.props.network[0].instanceId, this.state.location,(error) => {
     		if(error) {
     			notifications.error("An error occured")
     		} else {

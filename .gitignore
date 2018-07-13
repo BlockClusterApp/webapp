@@ -1,5 +1,7 @@
 node_modules/
 
+.DS_Store
+
 ./**/local.config.js
 imports/modules/config/local.config.js
 

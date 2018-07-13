@@ -24,7 +24,7 @@ function getAPIHost(){
 process.env.WORKER_NODE_IP || defaults.workerNodeIP,
 
 function getNamespace(){
-    return process.env.NAMESPACE || defaults.namespace;
+    return process.env.NAMESPACE || defaults.namespace || "dev";
 }
 
 module.exports = {
