@@ -24,7 +24,7 @@ export default class EmailVerification extends Component {
       this.setState({
         disabled: true,
         showMessage: true,
-        message: 'We have sent a link to reset your password on your registered email address. Kindly check your email for further details.'
+        message: <p><br />We have sent a link to reset your password on your registered email address. Kindly check your email for further details.</p>
       })
     });
   }

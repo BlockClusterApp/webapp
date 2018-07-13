@@ -67,7 +67,7 @@ export default class EmailVerification extends Component {
         this.setState({
           disabled: true,
           showMessage: true,
-          resultMessage: (
+          message: (
             <p>
               Congrats...!!! Your password has been changed successfully. You
               would be automatically redirected to login page in 5 seconds. Else{" "}
