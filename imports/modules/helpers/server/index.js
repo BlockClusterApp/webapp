@@ -22,7 +22,7 @@ function generateCompleteURLForEmailVerification(query) {
   return generateURL(`/app/email-verify?key=${query}`);
 }
 
-function generateCompleteURLForPasswordReset(param) {
+function generateCompleteURLForPasswordReset(query) {
   return generateURL(`/app/reset-password?key=${query}`);
 }
 

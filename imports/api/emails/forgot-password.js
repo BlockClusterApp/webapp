@@ -8,8 +8,15 @@ import {
 
 const PasswordResetter = {};
 
-PasswordResetter.resetLinkEmail = async function(user) {
-  const email = user.emails[0].address;
+PasswordResetter.resetLinkEmail = async function(email) {
+  const user = Meteor.users.find({
+    "emails.address": email
+  }).fetch()[0];
+
+  if(!user){
+    return true;
+  }
+
   const uniqueString = generateRandomString(`${email}-${new Date().toString()}`);
   const link = generateCompleteURLForPasswordReset(uniqueString);
 
@@ -85,10 +92,13 @@ PasswordResetter.changePassword = async function(token, password) {
 
 
 Meteor.methods({
+  async requestPasswordReset(email) {
+    return PasswordResetter.resetLinkEmail(email);
+  },
   async verifyResetPasswordLink(token) {
     return PasswordResetter.validateToken(token);
   },
-  async changePassword(token, password) {
+  async changeUserPassword(token, password) {
     return PasswordResetter.changePassword(token, password);
   }
 })
