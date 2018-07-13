@@ -1,4 +1,7 @@
 const defaults = require('../local.config.js');
+const fs = require('fs');
+
+const RemoteConfig = JSON.parse(fs.readFileSync('../kube-config').toString());
 
 function getAPIHost(){
     if(process.env.API_HOST) {
@@ -18,16 +21,32 @@ function getAPIHost(){
     }
 }
 
+process.env.WORKER_NODE_IP || defaults.workerNodeIP,
+
+function getNamespace(){
+    return process.env.NAMESPACE || defaults.namespace;
+}
+
 module.exports = {
     sendgridAPIKey: process.env.SENDGRID_API_KEY || defaults.sendgridApi,
-    workerNodeIP: process.env.WORKER_NODE_IP || defaults.workerNodeIP,
+    workerNodeIP: (locationCode = "us-west-2") => {
+        const locationConfig = RemoteConfig.clusters[getNameSpace()][locationCode];
+        return locationConfig.workerNodeIP;
+    },
     redisHost: process.env.REDIS_HOST || defaults.redisHost,
     redisPort: process.env.REDIS_PORT || defaults.redisPort,
     apiHost: getAPIHost(),
     workderNodeDomainName: (()=> {
         return getAPIHost().split("://")[1];
     })(),
-    kubeRestApiHost: process.env.KUBE_REST_API_HOST || defaults.kubeRestApiHost,
+    kubeRestApiHost: (locationCode = "us-west-2") => {
+        const locationConfig = RemoteConfig.clusters[getNameSpace()][locationCode];
+        return locationConfig.masterApiHost;
+    },
+    clusterApiAuth: (locationCode = "us-west-2") => {
+        const locationConfig = RemoteCOnfig.clusters[getNamespace()][locationCode];
+        return locationConfig.auth;
+    },
     firewallPort: process.env.FIREWALL_PORT || defaults.firewallPort,
-    namespace: process.env.NAMESPACE || defaults.namespace
+    namespace: getNamespace()
 }

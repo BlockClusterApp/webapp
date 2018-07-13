@@ -80,23 +80,23 @@ Accounts.onCreateUser(function(options, user) {
 });
 
 Meteor.methods({
-    "createNetwork": function(networkName, userId) {
+    "createNetwork": function(networkName, locationCode = "us-west-2") {
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
 
         function deleteNetwork(id) {
-            HTTP.call("DELETE", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
-            HTTP.call("DELETE", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, function(error, response) {});
-            HTTP.call("GET", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + instanceId), function(error, response) {
+            HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
+            HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, function(error, response) {});
+            HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + instanceId), function(error, response) {
                 if (!error) {
                     if (JSON.parse(response.content).items.length > 0) {
-                        HTTP.call("DELETE", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
-                            HTTP.call("GET", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + instanceId), function(error, response) {
+                        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
+                            HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + instanceId), function(error, response) {
                                 if (!error) {
                                     if (JSON.parse(response.content).items.length > 0) {
-                                        HTTP.call("DELETE", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
-                                            HTTP.call("DELETE", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {})
-                                            HTTP.call("DELETE", `${Config.kubeRestApiHost}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + instanceId, function(error, response) {})
+                                        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
+                                            HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {})
+                                            HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + instanceId, function(error, response) {})
                                             BCAccounts.remove({
                                                 instanceId: id
                                             })
@@ -122,13 +122,14 @@ Meteor.methods({
             "user": userId ? userId : this.userId,
             "createdOn": Date.now(),
             "totalENodes": [],
-            "totalConstellationNodes": []
+            "totalConstellationNodes": [],
+            "locationCode": locationCode
         }, (error, id) => {
             if (error) {
                 console.log(error);
                 myFuture.throw("An unknown error occured");
             } else {
-                HTTP.call("POST", `${Config.kubeRestApiHost}/apis/apps/v1beta1/namespaces/${Config.namespace}/deployments`, {
+                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${Config.namespace}/deployments`, {
                     "content": JSON.stringify({
                         "apiVersion":"apps/v1beta1",
                         "kind":"Deployment",
@@ -229,7 +230,7 @@ Meteor.methods({
                         console.log(error);
                         deleteNetwork(id)
                     } else {
-                        HTTP.call("POST", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/services`, {
+                        HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services`, {
                             "content": JSON.stringify({
                                 "kind":"Service",
                                 "apiVersion":"v1",
@@ -269,7 +270,7 @@ Meteor.methods({
                                 console.log(error);
                                 deleteNetwork(id)
                             } else {
-                                HTTP.call("GET", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, {}, (error, response) => {
+                                HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, {}, (error, response) => {
                                     if (error) {
                                         console.log(error);
                                         deleteNetwork(id)
@@ -294,7 +295,7 @@ Meteor.methods({
 
                                         let encryptedPassword = md5(instanceId);
                                         let auth = base64.encode(utf8.encode(instanceId + ":" + encryptedPassword))
-                                        HTTP.call("POST", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/secrets`, {
+                                        HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets`, {
                                             "content": JSON.stringify({
                                                 "apiVersion": "v1",
                                                 "data": {
@@ -315,7 +316,7 @@ Meteor.methods({
                                                 console.log(error);
                                                 deleteNetwork(id)
                                             } else {
-                                                HTTP.call("POST", `${Config.kubeRestApiHost}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses`, {
+                                                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses`, {
                                                         "content": JSON.stringify({
                                                             "apiVersion": "extensions/v1beta1",
                                                             "kind": "Ingress",
@@ -395,45 +396,45 @@ Meteor.methods({
 
         return myFuture.wait();
     },
-    "deleteNetwork": function(id) {
+    "deleteNetwork": function(id, locationCode="us-west-2") {
         var myFuture = new Future();
 
-        HTTP.call("DELETE", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + id, function(error, response) {
+        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + id, function(error, response) {
             if (error) {
                 console.log(error);
                 myFuture.throw("An unknown error occured");
             } else {
-                HTTP.call("DELETE", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/services/` + id, function(error, response) {
+                HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + id, function(error, response) {
                     if (error) {
                         console.log(error);
                         myFuture.throw("An unknown error occured");
                     } else {
-                        HTTP.call("GET", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(error, response) {
+                        HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + id), function(error, response) {
                             if (error) {
                                 console.log(error);
                                 myFuture.throw("An unknown error occured");
                             } else {
-                                HTTP.call("DELETE", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
+                                HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
                                     if (error) {
                                         console.log(error);
                                         myFuture.throw("An unknown error occured");
                                     } else {
-                                        HTTP.call("GET", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(error, response) {
+                                        HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + id), function(error, response) {
                                             if (error) {
                                                 console.log(error);
                                                 myFuture.throw("An unknown error occured");
                                             } else {
-                                                HTTP.call("DELETE", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
+                                                HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
                                                     if (error) {
                                                         console.log(error);
                                                         myFuture.throw("An unknown error occured");
                                                     } else {
-                                                        HTTP.call("DELETE", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + id, function(error, response) {
+                                                        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + id, function(error, response) {
                                                             if (error) {
                                                                 console.log(error);
                                                                 myFuture.throw("An unknown error occured while deleting secrets");
                                                             } else {
-                                                                HTTP.call("DELETE", `${Config.kubeRestApiHost}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + id, function(error, response) {
+                                                                HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + id, function(error, response) {
                                                                     if (error) {
                                                                         console.log(error);
                                                                         myFuture.throw("An unknown error occured while deleting ingresses");
@@ -481,23 +482,23 @@ Meteor.methods({
 
         return myFuture.wait();
     },
-    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, userId) {
+    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, userId, locationCode = "us-west-2") {
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
 
         function deleteNetwork(id) {
-            HTTP.call("DELETE", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
-            HTTP.call("DELETE", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, function(error, response) {});
-            HTTP.call("GET", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + instanceId), function(error, response) {
+            HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
+            HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, function(error, response) {});
+            HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + instanceId), function(error, response) {
                 if (!error) {
                     if (JSON.parse(response.content).items.length > 0) {
-                        HTTP.call("DELETE", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
-                            HTTP.call("GET", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + instanceId), function(error, response) {
+                        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
+                            HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + instanceId), function(error, response) {
                                 if (!error) {
                                     if (JSON.parse(response.content).items.length > 0) {
-                                        HTTP.call("DELETE", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
-                                            HTTP.call("DELETE", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {})
-                                            HTTP.call("DELETE", `${Config.kubeRestApiHost}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + instanceId, function(error, response) {})
+                                        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
+                                            HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {})
+                                            HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + instanceId, function(error, response) {})
                                             BCAccounts.remove({
                                                 instanceId: id
                                             })
@@ -523,7 +524,8 @@ Meteor.methods({
             "createdOn": Date.now(),
             "totalENodes": totalENodes,
             "totalConstellationNodes": totalConstellationNodes,
-            "genesisBlock": genesisFileContent
+            "genesisBlock": genesisFileContent,
+            "locationCode": locationCode
         }, function(error, id) {
             if (error) {
                 console.log(error);
@@ -631,7 +633,7 @@ spec:
       - name: regsecret`;
                 }
 
-                HTTP.call("POST", `${Config.kubeRestApiHost}/apis/apps/v1beta1/namespaces/${Config.namespace}/deployments`, {
+                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${Config.namespace}/deployments`, {
                     "content": content,
                     "headers": {
                         "Content-Type": "application/yaml"
@@ -641,7 +643,7 @@ spec:
                         console.log(error);
                         deleteNetwork(id)
                     } else {
-                        HTTP.call("POST", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/services`, {
+                        HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services`, {
                             "content": JSON.stringify({
                                 "kind":"Service",
                                 "apiVersion":"v1",
@@ -682,7 +684,7 @@ spec:
                                 deleteNetwork(id)
                             } else {
 
-                                HTTP.call("GET", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, {}, function(error, response) {
+                                HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, {}, function(error, response) {
                                     if (error) {
                                         console.log(error);
                                         deleteNetwork(id)
@@ -706,7 +708,7 @@ spec:
 
                                         let encryptedPassword = md5(instanceId);
                                         let auth = base64.encode(utf8.encode(instanceId + ":" + encryptedPassword))
-                                        HTTP.call("POST", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/secrets`, {
+                                        HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets`, {
                                             "content": JSON.stringify({
                                                 "apiVersion": "v1",
                                                 "data": {
@@ -727,7 +729,7 @@ spec:
                                                 console.log(error);
                                                 deleteNetwork(id)
                                             } else {
-                                                HTTP.call("POST", `${Config.kubeRestApiHost}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses`, {
+                                                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses`, {
                                                         "content": JSON.stringify({
                                                             "apiVersion": "extensions/v1beta1",
                                                             "kind": "Ingress",
@@ -805,7 +807,7 @@ spec:
 
         return myFuture.wait();
     },
-    "vote": function(networkId, toVote) {
+    "vote": function(networkId, toVote, locationCode="us-west-2") {
         var myFuture = new Future();
         var network = Networks.find({
             _id: networkId
@@ -827,7 +829,7 @@ spec:
 
         return myFuture.wait();
     },
-    "unVote": function(networkId, toVote) {
+    "unVote": function(networkId, toVote, locationCode="us-west-2") {
         var myFuture = new Future();
         var network = Networks.find({
             _id: networkId
@@ -1386,16 +1388,16 @@ spec:
         query.instanceId = instanceId;
         return SoloAssets.find(JSON.parse(query)).fetch();
     },
-    "rpcPasswordUpdate": function(instanceId, password) {
+    "rpcPasswordUpdate": function(instanceId, password, locationCode="us-west-2") {
         var myFuture = new Future();
-        HTTP.call("DELETE", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {
+        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {
             if (error) {
                 console.log(error);
                 myFuture.throw("An unknown error occured while deleting secret");
             } else {
                 let encryptedPassword = md5(password);
                 let auth = base64.encode(utf8.encode(instanceId + ":" + password))
-                HTTP.call("POST", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/secrets`, {
+                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets`, {
                     "content": JSON.stringify({
                         "apiVersion": "v1",
                         "data": {
