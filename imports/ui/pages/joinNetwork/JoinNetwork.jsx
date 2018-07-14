@@ -17,7 +17,8 @@ class JoinNetwork extends Component {
             totalENodes: [""],
             totalConstellationNodes: [""],
             joinLoading: false,
-            inviteLoading: false
+            inviteLoading: false,
+            locationCode: "us-west-2"
         };
     }
 
@@ -89,7 +90,7 @@ class JoinNetwork extends Component {
                 joinLoading: true
             });
 
-            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, (error) => {
+            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, this.state.locationCode, (error) => {
                 if(!error) {
                     this.setState({
                         joinFormSubmitError: '',

@@ -17,7 +17,7 @@ exports.HTTPInternals = {
   }
 };
 
-exports.setInterceptorFunction = function (interceptorFunction) {
+HTTP.setInterceptorFunction = function (interceptorFunction) {
   requestInterceptorFunction = interceptorFunction;
 }
 
@@ -111,8 +111,10 @@ function _call(method, url, options, callback) {
     headers: headers
   }, options.npmRequestOptions || null);
 
-  interceptorFunction(requestOptions);
+  requestInterceptorFunction(reqOptions);
 
+
+  console.log("Final request options", reqOptions);
   request(reqOptions, function(error, res, body) {
     var response = null;
 

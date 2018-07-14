@@ -19,7 +19,8 @@ class APIsCreds extends Component {
             updateRPCFormSubmitSuccess: "",
             updateRESTFormSubmitSuccess: "",
             rpcLoading: false,
-            restLoading: false
+            restLoading: false,
+            locationCode: "us-west-2"
         };
     }
 
@@ -37,7 +38,7 @@ class APIsCreds extends Component {
             rpcLoading: true
         });
 
-        Meteor.call("rpcPasswordUpdate", this.networkNameRPCUpdate.value, this.rpcPassword.value, (error) => {
+        Meteor.call("rpcPasswordUpdate", this.networkNameRPCUpdate.value, this.rpcPassword.value, this.state.locationCode, (error) => {
             if(!error) {
                 this.setState({
                     updateRPCFormSubmitError: '',

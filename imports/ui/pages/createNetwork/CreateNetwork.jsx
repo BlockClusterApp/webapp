@@ -9,7 +9,8 @@ class CreateNetwork extends Component {
 
         this.state = {
             formSubmitError: "",
-            loading: false
+            loading: false,
+            locationCode: "us-west-2"
         };
     }
 
@@ -21,7 +22,7 @@ class CreateNetwork extends Component {
             loading: true
         });
 
-        Meteor.call("createNetwork", this.networkName.value, (error) => {
+        Meteor.call("createNetwork", this.networkName.value, this.state.locationCode, (error) => {
             if(!error) {
                 this.setState({
                     loading: false,

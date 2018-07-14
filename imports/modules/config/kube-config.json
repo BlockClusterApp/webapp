@@ -8,7 +8,7 @@
         "locationName": "US West (Oregon)",
         "auth": {
           "user": "admin",
-          "password": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
+          "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
         }
       },
       "ap-south-1": {
@@ -18,7 +18,7 @@
         "locationName": "Asia Pacific South (Mumbai)",
         "auth": {
           "user": "admin",
-          "password": "Eca28RNB1yXXSfZm9B80SFzrTHSHXb1C"
+          "pass": "Eca28RNB1yXXSfZm9B80SFzrTHSHXb1C"
         }
       }
     },
@@ -30,7 +30,7 @@
         "locationName": "US West (Oregon)",
         "auth": {
           "user": "admin",
-          "password": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
+          "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
         }
       }
     }
