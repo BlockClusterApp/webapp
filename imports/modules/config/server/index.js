@@ -31,4 +31,3 @@ module.exports = {
     firewallPort: process.env.FIREWALL_PORT || defaults.firewallPort,
     namespace: process.env.NAMESPACE || defaults.namespace
 }
-

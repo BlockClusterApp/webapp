@@ -79,7 +79,7 @@ Accounts.onCreateUser(function(options, user) {
 });
 
 Meteor.methods({
-    "createNetwork": function(networkName) {
+    "createNetwork": function(networkName, userId) {
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
 
@@ -119,7 +119,7 @@ Meteor.methods({
             "type": "new",
             "status": "initializing",
             "peerType": "authority",
-            "user": this.userId,
+            "user": userId ? userId : this.userId,
             "createdOn": Date.now(),
             "totalENodes": [],
             "totalConstellationNodes": []
@@ -334,7 +334,7 @@ Meteor.methods({
                                                             console.log(error);
                                                             deleteNetwork(id)
                                                         } else {
-                                                            myFuture.return();
+                                                            myFuture.return(instanceId);
 
                                                             Meteor.setTimeout(() => {
                                                                 HTTP.call("GET", `http://${Config.workerNodeIP}:` + response.data.spec.ports[3].nodePort + "/nodeInfo", function(error, response) {
@@ -1080,10 +1080,10 @@ spec:
 
         return myFuture.wait();
     },
-    "inviteUserToNetwork": function(networkId, nodeType, email) {
+    "inviteUserToNetwork": function(networkId, nodeType, email, userId) {
         let user = Accounts.findUserByEmail(email);
         var network = Networks.find({
-            _id: networkId
+            instanceId: networkId
         }).fetch()[0];
         if (user) {
             Meteor.call(
@@ -1094,7 +1094,7 @@ spec:
                 network.assetsContractAddress,
                 network.atomicSwapContractAddress,
                 network.streamsContractAddress,
-                user._id
+                (userId ? userId : user._id)
             )
         } else {
             throw new Meteor.Error(500, 'Unknown error occured');

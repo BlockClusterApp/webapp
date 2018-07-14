@@ -141,7 +141,7 @@ class ViewEditNetwork extends Component {
 						       							if (this.props.network.length === 1) {
 						       								if("nodeId" in this.props.network[0]) {
 						       									return (
-						       										"enode://" + this.props.network[0].nodeId + "@" + this.props.workerNodeIP[0].value + ":" + this.props.network[0].ethNodePort
+						       										"enode://" + this.props.network[0].nodeId + "@" + this.props.workerNodeIP + ":" + this.props.network[0].ethNodePort
 						       									)
 						       								}
 						       							}
@@ -159,7 +159,7 @@ class ViewEditNetwork extends Component {
 						       							if (this.props.network.length === 1) {
 						       								if("constellationNodePort" in this.props.network[0]) {
 						       									return (
-						       										this.props.workerNodeIP[0].value + ":" + this.props.network[0].constellationNodePort
+						       										this.props.workerNodeIP + ":" + this.props.network[0].constellationNodePort
 						       									)
 						       								}
 						       							}

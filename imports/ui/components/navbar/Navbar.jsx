@@ -76,13 +76,13 @@ class Navbar extends Component {
 			              	<span className="icon-thumbnail"><i className="fa fa-cogs"></i></span>
 			              	<ul className="sub-menu">
 			                	<li>
-									<Link to={"#"}>
+									<Link target="_blank" to={"https://platform.api.blockcluster.io/"}>
 			                    		APIs
 			                    	</Link>
 			                  		<span className="icon-thumbnail"><i className="fa fa-code"></i></span>
 			                	</li>
 								<li>
-									<Link target="_blank" to={"https://api.blockcluster.io/"}>
+									<Link target="_blank" to={"https://docs.platform.api.blockcluster.io/"}>
 			                    		Notifications
 			                    	</Link>
 			                  		<span className="icon-thumbnail"><i className="fa fa-bell"></i></span>

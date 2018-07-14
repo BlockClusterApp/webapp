@@ -396,7 +396,7 @@ class JoinNetwork extends Component {
                                                                         <select className="form-control" ref={(input) => {this.networkNameInvite = input;}}>
                                                                             {this.props.networks.map((item, index) => {
                                                                                 return (
-                                                                                    <option value={item._id} key={item._id}>{item.name}</option>
+                                                                                    <option value={item.instanceId} key={item.instanceId}>{item.name}</option>
                                                                                 )
                                                                             })}
                                                                         </select>
