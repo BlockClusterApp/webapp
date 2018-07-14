@@ -13,7 +13,7 @@ Verifier.sendEmailVerification = async function(user) {
   const uniqueString = generateRandomString(email);
   const link = generateCompleteURLForEmailVerification(uniqueString);
 
-  const ejsTemplate = await getEJSTemplate({});
+  const ejsTemplate = await getEJSTemplate({fileName: "email-verification.ejs"});
   const finalHTML = ejsTemplate({
     user: {
       email,
