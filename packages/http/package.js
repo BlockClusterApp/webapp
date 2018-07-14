@@ -1,6 +1,7 @@
 Package.describe({
   summary: "Make HTTP calls to remote servers",
-  version: '1.4.1'
+  version: '1.4.1',
+  name: 'blockcluster:http',
 });
 
 Npm.depends({

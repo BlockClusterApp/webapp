@@ -6,6 +6,8 @@ var common = require("./httpcall_common.js");
 var HTTP = exports.HTTP = common.HTTP;
 var hasOwn = Object.prototype.hasOwnProperty;
 
+let requestInterceptorFunction = () => {};
+
 exports.HTTPInternals = {
   NpmModules: {
     request: {
@@ -14,6 +16,10 @@ exports.HTTPInternals = {
     }
   }
 };
+
+exports.setInterceptorFunction = function (interceptorFunction) {
+  requestInterceptorFunction = interceptorFunction;
+}
 
 // _call always runs asynchronously; HTTP.call, defined below,
 // wraps _call and runs synchronously when no callback is provided.
@@ -104,6 +110,8 @@ function _call(method, url, options, callback) {
     followAllRedirects: options.followRedirects,
     headers: headers
   }, options.npmRequestOptions || null);
+
+  interceptorFunction(requestOptions);
 
   request(reqOptions, function(error, res, body) {
     var response = null;
