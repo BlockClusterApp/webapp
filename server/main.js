@@ -81,7 +81,7 @@ Accounts.onCreateUser(function(options, user) {
 });
 
 Meteor.methods({
-    "createNetwork": function(networkName, userId, locationCode = "us-west-2") {
+    "createNetwork": function(networkName,  locationCode = "us-west-2", userId) {
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
 
