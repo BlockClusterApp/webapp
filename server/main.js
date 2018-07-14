@@ -81,7 +81,7 @@ Accounts.onCreateUser(function(options, user) {
 });
 
 Meteor.methods({
-    "createNetwork": function(networkName, locationCode = "us-west-2") {
+    "createNetwork": function(networkName, userId, locationCode = "us-west-2") {
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
 
@@ -922,8 +922,10 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-
+        console.log("Inside metohd", instanceId, assetName, assetType, assetIssuer, reissuable, parts, network);
+        console.log("URL", `http://${Config.workerNodeIP(network.locationCode)}:${network.rpcNodePort}`)
+        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:${network.rpcNodePort}`));
+        console.log("Web3 connected");
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
 
@@ -932,6 +934,7 @@ spec:
                 from: assetIssuer,
                 gas: '99999999999999999'
             }, function(error, txnHash) {
+                console.log("Creation solo error", error);
                 if (!error) {
                     myFuture.return();
                 } else {
@@ -943,6 +946,7 @@ spec:
                 from: assetIssuer,
                 gas: '99999999999999999'
             }, function(error, txnHash) {
+                console.log("Creation bulk error", error);
                 if (!error) {
                     myFuture.return();
                 } else {

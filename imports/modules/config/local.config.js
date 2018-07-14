@@ -6,5 +6,5 @@ module.exports = {
     kubeRestApiHost: "http://34.208.153.18:8000",
     firewallPort: "31988",
     workerNodeIP: "52.43.83.54",
-    namespace: "default"
+    namespace: "dev"
 }
