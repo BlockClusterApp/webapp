@@ -2,17 +2,18 @@ import React, {Component} from "react";
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import { withRouter } from 'react-router-dom'
 import notifications from "../../../modules/notifications"
+import LocationSelector from '../../components/LocationSelector/LocationSelector.jsx';
 
 class CreateNetwork extends Component {
     constructor() {
         super()
-
+        this.locationCode = "us-west-2";
         this.state = {
             formSubmitError: "",
             loading: false,
-            locationCode: "us-west-2"
         };
     }
+
 
     onSubmit = (e) => {
         e.preventDefault()
@@ -22,7 +23,7 @@ class CreateNetwork extends Component {
             loading: true
         });
 
-        Meteor.call("createNetwork", this.networkName.value, this.state.locationCode, (error) => {
+        Meteor.call("createNetwork", this.networkName.value, this.locationCode, (error) => {
             if(!error) {
                 this.setState({
                     loading: false,
@@ -38,9 +39,12 @@ class CreateNetwork extends Component {
                 })
             }
         });
+
+
     }
 
 	render(){
+        
 		return (
             <div className="content ">
                 <div className="m-t-20 container-fluid container-fixed-lg bg-white">
@@ -98,6 +102,12 @@ class CreateNetwork extends Component {
                                                         <input type="text" className="form-control" name="firstName" required disabled value="0" />
                                                     </div>
 
+                                                </div>
+                                            </div>
+
+                                            <div className="row clearfix">
+                                                <div className="col-md-6">
+                                                    <LocationSelector locationChangeListener={(locationCode) => this.locationCode = locationCode} />
                                                 </div>
                                             </div>
                                         </div>
