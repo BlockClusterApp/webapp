@@ -305,7 +305,7 @@ Meteor.methods({
                                                 "kind": "Secret",
                                                 "metadata": {
                                                     "name": "basic-auth-" + instanceId,
-                                                    "namespace": "default"
+                                                    "namespace": Config.namespace
                                                 },
                                                 "type": "Opaque"
                                             }),
@@ -718,7 +718,7 @@ spec:
                                                 "kind": "Secret",
                                                 "metadata": {
                                                     "name": "basic-auth-" + instanceId,
-                                                    "namespace": "default"
+                                                    "namespace": Config.namespace
                                                 },
                                                 "type": "Opaque"
                                             }),
