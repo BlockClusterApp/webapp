@@ -335,70 +335,16 @@ Meteor.methods({
                                                             console.log(error);
                                                             deleteNetwork(id)
                                                         } else {
+
+                                                            Networks.update({
+                                                                _id: id
+                                                            }, {
+                                                                $set: {
+                                                                    "api-password": instanceId
+                                                                }
+                                                            })
+
                                                             myFuture.return(instanceId);
-                                                            Meteor.setTimeout(() => {
-                                                                HTTP.call("GET", `http://${Config.workerNodeIP}:` + response.data.spec.ports[3].nodePort + `/api/node/${instanceId}/utility/nodeInfo`, function(error, response) {
-                                                                    if (error) {
-                                                                        console.log(error);
-                                                                        deleteNetwork(id)
-                                                                    } else {
-                                                                        var data = JSON.parse(response.content);
-                                                                        Networks.update({
-                                                                            _id: id
-                                                                        }, {
-                                                                            $set: {
-                                                                                genesisBlock: data.genesis,
-                                                                                nodeKey: data.nodekey,
-                                                                                nodeEthAddress: "0x" + lightwallet.keystore._computeAddressFromPrivKey(data.nodekey),
-                                                                                constellationPubKey: data.constellationPublicKey
-                                                                            }
-                                                                        })
-
-                                                                        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + rpcNodePort));
-                                                                        web3.currentProvider.sendAsync({
-                                                                            method: "admin_nodeInfo",
-                                                                            params: [],
-                                                                            jsonrpc: "2.0",
-                                                                            id: new Date().getTime()
-                                                                        }, Meteor.bindEnvironment((error, result) => {
-                                                                            if (error) {
-                                                                                console.log(error);
-                                                                                deleteNetwork(id)
-                                                                            } else {
-                                                                                Networks.update({
-                                                                                    _id: id
-                                                                                }, {
-                                                                                    $set: {
-                                                                                        nodeId: result.result.id,
-                                                                                    }
-                                                                                })
-
-                                                                                web3.currentProvider.sendAsync({
-                                                                                    method: "istanbul_getValidators",
-                                                                                    params: [],
-                                                                                    jsonrpc: "2.0",
-                                                                                    id: new Date().getTime()
-                                                                                }, Meteor.bindEnvironment(function(error, result) {
-                                                                                    if (error) {
-                                                                                        console.log(error);
-                                                                                        deleteNetwork(id)
-                                                                                    } else {
-                                                                                        Networks.update({
-                                                                                            _id: id
-                                                                                        }, {
-                                                                                            $set: {
-                                                                                                currentValidators: result.result,
-                                                                                                "status": "running",
-                                                                                                "api-password": instanceId
-                                                                                            }
-                                                                                        })
-                                                                                    }
-                                                                                }))
-                                                                            }
-                                                                        }))
-                                                                    }
-                                                                })
-                                                            }, 30000)
                                                         }
                                                     })
                                             }
@@ -774,71 +720,14 @@ spec:
                                                             console.log(error);
                                                             deleteNetwork(id)
                                                         } else {
+                                                            Networks.update({
+                                                                _id: id
+                                                            }, {
+                                                                $set: {
+                                                                    "api-password": instanceId
+                                                                }
+                                                            })
                                                             myFuture.return();
-                                                            Meteor.setTimeout(() => {
-
-                                                                HTTP.call("GET", `http://${Config.workerNodeIP}:` + response.data.spec.ports[3].nodePort + `/api/node/${instanceId}/utility/nodeInfo`, function(error, response) {
-                                                                    if (error) {
-                                                                        console.log(error);
-                                                                        deleteNetwork(id)
-                                                                    } else {
-                                                                        var data = JSON.parse(response.content);
-                                                                        Networks.update({
-                                                                            _id: id
-                                                                        }, {
-                                                                            $set: {
-                                                                                nodeKey: data.nodekey,
-                                                                                nodeEthAddress: "0x" + lightwallet.keystore._computeAddressFromPrivKey(data.nodekey),
-                                                                                constellationPubKey: data.constellationPublicKey
-                                                                            }
-                                                                        })
-
-                                                                        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP}:` + rpcNodePort));
-                                                                        web3.currentProvider.sendAsync({
-                                                                            method: "admin_nodeInfo",
-                                                                            params: [],
-                                                                            jsonrpc: "2.0",
-                                                                            id: new Date().getTime()
-                                                                        }, Meteor.bindEnvironment(function(error, result) {
-                                                                            if (error) {
-                                                                                console.log(error);
-                                                                                deleteNetwork(id)
-                                                                            } else {
-                                                                                Networks.update({
-                                                                                    _id: id
-                                                                                }, {
-                                                                                    $set: {
-                                                                                        nodeId: result.result.id,
-                                                                                    }
-                                                                                })
-
-                                                                                web3.currentProvider.sendAsync({
-                                                                                    method: "istanbul_getValidators",
-                                                                                    params: [],
-                                                                                    jsonrpc: "2.0",
-                                                                                    id: new Date().getTime()
-                                                                                }, Meteor.bindEnvironment(function(error, result) {
-                                                                                    if (error) {
-                                                                                        console.log(error);
-                                                                                        deleteNetwork(id)
-                                                                                    } else {
-                                                                                        let currentValidators = result.result;
-                                                                                        Networks.update({
-                                                                                            _id: id
-                                                                                        }, {
-                                                                                            $set: {
-                                                                                                currentValidators: currentValidators,
-                                                                                                "status": "running",
-                                                                                                "api-password": instanceId
-                                                                                            }
-                                                                                        })
-                                                                                    }
-                                                                                }))
-                                                                            }
-                                                                        }))
-                                                                    }
-                                                                })
-                                                            }, 20000)
                                                         }
                                                     })
                                             }
