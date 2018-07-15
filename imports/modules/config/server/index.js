@@ -49,5 +49,8 @@ module.exports = {
     return locationConfig.auth;
   },
   firewallPort: process.env.FIREWALL_PORT || defaults.firewallPort,
-  namespace: getNamespace()
+  namespace: getNamespace(),
+  RemoteConfig() {
+    return RemoteConfig
+  }
 };

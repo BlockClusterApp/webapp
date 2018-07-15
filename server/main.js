@@ -81,9 +81,13 @@ Accounts.onCreateUser(function(options, user) {
 });
 
 Meteor.methods({
-    "createNetwork": function(networkName,  locationCode = "us-west-2", userId) {
+    "createNetwork": function(networkName,  locationCode, userId) {
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
+
+        if(!locationCode){
+            locationCode = "us-west-2";
+        }
 
         function deleteNetwork(id) {
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
@@ -911,7 +915,8 @@ spec:
                 network.assetsContractAddress,
                 network.atomicSwapContractAddress,
                 network.streamsContractAddress,
-                (userId ? userId : user._id)
+                (userId ? userId : user._id),
+                network.locationCode
             )
         } else {
             throw new Meteor.Error(500, 'Unknown error occured');
@@ -1579,7 +1584,7 @@ spec:
             address: accountAddress
         }).fetch()[0]
 
-        HTTP.call("GET", `http://${workerNodeIP}:${network.apisPort}/api/node/${instanceId}/getPrivateKey?address=${accountAddress}&password=${account.password}`, function(error, response) {
+        HTTP.call("GET", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/getPrivateKey?address=${accountAddress}&password=${account.password}`, function(error, response) {
             if (error) {
                 myFuture.throw("An unknown error occured");
             } else {

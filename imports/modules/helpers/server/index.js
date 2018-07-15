@@ -2,6 +2,7 @@ import ModelHelpers from "./model-helpers";
 import crypto from "crypto";
 import ejs from "ejs";
 import Config from '../../config/server';
+
 require('./http-interceptor');
 
 const EmailVerificationTemplate = require('../../template/email-verification');
