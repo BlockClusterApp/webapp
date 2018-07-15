@@ -103,11 +103,15 @@ JsonRoutes.Middleware.use("/api/platform/networks", authMiddleware);
 JsonRoutes.Middleware.use("/api/platform/logout", authMiddleware);
 
 JsonRoutes.add("post", "/api/platform/networks/create", function(req, res, next) {
-    let name = req.body.name;
+    let { name, locationCode } = req.body;
+
+    if(!locationCode){
+        locationCode = "us-west-2";
+    }
 
     let user = Accounts.findUserByEmail(req.email)
 
-    Meteor.call("createNetwork", name, user._id, (error, instanceId) => {
+    Meteor.call("createNetwork", name, locationCode, user._id, (error, instanceId) => {
         if(error) {
             JsonRoutes.sendResult(res, {
                 code: 401,

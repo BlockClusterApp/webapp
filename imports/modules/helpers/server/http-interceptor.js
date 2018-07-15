@@ -27,7 +27,7 @@ HTTP.setInterceptorFunction(requestOptions => {
   */
   let isKubeURL = false;
   for (const url of kubeURLs) {
-    if (url.includes(requestOptions.url)) {
+    if (requestOptions.url.includes(url)) {
       isKubeURL = true;
       break;
     }
@@ -44,5 +44,3 @@ HTTP.setInterceptorFunction(requestOptions => {
   requestOptions.auth = locationConfig.auth;
   return undefined;
 });
-
-console.log("Attaching HTTP interceptors");

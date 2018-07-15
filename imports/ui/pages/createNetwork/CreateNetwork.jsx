@@ -16,8 +16,8 @@ class CreateNetwork extends Component {
 
 
     onSubmit = (e) => {
-        e.preventDefault()
-
+        e.preventDefault();
+        
         this.setState({
             formSubmitError: '',
             loading: true

@@ -30,7 +30,7 @@ class LocationSelector extends Component {
 
   render() {
     const locationsList = this.state.locations.map(location => (
-      <option value={location.locationCode}>{location.locationName}</option>
+      <option value={location.locationCode} key={location.locationName}>{location.locationName}</option>
     ));
     return (
       <div className="form-group form-group-default ">
@@ -39,6 +39,7 @@ class LocationSelector extends Component {
           className="form-control"
           name="location"
           ref={input => (this.location = input)}
+          onChange={this.onLocationChange.bind(this)}
           selected="us-west-2"
         >
           {locationsList}
