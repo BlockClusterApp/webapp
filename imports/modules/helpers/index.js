@@ -91,7 +91,7 @@ export default {
         return s;
     },
     calculateNodeStatus(status, lastPinged) {
-        if(status === undefined) {
+        if(status === undefined || status === "initializing") {
             return "initializing"
         } else if (status === "down") {
             return "down"
