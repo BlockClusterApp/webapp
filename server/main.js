@@ -86,11 +86,11 @@ Meteor.methods({
         function deleteNetwork(id) {
             HTTP.call("DELETE", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
             HTTP.call("DELETE", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, function(error, response) {});
-            HTTP.call("GET", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + instanceId), function(error, response) {
+            HTTP.call("GET", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + instanceId), function(error, response) {
                 if (!error) {
                     if (JSON.parse(response.content).items.length > 0) {
                         HTTP.call("DELETE", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
-                            HTTP.call("GET", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + instanceId), function(error, response) {
+                            HTTP.call("GET", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + instanceId), function(error, response) {
                                 if (!error) {
                                     if (JSON.parse(response.content).items.length > 0) {
                                         HTTP.call("DELETE", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
@@ -141,14 +141,14 @@ Meteor.methods({
                             "template":{
                                 "metadata":{
                                     "labels":{
-                                        "app":"quorum-node-" + instanceId
+                                        "app":"dynamo-node-" + instanceId
                                     }
                                 },
                                 "spec":{
                                     "containers":[
                                         {
-                                            "name":"quorum",
-                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum",
+                                            "name":"dynamo",
+                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo",
                                             "command":[
                                                 "bin/bash",
                                                 "-c",
@@ -175,17 +175,6 @@ Meteor.methods({
                                                     "containerPort":6382
                                                 }
                                             ]
-                                        },
-                                        {
-                                            "name":"scanner",
-                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner",
-                                            "env":[
-                                                {
-                                                    "name": "instanceId",
-                                                    "value": instanceId
-                                                }
-                                            ],
-                                            "imagePullPolicy":"Always"
                                         }
                                     ],
                                     "imagePullSecrets":[
@@ -227,12 +216,12 @@ Meteor.methods({
                                             "port":23000
                                         },
                                         {
-                                            "name":"utility",
+                                            "name":"apis",
                                             "port":6382
                                         }
                                     ],
                                     "selector":{
-                                        "app":"quorum-node-" + instanceId
+                                        "app":"dynamo-node-" + instanceId
                                     },
                                     "type":"NodePort"
                                 }
@@ -259,12 +248,12 @@ Meteor.methods({
                                                 rpcNodePort: response.data.spec.ports[0].nodePort,
                                                 constellationNodePort: response.data.spec.ports[1].nodePort,
                                                 ethNodePort: response.data.spec.ports[2].nodePort,
-                                                utilityPort: response.data.spec.ports[3].nodePort,
+                                                apisPort: response.data.spec.ports[3].nodePort,
                                                 clusterIP: response.data.spec.clusterIP,
                                                 realRPCNodePort: 8545,
                                                 realConstellationNodePort: 9001,
                                                 realEthNodePort: 23000,
-                                                realUtilityPort: 6382
+                                                realAPIsPort: 6382
                                             }
                                         })
 
@@ -321,10 +310,16 @@ Meteor.methods({
                                                                     "host": "app.blockcluster.io",
                                                                     "http": {
                                                                         "paths": [{
-                                                                            "path": "/node/" + instanceId,
+                                                                            "path": "/api/node/" + instanceId + "/jsonrpc/",
                                                                             "backend": {
                                                                                 "serviceName": instanceId,
                                                                                 "servicePort": 8545
+                                                                            }
+                                                                        }, {
+                                                                            "path": "/api/node/" + instanceId + "/",
+                                                                            "backend": {
+                                                                                "serviceName": instanceId,
+                                                                                "servicePort": 6382
                                                                             }
                                                                         }]
                                                                     }
@@ -341,9 +336,8 @@ Meteor.methods({
                                                             deleteNetwork(id)
                                                         } else {
                                                             myFuture.return(instanceId);
-
                                                             Meteor.setTimeout(() => {
-                                                                HTTP.call("GET", `http://${Config.workerNodeIP}:` + response.data.spec.ports[3].nodePort + "/nodeInfo", function(error, response) {
+                                                                HTTP.call("GET", `http://${Config.workerNodeIP}:` + response.data.spec.ports[3].nodePort + `/api/node/${instanceId}/utility/nodeInfo`, function(error, response) {
                                                                     if (error) {
                                                                         console.log(error);
                                                                         deleteNetwork(id)
@@ -395,9 +389,7 @@ Meteor.methods({
                                                                                             $set: {
                                                                                                 currentValidators: result.result,
                                                                                                 "status": "running",
-                                                                                                "jsonRPC-password": instanceId,
-                                                                                                "restAPI-password": instanceId,
-
+                                                                                                "api-password": instanceId
                                                                                             }
                                                                                         })
                                                                                     }
@@ -406,7 +398,7 @@ Meteor.methods({
                                                                         }))
                                                                     }
                                                                 })
-                                                            }, 20000)
+                                                            }, 30000)
                                                         }
                                                     })
                                             }
@@ -435,7 +427,7 @@ Meteor.methods({
                         console.log(error);
                         myFuture.throw("An unknown error occured");
                     } else {
-                        HTTP.call("GET", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + id), function(error, response) {
+                        HTTP.call("GET", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(error, response) {
                             if (error) {
                                 console.log(error);
                                 myFuture.throw("An unknown error occured");
@@ -445,7 +437,7 @@ Meteor.methods({
                                         console.log(error);
                                         myFuture.throw("An unknown error occured");
                                     } else {
-                                        HTTP.call("GET", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + id), function(error, response) {
+                                        HTTP.call("GET", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(error, response) {
                                             if (error) {
                                                 console.log(error);
                                                 myFuture.throw("An unknown error occured");
@@ -515,11 +507,11 @@ Meteor.methods({
         function deleteNetwork(id) {
             HTTP.call("DELETE", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
             HTTP.call("DELETE", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, function(error, response) {});
-            HTTP.call("GET", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + instanceId), function(error, response) {
+            HTTP.call("GET", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + instanceId), function(error, response) {
                 if (!error) {
                     if (JSON.parse(response.content).items.length > 0) {
                         HTTP.call("DELETE", `${Config.kubeRestApiHost}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
-                            HTTP.call("GET", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("quorum-node-" + instanceId), function(error, response) {
+                            HTTP.call("GET", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + instanceId), function(error, response) {
                                 if (!error) {
                                     if (JSON.parse(response.content).items.length > 0) {
                                         HTTP.call("DELETE", `${Config.kubeRestApiHost}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
@@ -572,11 +564,11 @@ spec:
   template:
     metadata:
       labels:
-        app: quorum-node-${instanceId}
+        app: dynamo-node-${instanceId}
     spec:
       containers:
-      - name: quorum
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum
+      - name: dynamo
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo
         command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
         imagePullPolicy: Always
         ports:
@@ -593,11 +585,6 @@ spec:
           value: ${atomicSwapContractAddress}
         - name: streamsContractAddress
           value: ${streamsContractAddress}
-      - name: scanner
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner
-        env:
-        - name: instanceId
-          value: ${instanceId}
       imagePullSecrets:
       - name: regsecret`
                 } else {
@@ -611,11 +598,11 @@ spec:
   template:
     metadata:
       labels:
-        app: quorum-node-${instanceId}
+        app: dynamo-node-${instanceId}
     spec:
       containers:
-      - name: quorum
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/quorum
+      - name: dynamo
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo
         command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
         imagePullPolicy: Always
         ports:
@@ -632,11 +619,6 @@ spec:
           value: ${atomicSwapContractAddress}
         - name: streamsContractAddress
           value: ${streamsContractAddress}
-      - name: scanner
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/scanner
-        env:
-        - name: instanceId
-          value: ${instanceId}
       imagePullSecrets:
       - name: regsecret`;
                 }
@@ -673,12 +655,12 @@ spec:
                                             "port":23000
                                         },
                                         {
-                                            "name":"utility",
+                                            "name":"apis",
                                             "port":6382
                                         }
                                     ],
                                     "selector":{
-                                        "app":"quorum-node-" + instanceId
+                                        "app":"dynamo-node-" + instanceId
                                     },
                                     "type":"NodePort"
                                 }
@@ -705,12 +687,12 @@ spec:
                                                 rpcNodePort: response.data.spec.ports[0].nodePort,
                                                 constellationNodePort: response.data.spec.ports[1].nodePort,
                                                 ethNodePort: response.data.spec.ports[2].nodePort,
-                                                utilityPort: response.data.spec.ports[3].nodePort,
+                                                apisPort: response.data.spec.ports[3].nodePort,
                                                 clusterIP: response.data.spec.clusterIP,
                                                 realRPCNodePort: 8545,
                                                 realConstellationNodePort: 9001,
                                                 realEthNodePort: 23000,
-                                                realUtilityPort: 6382
+                                                realAPIsPort: 6382
                                             }
                                         })
 
@@ -767,10 +749,16 @@ spec:
                                                                     "host": "app.blockcluster.io",
                                                                     "http": {
                                                                         "paths": [{
-                                                                            "path": "/node/" + instanceId,
+                                                                            "path": "/api/node/" + instanceId + "/jsonrpc/",
                                                                             "backend": {
                                                                                 "serviceName": instanceId,
                                                                                 "servicePort": 8545
+                                                                            }
+                                                                        }, {
+                                                                            "path": "/api/node/" + instanceId + "/",
+                                                                            "backend": {
+                                                                                "serviceName": instanceId,
+                                                                                "servicePort": 6382
                                                                             }
                                                                         }]
                                                                     }
@@ -789,7 +777,7 @@ spec:
                                                             myFuture.return();
                                                             Meteor.setTimeout(() => {
 
-                                                                HTTP.call("GET", `http://${Config.workerNodeIP}:` + response.data.spec.ports[3].nodePort + "/nodeInfo", function(error, response) {
+                                                                HTTP.call("GET", `http://${Config.workerNodeIP}:` + response.data.spec.ports[3].nodePort + `/api/node/${instanceId}/utility/nodeInfo`, function(error, response) {
                                                                     if (error) {
                                                                         console.log(error);
                                                                         deleteNetwork(id)
@@ -841,8 +829,7 @@ spec:
                                                                                             $set: {
                                                                                                 currentValidators: currentValidators,
                                                                                                 "status": "running",
-                                                                                                "jsonRPC-password": instanceId,
-                                                                                                "restAPI-password": instanceId,
+                                                                                                "api-password": instanceId
                                                                                             }
                                                                                         })
                                                                                     }
@@ -1481,7 +1468,7 @@ spec:
                             instanceId: instanceId
                         }, {
                             $set: {
-                                "jsonRPC-password": password
+                                "apis-password": password
                             }
                         })
 
@@ -1492,15 +1479,6 @@ spec:
         })
 
         return myFuture.wait();
-    },
-    "restAPIPasswordUpdate": function(instanceId, password) {
-        Networks.update({
-            instanceId: instanceId
-        }, {
-            $set: {
-                "restAPI-password": password
-            }
-        })
     },
     "addPeer": function(instanceId, eNodeURL) {
         var network = Networks.find({
@@ -1643,7 +1621,7 @@ spec:
             address: accountAddress
         }).fetch()[0]
 
-        HTTP.call("GET", `http://${workerNodeIP}:${network.utilityPort}/getPrivateKey?address=${accountAddress}&password=${account.password}`, function(error, response) {
+        HTTP.call("GET", `http://${workerNodeIP}:${network.apisPort}/api/node/${instanceId}/getPrivateKey?address=${accountAddress}&password=${account.password}`, function(error, response) {
             if (error) {
                 myFuture.throw("An unknown error occured");
             } else {
