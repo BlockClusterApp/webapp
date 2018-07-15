@@ -117,7 +117,6 @@ Meteor.methods({
             "instanceId": instanceId,
             "name": networkName,
             "type": "new",
-            "status": "initializing",
             "peerType": "authority",
             "user": userId ? userId : this.userId,
             "createdOn": Date.now(),
@@ -174,7 +173,38 @@ Meteor.methods({
                                                 {
                                                     "containerPort":6382
                                                 }
-                                            ]
+                                            ],
+                                            "livenessProbe": {
+                                                "exec": {
+                                                    "command": [
+                                                        "bin/bash",
+                                                        "-c",
+                                                        "node ./apis/ping.js"
+                                                    ]
+                                                },
+                                                "initialDelaySeconds": 5,
+                                                "periodSeconds": 5
+                                            },
+                                            "lifecycle": {
+                                                "postStart": {
+                                                    "exec": {
+                                                        "command": [
+                                                            "bin/bash",
+                                                            "-c",
+                                                            "node ./apis/postStart.js"
+                                                        ]
+                                                    }
+                                                },
+                                                "preStop": {
+                                                    "exec": {
+                                                        "command": [
+                                                            "bin/bash",
+                                                            "-c",
+                                                            "node ./apis/preStop.js"
+                                                        ]
+                                                    }
+                                                }
+                                            }
                                         }
                                     ],
                                     "imagePullSecrets":[
@@ -483,7 +513,6 @@ Meteor.methods({
             "instanceId": instanceId,
             "name": networkName,
             "type": "join",
-            "status": "initializing",
             "peerType": nodeType,
             "user": userId ? userId : this.userId,
             "createdOn": Date.now(),
@@ -516,6 +545,18 @@ spec:
       - name: dynamo
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo
         command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
+        livenessProbe:
+          exec:
+            command: ["bin/bash", "-c", "node ./apis/ping.js"]
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        lifecycle:
+          postStart:
+            exec:
+              command: ["bin/bash", "-c", "node ./apis/postStart.js"]
+          preStop:
+            exec:
+              command: ["bin/bash", "-c", "node ./apis/preStop.js"]
         imagePullPolicy: Always
         ports:
         - containerPort: 8545
@@ -550,6 +591,18 @@ spec:
       - name: dynamo
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo
         command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
+        livenessProbe:
+          exec:
+            command: ["bin/bash", "-c", "node ./apis/ping.js"]
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        lifecycle:
+          postStart:
+            exec:
+              command: ["bin/bash", "-c", "node ./apis/postStart.js"]
+          preStop:
+            exec:
+              command: ["bin/bash", "-c", "node ./apis/preStop.js"]
         imagePullPolicy: Always
         ports:
         - containerPort: 8545

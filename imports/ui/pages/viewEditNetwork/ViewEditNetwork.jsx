@@ -123,7 +123,7 @@ class ViewEditNetwork extends Component {
 			                        <div className="form-group row">
 			                            <label className="col-md-3 control-label">Status</label>
 			                            <div className="col-md-9">
-			                                <b className="value-valign-middle-status">{this.props.network.length === 1 ? ReactHtmlParser(helpers.convertStatusToTag(this.props.network[0].status, helpers.firstLetterCapital(this.props.network[0].status))) : ""}</b>
+			                                <b className="value-valign-middle-status">{this.props.network.length === 1 ? ReactHtmlParser(helpers.convertStatusToTag(helpers.calculateNodeStatus(this.props.network[0].status, this.props.network[0].lastPinged), helpers.firstLetterCapital(helpers.calculateNodeStatus(this.props.network[0].status, this.props.network[0].lastPinged)))) : ""}</b>
 			                            </div>
 			                        </div>
 			                        <div className="form-group row">

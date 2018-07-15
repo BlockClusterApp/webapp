@@ -43,7 +43,6 @@ class NetworksList extends Component {
                                             </thead>
                                             <tbody>
                                                 {this.props.networks.map((item, index) => {
-                                                    console.log(item)
                                                     return (
                                                         <tr key={item._id} onClick={() => this.openNetwork(item.instanceId)}>
                                                             <td className="v-align-middle ">
@@ -56,7 +55,7 @@ class NetworksList extends Component {
                                                                 {helpers.firstLetterCapital(item.peerType)}
                                                             </td>
                                                             <td className="v-align-middle">
-                                                                {ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}
+                                                                {ReactHtmlParser(helpers.convertStatusToTag(helpers.calculateNodeStatus(item.status, item.lastPinged), helpers.firstLetterCapital(helpers.calculateNodeStatus(item.status, item.lastPinged))))}
                                                             </td>
                                                             <td className="v-align-middle">
                                                                 {helpers.timeConverter(item.createdOn / 1000)}
