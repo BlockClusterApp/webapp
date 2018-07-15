@@ -43,6 +43,7 @@ class NetworksList extends Component {
                                             </thead>
                                             <tbody>
                                                 {this.props.networks.map((item, index) => {
+                                                    console.log(item)
                                                     return (
                                                         <tr key={item._id} onClick={() => this.openNetwork(item.instanceId)}>
                                                             <td className="v-align-middle ">

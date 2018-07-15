@@ -44,9 +44,9 @@ class App extends Component {
 				<Switch>
 					<Route exact path="/login" render={this.requireNotLoggedIn(Login)} />
 					<Route exact path="/register" render={this.requireNotLoggedIn(Register)} />
-					<Route exact path="/forgot-password" component={RequestPasswordReset} />
-					<Route exact path="/app/reset-password" component={ResetPassword} />
-					<Route exact path="/app/email-verify" component={EmailVerify} />
+					<Route exact path="/forgot-password" render={this.requireNotLoggedIn(RequestPasswordReset)} />
+					<Route exact path="/reset-password" render={this.requireNotLoggedIn(ResetPassword)} />
+					<Route exact path="/email-verify" render={this.requireNotLoggedIn(EmailVerify)} />
 					<Route path="/app" render={this.requireAuth(Main)} />
 					{/*<Route component={Notfound} />*/}
 				</Switch>
