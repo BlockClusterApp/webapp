@@ -5,21 +5,21 @@ if [ "$CIRCLE_TAG" = "production" ];
 then
   export NODE_ENV=production
   export CLUSTER_PREFIX="production";
-  export ROOL_URL="app.blockcluster.io";
+  export ROOT_URL="app.blockcluster.io";
 elif [ "$CIRCLE_TAG" = "staging" ];
 then
   export NODE_ENV=staging
   export CLUSTER_PREFIX="dev";
-  export ROOL_URL="app.blockcluster.io";
+  export ROOT_URL="app.blockcluster.io";
 elif [ "$CIRCLE_TAG" = "test" ];
 then
   export NODE_ENV=test
   export CLUSTER_PREFIX="dev";
-  export ROOL_URL="test.blockcluster.io";
+  export ROOT_URL="test.blockcluster.io";
 else
   export NODE_ENV=dev
   export CLUSTER_PREFIX="dev";
-  export ROOL_URL="dev.blockcluster.io";
+  export ROOT_URL="dev.blockcluster.io";
 fi
 
 
