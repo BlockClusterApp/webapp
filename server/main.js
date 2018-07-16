@@ -1521,3 +1521,15 @@ spec:
         return myFuture.wait();
     }
 })
+
+Meteor.startup(() => {
+
+});
+
+process.on('exit', () => {
+
+});
+
+process.on('uncaughtException', () => {
+
+});
