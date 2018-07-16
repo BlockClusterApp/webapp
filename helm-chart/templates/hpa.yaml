@@ -6,7 +6,7 @@ metadata:
   namespace: {{ template "server.namespace" . }}
 spec:
   scaleTargetRef:
-    apiVersion: apps/v1beta1
+    apiVersion: extensions/v1beta1
     kind: Deployment
     name: {{ template "server.name" . }}
   targetCPUUtilizationPercentage: 60

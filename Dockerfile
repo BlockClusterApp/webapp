@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:16.04 as builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 RUN apt-get install -y locales && locale-gen en_US.UTF-8 && dpkg-reconfigure locales
@@ -11,8 +11,19 @@ ENV PATH $PATH:/node/bin
 RUN apt-get install -y build-essential
 RUN curl /bin/sh -c curl https://install.meteor.com/ | sh
 
+WORKDIR /blockcluster
 COPY . /blockcluster
 RUN cd /blockcluster && npm --unsafe-perm install
 
+RUN mkdir /meteor-output-tar
+RUN meteor build /meteor-output-tar --architecture os.linux.x86_64
+RUN mkdir /meteor-output
+RUN tar -xzf webapp.tar.gz -C /meteor-output
+
+FROM node:8.9.3 as base
+RUN mkdir /blockcluster
 WORKDIR /blockcluster
-ENTRYPOINT ["/bin/bash", "-i", "-c"]
+COPY --from=builder /meteor-output/bundle ./
+RUN cd programs/server && npm install
+ENV PORT=3000
+CMD ["node", "main.js"]
