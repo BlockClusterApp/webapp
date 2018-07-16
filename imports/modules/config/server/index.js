@@ -2,9 +2,7 @@ const defaults = require("../local.config.js");
 const fs = require("fs");
 const path = require("path");
 
-const RemoteConfig = JSON.parse(
-  fs.readFileSync(path.join(process.cwd().split(".meteor")[0], "imports", "modules", "config", "kube-config.json")).toString()
-);
+const RemoteConfig = require('../kube-config.json')
 
 function getAPIHost() {
   if (process.env.API_HOST) {
