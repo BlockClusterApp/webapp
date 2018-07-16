@@ -44,6 +44,7 @@ import {
     scanBlocksOfNode,
     authoritiesListCronJob
 } from "../imports/collections/networks/server/cron.js"
+import fs from 'fs';
 var md5 = require("apache-md5");
 var base64 = require('base-64');
 var utf8 = require('utf8');
@@ -1578,3 +1579,26 @@ spec:
         return myFuture.wait();
     }
 })
+
+Meteor.startup(()=>{
+    serverStartup();
+});
+
+const LOCK_FILE_PATH = '/tmp/webapp.lock';
+function serverStartup(){
+    console.log("Writing lock file");
+    fs.writeFileSync(LOCK_FILE_PATH, `Server started at ${new Date()}`)
+}
+
+function serverStop(){
+    fs.unlinkSync(LOCK_FILE_PATH);
+}
+
+process.on('exit', () => {
+    serverStop();
+});
+
+process.on('uncaughtException', () => {
+    serverStop();
+})
+
