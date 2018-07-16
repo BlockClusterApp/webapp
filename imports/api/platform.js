@@ -23,7 +23,14 @@ const jwt = new RedisJwt({
     port: Config.redisPort,
     secret: 'rch4nuct90i3t9ik#%$^&u3jrmv29r239cr2',
     multiple: true
-})
+}) 
+
+JsonRoutes.add("get", "/ping", function(req, res, next) {
+    JsonRoutes.sendResult(res, {
+        code: 200,
+        data: "pong"
+    });
+});
 
 JsonRoutes.add("post", "/api/platform/login", function(req, res, next) {
     function authenticationFailed() {
