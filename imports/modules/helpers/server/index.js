@@ -20,11 +20,11 @@ function generateURL(route){
 }
 
 function generateCompleteURLForEmailVerification(query) {
-  return generateURL(`/app/email-verify?key=${query}`);
+  return generateURL(`/email-verify?key=${query}`);
 }
 
 function generateCompleteURLForPasswordReset(query) {
-  return generateURL(`/app/reset-password?key=${query}`);
+  return generateURL(`/reset-password?key=${query}`);
 }
 
 function getEJSTemplate({filePath, fileName}) {
