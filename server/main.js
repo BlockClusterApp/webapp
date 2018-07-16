@@ -157,6 +157,10 @@ Meteor.methods({
                                                 {
                                                     "name": "instanceId",
                                                     "value": instanceId
+                                                },
+                                                {
+                                                    "name": "MONGO_URL",
+                                                    "value": `mongo.${Config.namespace}.svc.cluster.local:27017`
                                                 }
                                             ],
                                             "imagePullPolicy":"Always",
