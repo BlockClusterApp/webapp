@@ -35,7 +35,7 @@ spec:
         - name: MONGO_URL
           value: {{ template "server.monogUrl" . }}
         - name: ROOT_URL
-          value: {{ template "server.host" . }}
+          value: {{ template "server.rootUrl" . }}
         - name: WORKER_NODE_IP
           value: {{ template "envs.workerNodeIP" . }}
         - name: REDIS_HOST
