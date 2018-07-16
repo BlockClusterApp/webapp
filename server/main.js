@@ -617,6 +617,8 @@ spec:
         - containerPort: 9001
         - containerPort: 6382
         env:
+        - name: MONGO_URL
+          value: ${process.env.MONGO_URL}
         - name: instanceId
           value: ${instanceId}
         - name: assetsContractAddress
@@ -1603,4 +1605,3 @@ process.on('exit', () => {
 process.on('uncaughtException', () => {
     serverStop();
 })
-
