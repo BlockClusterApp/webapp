@@ -8,7 +8,7 @@ spec:
   scaleTargetRef:
     apiVersion: extensions/v1beta1
     kind: Deployment
-    name: {{ template "server.name" . }}
+    name: {{ template "server.name" . }}-deploy
   targetCPUUtilizationPercentage: 60
   minReplicas: {{ template "server.minReplicas" . }}
   maxReplicas: {{ template "server.maxReplicas" . }}
