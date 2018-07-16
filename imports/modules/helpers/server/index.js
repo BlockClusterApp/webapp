@@ -3,6 +3,14 @@ import crypto from "crypto";
 import ejs from "ejs";
 import Config from '../../config/server';
 
+const EmailVerificationTemplate = require('../../template/email-verification');
+const ForgotPasswordTemplate = require('../../template/forgot-password');
+
+const EJSMapping = {
+  'email-verification.ejs': EmailVerificationTemplate,
+  'forgot-password.ejs': ForgotPasswordTemplate
+};
+
 const fs = Npm.require("fs");
 const path = Npm.require("path");
 
@@ -27,27 +35,16 @@ function generateCompleteURLForPasswordReset(query) {
   return generateURL(`/reset-password?key=${query}`);
 }
 
-function getEJSTemplate({filePath, fileName}) {
-  const _filePath = filePath || path.join(
-    process.cwd().split(".meteor")[0],
-    "imports",
-    "modules",
-    "template",
-    fileName
-    )
-  return new Promise((resolve, reject) => {
-    fs.readFile(_filePath, (err, buffer) => {
-      if (err) {
-        return reject(err);
-      }
-      const content = buffer.toString();
-      return resolve(
-        ejs.compile(content, {
-          cache: true,
-          filename: _filePath
-        })
-      );
-    });
+function getEJSTemplate({fileName}) {
+  return new Promise(resolve => {
+    if(!fileName){
+      fileName = "email-verification.ejs";
+    }
+    const content = EJSMapping[fileName];
+    resolve(ejs.compile(content, {
+      cache: true,
+      filename: fileName
+    }));
   });
 }
 
