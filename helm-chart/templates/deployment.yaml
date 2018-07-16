@@ -26,7 +26,6 @@ spec:
       - name: {{ template "server.name" . }} 
         image: {{ .Values.image }}:{{ template "server.image-tag" . }}
         imagePullPolicy: IfNotPresent
-        args: ["meteor --allow-superuser"]
         workingDir: /blockcluster
         env:
         - name: WEB_ENV
@@ -35,8 +34,8 @@ spec:
           value: {{ .Values.NODE_ENV | quote }}
         - name: MONGO_URL
           value: {{ template "server.monogUrl" . }}
-        - name: API_HOST
-          value: {{ .Values.API_HOST | quote }}
+        - name: ROOT_URL
+          value: {{ template "server.host" . }}
         - name: WORKER_NODE_IP
           value: {{ template "envs.workerNodeIP" . }}
         - name: REDIS_HOST
@@ -68,8 +67,8 @@ spec:
           exec:
             command:
             - cat
-            - /tmp/rm-server-booted.lock
-          initialDelaySeconds: 90
+            - /tmp/webapp.lock
+          initialDelaySeconds: 30
           periodSeconds: 15
         readinessProbe:
           httpGet:

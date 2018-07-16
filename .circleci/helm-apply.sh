@@ -6,7 +6,7 @@ aws s3 cp s3://bc-kubeconfig/config ~/.kube/config
 
 helm init --client-only
 
-setVariables="NODE_ENV=${NODE_ENV},image=${IMAGE_NAME},commitHash=${COMMIT_HASH}"
+setVariables="NODE_ENV=${NODE_ENV},image=${IMAGE_NAME},commitHash=${COMMIT_HASH},ROOT_URL=${ROOT_URL}"
 releaseName="blockcluster-app-${NODE_ENV}"
 
 helm --debug \

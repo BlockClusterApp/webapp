@@ -6,11 +6,11 @@ server:
 
   test:
     minReplicas: 2
-    maxReplicas: 4
+    maxReplicas: 2
 
   dev:
     minReplicas: 2
-    maxReplicas: 4
+    maxReplicas: 2
 
   production:
     minReplicas: 1
@@ -19,3 +19,4 @@ server:
 # NODE_ENV: dev
 # image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/blockcluster-webapp
 # commitHash: 9ea5e20fd7ae7f957e3581294d3d99c7a13ba73a
+# ROOT_URL: dev.blockcluster.io

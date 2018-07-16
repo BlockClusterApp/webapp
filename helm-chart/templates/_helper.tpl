@@ -27,7 +27,7 @@ mongodb://mongo.{{ template "server.namespace" . }}.svc.cluster.local:27017
 {{- end -}}
 
 {{- define "server.host" -}}
-{{ .Values.NODE_ENV }}.blockcluster.io
+https://{{ .Values.ROOT_URL }}
 {{- end -}}
 
 
