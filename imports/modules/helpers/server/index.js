@@ -24,9 +24,7 @@ function generateRandomString(email, salt = "I<3BlockCluster") {
 }
 
 function generateURL(route){
-  return `${
-    process.env.ROOT_URL ? process.env.ROOT_URL : "http://localhost:3000"
-  }${route}`;
+  return `${Config.apiHost.replace(":3000/", ':3000')}${route}`;
 }
 
 function generateCompleteURLForEmailVerification(query) {
