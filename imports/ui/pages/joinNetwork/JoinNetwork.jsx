@@ -4,6 +4,7 @@ import {withTracker} from "meteor/react-meteor-data";
 import {withRouter} from 'react-router-dom'
 import {Networks} from "../../../collections/networks/networks.js"
 import notifications from "../../../modules/notifications"
+import LocationSelector from '../../components/LocationSelector/LocationSelector';
 
 import "./JoinNetwork.scss"
 
@@ -11,13 +12,15 @@ class JoinNetwork extends Component {
     constructor() {
         super()
 
+        this.locationCode = "us-west-2";
         this.state = {
             joinFormSubmitError: "",
             inviteFormSubmitError: "",
             totalENodes: [""],
             totalConstellationNodes: [""],
             joinLoading: false,
-            inviteLoading: false
+            inviteLoading: false,
+            locationCode: "us-west-2"
         };
     }
 
@@ -89,7 +92,7 @@ class JoinNetwork extends Component {
                 joinLoading: true
             });
 
-            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, (error) => {
+            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, this.state.locationCode, (error) => {
                 if(!error) {
                     this.setState({
                         joinFormSubmitError: '',
@@ -138,6 +141,10 @@ class JoinNetwork extends Component {
                 })
             }
         });
+    }
+
+    locationChangeListener(newLocationCode){
+        this.locationCode = newLocationCode;
     }
 
 	render(){
@@ -211,6 +218,12 @@ class JoinNetwork extends Component {
                                                                         <label>Gas Price</label>
                                                                         <input type="text" className="form-control" name="firstName" required disabled value="0" />
                                                                     </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="row clearfix">
+                                                                <div className="col-md-12">
+                                                                    <LocationSelector locationChangeListener={this.locationChangeListener.bind(this)} />
                                                                 </div>
                                                             </div>
                                                         </div>

@@ -3,8 +3,8 @@ module.exports = {
     redisHost: "18.237.94.215",
     redisPort: 30645,
     apiHost: "localhost:3000",
-    kubeRestApiHost: "http://34.208.153.18:8000",
+    kubeRestApiHost: "https://k8s-dev-us-west-2-api.blockcluster.io",
     firewallPort: "31988",
-    workerNodeIP: "52.43.83.54",
-    namespace: "default"
+    workerNodeIP: "18.237.94.215",
+    namespace: "dev"
 }

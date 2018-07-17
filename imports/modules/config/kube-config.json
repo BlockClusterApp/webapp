@@ -1,0 +1,38 @@
+{
+  "clusters": {
+    "dev": {
+      "us-west-2": {
+        "masterApiHost": "https://k8s-dev-us-west-2-api.blockcluster.io",
+        "workerNodeIP": "18.237.94.215",
+        "locationCode": "us-west-2",
+        "locationName": "US West (Oregon)",
+        "auth": {
+          "user": "admin",
+          "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
+        }
+      },
+      "ap-south-1": {
+        "masterApiHost": "https://k8s-dev-ap-south-1-api.blockcluster.io",
+        "workerNodeIP": "13.126.10.140",
+        "locationCode": "ap-south-1",
+        "locationName": "Asia Pacific South (Mumbai)",
+        "auth": {
+          "user": "admin",
+          "pass": "Eca28RNB1yXXSfZm9B80SFzrTHSHXb1C"
+        }
+      }
+    },
+    "staging": {
+      "us-west-2": {
+        "masterApiHost": "https://k8s-dev-us-west-2-api.blockcluster.io",
+        "workerNodeIP": "18.237.94.215",
+        "locationCode": "us-west-2",
+        "locationName": "US West (Oregon)",
+        "auth": {
+          "user": "admin",
+          "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
+        }
+      }
+    }
+  }
+}

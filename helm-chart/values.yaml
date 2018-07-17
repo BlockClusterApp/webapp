@@ -18,5 +18,5 @@ server:
 
 # NODE_ENV: dev
 # image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/webapp
-# commitHash: fcb308f8c5ab37ca571aac8df95e8e1a4f7f13ba
+# commitHash: 84bdc20182fdde1b7b95430adde3fcfc048af2ad
 # ROOT_URL: dev.blockcluster.io

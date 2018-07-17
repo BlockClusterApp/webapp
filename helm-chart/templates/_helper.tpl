@@ -23,7 +23,13 @@ blockcluster-app
 {{- end -}}
 
 {{- define "server.monogUrl" -}}
-mongodb://mongo.{{ template "server.namespace" . }}.svc.cluster.local:27017
+{{- if eq .Values.NODE_ENV "staging" -}}
+mongodb://18.237.94.215:31972
+{{- else if eq .Values.NODE_ENV "test" -}}
+mongodb://18.237.94.215:32153
+{{- else if eq .Values.NODE_ENV "dev" -}}
+mongodb://18.237.94.215:32153
+{{- end -}}
 {{- end -}}
 
 {{- define "server.host" -}}

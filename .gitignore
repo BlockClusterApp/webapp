@@ -1,4 +1,9 @@
 node_modules/
 
+.DS_Store
+
+.npm
 ./**/local.config.js
 imports/modules/config/local.config.js
+
+.DS_Store
