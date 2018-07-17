@@ -74,7 +74,7 @@ class Peers extends Component {
                                                 <div className="col-lg-12">
                                                     <div className="card card-transparent">
                                                         <div className="row column-seperation">
-                                                            <div className="col-lg-4">
+                                                            <div className="col-lg-12">
                                                                 <h4>Add Static Peer</h4>
                                                                 <form role="form" onSubmit={(e) => {
                                                                         this.addPeer(e, this.props.network[0].instanceId);
@@ -103,7 +103,7 @@ class Peers extends Component {
                                                                             </div>
                                                                         </div>
                                                                     }
-                                                                    <p className="pull-right">
+                                                                    <p className="pull-left">
                                                                         <LaddaButton
                                                                             loading={this.state[this.props.network[0].instanceId + "_enodeURL_formloading"]}
                                                                             data-size={S}
@@ -118,51 +118,55 @@ class Peers extends Component {
                                                                     </p>
                                                                 </form>
                                                             </div>
-                                                            <div className="col-lg-8">
-                                                                <h4>Connected Peers</h4>
-                                                                <div className="table-responsive">
-                                                                    <table className="table table-hover" id="basicTable">
-                                                                        <thead>
-                                                                            <tr>
-                                                                                <th style={{width: "25%"}}></th>
-                                                                                <th style={{width: "25%"}}>IP and Port</th>
-                                                                                <th style={{width: "25%"}}>ENode ID</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody>
-                                                                            {
-                                                                                (() => {
-                                                                                    if (this.props.network[0].connectedPeers) {
-                                                                                        return (
-                                                                                            this.props.network[0].connectedPeers.map((item, index) => {
-                                                                                                return (
-                                                                                                    <tr key={item.id}>
-                                                                                                        <td className="v-align-middle">
-                                                                                                            <i className="fa fa-circle text-success fs-11"></i>
-                                                                                                        </td>
-                                                                                                        <td className="v-align-middle">
-                                                                                                            {item.network.remoteAddress}
-                                                                                                        </td>
-                                                                                                        <td className="v-align-middle ">
-                                                                                                            {item.id}
-                                                                                                        </td>
-                                                                                                    </tr>
-                                                                                                )
-                                                                                            })
-                                                                                        )
-                                                                                    }
-                                                                                })()
-                                                                            }
-                                                                        </tbody>
-                                                                    </table>
-                                                                </div>
-                                                            </div>
+                                                            
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     }
+                                </div>
+                                <hr style={{margin: '0px'}} />
+                                <div className="card-block" style={{marginTop: '10px'}}>
+                                {this.props.network.length === 1 &&<div className="col-lg-12">
+                                        <h4>Connected Peers</h4>
+                                        <div className="table-responsive">
+                                            <table className="table table-hover" id="basicTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th style={{width: "25%"}}></th>
+                                                        <th style={{width: "25%"}}>IP and Port</th>
+                                                        <th style={{width: "25%"}}>ENode ID</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {
+                                                        (() => {
+                                                            if (this.props.network[0].connectedPeers) {
+                                                                return (
+                                                                    this.props.network[0].connectedPeers.map((item, index) => {
+                                                                        return (
+                                                                            <tr key={item.id}>
+                                                                                <td className="v-align-middle">
+                                                                                    <i className="fa fa-circle text-success fs-11"></i>
+                                                                                </td>
+                                                                                <td className="v-align-middle">
+                                                                                    {item.network.remoteAddress}
+                                                                                </td>
+                                                                                <td className="v-align-middle ">
+                                                                                    {item.id}
+                                                                                </td>
+                                                                            </tr>
+                                                                        )
+                                                                    })
+                                                                )
+                                                            }
+                                                        })()
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div> }
                                 </div>
                             </div>
                         </div>

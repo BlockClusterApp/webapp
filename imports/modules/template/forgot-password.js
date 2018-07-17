@@ -67,9 +67,9 @@ module.exports = `<!DOCTYPE html>
       <br />
 
       <span class="sm-block">
-        <a href="#" class="m-l-10 m-r-10" style="color: #222; text-decoration: none;">Terms of use</a>
+        <a href="https://www.blockcluster.io/terms" class="m-l-10 m-r-10" style="color: #222; text-decoration: none;">Terms of use</a>
         <span class="muted">|</span>
-        <a href="#" class="m-l-10" style="color: #222; text-decoration: none;">Privacy Policy</a>
+        <a href="https://www.blockcluster.io/privacy" class="m-l-10" style="color: #222; text-decoration: none;">Privacy Policy</a>
       </span>
     </p>
     <p class="small no-margin pull-right sm-pull-reset" style="text-align: center">

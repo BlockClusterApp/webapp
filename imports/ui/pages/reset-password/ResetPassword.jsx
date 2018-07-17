@@ -160,7 +160,7 @@ export default class EmailVerification extends Component {
             <br />
             <span className="sm-block">
               <a
-                href="#"
+                href="https://www.blockcluster.io/terms"
                 className="m-l-10 m-r-10"
                 style={{ color: "#222", textDecoration: "none" }}
               >
@@ -168,7 +168,7 @@ export default class EmailVerification extends Component {
               </a>
               <span className="muted">|</span>
               <a
-                href="#"
+                href="https://www.blockcluster.io/privacy"
                 className="m-l-10"
                 style={{ color: "#222", textDecoration: "none" }}
               >

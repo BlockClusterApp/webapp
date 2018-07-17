@@ -3,6 +3,7 @@ require('../imports/api/emails/email-validator')
 require('../imports/api/emails/forgot-password')
 require('../imports/api/locations');
 
+import UserFunctions from '../imports/api/server-functions/user-functions';
 import {
     Networks
 } from "../imports/collections/networks/networks.js"
@@ -909,26 +910,27 @@ spec:
 
         return myFuture.wait();
     },
-    "inviteUserToNetwork": function(networkId, nodeType, email, userId) {
-        let user = Accounts.findUserByEmail(email);
-        var network = Networks.find({
-            instanceId: networkId
-        }).fetch()[0];
-        if (user) {
-            Meteor.call(
-                "joinNetwork",
-                network.name,
-                nodeType,
-                network.genesisBlock.toString(), ["enode://" + network.nodeId + "@" + network.workerNodeIP + ":" + network.ethNodePort].concat(network.totalENodes), [network.workerNodeIP + ":" + network.constellationNodePort].concat(network.totalConstellationNodes),
-                network.assetsContractAddress,
-                network.atomicSwapContractAddress,
-                network.streamsContractAddress,
-                network.locationCode,
-                (userId ? userId : user._id)
-            )
-        } else {
-            throw new Meteor.Error(500, 'Unknown error occured');
-        }
+    "inviteUserToNetwork": async function(networkId, nodeType, email, userId) {
+        return UserFunctions.inviteUserToNetwork(networkId, nodeType, email, userId || this.userId);
+        // let user = Accounts.findUserByEmail(email);
+        // var network = Networks.find({
+        //     instanceId: networkId
+        // }).fetch()[0];
+        // if (user) {
+        //     Meteor.call(
+        //         "joinNetwork",
+        //         network.name,
+        //         nodeType,
+        //         network.genesisBlock.toString(), ["enode://" + network.nodeId + "@" + network.clusterIP + ":" + network.realEthNodePort].concat(network.totalENodes), [network.clusterIP + ":" + network.realConstellationNodePort].concat(network.totalConstellationNodes),
+        //         network.assetsContractAddress,
+        //         network.atomicSwapContractAddress,
+        //         network.streamsContractAddress,
+        //         (userId ? userId : user._id),
+        //         network.locationCode
+        //     )
+        // } else {
+        //     throw new Meteor.Error(500, 'Unknown error occured');
+        // }
     },
     "createAssetType": function(instanceId, assetName, assetType, assetIssuer, reissuable, parts) {
         var myFuture = new Future();

@@ -4,6 +4,17 @@ import Config from '../../modules/config/server';
 
 import sg from "@sendgrid/mail";
 
+/*
+emailOptions
+{
+  from: {email: "jason@blockcluster.io", name: "Jason from Blockcluster"},
+  to: email,
+  subject: `Confirm ${user.emails[0].address} on blockcluster.io`,
+  text: `Visit the following link to verify your email address. ${link}`,
+  html: finalHTML
+}
+*/
+
 const sendEmail = function(emailOptions) {
   return new Promise( (resolve, reject) => {
     process.nextTick(async () => {
