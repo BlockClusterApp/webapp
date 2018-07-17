@@ -107,7 +107,7 @@ class Explorer extends Component {
         let status = null;
 
         if(this.props.network.length === 1) {
-            rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.network[0].instanceId
+            rpc = `https://${this.props.workerNodeDomainName}/api/node/${this.props.network[0].instanceId}/jsonrpc`
             username = this.props.network[0].instanceId
             password = this.props.network[0]["jsonRPC-password"]
             status = this.props.network[0].status
@@ -165,7 +165,7 @@ class Explorer extends Component {
         let status = null;
 
         if(this.props.network.length === 1) {
-            rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.network[0].instanceId
+            rpc = `https://${this.props.workerNodeDomainName}/api/node/${this.props.network[0].instanceId}/jsonrpc`
             username = this.props.network[0].instanceId
             password = this.props.network[0]["jsonRPC-password"]
 
@@ -231,7 +231,7 @@ class Explorer extends Component {
             let rpc = null;
             let status = null;
 
-            rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.network[0].instanceId
+            rpc = `https://${this.props.workerNodeDomainName}/api/node/${this.props.network[0].instanceId}/jsonrpc`
             username = this.props.network[0].instanceId
             password = this.props.network[0]["jsonRPC-password"]
             status = this.props.network[0].status
@@ -288,7 +288,7 @@ class Explorer extends Component {
         let atomicSwapContractAddress = null;
         let assetsContractAddress = null;
 
-        rpc = "https://" + this.props.workerNodeDomainName[0].value + "/node/" + this.props.network[0].instanceId
+        rpc = `https://${this.props.workerNodeDomainName}/api/node/${this.props.network[0].instanceId}/jsonrpc`
         username = this.props.network[0].instanceId
         password = this.props.network[0]["jsonRPC-password"]
         status = this.props.network[0].status
@@ -522,7 +522,6 @@ export default withTracker((props) => {
         		}
         	}
         })],
-        workerNodeIP: Config.workerNodeIP,
-        workerNodeDomainName: Config.workderNodeDomainName
+        workerNodeDomainName: Config.workerNodeDomainName
     }
 })(withRouter(Explorer))

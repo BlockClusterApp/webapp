@@ -23,7 +23,7 @@
 //     },
 //     {
 //       $set: {
-//         value: Config.workderNodeDomainName
+//         value: Config.workerNodeDomainName
 //       }
 //     }
 //   );

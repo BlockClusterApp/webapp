@@ -6,8 +6,8 @@ const RemoteConfig = require('../kube-config.json');
 // let locationMapping = {};
 
 function getAPIHost() {
-  if (process.env.API_HOST) {
-    return process.env.API_HOST;
+  if (process.env.ROOT_URL) {
+    return process.env.ROOT_URL;
   }
   switch (process.env.NODE_ENV) {
     case "production":
@@ -20,6 +20,20 @@ function getAPIHost() {
       return "https://dev.blockcluster.io";
     default:
       return `http://localhost:${process.env.PORT || "3000"}`;
+  }
+}
+
+function getDynamoWokerDomainName() {
+  switch (process.env.NODE_ENV) {
+    case "production":
+      return "app.blockcluster.io";
+    case "staging":
+      return "app.blockcluster.io";
+    case "test":
+      return "test.blockcluster.io";
+    default:
+      return "dev.blockcluster.io";
+
   }
 }
 
@@ -41,8 +55,8 @@ module.exports = {
   redisHost: process.env.REDIS_HOST || defaults.redisHost,
   redisPort: process.env.REDIS_PORT || defaults.redisPort,
   apiHost: getAPIHost(),
-  workderNodeDomainName: (() => {
-    return getAPIHost().split("://")[1];
+  workerNodeDomainName: (() => {
+    return getDynamoWokerDomainName();
   })(),
   kubeRestApiHost: (locationCode = "us-west-2") => {
     const locationConfig = RemoteConfig.clusters[getNamespace()][locationCode];
