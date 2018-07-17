@@ -95,12 +95,8 @@ export default {
             return "initializing"
         } else if (status === "down") {
             return "down"
-        } else if (status === "running" && lastPinged !== undefined) {
-            if((Date.now() - lastPinged) / 1000 <= 7) {
-                return "running"
-            } else {
-                return "down"
-            }
+        } else if (status === "running") {
+            return "running"
         } else {
             return "unknown"
         }

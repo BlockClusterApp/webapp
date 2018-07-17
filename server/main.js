@@ -185,17 +185,6 @@ Meteor.methods({
                                                     "containerPort":6382
                                                 }
                                             ],
-                                            "livenessProbe": {
-                                                "exec": {
-                                                    "command": [
-                                                        "bin/bash",
-                                                        "-c",
-                                                        "node ./apis/ping.js"
-                                                    ]
-                                                },
-                                                "initialDelaySeconds": 5,
-                                                "periodSeconds": 5
-                                            },
                                             "lifecycle": {
                                                 "postStart": {
                                                     "exec": {
@@ -569,11 +558,6 @@ spec:
       - name: dynamo
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo
         command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
-        livenessProbe:
-          exec:
-            command: ["bin/bash", "-c", "node ./apis/ping.js"]
-          initialDelaySeconds: 5
-          periodSeconds: 5
         lifecycle:
           postStart:
             exec:
@@ -617,11 +601,6 @@ spec:
       - name: dynamo
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo
         command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
-        livenessProbe:
-          exec:
-            command: ["bin/bash", "-c", "node ./apis/ping.js"]
-          initialDelaySeconds: 5
-          periodSeconds: 5
         lifecycle:
           postStart:
             exec:
@@ -1596,7 +1575,8 @@ spec:
             address: accountAddress
         }).fetch()[0]
 
-        HTTP.call("GET", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/getPrivateKey?address=${accountAddress}&password=${account.password}`, function(error, response) {
+        HTTP.call("GET", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/utility/getPrivateKey?address=${accountAddress}&password=${account.password}`, function(error, response) {
+            console.log(error, response)
             if (error) {
                 myFuture.throw("An unknown error occured");
             } else {
