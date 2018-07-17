@@ -4,6 +4,7 @@ import {withTracker} from "meteor/react-meteor-data";
 import {withRouter} from 'react-router-dom'
 import {Networks} from "../../../collections/networks/networks.js"
 import notifications from "../../../modules/notifications"
+import LocationSelector from '../../components/LocationSelector/LocationSelector';
 
 import "./JoinNetwork.scss"
 
@@ -11,6 +12,7 @@ class JoinNetwork extends Component {
     constructor() {
         super()
 
+        this.locationCode = "us-west-2";
         this.state = {
             joinFormSubmitError: "",
             inviteFormSubmitError: "",
@@ -141,6 +143,10 @@ class JoinNetwork extends Component {
         });
     }
 
+    locationChangeListener(newLocationCode){
+        this.locationCode = newLocationCode;
+    }
+
 	render(){
 		return (
             <div className="content ">
@@ -212,6 +218,12 @@ class JoinNetwork extends Component {
                                                                         <label>Gas Price</label>
                                                                         <input type="text" className="form-control" name="firstName" required disabled value="0" />
                                                                     </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="row clearfix">
+                                                                <div className="col-md-12">
+                                                                    <LocationSelector locationChangeListener={this.locationChangeListener.bind(this)} />
                                                                 </div>
                                                             </div>
                                                         </div>

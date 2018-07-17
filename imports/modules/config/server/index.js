@@ -2,7 +2,8 @@ const defaults = require("../local.config.js");
 const fs = require("fs");
 const path = require("path");
 
-const RemoteConfig = require('../kube-config.json')
+const RemoteConfig = require('../kube-config.json');
+// let locationMapping = {};
 
 function getAPIHost() {
   if (process.env.API_HOST) {
@@ -25,6 +26,11 @@ function getAPIHost() {
 function getNamespace() {
   return process.env.NAMESPACE || defaults.namespace || "dev";
 };
+
+// const locationConfigs = RemoteConfig.clusters[getNamespace()];
+// locationConfigs.forEach(lc => {
+//   locationMapping[lc.locationCode] = lc.locationName;
+// });
 
 module.exports = {
   sendgridAPIKey: process.env.SENDGRID_API_KEY || defaults.sendgridApi,
@@ -50,5 +56,6 @@ module.exports = {
   namespace: getNamespace(),
   RemoteConfig() {
     return RemoteConfig
-  }
+  },
+  // locationMapping
 };

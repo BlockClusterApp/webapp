@@ -16,7 +16,8 @@ class ViewEditNetwork extends Component {
         super()
         this.state = {
 			deleting: false,
-			location: "us-west-2"
+			location: "us-west-2",
+			locations: []
         };
     }
 
@@ -24,14 +25,22 @@ class ViewEditNetwork extends Component {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
         });
-    }
+	}
+	
+	componentDidMount(){
+		Meteor.call("getClusterLocations", (err, res) => {
+			this.setState({
+			  locations: res
+			});
+		  });
+	}
 
     deleteNetwork = () => {
 		this.setState({
             deleting: true
         });
 
-    	Meteor.call("deleteNetwork", this.props.network[0].instanceId, this.state.location, (error) => {
+    	Meteor.call("deleteNetwork", this.props.network[0].instanceId, (error) => {
     		if(error) {
     			notifications.error("An error occured")
     		} else {
@@ -100,6 +109,14 @@ class ViewEditNetwork extends Component {
 		})
 	}
 
+	getLocationName = (locationCode) => {
+		const locationConfig = this.state.locations.find(a => a.locationCode === locationCode);
+		if(!locationConfig) {
+			return undefined;
+		}
+		return locationConfig.locationName
+	}
+
 	render(){
 		return (
 			<div className="content ">
@@ -125,6 +142,13 @@ class ViewEditNetwork extends Component {
 			                            <label className="col-md-3 control-label">Status</label>
 			                            <div className="col-md-9">
 			                                <b className="value-valign-middle-status">{this.props.network.length === 1 ? ReactHtmlParser(helpers.convertStatusToTag(helpers.calculateNodeStatus(this.props.network[0].status, this.props.network[0].lastPinged), helpers.firstLetterCapital(helpers.calculateNodeStatus(this.props.network[0].status, this.props.network[0].lastPinged)))) : ""}</b>
+			                            </div>
+			                        </div>
+
+			                        <div className="form-group row">
+			                            <label className="col-md-3 control-label">Location</label>
+			                            <div className="col-md-9">
+			                                <b className="value-valign-middle-status">{this.props.network.length === 1 ?  this.getLocationName(this.props.network[0].locationCode) : undefined}</b>
 			                            </div>
 			                        </div>
 			                        <div className="form-group row">

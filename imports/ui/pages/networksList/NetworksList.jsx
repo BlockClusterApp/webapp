@@ -8,6 +8,15 @@ import {withRouter} from 'react-router-dom'
 import "./NetworksList.scss"
 
 class NetworksList extends Component {
+
+    constructor(props){
+        super(props);
+
+        this.state = {
+            locations: []
+        }
+    }
+
     componentWillUnmount() {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
@@ -17,6 +26,24 @@ class NetworksList extends Component {
     openNetwork = (networkId) => {
         this.props.history.push("/app/networks/" + networkId);
     }
+
+
+	componentDidMount(){
+		Meteor.call("getClusterLocations", (err, res) => {
+			this.setState({
+			  locations: res
+			});
+		  });
+    }
+    
+
+	getLocationName = (locationCode) => {
+		const locationConfig = this.state.locations.find(a => a.locationCode === locationCode);
+		if(!locationConfig) {
+			return undefined;
+		}
+		return locationConfig.locationName
+	}
 
 	render(){
 		return (
@@ -35,10 +62,11 @@ class NetworksList extends Component {
                                             <thead>
                                                 <tr>
                                                     <th style={{width: "20%"}}>Name</th>
-                                                    <th style={{width: "20%"}}>Instance ID</th>
-                                                    <th style={{width: "20%"}}>Member Type</th>
-                                                    <th style={{width: "20%"}}>Status</th>
-                                                    <th style={{width: "20%"}}>Created on</th>
+                                                    <th style={{width: "15%"}}>Instance ID</th>
+                                                    <th style={{width: "15%"}}>Member Type</th>
+                                                    <th style={{width: "18%"}}>Location</th>
+                                                    <th style={{width: "17%"}}>Status</th>
+                                                    <th style={{width: "15%"}}>Created on</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -53,6 +81,9 @@ class NetworksList extends Component {
                                                             </td>
                                                             <td className="v-align-middle">
                                                                 {helpers.firstLetterCapital(item.peerType)}
+                                                            </td>
+                                                            <td className="v-align-middle">
+                                                                {this.getLocationName(item.locationCode)}
                                                             </td>
                                                             <td className="v-align-middle">
                                                                 {ReactHtmlParser(helpers.convertStatusToTag(helpers.calculateNodeStatus(item.status, item.lastPinged), helpers.firstLetterCapital(helpers.calculateNodeStatus(item.status, item.lastPinged))))}

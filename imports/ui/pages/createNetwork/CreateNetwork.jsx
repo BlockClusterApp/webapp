@@ -106,7 +106,7 @@ class CreateNetwork extends Component {
                                             </div>
 
                                             <div className="row clearfix">
-                                                <div className="col-md-6">
+                                                <div className="col-md-12">
                                                     <LocationSelector locationChangeListener={(locationCode) => this.locationCode = locationCode} />
                                                 </div>
                                             </div>

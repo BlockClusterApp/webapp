@@ -401,9 +401,19 @@ Meteor.methods({
 
         return myFuture.wait();
     },
-    "deleteNetwork": function(id, locationCode="us-west-2") {
+    "deleteNetwork": function(id) {
         var myFuture = new Future();
-
+        var network = Networks.find({
+            instanceId: id
+        }).fetch()[0];
+        if(!network) {
+            myFuture.throw("Invalid network id");
+            Networks.remove({
+                _id: id
+            });
+            return;
+        }
+        const locationCode = network.locationCode;
         HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + id, function(error, response) {
             if (error) {
                 console.log(error);
@@ -487,9 +497,11 @@ Meteor.methods({
 
         return myFuture.wait();
     },
-    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, userId, locationCode = "us-west-2") {
+    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode, userId) {
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
+
+        locationCode = locationCode || "us-west-2";
 
         function deleteNetwork(id) {
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
