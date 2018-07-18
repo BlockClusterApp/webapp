@@ -3,15 +3,18 @@ import SimpleSchema from "simpl-schema";
 
 import AttachBaseHooks from "../../modules/helpers/server/model-helpers";
 
-const UserInvitationCollection = new Mongo.Collection("emailVerification");
+const UserInvitationCollection = new Mongo.Collection("userInvitation");
 
 AttachBaseHooks(UserInvitationCollection);
 
 UserInvitationCollection.schema = new SimpleSchema({
   inviteFrom: {
-    type: Mongo.ObjectID
+    type: String
   },
   inviteTo: {
+    type: String
+  },
+  networkId: {
     type: String
   },
   createdAt: {

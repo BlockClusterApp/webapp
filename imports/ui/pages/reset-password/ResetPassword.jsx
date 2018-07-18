@@ -22,7 +22,7 @@ export default class EmailVerification extends Component {
     const queries = queryString(this.props.location.search);
     sessionStorage.setItem("key", queries.key);
     if (history.pushState) {
-      var newurl =
+      const newurl =
         window.location.protocol +
         "//" +
         window.location.host +

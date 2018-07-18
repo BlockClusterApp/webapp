@@ -15,7 +15,7 @@ export default class EmailVerification extends Component {
     const queries = queryString(this.props.location.search);
     sessionStorage.setItem("key", queries.key);
     if (history.pushState) {
-      var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?action=verification&id=${btoa(`${new Date().getTime()}-${queries.key}`)}`;
+      const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?action=verification&id=${btoa(`${new Date().getTime()}-${queries.key}`)}`;
       window.history.pushState({ path: newurl }, '', newurl);
     }
   }
