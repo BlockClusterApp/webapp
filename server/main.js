@@ -1394,8 +1394,9 @@ spec:
         return myFuture.wait();
     },
     "searchSoloAssets": function(instanceId, query) {
+        query = JSON.parse(query)
         query.instanceId = instanceId;
-        return SoloAssets.find(JSON.parse(query)).fetch();
+        return SoloAssets.find(query).fetch();
     },
     "rpcPasswordUpdate": function(instanceId, password, locationCode="us-west-2") {
         var myFuture = new Future();
