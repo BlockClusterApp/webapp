@@ -283,7 +283,7 @@ class AssetsAudit extends Component {
                                                                     <div className="col-md-12">
                                                                         <div className="m-b-20 alert alert-danger m-b-0" role="alert">
                                                                             <button className="close" data-dismiss="alert"></button>
-                                                                            {"_auditReport_formSubmitError"}
+                                                                            {this.state["_auditReport_formSubmitError"]}
                                                                         </div>
                                                                     </div>
                                                                 </div>

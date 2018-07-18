@@ -30,6 +30,9 @@ import {
 import {
     BCAccounts
 } from "../imports/collections/bcAccounts/bcAccounts.js"
+import {
+    SoloAssetAudit
+} from "../imports/collections/soloAssetAudit/soloAssetAudit.js"
 
 import Verifier from '../imports/api/emails/email-validator'
 import Config from '../imports/modules/config/server';
@@ -1594,6 +1597,14 @@ spec:
         })
 
         return myFuture.wait();
+    },
+    "downloadReport": function(instanceId, assetName, uID) {
+        return SoloAssetAudit.find({
+            instanceId: instanceId,
+            assetName: assetName,
+            uniqueIdentifier: uID,
+
+        }, {sort: {date_created: 1}}).fetch()
     }
 })
 
