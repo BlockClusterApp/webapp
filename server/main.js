@@ -1609,7 +1609,7 @@ function serverStop(){
 
     try{
         if(fs.existsSync(LOCK_FILE_PATH)){
-            fs.unlinkSync(LOCK_FILE_PATH); 
+            // fs.unlinkSync(LOCK_FILE_PATH); 
         }
     }catch(err){
         console.log(err);
