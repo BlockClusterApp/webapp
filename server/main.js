@@ -168,9 +168,13 @@ Meteor.methods({
                                                 {
                                                     "name": "MONGO_URL",
                                                     "value": `${process.env.MONGO_URL}`
+                                                },
+                                                {
+                                                    "name": "WORKER_NODE_IP",
+                                                    "value": `${Config.workerNodeIP(locationCode)}`
                                                 }
                                             ],
-                                            "imagePullPolicy":"Always",
+                                            "imagePullPolicy":"Alwys",
                                             "ports":[
                                                 {
                                                     "containerPort":8545
@@ -574,6 +578,8 @@ spec:
         env:
         - name: MONGO_URL
           value: ${process.env.MONGO_URL}
+        - name: WORKER_NODE_IP
+          value: ${Config.workerNodeIP(locationCode)}
         - name: instanceId
           value: ${instanceId}
         - name: assetsContractAddress
@@ -617,6 +623,8 @@ spec:
         env:
         - name: MONGO_URL
           value: ${process.env.MONGO_URL}
+        - name: WORKER_NODE_IP
+          value: ${Config.workerNodeIP(locationCode)}
         - name: instanceId
           value: ${instanceId}
         - name: assetsContractAddress
