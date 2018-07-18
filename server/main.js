@@ -917,7 +917,7 @@ spec:
                 "joinNetwork",
                 network.name,
                 nodeType,
-                network.genesisBlock.toString(), ["enode://" + network.nodeId + "@" + network.clusterIP + ":" + network.realEthNodePort].concat(network.totalENodes), [network.clusterIP + ":" + network.realConstellationNodePort].concat(network.totalConstellationNodes),
+                network.genesisBlock.toString(), ["enode://" + network.nodeId + "@" + network.workerNodeIP + ":" + network.realEthNodePort].concat(network.totalENodes), [network.workerNodeIP + ":" + network.realConstellationNodePort].concat(network.totalConstellationNodes),
                 network.assetsContractAddress,
                 network.atomicSwapContractAddress,
                 network.streamsContractAddress,
