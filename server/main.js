@@ -1594,18 +1594,26 @@ Meteor.startup(()=>{
 
 const LOCK_FILE_PATH = '/tmp/webapp.lock';
 function serverStartup(){
-    console.log("Writing lock file");
     fs.writeFileSync(LOCK_FILE_PATH, `Server started at ${new Date()}`)
 }
 
 function serverStop(){
-    fs.unlinkSync(LOCK_FILE_PATH);
+
+    try{
+        if(fs.existsSync(LOCK_FILE_PATH)){
+            fs.unlinkSync(LOCK_FILE_PATH); 
+        }
+    }catch(err){
+        console.log(err);
+    }
 }
 
 process.on('exit', () => {
+    console.log("Exiting");
     serverStop();
 });
 
-process.on('uncaughtException', () => {
+process.on('uncaughtException', (e) => {
+    console.log("Uncaught exception", e);
     serverStop();
 })

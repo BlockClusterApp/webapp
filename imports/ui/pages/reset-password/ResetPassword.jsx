@@ -27,7 +27,7 @@ export default class EmailVerification extends Component {
         "//" +
         window.location.host +
         window.location.pathname +
-        `?action=verification&id=${btoa(
+        `?action=reset-password&id=${btoa(
           `${new Date().getTime()}-${queries.key}`
         )}`;
       window.history.pushState({ path: newurl }, "", newurl);
