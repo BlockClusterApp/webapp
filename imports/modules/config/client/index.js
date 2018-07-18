@@ -18,7 +18,7 @@ function getAPIHost() {
 }
 
 function getDynamoWokerDomainName() {
-  switch (process.env.NODE_ENV) {
+  switch (window.location) {
     case "production":
       return "app.blockcluster.io";
     case "staging":
@@ -34,7 +34,7 @@ module.exports = {
   workerNodeIP: process.env.WORKER_NODE_IP || defaults.workerNodeIP,
   apiHost: getAPIHost(),
   workerNodeDomainName: (() => {
-    return getDynamoWokerDomainName();
+    return window.location.host.includes("localhost") ? "dev.blockcluster.io" : window.location.host;
   })(),
   kubeRestApiHost: process.env.KUBE_REST_API_HOST || defaults.kubeRestApiHost,
   namespace: process.env.NAMESPACE || defaults.namespace,
