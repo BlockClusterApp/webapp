@@ -1012,7 +1012,7 @@ spec:
         var assets = assetsContract.at(network.assetsContractAddress);
         var parts = assets.getBulkAssetParts.call(assetName)
         units = (new BigNumber(units)).multipliedBy(helpers.addZeros(1, parts))
-        assets.transferBulkAssetUnits.sendTransaction(assetName, toAddress, units, {
+        assets.transferBulkAssetUnits.sendTransaction(assetName, toAddress, units.toString(), {
             from: fromAddress
         }, function(error, txnHash) {
             if (error) {
@@ -1609,7 +1609,7 @@ function serverStop(){
 
     try{
         if(fs.existsSync(LOCK_FILE_PATH)){
-            // fs.unlinkSync(LOCK_FILE_PATH); 
+            // fs.unlinkSync(LOCK_FILE_PATH);
         }
     }catch(err){
         console.log(err);
