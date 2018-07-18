@@ -16,7 +16,7 @@ then
   export NODE_ENV=test
   export CLUSTER_PREFIX="dev";
   export ROOT_URL="test.blockcluster.io";
-else if [ "$CIRCLE_TAG" = "dev" ] ||  ["$CIRCLE_BRANCH" = "dev" ];
+elif [ "$CIRCLE_TAG" = "dev" ] ||  [ "$CIRCLE_BRANCH" = "dev" ];
 then
   export NODE_ENV=dev
   export CLUSTER_PREFIX="dev";
