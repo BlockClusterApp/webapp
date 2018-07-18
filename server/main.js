@@ -498,6 +498,8 @@ Meteor.methods({
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
 
+        console.log(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode);
+
         locationCode = locationCode || "us-west-2";
 
         function deleteNetwork(id) {
@@ -917,7 +919,7 @@ spec:
                 "joinNetwork",
                 network.name,
                 nodeType,
-                network.genesisBlock.toString(), ["enode://" + network.nodeId + "@" + network.workerNodeIP + ":" + network.realEthNodePort].concat(network.totalENodes), [network.workerNodeIP + ":" + network.realConstellationNodePort].concat(network.totalConstellationNodes),
+                network.genesisBlock.toString(), ["enode://" + network.nodeId + "@" + network.workerNodeIP + ":" + network.ethNodePort].concat(network.totalENodes), [network.workerNodeIP + ":" + network.constellationNodePort].concat(network.totalConstellationNodes),
                 network.assetsContractAddress,
                 network.atomicSwapContractAddress,
                 network.streamsContractAddress,
