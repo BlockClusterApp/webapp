@@ -529,6 +529,8 @@ Meteor.methods({
             });
         }
 
+        console.log(locationCode)
+
         Networks.insert({
             "instanceId": instanceId,
             "name": networkName,
@@ -919,8 +921,8 @@ spec:
                 network.assetsContractAddress,
                 network.atomicSwapContractAddress,
                 network.streamsContractAddress,
-                (userId ? userId : user._id),
-                network.locationCode
+                network.locationCode,
+                (userId ? userId : user._id)
             )
         } else {
             throw new Meteor.Error(500, 'Unknown error occured');
