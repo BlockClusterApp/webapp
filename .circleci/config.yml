@@ -95,7 +95,6 @@ jobs:
 workflows:
   version: 2
   build-and-push:
-    <<: *deploy_tag_filters
     jobs:
       - checkout_code:
           <<: *deploy_tag_filters
@@ -117,7 +116,6 @@ workflows:
             - docker_push
           context: aws-creds
   build-and-test:
-    <<: *build_tags
     jobs:
       - checkout_code:
           <<: *build_tags
