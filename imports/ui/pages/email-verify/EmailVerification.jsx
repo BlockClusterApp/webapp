@@ -67,10 +67,10 @@ export default class EmailVerification extends Component {
             <span className="hint-text">&nbsp;All rights reserved. </span>
             <br />
 
-            <span class="sm-block">
-              <a href="https://www.blockcluster.io/terms" class="m-l-10 m-r-10" style="color: #222; text-decoration: none;">Terms of use</a>
-              <span class="muted">|</span>
-              <a href="https://www.blockcluster.io/privacy" class="m-l-10" style="color: #222; text-decoration: none;">Privacy Policy</a>
+            <span className="sm-block">
+              <a href="https://www.blockcluster.io/terms" className="m-l-10 m-r-10" style={{ color: "#222", textDecoration: "none" }}>Terms of use</a>
+              <span className="muted">|</span>
+              <a href="https://www.blockcluster.io/privacy" className="m-l-10" style={{ color: "#222", textDecoration: "none" }}>Privacy Policy</a>
             </span>
           </p>
           <p className="small no-margin pull-right sm-pull-reset" style={{ textAlign: "center", width: "100%" }}>

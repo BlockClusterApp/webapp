@@ -1,4 +1,4 @@
-import ModelHelpers from "./model-helpers";
+import ModelHelpers from "../model-helpers";
 import crypto from "crypto";
 import ejs from "ejs";
 import Config from '../../config/server';
@@ -15,14 +15,11 @@ const EJSMapping = {
   'invite-user.ejs': InviteUserTemplate
 };
 
-const fs = Npm.require("fs");
-const path = Npm.require("path");
-
 function generateRandomString(placeholder, salt = "I<3BlockCluster") {
-  return crypto
+  return `${new Date().getTime()}${crypto
     .createHash("sha256")
     .update(`${placeholder}${salt}${new Date().getTime()}`, "utf8")
-    .digest("hex");
+    .digest("hex")}`;
 }
 
 function generateURL(route){
@@ -30,7 +27,7 @@ function generateURL(route){
 }
 
 function generateCompleteURLForUserInvite(query) {
-  return generateURL(`/invite-user?invitation=${query}`)
+  return generateURL(`/accept-invitation?invitation=${query}`)
 }
 
 function generateCompleteURLForEmailVerification(query) {

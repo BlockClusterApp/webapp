@@ -1,5 +1,5 @@
 import { Mongo } from 'meteor/mongo';
-import AttachBaseHooks from '../../modules/helpers/server/model-helpers';
+import AttachBaseHooks from '../../modules/helpers/model-helpers';
 import SimpleSchema from 'simpl-schema';
 
 const EmailSchema = new SimpleSchema({

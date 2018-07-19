@@ -1,7 +1,7 @@
 import { Mongo } from 'meteor/mongo'
 import SimpleSchema from 'simpl-schema';
 
-import AttachBaseHooks from '../../modules/helpers/server/model-helpers';
+import AttachBaseHooks from '../../modules/helpers/model-helpers';
 
 const EmailVerificationCollection = new Mongo.Collection(
   "emailVerification"
