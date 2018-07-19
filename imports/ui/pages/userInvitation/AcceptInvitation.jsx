@@ -44,7 +44,7 @@ export default class AcceptInvitation extends Component {
   }
 
   handleLoggedOutCase = (reply) => {
-    if(!reply.invitedUser.toBeCreated) {
+    if(reply.invitedUser.profile.firstName && reply.invitedUser.profile.firstName !== null && reply.invitedUser.profile.firstName !== "null") {
       // TODO: Handle this case in login page
       window.open("/app/login?action=join-network", "_self");
     } 

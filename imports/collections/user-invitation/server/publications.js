@@ -8,6 +8,9 @@ Meteor.publish("sentInvitations", function() {
     {
       fields: {
         uniqueToken: 0
+      },
+      sort: {
+        createdAt: -1
       }
     }
   );
@@ -21,6 +24,9 @@ Meteor.publish("receivedInvitations", function() {
     {
       fields: {
         uniqueToken: 0
+      },
+      sort: {
+        createdAt: -1
       }
     }
   );
