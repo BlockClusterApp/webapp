@@ -50,6 +50,15 @@ UserInvitationCollection.schema = new SimpleSchema({
   },
   metadata: {
     type: Object
+  },
+  nodeType: {
+    type: String
+  },
+  joinedNetwork: {
+    type: String
+  },
+  joinedLocation: {
+    type: String
   }
 });
 

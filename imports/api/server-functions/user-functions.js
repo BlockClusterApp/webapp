@@ -79,6 +79,7 @@ NetworkInvitation.inviteUserToNetwork = async function(
     inviteTo: invitedUser._id,
     uniqueToken: uniqueString,
     networkId: network._id,
+    nodeType,
     metadata: {
       inviteFrom: {
         name: `${invitingUser.profile.firstName} ${invitingUser.profile.lastName}`,
@@ -124,8 +125,80 @@ NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
   return { invitation, invitedUser, invitingUser, network };
 };
 
+NetworkInvitation.acceptInvitation = function(invitationId, locationCode) {
+  return new Promise((resolve, reject) => {
+    const invitation = UserInvitation.find({
+      _id: invitationId
+    }).fetch()[0];
+  
+    const network = Networks.find({
+      _id: invitation.networkId
+    }).fetch()[0];
+  
+    Meteor.call("joinNetwork", 
+      network.name,
+      invitation.nodeType || "authority",
+      network.genesisBlock.toString(),
+      ["enode://" + network.nodeId + "@" + network.workerNodeIP + ":" + network.ethNodePort].concat(network.totalENodes),
+      [network.workerNodeIP + ":" + network.constellationNodePort].concat(network.totalConstellationNodes),
+      network.assetsContractAddress,
+      network.atomicSwapContractAddress,
+      network.streamsContractAddress,
+      locationCode,
+      invitation.inviteTo,
+      (err, res) => {
+        console.log("Join network res", err, res);
+        if(err) return reject(err);
+        UserInvitation.update({
+          _id: invitationId,
+        }, {
+          $set: {
+            joinedNetwork: res,
+            joinedLocation: locationCode,
+            invitationStatus: UserInvitation.StatusMapping.Accepted,
+            inviteStatusUpdatedAt: new Date()
+          }
+        });
+        resolve();
+      }
+    );
+  });
+  // let user = Accounts.findUserByEmail(email);
+        // var network = Networks.find({
+        //     instanceId: networkId
+        // }).fetch()[0];
+        // if (user) {
+        //     Meteor.call(
+        //         "joinNetwork",
+        //         network.name,
+        //         nodeType,
+        //         network.genesisBlock.toString(), ["enode://" + network.nodeId + "@" + network.clusterIP + ":" + network.realEthNodePort].concat(network.totalENodes), [network.clusterIP + ":" + network.realConstellationNodePort].concat(network.totalConstellationNodes),
+        //         network.assetsContractAddress,
+        //         network.atomicSwapContractAddress,
+        //         network.streamsContractAddress,
+        //         (userId ? userId : user._id),
+        //         network.locationCode
+        //     )
+        // } else {
+        //     throw new Meteor.Error(500, 'Unknown error occured');
+        // }
+}
+
+NetworkInvitation.rejectInvitation = async function(invitationId) {
+  return UserInvitation.update({
+    _id: invitationId
+  }, {
+    $set: {
+      invitationStatus: UserInvitation.StatusMapping.Rejected,
+      inviteStatusUpdatedAt: new Date()
+    }
+  });
+}
+
 Meteor.methods({
-  verifyInvitationLink: NetworkInvitation.verifyInvitationLink
+  verifyInvitationLink: NetworkInvitation.verifyInvitationLink,
+  acceptInvitation: NetworkInvitation.acceptInvitation,
+  rejectInvitation: NetworkInvitation.rejectInvitation
 });
 
 export default NetworkInvitation;

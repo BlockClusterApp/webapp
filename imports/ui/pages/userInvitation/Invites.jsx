@@ -3,11 +3,6 @@ import { withTracker } from "meteor/react-meteor-data";
 import { UserInvitation } from "../../../collections/user-invitation";
 import helpers from "../../../modules/helpers";
 import LocationSelector from "../../components/LocationSelector/LocationSelectorSimple";
-import ReactHtmlParser, {
-  processNodes,
-  convertNodeToElement,
-  htmlparser2
-} from "react-html-parser";
 import { withRouter } from "react-router-dom";
 
 import "./Invites.scss";
@@ -27,33 +22,13 @@ function getStatus(int) {
   }
 }
 
-function getActionStatus(int) {
-  switch (int) {
-    case 2:
-      return <span className="label label-success">Accepted</span>;
-    case 3:
-      return <span className="label label-danger">Rejected</span>;
-    case 4:
-      return <span className="label label-danger">Cancelled</span>;
-    case 1:
-    default:
-    return (
-        <span>
-          <button type="button" class="btn btn-success">
-            <i class="fa fa-check" />&nbsp;Accept
-          </button>&nbsp;&nbsp;
-          <button type="button" class="btn btn-danger">
-            <i class="fa fa-close" />&nbsp;Reject
-          </button>
-        </span>
-      );
-  }
-}
+
 
 class NetworksList extends Component {
   constructor(props) {
     super(props);
 
+    this.inviteLocationMapping= {};
     this.state = {
       locations: [],
       userData: []
@@ -65,10 +40,6 @@ class NetworksList extends Component {
       s.stop();
     });
   }
-
-  openNetwork = networkId => {
-    this.props.history.push("/app/networks/" + networkId);
-  };
 
   componentDidMount() {
     Meteor.call("getClusterLocations", (err, res) => {
@@ -87,6 +58,41 @@ class NetworksList extends Component {
     }
     return locationConfig.locationName;
   };
+
+  locationChangeListener = (inviteId, location) => {
+    this.inviteLocationMappingnetworkId] = location;
+  }
+
+  acceptInvitation = (inviteId) => {
+    Meteor.call("acceptInvitation", inviteId, this.inviteLocationMappinginviteId] || "us-west-2");
+  }
+
+  rejectInvitation = (inviteId) => {
+    Meteor.call("rejectInvitation", inviteId);
+  }
+
+  getActionStatus = (int, inviteId) => {
+    switch (int) {
+      case 2:
+        return <span className="label label-success">Accepted</span>;
+      case 3:
+        return <span className="label label-danger">Rejected</span>;
+      case 4:
+        return <span className="label label-danger">Cancelled</span>;
+      case 1:
+      default:
+      return (
+          <span>
+            <button type="button" className="btn btn-success" onClick={this.acceptInvitation(inviteId)}>
+              <i className="fa fa-check" />&nbsp;Accept
+            </button>&nbsp;&nbsp;
+            <button type="button" className="btn btn-danger" onClick={this.rejectInvitation(inviteId)}>
+              <i className="fa fa-close" />&nbsp;Reject
+            </button>
+          </span>
+        );
+    }
+  }
 
   render() {
     return (
@@ -121,9 +127,9 @@ class NetworksList extends Component {
                               <td>{data.network.name}</td>
                               <td>
                                 <div className="row">
-                                    <LocationSelector style={{width: '45%'}} />
+                                    <LocationSelector style={{width: '45%'}} locationChangeListener={this.locationChangeListener.bind(this, item._id)}/>
                                     &nbsp;&nbsp;
-                                    {getActionStatus(item.invitationStatus)}
+                                    {this.getActionStatus(item.invitationStatus, item._id)}
                                     </div>
                                 </td>
                             </tr>
