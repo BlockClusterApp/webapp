@@ -400,98 +400,58 @@ Meteor.methods({
         return myFuture.wait();
     },
     "deleteNetwork": function(id) {
+
+        function kubeCallback(err, res) {
+            if(err) {
+                console.log(err);
+            }
+        }
+
         var myFuture = new Future();
         var network = Networks.find({
             instanceId: id
         }).fetch()[0];
-        if(!network) {
-            myFuture.throw("Invalid network id");
-            Networks.remove({
-                _id: id
-            });
-            return;
-        }
         const locationCode = network.locationCode;
-        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + id, function(error, response) {
-            if (error) {
-                console.log(error);
-                myFuture.throw("An unknown error occured");
-            } else {
-                HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + id, function(error, response) {
-                    if (error) {
-                        console.log(error);
-                        myFuture.throw("An unknown error occured");
-                    } else {
-                        HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(error, response) {
-                            if (error) {
-                                console.log(error);
-                                myFuture.throw("An unknown error occured");
-                            } else {
-                                HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
-                                    if (error) {
-                                        console.log(error);
-                                        myFuture.throw("An unknown error occured");
-                                    } else {
-                                        HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(error, response) {
-                                            if (error) {
-                                                console.log(error);
-                                                myFuture.throw("An unknown error occured");
-                                            } else {
-                                                HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
-                                                    if (error) {
-                                                        console.log(error);
-                                                        myFuture.throw("An unknown error occured");
-                                                    } else {
-                                                        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + id, function(error, response) {
-                                                            if (error) {
-                                                                console.log(error);
-                                                                myFuture.throw("An unknown error occured while deleting secrets");
-                                                            } else {
-                                                                HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + id, function(error, response) {
-                                                                    if (error) {
-                                                                        console.log(error);
-                                                                        myFuture.throw("An unknown error occured while deleting ingresses");
-                                                                    } else {
-                                                                        Networks.remove({
-                                                                            instanceId: id
-                                                                        });
-                                                                        Orders.remove({
-                                                                            instanceId: id
-                                                                        });
-                                                                        SoloAssets.remove({
-                                                                            instanceId: id
-                                                                        });
-                                                                        StreamsItems.remove({
-                                                                            instanceId: id
-                                                                        });
-                                                                        AssetTypes.remove({
-                                                                            instanceId: id
-                                                                        })
-                                                                        Secrets.remove({
-                                                                            instanceId: id
-                                                                        });
-
-                                                                        BCAccounts.remove({
-                                                                            instanceId: id
-                                                                        })
-
-                                                                        myFuture.return();
-                                                                    }
-                                                                })
-                                                            }
-                                                        })
-                                                    }
-                                                })
-                                            }
-                                        })
-                                    }
-                                })
-                            }
-                        })
-                    }
-                })
-            }
+        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + id, kubeCallback);
+        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + id, kubeCallback);
+        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + id, kubeCallback);
+        HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(err, response) {
+            if(err) return console.log(err);
+            HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name, kubeCallback);
+        });
+        
+        HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(err, response) {
+            if(err) return console.log(err);
+            HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, kubeCallback);
+        });
+        
+        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + id, kubeCallback);
+        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + id, kubeCallback);
+        Networks.remove({
+            instanceId: id
+        });
+        Orders.remove({
+            instanceId: id
+        });
+        SoloAssets.remove({
+            instanceId: id
+        });
+        StreamsItems.remove({
+            instanceId: id
+        });
+        AssetTypes.remove({
+            instanceId: id
         })
+        Secrets.remove({
+            instanceId: id
+        });
+
+        BCAccounts.remove({
+            instanceId: id
+        })
+
+        myFuture.return();
+           
 
         return myFuture.wait();
     },
@@ -499,7 +459,6 @@ Meteor.methods({
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
 
-        console.log(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode);
 
         locationCode = locationCode || "us-west-2";
 
@@ -805,7 +764,7 @@ spec:
                                                                     "api-password": instanceId
                                                                 }
                                                             })
-                                                            myFuture.return();
+                                                            myFuture.return(id);
                                                         }
                                                     })
                                             }
