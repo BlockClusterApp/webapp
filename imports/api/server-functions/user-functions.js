@@ -3,7 +3,7 @@ import {
   generateCompleteURLForUserInvite,
   getEJSTemplate
 } from "../../modules/helpers/server";
-import UserInvitation from "../../collections/user-invitation";
+import { UserInvitation } from "../../collections/user-invitation";
 import { sendEmail } from "../emails/email-sender";
 import { Network } from '../../collections/networks/networks';
 

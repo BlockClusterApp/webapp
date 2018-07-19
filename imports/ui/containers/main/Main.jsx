@@ -39,7 +39,7 @@ export default class Main extends Component {
 						<Route exact path="/app/createNetwork" component={CreateNetwork} />
 						<Route exact path="/app/networks/:id/settings" component={ViewEditNetwork} />
 						<Route exact path="/app/networks/:id" component={ViewNetwork} />
-						<Route exact path="/app/joinNetwork" component={JoinNetwork} />
+						<Route exact path="/app/join/networks" component={JoinNetwork} />
 						<Route exact path="/app/networks/:id/security/peers" component={Peers} />
 						<Route exact path="/app/networks/:id/assets/events" component={AssetsEvents} />
 						<Route exact path="/app/networks/:id/explorer" component={Explorer} />

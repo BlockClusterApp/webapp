@@ -24,7 +24,7 @@ class Navbar extends Component {
                             <Link to={"/app/createNetwork"} className="header-icon fa fa-plus"></Link>
                         </li>
                         <li className="p-r-10 inline">
-                            <Link to={"/app/joinNetwork"} className="header-icon fa fa-group"></Link>
+                            <Link to={"/app/join/networks"} className="header-icon fa fa-group"></Link>
                         </li>
                         <li className="p-r-10 inline">
                             <a href="#" className="header-icon fa fa-book"></a>

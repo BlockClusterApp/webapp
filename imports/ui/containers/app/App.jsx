@@ -10,6 +10,7 @@ import Register from "../../pages/register/Register.jsx"
 import EmailVerify from '../../pages/email-verify/EmailVerification.jsx';
 import RequestPasswordReset from '../../pages/reset-password/RequestLink.jsx';
 import ResetPassword from '../../pages/reset-password/ResetPassword.jsx';
+import AcceptInvitation from '../../pages/userInvitation/AcceptInvitation.jsx'
 
 import "./App.css"
 
@@ -47,6 +48,7 @@ class App extends Component {
 					<Route exact path="/forgot-password" render={this.requireNotLoggedIn(RequestPasswordReset)} />
 					<Route exact path="/reset-password" component={ResetPassword} />
 					<Route exact path="/email-verify" component={EmailVerify} />
+					<Route exact path="/accept-invitation" component={AcceptInvitation} />
 					<Route path="/app" render={this.requireAuth(Main)} />
 					{/*<Route component={Notfound} />*/}
 				</Switch>

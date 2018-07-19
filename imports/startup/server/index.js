@@ -10,6 +10,7 @@ import {Networks} from "../../collections/networks/networks.js"
 // updateWorkerNodeDomainName()
 
 require("../../collections/networks/server/publications.js")
+require('../../collections/user-invitation/server/publications.js');
 require("../../collections/utilities/server/publications.js")
 require("../../collections/orders/server/publications.js")
 require("../../api/platform")

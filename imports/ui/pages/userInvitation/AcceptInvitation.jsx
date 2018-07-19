@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
+import queryString from 'stringquery';
 import validations from "../../../modules/validations";
 
 const LinkStatus = {
@@ -15,8 +16,8 @@ export default class AcceptInvitation extends Component {
     super();
     this.state = {
       linkStatus: LinkStatus.Undefined,
-      invitingUser: {},
-      invitedUser: {},
+      invitingUser: {profile: {}, emails: [{}]},
+      invitedUser: {profile: {}, emails: [{}]},
       invitation: {},
       network: {}
     };
@@ -77,6 +78,7 @@ export default class AcceptInvitation extends Component {
             linkStatus: LinkStatus.Invalid
           });
         }
+        console.log("Reply", reply, "User", Meteor.userId());
         if(Meteor.userId()) {
           this.handleLoggedInCase(reply, Meteor.userId());
           // Handle logged in case
@@ -112,7 +114,7 @@ export default class AcceptInvitation extends Component {
 				this.setState({
 					formSubmitError: ''
         });
-        window.open("/app/joinNetwork/invitation", "_self");
+        window.open("/app/join/networks/invitation", "_self");
 			}
 		});
   }
@@ -133,11 +135,11 @@ export default class AcceptInvitation extends Component {
             </h3>
             <p>
               You have been invited by {this.state.invitingUser.profile.firstName} {this.state.invitedUser.profile.lastName} to join their network {this.state.network.name} on Blockcluster.
-              Before you join, you would need to create an account here. Kindly create your account here. If you already have an account, click
+              Before you join, you would need to create an account here. Kindly create your account here. If you already have an account, click&nbsp;
               <Link to="/login" className="text-info">
                 here
               </Link>
-              to login
+              &nbsp;to login
             </p>
             <form
               id="form-register"
