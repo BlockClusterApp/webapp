@@ -29,6 +29,9 @@ class Navbar extends Component {
                         <li className="p-r-10 inline">
                             <a href="#" className="header-icon fa fa-book"></a>
                         </li>
+                        <li className="p-r-10 inline">
+                            <Link to="/app/invites" className="header-icon fa fa-user-plus"></Link>
+                        </li>
                     </ul>
                 </div>
                 <div className="d-flex align-items-center">

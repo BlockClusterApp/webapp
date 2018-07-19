@@ -32,7 +32,7 @@ export default class AcceptInvitation extends Component {
       // Show join network page
       
       // TODO: Need to create this page
-      window.open("/app/join-network", "_self");
+      window.open("/app/invites", "_self");
     } else {
       this.setState({
         linkStatus: LinkStatus.UserMismatch

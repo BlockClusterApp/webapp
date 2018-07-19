@@ -36,7 +36,7 @@ module.exports = `<!DOCTYPE html>
 
     <h4 style="margin-bottom: 0px">Hi,</h4>
     <p style="margin-top: 5px;">
-        You have been invited by <%= invitingUser.name %> (<a href="mailto:<%= invitingUser.emails[0].address %>"><%= invitingUser.emails[0].address %></a>) to join their blockchain network <%= network.name %> on <a href="https://www.blockcluster.io">blockcluster.io</a>.
+        You have been invited by <%= invitingUser.profile.firstName %> <%= invitingUser.profile.lastName %> (<a href="mailto:<%= invitingUser.emails[0].address %>"><%= invitingUser.emails[0].address %></a>) to join their blockchain network <%= network.name %> on <a href="https://www.blockcluster.io">blockcluster.io</a>.
         <br />
         <br /> Click on the following button to join this network:
         <br />

@@ -12,6 +12,7 @@ import CreateNetwork from "../../pages/createNetwork/CreateNetwork.jsx"
 import JoinNetwork from "../../pages/joinNetwork/JoinNetwork.jsx"
 import ViewEditNetwork from "../../pages/viewEditNetwork/ViewEditNetwork.jsx"
 import ViewNetwork from "../../pages/viewNetwork/viewNetwork.jsx"
+import Invites from '../../pages/userInvitation/Invites.jsx';
 import CreateAssetType from "../../pages/createAssetType/CreateAssetType.jsx"
 import AssetsStats from "../../pages/assetsStats/AssetsStats.jsx"
 import AssetsEvents from "../../pages/assetsEvents/AssetsEvents.jsx"
@@ -40,6 +41,7 @@ export default class Main extends Component {
 						<Route exact path="/app/networks/:id/settings" component={ViewEditNetwork} />
 						<Route exact path="/app/networks/:id" component={ViewNetwork} />
 						<Route exact path="/app/join/networks" component={JoinNetwork} />
+						<Route exact path="/app/invites" component={Invites} />
 						<Route exact path="/app/networks/:id/security/peers" component={Peers} />
 						<Route exact path="/app/networks/:id/assets/events" component={AssetsEvents} />
 						<Route exact path="/app/networks/:id/explorer" component={Explorer} />

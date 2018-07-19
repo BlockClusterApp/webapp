@@ -3,7 +3,6 @@ import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import {withTracker} from "meteor/react-meteor-data";
 import {withRouter} from 'react-router-dom'
 import {Networks} from "../../../collections/networks/networks.js"
-import { UserInvitation } from '../../../collections/user-invitation';
 import notifications from "../../../modules/notifications"
 import LocationSelector from '../../components/LocationSelector/LocationSelector';
 
@@ -160,9 +159,6 @@ class JoinNetwork extends Component {
                                 </li>
                                 <li className="nav-item">
                                     <a href="#" data-toggle="tab" role="tab" data-target="#invite">Invite User to Network</a>
-                                </li>
-                                <li className="nav-item>">
-                                    <a href="#" data-toggle="tab" role="tab" data-target="#invitation">Your Invitations</a>
                                 </li>
                             </ul>
                             <div className="tab-content">
@@ -467,46 +463,6 @@ class JoinNetwork extends Component {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="tab-pane" id="invitation">
-                                  <div className="row">
-                                    <div className="col-lg-12">
-                                        <h4>Invitations Received</h4>
-                                        <div className="table-responsive">
-                                            <table className="table table-hover" id="basicTable">
-                                                <thead>
-                                                    <tr>
-                                                        <th style={{width: "25%"}}>Invited By</th>
-                                                        <th style={{width: "25%"}}>Network</th>
-                                                        <th style={{width: "25%"}}>Location</th>
-                                                        <th style={{width: "25%"}}>Action</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    <div className="col-lg-12">
-                                        <h4>Invitations Sent</h4>
-                                        <div className="table-responsive">
-                                            <table className="table table-hover" id="basicTable">
-                                                <thead>
-                                                    <tr>
-                                                        <th style={{width: "25%"}}>Invite Sent to</th>
-                                                        <th style={{width: "25%"}}>Network</th>
-                                                        <th style={{width: "25%"}}>Location</th>
-                                                        <th style={{width: "25%"}}>Status</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -519,12 +475,6 @@ class JoinNetwork extends Component {
 export default withTracker(() => {
     return {
         networks: Networks.find({}).fetch(),
-        receivedInvitations: UserInvitation.find({
-            inviteTo: Meteor.userId()
-        }).fetch(),
-        sentInvitations: UserInvitation.find({
-            invitingUser: Meteor.userId()
-        }).fetch(),
-        subscriptions: [Meteor.subscribe("networks"), Meteor.subscribe("receivedInvitations"), Meteor.subscribe("sentInvitations")]
+        subscriptions: [Meteor.subscribe("networks")]
     }
 })(withRouter(JoinNetwork))

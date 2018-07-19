@@ -5,7 +5,7 @@ import {
 } from "../../modules/helpers/server";
 import { UserInvitation } from "../../collections/user-invitation";
 import { sendEmail } from "../emails/email-sender";
-import { Network } from '../../collections/networks/networks';
+import { Networks } from '../../collections/networks/networks';
 
 const NetworkInvitation = {};
 
@@ -15,7 +15,7 @@ NetworkInvitation.inviteUserToNetwork = async function(
   email,
   userId
 ) {
-  const network = Network.find({
+  const network = Networks.find({
     instanceId: networkId
   }).fetch()[0];
   if (!network) {
@@ -28,35 +28,40 @@ NetworkInvitation.inviteUserToNetwork = async function(
     })
     .fetch()[0];
 
-  if (invitingUser.emails.map(e => e.address).includes(email)) {
-    throw new Error("Cannot invite yourself to the network");
-  }
+  // if (invitingUser.emails.map(e => e.address).includes(email)) {
+  //   throw new Error("Cannot invite yourself to the network");
+  // }
 
   let invitedUser = Meteor.users.find({
     "emails.address": email
-  });
+  }).fetch()[0];
+
 
   if (!invitedUser) {
     const createdId = Accounts.createUser({
       email,
       password: `a-${new Date().getTime()}`,
-      toBeCreated: true
+      toBeCreated: true,
+      profile: {
+
+      }
     });
-    console.log("Created User", createdId);
     invitedUser = Meteor.users.find({
       _id: createdId
-    });
+    }).fetch()[0];
   }
+
 
   const uniqueString = generateRandomString(
     `${email}-${networkId}-${new Date().toString()}`
   );
   const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
 
-  const Template = getEJSTemplate({ fileName: "invite-user.ejs" });
+  const Template = await getEJSTemplate({ fileName: "invite-user.ejs" });
   const emailHtml = Template({
     network,
-    invitingUser
+    invitingUser,
+    networkJoinLink: joinNetworkLink
   });
 
   await sendEmail({
@@ -73,7 +78,21 @@ NetworkInvitation.inviteUserToNetwork = async function(
     inviteFrom: invitingUser._id,
     inviteTo: invitedUser._id,
     uniqueToken: uniqueString,
-    networkId: network._id
+    networkId: network._id,
+    metadata: {
+      inviteFrom: {
+        name: `${invitingUser.profile.firstName} ${invitingUser.profile.lastName}`,
+        email: invitingUser.emails[0].address
+      },
+      inviteTo: {
+        email,
+        name: invitedUser.profile.firstName ? `${invitedUser.profile.firstName} ${invitedUser.profile.lastName}` : undefined
+      },
+      network: {
+        name: network.name,
+        locationCode: network.locationCode
+      }
+    }
   });
 
   return true;
@@ -99,7 +118,7 @@ NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
       _id: invitation.inviteTo
     })
     .fetch()[0];
-  const network = Network.find({
+  const network = Networks.find({
     _id: invitation.networkId
   }).fetch()[0];
   return { invitation, invitedUser, invitingUser, network };
