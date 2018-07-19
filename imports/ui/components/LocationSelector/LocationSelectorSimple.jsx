@@ -36,6 +36,7 @@ class LocationSelector extends Component {
         <select
           className="form-control"
           name="location"
+          style={this.props.style}
           ref={input => (this.location = input)}
           onChange={this.onLocationChange.bind(this)}
           selected="us-west-2"
