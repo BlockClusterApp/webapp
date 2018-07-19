@@ -42,7 +42,7 @@ UserInvitationCollection.schema = new SimpleSchema({
   active: {
     type: Boolean
   },
-  inviteAcceptedAt: {
+  inviteStatusUpdatedAt: {
     type: Date
   },
   invitationStatus: {

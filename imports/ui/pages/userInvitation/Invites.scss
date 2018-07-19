@@ -3,4 +3,12 @@
 		padding: 12px;
 		vertical-align: middle;
 	}
+
+	.form-control[disabled] {
+		background: #f3f3f30d;
+		color: rgba(87, 87, 87, 0.86);
+	}
+	.btn[disabled], .form-control[disabled] {
+		cursor: default;
+	}
 }

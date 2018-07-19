@@ -18,6 +18,9 @@ export default class Login extends Component {
 					formSubmitError: error.reason
 				})
 			} else {
+				if(window.location.search.includes("action=join-network")){
+					window.open("/app/invites", "_self");
+				}
 				this.setState({
 					formSubmitError: ''
 				})

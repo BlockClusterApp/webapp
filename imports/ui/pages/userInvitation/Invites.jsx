@@ -24,14 +24,16 @@ function getStatus(int) {
 
 
 
-class NetworksList extends Component {
+class Invites extends Component {
   constructor(props) {
     super(props);
 
     this.inviteLocationMapping= {};
+    this.loading = {};
     this.state = {
       locations: [],
-      userData: []
+      userData: [],
+      loading: {}
     };
   }
 
@@ -60,34 +62,72 @@ class NetworksList extends Component {
   };
 
   locationChangeListener = (inviteId, location) => {
-    this.inviteLocationMappingnetworkId] = location;
+    this.inviteLocationMapping[inviteId] = location;
   }
 
   acceptInvitation = (inviteId) => {
-    Meteor.call("acceptInvitation", inviteId, this.inviteLocationMappinginviteId] || "us-west-2");
+    const loading = this.state.loading;
+    loading[inviteId] = true;
+    this.setState({
+      loading
+    });
+    if(!this.loading[inviteId]){
+      Meteor.call("acceptInvitation", inviteId, this.inviteLocationMapping[inviteId] || "us-west-2", () => {
+        this.loading[inviteId] = false;
+        const loading = this.state.loading;
+        loading[inviteId] = false;
+        this.setState({
+          loading
+        });
+      }); 
+    }
+    this.loading[inviteId] = loading;
   }
 
   rejectInvitation = (inviteId) => {
-    Meteor.call("rejectInvitation", inviteId);
+    const loading = this.state.loading;
+    loading[inviteId] = true;
+    this.setState({
+      loading
+    });
+    if(!this.loading[inviteId]){
+      Meteor.call("rejectInvitation", inviteId, () => {
+        this.loading[inviteId] = false;
+        const loading = this.state.loading;
+        loading[inviteId] = false;
+        this.setState({
+          loading
+        });
+      });
+    }
+    this.loading[inviteId] = loading;
   }
+
+  getLocationName = (locationCode) => {
+		const locationConfig = this.state.locations.find(a => a.locationCode === locationCode);
+		if(!locationConfig) {
+			return undefined;
+		}
+		return locationConfig.locationName
+	}
 
   getActionStatus = (int, inviteId) => {
     switch (int) {
       case 2:
-        return <span className="label label-success">Accepted</span>;
+        return <button className="btn btn-success" disabled>Accepted</button>;
       case 3:
-        return <span className="label label-danger">Rejected</span>;
+        return <button className="btn btn-danger" disabled>Rejected</button>;
       case 4:
-        return <span className="label label-danger">Cancelled</span>;
+        return <button className="btn btn-warn">Cancelled</button>;
       case 1:
       default:
       return (
           <span>
-            <button type="button" className="btn btn-success" onClick={this.acceptInvitation(inviteId)}>
-              <i className="fa fa-check" />&nbsp;Accept
+            <button type="button" className="btn btn-success" onClick={this.acceptInvitation.bind(this, inviteId)} disabled={this.state.loading[inviteId] === true}>
+              {this.state.loading[inviteId] === true ? <i className="fa fa-spinner fa-spin"></i> : <i className="fa fa-check" />}&nbsp;Accept
             </button>&nbsp;&nbsp;
-            <button type="button" className="btn btn-danger" onClick={this.rejectInvitation(inviteId)}>
-              <i className="fa fa-close" />&nbsp;Reject
+            <button type="button" className="btn btn-danger" onClick={this.rejectInvitation.bind(this, inviteId)} disabled={this.state.loading[inviteId] === true}>
+              {this.state.loading[inviteId] === true ? <i className="fa fa-spinner fa-spin"></i> : <i className="fa fa-close" />}&nbsp;Reject
             </button>
           </span>
         );
@@ -127,7 +167,10 @@ class NetworksList extends Component {
                               <td>{data.network.name}</td>
                               <td>
                                 <div className="row">
-                                    <LocationSelector style={{width: '45%'}} locationChangeListener={this.locationChangeListener.bind(this, item._id)}/>
+                                    {item.invitationStatus === 1 ? 
+                                      <LocationSelector style={{width: '45%'}} locationChangeListener={this.locationChangeListener.bind(this, item._id)}/> :
+                                      <input className="form-control" value={this.getLocationName(item.joinedLocation)} disabled type="text" style={{width: '50%'}} />
+                                    }
                                     &nbsp;&nbsp;
                                     {this.getActionStatus(item.invitationStatus, item._id)}
                                     </div>
@@ -154,9 +197,10 @@ class NetworksList extends Component {
                       <thead>
                         <tr>
                           <th style={{ width: "5%" }}>S.No</th>
-                          <th style={{ width: "50%" }}>Invite Sent to</th>
-                          <th style={{ width: "25%" }}>Network</th>
-                          <th style={{ width: "25%" }}>Status</th>
+                          <th style={{ width: "35%" }}>Invite Sent to</th>
+                          <th style={{width: '25%'}}>Invited On </th>
+                          <th style={{ width: "20%" }}>Network</th>
+                          <th style={{ width: "20%" }}>Status</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -171,6 +215,7 @@ class NetworksList extends Component {
                                   : ""}{" "}
                                 {data.inviteTo.email}
                               </td>
+                              <td>{new Date(item.createdAt).toLocaleDateString("en-US", {year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric'})}</td>
                               <td>{data.network.name}</td>
                               <td>{getStatus(item.invitationStatus)}</td>
                             </tr>
@@ -202,4 +247,4 @@ export default withTracker(() => {
       Meteor.subscribe("sentInvitations")
     ]
   };
-})(withRouter(NetworksList));
+})(withRouter(Invites));

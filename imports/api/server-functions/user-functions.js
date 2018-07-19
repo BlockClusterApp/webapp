@@ -135,6 +135,7 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode) {
       _id: invitation.networkId
     }).fetch()[0];
   
+    console.log("Joining network", invitationId, network);
     Meteor.call("joinNetwork", 
       network.name,
       invitation.nodeType || "authority",
@@ -159,7 +160,7 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode) {
             inviteStatusUpdatedAt: new Date()
           }
         });
-        resolve();
+        resolve(invitationId);
       }
     );
   });

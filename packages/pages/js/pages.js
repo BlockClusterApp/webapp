@@ -71,7 +71,6 @@
     };
     
     window.classie = classie;
-    console.log("Attaching classie", window.classie);
     })( window );
 (function($) {
     'use strict';

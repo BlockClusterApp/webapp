@@ -32,7 +32,7 @@ module.exports = `<!DOCTYPE html>
 
   <div style="background: #f0f0f0; width: 80%; margin: auto; padding: 20px;">
     <img src="https://app.blockcluster.io/assets/img/logo/blockcluster.png" alt="logo" />
-    <h2 style="margin-bottom: 5px;"><%= invitingUser.name %> has invited you to join their network <%= network.name %></h2>
+    <h2 style="margin-bottom: 5px;"><%= invitingUser.profile.firstName %> <%= invitingUser.profile.lastName %> has invited you to join their network <%= network.name %></h2>
 
     <h4 style="margin-bottom: 0px">Hi,</h4>
     <p style="margin-top: 5px;">
