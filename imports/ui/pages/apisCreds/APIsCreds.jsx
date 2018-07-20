@@ -85,7 +85,7 @@ class APIsCreds extends Component {
                                                     <pre>
                                                         var web3 = new Web3(
                                                             new Web3.providers.HttpProvider(
-                                                                {"\"https://" + (this.props.workerNodeDomainName[0] ? this.props.workerNodeDomainName[0].value : '') + "/api/node/networkId/jsonrpc" + "\", 0, " + "\"username\", \"password\""}
+                                                                {"\"https://" + this.props.workerNodeDomainName(this.props.network[0].locationCode) + "/api/node/networkId/jsonrpc" + "\", 0, " + "\"username\", \"password\""}
                                                             )
                                                         );
                                                     </pre>
