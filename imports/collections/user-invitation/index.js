@@ -18,6 +18,7 @@ UserInvitationCollection.before.insert((userId, doc) => {
   doc.createdAt = Date.now();
   doc.active = true;
   doc.invitationStatus = UserInvitationCollection.StatusMapping.Pending;
+  doc.resendCount = 0;
 });
 
 UserInvitationCollection.schema = new SimpleSchema({
@@ -59,6 +60,9 @@ UserInvitationCollection.schema = new SimpleSchema({
   },
   joinedLocation: {
     type: String
+  },
+  resendCount: {
+    type: Number
   }
 });
 

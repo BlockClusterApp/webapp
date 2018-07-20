@@ -164,25 +164,6 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode) {
       }
     );
   });
-  // let user = Accounts.findUserByEmail(email);
-        // var network = Networks.find({
-        //     instanceId: networkId
-        // }).fetch()[0];
-        // if (user) {
-        //     Meteor.call(
-        //         "joinNetwork",
-        //         network.name,
-        //         nodeType,
-        //         network.genesisBlock.toString(), ["enode://" + network.nodeId + "@" + network.clusterIP + ":" + network.realEthNodePort].concat(network.totalENodes), [network.clusterIP + ":" + network.realConstellationNodePort].concat(network.totalConstellationNodes),
-        //         network.assetsContractAddress,
-        //         network.atomicSwapContractAddress,
-        //         network.streamsContractAddress,
-        //         (userId ? userId : user._id),
-        //         network.locationCode
-        //     )
-        // } else {
-        //     throw new Meteor.Error(500, 'Unknown error occured');
-        // }
 }
 
 NetworkInvitation.rejectInvitation = async function(invitationId) {
@@ -195,6 +176,70 @@ NetworkInvitation.rejectInvitation = async function(invitationId) {
     }
   });
 }
+
+
+NetworkInvitation.cancelInvitation = async function(inviteId, userId) {
+  return UserInvitation.update({
+    _id: inviteId,
+    inviteFrom: userId
+  }, {
+    $set: {
+      inviteStatusUpdatedAt: new Date(),
+      invitationStatus: UserInvitation.StatusMapping.Cancelled,
+    }
+  });
+}
+
+NetworkInvitation.resendInvitation = async function(inviteId, userId) {
+  const invite = UserInvitation.find({
+    _id: inviteId,
+    inviteFrom: userId
+  }).fetch()[0];
+  if(!invite){
+    return false;
+  }
+  const invitingUser = Meteor.users
+    .find({
+      _id: invite.inviteFrom
+    })
+    .fetch()[0];
+  const network = Networks.find({
+    _id: invite.networkId
+  }).fetch()[0];
+  const uniqueString = invite.uniqueString;
+  const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
+
+  const Template = await getEJSTemplate({ fileName: "invite-user.ejs" });
+  const emailHtml = Template({
+    network,
+    invitingUser,
+    networkJoinLink: joinNetworkLink
+  });
+
+  await sendEmail({
+    from: { name: "Jason from Blockcluster", email: "jason@blockcluster.io" },
+    to: invite.metadata.inviteTo.email,
+    subject: `Invite to join ${network.name} network on blockcluster.io`,
+    text: `Visit the following link to join ${
+      network.name
+    } network on blockcluster.io - ${joinNetworkLink}`,
+    html: emailHtml
+  });
+
+  UserInvitation.update({
+    _id: inviteId
+  }, {
+    $set: {
+      invitationStatus: UserInvitation.StatusMapping.Pending
+    },
+    $inc: {
+      resendCount: 1
+    }
+  });
+
+  return true;
+}
+
 
 Meteor.methods({
   verifyInvitationLink: NetworkInvitation.verifyInvitationLink,
@@ -218,7 +263,9 @@ Meteor.methods({
       }
     });
     return Accounts.setPassword(id, password);
-  }
+  },
+  cancelInvitation: NetworkInvitation.cancelInvitation,
+  resendInvitation: NetworkInvitation.resendInvitation
 });
 
 export default NetworkInvitation;
