@@ -111,7 +111,7 @@ NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
 
   const invitingUser = Meteor.users
     .find({
-      _id: invitation.invitingUser
+      _id: invitation.inviteFrom
     })
     .fetch()[0];
   const invitedUser = Meteor.users
@@ -199,7 +199,26 @@ NetworkInvitation.rejectInvitation = async function(invitationId) {
 Meteor.methods({
   verifyInvitationLink: NetworkInvitation.verifyInvitationLink,
   acceptInvitation: NetworkInvitation.acceptInvitation,
-  rejectInvitation: NetworkInvitation.rejectInvitation
+  rejectInvitation: NetworkInvitation.rejectInvitation,
+  "updatePasswordAndInfo": (id, password, profile) => {
+    Meteor.users.update({
+      _id: id
+    }, {
+      $set: {
+        profile
+      }
+    });
+    const user = Meteor.users.find({_id: id}).fetch()[0];
+    const updateResult = Meteor.users.update({
+      _id: id,
+      "emails.address": user.emails[0].address
+    }, {
+      $set: {
+        "emails.$.verified": true
+      }
+    });
+    return Accounts.setPassword(id, password);
+  }
 });
 
 export default NetworkInvitation;

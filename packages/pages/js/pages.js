@@ -1159,7 +1159,7 @@
 
             // reset backdrop
             backdrop.style.transform = backdrop.style.webkitTransform = backdrop.style.MozTransform = backdrop.style.msTransform = backdrop.style.OTransform = 'scale3d(1,1,1)';
-            console.log("Removing class ", this.selEl);
+            
             classie.remove(this.selEl, 'cs-active');
 
             mask.style.display = 'none';
