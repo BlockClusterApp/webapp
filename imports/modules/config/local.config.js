@@ -6,5 +6,9 @@ module.exports = {
     kubeRestApiHost: "https://k8s-dev-us-west-2-api.blockcluster.io",
     firewallPort: "31988",
     workerNodeIP: "18.237.94.215",
-    namespace: "dev"
+    namespace: "dev",
+    razorpay: {
+        id: '',
+        secret: ''
+    }
 }

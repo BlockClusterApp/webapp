@@ -17,5 +17,6 @@ require("../../api/platform")
 require("../../collections/streams/server/publications.js")
 require("../../collections/assetTypes/server/publications.js")
 require("../../collections/bcAccounts/server/publications.js")
+require('../../api/razor-pay');
 
 export {}

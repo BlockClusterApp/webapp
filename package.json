@@ -30,6 +30,7 @@
     "node-cmd": "3.0.0",
     "npm": "^6.1.0",
     "pass": "*",
+    "razorpay": "^2.0.1",
     "react": "16.2.0",
     "react-codemirror": "git://github.com/skidding/react-codemirror.git#106-fix-update",
     "react-dom": "16.2.0",
