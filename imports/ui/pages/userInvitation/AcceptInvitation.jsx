@@ -45,8 +45,7 @@ export default class AcceptInvitation extends Component {
 
   handleLoggedOutCase = (reply) => {
     if(reply.invitedUser.profile.firstName && reply.invitedUser.profile.firstName !== null && reply.invitedUser.profile.firstName !== "null") {
-      // TODO: Handle this case in login page
-      window.open("/app/login?action=join-network", "_self");
+      return window.open("/app/login?action=join-network", "_self");
     } 
     // Let the user continue on this page
   }
@@ -78,12 +77,12 @@ export default class AcceptInvitation extends Component {
             linkStatus: LinkStatus.Invalid
           });
         }
-        console.log("Reply", reply, "User", Meteor.userId());
         if(Meteor.userId()) {
           this.handleLoggedInCase(reply, Meteor.userId());
           // Handle logged in case
         } else {
           // Handle logged out case
+          this.handleLoggedOutCase(reply)
         }
       }
     )
@@ -114,7 +113,7 @@ export default class AcceptInvitation extends Component {
 				this.setState({
 					formSubmitError: ''
         });
-        window.open("/app/join/networks/invitation", "_self");
+        window.open("/app/invites", "_self");
 			}
 		});
   }
