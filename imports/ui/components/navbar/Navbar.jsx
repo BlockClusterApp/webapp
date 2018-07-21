@@ -89,7 +89,7 @@ class Navbar extends Component {
 			                	</li>
 			              	</ul>
 			            </li>
-						{(this.props.kuberREST_IP[0] !== undefined) &&
+						{/*(this.props.kuberREST_IP[0] !== undefined) &&
 	                    	<li className="">
 		                    	<Link target="_blank" to={this.props.kuberREST_IP + "/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#!/overview?namespace=default"} className="detailed">
 		                    		<span className="title">Infrastructure</span>
@@ -97,7 +97,7 @@ class Navbar extends Component {
 		                    	</Link>
 		                        <span className="icon-thumbnail"><i className="fa fa-cubes"></i></span>
 		                    </li>
-	                    }
+	                    */}
 	                </ul>
 	                <div className="clearfix"></div>
 	            </div>
