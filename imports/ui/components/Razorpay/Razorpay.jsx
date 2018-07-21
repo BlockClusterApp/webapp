@@ -2,6 +2,8 @@ import React from "react";
 import PropTypes from 'prop-types';
 import Config from '../../../modules/config/client';
 
+import './Razorpay.scss';
+
 class RazorPay extends React.Component {
   constructor(props) {
     super(props);
@@ -22,8 +24,9 @@ class RazorPay extends React.Component {
     const user = Meteor.user();
     const razorpayOptions = {
       key: Config.razorpayId,
+      amount: this.props.amount,
       name: 'Blockcluster',
-      image: "https://app.blockcluster.io/assets/img/logo/blockcluster.png",
+      image: "/assets/img/logo/favicon-96x96.png",
       prefill: {
         name: `${user.profile.firstName} ${user.profile.lastName}`,
         email: `${user.emails[0].address}`
@@ -35,19 +38,28 @@ class RazorPay extends React.Component {
         ...notes
       },
       handler: response => {
-        console.log(response);
+        /* response: {razorpay_payment_id: "pay_AbpQVNsNRTkyKo"} */
         // Meteor.call("capturePaymentRazorPay", response);
+        this.setState({
+          loading: false
+        });
         if(this.props.paymentHandler) {
           this.props.paymentHandler(response);
         }
       },
       modal: {
         backdropclose: () => {
+          this.setState({
+            loading: false
+          });
           if(this.props.modalBackDropCloseListener) {
             this.props.modalBackDropCloseListener();
           }
         },
         ondismiss: () => {
+          this.setState({
+            loading: false
+          });
           if(this.props.modalDismissListener) {
             this.props.modalDismissListener();
           }
@@ -58,15 +70,15 @@ class RazorPay extends React.Component {
     if(!window.rzp1) {
       window.rzp1 = new window.Razorpay(razorpayOptions);
     } 
-    window.rzp1.open(defaultRazorpayOptions);
+    window.rzp1.open();
   }
 
   render() { 
     return (<div className="razorpay-holder">
-      <button className="btn btn-primary" 
+      <button className="btn btn-primary razorpay-payment-button" 
         onClick={this.triggerPayment}
         disabled={this.state.loading}>
-        { this.state.loading && <i className="fa fa-spin fa-spinner">></i> }Pay Now
+        { this.state.loading && <i className="fa fa-spin fa-spinner">&nbsp;</i> }Pay Now
       </button>
     </div>
     );
@@ -79,7 +91,8 @@ RazorPay.propTypes = {
   modalBackDropCloseListener: PropTypes.func,
   paymentHandler: PropTypes.func.isRequired,
   paymentNotes: PropTypes.object.isRequired,
-  preTriggerPaymentListener: PropTypes.func
+  preTriggerPaymentListener: PropTypes.func,
+  amount: PropTypes.number.isRequired
 }
 
 export default RazorPay;

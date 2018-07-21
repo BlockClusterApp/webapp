@@ -3,11 +3,11 @@ import {Link} from "react-router-dom"
 import createHistory from "history/createBrowserHistory";
 import {withTracker} from "meteor/react-meteor-data";
 
-import RazorPay from '../../components/Razorpay/Razorpay';
+import RazorPay from '../../components/Razorpay/Razorpay.jsx';
 
 import "./Header.scss"
 
-class Navbar extends Component {
+class Header extends Component {
     logout = () => {
         Meteor.logout()
     }
@@ -61,4 +61,4 @@ export default withTracker(() => {
     return {
         user: Meteor.user()
     }
-})(Navbar)
+})(Header)
