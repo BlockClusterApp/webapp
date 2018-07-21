@@ -12,12 +12,15 @@ class RazorPay extends React.Component {
   }
 
   triggerPayment = () => {
+    if(this.props.preTriggerPaymentListener) {
+      this.props.preTriggerPaymentListener();
+    }
     this.setState({
       loading: true
     });
     const notes = Object.assign({}, this.props.paymentNotes);
     const user = Meteor.user();
-    const defaultRazorpayOptions = {
+    const razorpayOptions = {
       key: Config.razorpayId,
       name: 'Blockcluster',
       image: "https://app.blockcluster.io/assets/img/logo/blockcluster.png",
@@ -32,7 +35,8 @@ class RazorPay extends React.Component {
         ...notes
       },
       handler: response => {
-        Meteor.call("capturePaymentRazorPay", response);
+        console.log(response);
+        // Meteor.call("capturePaymentRazorPay", response);
         if(this.props.paymentHandler) {
           this.props.paymentHandler(response);
         }
@@ -51,18 +55,14 @@ class RazorPay extends React.Component {
       }
     };
 
-    if(window.rzp1) {
-      window.rzp1.open(defaultRazorpayOptions);
-    }
+    if(!window.rzp1) {
+      window.rzp1 = new window.Razorpay(razorpayOptions);
+    } 
+    window.rzp1.open(defaultRazorpayOptions);
   }
 
-  render() {
-    if (this.props.buttonLayout) {
-      return this.props.buttonLayout;
-    }
-
-    return (
-    <div className="razorpay-holder">
+  render() { 
+    return (<div className="razorpay-holder">
       <button className="btn btn-primary" 
         onClick={this.triggerPayment}
         disabled={this.state.loading}>
@@ -70,15 +70,16 @@ class RazorPay extends React.Component {
       </button>
     </div>
     );
+  
   }
 }
 
 RazorPay.propTypes = {
   modalDismissListener: PropTypes.func,
   modalBackDropCloseListener: PropTypes.func,
-  paymentHandler: PropTypes.paymentHandler.isRequired,
+  paymentHandler: PropTypes.func.isRequired,
   paymentNotes: PropTypes.object.isRequired,
-  buttonLayout: PropTypes.node
+  preTriggerPaymentListener: PropTypes.func
 }
 
 export default RazorPay;

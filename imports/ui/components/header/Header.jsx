@@ -3,6 +3,8 @@ import {Link} from "react-router-dom"
 import createHistory from "history/createBrowserHistory";
 import {withTracker} from "meteor/react-meteor-data";
 
+import RazorPay from '../../components/Razorpay/Razorpay';
+
 import "./Header.scss"
 
 class Navbar extends Component {
@@ -31,6 +33,9 @@ class Navbar extends Component {
                         </li>
                         <li className="p-r-10 inline">
                             <a href="#" className="header-icon fa fa-book"></a>
+                        </li>
+                        <li className="inline">
+                            <RazorPay paymentHandler={() => {}} paymentNotes={{}} />
                         </li>
                     </ul>
                 </div>

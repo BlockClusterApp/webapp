@@ -8,7 +8,7 @@ module.exports = {
     workerNodeIP: "18.237.94.215",
     namespace: "dev",
     razorpay: {
-        id: '',
-        secret: ''
+        id: '1234567890',
+        secret: '1234567890'
     }
 }
