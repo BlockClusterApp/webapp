@@ -31,6 +31,19 @@ import {
     BCAccounts
 } from "../imports/collections/bcAccounts/bcAccounts.js"
 
+import {
+    DerivationKeys
+} from "../imports/collections/derivationKeys/derivationKeys.js"
+import {
+    EncryptedObjects
+} from "../imports/collections/encryptedObjects/encryptedObjects.js"
+import {
+    EncryptionKeys
+} from "../imports/collections/encryptionKeys/encryptionKeys.js"
+import {
+    SoloAssetAudit
+} from "../imports/collections/soloAssetAudit/soloAssetAudit.js"
+
 import Verifier from '../imports/api/emails/email-validator'
 import Config from '../imports/modules/config/server';
 
@@ -154,7 +167,7 @@ Meteor.methods({
                                     "containers":[
                                         {
                                             "name":"dynamo",
-                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo",
+                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo-test",
                                             "command":[
                                                 "bin/bash",
                                                 "-c",
@@ -209,6 +222,30 @@ Meteor.methods({
                                                     }
                                                 }
                                             }
+                                        },
+                                        {
+                                            "name":"impulse",
+                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/impulse",
+                                            "env":[
+                                                {
+                                                    "name": "instanceId",
+                                                    "value": instanceId
+                                                },
+                                                {
+                                                    "name": "MONGO_URL",
+                                                    "value": `${process.env.MONGO_URL}`
+                                                },
+                                                {
+                                                    "name": "WORKER_NODE_IP",
+                                                    "value": `${Config.workerNodeIP(locationCode)}`
+                                                }
+                                            ],
+                                            "imagePullPolicy":"Always",
+                                            "ports":[
+                                                {
+                                                    "containerPort":7558
+                                                }
+                                            ]
                                         }
                                     ],
                                     "imagePullSecrets":[
@@ -252,6 +289,10 @@ Meteor.methods({
                                         {
                                             "name":"apis",
                                             "port":6382
+                                        },
+                                        {
+                                            "name":"impulse",
+                                            "port":7558
                                         }
                                     ],
                                     "selector":{
@@ -283,11 +324,13 @@ Meteor.methods({
                                                 constellationNodePort: response.data.spec.ports[1].nodePort,
                                                 ethNodePort: response.data.spec.ports[2].nodePort,
                                                 apisPort: response.data.spec.ports[3].nodePort,
+                                                impulsePort: response.data.spec.ports[4].nodePort,
                                                 clusterIP: response.data.spec.clusterIP,
                                                 realRPCNodePort: 8545,
                                                 realConstellationNodePort: 9001,
                                                 realEthNodePort: 23000,
-                                                realAPIsPort: 6382
+                                                realAPIsPort: 6382,
+                                                realImpulsePort: 7558
                                             }
                                         })
 
@@ -369,7 +412,6 @@ Meteor.methods({
                                                             console.log(error);
                                                             deleteNetwork(id)
                                                         } else {
-
                                                             Networks.update({
                                                                 _id: id
                                                             }, {
@@ -470,6 +512,22 @@ Meteor.methods({
                                                                             instanceId: id
                                                                         })
 
+                                                                        EncryptionKeys.remove({
+                                                                            instanceId: id
+                                                                        })
+
+                                                                        DerivationKeys.remove({
+                                                                            instanceId: id
+                                                                        })
+
+                                                                        EncryptedObjects.remove({
+                                                                            instanceId: id
+                                                                        })
+
+                                                                        SoloAssetAudit.remove({
+                                                                            instanceId: id
+                                                                        })
+
                                                                         myFuture.return();
                                                                     }
                                                                 })
@@ -560,7 +618,7 @@ spec:
     spec:
       containers:
       - name: dynamo
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo-test
         command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
         lifecycle:
           postStart:
@@ -605,7 +663,7 @@ spec:
     spec:
       containers:
       - name: dynamo
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo-test
         command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
         lifecycle:
           postStart:
@@ -926,13 +984,9 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        console.log("Inside metohd", instanceId, assetName, assetType, assetIssuer, reissuable, parts, network);
-        console.log("URL", `http://${Config.workerNodeIP(network.locationCode)}:${network.rpcNodePort}`)
         let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:${network.rpcNodePort}`));
-        console.log("Web3 connected");
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
-
         if (assetType === "solo") {
             assets.createSoloAssetType.sendTransaction(assetName, {
                 from: assetIssuer,
@@ -988,18 +1042,27 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-        assets.issueSoloAsset.sendTransaction(assetName, toAddress, identifier, {
-            from: fromAddress,
-        }, function(error, txnHash) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/issueSoloAsset`, {
+            "content": JSON.stringify({
+                assetName: assetName,
+                toAccount: toAddress,
+                identifier: identifier,
+                data: {},
+                fromAccount: fromAddress
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
             } else {
+                console.log(response)
                 myFuture.return();
             }
         })
+
         return myFuture.wait();
     },
     "transferBulkAssets": function(instanceId, assetName, fromAddress, toAddress, units) {
@@ -1115,22 +1178,82 @@ spec:
 
         return myFuture.wait();
     },
-    "addUpdateSoloAssetInfo": function(instanceId, assetName, fromAddress, identifier, key, value) {
+    "addUpdateSoloAssetInfo": function(instanceId, assetName, fromAddress, identifier, key, value, visibility) {
         var myFuture = new Future();
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-
-        assets.addOrUpdateSoloAssetExtraData.sendTransaction(assetName, identifier, key, value, {
-            from: fromAddress,
-            gas: '4712388'
-        }, function(error, txnHash) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/updateAssetInfo`, {
+            "content": JSON.stringify({
+                visibility: visibility,
+                key: key,
+                value: value,
+                assetName: assetName,
+                identifier: identifier,
+                fromAccount: fromAddress
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
             } else {
+                console.log(response)
+                myFuture.return();
+            }
+        })
+
+        return myFuture.wait();
+    },
+    "grantAccess": function(instanceId, assetName, identifier, publicKey, fromAddress) {
+        var myFuture = new Future();
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/grantAccessToPrivateData`, {
+            "content": JSON.stringify({
+                assetName: assetName,
+                identifier: identifier,
+                publicKey: publicKey,
+                fromAccount: fromAddress
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                console.log(response)
+                myFuture.return();
+            }
+        })
+
+        return myFuture.wait();
+    },
+    "revokeAccess": function(instanceId, assetName, identifier, publicKey, fromAddress) {
+        var myFuture = new Future();
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/revokeAccessToPrivateData`, {
+            "content": JSON.stringify({
+                assetName: assetName,
+                identifier: identifier,
+                publicKey: publicKey,
+                fromAccount: fromAddress
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                console.log(response)
                 myFuture.return();
             }
         })
@@ -1394,8 +1517,9 @@ spec:
         return myFuture.wait();
     },
     "searchSoloAssets": function(instanceId, query) {
+        query = JSON.parse(query)
         query.instanceId = instanceId;
-        return SoloAssets.find(JSON.parse(query)).fetch();
+        return SoloAssets.find(query).fetch();
     },
     "rpcPasswordUpdate": function(instanceId, password, locationCode="us-west-2") {
         var myFuture = new Future();
