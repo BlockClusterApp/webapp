@@ -239,6 +239,7 @@ class AssetsManagement extends Component {
             this[instanceId + "_updateSoloAssetInfo_identifier"].value,
             this[instanceId + "_updateSoloAssetInfo_key"].value,
             this[instanceId + "_updateSoloAssetInfo_value"].value,
+            this[instanceId + "_updateSoloAssetInfo_visibility"].value,
             (error) => {
                 if(error) {
                     this.setState({
@@ -256,6 +257,8 @@ class AssetsManagement extends Component {
             }
         )
     }
+
+
 
     closeSoloAsset(e, instanceId) {
         e.preventDefault();
@@ -367,6 +370,56 @@ class AssetsManagement extends Component {
                 this.setState({
                     [instanceId + "_unsubscribeAsset_formloading"]: false,
                     [instanceId + "_subscribeAsset_formSubmitError"]: error.reason
+                })
+            }
+        });
+    }
+
+    grantAccess = (e, instanceId) => {
+        e.preventDefault();
+
+        this.setState({
+            [instanceId + "_privacyGrant_formloading"]: true,
+            [instanceId + "_privacy_formSubmitError"]: ''
+        });
+
+        Meteor.call("grantAccess", instanceId, this[instanceId + "_privacy_assetName"].value, this[instanceId + "_privacy_identifier"].value, this[instanceId + "_privacy_publicKey"].value, this[instanceId + "_privacy_fromAddress"].value, (error) => {
+            if(!error) {
+                this.setState({
+                    [instanceId + "_privacyGrant_formloading"]: false,
+                    [instanceId + "_privacy_formSubmitError"]: ''
+                });
+
+                notifications.success("Access granted")
+            } else {
+                this.setState({
+                    [instanceId + "_privacyGrant_formloading"]: false,
+                    [instanceId + "_privacy_formSubmitError"]: error.reason
+                })
+            }
+        });
+    }
+
+    revokeAccess = (e, instanceId) => {
+        e.preventDefault();
+
+        this.setState({
+            [instanceId + "_privacyRevoke_formloading"]: true,
+            [instanceId + "_privacy_formSubmitError"]: ''
+        });
+
+        Meteor.call("revokeAccess", instanceId, this[instanceId + "_privacy_assetName"].value, this[instanceId + "_privacy_identifier"].value, this[instanceId + "_privacy_publicKey"].value, this[instanceId + "_privacy_fromAddress"].value, (error) => {
+            if(!error) {
+                this.setState({
+                    [instanceId + "_privacyRevoke_formloading"]: false,
+                    [instanceId + "_privacy_formSubmitError"]: ''
+                });
+
+                notifications.success("Access Revoked")
+            } else {
+                this.setState({
+                    [instanceId + "_privacyRevoke_formloading"]: false,
+                    [instanceId + "_privacy_formSubmitError"]: error.reason
                 })
             }
         });
@@ -523,6 +576,9 @@ class AssetsManagement extends Component {
                                                                     </li>
                                                                     <li className="nav-item">
                                                                         <a href="#" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide6"}><span>Subscribe/Unsubscribe</span></a>
+                                                                    </li>
+                                                                    <li className="nav-item">
+                                                                        <a href="#" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide7"}><span>Privacy</span></a>
                                                                     </li>
                                                                 </ul>
                                                                 <div className="tab-content p-l-0 p-r-0">
@@ -891,6 +947,13 @@ class AssetsManagement extends Component {
                                                                                         <label>Value</label>
                                                                                         <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_updateSoloAssetInfo_value"] = input}} required />
                                                                                     </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>Visibility</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_updateSoloAssetInfo_visibility"] = input}} required>
+                                                                                            <option key="public" value="public">Public</option>
+                                                                                            <option key="private" value="private">Private</option>
+                                                                                        </select>
+                                                                                    </div>
                                                                                     {this.state[this.props.network[0].instanceId + "_updateSoloAssetInfo_formSubmitError"] &&
                                                                                         <div className="row m-t-30">
                                                                                             <div className="col-md-12">
@@ -1057,6 +1120,82 @@ class AssetsManagement extends Component {
                                                                                         </form>
                                                                                     </div>
                                                                                 </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="tab-pane slide-left" id={this.props.network[0].instanceId + "_slide7"}>
+                                                                        <div className="row">
+                                                                            <div className="col-lg-12">
+                                                                                <h4>Grant or Revoke Access</h4>
+                                                                                <form role="form">
+                                                                                    <div className="form-group">
+                                                                                        <label>Asset Name</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_privacy_assetName"] = input}} required>
+                                                                                            {this.props.assetTypes.map((item) => {
+                                                                                                if(item.type === "solo") {
+                                                                                                    return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
+                                                                                                }
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>Identifier</label>
+                                                                                        <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_privacy_identifier"] = input}} required />
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>Public Key</label>
+                                                                                        <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_privacy_publicKey"] = input}} required />
+                                                                                    </div>
+                                                                                    <div className="form-group">
+                                                                                        <label>From Account</label>
+                                                                                        <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_privacy_fromAddress"] = input}} required>
+                                                                                            {this.props.accounts.map((item) => {
+                                                                                                return <option key={item.address} value={item.address}>{item.address}</option>
+                                                                                            })}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    {this.state[this.props.network[0].instanceId + "_privacy_formSubmitError"] &&
+                                                                                        <div className="row m-t-30">
+                                                                                            <div className="col-md-12">
+                                                                                                <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                                                                                    <button className="close" data-dismiss="alert"></button>
+                                                                                                    {this.state[this.props.network[0].instanceId + "_privacy_formSubmitError"]}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    }
+                                                                                    <p className="pull-right">
+                                                                                        <LaddaButton
+                                                                                            loading={this.state[this.props.network[0].instanceId + "_privacyGrant_formloading"]}
+                                                                                            data-size={S}
+                                                                                            data-style={SLIDE_UP}
+                                                                                            data-spinner-size={30}
+                                                                                            data-spinner-lines={12}
+                                                                                            className="btn btn-success m-t-10"
+                                                                                            type="submit"
+                                                                                            onClick={(e) => {
+                                                                                                this.grantAccess(e, this.props.network[0].instanceId);
+                                                                                            }}
+                                                                                        >
+                                                                                            <i className="fa fa-eye" aria-hidden="true"></i>&nbsp;&nbsp;Grant Access
+                                                                                        </LaddaButton>
+                                                                                        &nbsp;&nbsp;
+                                                                                        <LaddaButton
+                                                                                            loading={this.state[this.props.network[0].instanceId + "_privacyRevoke_formloading"]}
+                                                                                            data-size={S}
+                                                                                            data-style={SLIDE_UP}
+                                                                                            data-spinner-size={30}
+                                                                                            data-spinner-lines={12}
+                                                                                            className="btn btn-success m-t-10"
+                                                                                            type="submit"
+                                                                                            onClick={(e) => {
+                                                                                                this.revokeAccess(e, this.props.network[0].instanceId);
+                                                                                            }}
+                                                                                        >
+                                                                                            <i className="fa fa-eye-slash" aria-hidden="true"></i>&nbsp;&nbsp;Revoke Access
+                                                                                        </LaddaButton>
+                                                                                    </p>
+                                                                                </form>
                                                                             </div>
                                                                         </div>
                                                                     </div>
