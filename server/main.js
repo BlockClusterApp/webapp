@@ -44,9 +44,6 @@ import {
 import {
     EncryptionKeys
 } from "../imports/collections/encryptionKeys/encryptionKeys.js"
-import {
-    SoloAssetAudit
-} from "../imports/collections/soloAssetAudit/soloAssetAudit.js"
 
 import Verifier from '../imports/api/emails/email-validator'
 import Config from '../imports/modules/config/server';
