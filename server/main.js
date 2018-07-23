@@ -244,6 +244,26 @@ Meteor.methods({
                                                     "value": `${Config.workerNodeIP(locationCode)}`
                                                 }
                                             ],
+                                            "lifecycle": {
+                                                "postStart": {
+                                                    "exec": {
+                                                        "command": [
+                                                            "/bin/bash",
+                                                            "-c",
+                                                            "node /impulse/postStart.js"
+                                                        ]
+                                                    }
+                                                },
+                                                "preStop": {
+                                                    "exec": {
+                                                        "command": [
+                                                            "/bin/bash",
+                                                            "-c",
+                                                            "node /impulse/preStop.js"
+                                                        ]
+                                                    }
+                                                }
+                                            },
                                             "imagePullPolicy":"Always",
                                             "ports":[
                                                 {
@@ -334,7 +354,8 @@ Meteor.methods({
                                                 realConstellationNodePort: 9001,
                                                 realEthNodePort: 23000,
                                                 realAPIsPort: 6382,
-                                                realImpulsePort: 7558
+                                                realImpulsePort: 7558,
+                                                impulseURL: "http://" + Config.workerNodeIP(locationCode) + ":" + response.data.spec.ports[4].nodePort
                                             }
                                         })
 
@@ -550,12 +571,9 @@ Meteor.methods({
             }
         })
 
-        myFuture.return();
-
-
         return myFuture.wait();
     },
-    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode, userId) {
+    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, impulseURL, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode, userId) {
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
 
@@ -602,7 +620,8 @@ Meteor.methods({
             "totalENodes": totalENodes,
             "totalConstellationNodes": totalConstellationNodes,
             "genesisBlock": genesisFileContent,
-            "locationCode": locationCode
+            "locationCode": locationCode,
+            "impulseURL": impulseURL
         }, function(error, id) {
             if (error) {
                 console.log(error);
@@ -655,6 +674,8 @@ spec:
           value: ${atomicSwapContractAddress}
         - name: streamsContractAddress
           value: ${streamsContractAddress}
+        - name: IMPULSE_URL
+          value: ${impulseURL}
       imagePullSecrets:
       - name: regsecret`
                 } else {
@@ -700,6 +721,8 @@ spec:
           value: ${atomicSwapContractAddress}
         - name: streamsContractAddress
           value: ${streamsContractAddress}
+        - name: IMPULSE_URL
+          value: ${impulseURL}
       imagePullSecrets:
       - name: regsecret`;
                 }

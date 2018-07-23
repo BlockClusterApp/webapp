@@ -90,7 +90,7 @@ export default {
 
         return s;
     },
-    calculateNodeStatus(status, lastPinged) {
+    calculateNodeStatus(status) {
         if(status === undefined || status === "initializing") {
             return "initializing"
         } else if (status === "down") {
@@ -100,5 +100,18 @@ export default {
         } else {
             return "unknown"
         }
+    },
+    hexToBase64(str) {
+        return btoa(String.fromCharCode.apply(null,
+          str.replace(/\r|\n/g, "").replace(/([\da-fA-F]{2}) ?/g, "0x$1 ").replace(/ +$/, "").split(" "))
+        );
+    },
+    base64ToHex(str) {
+        for (var i = 0, bin = atob(str.replace(/[ \r\n]+$/, "")), hex = []; i < bin.length; ++i) {
+            let tmp = bin.charCodeAt(i).toString(16);
+            if (tmp.length === 1) tmp = "0" + tmp;
+            hex[hex.length] = tmp;
+        }
+        return hex.join("");
     }
 }

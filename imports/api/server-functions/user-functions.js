@@ -130,18 +130,19 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode) {
     const invitation = UserInvitation.find({
       _id: invitationId
     }).fetch()[0];
-  
+
     const network = Networks.find({
       _id: invitation.networkId
     }).fetch()[0];
-  
+
     console.log("Joining network", invitationId, network);
-    Meteor.call("joinNetwork", 
+    Meteor.call("joinNetwork",
       network.name,
       invitation.nodeType || "authority",
       network.genesisBlock.toString(),
       ["enode://" + network.nodeId + "@" + network.workerNodeIP + ":" + network.ethNodePort].concat(network.totalENodes),
       [network.workerNodeIP + ":" + network.constellationNodePort].concat(network.totalConstellationNodes),
+      network.impulseURL,
       network.assetsContractAddress,
       network.atomicSwapContractAddress,
       network.streamsContractAddress,
