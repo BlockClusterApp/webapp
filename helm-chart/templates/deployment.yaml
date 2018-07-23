@@ -53,6 +53,16 @@ spec:
             secretKeyRef:
               name: sendgrid-creds
               key: apiKey
+        - name: RAZORPAY_ID
+          valueFrom:
+            secretKeyRef:
+              name: razorpay-creds
+              key: razorPayId
+        - name: RAZORPAY_KEY
+          valueFrom:
+            secretKeyRef:
+              name: razorpay-creds
+              key: razorPaySecret
         - name: KUBERNETES_NODE_NAME
           valueFrom:
             fieldRef:

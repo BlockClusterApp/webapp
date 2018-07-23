@@ -13,18 +13,28 @@ class RazorPay extends React.Component {
     };
   }
 
-  triggerPayment = () => {
-    if(this.props.preTriggerPaymentListener) {
-      this.props.preTriggerPaymentListener();
-    }
+  triggerRazorPay = (customOptions) => {
     this.setState({
       loading: true
     });
-    const notes = Object.assign({}, this.props.paymentNotes);
+
+    const testOptions = {
+      paymentRequestId: 'test123'
+    }
+
+    const notes = Object.assign(testOptions, {}, this.props.paymentNotes);
     const user = Meteor.user();
+
+    const amount = 100 // || this.props.amount || customOptions.amount || 0;
+    if(String(amount).includes(".")) {
+      return console.log("Amount is not in paisa");
+    }
+    if(!notes.paymentRequestId) {
+      return console.log("Payment request id is required for razorpay");
+    }
     const razorpayOptions = {
       key: Config.razorpayId,
-      amount: this.props.amount,
+      amount,
       name: 'Blockcluster',
       image: "/assets/img/logo/favicon-96x96.png",
       prefill: {
@@ -39,7 +49,8 @@ class RazorPay extends React.Component {
       },
       handler: response => {
         /* response: {razorpay_payment_id: "pay_AbpQVNsNRTkyKo"} */
-        // Meteor.call("capturePaymentRazorPay", response);
+        console.log("Payment response", response);
+        Meteor.call("capturePaymentRazorPay", response);
         this.setState({
           loading: false
         });
@@ -67,10 +78,37 @@ class RazorPay extends React.Component {
       }
     };
 
-    if(!window.rzp1) {
-      window.rzp1 = new window.Razorpay(razorpayOptions);
-    } 
-    window.rzp1.open();
+    try {
+
+      if(!window.rzp1) {
+        window.rzp1 = new window.Razorpay(razorpayOptions);
+      } 
+      window.rzp1.open();
+    }catch(err) {
+      this.setState({
+        loading: false
+      });
+      console.log("Razorpay error", err);
+    }finally{
+      // alert("Payment gateway error. Please try again");
+    }
+  }
+
+  triggerPayment = () => {
+    let customOptions = {};
+    if(this.props.preTriggerPaymentListener) {
+      customOptions = this.props.preTriggerPaymentListener();
+      if(customOptions.then){
+        customOptions.then((co) => {
+          return this.triggerRazorPay(co)
+        });
+      } else {
+        this.triggerRazorPay(customOptions);
+      }
+
+    } else {
+      this.triggerRazorPay(customOptions);
+    }
   }
 
   render() { 
@@ -78,7 +116,7 @@ class RazorPay extends React.Component {
       <button className="btn btn-primary razorpay-payment-button" 
         onClick={this.triggerPayment}
         disabled={this.state.loading}>
-        { this.state.loading && <i className="fa fa-spin fa-spinner">&nbsp;</i> }Pay Now
+        { this.state.loading && <i className="fa fa-spin fa-spinner"></i> }&nbsp;Pay Now
       </button>
     </div>
     );
@@ -92,7 +130,7 @@ RazorPay.propTypes = {
   paymentHandler: PropTypes.func.isRequired,
   paymentNotes: PropTypes.object.isRequired,
   preTriggerPaymentListener: PropTypes.func,
-  amount: PropTypes.number.isRequired
+  amount: PropTypes.number
 }
 
 export default RazorPay;

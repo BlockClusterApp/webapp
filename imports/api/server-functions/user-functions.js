@@ -135,7 +135,6 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode) {
       _id: invitation.networkId
     }).fetch()[0];
   
-    console.log("Joining network", invitationId, network);
     Meteor.call("joinNetwork", 
       network.name,
       invitation.nodeType || "authority",
@@ -148,7 +147,6 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode) {
       locationCode,
       invitation.inviteTo,
       (err, res) => {
-        console.log("Join network res", err, res);
         if(err) return reject(err);
         UserInvitation.update({
           _id: invitationId,
