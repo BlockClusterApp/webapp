@@ -27,6 +27,7 @@
     "i": "^0.3.6",
     "jsonminify": "0.4.1",
     "meteor-node-stubs": "0.3.2",
+    "moment": "^2.22.2",
     "mongodb": "^3.0.5",
     "node-cmd": "3.0.0",
     "npm": "^6.1.0",

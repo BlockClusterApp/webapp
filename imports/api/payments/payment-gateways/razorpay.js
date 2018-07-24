@@ -18,14 +18,17 @@ RazorPay.capturePayment = async paymentResponse => {
     // First update payment status
     const rzpayment = await RazorPayInstance.payments.fetch(paymentResponse.razorpay_payment_id);
     debug("Razorpay payment", rzpayment);
+    if(!rzpayment) {
+      throw new Error("Invalid razorpay payment id");
+    }
     const paymentRequest = PaymentRequests.find({
         _id: rzpayment.notes.paymentRequestId
     }).fetch()[0];
-  
+
     if(!paymentRequest){
         throw new Error("Invalid payment request id for rzpayment ", paymentResponse);
     }
-  
+
     PaymentRequests.update({
         _id: rzpayment.notes.paymentRequestId
     }, {
@@ -84,7 +87,7 @@ RazorPay.refundPayment = async (paymentId, options) => {
   if(!paymentRequest){
     throw new Error(`Invalid payment Id ${paymentId}`)
   }
-  
+
   if(!options.amount) {
     options.amount = paymentRequest.amount
   }

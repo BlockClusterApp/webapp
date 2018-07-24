@@ -16,7 +16,8 @@ NetworkInvitation.inviteUserToNetwork = async function(
   userId
 ) {
   const network = Networks.find({
-    instanceId: networkId
+    instanceId: networkId,
+    active: true
   }).fetch()[0];
   if (!network) {
     throw new Error("Invalid network");
@@ -130,12 +131,12 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode) {
     const invitation = UserInvitation.find({
       _id: invitationId
     }).fetch()[0];
-  
+
     const network = Networks.find({
       _id: invitation.networkId
     }).fetch()[0];
-  
-    Meteor.call("joinNetwork", 
+
+    Meteor.call("joinNetwork",
       network.name,
       invitation.nodeType || "authority",
       network.genesisBlock.toString(),
