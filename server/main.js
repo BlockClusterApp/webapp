@@ -1639,11 +1639,34 @@ spec:
 
         return myFuture.wait();
     },
-    "publishStream": function(instanceId, name, issuer, key, data) {
+    "publishStream": function(instanceId, name, issuer, key, data, visibility, publicKeys) {
         var myFuture = new Future();
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/streams/publish`, {
+            "content": JSON.stringify({
+                visibility: visibility,
+                fromAccount: issuer,
+                streamName: name,
+                key: key,
+                data: data,
+                publicKeys: publicKeys.split(",")
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                console.log(response)
+                myFuture.return();
+            }
+        })
+
+        /*
         let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
 
         var streamsContract = web3.eth.contract(smartContracts.streams.abi);
@@ -1659,6 +1682,7 @@ spec:
                 myFuture.throw("An unknown error occured");
             }
         })
+        */
 
         return myFuture.wait();
     },
