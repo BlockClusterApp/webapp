@@ -10,7 +10,13 @@
 	}
 	.btn[disabled], .form-control[disabled] {
 		cursor: default;
-	}
+  }
+
+  .modal {
+    padding-top: 150px;
+    background: rgba(0,0,0,0.4);
+    display: block;
+  }
 }
 
 .badge-dummy{

@@ -2,7 +2,8 @@ import React, {Component} from "react";
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import { withRouter } from 'react-router-dom'
 import notifications from "../../../modules/notifications"
-import LocationSelector from '../../components/LocationSelector/LocationSelector.jsx';
+import LocationSelector from '../../components/Selectors/LocationSelector.jsx';
+import NetworkConfigSelector from '../../components/Selectors/NetworkConfigSelector.jsx'
 
 class CreateNetwork extends Component {
     constructor() {
@@ -10,20 +11,20 @@ class CreateNetwork extends Component {
         this.locationCode = "us-west-2";
         this.state = {
             formSubmitError: "",
-            loading: false,
+            loading: false
         };
     }
 
 
     onSubmit = (e) => {
         e.preventDefault();
-        
+
         this.setState({
             formSubmitError: '',
             loading: true
         });
 
-        Meteor.call("createNetwork", this.networkName.value, this.locationCode, (error) => {
+        Meteor.call("createNetwork", this.networkName.value, this.locationCode, {...this.config}, (error) => {
             if(!error) {
                 this.setState({
                     loading: false,
@@ -39,12 +40,12 @@ class CreateNetwork extends Component {
                 })
             }
         });
-
-
     }
 
+
+
 	render(){
-        
+
 		return (
             <div className="content ">
                 <div className="m-t-20 container-fluid container-fixed-lg bg-white">
@@ -111,6 +112,10 @@ class CreateNetwork extends Component {
                                                 </div>
                                             </div>
                                         </div>
+                                        <br />
+                                        <p>Node Configuration</p>
+                                        <NetworkConfigSelector configChangeListener={(config) => this.config = config} />
+
                                         <p className="m-t-10">Advanced Information</p>
                                         <div className="form-group-attached">
                                             <div className="row">

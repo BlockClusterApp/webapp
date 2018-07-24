@@ -11,6 +11,8 @@ export default function (Collection) {
     });
 
     Collection.before.find((userId, selector, options) => {
+      if(selector.active === undefined) {
         selector.active = true;
+      }
     });
 }

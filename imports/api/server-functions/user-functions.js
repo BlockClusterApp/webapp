@@ -126,7 +126,7 @@ NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
   return { invitation, invitedUser, invitingUser, network };
 };
 
-NetworkInvitation.acceptInvitation = function(invitationId, locationCode) {
+NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networkConfig) {
   return new Promise((resolve, reject) => {
     const invitation = UserInvitation.find({
       _id: invitationId

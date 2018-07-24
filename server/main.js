@@ -3,6 +3,9 @@ require('../imports/api/emails/email-validator')
 require('../imports/api/emails/forgot-password')
 require('../imports/api/locations');
 require('../imports/modules/migrations/server');
+require('../imports/api');
+
+console.log("env", process.env.NODE_ENV);
 
 import UserFunctions from '../imports/api/server-functions/user-functions';
 import {
@@ -88,7 +91,7 @@ Accounts.onCreateUser(function(options, user) {
 });
 
 Meteor.methods({
-    "createNetwork": function(networkName,  locationCode, userId) {
+    "createNetwork": function(networkName,  locationCode, networkConfig, userId) {
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
 
@@ -468,7 +471,7 @@ Meteor.methods({
 
         return myFuture.wait();
     },
-    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode, userId) {
+    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode, networkConfig, userId) {
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
 
@@ -1592,7 +1595,7 @@ Meteor.startup(()=>{
 
 const LOCK_FILE_PATH = '/tmp/webapp.lock';
 function serverStartup(){
-    Migrations.migrateTo(1);
+    Migrations.migrateTo(2);
     fs.writeFileSync(LOCK_FILE_PATH, `Server started at ${new Date()}`)
 }
 

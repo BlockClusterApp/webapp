@@ -4,7 +4,8 @@ import {withTracker} from "meteor/react-meteor-data";
 import {withRouter} from 'react-router-dom'
 import {Networks} from "../../../collections/networks/networks.js"
 import notifications from "../../../modules/notifications"
-import LocationSelector from '../../components/LocationSelector/LocationSelector';
+import LocationSelector from '../../components/Selectors/LocationSelector';
+import NetworkConfigSelector from '../../components/Selectors/NetworkConfigSelector.jsx'
 
 import "./JoinNetwork.scss"
 
@@ -92,7 +93,7 @@ class JoinNetwork extends Component {
                 joinLoading: true
             });
 
-            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, this.state.locationCode, (error) => {
+            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, this.state.locationCode,  {...this.config}, (error) => {
                 if(!error) {
                     this.setState({
                         joinFormSubmitError: '',
@@ -227,6 +228,9 @@ class JoinNetwork extends Component {
                                                                 </div>
                                                             </div>
                                                         </div>
+                                                        <br />
+                                                        <p>Node Configuration</p>
+                                                        <NetworkConfigSelector configChangeListener={(config) => this.config = config} />
                                                         <p className="m-t-10">Advanced Information</p>
                                                         <div className="form-group-attached">
                                                             <div className="row">
