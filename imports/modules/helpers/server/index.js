@@ -1,4 +1,4 @@
-import ModelHelpers from "./model-helpers";
+import ModelHelpers from "../model-helpers";
 import crypto from "crypto";
 import ejs from "ejs";
 import Config from '../../config/server';
@@ -7,24 +7,27 @@ require('./http-interceptor');
 
 const EmailVerificationTemplate = require('../../template/email-verification');
 const ForgotPasswordTemplate = require('../../template/forgot-password');
+const InviteUserTemplate = require('../../template/invite-user');
 
 const EJSMapping = {
   'email-verification.ejs': EmailVerificationTemplate,
-  'forgot-password.ejs': ForgotPasswordTemplate
+  'forgot-password.ejs': ForgotPasswordTemplate,
+  'invite-user.ejs': InviteUserTemplate
 };
 
-const fs = Npm.require("fs");
-const path = Npm.require("path");
-
-function generateRandomString(email, salt = "I<3BlockCluster") {
-  return crypto
+function generateRandomString(placeholder, salt = "I<3BlockCluster") {
+  return `${new Date().getTime()}${crypto
     .createHash("sha256")
-    .update(`${email}${salt}${new Date().getTime()}`, "utf8")
-    .digest("hex");
+    .update(`${placeholder}${salt}${new Date().getTime()}`, "utf8")
+    .digest("hex")}`;
 }
 
 function generateURL(route){
   return `${Config.apiHost.replace(":3000/", ':3000')}${route}`;
+}
+
+function generateCompleteURLForUserInvite(query) {
+  return generateURL(`/accept-invitation?invitation=${query}`)
 }
 
 function generateCompleteURLForEmailVerification(query) {
@@ -52,6 +55,7 @@ export {
     generateRandomString,
     generateCompleteURLForEmailVerification,
     generateCompleteURLForPasswordReset,
+    generateCompleteURLForUserInvite,
     getEJSTemplate,
     ModelHelpers
   }

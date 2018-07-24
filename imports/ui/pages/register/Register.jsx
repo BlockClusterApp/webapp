@@ -122,7 +122,7 @@ export default class Register extends Component {
 						    }
 		                    <div className="row m-t-10">
 		                        <div className="col-lg-6">
-		                            <p><small>I agree to the <a href="#" className="text-info">Pages Terms</a> and <a href="#" className="text-info">Privacy</a>.</small></p>
+		                            <p><small>I agree to the <a href="https://www.blockcluster.io/terms" className="text-info">Pages Terms</a> and <a href="https://www.blockcluster.io/privacy" className="text-info">Privacy</a>.</small></p>
 		                        </div>
 		                        <div className="col-lg-6 text-right">
 		                            <a href="#" className="text-info small">Help? Contact Support</a>

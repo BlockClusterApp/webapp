@@ -3,6 +3,7 @@ require('../imports/api/emails/email-validator')
 require('../imports/api/emails/forgot-password')
 require('../imports/api/locations');
 
+import UserFunctions from '../imports/api/server-functions/user-functions';
 import {
     Networks
 } from "../imports/collections/networks/networks.js"
@@ -33,6 +34,16 @@ import {
 import {
     SoloAssetAudit
 } from "../imports/collections/soloAssetAudit/soloAssetAudit.js"
+
+import {
+    DerivationKeys
+} from "../imports/collections/derivationKeys/derivationKeys.js"
+import {
+    EncryptedObjects
+} from "../imports/collections/encryptedObjects/encryptedObjects.js"
+import {
+    EncryptionKeys
+} from "../imports/collections/encryptionKeys/encryptionKeys.js"
 
 import Verifier from '../imports/api/emails/email-validator'
 import Config from '../imports/modules/config/server';
@@ -78,7 +89,9 @@ Accounts.onCreateUser(function(options, user) {
     user.profile.firstName = options.profile.firstName;
     user.profile.lastName = options.profile.lastName;
 
-    Verifier.sendEmailVerification(user);
+    if(!(!options.profile.firstName || options.profile.firstName === "null" || options.profile.firstName === "undefined")){
+        Verifier.sendEmailVerification(user);
+    }
 
     return user;
 });
@@ -158,7 +171,8 @@ Meteor.methods({
                                     "containers":[
                                         {
                                             "name":"dynamo",
-                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo",
+
+                                            "image":`402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo${['staging', 'production'].includes(process.env.NODE_ENV) ? '' : '-test'}`,
                                             "command":[
                                                 "bin/bash",
                                                 "-c",
@@ -213,6 +227,50 @@ Meteor.methods({
                                                     }
                                                 }
                                             }
+                                        },
+                                        {
+                                            "name":"impulse",
+                                            "image":`402432300121.dkr.ecr.us-west-2.amazonaws.com/impulse:${process.env.NODE_ENV || "dev"}`,
+                                            "env":[
+                                                {
+                                                    "name": "instanceId",
+                                                    "value": instanceId
+                                                },
+                                                {
+                                                    "name": "MONGO_URL",
+                                                    "value": `${process.env.MONGO_URL}`
+                                                },
+                                                {
+                                                    "name": "WORKER_NODE_IP",
+                                                    "value": `${Config.workerNodeIP(locationCode)}`
+                                                }
+                                            ],
+                                            "lifecycle": {
+                                                "postStart": {
+                                                    "exec": {
+                                                        "command": [
+                                                            "/bin/bash",
+                                                            "-c",
+                                                            "node /impulse/postStart.js"
+                                                        ]
+                                                    }
+                                                },
+                                                "preStop": {
+                                                    "exec": {
+                                                        "command": [
+                                                            "/bin/bash",
+                                                            "-c",
+                                                            "node /impulse/preStop.js"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "imagePullPolicy":"Always",
+                                            "ports":[
+                                                {
+                                                    "containerPort":7558
+                                                }
+                                            ]
                                         }
                                     ],
                                     "imagePullSecrets":[
@@ -256,6 +314,10 @@ Meteor.methods({
                                         {
                                             "name":"apis",
                                             "port":6382
+                                        },
+                                        {
+                                            "name":"impulse",
+                                            "port":7558
                                         }
                                     ],
                                     "selector":{
@@ -287,11 +349,14 @@ Meteor.methods({
                                                 constellationNodePort: response.data.spec.ports[1].nodePort,
                                                 ethNodePort: response.data.spec.ports[2].nodePort,
                                                 apisPort: response.data.spec.ports[3].nodePort,
+                                                impulsePort: response.data.spec.ports[4].nodePort,
                                                 clusterIP: response.data.spec.clusterIP,
                                                 realRPCNodePort: 8545,
                                                 realConstellationNodePort: 9001,
                                                 realEthNodePort: 23000,
-                                                realAPIsPort: 6382
+                                                realAPIsPort: 6382,
+                                                realImpulsePort: 7558,
+                                                impulseURL: "http://" + Config.workerNodeIP(locationCode) + ":" + response.data.spec.ports[4].nodePort
                                             }
                                         })
 
@@ -332,20 +397,20 @@ Meteor.methods({
                                                                     "nginx.ingress.kubernetes.io/enable-cors": "true",
                                                                     "nginx.ingress.kubernetes.io/cors-credentials": "true",
                                                                     "kubernetes.io/ingress.class": "nginx",
-                                                                    "nginx.ingress.kubernetes.io/configuration-snippet": `if ($http_origin ~* (^https?://([^/]+\\.)*(localhost:3000|${Config.workerNodeDomainName}))) {\n    set $cors \"true\";\n}\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`
+                                                                    "nginx.ingress.kubernetes.io/configuration-snippet": `if ($http_origin ~* (^https?://([^/]+\\.)*(localhost:3000|${Config.workerNodeDomainName()}))) {\n    set $cors \"true\";\n}\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`
                                                                 }
                                                             },
                                                             "spec": {
                                                                 "tls": [
                                                                     {
                                                                         "hosts": [
-                                                                            Config.workerNodeDomainName
+                                                                            Config.workerNodeDomainName(locationCode)
                                                                         ],
                                                                         "secretName": "blockcluster-ssl"
                                                                     }
                                                                 ],
                                                                 "rules": [{
-                                                                    "host": Config.workerNodeDomainName,
+                                                                    "host": Config.workerNodeDomainName(locationCode),
                                                                     "http": {
                                                                         "paths": [{
                                                                             "path": "/api/node/" + instanceId + "/jsonrpc",
@@ -373,7 +438,6 @@ Meteor.methods({
                                                             console.log(error);
                                                             deleteNetwork(id)
                                                         } else {
-
                                                             Networks.update({
                                                                 _id: id
                                                             }, {
@@ -399,17 +463,17 @@ Meteor.methods({
         return myFuture.wait();
     },
     "deleteNetwork": function(id) {
+
+        function kubeCallback(err, res) {
+            if(err) {
+                console.log(err);
+            }
+        }
+
         var myFuture = new Future();
         var network = Networks.find({
             instanceId: id
         }).fetch()[0];
-        if(!network) {
-            myFuture.throw("Invalid network id");
-            Networks.remove({
-                _id: id
-            });
-            return;
-        }
         const locationCode = network.locationCode;
         HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + id, function(error, response) {
             if (error) {
@@ -474,6 +538,22 @@ Meteor.methods({
                                                                             instanceId: id
                                                                         })
 
+                                                                        EncryptionKeys.remove({
+                                                                            instanceId: id
+                                                                        })
+
+                                                                        DerivationKeys.remove({
+                                                                            instanceId: id
+                                                                        })
+
+                                                                        EncryptedObjects.remove({
+                                                                            instanceId: id
+                                                                        })
+
+                                                                        SoloAssetAudit.remove({
+                                                                            instanceId: id
+                                                                        })
+
                                                                         myFuture.return();
                                                                     }
                                                                 })
@@ -494,11 +574,10 @@ Meteor.methods({
 
         return myFuture.wait();
     },
-    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode, userId) {
+    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, impulseURL, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode, userId) {
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
 
-        console.log(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode);
 
         locationCode = locationCode || "us-west-2";
 
@@ -531,8 +610,6 @@ Meteor.methods({
             });
         }
 
-        console.log(locationCode)
-
         Networks.insert({
             "instanceId": instanceId,
             "name": networkName,
@@ -544,7 +621,8 @@ Meteor.methods({
             "totalENodes": totalENodes,
             "totalConstellationNodes": totalConstellationNodes,
             "genesisBlock": genesisFileContent,
-            "locationCode": locationCode
+            "locationCode": locationCode,
+            "impulseURL": impulseURL
         }, function(error, id) {
             if (error) {
                 console.log(error);
@@ -569,7 +647,7 @@ spec:
     spec:
       containers:
       - name: dynamo
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo${['staging', 'production'].includes(process.env.NODE_ENV) ? '' : '-test'}
         command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
         lifecycle:
           postStart:
@@ -597,6 +675,8 @@ spec:
           value: ${atomicSwapContractAddress}
         - name: streamsContractAddress
           value: ${streamsContractAddress}
+        - name: IMPULSE_URL
+          value: ${impulseURL}
       imagePullSecrets:
       - name: regsecret`
                 } else {
@@ -614,7 +694,7 @@ spec:
     spec:
       containers:
       - name: dynamo
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo${['staging', 'production'].includes(process.env.NODE_ENV) ? '' : '-test'}
         command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
         lifecycle:
           postStart:
@@ -642,6 +722,8 @@ spec:
           value: ${atomicSwapContractAddress}
         - name: streamsContractAddress
           value: ${streamsContractAddress}
+        - name: IMPULSE_URL
+          value: ${impulseURL}
       imagePullSecrets:
       - name: regsecret`;
                 }
@@ -756,20 +838,20 @@ spec:
                                                                     "nginx.ingress.kubernetes.io/enable-cors": "true",
                                                                     "nginx.ingress.kubernetes.io/cors-credentials": "true",
                                                                     "kubernetes.io/ingress.class": "nginx",
-                                                                    "nginx.ingress.kubernetes.io/configuration-snippet": `if ($http_origin ~* (^https?://([^/]+\\.)*(localhost:3000|${Config.workerNodeDomainName}))) {\n    set $cors \"true\";\n}\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`
+                                                                    "nginx.ingress.kubernetes.io/configuration-snippet": `if ($http_origin ~* (^https?://([^/]+\\.)*(localhost:3000|${Config.workerNodeDomainName()}))) {\n    set $cors \"true\";\n}\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`
                                                                 }
                                                             },
                                                             "spec": {
                                                                 "tls": [
                                                                     {
                                                                         "hosts": [
-                                                                            Config.workerNodeDomainName
+                                                                            Config.workerNodeDomainName(locationCode)
                                                                         ],
                                                                         "secretName": "blockcluster-ssl"
                                                                     }
                                                                 ],
                                                                 "rules": [{
-                                                                    "host": Config.workerNodeDomainName,
+                                                                    "host": Config.workerNodeDomainName(locationCode),
                                                                     "http": {
                                                                         "paths": [{
                                                                             "path": "/api/node/" + instanceId + "/jsonrpc",
@@ -804,7 +886,7 @@ spec:
                                                                     "api-password": instanceId
                                                                 }
                                                             })
-                                                            myFuture.return();
+                                                            myFuture.return(id);
                                                         }
                                                     })
                                             }
@@ -909,45 +991,41 @@ spec:
 
         return myFuture.wait();
     },
-    "inviteUserToNetwork": function(networkId, nodeType, email, userId) {
-        let user = Accounts.findUserByEmail(email);
-        var network = Networks.find({
-            instanceId: networkId
-        }).fetch()[0];
-        if (user) {
-            Meteor.call(
-                "joinNetwork",
-                network.name,
-                nodeType,
-                network.genesisBlock.toString(), ["enode://" + network.nodeId + "@" + network.workerNodeIP + ":" + network.ethNodePort].concat(network.totalENodes), [network.workerNodeIP + ":" + network.constellationNodePort].concat(network.totalConstellationNodes),
-                network.assetsContractAddress,
-                network.atomicSwapContractAddress,
-                network.streamsContractAddress,
-                network.locationCode,
-                (userId ? userId : user._id)
-            )
-        } else {
-            throw new Meteor.Error(500, 'Unknown error occured');
-        }
+    "inviteUserToNetwork": async function(networkId, nodeType, email, userId) {
+        return UserFunctions.inviteUserToNetwork(networkId, nodeType, email, userId || this.userId);
+        // let user = Accounts.findUserByEmail(email);
+        // var network = Networks.find({
+        //     instanceId: networkId
+        // }).fetch()[0];
+        // if (user) {
+        //     Meteor.call(
+        //         "joinNetwork",
+        //         network.name,
+        //         nodeType,
+        //         network.genesisBlock.toString(), ["enode://" + network.nodeId + "@" + network.clusterIP + ":" + network.realEthNodePort].concat(network.totalENodes), [network.clusterIP + ":" + network.realConstellationNodePort].concat(network.totalConstellationNodes),
+        //         network.assetsContractAddress,
+        //         network.atomicSwapContractAddress,
+        //         network.streamsContractAddress,
+        //         (userId ? userId : user._id),
+        //         network.locationCode
+        //     )
+        // } else {
+        //     throw new Meteor.Error(500, 'Unknown error occured');
+        // }
     },
     "createAssetType": function(instanceId, assetName, assetType, assetIssuer, reissuable, parts) {
         var myFuture = new Future();
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        console.log("Inside metohd", instanceId, assetName, assetType, assetIssuer, reissuable, parts, network);
-        console.log("URL", `http://${Config.workerNodeIP(network.locationCode)}:${network.rpcNodePort}`)
         let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:${network.rpcNodePort}`));
-        console.log("Web3 connected");
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
-
         if (assetType === "solo") {
             assets.createSoloAssetType.sendTransaction(assetName, {
                 from: assetIssuer,
                 gas: '99999999999999999'
             }, function(error, txnHash) {
-                console.log("Creation solo error", error);
                 if (!error) {
                     myFuture.return();
                 } else {
@@ -959,7 +1037,6 @@ spec:
                 from: assetIssuer,
                 gas: '99999999999999999'
             }, function(error, txnHash) {
-                console.log("Creation bulk error", error);
                 if (!error) {
                     myFuture.return();
                 } else {
@@ -997,18 +1074,27 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-        assets.issueSoloAsset.sendTransaction(assetName, toAddress, identifier, {
-            from: fromAddress,
-        }, function(error, txnHash) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/issueSoloAsset`, {
+            "content": JSON.stringify({
+                assetName: assetName,
+                toAccount: toAddress,
+                identifier: identifier,
+                data: {},
+                fromAccount: fromAddress
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
             } else {
+                console.log(response)
                 myFuture.return();
             }
         })
+
         return myFuture.wait();
     },
     "transferBulkAssets": function(instanceId, assetName, fromAddress, toAddress, units) {
@@ -1124,22 +1210,82 @@ spec:
 
         return myFuture.wait();
     },
-    "addUpdateSoloAssetInfo": function(instanceId, assetName, fromAddress, identifier, key, value) {
+    "addUpdateSoloAssetInfo": function(instanceId, assetName, fromAddress, identifier, key, value, visibility) {
         var myFuture = new Future();
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-
-        assets.addOrUpdateSoloAssetExtraData.sendTransaction(assetName, identifier, key, value, {
-            from: fromAddress,
-            gas: '4712388'
-        }, function(error, txnHash) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/updateAssetInfo`, {
+            "content": JSON.stringify({
+                visibility: visibility,
+                key: key,
+                value: value,
+                assetName: assetName,
+                identifier: identifier,
+                fromAccount: fromAddress
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
             } else {
+                console.log(response)
+                myFuture.return();
+            }
+        })
+
+        return myFuture.wait();
+    },
+    "grantAccess": function(instanceId, assetName, identifier, publicKey, fromAddress) {
+        var myFuture = new Future();
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/grantAccessToPrivateData`, {
+            "content": JSON.stringify({
+                assetName: assetName,
+                identifier: identifier,
+                publicKey: publicKey,
+                fromAccount: fromAddress
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                console.log(response)
+                myFuture.return();
+            }
+        })
+
+        return myFuture.wait();
+    },
+    "revokeAccess": function(instanceId, assetName, identifier, publicKey, fromAddress) {
+        var myFuture = new Future();
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/revokeAccessToPrivateData`, {
+            "content": JSON.stringify({
+                assetName: assetName,
+                identifier: identifier,
+                publicKey: publicKey,
+                fromAccount: fromAddress
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                console.log(response)
                 myFuture.return();
             }
         })

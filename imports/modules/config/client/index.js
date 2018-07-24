@@ -17,25 +17,22 @@ function getAPIHost() {
   }
 }
 
-function getDynamoWokerDomainName() {
-  switch (window.location) {
-    case "production":
-      return "app.blockcluster.io";
-    case "staging":
-      return "app.blockcluster.io";
-    case "test":
-      return "test.blockcluster.io";
-    default:
-      return "dev.blockcluster.io";
-  }
+function getDynamoWokerDomainName(locationCode) {
+  let prefix = '';
+    if(locationCode !== "us-west-2"){
+      prefix = `-${locationCode}`
+    }
+  const host = window.location.origin.includes("localhost") ? 'https://dev.blockcluster.io' : window.location.origin;
+  const url = `${host.split("://")[1].replace(".blockcluster.io", '')}${prefix}.blockcluster.io`;
+  return url;
 }
 
 module.exports = {
   workerNodeIP: process.env.WORKER_NODE_IP || defaults.workerNodeIP,
   apiHost: getAPIHost(),
-  workerNodeDomainName: (() => {
-    return window.location.host.includes("localhost") ? "dev.blockcluster.io" : window.location.host;
-  })(),
+  workerNodeDomainName: (locationCode = "us-west-2") => {
+    return getDynamoWokerDomainName(locationCode)
+  },
   kubeRestApiHost: process.env.KUBE_REST_API_HOST || defaults.kubeRestApiHost,
   namespace: process.env.NAMESPACE || defaults.namespace,
   firewallPort: process.env.FIREWALL_PORT || defaults.firewallPort

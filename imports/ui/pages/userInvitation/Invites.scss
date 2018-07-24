@@ -1,0 +1,22 @@
+.invite {
+	.table tbody tr td {
+		padding: 12px;
+		vertical-align: middle;
+	}
+
+	.form-control[disabled] {
+		background: #f3f3f30d;
+		color: rgba(87, 87, 87, 0.86);
+	}
+	.btn[disabled], .form-control[disabled] {
+		cursor: default;
+	}
+}
+
+.badge-dummy{
+	background: rgba(0,0,0,0);
+	color: rgba(0,0,0,0);
+	padding-left: 0;
+	padding-right: 0;
+	width: 0;
+}

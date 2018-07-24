@@ -15,7 +15,7 @@ export default class EmailVerification extends Component {
     const queries = queryString(this.props.location.search);
     sessionStorage.setItem("key", queries.key);
     if (history.pushState) {
-      var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?action=verification&id=${btoa(`${new Date().getTime()}-${queries.key}`)}`;
+      const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?action=verification&id=${btoa(`${new Date().getTime()}-${queries.key}`)}`;
       window.history.pushState({ path: newurl }, '', newurl);
     }
   }
@@ -68,9 +68,9 @@ export default class EmailVerification extends Component {
             <br />
 
             <span className="sm-block">
-              <a href="#" className="m-l-10 m-r-10" style={{ color: "#222", textDecoration: "none" }}>Terms of use</a>
+              <a href="https://www.blockcluster.io/terms" className="m-l-10 m-r-10" style={{ color: "#222", textDecoration: "none" }}>Terms of use</a>
               <span className="muted">|</span>
-              <a href="#" className="m-l-10" style={{ color: "#222", textDecoration: "none" }}>Privacy Policy</a>
+              <a href="https://www.blockcluster.io/privacy" className="m-l-10" style={{ color: "#222", textDecoration: "none" }}>Privacy Policy</a>
             </span>
           </p>
           <p className="small no-margin pull-right sm-pull-reset" style={{ textAlign: "center", width: "100%" }}>

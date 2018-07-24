@@ -41,7 +41,6 @@ PasswordResetter.resetLinkEmail = async function(email) {
 
   await Email.sendEmail(emailProps);
 
-  // TODO: Wrapper around callback insert for async await to work
   const reply = PasswordResetRequest.insert({
     accountId: user._id,
     emailId: email,

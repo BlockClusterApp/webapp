@@ -23,16 +23,20 @@ function getAPIHost() {
   }
 }
 
-function getDynamoWokerDomainName() {
+function getDynamoWokerDomainName(locationCode) {
+  let prefix = '';
+  if(locationCode !== "us-west-2"){
+    prefix = `-${locationCode}`;
+  }
   switch (process.env.NODE_ENV) {
     case "production":
-      return "app.blockcluster.io";
+      return `app${prefix}.blockcluster.io`;
     case "staging":
-      return "app.blockcluster.io";
+      return `app${prefix}.blockcluster.io`;
     case "test":
-      return "test.blockcluster.io";
+      return `test${prefix}.blockcluster.io`;
     default:
-      return "dev.blockcluster.io";
+      return `dev${prefix}.blockcluster.io`;
 
   }
 }
@@ -55,9 +59,9 @@ module.exports = {
   redisHost: process.env.REDIS_HOST || defaults.redisHost,
   redisPort: process.env.REDIS_PORT || defaults.redisPort,
   apiHost: getAPIHost(),
-  workerNodeDomainName: (() => {
-    return getDynamoWokerDomainName();
-  })(),
+  workerNodeDomainName: (locationCode = "us-west-2") => {
+    return getDynamoWokerDomainName(locationCode);
+  },
   kubeRestApiHost: (locationCode = "us-west-2") => {
     const locationConfig = RemoteConfig.clusters[getNamespace()][locationCode];
     return locationConfig.masterApiHost;

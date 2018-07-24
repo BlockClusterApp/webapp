@@ -20,11 +20,14 @@ class Navbar extends Component {
                         <img src="/assets/img/logo/blockcluster-bw.png" alt="logo" height="35" />
                     </div>
                     <ul className="hidden-md-down notification-list no-margin hidden-sm-down b-grey b-l no-style p-l-30 p-r-20">
-                        <li className="p-r-10 inline">
+                        <li className="p-r-10 inline" title="Create Network">
                             <Link to={"/app/createNetwork"} className="header-icon fa fa-plus"></Link>
                         </li>
-                        <li className="p-r-10 inline">
-                            <Link to={"/app/joinNetwork"} className="header-icon fa fa-group"></Link>
+                        <li className="p-r-10 inline" title="Join Network">
+                            <Link to={"/app/join/networks"} className="header-icon fa fa-user-plus"></Link>
+                        </li>
+                        <li className="p-r-10 inline" title="Manage Invitations">
+                            <Link to="/app/invites" className="header-icon fa fa-group"></Link>
                         </li>
                         <li className="p-r-10 inline">
                             <a href="#" className="header-icon fa fa-book"></a>

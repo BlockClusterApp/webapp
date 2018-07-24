@@ -92,7 +92,7 @@ class JoinNetwork extends Component {
                 joinLoading: true
             });
 
-            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, this.state.locationCode, (error) => {
+            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, this.state.impulseURL, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, this.state.locationCode, (error) => {
                 if(!error) {
                     this.setState({
                         joinFormSubmitError: '',
@@ -268,19 +268,27 @@ class JoinNetwork extends Component {
                                                                 <div className="col-md-4">
                                                                     <div className="form-group form-group-default ">
                                                                         <label>Assets Contract Address</label>
-                                                                        <input type="text" className="form-control" name="assetsContractAddress" ref={(input) => {this.assetsContractAddress = input;}} placeholder="0x...." />
+                                                                        <input type="text" className="form-control" name="assetsContractAddress" required ref={(input) => {this.assetsContractAddress = input;}} placeholder="0x...." />
                                                                     </div>
                                                                 </div>
                                                                 <div className="col-md-4">
                                                                     <div className="form-group form-group-default ">
                                                                         <label>Atomic Swap Contract Address</label>
-                                                                        <input type="text" className="form-control" name="atomicSwapContractAddress" ref={(input) => {this.atomicSwapContractAddress = input;}} placeholder="0x...." />
+                                                                        <input type="text" className="form-control" name="atomicSwapContractAddress" required ref={(input) => {this.atomicSwapContractAddress = input;}} placeholder="0x...." />
                                                                     </div>
                                                                 </div>
                                                                 <div className="col-md-4">
                                                                     <div className="form-group form-group-default ">
                                                                         <label>Streams Contract Address</label>
-                                                                        <input type="text" className="form-control" name="streamsContractAddress" ref={(input) => {this.streamsContractAddress = input;}} placeholder="0x...." />
+                                                                        <input type="text" className="form-control" name="streamsContractAddress" required ref={(input) => {this.streamsContractAddress = input;}} placeholder="0x...." />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="row clearfix">
+                                                                <div className="col-md-12">
+                                                                    <div className="form-group form-group-default ">
+                                                                        <label>Impulse URL</label>
+                                                                        <input type="text" className="form-control" name="impulseURL" required ref={(input) => {this.impulseURL = input;}} placeholder="http://76.45.122.34:3478" />
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -291,6 +299,7 @@ class JoinNetwork extends Component {
                                                                         <input type="file" className="form-control file-button" name="firstName" required ref={(input) => {this.genesisFile = input;}} />
                                                                     </div>
                                                                 </div>
+
                                                             </div>
                                                         </div>
                                                         <p className="m-t-10">Add other nodes enode URLs</p>
