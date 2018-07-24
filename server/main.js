@@ -120,8 +120,13 @@ Meteor.methods({
                 }
             })
 
-            Networks.remove({
+            Networks.update({
                 _id: id
+            }, {
+              $set: {
+                active: false,
+                deletedAt: new Date().getTime()
+              }
             });
         }
 
@@ -421,16 +426,21 @@ Meteor.methods({
             if(err) return console.log(err);
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name, kubeCallback);
         });
-        
+
         HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(err, response) {
             if(err) return console.log(err);
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, kubeCallback);
         });
-        
+
         HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + id, kubeCallback);
         HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + id, kubeCallback);
-        Networks.remove({
-            instanceId: id
+        Networks.update({
+          _id: id
+        }, {
+          $set: {
+            active: false,
+            deletedAt: new Date().getTime()
+          }
         });
         Orders.remove({
             instanceId: id
@@ -453,7 +463,7 @@ Meteor.methods({
         })
 
         myFuture.return();
-           
+
 
         return myFuture.wait();
     },
@@ -488,8 +498,13 @@ Meteor.methods({
                     }
                 }
             })
-            Networks.remove({
-                _id: id
+            Networks.update({
+              _id: id
+            }, {
+              $set: {
+                active: false,
+                deletedAt: new Date().getTime()
+              }
             });
         }
 

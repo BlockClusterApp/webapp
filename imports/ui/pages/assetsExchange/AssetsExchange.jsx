@@ -151,7 +151,7 @@ class AssetsManagement extends Component {
             toUniqueIdentifier,
             this[instanceId + "_sellAsset_fromAddress"].value,
             this[instanceId + "_buyAsset_toAddress"].value,
-            Networks.find({instanceId: buyAsset_networkId}).fetch()[0].genesisBlockHash,
+            Networks.find({instanceId: buyAsset_networkId, active: true}).fetch()[0].genesisBlockHash,
             this[instanceId + "_sellAsset_timePeriod"].value,
             buyAsset_networkId,
             (error) => {
@@ -184,7 +184,7 @@ class AssetsManagement extends Component {
 
         let otherInstanceId = this[instanceId + "_fullfillOrder_networkId"].value;
 
-        if(Networks.find({instanceId: instanceId}).fetch()[0].genesisBlockHash === order.toGenesisBlockHash) {
+        if(Networks.find({instanceId: instanceId, active: true}).fetch()[0].genesisBlockHash === order.toGenesisBlockHash) {
             Meteor.call(
                 "claimOrder",
                 otherInstanceId,
@@ -242,7 +242,7 @@ class AssetsManagement extends Component {
                 order.fromAssetId,
                 order.toAddress,
                 order.fromAddress,
-                Networks.find({instanceId: instanceId}).fetch()[0].genesisBlockHash,
+                Networks.find({instanceId: instanceId, active: true}).fetch()[0].genesisBlockHash,
                 newMin,
                 this[instanceId + "_fullfill_orderID"].value,
                 (error) => {
@@ -720,8 +720,8 @@ class AssetsManagement extends Component {
 
 export default withTracker((props) => {
     return {
-        network: Networks.find({instanceId: props.match.params.id}).fetch(),
-        networks: Networks.find({}).fetch(),
+        network: Networks.find({instanceId: props.match.params.id, active: true}).fetch(),
+        networks: Networks.find({active: true}).fetch(),
         otherSelectedNetworkAssetTypes: AssetTypes.find({instanceId: Session.get("otherSelectedNetwork")}).fetch(),
         orders: Orders.find({}).fetch(),
         assetTypes: AssetTypes.find({instanceId: props.match.params.id}).fetch(),
@@ -729,12 +729,12 @@ export default withTracker((props) => {
         fullFillNetworkAccounts: BCAccounts.find({instanceId: Session.get("fullFillNetwork")}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
             onReady: function () {
-        		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
+        		if(Networks.find({instanceId: props.match.params.id, active: true}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
 
                 if(Session.get("otherSelectedNetwork") === null) {
-                    Session.set("otherSelectedNetwork",  Networks.find({}).fetch()[0].instanceId)
+                    Session.set("otherSelectedNetwork",  Networks.find({active: true}).fetch()[0].instanceId)
                 }
         	}
         }),

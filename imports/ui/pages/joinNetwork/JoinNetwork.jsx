@@ -474,7 +474,7 @@ class JoinNetwork extends Component {
 
 export default withTracker(() => {
     return {
-        networks: Networks.find({}).fetch(),
+        networks: Networks.find({active: true}).fetch(),
         subscriptions: [Meteor.subscribe("networks")]
     }
 })(withRouter(JoinNetwork))
