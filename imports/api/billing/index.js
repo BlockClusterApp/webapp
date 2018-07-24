@@ -5,7 +5,7 @@ const Billing = {};
 
 function convertMilliseconds(ms) {
   const seconds = Math.round(ms/1000);
-  const minutes = Math.floor(seconds/60)+ (seconds%60);
+  const minutes = Math.floor(seconds/60);
   const hours = Math.floor(minutes/60);
 
   return { seconds, minutes, hours }
@@ -54,7 +54,7 @@ Billing.generateBill = function(userId, month, year) {
       instanceId: network.instanceId,
       createdOn: new Date(network.createdOn),
       rate: `$${rate} / month`,
-      runtime: `${time.hours}:${time.minutes % 60}`,
+      runtime: `${time.hours}:${(time.minutes % 60) < 10 ? `0${time.minutes % 60}`: time.minutes % 60}`,
       cost,
       timeperiod: `Started at: ${moment(network.createdOn).format('DD-MMM-YYYY HH:mm')} ${network.deletedAt ? ` to ${moment(network.deletedAt).format('DD-MMM-YYYY HH:mm:SS')}` : 'and still running'}`
     };
