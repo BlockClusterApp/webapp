@@ -2,6 +2,7 @@ require("../imports/startup/server/")
 require('../imports/api/emails/email-validator')
 require('../imports/api/emails/forgot-password')
 require('../imports/api/locations');
+require('../imports/modules/migrations/server');
 
 import UserFunctions from '../imports/api/server-functions/user-functions';
 import {
@@ -1591,6 +1592,7 @@ Meteor.startup(()=>{
 
 const LOCK_FILE_PATH = '/tmp/webapp.lock';
 function serverStartup(){
+    Migrations.migrateTo(1);
     fs.writeFileSync(LOCK_FILE_PATH, `Server started at ${new Date()}`)
 }
 
