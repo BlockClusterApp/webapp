@@ -230,7 +230,7 @@ Meteor.methods({
                                         },
                                         {
                                             "name":"impulse",
-                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/impulse",
+                                            "image":`402432300121.dkr.ecr.us-west-2.amazonaws.com/impulse:${process.env.NODE_ENV || "dev"}`,
                                             "env":[
                                                 {
                                                     "name": "instanceId",
