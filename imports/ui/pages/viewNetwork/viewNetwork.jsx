@@ -162,19 +162,19 @@ class ViewNetwork extends Component {
                                                     </div>
                                                     <div className="clickable">
                                                         <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Add Smart Contracts</p>
-                                                        <p className="no-margin fs-12">Auditing, Indexing and APIs</p>
+                                                        <p className="no-margin fs-12">Auditing and Indexing</p>
                                                     </div>
                                                     <div className="clickable" onClick={() => {
 															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/bc-accounts") : ""
 														}}>
-                                                        <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Accounts</p>
-                                                        <p className="no-margin fs-12">Create, Import and Export Keys</p>
+                                                        <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Call Smart Contracts</p>
+                                                        <p className="no-margin fs-12">Auto-Generated APIs</p>
                                                     </div>
                                                 </div>
                                             </div>
                                             <br />
                                             <p className="small hint-text">
-                                                Tools to develop your own smart contracts and manage blockchain accounts
+                                                Tools to develop your own smart contracts and manage them
                                             </p>
                                         </div>
                                         <div className="col-lg-3">
@@ -193,10 +193,10 @@ class ViewNetwork extends Component {
                                                         <p className="no-margin fs-12">Store Encrypted Data</p>
                                                     </div>
                                                     <div className="clickable" onClick={() => {
-															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/events") : ""
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/bc-accounts") : ""
 														}}>
-                                                        <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Register Callbacks</p>
-                                                        <p className="no-margin fs-12">Add Callback URLs</p>
+														<p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Accounts</p>
+                                                        <p className="no-margin fs-12">Create, Import and Export Keys</p>
                                                     </div>
 													<div className="clickable" onClick={() => {
 															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/explorer") : ""
@@ -208,7 +208,7 @@ class ViewNetwork extends Component {
                                             </div>
                                             <br />
                                             <p className="small hint-text">
-                                                Features providing privacy, notification and on-demand DApps
+                                                Features providing privacy, visibility and accounts management
                                             </p>
                                         </div>
                                     </div>
