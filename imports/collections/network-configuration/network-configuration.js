@@ -28,6 +28,9 @@ NetworkConfiguration.schema = new SimpleSchema({
   },
   disk: {
     type: Number
+  },
+  isDiskChangeable: {
+    type: Boolean
   }
 });
 

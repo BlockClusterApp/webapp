@@ -8,7 +8,8 @@ module.exports = [
       ram: 0.5,
       disk: 5
     },
-    expiryDate: moment().add('30', 'days').toDate()
+    expiryDate: moment().add('30', 'days').toDate(),
+    isDiskChangeable: false
   },
   {
     code: 'BLOCKEXP12G33',
@@ -17,7 +18,8 @@ module.exports = [
       ram: 2,
       disk: 20
     },
-    expiryDate: moment().subtract('30', 'days').toDate()
+    expiryDate: moment().subtract('30', 'days').toDate(),
+    isDiskChangeable: false
   },
   {
     code: 'BLOCK134SOI',
@@ -26,6 +28,7 @@ module.exports = [
       ram: 23,
       disk: 256
     },
-    expiryDate: moment().add('60', 'days').toDate()
+    expiryDate: moment().add('60', 'days').toDate(),
+    isDiskChangeable: false
   }
 ]

@@ -10,12 +10,6 @@ Migrations.add({
     });
   },
   down: function(){
-    Networks.update({}, {
-      $unset: {
-        active: ''
-      }
-    }, {
-      multi: true
-    });
+    NetworkConfiguration.remove({});
   }
 });

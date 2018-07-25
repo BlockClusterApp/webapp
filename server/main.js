@@ -11,6 +11,8 @@ import UserFunctions from '../imports/api/server-functions/user-functions';
 import {
     Networks
 } from "../imports/collections/networks/networks.js"
+import Vouchers from '../imports/collections/vouchers/voucher';
+import NetworkConfiguration from '../imports/collections/network-configuration/network-configuration';
 import {
     SoloAssets
 } from "../imports/collections/soloAssets/soloAssets.js"
@@ -90,6 +92,51 @@ Accounts.onCreateUser(function(options, user) {
     return user;
 });
 
+
+function getNodeConfig(networkConfig) {
+  let nodeConfig = {};
+  let finalNetworkConfig = undefined;
+  const { voucher, config, diskSpace } = networkConfig;
+  if(voucher) {
+    const _voucher = Vouchers.find({
+      _id: voucher._id
+    }).fetch()[0];
+
+    if(_voucher) {
+      nodeConfig.voucherId = _voucher._id;
+      finalNetworkConfig = _voucher.networkConfig;
+      if(_voucher.isDiskChangeable) {
+        finalNetworkConfig = diskSpace || _voucher.diskSpace;
+      }
+    }
+  }
+
+  if(!finalNetworkConfig && config) {
+    const _config = NetworkConfiguration.find({
+      _id: config._id
+    }).fetch()[0];
+    if(_config) {
+      finalNetworkConfig = _config;
+      if(_config.isDiskChangeable) {
+        finalNetworkConfig = diskSpace || _config.diskSpace;
+      }
+    }
+  }
+
+  if(!finalNetworkConfig){
+    return nodeConfig;
+  }
+
+   nodeConfig = {
+    ...nodeConfig,
+    cpu: finalNetworkConfig.cpu * 1000,
+    ram: finalNetworkConfig.ram,
+    disk: finalNetworkConfig.disk
+  };
+
+  return nodeConfig;
+}
+
 Meteor.methods({
     "createNetwork": function(networkName,  locationCode, networkConfig, userId) {
         var myFuture = new Future();
@@ -100,6 +147,15 @@ Meteor.methods({
         }
 
         function deleteNetwork(id) {
+
+            Networks.update({
+                _id: id
+            }, {
+              $set: {
+                active: false,
+                deletedAt: new Date().getTime()
+              }
+            });
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, function(error, response) {});
             HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + instanceId), function(error, response) {
@@ -122,17 +178,15 @@ Meteor.methods({
                         })
                     }
                 }
-            })
-
-            Networks.update({
-                _id: id
-            }, {
-              $set: {
-                active: false,
-                deletedAt: new Date().getTime()
-              }
             });
+            HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${instanceId}-pvc`, function(error, response) {});
         }
+
+        const nodeConfig = getNodeConfig(networkConfig);
+        if(!nodeConfig.cpu) {
+          throw new Meteor.Error("Invalid Network Configuration");
+        }
+        return;
 
         Networks.insert({
             "instanceId": instanceId,
@@ -144,266 +198,310 @@ Meteor.methods({
             "createdOn": Date.now(),
             "totalENodes": [],
             "totalConstellationNodes": [],
-            "locationCode": locationCode
+            "locationCode": locationCode,
+            voucherId: nodeConfig.voucherId,
+            networkConfig: {cpu: nodeConfig.cpu, ram: nodeConfig.ram, disk: nodeConfig.disk}
         }, (error, id) => {
             if (error) {
                 console.log(error);
                 myFuture.throw("An unknown error occured");
             } else {
-                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${Config.namespace}/deployments`, {
-                    "content": JSON.stringify({
-                        "apiVersion":"apps/v1beta1",
-                        "kind":"Deployment",
-                        "metadata":{
-                            "name": instanceId
-                        },
-                        "spec":{
-                            "replicas":1,
-                            "revisionHistoryLimit":10,
-                            "template":{
-                                "metadata":{
-                                    "labels":{
-                                        "app":"dynamo-node-" + instanceId
-                                    }
-                                },
-                                "spec":{
-                                    "containers":[
-                                        {
-                                            "name":"dynamo",
-                                            "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo",
-                                            "command":[
-                                                "bin/bash",
-                                                "-c",
-                                                "./setup.sh"
-                                            ],
-                                            "env":[
-                                                {
-                                                    "name": "instanceId",
-                                                    "value": instanceId
-                                                },
-                                                {
-                                                    "name": "MONGO_URL",
-                                                    "value": `${process.env.MONGO_URL}`
-                                                },
-                                                {
-                                                    "name": "WORKER_NODE_IP",
-                                                    "value": `${Config.workerNodeIP(locationCode)}`
-                                                }
-                                            ],
-                                            "imagePullPolicy":"Always",
-                                            "ports":[
-                                                {
-                                                    "containerPort":8545
-                                                },
-                                                {
-                                                    "containerPort":23000
-                                                },
-                                                {
-                                                    "containerPort":9001
-                                                },
-                                                {
-                                                    "containerPort":6382
-                                                }
-                                            ],
-                                            "lifecycle": {
-                                                "postStart": {
-                                                    "exec": {
-                                                        "command": [
-                                                            "bin/bash",
-                                                            "-c",
-                                                            "node ./apis/postStart.js"
-                                                        ]
-                                                    }
-                                                },
-                                                "preStop": {
-                                                    "exec": {
-                                                        "command": [
-                                                            "bin/bash",
-                                                            "-c",
-                                                            "node ./apis/preStop.js"
-                                                        ]
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    ],
-                                    "imagePullSecrets":[
-                                        {
-                                            "name":"regsecret"
-                                        }
-                                    ]
-                                }
-                            }
+                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${Config.namespace}/persistentvolumeclaims`, {
+                  content: JSON.stringify({
+                    apiVersion: "v1",
+                    kind: "PersistentVolumeClaim",
+                    metadata: {
+                      name: `${instanceId}-pvc`
+                    },
+                    spec:{
+                      accessModes: [
+                        "ReadWriteOnce"
+                      ],
+                      resources: {
+                        requests: {
+                          storage: `${nodeConfig.disk}Gi`
                         }
-                    }),
-                    "headers": {
-                        "Content-Type": "application/json"
+                      },
+                      storageClassName: "gp2-storage-class"
                     }
-                }, function(error, response) {
-                    if (error) {
-                        console.log(error);
-                        deleteNetwork(id)
-                    } else {
-                        HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services`, {
-                            "content": JSON.stringify({
-                                "kind":"Service",
-                                "apiVersion":"v1",
-                                "metadata":{
-                                    "name": instanceId
-                                },
-                                "spec":{
-                                    "ports":[
+                  }),
+                  headers: {
+                      "Content-Type": "application/json"
+                  }
+                }, (err, response) => {
+                  if(err){
+                    console.log(err);
+                    throw new Meteor.Error("Error allocating storage");
+                  }
+                  HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${Config.namespace}/deployments`, {
+                      "content": JSON.stringify({
+                          "apiVersion":"apps/v1beta1",
+                          "kind":"Deployment",
+                          "metadata":{
+                              "name": instanceId
+                          },
+                          "spec":{
+                              "replicas":1,
+                              "revisionHistoryLimit":10,
+                              "template":{
+                                  "metadata":{
+                                      "labels":{
+                                          "app":"dynamo-node-" + instanceId
+                                      }
+                                  },
+                                  "spec":{
+                                      "containers":[
+                                          {
+                                              "name":"dynamo",
+                                              "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo",
+                                              "command":[
+                                                  "bin/bash",
+                                                  "-c",
+                                                  "./setup.sh"
+                                              ],
+                                              "env":[
+                                                  {
+                                                      "name": "instanceId",
+                                                      "value": instanceId
+                                                  },
+                                                  {
+                                                      "name": "MONGO_URL",
+                                                      "value": `${process.env.MONGO_URL}`
+                                                  },
+                                                  {
+                                                      "name": "WORKER_NODE_IP",
+                                                      "value": `${Config.workerNodeIP(locationCode)}`
+                                                  }
+                                              ],
+                                              "imagePullPolicy":"Always",
+                                              "ports":[
+                                                  {
+                                                      "containerPort":8545
+                                                  },
+                                                  {
+                                                      "containerPort":23000
+                                                  },
+                                                  {
+                                                      "containerPort":9001
+                                                  },
+                                                  {
+                                                      "containerPort":6382
+                                                  }
+                                              ],
+                                              "volumeMounts": [
+                                                {
+                                                  "name": "dynamo-dir",
+                                                  "mountPath": "/dynamo"
+                                                }
+                                              ],
+                                              "lifecycle": {
+                                                  "postStart": {
+                                                      "exec": {
+                                                          "command": [
+                                                              "bin/bash",
+                                                              "-c",
+                                                              "node ./apis/postStart.js"
+                                                          ]
+                                                      }
+                                                  },
+                                                  "preStop": {
+                                                      "exec": {
+                                                          "command": [
+                                                              "bin/bash",
+                                                              "-c",
+                                                              "node ./apis/preStop.js"
+                                                          ]
+                                                      }
+                                                  }
+                                              }
+                                          }
+                                      ],
+                                      "volumes": [
                                         {
-                                            "name":"rpc",
-                                            "port":8545
-                                        },
-                                        {
-                                            "name":"constellation",
-                                            "port":9001
-                                        },
-                                        {
-                                            "name":"eth",
-                                            "port":23000
-                                        },
-                                        {
-                                            "name":"apis",
-                                            "port":6382
+                                          "name": "dynamo-dir",
+                                          "persistentVolumeClaim": {
+                                            "claimName": `${instanceId}-pvc`
+                                          }
                                         }
-                                    ],
-                                    "selector":{
-                                        "app":"dynamo-node-" + instanceId
-                                    },
-                                    "type":"NodePort"
-                                }
-                            }),
-                            "headers": {
-                                "Content-Type": "application/json"
-                            }
-                        }, (error, response) => {
-                            if (error) {
-                                console.log(error);
-                                deleteNetwork(id)
-                            } else {
-                                HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, {}, (error, response) => {
-                                    if (error) {
-                                        console.log(error);
-                                        deleteNetwork(id)
-                                    } else {
-                                        let rpcNodePort = response.data.spec.ports[0].nodePort
+                                      ],
+                                      "imagePullSecrets":[
+                                          {
+                                              "name":"regsecret"
+                                          }
+                                      ]
+                                  }
+                              }
+                          }
+                      }),
+                      "headers": {
+                          "Content-Type": "application/json"
+                      }
+                  }, function(error, response) {
+                      if (error) {
+                          console.log(error);
+                          deleteNetwork(id)
+                      } else {
+                          HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services`, {
+                              "content": JSON.stringify({
+                                  "kind":"Service",
+                                  "apiVersion":"v1",
+                                  "metadata":{
+                                      "name": instanceId
+                                  },
+                                  "spec":{
+                                      "ports":[
+                                          {
+                                              "name":"rpc",
+                                              "port":8545
+                                          },
+                                          {
+                                              "name":"constellation",
+                                              "port":9001
+                                          },
+                                          {
+                                              "name":"eth",
+                                              "port":23000
+                                          },
+                                          {
+                                              "name":"apis",
+                                              "port":6382
+                                          }
+                                      ],
+                                      "selector":{
+                                          "app":"dynamo-node-" + instanceId
+                                      },
+                                      "type":"NodePort"
+                                  }
+                              }),
+                              "headers": {
+                                  "Content-Type": "application/json"
+                              }
+                          }, (error, response) => {
+                              if (error) {
+                                  console.log(error);
+                                  deleteNetwork(id)
+                              } else {
+                                  HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, {}, (error, response) => {
+                                      if (error) {
+                                          console.log(error);
+                                          deleteNetwork(id)
+                                      } else {
+                                          let rpcNodePort = response.data.spec.ports[0].nodePort
 
-                                        Networks.update({
-                                            _id: id
-                                        }, {
-                                            $set: {
-                                                rpcNodePort: response.data.spec.ports[0].nodePort,
-                                                constellationNodePort: response.data.spec.ports[1].nodePort,
-                                                ethNodePort: response.data.spec.ports[2].nodePort,
-                                                apisPort: response.data.spec.ports[3].nodePort,
-                                                clusterIP: response.data.spec.clusterIP,
-                                                realRPCNodePort: 8545,
-                                                realConstellationNodePort: 9001,
-                                                realEthNodePort: 23000,
-                                                realAPIsPort: 6382
-                                            }
-                                        })
+                                          Networks.update({
+                                              _id: id
+                                          }, {
+                                              $set: {
+                                                  rpcNodePort: response.data.spec.ports[0].nodePort,
+                                                  constellationNodePort: response.data.spec.ports[1].nodePort,
+                                                  ethNodePort: response.data.spec.ports[2].nodePort,
+                                                  apisPort: response.data.spec.ports[3].nodePort,
+                                                  clusterIP: response.data.spec.clusterIP,
+                                                  realRPCNodePort: 8545,
+                                                  realConstellationNodePort: 9001,
+                                                  realEthNodePort: 23000,
+                                                  realAPIsPort: 6382
+                                              }
+                                          })
 
-                                        let encryptedPassword = md5(instanceId);
-                                        let auth = base64.encode(utf8.encode(instanceId + ":" + encryptedPassword))
-                                        HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets`, {
-                                            "content": JSON.stringify({
-                                                "apiVersion": "v1",
-                                                "data": {
-                                                    "auth": auth
-                                                },
-                                                "kind": "Secret",
-                                                "metadata": {
-                                                    "name": "basic-auth-" + instanceId,
-                                                    "namespace": Config.namespace
-                                                },
-                                                "type": "Opaque"
-                                            }),
-                                            "headers": {
-                                                "Content-Type": "application/json"
-                                            }
-                                        }, (error) => {
-                                            if (error) {
-                                                console.log(error);
-                                                deleteNetwork(id)
-                                            } else {
-                                                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses`, {
-                                                        "content": JSON.stringify({
-                                                            "apiVersion": "extensions/v1beta1",
-                                                            "kind": "Ingress",
-                                                            "metadata": {
-                                                                "name": "ingress-" + instanceId,
-                                                                "annotations": {
-                                                                    "nginx.ingress.kubernetes.io/rewrite-target": "/",
-                                                                    "ingress.kubernetes.io/auth-type": "basic",
-                                                                    "ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
-                                                                    "ingress.kubernetes.io/auth-realm": "Authentication Required",
-                                                                    "nginx.ingress.kubernetes.io/enable-cors": "true",
-                                                                    "nginx.ingress.kubernetes.io/cors-credentials": "true",
-                                                                    "kubernetes.io/ingress.class": "nginx",
-                                                                    "nginx.ingress.kubernetes.io/configuration-snippet": `if ($http_origin ~* (^https?://([^/]+\\.)*(localhost:3000|${Config.workerNodeDomainName()}))) {\n    set $cors \"true\";\n}\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`
-                                                                }
-                                                            },
-                                                            "spec": {
-                                                                "tls": [
-                                                                    {
-                                                                        "hosts": [
-                                                                            Config.workerNodeDomainName(locationCode)
-                                                                        ],
-                                                                        "secretName": "blockcluster-ssl"
-                                                                    }
-                                                                ],
-                                                                "rules": [{
-                                                                    "host": Config.workerNodeDomainName(locationCode),
-                                                                    "http": {
-                                                                        "paths": [{
-                                                                            "path": "/api/node/" + instanceId + "/jsonrpc",
-                                                                            "backend": {
-                                                                                "serviceName": instanceId,
-                                                                                "servicePort": 8545
-                                                                            }
-                                                                        }, {
-                                                                            "path": "/api/node/" + instanceId,
-                                                                            "backend": {
-                                                                                "serviceName": instanceId,
-                                                                                "servicePort": 6382
-                                                                            }
-                                                                        }]
-                                                                    }
-                                                                }]
-                                                            }
-                                                        }),
-                                                        "headers": {
-                                                            "Content-Type": "application/json"
-                                                        }
-                                                    },
-                                                    (error) => {
-                                                        if (error) {
-                                                            console.log(error);
-                                                            deleteNetwork(id)
-                                                        } else {
+                                          let encryptedPassword = md5(instanceId);
+                                          let auth = base64.encode(utf8.encode(instanceId + ":" + encryptedPassword))
+                                          HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets`, {
+                                              "content": JSON.stringify({
+                                                  "apiVersion": "v1",
+                                                  "data": {
+                                                      "auth": auth
+                                                  },
+                                                  "kind": "Secret",
+                                                  "metadata": {
+                                                      "name": "basic-auth-" + instanceId,
+                                                      "namespace": Config.namespace
+                                                  },
+                                                  "type": "Opaque"
+                                              }),
+                                              "headers": {
+                                                  "Content-Type": "application/json"
+                                              }
+                                          }, (error) => {
+                                              if (error) {
+                                                  console.log(error);
+                                                  deleteNetwork(id)
+                                              } else {
+                                                  HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses`, {
+                                                          "content": JSON.stringify({
+                                                              "apiVersion": "extensions/v1beta1",
+                                                              "kind": "Ingress",
+                                                              "metadata": {
+                                                                  "name": "ingress-" + instanceId,
+                                                                  "annotations": {
+                                                                      "nginx.ingress.kubernetes.io/rewrite-target": "/",
+                                                                      "ingress.kubernetes.io/auth-type": "basic",
+                                                                      "ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
+                                                                      "ingress.kubernetes.io/auth-realm": "Authentication Required",
+                                                                      "nginx.ingress.kubernetes.io/enable-cors": "true",
+                                                                      "nginx.ingress.kubernetes.io/cors-credentials": "true",
+                                                                      "kubernetes.io/ingress.class": "nginx",
+                                                                      "nginx.ingress.kubernetes.io/configuration-snippet": `if ($http_origin ~* (^https?://([^/]+\\.)*(localhost:3000|${Config.workerNodeDomainName()}))) {\n    set $cors \"true\";\n}\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`
+                                                                  }
+                                                              },
+                                                              "spec": {
+                                                                  "tls": [
+                                                                      {
+                                                                          "hosts": [
+                                                                              Config.workerNodeDomainName(locationCode)
+                                                                          ],
+                                                                          "secretName": "blockcluster-ssl"
+                                                                      }
+                                                                  ],
+                                                                  "rules": [{
+                                                                      "host": Config.workerNodeDomainName(locationCode),
+                                                                      "http": {
+                                                                          "paths": [{
+                                                                              "path": "/api/node/" + instanceId + "/jsonrpc",
+                                                                              "backend": {
+                                                                                  "serviceName": instanceId,
+                                                                                  "servicePort": 8545
+                                                                              }
+                                                                          }, {
+                                                                              "path": "/api/node/" + instanceId,
+                                                                              "backend": {
+                                                                                  "serviceName": instanceId,
+                                                                                  "servicePort": 6382
+                                                                              }
+                                                                          }]
+                                                                      }
+                                                                  }]
+                                                              }
+                                                          }),
+                                                          "headers": {
+                                                              "Content-Type": "application/json"
+                                                          }
+                                                      },
+                                                      (error) => {
+                                                          if (error) {
+                                                              console.log(error);
+                                                              deleteNetwork(id)
+                                                          } else {
 
-                                                            Networks.update({
-                                                                _id: id
-                                                            }, {
-                                                                $set: {
-                                                                    "api-password": instanceId
-                                                                }
-                                                            })
+                                                              Networks.update({
+                                                                  _id: id
+                                                              }, {
+                                                                  $set: {
+                                                                      "api-password": instanceId
+                                                                  }
+                                                              })
 
-                                                            myFuture.return(instanceId);
-                                                        }
-                                                    })
-                                            }
-                                        })
-                                    }
-                                })
-                            }
-                        })
-                    }
+                                                              myFuture.return(instanceId);
+                                                          }
+                                                      })
+                                              }
+                                          })
+                                      }
+                                  })
+                              }
+                          })
+                      }
+                  });
                 });
             }
         })
@@ -446,7 +544,7 @@ Meteor.methods({
               if(err) return console.log(err);
               HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, kubeCallback);
           });
-
+          HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${instanceId}-pvc`, function(error, response) {});
           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + id, kubeCallback);
           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + id, kubeCallback);
         }catch(err){
@@ -485,6 +583,14 @@ Meteor.methods({
         locationCode = locationCode || "us-west-2";
 
         function deleteNetwork(id) {
+            Networks.update({
+              _id: id
+            }, {
+              $set: {
+                active: false,
+                deletedAt: new Date().getTime()
+              }
+            });
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, function(error, response) {});
             HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + instanceId), function(error, response) {
@@ -507,15 +613,15 @@ Meteor.methods({
                         })
                     }
                 }
-            })
-            Networks.update({
-              _id: id
-            }, {
-              $set: {
-                active: false,
-                deletedAt: new Date().getTime()
-              }
             });
+            HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${instanceId}-pvc`, function(error, response) {});
+
+        }
+
+        const nodeConfig = getNodeConfig(networkConfig);
+
+        if(!nodeConfig.cpu) {
+          throw new Meteor.Error("Invalid Network Configuration");
         }
 
         Networks.insert({
@@ -529,7 +635,9 @@ Meteor.methods({
             "totalENodes": totalENodes,
             "totalConstellationNodes": totalConstellationNodes,
             "genesisBlock": genesisFileContent,
-            "locationCode": locationCode
+            "locationCode": locationCode,
+            voucherId: nodeConfig.voucherId,
+            networkConfig: {cpu: nodeConfig.cpu, ram: nodeConfig.ram, disk: nodeConfig.disk}
         }, function(error, id) {
             if (error) {
                 console.log(error);
@@ -582,6 +690,13 @@ spec:
           value: ${atomicSwapContractAddress}
         - name: streamsContractAddress
           value: ${streamsContractAddress}
+        volumeMounts:
+          - name: dynamo-dir
+            mountPath: /dynamo
+      volumes:
+        - name: dynamo-dir
+          persistentVolumeClaim:
+            claimName: ${instanceId}-pvc
       imagePullSecrets:
       - name: regsecret`
                 } else {
@@ -627,10 +742,39 @@ spec:
           value: ${atomicSwapContractAddress}
         - name: streamsContractAddress
           value: ${streamsContractAddress}
+        volumeMounts:
+          - name: dynamo-dir
+            mountPath: /dynamo
+      volumes:
+        - name: dynamo-dir
+          persistentVolumeClaim:
+            claimName: ${instanceId}-pvc
       imagePullSecrets:
       - name: regsecret`;
                 }
-
+                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${Config.namespace}/persistentvolumeclaims`, {
+                  content: JSON.stringify({
+                    apiVersion: "v1",
+                    kind: "PersistentVolumeClaim",
+                    metadata: {
+                      name: `${instanceId}-pvc`
+                    },
+                    spec:{
+                      accessModes: [
+                        "ReadWriteOnce"
+                      ],
+                      resources: {
+                        requests: {
+                          storage: `${nodeConfig.disk}Gi`
+                        }
+                      },
+                      storageClassName: "gp2-storage-class"
+                    }
+                  }),
+                  headers: {
+                    "Content-Type": "application/yaml"
+                  }
+                });
                 HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${Config.namespace}/deployments`, {
                     "content": content,
                     "headers": {

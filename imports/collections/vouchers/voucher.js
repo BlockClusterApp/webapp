@@ -29,6 +29,9 @@ VoucherCollection.schema = new SimpleSchema({
   },
   active: {
     type: Boolean
+  },
+  isDiskChangeable: {
+    type: Boolean
   }
 });
 
