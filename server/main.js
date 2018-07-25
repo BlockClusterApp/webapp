@@ -170,6 +170,16 @@ Meteor.methods({
                                 "spec":{
                                     "containers":[
                                         {
+                                            "name":"mongo",
+                                            "image":`mongo`,
+                                            "imagePullPolicy":"IfNotPresent",
+                                            "ports":[
+                                                {
+                                                    "containerPort":27017
+                                                }
+                                            ]
+                                        },
+                                        {
                                             "name":"dynamo",
 
                                             "image":`402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo${['staging', 'production'].includes(process.env.NODE_ENV) ? '' : '-test'}`,
