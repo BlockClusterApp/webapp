@@ -110,7 +110,7 @@ class Explorer extends Component {
         if(this.props.network.length === 1) {
             rpc = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/jsonrpc`
             username = this.props.network[0].instanceId
-            password = this.props.network[0]["jsonRPC-password"]
+            password = this.props.network[0]["api-password"]
             status = this.props.network[0].status
         }
 
@@ -168,7 +168,7 @@ class Explorer extends Component {
         if(this.props.network.length === 1) {
             rpc = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/jsonrpc`
             username = this.props.network[0].instanceId
-            password = this.props.network[0]["jsonRPC-password"]
+            password = this.props.network[0]["api-password"]
 
             status = this.props.network[0].status
         }
@@ -234,7 +234,7 @@ class Explorer extends Component {
 
             rpc = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/jsonrpc`
             username = this.props.network[0].instanceId
-            password = this.props.network[0]["jsonRPC-password"]
+            password = this.props.network[0]["api-password"]
             status = this.props.network[0].status
 
             let web3 = new Web3(new Web3.providers.HttpProvider(rpc, 0, username, password));
