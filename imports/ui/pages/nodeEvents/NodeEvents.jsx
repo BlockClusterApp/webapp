@@ -74,7 +74,7 @@ class NodeEvents extends Component {
                                                         <div className="form-group">
                                                             <label>URL</label>
                                                             <span className="help"> e.g. "http://callback.blockcluster.io/eventHandler"</span>
-                                                            <input type="text" className="form-control" required ref={(input) => {this[this.props.network[0].instanceId + "_nodeEvents_url"] = input}} />
+                                                            <input type="text" className="form-control" required value={this.props.network[0] ? this.props.network[0].callbackURL : ""} ref={(input) => {this[this.props.network[0].instanceId + "_nodeEvents_url"] = input}} />
                                                         </div>
 
                                                         {this.state[this.props.network[0].instanceId + "_nodeEvents_formSubmitError"] &&
