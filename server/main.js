@@ -181,10 +181,9 @@ Meteor.methods({
                                         },
                                         {
                                             "name":"dynamo",
-
                                             "image":`402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo${['staging', 'production'].includes(process.env.NODE_ENV) ? '' : '-test'}`,
                                             "command":[
-                                                "bin/bash",
+                                                "/bin/bash",
                                                 "-c",
                                                 "./setup.sh"
                                             ],
@@ -221,7 +220,7 @@ Meteor.methods({
                                                 "postStart": {
                                                     "exec": {
                                                         "command": [
-                                                            "bin/bash",
+                                                            "/bin/bash",
                                                             "-c",
                                                             "node ./apis/postStart.js"
                                                         ]
@@ -230,7 +229,7 @@ Meteor.methods({
                                                 "preStop": {
                                                     "exec": {
                                                         "command": [
-                                                            "bin/bash",
+                                                            "/bin/bash",
                                                             "-c",
                                                             "node ./apis/preStop.js"
                                                         ]
@@ -658,14 +657,14 @@ spec:
       containers:
       - name: dynamo
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo${['staging', 'production'].includes(process.env.NODE_ENV) ? '' : '-test'}
-        command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
+        command: [ "/bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
         lifecycle:
           postStart:
             exec:
-              command: ["bin/bash", "-c", "node ./apis/postStart.js"]
+              command: ["/bin/bash", "-c", "node ./apis/postStart.js"]
           preStop:
             exec:
-              command: ["bin/bash", "-c", "node ./apis/preStop.js"]
+              command: ["/bin/bash", "-c", "node ./apis/preStop.js"]
         imagePullPolicy: Always
         ports:
         - containerPort: 8545
@@ -705,14 +704,14 @@ spec:
       containers:
       - name: dynamo
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo${['staging', 'production'].includes(process.env.NODE_ENV) ? '' : '-test'}
-        command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
+        command: [ "/bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
         lifecycle:
           postStart:
             exec:
-              command: ["bin/bash", "-c", "node ./apis/postStart.js"]
+              command: ["/bin/bash", "-c", "node ./apis/postStart.js"]
           preStop:
             exec:
-              command: ["bin/bash", "-c", "node ./apis/preStop.js"]
+              command: ["/bin/bash", "-c", "node ./apis/preStop.js"]
         imagePullPolicy: Always
         ports:
         - containerPort: 8545
