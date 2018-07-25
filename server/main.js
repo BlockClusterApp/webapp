@@ -199,6 +199,10 @@ Meteor.methods({
                                                 {
                                                     "name": "WORKER_NODE_IP",
                                                     "value": `${Config.workerNodeIP(locationCode)}`
+                                                },
+                                                {
+                                                    "name": "DEBUG",
+                                                    "value": "*"
                                                 }
                                             ],
                                             "imagePullPolicy":"Always",
@@ -400,9 +404,9 @@ Meteor.methods({
                                                                 "name": "ingress-" + instanceId,
                                                                 "annotations": {
                                                                     "nginx.ingress.kubernetes.io/rewrite-target": "/",
-                                                                    "ingress.kubernetes.io/auth-type": "basic",
-                                                                    "ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
-                                                                    "ingress.kubernetes.io/auth-realm": "Authentication Required",
+                                                                    "nginx.ingress.kubernetes.io/auth-type": "basic",
+                                                                    "nginx.ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
+                                                                    "nginx.ingress.kubernetes.io/auth-realm": "Authentication Required",
                                                                     "nginx.ingress.kubernetes.io/enable-cors": "true",
                                                                     "nginx.ingress.kubernetes.io/cors-credentials": "true",
                                                                     "kubernetes.io/ingress.class": "nginx",
@@ -427,7 +431,8 @@ Meteor.methods({
                                                                                 "serviceName": instanceId,
                                                                                 "servicePort": 8545
                                                                             }
-                                                                        }, {
+                                                                        },
+                                                                        {
                                                                             "path": "/api/node/" + instanceId,
                                                                             "backend": {
                                                                                 "serviceName": instanceId,
@@ -841,9 +846,9 @@ spec:
                                                                 "name": "ingress-" + instanceId,
                                                                 "annotations": {
                                                                     "nginx.ingress.kubernetes.io/rewrite-target": "/",
-                                                                    "ingress.kubernetes.io/auth-type": "basic",
-                                                                    "ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
-                                                                    "ingress.kubernetes.io/auth-realm": "Authentication Required",
+                                                                    "nginx.ingress.kubernetes.io/auth-type": "basic",
+                                                                    "nginx.ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
+                                                                    "nginx.ingress.kubernetes.io/auth-realm": "Authentication Required",
                                                                     "nginx.ingress.kubernetes.io/enable-cors": "true",
                                                                     "nginx.ingress.kubernetes.io/cors-credentials": "true",
                                                                     "kubernetes.io/ingress.class": "nginx",
@@ -1790,6 +1795,15 @@ spec:
             uniqueIdentifier: uID,
 
         }, {sort: {date_created: 1}}).fetch()
+    },
+    "updateNodeCallbackURL": function(instanceId, callbackURL) {
+        Networks.update({
+            instanceId: instanceId
+        }, {
+            $set: {
+                callbackURL: callbackURL
+            }
+        })
     }
 })
 
