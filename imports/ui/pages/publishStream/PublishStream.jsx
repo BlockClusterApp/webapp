@@ -27,7 +27,13 @@ class PublishStream extends Component {
             publishStream_formloading: true
         });
 
-        Meteor.call("publishStream", instanceId, this[instanceId + "_publishStream_name"].value, this[instanceId + "_publishStream_issuer"].value, this[instanceId + "_publishStream_key"].value, this[instanceId + "_publishStream_data"].value, (error) => {
+        let publicKeys = "";
+
+        if(this[instanceId + "_publishStream_visibility"].value === "private") {
+            publicKeys = this[instanceId + "_publicKeys"].value
+        }
+
+        Meteor.call("publishStream", instanceId, this[instanceId + "_publishStream_name"].value, this[instanceId + "_publishStream_issuer"].value, this[instanceId + "_publishStream_key"].value, this[instanceId + "_publishStream_data"].value, this[instanceId + "_publishStream_visibility"].value, publicKeys, (error) => {
             if(!error) {
                 this.setState({
                     [instanceId + "_publishStream_formloading"]: false,
@@ -48,6 +54,17 @@ class PublishStream extends Component {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
         });
+    }
+
+    visibilityChanged = (instanceId, e) => {
+        let obj = {}
+        if(e.target.value === "private") {
+            obj[instanceId + "_showPublicKeys"] = true;
+        } else {
+            obj[instanceId + "_showPublicKeys"] = false;
+        }
+
+        this.setState(obj)
     }
 
 	render(){
@@ -96,6 +113,22 @@ class PublishStream extends Component {
                                                                     <span className="help"> e.g. {"{'licenseNumber': '121'}"}</span>
                                                                     <textarea className="form-control" required ref={(input) => {this[this.props.network[0].instanceId + "_publishStream_data"] = input}}></textarea>
                                                                 </div>
+
+                                                                <div className="form-group">
+                                                                    <label>Visibility</label>
+                                                                    <span className="help"> e.g. Plain or Encrypted</span>
+                                                                    <select className="form-control" required onChange={(e) => {this.visibilityChanged(this.props.network[0].instanceId, e)}} ref={(input) => {this[this.props.network[0].instanceId + "_publishStream_visibility"] = input}}>
+                                                                        <option key="public" value="public">Public</option>
+                                                                        <option key="private" value="private">Private</option>
+                                                                    </select>
+                                                                </div>
+                                                                {this.state[this.props.network[0].instanceId + "_showPublicKeys"] &&
+                                                                    <div className="form-group">
+                                                                        <label>Public Keys</label>
+                                                                        <span className="help"> e.g. "jx89u2mxjdsklfjsd..., djkaskldjlkasjdkl..."</span>
+                                                                        <input type="text" className="form-control" required ref={(input) => {this[this.props.network[0].instanceId + "_publicKeys"] = input}} />
+                                                                    </div>
+                                                                }
                                                                 <div className="form-group">
                                                                     <label>From Account</label>
                                                                     <span className="help"> e.g. "0x84eddb1..."</span>

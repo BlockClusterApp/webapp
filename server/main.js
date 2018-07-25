@@ -41,6 +41,16 @@ import {
     SoloAssetAudit
 } from "../imports/collections/soloAssetAudit/soloAssetAudit.js"
 
+import {
+    DerivationKeys
+} from "../imports/collections/derivationKeys/derivationKeys.js"
+import {
+    EncryptedObjects
+} from "../imports/collections/encryptedObjects/encryptedObjects.js"
+import {
+    EncryptionKeys
+} from "../imports/collections/encryptionKeys/encryptionKeys.js"
+
 import Verifier from '../imports/api/emails/email-validator'
 import Config from '../imports/modules/config/server';
 
@@ -186,7 +196,6 @@ Meteor.methods({
         if(!nodeConfig.cpu) {
           throw new Meteor.Error("Invalid Network Configuration");
         }
-        return;
 
         Networks.insert({
             "instanceId": instanceId,
@@ -252,6 +261,22 @@ Meteor.methods({
                                   "spec":{
                                       "containers":[
                                           {
+                                              "name":"mongo",
+                                              "image":`mongo`,
+                                              "imagePullPolicy":"IfNotPresent",
+                                              "ports":[
+                                                  {
+                                                      "containerPort":27017
+                                                  }
+                                              ],
+                                              "volumeMounts": [
+                                                {
+                                                  "name": "dynamo-dir",
+                                                  "mountPath": "/data"
+                                                }
+                                              ],
+                                          },
+                                          {
                                               "name":"dynamo",
                                               "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo",
                                               "command":[
@@ -314,7 +339,51 @@ Meteor.methods({
                                                       }
                                                   }
                                               }
-                                          }
+                                          },
+                                          {
+                                            "name":"impulse",
+                                            "image":`402432300121.dkr.ecr.us-west-2.amazonaws.com/impulse:${process.env.NODE_ENV || "dev"}`,
+                                            "env":[
+                                                {
+                                                    "name": "instanceId",
+                                                    "value": instanceId
+                                                },
+                                                {
+                                                    "name": "MONGO_URL",
+                                                    "value": `${process.env.MONGO_URL}`
+                                                },
+                                                {
+                                                    "name": "WORKER_NODE_IP",
+                                                    "value": `${Config.workerNodeIP(locationCode)}`
+                                                }
+                                            ],
+                                            "lifecycle": {
+                                                "postStart": {
+                                                    "exec": {
+                                                        "command": [
+                                                            "/bin/bash",
+                                                            "-c",
+                                                            "node /impulse/postStart.js"
+                                                        ]
+                                                    }
+                                                },
+                                                "preStop": {
+                                                    "exec": {
+                                                        "command": [
+                                                            "/bin/bash",
+                                                            "-c",
+                                                            "node /impulse/preStop.js"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "imagePullPolicy":"Always",
+                                            "ports":[
+                                                {
+                                                    "containerPort":7558
+                                                }
+                                            ]
+                                        }
                                       ],
                                       "volumes": [
                                         {
@@ -324,6 +393,7 @@ Meteor.methods({
                                           }
                                         }
                                       ],
+
                                       "imagePullSecrets":[
                                           {
                                               "name":"regsecret"
@@ -365,6 +435,10 @@ Meteor.methods({
                                           {
                                               "name":"apis",
                                               "port":6382
+                                          },
+                                          {
+                                              "name":"impulse",
+                                              "port":7558
                                           }
                                       ],
                                       "selector":{
@@ -575,7 +649,7 @@ Meteor.methods({
 
         return myFuture.wait();
     },
-    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode, networkConfig, userId) {
+    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, impulseURL, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode, networkConfig, userId) {
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
 
@@ -637,7 +711,8 @@ Meteor.methods({
             "genesisBlock": genesisFileContent,
             "locationCode": locationCode,
             voucherId: nodeConfig.voucherId,
-            networkConfig: {cpu: nodeConfig.cpu, ram: nodeConfig.ram, disk: nodeConfig.disk}
+            networkConfig: {cpu: nodeConfig.cpu, ram: nodeConfig.ram, disk: nodeConfig.disk},
+            "impulseURL": impulseURL
         }, function(error, id) {
             if (error) {
                 console.log(error);
@@ -662,15 +737,15 @@ spec:
     spec:
       containers:
       - name: dynamo
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo
-        command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo${['staging', 'production'].includes(process.env.NODE_ENV) ? '' : '-test'}
+        command: [ "/bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
         lifecycle:
           postStart:
             exec:
-              command: ["bin/bash", "-c", "node ./apis/postStart.js"]
+              command: ["/bin/bash", "-c", "node ./apis/postStart.js"]
           preStop:
             exec:
-              command: ["bin/bash", "-c", "node ./apis/preStop.js"]
+              command: ["/bin/bash", "-c", "node ./apis/preStop.js"]
         imagePullPolicy: Always
         ports:
         - containerPort: 8545
@@ -690,6 +765,8 @@ spec:
           value: ${atomicSwapContractAddress}
         - name: streamsContractAddress
           value: ${streamsContractAddress}
+        - name: IMPULSE_URL
+         value: ${impulseURL}
         volumeMounts:
           - name: dynamo-dir
             mountPath: /dynamo
@@ -714,15 +791,15 @@ spec:
     spec:
       containers:
       - name: dynamo
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo
-        command: [ "bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo${['staging', 'production'].includes(process.env.NODE_ENV) ? '' : '-test'}
+        command: [ "/bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
         lifecycle:
           postStart:
             exec:
-              command: ["bin/bash", "-c", "node ./apis/postStart.js"]
+              command: ["/bin/bash", "-c", "node ./apis/postStart.js"]
           preStop:
             exec:
-              command: ["bin/bash", "-c", "node ./apis/preStop.js"]
+              command: ["/bin/bash", "-c", "node ./apis/preStop.js"]
         imagePullPolicy: Always
         ports:
         - containerPort: 8545
@@ -742,6 +819,8 @@ spec:
           value: ${atomicSwapContractAddress}
         - name: streamsContractAddress
           value: ${streamsContractAddress}
+        - name: IMPULSE_URL
+          value: ${impulseURL}
         volumeMounts:
           - name: dynamo-dir
             mountPath: /dynamo
@@ -1068,7 +1147,6 @@ spec:
         let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:${network.rpcNodePort}`));
         var assetsContract = web3.eth.contract(smartContracts.assets.abi);
         var assets = assetsContract.at(network.assetsContractAddress);
-
         if (assetType === "solo") {
             assets.createSoloAssetType.sendTransaction(assetName, {
                 from: assetIssuer,
@@ -1122,18 +1200,27 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-        assets.issueSoloAsset.sendTransaction(assetName, toAddress, identifier, {
-            from: fromAddress,
-        }, function(error, txnHash) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/issueSoloAsset`, {
+            "content": JSON.stringify({
+                assetName: assetName,
+                toAccount: toAddress,
+                identifier: identifier,
+                data: {},
+                fromAccount: fromAddress
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
             } else {
+                console.log(response)
                 myFuture.return();
             }
         })
+
         return myFuture.wait();
     },
     "transferBulkAssets": function(instanceId, assetName, fromAddress, toAddress, units) {
@@ -1249,22 +1336,82 @@ spec:
 
         return myFuture.wait();
     },
-    "addUpdateSoloAssetInfo": function(instanceId, assetName, fromAddress, identifier, key, value) {
+    "addUpdateSoloAssetInfo": function(instanceId, assetName, fromAddress, identifier, key, value, visibility) {
         var myFuture = new Future();
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-
-        assets.addOrUpdateSoloAssetExtraData.sendTransaction(assetName, identifier, key, value, {
-            from: fromAddress,
-            gas: '4712388'
-        }, function(error, txnHash) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/updateAssetInfo`, {
+            "content": JSON.stringify({
+                visibility: visibility,
+                key: key,
+                value: value,
+                assetName: assetName,
+                identifier: identifier,
+                fromAccount: fromAddress
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
             } else {
+                console.log(response)
+                myFuture.return();
+            }
+        })
+
+        return myFuture.wait();
+    },
+    "grantAccess": function(instanceId, assetName, identifier, publicKey, fromAddress) {
+        var myFuture = new Future();
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/grantAccessToPrivateData`, {
+            "content": JSON.stringify({
+                assetName: assetName,
+                identifier: identifier,
+                publicKey: publicKey,
+                fromAccount: fromAddress
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                console.log(response)
+                myFuture.return();
+            }
+        })
+
+        return myFuture.wait();
+    },
+    "revokeAccess": function(instanceId, assetName, identifier, publicKey, fromAddress) {
+        var myFuture = new Future();
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/revokeAccessToPrivateData`, {
+            "content": JSON.stringify({
+                assetName: assetName,
+                identifier: identifier,
+                publicKey: publicKey,
+                fromAccount: fromAddress
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                console.log(response)
                 myFuture.return();
             }
         })
@@ -1619,11 +1766,34 @@ spec:
 
         return myFuture.wait();
     },
-    "publishStream": function(instanceId, name, issuer, key, data) {
+    "publishStream": function(instanceId, name, issuer, key, data, visibility, publicKeys) {
         var myFuture = new Future();
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/streams/publish`, {
+            "content": JSON.stringify({
+                visibility: visibility,
+                fromAccount: issuer,
+                streamName: name,
+                key: key,
+                data: data,
+                publicKeys: publicKeys.split(",")
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                console.log(response)
+                myFuture.return();
+            }
+        })
+
+        /*
         let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
 
         var streamsContract = web3.eth.contract(smartContracts.streams.abi);
@@ -1639,6 +1809,7 @@ spec:
                 myFuture.throw("An unknown error occured");
             }
         })
+        */
 
         return myFuture.wait();
     },

@@ -11,6 +11,7 @@ import NetworksList from "../../pages/networksList/NetworksList.jsx"
 import CreateNetwork from "../../pages/createNetwork/CreateNetwork.jsx"
 import JoinNetwork from "../../pages/joinNetwork/JoinNetwork.jsx"
 import ViewEditNetwork from "../../pages/viewEditNetwork/ViewEditNetwork.jsx"
+import ViewEditImpulse from "../../pages/viewEditImpulse/ViewEditImpulse.jsx"
 import ViewNetwork from "../../pages/viewNetwork/viewNetwork.jsx"
 import Invites from '../../pages/userInvitation/Invites.jsx';
 import CreateAssetType from "../../pages/createAssetType/CreateAssetType.jsx"
@@ -41,6 +42,7 @@ export default class Main extends Component {
                     	<Route exact path="/app/networks" component={NetworksList} />
 						<Route exact path="/app/createNetwork" component={CreateNetwork} />
 						<Route exact path="/app/networks/:id/settings" component={ViewEditNetwork} />
+						<Route exact path="/app/networks/:id/impulse" component={ViewEditImpulse} />
 						<Route exact path="/app/networks/:id" component={ViewNetwork} />
 						<Route exact path="/app/join/networks" component={JoinNetwork} />
 						<Route exact path="/app/invites" component={Invites} />

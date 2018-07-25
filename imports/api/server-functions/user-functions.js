@@ -142,6 +142,7 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
       network.genesisBlock.toString(),
       ["enode://" + network.nodeId + "@" + network.workerNodeIP + ":" + network.ethNodePort].concat(network.totalENodes),
       [network.workerNodeIP + ":" + network.constellationNodePort].concat(network.totalConstellationNodes),
+      network.impulseURL,
       network.assetsContractAddress,
       network.atomicSwapContractAddress,
       network.streamsContractAddress,
