@@ -61,7 +61,7 @@ class Navbar extends Component {
 	                    	</Link>
 	                        <span className="icon-thumbnail"><i className="fa fa-list"></i></span>
 	                    </li>
-						{(this.props.kuberREST_IP[0] !== undefined) &&
+						{/* {(this.props.kuberREST_IP[0] !== undefined) &&
 							<li className="">
 			                    <Link to={this.props.kuberREST_IP.split("://")[1].split(":")[0] + ":5001/ipfs/QmPhnvn747LqwPYMJmQVorMaGbMSgA7mRRoyyZYz3DoZRQ/#/home"} target="_blank" className="detailed">
 		                    		<span className="title">IPFS</span>
@@ -69,7 +69,7 @@ class Navbar extends Component {
 		                    	</Link>
 		                        <span className="icon-thumbnail"><i className="fa fa-database"></i></span>
 		                    </li>
-						}
+						} */}
 						<li className="">
 			            	<a href="javascript:;"><span className="title">Settings</span>
 			              	<span className="arrow"></span></a>

@@ -322,7 +322,7 @@ class Invites extends Component {
                           <th style={{ width: "25%" }}>Invite From</th>
                           <th style={{ width: "25%" }}>Network</th>
                           <th style={{ width: "%" }}>
-                            Select Location to deploy
+                            Action
                           </th>
                         </tr>
                       </thead>
