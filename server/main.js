@@ -218,9 +218,6 @@ Meteor.methods({
                                                 },
                                                 {
                                                     "containerPort":6382
-                                                },
-                                                {
-                                                    "containerPort":5742
                                                 }
                                             ],
                                             "lifecycle": {
@@ -334,10 +331,6 @@ Meteor.methods({
                                         {
                                             "name":"impulse",
                                             "port":7558
-                                        },
-                                        {
-                                            "name": "events",
-                                            "port": 5742
                                         }
                                     ],
                                     "selector":{
@@ -371,8 +364,6 @@ Meteor.methods({
                                                 apisPort: response.data.spec.ports[3].nodePort,
                                                 impulsePort: response.data.spec.ports[4].nodePort,
                                                 clusterIP: response.data.spec.clusterIP,
-                                                eventsPort: response.data.spec.ports[5].nodePort,
-                                                realEventsPort: 5742,
                                                 realRPCNodePort: 8545,
                                                 realConstellationNodePort: 9001,
                                                 realEthNodePort: 23000,
@@ -440,13 +431,8 @@ Meteor.methods({
                                                                                 "serviceName": instanceId,
                                                                                 "servicePort": 8545
                                                                             }
-                                                                        }, {
-                                                                            "path": "/api/node/" + instanceId + "/events",
-                                                                            "backend": {
-                                                                                "serviceName": instanceId,
-                                                                                "servicePort": 5742
-                                                                            }
-                                                                        }, {
+                                                                        },
+                                                                        {
                                                                             "path": "/api/node/" + instanceId,
                                                                             "backend": {
                                                                                 "serviceName": instanceId,
@@ -690,7 +676,6 @@ spec:
         - containerPort: 23000
         - containerPort: 9001
         - containerPort: 6382
-        - containerPort: 5742
         env:
         - name: MONGO_URL
           value: ${process.env.MONGO_URL}
@@ -738,7 +723,6 @@ spec:
         - containerPort: 23000
         - containerPort: 9001
         - containerPort: 6382
-        - containerPort: 5742
         env:
         - name: MONGO_URL
           value: ${process.env.MONGO_URL}
@@ -792,10 +776,6 @@ spec:
                                         {
                                             "name":"apis",
                                             "port":6382
-                                        },
-                                        {
-                                            "name": "events",
-                                            "port": 5742
                                         }
                                     ],
                                     "selector":{
@@ -828,8 +808,6 @@ spec:
                                                 ethNodePort: response.data.spec.ports[2].nodePort,
                                                 apisPort: response.data.spec.ports[3].nodePort,
                                                 clusterIP: response.data.spec.clusterIP,
-                                                eventsPort: response.data.spec.ports[4].nodePort,
-                                                realEventsPort: 5742,
                                                 realRPCNodePort: 8545,
                                                 realConstellationNodePort: 9001,
                                                 realEthNodePort: 23000,
@@ -894,12 +872,6 @@ spec:
                                                                             "backend": {
                                                                                 "serviceName": instanceId,
                                                                                 "servicePort": 8545
-                                                                            }
-                                                                        }, {
-                                                                            "path": "/api/node/" + instanceId + "/events",
-                                                                            "backend": {
-                                                                                "serviceName": instanceId,
-                                                                                "servicePort": 5742
                                                                             }
                                                                         }, {
                                                                             "path": "/api/node/" + instanceId,
