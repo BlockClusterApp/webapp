@@ -280,7 +280,7 @@ Meteor.methods({
                                               "name":"dynamo",
                                               "image":"402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo",
                                               "command":[
-                                                  "bin/bash",
+                                                  "/bin/bash",
                                                   "-c",
                                                   "./setup.sh"
                                               ],
@@ -323,7 +323,7 @@ Meteor.methods({
                                                   "postStart": {
                                                       "exec": {
                                                           "command": [
-                                                              "bin/bash",
+                                                              "/bin/bash",
                                                               "-c",
                                                               "node ./apis/postStart.js"
                                                           ]
@@ -332,7 +332,7 @@ Meteor.methods({
                                                   "preStop": {
                                                       "exec": {
                                                           "command": [
-                                                              "bin/bash",
+                                                              "/bin/bash",
                                                               "-c",
                                                               "node ./apis/preStop.js"
                                                           ]
