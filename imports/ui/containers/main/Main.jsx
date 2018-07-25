@@ -16,7 +16,7 @@ import ViewNetwork from "../../pages/viewNetwork/viewNetwork.jsx"
 import Invites from '../../pages/userInvitation/Invites.jsx';
 import CreateAssetType from "../../pages/createAssetType/CreateAssetType.jsx"
 import AssetsStats from "../../pages/assetsStats/AssetsStats.jsx"
-import AssetsEvents from "../../pages/assetsEvents/AssetsEvents.jsx"
+import NodeEvents from "../../pages/nodeEvents/NodeEvents.jsx"
 import AssetsManagement from "../../pages/assetsManagement/AssetsManagement.jsx"
 import AssetsExchange from "../../pages/assetsExchange/AssetsExchange.jsx"
 import AssetsSearch from "../../pages/assetsSearch/AssetsSearch.jsx"
@@ -45,7 +45,7 @@ export default class Main extends Component {
 						<Route exact path="/app/join/networks" component={JoinNetwork} />
 						<Route exact path="/app/invites" component={Invites} />
 						<Route exact path="/app/networks/:id/security/peers" component={Peers} />
-						<Route exact path="/app/networks/:id/assets/events" component={AssetsEvents} />
+						<Route exact path="/app/networks/:id/events" component={NodeEvents} />
 						<Route exact path="/app/networks/:id/explorer" component={Explorer} />
 						<Route exact path="/app/networks/:id/assets/search" component={AssetsSearch} />
 						<Route exact path="/app/networks/:id/assets/exchange" component={AssetsExchange} />
