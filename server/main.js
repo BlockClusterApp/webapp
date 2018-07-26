@@ -103,7 +103,7 @@ Accounts.onCreateUser(function(options, user) {
 });
 
 
-function getNodeConfig(networkConfig) {
+function getNodeConfig(networkConfig, userId) {
   let nodeConfig = {};
   let finalNetworkConfig = undefined;
   const { voucher, config, diskSpace } = networkConfig;
@@ -119,6 +119,16 @@ function getNodeConfig(networkConfig) {
         finalNetworkConfig = diskSpace || _voucher.diskSpace;
       }
     }
+
+    Vouchers.update({
+      _id: voucher._id
+    }, {
+      $set: {
+        claimedBy: userId,
+        claimedOn: new Date(),
+        claimed: true
+      }
+    });
   }
 
   if(!finalNetworkConfig && config) {
@@ -143,6 +153,7 @@ function getNodeConfig(networkConfig) {
     ram: finalNetworkConfig.ram,
     disk: finalNetworkConfig.disk
   };
+
 
   return nodeConfig;
 }
@@ -691,7 +702,6 @@ Meteor.methods({
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${instanceId}-pvc`, function(error, response) {});
 
         }
-
         const nodeConfig = getNodeConfig(networkConfig);
 
         if(!nodeConfig.cpu) {

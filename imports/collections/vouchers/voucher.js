@@ -35,6 +35,15 @@ VoucherCollection.schema = new SimpleSchema({
   },
   discountedDays: {
     type: Number
+  },
+  claimed: {
+    type: Boolean
+  },
+  claimedBy: {
+    type: String
+  },
+  claimedOn: {
+    type: Date
   }
 });
 

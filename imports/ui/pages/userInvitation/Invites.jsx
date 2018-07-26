@@ -56,12 +56,13 @@ class Invites extends Component {
 
   configChangeListener = (inviteId, config) => {
     this.inviteConfigMapping[inviteId] = config;
+    this.setState({});
   }
 
   cardVerificationListener = (isVerified) => {
     this.setState({
       cardVerified: isVerified
-    })
+    });
   }
 
   acceptInvitation = (inviteId, invite, fromModal = false) => {
@@ -273,6 +274,18 @@ class Invites extends Component {
 
   render() {
 
+    let isButtonDisabled = this.state.loading[this.state.modalInviteId] === true;
+    let isVoucherAlertShown = false;
+    if(!this.state.cardVerified){
+      isButtonDisabled = true;
+      isVoucherAlertShown = true;
+    }
+    if(this.inviteConfigMapping[this.state.modalInviteId] && this.inviteConfigMapping[this.state.modalInviteId].voucher){
+      isButtonDisabled = false;
+      isVoucherAlertShown = false;
+    }else {
+      isVoucherAlertShown = true;
+    }
     const Modal = this.state.showModal && (
       <div id="myModal" className="modal fade" role="dialog">
         <div className="modal-dialog">
@@ -290,14 +303,14 @@ class Invites extends Component {
               <br />
               <p>Select Node Configuration</p>
               <NetworkConfigSelector configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)} />
-              {this.config && this.config.voucher ? null : <CardVerification cardVerificationListener={this.cardVerificationListener}/>}
+              {!isVoucherAlertShown? null : <CardVerification cardVerificationListener={this.cardVerificationListener}/>}
             </div>
             <div className="modal-footer">
             <button
               type="button"
               className="btn btn-success"
               onClick={this.acceptInvitation.bind(this, this.state.modalInviteId, this.state.modalInvite, true)}
-              disabled={this.state.loading[this.state.modalInviteId] === true || this.inviteConfigMapping[this.state.modalInviteId] && this.inviteConfigMapping[this.state.modalInviteId].voucher ? false : !this.state.cardVerified}
+              disabled={isButtonDisabled}
             >
               {this.state.loading[this.state.modalInviteId] === true ? (
                 <i className="fa fa-spinner fa-spin" />

@@ -7,6 +7,7 @@ Voucher.validate = async function(voucherCode) {
   const voucher = Vouchers.find({
     code: voucherCode,
     active: true,
+    claimed: false,
     expiryDate: {
       $gt: new Date()
     }

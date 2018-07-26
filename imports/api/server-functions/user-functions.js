@@ -147,6 +147,7 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
       network.atomicSwapContractAddress,
       network.streamsContractAddress,
       locationCode,
+      networkConfig,
       invitation.inviteTo,
       (err, res) => {
         if(err) return reject(err);
