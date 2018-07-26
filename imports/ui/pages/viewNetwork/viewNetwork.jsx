@@ -99,8 +99,8 @@ class ViewNetwork extends Component {
                                                     <div className="clickable" onClick={() => {
 															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/streams/subscribe") : ""
 														}}>
-                                                        <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Subscribe</p>
-                                                        <p className="no-margin fs-12">Receive Event</p>
+                                                        <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Access Control</p>
+                                                        <p className="no-margin fs-12">Permissions and Ownership</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -195,8 +195,8 @@ class ViewNetwork extends Component {
                                                     <div className="clickable" onClick={() => {
 															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/events") : ""
 														}}>
-                                                        <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Register Callbacks</p>
-                                                        <p className="no-margin fs-12">Add Callback URLs</p>
+                                                        <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Integrate Webbooks</p>
+                                                        <p className="no-margin fs-12">Events Notification</p>
                                                     </div>
 													<div className="clickable" onClick={() => {
 															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/explorer") : ""
