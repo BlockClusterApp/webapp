@@ -7,7 +7,7 @@ const PaymentRequests = new Mongo.Collection("paymentRequests");
 AttachBaseHooks(PaymentRequests);
 
 PaymentRequests.paymentGateways = {
-    RazorPay: 'RazorPay'
+    RazorPay: 'razorpay'
 };
 
 
@@ -28,7 +28,7 @@ PaymentRequests.before.insert((userId, doc) => {
     if(!doc.paymentGateway) {
         throw new Error("Payment gateway required for payment request");
     }
-    if(!Object.values(PaymentRequests.paymentRequests).includes(doc.paymentGateway)) {
+    if(!Object.values(PaymentRequests.paymentGateways).includes(doc.paymentGateway)) {
         throw new Error(`${doc.paymentGateway} is not a valid payment gateway.`)
     }
 
@@ -50,6 +50,15 @@ PaymentRequests.schema = new SimpleSchema({
   },
   paymentStatus: {
     type: Number
+  },
+  amount: {
+    type: Number
+  },
+  pgReference: {
+    type: String
+  },
+  pgResponse: {
+    type: Object
   }
 });
 

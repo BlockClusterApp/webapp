@@ -22,10 +22,10 @@ class RazorPay extends React.Component {
       paymentRequestId: 'test123'
     }
 
-    const notes = Object.assign(testOptions, {}, this.props.paymentNotes);
+    const notes = Object.assign(testOptions, customOptions, {}, this.props.paymentNotes);
     const user = Meteor.user();
 
-    const amount = 100 // || this.props.amount || customOptions.amount || 0;
+    const amount =  this.props.amount || customOptions.amount || 0;
     if(String(amount).includes(".")) {
       return console.log("Amount is not in paisa");
     }
@@ -49,14 +49,14 @@ class RazorPay extends React.Component {
       },
       handler: response => {
         /* response: {razorpay_payment_id: "pay_AbpQVNsNRTkyKo"} */
-        console.log("Payment response", response);
-        Meteor.call("capturePaymentRazorPay", response);
-        this.setState({
-          loading: false
+        Meteor.call("capturePaymentRazorPay", response, () => {
+          this.setState({
+            loading: false
+          });
+          if(this.props.paymentHandler) {
+            this.props.paymentHandler(response);
+          }
         });
-        if(this.props.paymentHandler) {
-          this.props.paymentHandler(response);
-        }
       },
       modal: {
         backdropclose: () => {
@@ -82,7 +82,7 @@ class RazorPay extends React.Component {
 
       if(!window.rzp1) {
         window.rzp1 = new window.Razorpay(razorpayOptions);
-      } 
+      }
       window.rzp1.open();
     }catch(err) {
       this.setState({
@@ -111,16 +111,16 @@ class RazorPay extends React.Component {
     }
   }
 
-  render() { 
+  render() {
     return (<div className="razorpay-holder">
-      <button className="btn btn-primary razorpay-payment-button" 
+      <button className="btn btn-primary razorpay-payment-button"
         onClick={this.triggerPayment}
         disabled={this.state.loading}>
-        { this.state.loading && <i className="fa fa-spin fa-spinner"></i> }&nbsp;Pay Now
+        { this.state.loading && <i className="fa fa-spin fa-spinner"></i> }&nbsp;{this.props.buttonText || `Pay Now`}
       </button>
     </div>
     );
-  
+
   }
 }
 
@@ -128,9 +128,10 @@ RazorPay.propTypes = {
   modalDismissListener: PropTypes.func,
   modalBackDropCloseListener: PropTypes.func,
   paymentHandler: PropTypes.func.isRequired,
-  paymentNotes: PropTypes.object.isRequired,
+  paymentNotes: PropTypes.object,
   preTriggerPaymentListener: PropTypes.func,
-  amount: PropTypes.number
+  amount: PropTypes.number,
+  buttonText: PropTypes.string
 }
 
 export default RazorPay;

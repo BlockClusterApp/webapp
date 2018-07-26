@@ -1,4 +1,5 @@
 import { Networks } from '../../collections/networks/networks';
+import UserCards from '../../collections/payments/user-cards';
 import moment from 'moment';
 
 const Billing = {};
@@ -11,7 +12,7 @@ function convertMilliseconds(ms) {
   return { seconds, minutes, hours }
 }
 
-Billing.generateBill = function(userId, month, year) {
+Billing.generateBill = async function(userId, month, year) {
   month = month || moment().month();
   year = year || moment().year();
 
@@ -63,8 +64,29 @@ Billing.generateBill = function(userId, month, year) {
   return result;
 }
 
+Billing.isUserCardVerified = async function() {
+  const userId = Meteor.userId();
+
+  if(!userId){
+    return false;
+  }
+
+  const userCards = UserCards.find({userId: userId}).fetch()[0];
+  if(!userCards){
+    return false;
+  }
+
+  if(userCards.cards && userCards.cards.length > 0){
+    return true;
+  }
+
+  return false;
+
+}
+
 Meteor.methods({
-  fetchBilling: Billing.generateBill
+  fetchBilling: Billing.generateBill,
+  userCardVerificationStatus: Billing.isUserCardVerified
 });
 
 export default Billing;

@@ -94,8 +94,10 @@ class NetworkConfigSelector extends Component {
         disk: 5
       }
     });
+    this.voucher.value = '';
     this.diskSpace.value = 5;
     this.voucherDetails = undefined;
+    this.onConfigChange();
   }
 
   render() {
@@ -170,7 +172,7 @@ class NetworkConfigSelector extends Component {
                     <div className="col-md-4">
                         <div className="form-group form-group-default ">
                             <label>Disk Space (GB)</label>
-                            <input type="number" className="form-control" name="firstName" required ref={(input) => this.diskSpace = input} disabled={!this.state.networkConfig.name || this.state.networkConfig.name.toLowerCase() === "micro"} onChange={this.onConfigChange.bind(this, true)} />
+                            <input type="number" className="form-control" name="firstName" required ref={(input) => this.diskSpace = input} disabled={!this.state.networkConfig.isDiskChangeable} onChange={this.onConfigChange.bind(this, true)} />
                         </div>
                     </div>
                 </div>

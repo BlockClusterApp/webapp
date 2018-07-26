@@ -32,6 +32,9 @@ VoucherCollection.schema = new SimpleSchema({
   },
   isDiskChangeable: {
     type: Boolean
+  },
+  discountedMonths: {
+    type: Number
   }
 });
 

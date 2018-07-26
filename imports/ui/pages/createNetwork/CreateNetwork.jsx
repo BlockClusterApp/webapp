@@ -4,6 +4,7 @@ import { withRouter } from 'react-router-dom'
 import notifications from "../../../modules/notifications"
 import LocationSelector from '../../components/Selectors/LocationSelector.jsx';
 import NetworkConfigSelector from '../../components/Selectors/NetworkConfigSelector.jsx'
+import CardVerification from '../billing/components/CardVerification.jsx';
 
 class CreateNetwork extends Component {
     constructor() {
@@ -42,7 +43,11 @@ class CreateNetwork extends Component {
         });
     }
 
-
+    cardVerificationListener = (isVerified) => {
+      this.setState({
+        cardVerified: isVerified
+      })
+    }
 
 	render(){
 
@@ -72,7 +77,7 @@ class CreateNetwork extends Component {
                         <div className="col-md-7">
                             <div className="card card-transparent">
                                 <div className="card-block">
-                                    <form id="form-project" role="form" onSubmit={this.onSubmit} autoComplete="off">
+                                    {/* <form id="form-project" role="form" onSubmit={this.onSubmit} autoComplete="off"> */}
                                         <p>Basic Information</p>
                                         <div className="form-group-attached">
                                             <div className="row clearfix">
@@ -114,7 +119,10 @@ class CreateNetwork extends Component {
                                         </div>
                                         <br />
                                         <p>Node Configuration</p>
-                                        <NetworkConfigSelector configChangeListener={(config) => this.config = config} />
+                                        <NetworkConfigSelector configChangeListener={(config) => {
+                                          this.config = config;
+                                          this.setState({});
+                                        }} />
 
                                         <p className="m-t-10">Advanced Information</p>
                                         <div className="form-group-attached">
@@ -166,19 +174,21 @@ class CreateNetwork extends Component {
                                                 </div>
                                             </div>
                                         }
-
+                                        {this.config && this.config.voucher ? null : <CardVerification cardVerificationListener={this.cardVerificationListener}/>}
                                         <LaddaButton
+                                            disabled={this.config && this.config.voucher ? false : !this.state.cardVerified}
                                             loading={this.state.loading}
                                             data-size={S}
                                             data-style={SLIDE_UP}
                                             data-spinner-size={30}
                                             data-spinner-lines={12}
+                                            onClick={this.onSubmit}
                                             className="btn btn-success"
                                             type="submit"
                                         >
                                             <i className="fa fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;Create
                                         </LaddaButton>
-                                    </form>
+                                    {/* </form> */}
                                 </div>
                             </div>
                         </div>
