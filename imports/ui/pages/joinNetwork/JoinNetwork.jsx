@@ -6,6 +6,7 @@ import {Networks} from "../../../collections/networks/networks.js"
 import notifications from "../../../modules/notifications"
 import LocationSelector from '../../components/Selectors/LocationSelector';
 import NetworkConfigSelector from '../../components/Selectors/NetworkConfigSelector.jsx'
+import CardVerification from '../billing/components/CardVerification.jsx';
 
 import "./JoinNetwork.scss"
 
@@ -148,6 +149,14 @@ class JoinNetwork extends Component {
         this.locationCode = newLocationCode;
     }
 
+
+    cardVerificationListener = (isVerified) => {
+      this.setState({
+        cardVerified: isVerified
+      })
+    }
+
+
 	render(){
 		return (
             <div className="content ">
@@ -187,7 +196,6 @@ class JoinNetwork extends Component {
                                         <div className="col-lg-7">
                                             <div className="card card-transparent">
                                                 <div className="card-block">
-                                                    <form id="form-project" role="form" onSubmit={this.onJoinSubmit} autoComplete="off">
                                                         <p>Basic Information</p>
                                                         <div className="form-group-attached">
                                                             <div className="row clearfix">
@@ -230,7 +238,10 @@ class JoinNetwork extends Component {
                                                         </div>
                                                         <br />
                                                         <p>Node Configuration</p>
-                                                        <NetworkConfigSelector configChangeListener={(config) => this.config = config} />
+                                                        <NetworkConfigSelector configChangeListener={(config) => {
+                                                          this.config = config;
+                                                          this.setState({});
+                                                        }} />
                                                         <p className="m-t-10">Advanced Information</p>
                                                         <div className="form-group-attached">
                                                             <div className="row">
@@ -375,19 +386,20 @@ class JoinNetwork extends Component {
                                                                 </div>
                                                             </div>
                                                         }
-
+                                                        {this.config && this.config.voucher ? null : <CardVerification cardVerificationListener={this.cardVerificationListener}/>}
                                                         <LaddaButton
                                                             loading={this.state.joinLoading}
                                                             data-size={S}
+                                                            disabled={this.config && this.config.voucher ? false : !this.state.cardVerified}
                                                             data-style={SLIDE_UP}
                                                             data-spinner-size={30}
                                                             data-spinner-lines={12}
                                                             className="btn btn-success"
+                                                            onClick={this.onJoinSubmit}
                                                             type="submit"
                                                         >
                                                             <i className="fa fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;Join
                                                         </LaddaButton>
-                                                    </form>
                                                 </div>
                                             </div>
                                         </div>
