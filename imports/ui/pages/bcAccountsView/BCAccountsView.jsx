@@ -35,7 +35,7 @@ class BCAccountsView extends Component {
         });
 
         e.preventDefault();
-		Meteor.call("createAccount", this.accountPassword.value, this.props.network[0]._id, (error) => {
+		Meteor.call("createAccount", this.name.value, this.accountPassword.value, this.props.network[0]._id, (error) => {
 			if(error) {
                 this.setState({
                     ["_accounts_formSubmitError"]: error.reason,
@@ -99,7 +99,11 @@ class BCAccountsView extends Component {
                                                                         this.createAccount(e);
                                                                     }}>
                                                                     <div className="form-group">
-                                                                        <label>Account Password</label>
+                                                                        <label>Name</label>
+                                                                        <input type="text" className="form-control" ref={(input) => {this.name = input;}} required />
+                                                                    </div>
+                                                                    <div className="form-group">
+                                                                        <label>Password</label>
                                                                         <input type="password" className="form-control" ref={(input) => {this.accountPassword = input;}} required />
                                                                     </div>
                                                                     {this.state["_accounts_formSubmitError"] &&
@@ -143,6 +147,7 @@ class BCAccountsView extends Component {
                                                                     <table className="table table-hover" id="basicTable">
                                                                         <thead>
                                                                             <tr>
+                                                                                <th style={{width: "25%"}}>Name</th>
                                                                                 <th style={{width: "25%"}}>Address</th>
                                                                                 <th style={{width: "25%"}}>Download</th>
                                                                             </tr>
@@ -151,6 +156,9 @@ class BCAccountsView extends Component {
                                                                             {this.props.accounts.map((item) => {
                                                                                 return (
                                                                                     <tr key={item.address}>
+                                                                                        <td className="v-align-middle">
+                                                                                            {item.name}
+                                                                                        </td>
                                                                                         <td className="v-align-middle">
                                                                                             {item.address}
                                                                                         </td>

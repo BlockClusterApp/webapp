@@ -199,10 +199,6 @@ Meteor.methods({
                                                 {
                                                     "name": "WORKER_NODE_IP",
                                                     "value": `${Config.workerNodeIP(locationCode)}`
-                                                },
-                                                {
-                                                    "name": "DEBUG",
-                                                    "value": "*"
                                                 }
                                             ],
                                             "imagePullPolicy":"Always",
@@ -921,87 +917,84 @@ spec:
         var network = Networks.find({
             _id: networkId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        web3.currentProvider.sendAsync({
-            method: "istanbul_propose",
-            params: [toVote, true],
-            jsonrpc: "2.0",
-            id: new Date().getTime()
-        }, Meteor.bindEnvironment(function(error, result) {
-            if (error) {
-                console.log(error);
-                myFuture.throw("An unknown error occured");
-            } else {
-                myFuture.return();
+
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/utility/vote`, {
+            "content": JSON.stringify({
+                toVote: toVote
+            }),
+            "headers": {
+                "Content-Type": "application/json"
             }
-        }))
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
+            }
+        })
 
         return myFuture.wait();
     },
-    "unVote": function(networkId, toVote) {
+    "unVote": function(networkId, toUnvote) {
         var myFuture = new Future();
         var network = Networks.find({
             _id: networkId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        web3.currentProvider.sendAsync({
-            method: "istanbul_propose",
-            params: [toVote, false],
-            jsonrpc: "2.0",
-            id: new Date().getTime()
-        }, Meteor.bindEnvironment(function(error, result) {
-            if (error) {
-                console.log(error);
-                myFuture.throw("An unknown error occured");
-            } else {
-                myFuture.return();
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/utility/unVote`, {
+            "content": JSON.stringify({
+                toUnvote: toUnvote
+            }),
+            "headers": {
+                "Content-Type": "application/json"
             }
-        }))
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
+            }
+        })
 
         return myFuture.wait();
     },
-    "createAccount": function(password, networkId) {
+    "createAccount": function(name, password, networkId) {
         var myFuture = new Future();
         var network = Networks.find({
             _id: networkId
         }).fetch()[0];
 
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-
-        web3.currentProvider.sendAsync({
-            method: "personal_newAccount",
-            params: [password],
-            jsonrpc: "2.0",
-            id: new Date().getTime()
-        }, Meteor.bindEnvironment(function(error, result) {
-            if (error) {
-                console.log(error);
-                myFuture.throw("An unknown error occured");
-            } else {
-                web3.currentProvider.sendAsync({
-                    method: "personal_unlockAccount",
-                    params: [result.result, password, 0],
-                    jsonrpc: "2.0",
-                    id: new Date().getTime()
-                }, Meteor.bindEnvironment(function(error) {
-                    if(!error) {
-                        BCAccounts.insert({
-                            "instanceId": network.instanceId,
-                            "address": result.result,
-                            "password": password
-                        }, Meteor.bindEnvironment((error) => {
-                            if(!error) {
-                                myFuture.return();
-                            } else {
-                                myFuture.throw("An unknown error occured");
-                            }
-                        }))
-                    } else {
-                        myFuture.throw("An unknown error occured");
-                    }
-                }))
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/utility/createAccount`, {
+            "content": JSON.stringify({
+                name: name,
+                password: password
+            }),
+            "headers": {
+                "Content-Type": "application/json"
             }
-        }))
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                console.log(typeof response.content)
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
+            }
+        })
 
         return myFuture.wait();
     },
@@ -1032,32 +1025,30 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:${network.rpcNodePort}`));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-        if (assetType === "solo") {
-            assets.createSoloAssetType.sendTransaction(assetName, {
-                from: assetIssuer,
-                gas: '99999999999999999'
-            }, function(error, txnHash) {
-                if (!error) {
-                    myFuture.return();
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/assets/createAssetType`, {
+            "content": JSON.stringify({
+                assetName: assetName,
+                assetType: assetType,
+                assetIssuer: assetIssuer,
+                reissuable: reissuable,
+                parts: parts
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
                 } else {
-                    myFuture.throw("An unknown error occured");
-                }
-            })
-        } else {
-            assets.createBulkAssetType.sendTransaction(assetName, (reissuable === "true"), parts, {
-                from: assetIssuer,
-                gas: '99999999999999999'
-            }, function(error, txnHash) {
-                if (!error) {
                     myFuture.return();
-                } else {
-                    myFuture.throw("An unknown error occured");
                 }
-            })
-        }
+            }
+        })
 
         return myFuture.wait();
     },
@@ -1066,18 +1057,27 @@ spec:
         var network = Networks.find({
             instanceId: networkId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-        var parts = assets.getBulkAssetParts.call(assetName)
-        units = (new BigNumber(units)).multipliedBy(helpers.addZeros(1, parts))
-        assets.issueBulkAsset.sendTransaction(assetName, units.toString(), toAddress, {
-            from: fromAddress,
-        }, function(error, txnHash) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/assets/issueBulkAsset`, {
+            "content": JSON.stringify({
+                fromAccount: fromAddress,
+                assetName: assetName,
+                toAccount: toAddress,
+                units: units
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
             } else {
-                myFuture.return();
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
             }
         })
 
@@ -1104,8 +1104,12 @@ spec:
             if(error) {
                 myFuture.throw(error);
             } else {
-                console.log(response)
-                myFuture.return();
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
             }
         })
 
@@ -1116,20 +1120,31 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-        var parts = assets.getBulkAssetParts.call(assetName)
-        units = (new BigNumber(units)).multipliedBy(helpers.addZeros(1, parts))
-        assets.transferBulkAssetUnits.sendTransaction(assetName, toAddress, units.toString(), {
-            from: fromAddress
-        }, function(error, txnHash) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
+
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/assets/transferBulkAsset`, {
+            "content": JSON.stringify({
+                fromAccount: fromAddress,
+                toAccount: toAddress,
+                assetName: assetName,
+                units: units
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
             } else {
-                myFuture.return();
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
             }
         })
+
         return myFuture.wait();
     },
     "transferSoloAsset": function(instanceId, assetName, fromAddress, toAddress, identifier) {
@@ -1137,18 +1152,30 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-        assets.transferOwnershipOfSoloAsset.sendTransaction(assetName, identifier, toAddress, {
-            from: fromAddress
-        }, function(error, txnHash) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/assets/transferSoloAsset`, {
+            "content": JSON.stringify({
+                fromAccount: fromAddress,
+                toAccount: toAddress,
+                assetName: assetName,
+                identifier: identifier
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
             } else {
-                myFuture.return();
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
             }
         })
+
         return myFuture.wait();
     },
     "getBulkAssetBalance": function(instanceId, assetName, address) {
@@ -1156,18 +1183,28 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-        var parts = assets.getBulkAssetParts.call(assetName)
-        assets.getBulkAssetUnits.call(assetName, address, {}, function(error, units) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/assets/getBulkAssetBalance`, {
+            "content": JSON.stringify({
+                assetName: assetName,
+                account: address
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
             } else {
-                units = (new BigNumber(units)).dividedBy(helpers.addZeros(1, parts)).toFixed(parseInt(parts))
-                myFuture.return(units.toString());
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return(responseBody.units.toString());
+                }
             }
         })
+
         return myFuture.wait();
     },
     "getSoloAssetInfo": function(instanceId, assetName, identifier) {
@@ -1175,50 +1212,26 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
-        properties = []
 
-        let addedOrUpdatedSoloAssetExtraData_events = assets.addedOrUpdatedSoloAssetExtraData({}, {
-            fromBlock: 0,
-            toBlock: "latest"
-        })
-        addedOrUpdatedSoloAssetExtraData_events.get((error, events) => {
-            if (!error) {
-                for (let count = 0; count < events.length; count++) {
-                    properties.indexOf(events[count].args.key) === -1 ? properties.push(events[count].args.key) : null;
-                }
-                assets.isSoloAssetClosed.call(assetName, identifier, {}, function(error, isClosed) {
-                    if (!error) {
-                        assets.getSoloAssetOwner.call(assetName, identifier, {}, function(error, owner) {
-                            if (!error) {
-                                let extraData = {};
-
-                                if (properties.length > 0) {
-                                    for (let count = 0; count < properties.length; count++) {
-                                        extraData[properties[count]] = assets.getSoloAssetExtraData.call(assetName, identifier, properties[count])
-                                    }
-                                }
-
-                                myFuture.return({
-                                    "details": {
-                                        isClosed: isClosed,
-                                        owner: owner,
-                                        extraData: extraData
-                                    }
-                                });
-
-                            } else {
-                                myFuture.throw("An unknown error occured");
-                            }
-                        })
-                    } else {
-                        myFuture.throw("An unknown error occured");
-                    }
-                })
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/assets/getSoloAssetInfo`, {
+            "content": JSON.stringify({
+                assetName: assetName,
+                identifier: identifier
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
             } else {
-                myFuture.throw("An unknown error occured");
+                console.log(response)
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return(responseBody);
+                }
             }
         })
 
@@ -1245,8 +1258,12 @@ spec:
             if(error) {
                 myFuture.throw(error);
             } else {
-                console.log(response)
-                myFuture.return();
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
             }
         })
 
@@ -1272,8 +1289,12 @@ spec:
             if(error) {
                 myFuture.throw(error);
             } else {
-                console.log(response)
-                myFuture.return();
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
             }
         })
 
@@ -1299,8 +1320,12 @@ spec:
             if(error) {
                 myFuture.throw(error);
             } else {
-                console.log(response)
-                myFuture.return();
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
             }
         })
 
@@ -1311,18 +1336,26 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
 
-        assets.closeSoloAsset.sendTransaction(assetName, identifier, {
-            from: fromAddress,
-            gas: '4712388'
-        }, function(error, txnHash) {
-            if (error) {
-                myFuture.throw("An unknown error occured");
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/closeAsset`, {
+            "content": JSON.stringify({
+                fromAccount: fromAddress,
+                identifier: identifier,
+                assetName: assetName
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
             } else {
-                myFuture.return();
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
             }
         })
 
@@ -1349,69 +1382,37 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
-        var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
 
-        var secret = helpers.generateSecret();
-
-        atomicSwap.calculateHash.call(secret, Meteor.bindEnvironment((error, hash) => {
-            if (!error) {
-                Secrets.insert({
-                    "instanceId": otherInstanceId,
-                    "secret": secret,
-                    "hash": hash,
-                }, Meteor.bindEnvironment((error) => {
-                    if (!error) {
-                        assets.approve.sendTransaction(
-                            fromType,
-                            fromId,
-                            fromUniqueIdentifier,
-                            fromUnits,
-                            network.atomicSwapContractAddress, {
-                                from: fromAddress,
-                                gas: '99999999999999999'
-                            },
-                            Meteor.bindEnvironment((error) => {
-                                if (!error) {
-                                    atomicSwap.lock.sendTransaction(
-                                        toAddress,
-                                        hash,
-                                        lockMinutes,
-                                        fromType,
-                                        fromId,
-                                        fromUniqueIdentifier,
-                                        fromUnits,
-                                        toType,
-                                        toId,
-                                        toUnits,
-                                        toUniqueIdentifier,
-                                        toGenesisBlockHash, {
-                                            from: fromAddress,
-                                            gas: '99999999999999999'
-                                        },
-                                        Meteor.bindEnvironment((error) => {
-                                            if (!error) {
-                                                myFuture.return();
-                                            } else {
-                                                myFuture.throw("An unknown error occured");
-                                            }
-                                        }))
-                                } else {
-                                    myFuture.throw("An unknown error occured");
-                                }
-                            })
-                        )
-                    } else {
-                        myFuture.throw("An unknown error occured");
-                    }
-                }))
-            } else {
-                myFuture.throw("An unknown error occured");
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/placeOrder`, {
+            "content": JSON.stringify({
+                toNetworkId: otherInstanceId,
+                fromAssetType: fromType,
+                fromAssetName: fromId,
+                fromAssetUniqueIdentifier: fromUniqueIdentifier,
+                fromAssetUnits: fromUnits,
+                fromAssetLockMinutes: lockMinutes,
+                toAssetType: toType,
+                toAssetName: toId,
+                toAssetUnits: toUnits,
+                toAssetUniqueIdentifier: toUniqueIdentifier,
+                fromAddress: fromAddress,
+                toAddress: toAddress
+            }),
+            "headers": {
+                "Content-Type": "application/json"
             }
-        }))
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
+            }
+        })
 
         return myFuture.wait();
     },
@@ -1431,66 +1432,32 @@ spec:
         toGenesisBlockHash,
         lockMinutes,
         hash) {
-
         var myFuture = new Future();
         var network = Networks.find({
-            instanceId: buyerInstanceId
+            instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
-        var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
 
-        AcceptedOrders.insert({
-            "instanceId": instanceId,
-            "buyerInstanceId": buyerInstanceId,
-            "hash": hash
-        }, Meteor.bindEnvironment((error) => {
-            if (!error) {
-                assets.approve.sendTransaction(
-                    fromType,
-                    fromId,
-                    fromUniqueIdentifier,
-                    fromUnits,
-                    network.atomicSwapContractAddress, {
-                        from: fromAddress,
-                        gas: '99999999999999999'
-                    },
-                    Meteor.bindEnvironment((error) => {
-                        if (!error) {
-                            atomicSwap.lock.sendTransaction(
-                                toAddress,
-                                hash,
-                                lockMinutes,
-                                fromType,
-                                fromId,
-                                fromUniqueIdentifier,
-                                fromUnits,
-                                toType,
-                                toId,
-                                toUnits,
-                                toUniqueIdentifier,
-                                toGenesisBlockHash, {
-                                    from: fromAddress,
-                                    gas: '99999999999999999'
-                                },
-                                Meteor.bindEnvironment((error) => {
-                                    if (!error) {
-                                        myFuture.return();
-                                    } else {
-                                        myFuture.throw("An unknown error occured");
-                                    }
-                                }))
-                        } else {
-                            myFuture.throw("An unknown error occured");
-                        }
-                    })
-                )
-            } else {
-                myFuture.throw("An unknown error occured");
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/fulfillOrder`, {
+            "content": JSON.stringify({
+                orderId: hash,
+                toNetworkId: buyerInstanceId
+            }),
+            "headers": {
+                "Content-Type": "application/json"
             }
-        }))
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                console.log(response)
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
+            }
+        })
 
         return myFuture.wait();
     },
@@ -1499,39 +1466,28 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
-        var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
-        var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
-        var assetsContract = web3.eth.contract(smartContracts.assets.abi);
-        var assets = assetsContract.at(network.assetsContractAddress);
 
-        assets.approve.sendTransaction(
-            toAssetType,
-            toAssetName,
-            toAssetId,
-            toAssetUnits,
-            network.atomicSwapContractAddress, {
-                from: fromAddress,
-                gas: '99999999999999999'
-            }, Meteor.bindEnvironment((error) => {
-                if (!error) {
-                    atomicSwap.claim.sendTransaction(
-                        atomicSwapHash,
-                        "", {
-                            from: fromAddress,
-                            gas: '99999999999999999'
-                        }, Meteor.bindEnvironment(function(error, txHash) {
-                            if (error) {
-                                myFuture.throw("An unknown error occured");
-                            } else {
-                                myFuture.return();
-                            }
-                        }))
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/fulfillOrder`, {
+            "content": JSON.stringify({
+                orderId: atomicSwapHash,
+                toNetworkId: instanceId
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                console.log(response)
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
                 } else {
-                    myFuture.throw("An unknown error occured");
+                    myFuture.return();
                 }
-            })
-        )
+            }
+        })
 
         return myFuture.wait();
     },
@@ -1546,19 +1502,25 @@ spec:
         var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
         var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
 
-        atomicSwap.unlock.sendTransaction(
-            orderId, {
-                from: fromAddress,
-                gas: '99999999999999999'
-            },
-            function(error, txHash) {
-                if (error) {
-                    myFuture.throw("An unknown error occured");
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/cancelOrder`, {
+            "content": JSON.stringify({
+                orderId: orderId
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
                 } else {
                     myFuture.return();
                 }
             }
-        )
+        })
 
         return myFuture.wait();
     },
@@ -1636,19 +1598,25 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
 
-        var streamsContract = web3.eth.contract(smartContracts.streams.abi);
-        var streams = streamsContract.at(network.streamsContractAddress);
-
-        streams.createStream.sendTransaction(name, {
-            from: issuer,
-            gas: '99999999999999999'
-        }, function(error, txnHash) {
-            if (!error) {
-                myFuture.return();
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/createStream`, {
+            "content": JSON.stringify({
+                streamName: name,
+                fromAccount: issuer
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
             } else {
-                myFuture.throw("An unknown error occured");
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
             }
         })
 
@@ -1700,54 +1668,6 @@ spec:
         */
 
         return myFuture.wait();
-    },
-    "subscribeStream": function(instanceId, name) {
-        var network = Networks.find({
-            instanceId: instanceId
-        }).fetch()[0];
-
-        Streams.update({
-            instanceId: instanceId,
-            streamName: name
-        }, {
-            $set: {
-                subscribed: true
-            }
-        })
-    },
-    "unsubscribeStream": function(instanceId, name) {
-        var network = Networks.find({
-            instanceId: instanceId
-        }).fetch()[0];
-
-        Streams.update({
-            instanceId: instanceId,
-            streamName: name
-        }, {
-            $set: {
-                subscribed: false
-            }
-        })
-    },
-    "subscribeAssetType": function(instanceId, name) {
-        AssetTypes.update({
-            instanceId: instanceId,
-            assetName: name
-        }, {
-            $set: {
-                subscribed: true
-            }
-        })
-    },
-    "unsubscribeAssetType": function(instanceId, name) {
-        AssetTypes.update({
-            instanceId: instanceId,
-            assetName: name
-        }, {
-            $set: {
-                subscribed: false
-            }
-        })
     },
     "updateAssetTypeCreatedNotifyURL": function(instanceId, url) {
         var network = Networks.find({
