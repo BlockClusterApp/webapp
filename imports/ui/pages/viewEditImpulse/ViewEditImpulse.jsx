@@ -129,16 +129,14 @@ class ViewEditImpulse extends Component {
 									{
 										(() => {
 											if (this.props.network.length === 1) {
-												if(this.props.network[0].impulseStatus) {
-													return (
-														<div className="form-group row">
-															<label className="col-md-3 control-label">Status</label>
-															<div className="col-md-9">
-																<span className="value-valign-middle-status">{this.props.network.length === 1 ? ReactHtmlParser(helpers.convertStatusToTag(helpers.calculateNodeStatus(this.props.network[0].impulseStatus), helpers.firstLetterCapital(helpers.calculateNodeStatus(this.props.network[0].impulseStatus)))) : ""}</span>
-															</div>
+												return (
+													<div className="form-group row">
+														<label className="col-md-3 control-label">Status</label>
+														<div className="col-md-9">
+															<span className="value-valign-middle-status">{this.props.network.length === 1 ? ReactHtmlParser(helpers.convertStatusToTag(helpers.calculateNodeStatus(this.props.network[0].impulseStatus), helpers.firstLetterCapital(helpers.calculateNodeStatus(this.props.network[0].impulseStatus)))) : ""}</span>
 														</div>
-													)
-												}
+													</div>
+												)
 											}
 										})()
 									}
