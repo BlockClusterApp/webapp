@@ -14,7 +14,7 @@ export default class CardVerification extends React.Component {
   }
 
   checkCardStatus = () => {
-    Meteor.call("userCardVerificationStatus", (err, reply) => {
+    Meteor.call("shouldShowCreditCardVerification", (err, reply) => {
       if(err){
         return console.log(err);
       }

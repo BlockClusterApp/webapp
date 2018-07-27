@@ -138,6 +138,8 @@ function getNodeConfig(networkConfig, userId) {
       _id: config._id
     }).fetch()[0];
     if(_config) {
+      nodeConfig.configId = _config._id;
+      nodeConfig.networkConfig = _config;
       finalNetworkConfig = _config;
       if(_config.isDiskChangeable) {
         finalNetworkConfig = diskSpace || _config.diskSpace;
@@ -223,8 +225,10 @@ Meteor.methods({
             "totalConstellationNodes": [],
             "locationCode": locationCode,
             voucherId: nodeConfig.voucherId,
+            networkConfigId: nodeConfig.configId,
             metadata: {
-              voucher: nodeConfig.voucher
+              voucher: nodeConfig.voucher,
+              networkConfig: nodeConfig.networkConfig
             },
             networkConfig: {cpu: nodeConfig.cpu, ram: nodeConfig.ram, disk: nodeConfig.disk}
         }, (error, id) => {
@@ -729,6 +733,11 @@ Meteor.methods({
             "genesisBlock": genesisFileContent,
             "locationCode": locationCode,
             voucherId: nodeConfig.voucherId,
+            networkConfigId: nodeConfig.configId,
+            metadata: {
+              voucher: nodeConfig.voucher,
+              networkConfig: nodeConfig.networkConfig
+            },
             networkConfig: {cpu: nodeConfig.cpu, ram: nodeConfig.ram, disk: nodeConfig.disk},
             "impulseURL": impulseURL
         }, function(error, id) {

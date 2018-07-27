@@ -41,7 +41,6 @@ class BillingDashboard extends Component {
   updateBilling() {
     const date = new Date();
     Meteor.call('fetchBilling', Meteor.userId(), date.getMonth(), date.getFullYear(), (err, reply) => {
-      console.log("Reply fetch billing", reply);
       this.setState({
         bill: reply,
         loading: false
@@ -59,6 +58,13 @@ class BillingDashboard extends Component {
     return locationConfig.locationName;
   };
 
+  convertCostToTag = (label) => {
+    if(!label){
+      return null;
+    }
+    return <span class="label label-info">{label}</span>;
+}
+
   render() {
 
     let billView = undefined;
@@ -71,7 +77,7 @@ class BillingDashboard extends Component {
             <td>{network.instanceId}</td>
             <td>{network.rate}</td>
             <td>{network.runtime} hrs</td>
-            <td>$ {network.cost}</td>
+            <td>$ {network.cost} {this.convertCostToTag(network.label)} </td>
           </tr>
         )
       });
@@ -88,14 +94,15 @@ class BillingDashboard extends Component {
                 </div>
                 <div className="card-block">
                   <div className="table-responsive">
+                    <p>Free micro node usage: {this.state.bill.totalFreeMicroHours ? `${this.state.bill.totalFreeMicroHours.hours}:${this.state.bill.totalFreeMicroHours.minutes%60} `: '0'} / {1490 * 2}</p>
                     <table className="table table-hover" id="basicTable">
                       <thead>
                         <tr>
-                          <th style={{ width: "20%" }}>Network Name</th>
+                          <th style={{ width: "18%" }}>Network Name</th>
                           <th style={{ width: "15%" }}>Instance ID</th>
                           <th style={{ width: "15%" }}>Rate</th>
                           <th style={{ width: "18%" }}>Runtime</th>
-                          <th style={{ width: "17%" }}>Cost</th>
+                          <th style={{ width: "19%" }}>Cost</th>
                         </tr>
                       </thead>
                       <tbody>
