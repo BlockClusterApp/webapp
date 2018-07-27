@@ -196,6 +196,17 @@ function getContainerResourceLimits({cpu, ram }){
 Meteor.methods({
     "createNetwork": function(networkName,  locationCode, networkConfig, userId) {
         var myFuture = new Future();
+
+        const microNodes = Networks.find({
+          user: Meteor.userId(),
+          active: true,
+          "networkConfig.cpu": 500
+        }).fetch();
+
+        if(microNodes.length >= 2) {
+          throw new Meteor.Error('Can have maximum of 2 micro nodes only');
+        }
+
         var instanceId = helpers.instanceIDGenerate();
 
         if(!locationCode){
@@ -738,6 +749,17 @@ Meteor.methods({
         var instanceId = helpers.instanceIDGenerate();
 
 
+        const microNodes = Networks.find({
+          user: Meteor.userId(),
+          active: true,
+          "networkConfig.cpu": 500
+        }).fetch();
+
+        if(microNodes.length >= 2) {
+          throw new Meteor.Error('Can have maximum of 2 micro nodes only');
+        }
+
+
         locationCode = locationCode || "us-west-2";
 
         function deleteNetwork(id) {
@@ -858,12 +880,7 @@ spec:
         - name: streamsContractAddress
           value: ${streamsContractAddress}
         - name: IMPULSE_URL
-         value: ${impulseURL}
-        volumeMounts:
-          - name: dynamo-dir
-            mountPath: /dynamo/node
-          - name: dynamo-dir
-            mountPath: /dynamo/cnode
+          value: ${impulseURL}
         resources:
           requests:
             memory: "${nodeConfig.ram}Gi"
@@ -929,11 +946,6 @@ spec:
           limits:
             memory: "${nodeConfig.ram}Gi"
             cpu: "${nodeConfig.cpu}m"
-        volumeMounts:
-          - name: dynamo-dir
-            mountPath: /dynamo/node
-          - name: dynamo-dir
-            mountPath: /dynamo/cnode
       volumes:
         - name: dynamo-dir
           persistentVolumeClaim:
@@ -964,6 +976,7 @@ spec:
                     "Content-Type": "application/yaml"
                   }
                 });
+
                 HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${Config.namespace}/deployments`, {
                     "content": content,
                     "headers": {

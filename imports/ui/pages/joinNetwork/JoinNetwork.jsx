@@ -47,6 +47,17 @@ class JoinNetwork extends Component {
         })
     }
 
+    componentDidMount(){
+      Meteor.call('nodeCount', (err, res) => {
+        if(!err){
+            this.setState({
+              microNodesViolated: res.micro > 2,
+              nodeCount: res
+            });
+        }
+      });
+    }
+
     deleteENodeURL = (index) => {
         if(this.state.totalENodes.length > 1) {
             this.state.totalENodes.splice(index, 1);
@@ -82,6 +93,21 @@ class JoinNetwork extends Component {
 
     onJoinSubmit = (e) => {
         e.preventDefault()
+
+        const isVoucherMicro = (this.config.voucher &&  this.config.voucher.networkConfig && this.config.voucher.networkConfig.cpu === 0.5);
+        const isMicro = (this.config && this.config.config && (this.config.config.cpu === 0.5 || this.config.config.name && this.config.config.name.toLowerCase() === 'micro')) || isVoucherMicro;
+        if(this.state.nodeCount.micro >= 2 && isMicro){
+          return this.setState({
+            formSubmitError: 'You can have at max only 2 micro nodes at a time',
+          });
+        }
+
+        if(!this.networkName.value){
+          return
+          this.setState({
+            formSubmitError: 'Network name is required'
+          });
+        }
 
         let file = this.genesisFile.files[0];
         let reader = new FileReader();
