@@ -226,7 +226,7 @@ Meteor.methods({
                 console.log(error);
                 myFuture.throw("An unknown error occured");
             } else {
-                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${Config.namespace}/persistentvolumeclaims`, {
+                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims`, {
                   content: JSON.stringify({
                     apiVersion: "v1",
                     kind: "PersistentVolumeClaim",
@@ -619,7 +619,6 @@ Meteor.methods({
         try{
           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + id, kubeCallback);
           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + id, kubeCallback);
-          HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + id, kubeCallback);
           HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(err, response) {
               if(err) return console.log(err);
               HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name, kubeCallback);
@@ -841,7 +840,7 @@ spec:
       imagePullSecrets:
       - name: regsecret`;
                 }
-                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${Config.namespace}/persistentvolumeclaims`, {
+                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims`, {
                   content: JSON.stringify({
                     apiVersion: "v1",
                     kind: "PersistentVolumeClaim",
