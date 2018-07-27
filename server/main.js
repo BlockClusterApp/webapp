@@ -162,6 +162,31 @@ function getNodeConfig(networkConfig, userId) {
   return nodeConfig;
 }
 
+function getContainerResourceLimits({cpu, ram }){
+  const percentage = {
+    mongo: 0.1,
+    impulse: 0.25,
+    dynamo: 0.65
+  }
+
+  const config = {
+    mongo: {
+      cpu: Math.floor(cpu * percentage.mongo),
+      ram: Math.floor(ram * percentage.mongo * 1000) / 1000
+    },
+    dynamo: {
+      cpu: Math.floor(cpu * percentage.dynamo),
+      ram: Math.floor(ram * percentage.dynamo * 1000) / 1000
+    },
+    impulse: {
+      cpu: Math.floor(cpu * percentage.impulse),
+      ram: Math.floor(ram * percentage.impulse * 1000) / 1000
+    }
+  };
+
+  return config;
+}
+
 Meteor.methods({
     "createNetwork": function(networkName,  locationCode, networkConfig, userId) {
         var myFuture = new Future();
@@ -212,6 +237,8 @@ Meteor.methods({
         if(!nodeConfig.cpu) {
           throw new Meteor.Error("Invalid Network Configuration");
         }
+
+        const resourceConfig = getContainerResourceLimits({cpu: nodeConfig.cpu, ram: nodeConfig.ram});
 
         Networks.insert({
             "instanceId": instanceId,
@@ -290,6 +317,16 @@ Meteor.methods({
                                                       "containerPort":27017
                                                   }
                                               ],
+                                              "resources": {
+                                                "requests": {
+                                                  "cpu": `${resourceConfig.mongo.cpu}m`,
+                                                  "memory": `${resourceConfig.mongo.ram}Gi`
+                                                },
+                                                "limits": {
+                                                  "cpu": `${resourceConfig.mongo.cpu}m`,
+                                                  "memory": `${resourceConfig.mongo.ram}Gi`
+                                                }
+                                              },
                                               "volumeMounts": [
                                                 {
                                                   "name": "dynamo-dir",
@@ -300,11 +337,8 @@ Meteor.methods({
                                           {
                                               "name":"dynamo",
                                               "image":`402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}`,
-                                              "command":[
-                                                  "/bin/bash",
-                                                  "-c",
-                                                  "./setup.sh"
-                                              ],
+                                              "tty": true,
+                                              "stdin": true,
                                               "env":[
                                                   {
                                                       "name": "instanceId",
@@ -334,16 +368,16 @@ Meteor.methods({
                                                       "containerPort":6382
                                                   }
                                               ],
-                                              "volumeMounts": [
-                                                {
-                                                  "name": "dynamo-dir",
-                                                  "mountPath": "/dynamo/node"
+                                              "resources": {
+                                                "requests": {
+                                                  "cpu": `${resourceConfig.dynamo.cpu}m`,
+                                                  "memory": `${resourceConfig.dynamo.ram}Gi`
                                                 },
-                                                {
-                                                  "name": "dynamo-dir",
-                                                  "mountPath": "/dynamo/cnode"
+                                                "limits": {
+                                                  "cpu": `${resourceConfig.dynamo.cpu}m`,
+                                                  "memory": `${resourceConfig.dynamo.ram}Gi`
                                                 }
-                                              ],
+                                              },
                                               "lifecycle": {
                                                   "postStart": {
                                                       "exec": {
@@ -382,6 +416,16 @@ Meteor.methods({
                                                     "value": `${Config.workerNodeIP(locationCode)}`
                                                 }
                                             ],
+                                            "resources": {
+                                              "requests": {
+                                                "cpu": `${resourceConfig.impulse.cpu}m`,
+                                                "memory": `${resourceConfig.impulse.ram}Gi`
+                                              },
+                                              "limits": {
+                                                "cpu": `${resourceConfig.impulse.cpu}m`,
+                                                "memory": `${resourceConfig.impulse.ram}Gi`
+                                              }
+                                            },
                                             "lifecycle": {
                                                 "postStart": {
                                                     "exec": {
@@ -724,6 +768,8 @@ Meteor.methods({
           throw new Meteor.Error("Invalid Network Configuration");
         }
 
+        const resourceConfig = getContainerResourceLimits({cpu: nodeConfig.cpu, ram: nodeConfig.ram});
+
         Networks.insert({
             "instanceId": instanceId,
             "name": networkName,
@@ -803,6 +849,13 @@ spec:
             mountPath: /dynamo/node
           - name: dynamo-dir
             mountPath: /dynamo/cnode
+        resources:
+          requests:
+            memory: "${nodeConfig.ram}Gi"
+            cpu: "${nodeConfig.cpu}m"
+          limits:
+            memory: "${nodeConfig.ram}Gi"
+            cpu: "${nodeConfig.cpu}m"
       volumes:
         - name: dynamo-dir
           persistentVolumeClaim:
@@ -854,9 +907,16 @@ spec:
           value: ${streamsContractAddress}
         - name: IMPULSE_URL
           value: ${impulseURL}
+        resources:
+          requests:
+            memory: "${nodeConfig.ram}Gi"
+            cpu: "${nodeConfig.cpu}m"
+          limits:
+            memory: "${nodeConfig.ram}Gi"
+            cpu: "${nodeConfig.cpu}m"
         volumeMounts:
           - name: dynamo-dir
-            mountPath: /dynamo-node
+            mountPath: /dynamo/node
           - name: dynamo-dir
             mountPath: /dynamo/cnode
       volumes:
