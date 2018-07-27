@@ -195,12 +195,12 @@ class SubscribeStream extends Component {
 
 export default withTracker((props) => {
     return {
-        network: Networks.find({instanceId: props.match.params.id}).fetch(),
-        networks: Networks.find({}).fetch(),
+        network: Networks.find({instanceId: props.match.params.id, active: true}).fetch(),
+        networks: Networks.find({active: true}).fetch(),
         streams: Streams.find({instanceId: props.match.params.id}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
-        		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
+        		if(Networks.find({instanceId: props.match.params.id, active: true}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
         	}

@@ -2,11 +2,18 @@ require("../imports/startup/server/")
 require('../imports/api/emails/email-validator')
 require('../imports/api/emails/forgot-password')
 require('../imports/api/locations');
+require('../imports/modules/migrations/server');
+require('../imports/api');
+
+console.log("env", process.env.NODE_ENV);
 
 import UserFunctions from '../imports/api/server-functions/user-functions';
 import {
     Networks
 } from "../imports/collections/networks/networks.js"
+import NetworkFunctions from '../imports/api/network/networks';
+import Vouchers from '../imports/collections/vouchers/voucher';
+import NetworkConfiguration from '../imports/collections/network-configuration/network-configuration';
 import {
     SoloAssets
 } from "../imports/collections/soloAssets/soloAssets.js"
@@ -96,9 +103,110 @@ Accounts.onCreateUser(function(options, user) {
     return user;
 });
 
+
+function getNodeConfig(networkConfig, userId) {
+  let nodeConfig = {};
+  let finalNetworkConfig = undefined;
+  const { voucher, config, diskSpace } = networkConfig;
+  if(voucher) {
+    const _voucher = Vouchers.find({
+      _id: voucher._id
+    }).fetch()[0];
+
+    if(_voucher) {
+      nodeConfig.voucherId = _voucher._id;
+      nodeConfig.voucher = _voucher;
+      finalNetworkConfig = _voucher.networkConfig;
+      if(_voucher.isDiskChangeable) {
+        finalNetworkConfig = diskSpace || _voucher.diskSpace;
+      }
+    }
+
+    Vouchers.update({
+      _id: voucher._id
+    }, {
+      $set: {
+        claimedBy: userId,
+        claimedOn: new Date(),
+        claimed: true
+      }
+    });
+  }
+
+  if(!finalNetworkConfig && config) {
+    const _config = NetworkConfiguration.find({
+      _id: config._id
+    }).fetch()[0];
+    if(_config) {
+      nodeConfig.configId = _config._id;
+      nodeConfig.networkConfig = _config;
+      finalNetworkConfig = _config;
+      if(_config.isDiskChangeable) {
+        finalNetworkConfig = diskSpace || _config.diskSpace;
+      }
+    }
+  }
+
+  if(!finalNetworkConfig){
+    return nodeConfig;
+  }
+
+   nodeConfig = {
+    ...nodeConfig,
+    cpu: finalNetworkConfig.cpu * 1000,
+    ram: finalNetworkConfig.ram,
+    disk: finalNetworkConfig.disk
+  };
+
+
+  return nodeConfig;
+}
+
+function getContainerResourceLimits({cpu, ram }){
+  const CpuPercentage = {
+    mongo: 0.15,
+    impulse: 0.20,
+    dynamo: 0.65
+  }
+
+  const RamPercentage = {
+    mongo: 0.05,
+    impulse: 0.15,
+    dynamo: 0.8
+  }
+
+  const config = {
+    mongo: {
+      cpu: Math.floor(cpu * CpuPercentage.mongo),
+      ram: Math.floor(ram * RamPercentage.mongo * 1000) / 1000
+    },
+    dynamo: {
+      cpu: Math.floor(cpu * CpuPercentage.dynamo),
+      ram: Math.floor(ram * RamPercentage.dynamo * 1000) / 1000
+    },
+    impulse: {
+      cpu: Math.floor(cpu * CpuPercentage.impulse),
+      ram: Math.floor(ram * RamPercentage.impulse * 1000) / 1000
+    }
+  };
+
+  return config;
+}
+
 Meteor.methods({
-    "createNetwork": function(networkName,  locationCode, userId) {
+    "createNetwork": function(networkName,  locationCode, networkConfig, userId) {
         var myFuture = new Future();
+
+        const microNodes = Networks.find({
+          user: Meteor.userId(),
+          active: true,
+          "networkConfig.cpu": 500
+        }).fetch();
+
+        if(microNodes.length >= 2) {
+          throw new Meteor.Error('Can have maximum of 2 micro nodes only');
+        }
+
         var instanceId = helpers.instanceIDGenerate();
 
         if(!locationCode){
@@ -106,6 +214,16 @@ Meteor.methods({
         }
 
         function deleteNetwork(id) {
+
+            Networks.update({
+                _id: id
+            }, {
+              $set: {
+                active: false,
+                deletedAt: new Date().getTime()
+              }
+            });
+            NetworkFunctions.cleanNetworkDependencies(id);
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, function(error, response) {});
             HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + instanceId), function(error, response) {
@@ -118,6 +236,7 @@ Meteor.methods({
                                         HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
                                             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {})
                                             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + instanceId, function(error, response) {})
+                                            HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${instanceId}-pvc`, function(error, response) {});
                                             BCAccounts.remove({
                                                 instanceId: id
                                             })
@@ -128,12 +247,16 @@ Meteor.methods({
                         })
                     }
                 }
-            })
-
-            Networks.remove({
-                _id: id
             });
+
         }
+
+        const nodeConfig = getNodeConfig(networkConfig);
+        if(!nodeConfig.cpu) {
+          throw new Meteor.Error("Invalid Network Configuration");
+        }
+
+        const resourceConfig = getContainerResourceLimits({cpu: nodeConfig.cpu, ram: nodeConfig.ram});
 
         Networks.insert({
             "instanceId": instanceId,
@@ -145,99 +268,159 @@ Meteor.methods({
             "createdOn": Date.now(),
             "totalENodes": [],
             "totalConstellationNodes": [],
-            "locationCode": locationCode
+            "locationCode": locationCode,
+            voucherId: nodeConfig.voucherId,
+            networkConfigId: nodeConfig.configId,
+            metadata: {
+              voucher: nodeConfig.voucher,
+              networkConfig: nodeConfig.networkConfig
+            },
+            networkConfig: {cpu: nodeConfig.cpu, ram: nodeConfig.ram, disk: nodeConfig.disk}
         }, (error, id) => {
             if (error) {
                 console.log(error);
                 myFuture.throw("An unknown error occured");
             } else {
-                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${Config.namespace}/deployments`, {
-                    "content": JSON.stringify({
-                        "apiVersion":"apps/v1beta1",
-                        "kind":"Deployment",
-                        "metadata":{
-                            "name": instanceId
-                        },
-                        "spec":{
-                            "replicas":1,
-                            "revisionHistoryLimit":10,
-                            "template":{
-                                "metadata":{
-                                    "labels":{
-                                        "app":"dynamo-node-" + instanceId
-                                    }
-                                },
-                                "spec":{
-                                    "containers":[
-                                        {
-                                            "name":"mongo",
-                                            "image":`mongo`,
-                                            "imagePullPolicy":"IfNotPresent",
-                                            "ports":[
-                                                {
-                                                    "containerPort":27017
+                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims`, {
+                  content: JSON.stringify({
+                    apiVersion: "v1",
+                    kind: "PersistentVolumeClaim",
+                    metadata: {
+                      name: `${instanceId}-pvc`
+                    },
+                    spec:{
+                      accessModes: [
+                        "ReadWriteOnce"
+                      ],
+                      resources: {
+                        requests: {
+                          storage: `${nodeConfig.disk}Gi`
+                        }
+                      },
+                      storageClassName: "gp2-storage-class"
+                    }
+                  }),
+                  headers: {
+                      "Content-Type": "application/json"
+                  }
+                }, (err, response) => {
+                  if(err){
+                    console.log(err);
+                    throw new Meteor.Error("Error allocating storage");
+                  }
+                  HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${Config.namespace}/deployments`, {
+                      "content": JSON.stringify({
+                          "apiVersion":"apps/v1beta1",
+                          "kind":"Deployment",
+                          "metadata":{
+                              "name": instanceId
+                          },
+                          "spec":{
+                              "replicas":1,
+                              "revisionHistoryLimit":10,
+                              "template":{
+                                  "metadata":{
+                                      "labels":{
+                                          "app":"dynamo-node-" + instanceId
+                                      }
+                                  },
+                                  "spec":{
+                                      "containers":[
+                                          {
+                                              "name":"mongo",
+                                              "image":`mongo`,
+                                              "imagePullPolicy":"IfNotPresent",
+                                              "ports":[
+                                                  {
+                                                      "containerPort":27017
+                                                  }
+                                              ],
+                                              "resources": {
+                                                "requests": {
+                                                  "cpu": `${resourceConfig.mongo.cpu}m`,
+                                                  "memory": `${resourceConfig.mongo.ram}Gi`
+                                                },
+                                                "limits": {
+                                                  "cpu": `${resourceConfig.mongo.cpu + 50}m`,
+                                                  "memory": `${resourceConfig.mongo.ram + 0.1}Gi`
                                                 }
-                                            ]
-                                        },
-                                        {
-                                            "name":"dynamo",
-                                            "image":`402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo${['staging', 'production'].includes(process.env.NODE_ENV) ? '' : '-test'}`,
-                                            "command":[
+                                              },
+                                              "volumeMounts": [
+                                                {
+                                                  "name": "dynamo-dir",
+                                                  "mountPath": "/data"
+                                                }
+                                              ],
+                                          },
+                                          {
+                                              "name":"dynamo",
+                                              "image":`402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}`,
+                                              "command":[
                                                 "/bin/bash",
                                                 "-c",
                                                 "./setup.sh"
-                                            ],
-                                            "env":[
-                                                {
-                                                    "name": "instanceId",
-                                                    "value": instanceId
+                                              ],
+                                              "env":[
+                                                  {
+                                                      "name": "instanceId",
+                                                      "value": instanceId
+                                                  },
+                                                  {
+                                                      "name": "MONGO_URL",
+                                                      "value": `${process.env.MONGO_URL}`
+                                                  },
+                                                  {
+                                                      "name": "WORKER_NODE_IP",
+                                                      "value": `${Config.workerNodeIP(locationCode)}`
+                                                  }
+                                              ],
+                                              "imagePullPolicy":"Always",
+                                              "ports":[
+                                                  {
+                                                      "containerPort":8545
+                                                  },
+                                                  {
+                                                      "containerPort":23000
+                                                  },
+                                                  {
+                                                      "containerPort":9001
+                                                  },
+                                                  {
+                                                      "containerPort":6382
+                                                  }
+                                              ],
+                                              "resources": {
+                                                "requests": {
+                                                  "cpu": `${resourceConfig.dynamo.cpu}m`,
+                                                  "memory": `${resourceConfig.dynamo.ram}Gi`
                                                 },
-                                                {
-                                                    "name": "MONGO_URL",
-                                                    "value": `${process.env.MONGO_URL}`
-                                                },
-                                                {
-                                                    "name": "WORKER_NODE_IP",
-                                                    "value": `${Config.workerNodeIP(locationCode)}`
+                                                "limits": {
+                                                  "cpu": `${resourceConfig.dynamo.cpu + 100}m`,
+                                                  "memory": `${resourceConfig.dynamo.ram + 0.3}Gi`
                                                 }
-                                            ],
-                                            "imagePullPolicy":"Always",
-                                            "ports":[
-                                                {
-                                                    "containerPort":8545
-                                                },
-                                                {
-                                                    "containerPort":23000
-                                                },
-                                                {
-                                                    "containerPort":9001
-                                                },
-                                                {
-                                                    "containerPort":6382
-                                                }
-                                            ],
-                                            "lifecycle": {
-                                                "postStart": {
-                                                    "exec": {
-                                                        "command": [
-                                                            "/bin/bash",
-                                                            "-c",
-                                                            "node ./apis/postStart.js"
-                                                        ]
-                                                    }
-                                                },
-                                                "preStop": {
-                                                    "exec": {
-                                                        "command": [
-                                                            "/bin/bash",
-                                                            "-c",
-                                                            "node ./apis/preStop.js"
-                                                        ]
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        {
+                                              },
+                                              "lifecycle": {
+                                                  "postStart": {
+                                                      "exec": {
+                                                          "command": [
+                                                              "/bin/bash",
+                                                              "-c",
+                                                              "node ./apis/postStart.js"
+                                                          ]
+                                                      }
+                                                  },
+                                                  "preStop": {
+                                                      "exec": {
+                                                          "command": [
+                                                              "/bin/bash",
+                                                              "-c",
+                                                              "node ./apis/preStop.js"
+                                                          ]
+                                                      }
+                                                  }
+                                              }
+                                          },
+                                          {
                                             "name":"impulse",
                                             "image":`402432300121.dkr.ecr.us-west-2.amazonaws.com/impulse:${process.env.NODE_ENV || "dev"}`,
                                             "env":[
@@ -254,6 +437,16 @@ Meteor.methods({
                                                     "value": `${Config.workerNodeIP(locationCode)}`
                                                 }
                                             ],
+                                            "resources": {
+                                              "requests": {
+                                                "cpu": `${resourceConfig.impulse.cpu}m`,
+                                                "memory": `${resourceConfig.impulse.ram}Gi`
+                                              },
+                                              "limits": {
+                                                "cpu": `${resourceConfig.impulse.cpu + 100}m`,
+                                                "memory": `${resourceConfig.impulse.ram + 0.2}Gi`
+                                              }
+                                            },
                                             "lifecycle": {
                                                 "postStart": {
                                                     "exec": {
@@ -281,12 +474,20 @@ Meteor.methods({
                                                 }
                                             ]
                                         }
-                                    ],
-                                    "imagePullSecrets":[
+                                      ],
+                                      "volumes": [
+                                        {
+                                          "name": "dynamo-dir",
+                                          "persistentVolumeClaim": {
+                                            "claimName": `${instanceId}-pvc`
+                                          }
+                                        }
+                                      ],
+                                      "imagePullSecrets":[
                                         {
                                             "name":"regsecret"
                                         }
-                                    ]
+                                      ]
                                 }
                             }
                         }
@@ -367,8 +568,7 @@ Meteor.methods({
                                                 realImpulsePort: 7558,
                                                 impulseURL: "http://" + Config.workerNodeIP(locationCode) + ":" + response.data.spec.ports[4].nodePort
                                             }
-                                        })
-
+                                        });
                                         let encryptedPassword = md5(instanceId);
                                         let auth = base64.encode(utf8.encode(instanceId + ":" + encryptedPassword))
                                         HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets`, {
@@ -459,7 +659,7 @@ Meteor.methods({
                                                             myFuture.return(instanceId);
                                                         }
                                                     })
-                                            }
+                                                  }
                                         })
                                     }
                                 })
@@ -467,9 +667,9 @@ Meteor.methods({
                         })
                     }
                 });
-            }
-        })
-
+            });
+          }
+        });
         return myFuture.wait();
     },
     "deleteNetwork": function(id) {
@@ -485,113 +685,93 @@ Meteor.methods({
             instanceId: id
         }).fetch()[0];
         const locationCode = network.locationCode;
-        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + id, function(error, response) {
-            if (error) {
-                console.log(error);
-                myFuture.throw("An unknown error occured");
-            } else {
-                HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + id, function(error, response) {
-                    if (error) {
-                        console.log(error);
-                        myFuture.throw("An unknown error occured");
-                    } else {
-                        HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(error, response) {
-                            if (error) {
-                                console.log(error);
-                                myFuture.throw("An unknown error occured");
-                            } else {
-                                HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
-                                    if (error) {
-                                        console.log(error);
-                                        myFuture.throw("An unknown error occured");
-                                    } else {
-                                        HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(error, response) {
-                                            if (error) {
-                                                console.log(error);
-                                                myFuture.throw("An unknown error occured");
-                                            } else {
-                                                HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
-                                                    if (error) {
-                                                        console.log(error);
-                                                        myFuture.throw("An unknown error occured");
-                                                    } else {
-                                                        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + id, function(error, response) {
-                                                            if (error) {
-                                                                console.log(error);
-                                                                myFuture.throw("An unknown error occured while deleting secrets");
-                                                            } else {
-                                                                HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + id, function(error, response) {
-                                                                    if (error) {
-                                                                        console.log(error);
-                                                                        myFuture.throw("An unknown error occured while deleting ingresses");
-                                                                    } else {
-                                                                        Networks.remove({
-                                                                            instanceId: id
-                                                                        });
-                                                                        Orders.remove({
-                                                                            instanceId: id
-                                                                        });
-                                                                        SoloAssets.remove({
-                                                                            instanceId: id
-                                                                        });
-                                                                        StreamsItems.remove({
-                                                                            instanceId: id
-                                                                        });
-                                                                        AssetTypes.remove({
-                                                                            instanceId: id
-                                                                        })
-                                                                        Secrets.remove({
-                                                                            instanceId: id
-                                                                        });
 
-                                                                        BCAccounts.remove({
-                                                                            instanceId: id
-                                                                        })
+        Networks.update({
+          instanceId: id
+        }, {
+          $set: {
+            active: false,
+            deletedAt: new Date().getTime()
+          }
+        });
 
-                                                                        EncryptionKeys.remove({
-                                                                            instanceId: id
-                                                                        })
+        NetworkFunctions.cleanNetworkDependencies(id);
 
-                                                                        DerivationKeys.remove({
-                                                                            instanceId: id
-                                                                        })
+        try{
+          HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + id, kubeCallback);
+          HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + id, kubeCallback);
+          HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(err, response) {
+              if(err) return console.log(err);
+              HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name, () => {
+                HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(err, response) {
+                  if(err) return console.log(err);
+                  HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, function(err, res) {
+                    HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${id}-pvc`, function(error, response) {});
+                  });
+              });
+            });
+          });
 
-                                                                        EncryptedObjects.remove({
-                                                                            instanceId: id
-                                                                        })
 
-                                                                        SoloAssetAudit.remove({
-                                                                            instanceId: id
-                                                                        })
 
-                                                                        myFuture.return();
-                                                                    }
-                                                                })
-                                                            }
-                                                        })
-                                                    }
-                                                })
-                                            }
-                                        })
-                                    }
-                                })
-                            }
-                        })
-                    }
-                })
-            }
+          HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + id, kubeCallback);
+          HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + id, kubeCallback);
+        }catch(err){
+          console.log("Kube delete error ", err);
+        }
+        Orders.remove({
+            instanceId: id
+        });
+        SoloAssets.remove({
+            instanceId: id
+        });
+        StreamsItems.remove({
+            instanceId: id
+        });
+        AssetTypes.remove({
+            instanceId: id
         })
+        Secrets.remove({
+            instanceId: id
+        });
+
+        BCAccounts.remove({
+            instanceId: id
+        })
+
+        myFuture.return();
+
 
         return myFuture.wait();
     },
-    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, impulseURL, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode, userId) {
+    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, impulseURL, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode, networkConfig, userId) {
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
+
+
+        const microNodes = Networks.find({
+          user: Meteor.userId(),
+          active: true,
+          "networkConfig.cpu": 500
+        }).fetch();
+
+        if(microNodes.length >= 2) {
+          throw new Meteor.Error('Can have maximum of 2 micro nodes only');
+        }
 
 
         locationCode = locationCode || "us-west-2";
 
         function deleteNetwork(id) {
+            Networks.update({
+              _id: id
+            }, {
+              $set: {
+                active: false,
+                deletedAt: new Date().getTime()
+              }
+            });
+            NetworkFunctions.cleanNetworkDependencies(id);
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, function(error, response) {});
             HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + instanceId), function(error, response) {
@@ -602,7 +782,8 @@ Meteor.methods({
                                 if (!error) {
                                     if (JSON.parse(response.content).items.length > 0) {
                                         HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, function(error, response) {
-                                            HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {})
+                                          HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${instanceId}-pvc`, function(error, response) {});
+                                          HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {})
                                             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + instanceId, function(error, response) {})
                                             BCAccounts.remove({
                                                 instanceId: id
@@ -614,11 +795,17 @@ Meteor.methods({
                         })
                     }
                 }
-            })
-            Networks.remove({
-                _id: id
             });
+
+
         }
+        const nodeConfig = getNodeConfig(networkConfig);
+
+        if(!nodeConfig.cpu) {
+          throw new Meteor.Error("Invalid Network Configuration");
+        }
+
+        const resourceConfig = getContainerResourceLimits({cpu: nodeConfig.cpu, ram: nodeConfig.ram});
 
         Networks.insert({
             "instanceId": instanceId,
@@ -632,6 +819,13 @@ Meteor.methods({
             "totalConstellationNodes": totalConstellationNodes,
             "genesisBlock": genesisFileContent,
             "locationCode": locationCode,
+            voucherId: nodeConfig.voucherId,
+            networkConfigId: nodeConfig.configId,
+            metadata: {
+              voucher: nodeConfig.voucher,
+              networkConfig: nodeConfig.networkConfig
+            },
+            networkConfig: {cpu: nodeConfig.cpu, ram: nodeConfig.ram, disk: nodeConfig.disk},
             "impulseURL": impulseURL
         }, function(error, id) {
             if (error) {
@@ -657,7 +851,7 @@ spec:
     spec:
       containers:
       - name: dynamo
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo${['staging', 'production'].includes(process.env.NODE_ENV) ? '' : '-test'}
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}
         command: [ "/bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
         lifecycle:
           postStart:
@@ -687,6 +881,17 @@ spec:
           value: ${streamsContractAddress}
         - name: IMPULSE_URL
           value: ${impulseURL}
+        resources:
+          requests:
+            memory: "${nodeConfig.ram}Gi"
+            cpu: "${nodeConfig.cpu}m"
+          limits:
+            memory: "${nodeConfig.ram}Gi"
+            cpu: "${nodeConfig.cpu}m"
+      volumes:
+        - name: dynamo-dir
+          persistentVolumeClaim:
+            claimName: ${instanceId}-pvc
       imagePullSecrets:
       - name: regsecret`
                 } else {
@@ -704,7 +909,7 @@ spec:
     spec:
       containers:
       - name: dynamo
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo${['staging', 'production'].includes(process.env.NODE_ENV) ? '' : '-test'}
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}
         command: [ "/bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
         lifecycle:
           postStart:
@@ -734,9 +939,43 @@ spec:
           value: ${streamsContractAddress}
         - name: IMPULSE_URL
           value: ${impulseURL}
+        resources:
+          requests:
+            memory: "${nodeConfig.ram}Gi"
+            cpu: "${nodeConfig.cpu}m"
+          limits:
+            memory: "${nodeConfig.ram}Gi"
+            cpu: "${nodeConfig.cpu}m"
+      volumes:
+        - name: dynamo-dir
+          persistentVolumeClaim:
+            claimName: ${instanceId}-pvc
       imagePullSecrets:
       - name: regsecret`;
                 }
+                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims`, {
+                  content: JSON.stringify({
+                    apiVersion: "v1",
+                    kind: "PersistentVolumeClaim",
+                    metadata: {
+                      name: `${instanceId}-pvc`
+                    },
+                    spec:{
+                      accessModes: [
+                        "ReadWriteOnce"
+                      ],
+                      resources: {
+                        requests: {
+                          storage: `${nodeConfig.disk}Gi`
+                        }
+                      },
+                      storageClassName: "gp2-storage-class"
+                    }
+                  }),
+                  headers: {
+                    "Content-Type": "application/yaml"
+                  }
+                });
 
                 HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${Config.namespace}/deployments`, {
                     "content": content,
@@ -1733,7 +1972,8 @@ Meteor.startup(()=>{
 
 const LOCK_FILE_PATH = '/tmp/webapp.lock';
 function serverStartup(){
-    fs.writeFileSync(LOCK_FILE_PATH, `Server started at ${new Date()}`)
+    Migrations.migrateTo(3);
+    fs.writeFileSync(LOCK_FILE_PATH, `Server started at  ${new Date()}`)
 }
 
 function serverStop(){

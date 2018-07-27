@@ -33,9 +33,17 @@ class NetworksList extends Component {
 			this.setState({
 			  locations: res
 			});
-		  });
-    }
-    
+    });
+
+    Meteor.call('nodeCount', (err, res) => {
+      if(!err){
+        if(res.total <= 0){
+          this.props.history.push(`/app/createNetwork`);
+        }
+      }
+    });
+  }
+
 
 	getLocationName = (locationCode) => {
 		const locationConfig = this.state.locations.find(a => a.locationCode === locationCode);

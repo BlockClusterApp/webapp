@@ -2,8 +2,10 @@ import React, { Component } from "react";
 import { withTracker } from "meteor/react-meteor-data";
 import { UserInvitation } from "../../../collections/user-invitation";
 import helpers from "../../../modules/helpers";
-import LocationSelector from "../../components/LocationSelector/LocationSelectorSimple";
+import LocationSelector from "../../components/Selectors/LocationSelector";
+import NetworkConfigSelector from '../../components/Selectors/NetworkConfigSelector.jsx'
 import { withRouter } from "react-router-dom";
+import CardVerification from '../billing/components/CardVerification.jsx';
 
 import "./Invites.scss";
 
@@ -12,8 +14,12 @@ class Invites extends Component {
     super(props);
 
     this.inviteLocationMapping = {};
+    this.inviteConfigMapping = {};
     this.loading = {};
     this.state = {
+      showModal: false,
+      modalInvite: {},
+      modalInviteId: undefined,
       locations: [],
       userData: [],
       loading: {}
@@ -48,8 +54,26 @@ class Invites extends Component {
     this.inviteLocationMapping[inviteId] = location;
   };
 
-  acceptInvitation = inviteId => {
+  configChangeListener = (inviteId, config) => {
+    this.inviteConfigMapping[inviteId] = config;
+    this.setState({});
+  }
+
+  cardVerificationListener = (isVerified) => {
+    this.setState({
+      cardVerified: isVerified
+    });
+  }
+
+  acceptInvitation = (inviteId, invite, fromModal = false) => {
     const loading = this.state.loading;
+    if(!fromModal){
+      return this.setState({
+        showModal: true,
+        modalInvite: invite,
+        modalInviteId: inviteId
+      });
+    }
     loading[inviteId] = true;
     this.setState({
       loading
@@ -59,12 +83,14 @@ class Invites extends Component {
         "acceptInvitation",
         inviteId,
         this.inviteLocationMapping[inviteId] || "us-west-2",
+        this.inviteConfigMapping[inviteId],
         () => {
           this.loading[inviteId] = false;
           const loading = this.state.loading;
           loading[inviteId] = false;
           this.setState({
-            loading
+            loading,
+            showModal: false
           });
         }
       );
@@ -101,7 +127,7 @@ class Invites extends Component {
     return locationConfig.locationName;
   };
 
-  getActionStatus = (int, inviteId) => {
+  getActionStatus = (int, inviteId, invite) => {
     switch (int) {
       case 2:
         return (
@@ -124,7 +150,7 @@ class Invites extends Component {
             <button
               type="button"
               className="btn btn-success"
-              onClick={this.acceptInvitation.bind(this, inviteId)}
+              onClick={this.acceptInvitation.bind(this, inviteId, invite, false)}
               disabled={this.state.loading[inviteId] === true}
             >
               {this.state.loading[inviteId] === true ? (
@@ -247,6 +273,58 @@ class Invites extends Component {
   };
 
   render() {
+
+    let isButtonDisabled = this.state.loading[this.state.modalInviteId] === true;
+    let isVoucherAlertShown = false;
+    if(!this.state.cardVerified){
+      isButtonDisabled = true;
+      isVoucherAlertShown = true;
+    }
+    if(this.inviteConfigMapping[this.state.modalInviteId] && this.inviteConfigMapping[this.state.modalInviteId].voucher){
+      isButtonDisabled = false;
+      isVoucherAlertShown = false;
+    }else {
+      isVoucherAlertShown = true;
+    }
+    const Modal = this.state.showModal && (
+      <div id="myModal" className="modal fade" role="dialog">
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <button type="button" className="close" data-dismiss="modal" onClick={() => this.setState({showModal: false})}>&times;</button>
+              <h5 className="modal-title">Accept Invitation </h5>
+            </div>
+            <div className="modal-body">
+              <p>Sent by:&nbsp;<b>{this.state.modalInvite.metadata.inviteFrom.name}</b></p>
+              <p>Network Name:&nbsp;<b>{this.state.modalInvite.metadata.network.name}</b></p>
+
+              <p>Select Location to deploy</p>
+              <LocationSelector locationChangeListener={this.locationChangeListener.bind(this, this.state.modalInviteId)} />
+              <br />
+              <p>Select Node Configuration</p>
+              <NetworkConfigSelector configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)} />
+              {!isVoucherAlertShown? null : <CardVerification cardVerificationListener={this.cardVerificationListener}/>}
+            </div>
+            <div className="modal-footer">
+            <button
+              type="button"
+              className="btn btn-success"
+              onClick={this.acceptInvitation.bind(this, this.state.modalInviteId, this.state.modalInvite, true)}
+              disabled={isButtonDisabled}
+            >
+              {this.state.loading[this.state.modalInviteId] === true ? (
+                <i className="fa fa-spinner fa-spin" />
+              ) : (
+                <i className="fa fa-check" />
+              )}&nbsp;Accept
+            </button>&nbsp;<button type="button" className="btn btn-default" data-dismiss="modal" onClick={() => this.setState({showModal: false})}>Close</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
+
     return (
       <div className="content invite">
         <div className="m-t-20 container-fluid container-fixed-lg bg-white">
@@ -265,13 +343,13 @@ class Invites extends Component {
                           <th style={{ width: "25%" }}>Invite From</th>
                           <th style={{ width: "25%" }}>Network</th>
                           <th style={{ width: "%" }}>
-                            Select Location to deploy
+                            Action
                           </th>
                         </tr>
                       </thead>
                       <tbody>
                         {this.props.receivedInvitations
-                          .filter(item => item.invitationStatus !== 4)
+                          .filter(item => item.invitationStatus < 4)
                           .map((item, index) => {
                             const data = item.metadata;
                             return (
@@ -284,13 +362,14 @@ class Invites extends Component {
                                 <td>
                                   <div className="row">
                                     {item.invitationStatus === 1 ? (
-                                      <LocationSelector
-                                        style={{ width: "45%" }}
-                                        locationChangeListener={this.locationChangeListener.bind(
-                                          this,
-                                          item._id
-                                        )}
-                                      />
+                                      // <LocationSelector
+                                      //   style={{ width: "45%" }}
+                                      //   locationChangeListener={this.locationChangeListener.bind(
+                                      //     this,
+                                      //     item._id
+                                      //   )}
+                                      // />
+                                      undefined
                                     ) : (
                                       <input
                                         className="form-control"
@@ -305,7 +384,8 @@ class Invites extends Component {
                                     &nbsp;&nbsp;
                                     {this.getActionStatus(
                                       item.invitationStatus,
-                                      item._id
+                                      item._id,
+                                      item
                                     )}
                                   </div>
                                 </td>
@@ -338,7 +418,7 @@ class Invites extends Component {
                         </tr>
                       </thead>
                       <tbody>
-                        {this.props.sentInvitations.map((item, index) => {
+                        {this.props.sentInvitations.filter(item => item.invitationStatus < 5).map((item, index) => {
                           const data = item.metadata;
                           return (
                             <tr key={item._id}>
@@ -380,6 +460,7 @@ class Invites extends Component {
             </div>
           </div>
         </div>
+        {Modal}
       </div>
     );
   }

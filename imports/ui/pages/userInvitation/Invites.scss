@@ -10,7 +10,13 @@
 	}
 	.btn[disabled], .form-control[disabled] {
 		cursor: default;
-	}
+  }
+
+  .modal {
+    padding-top: 150px;
+    background: rgba(0,0,0,0.4);
+    display: block;
+  }
 }
 
 .badge-dummy{
@@ -19,4 +25,12 @@
 	padding-left: 0;
 	padding-right: 0;
 	width: 0;
+}
+
+.modal p {
+  color: #999;
+}
+
+.modal p b {
+  color: #222;
 }

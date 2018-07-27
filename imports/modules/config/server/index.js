@@ -75,5 +75,9 @@ module.exports = {
   RemoteConfig() {
     return RemoteConfig
   },
+  RazorPay: {
+    id: process.env.RAZORPAY_ID || defaults.razorpay.id,
+    secret: process.env.RAZORPAY_KEY || defaults.razorpay.secret
+  }
   // locationMapping
 };

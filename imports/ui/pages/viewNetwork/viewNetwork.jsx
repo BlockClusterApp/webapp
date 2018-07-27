@@ -263,11 +263,10 @@ class ViewNetwork extends Component {
 
 export default withTracker(function(props) {
     return {
-        network: Networks.find({instanceId: props.match.params.id}).fetch(),
-        workerNodeIP: Config.workerNodeIP,
+        network: Networks.find({instanceId: props.match.params.id, active: true}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
-        		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
+        		if(Networks.find({instanceId: props.match.params.id, active: true}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
         	}
