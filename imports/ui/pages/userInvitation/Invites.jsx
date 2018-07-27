@@ -349,7 +349,7 @@ class Invites extends Component {
                       </thead>
                       <tbody>
                         {this.props.receivedInvitations
-                          .filter(item => item.invitationStatus !== 4)
+                          .filter(item => item.invitationStatus < 4)
                           .map((item, index) => {
                             const data = item.metadata;
                             return (
@@ -418,7 +418,7 @@ class Invites extends Component {
                         </tr>
                       </thead>
                       <tbody>
-                        {this.props.sentInvitations.map((item, index) => {
+                        {this.props.sentInvitations.filter(item => item.invitationStatus < 5).map((item, index) => {
                           const data = item.metadata;
                           return (
                             <tr key={item._id}>

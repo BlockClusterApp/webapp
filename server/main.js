@@ -11,6 +11,7 @@ import UserFunctions from '../imports/api/server-functions/user-functions';
 import {
     Networks
 } from "../imports/collections/networks/networks.js"
+import NetworkFunctions from '../imports/api/network/networks';
 import Vouchers from '../imports/collections/vouchers/voucher';
 import NetworkConfiguration from '../imports/collections/network-configuration/network-configuration';
 import {
@@ -114,6 +115,7 @@ function getNodeConfig(networkConfig, userId) {
 
     if(_voucher) {
       nodeConfig.voucherId = _voucher._id;
+      nodeConfig.voucher = _voucher;
       finalNetworkConfig = _voucher.networkConfig;
       if(_voucher.isDiskChangeable) {
         finalNetworkConfig = diskSpace || _voucher.diskSpace;
@@ -177,6 +179,7 @@ Meteor.methods({
                 deletedAt: new Date().getTime()
               }
             });
+            NetworkFunctions.cleanNetworkDependencies(id);
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, function(error, response) {});
             HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + instanceId), function(error, response) {
@@ -220,6 +223,9 @@ Meteor.methods({
             "totalConstellationNodes": [],
             "locationCode": locationCode,
             voucherId: nodeConfig.voucherId,
+            metadata: {
+              voucher: nodeConfig.voucher
+            },
             networkConfig: {cpu: nodeConfig.cpu, ram: nodeConfig.ram, disk: nodeConfig.disk}
         }, (error, id) => {
             if (error) {
@@ -327,7 +333,7 @@ Meteor.methods({
                                               "volumeMounts": [
                                                 {
                                                   "name": "dynamo-dir",
-                                                  "mountPath": "/dynamo"
+                                                  "mountPath": "/dynamo-node"
                                                 }
                                               ],
                                               "lifecycle": {
@@ -616,6 +622,8 @@ Meteor.methods({
           }
         });
 
+        NetworkFunctions.cleanNetworkDependencies(id);
+
         try{
           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + id, kubeCallback);
           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + id, kubeCallback);
@@ -628,7 +636,7 @@ Meteor.methods({
               if(err) return console.log(err);
               HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, kubeCallback);
           });
-          HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${instanceId}-pvc`, function(error, response) {});
+          HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${id}-pvc`, function(error, response) {});
           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + id, kubeCallback);
           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + id, kubeCallback);
         }catch(err){
@@ -675,6 +683,7 @@ Meteor.methods({
                 deletedAt: new Date().getTime()
               }
             });
+            NetworkFunctions.cleanNetworkDependencies(id);
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, function(error, response) {});
             HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + instanceId), function(error, response) {
@@ -778,7 +787,7 @@ spec:
          value: ${impulseURL}
         volumeMounts:
           - name: dynamo-dir
-            mountPath: /dynamo
+            mountPath: /dynamo-node
       volumes:
         - name: dynamo-dir
           persistentVolumeClaim:
@@ -832,7 +841,7 @@ spec:
           value: ${impulseURL}
         volumeMounts:
           - name: dynamo-dir
-            mountPath: /dynamo
+            mountPath: /dynamo-node
       volumes:
         - name: dynamo-dir
           persistentVolumeClaim:

@@ -1,5 +1,4 @@
 import Vouchers from '../../collections/vouchers/voucher';
-const Future = Npm.require("fibers/future");
 
 const Voucher = {};
 

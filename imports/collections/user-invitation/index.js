@@ -11,7 +11,8 @@ UserInvitationCollection.StatusMapping = {
   Pending: 1,
   Accepted: 2,
   Rejected: 3,
-  Cancelled: 4
+  Cancelled: 4,
+  InvitingNetworkDeleted: 5
 }
 
 UserInvitationCollection.before.insert((userId, doc) => {
