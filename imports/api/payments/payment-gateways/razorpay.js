@@ -49,6 +49,8 @@ RazorPay.capturePayment = async paymentResponse => {
         $set: {
           paymentStatus: PaymentRequests.StatusMapping.Approved,
           pgReference: paymentResponse.razorpay_payment_id,
+        },
+        $push: {
           pgResponse: rzpayment
         }
       }
@@ -65,7 +67,7 @@ RazorPay.capturePayment = async paymentResponse => {
         _id: rzpayment.notes.paymentRequestId
       },
       {
-        $set: {
+        $push: {
           pgResponse: captureResponse
         }
       }
@@ -121,19 +123,26 @@ RazorPay.refundPayment = async (paymentId, options) => {
       paymentId,
       options
     );
-    debug("Capture response ", refundResponse);
+    debug("refund response ", refundResponse);
 
-    PaymentRequests.update(
+    const updateResult = PaymentRequests.update(
       {
-        _id: paymentId
+        pgReference: paymentId
       },
       {
         $set: {
-          pgResponse: refundResponse,
-          paymentStatus: PaymentRequests.StatusMapping.Refunded
+          paymentStatus: PaymentRequests.StatusMapping.Refunded,
+          refundedAt: new Date()
+        },
+        $push: {
+          pgResponse: refundResponse
         }
       }
     );
+
+    debug("Refund updated", updateResult)
+
+    return updateResult;
   } catch (err) {
     debug("Refund error", err);
     // rollback
@@ -165,7 +174,7 @@ RazorPay.applyCardVerification = async paymentId => {
       return new Meteor.Error("Payment method was not card");
     }
 
-    if(cardUsed.error) {
+    if (cardUsed.error) {
       return new Meteor.Error("Payment method was not card");
     }
 

@@ -62,8 +62,8 @@ class BillingDashboard extends Component {
     if(!label){
       return null;
     }
-    return <span class="label label-info">{label}</span>;
-}
+    return <span className="label label-info">{label}</span>;
+  }
 
   render() {
 

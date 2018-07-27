@@ -58,7 +58,13 @@ PaymentRequests.schema = new SimpleSchema({
     type: String
   },
   pgResponse: {
+    type: Array
+  },
+  "pgResponse.$": {
     type: Object
+  },
+  refundedAt: {
+    type: Date
   }
 });
 

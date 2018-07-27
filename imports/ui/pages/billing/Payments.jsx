@@ -2,7 +2,9 @@ import React, { Component } from "react";
 import { withTracker } from "meteor/react-meteor-data";
 import { Networks } from "../../../collections/networks/networks.js";
 import helpers from "../../../modules/helpers";
+import PaymentRequests from '../../../collections/payments/payment-requests';
 import { withRouter } from "react-router-dom";
+import moment from 'moment';
 
 import "./Dashboard.scss";
 
@@ -22,11 +24,6 @@ class PaymentDashboard extends Component {
   }
 
   componentDidMount() {
-    Meteor.call("getClusterLocations", (err, res) => {
-      this.setState({
-        locations: res
-      });
-    });
   }
 
   getLocationName = locationCode => {
@@ -38,6 +35,16 @@ class PaymentDashboard extends Component {
     }
     return locationConfig.locationName;
   };
+
+
+  convertStatusToTag = (statusCode) => {
+    if(statusCode === 2) {
+      return <span className="label label-success">Success</span>
+    } else if(statusCode === 3){
+      return <span className="label label-info">Refunded</span>;
+    }
+    return null;
+  }
 
   render() {
     return (
@@ -54,15 +61,31 @@ class PaymentDashboard extends Component {
                     <table className="table table-hover" id="basicTable">
                       <thead>
                         <tr>
-                          <th style={{ width: "30%" }}>Payment Ref.</th>
+                          <th style={{ width: "20%" }}>Payment Ref.</th>
+                          <th style={{width: "20%"}}> For</th>
                           <th style={{ width: "20%" }}>Payment made on</th>
-                          <th style={{ width: "25%" }}>Amount</th>
-                          <th style={{ width: "25%" }}>Status</th>
+                          <th style={{ width: "20%" }}>Amount</th>
+                          <th style={{ width: "20%" }}>Status</th>
                         </tr>
                       </thead>
                       <tbody>
-
+                        {this.props.payments.map(payment => {
+                          return (
+                            <tr key={payment._id} title={payment.paymentStatus === 3 ? `Refund initiated at ${moment(payment.refundedAt).format('DD-MMM-YY HH:mm:SS')}` : null}>
+                              <td>{payment._id}</td>
+                              <td>{payment.reason}</td>
+                              <td>{moment(payment.createdAt).format('DD-MMM-YY HH:mm:SS')}</td>
+                              <td>INR {Number(payment.amount / 100).toFixed(2)}</td>
+                              <td>{this.convertStatusToTag(payment.paymentStatus)}</td>
+                            </tr>
+                          )
+                        })}
                       </tbody>
+                      <tfoot>
+                        <tr>
+                          <td colSpan="5"><p style={{fontSize: '0.8em'}}>Refunds will be completed within <b>5</b> working days</p></td>
+                        </tr>
+                      </tfoot>
                     </table>
                   </div>
                 </div>
@@ -77,6 +100,7 @@ class PaymentDashboard extends Component {
 
 export default withTracker(() => {
   return {
-    subscriptions: [Meteor.subscribe("approvedPayments")]
+    payments: PaymentRequests.find({}).fetch(),
+    subscriptions: [Meteor.subscribe("userPayments")]
   };
 })(withRouter(PaymentDashboard));
