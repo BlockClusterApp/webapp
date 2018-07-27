@@ -337,7 +337,11 @@ Meteor.methods({
                                               "volumeMounts": [
                                                 {
                                                   "name": "dynamo-dir",
-                                                  "mountPath": "/dynamo-node"
+                                                  "mountPath": "/dynamo/node"
+                                                },
+                                                {
+                                                  "name": "dynamo-dir",
+                                                  "mountPath": "/dynamo/cnode"
                                                 }
                                               ],
                                               "lifecycle": {
@@ -796,7 +800,9 @@ spec:
          value: ${impulseURL}
         volumeMounts:
           - name: dynamo-dir
-            mountPath: /dynamo-node
+            mountPath: /dynamo/node
+          - name: dynamo-dir
+            mountPath: /dynamo/cnode
       volumes:
         - name: dynamo-dir
           persistentVolumeClaim:
@@ -851,6 +857,8 @@ spec:
         volumeMounts:
           - name: dynamo-dir
             mountPath: /dynamo-node
+          - name: dynamo-dir
+            mountPath: /dynamo/cnode
       volumes:
         - name: dynamo-dir
           persistentVolumeClaim:
