@@ -12,7 +12,7 @@ class CreateNetwork extends Component {
         this.locationCode = "us-west-2";
         this.state = {
             formSubmitError: "",
-            loading: false
+            loading: true
         };
     }
 
@@ -25,14 +25,13 @@ class CreateNetwork extends Component {
             loading: true
         });
 
-        Meteor.call("createNetwork", this.networkName.value, this.locationCode, {...this.config}, (error) => {
+        Meteor.call("createNetwork", this.networkName.value, this.locationCode, {...this.config}, (error, reply) => {
             if(!error) {
                 this.setState({
                     loading: false,
                     formSubmitError: ''
                 });
-
-                this.props.history.push("/app/networks");
+                this.props.history.push(`/app/networks/${reply}`);
                 notifications.success("Initializing node")
             } else {
                 this.setState({
@@ -45,7 +44,8 @@ class CreateNetwork extends Component {
 
     cardVerificationListener = (isVerified) => {
       this.setState({
-        cardVerified: isVerified
+        cardVerified: isVerified,
+        loading: false
       })
     }
 

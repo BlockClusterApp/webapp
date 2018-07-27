@@ -148,7 +148,7 @@ Billing.shouldHideCreditCardVerification = async function() {
   const userCards = UserCards.find({userId: userId}).fetch()[0];
   const networks = Networks.find({user: userId, active: true}).fetch();
 
-  if(networks.length > 2){
+  if(networks.length > 2 && !(userCards && userCards.cards.length > 0)){
     return false;
   }
 
