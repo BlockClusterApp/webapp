@@ -10,6 +10,7 @@ import notifications from "../../../modules/notifications"
 import {AssetTypes} from "../../../collections/assetTypes/assetTypes.js"
 import {BCAccounts} from "../../../collections/bcAccounts/bcAccounts.js"
 import {Link} from "react-router-dom"
+var BigNumber = require('bignumber.js');
 
 import "./AssetsExchange.scss"
 
@@ -390,7 +391,7 @@ class AssetsManagement extends Component {
                                                                                     {(this.state[this.props.network[0].instanceId + "_sellAsset_assetType_bulk"] == true || this.state[this.props.network[0].instanceId + "_sellAsset_assetType_bulk"] == undefined) &&
                                                                                         <div className="form-group">
                                                                                             <label>Units</label>
-                                                                                            <input type="number" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_units"] = input}} required />
+                                                                                            <input type="float" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_units"] = input}} required />
                                                                                         </div>
                                                                                     }
 
@@ -482,7 +483,7 @@ class AssetsManagement extends Component {
                                                                                     {(this.state[this.props.network[0].instanceId + "_buyAsset_assetType_bulk"] == true || this.state[this.props.network[0].instanceId + "_buyAsset_assetType_bulk"] == undefined) &&
                                                                                         <div className="form-group">
                                                                                             <label>Units</label>
-                                                                                            <input type="number" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_buyAsset_units"] = input}} required />
+                                                                                            <input type="float" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_buyAsset_units"] = input}} required />
                                                                                         </div>
                                                                                     }
 
@@ -552,7 +553,7 @@ class AssetsManagement extends Component {
                                                                                                         </td>
                                                                                                         <td className="v-align-middle">
                                                                                                             {item1.fromAssetType == "bulk" &&
-                                                                                                                <span>{item1.fromAssetUnits} {item1.fromAssetName}</span>
+                                                                                                                <span>{(new BigNumber(item1.fromAssetUnits)).dividedBy(helpers.addZeros(1, item1.fromAssetParts)).toFixed(parseInt(item1.fromAssetParts)).toString()} {item1.fromAssetName}</span>
                                                                                                             }
 
                                                                                                             {item1.fromAssetType == "solo" &&
@@ -561,7 +562,7 @@ class AssetsManagement extends Component {
                                                                                                         </td>
                                                                                                         <td className="v-align-middle">
                                                                                                             {item1.toAssetType == "bulk" &&
-                                                                                                                <span>{item1.toAssetUnits} {item1.toAssetName}</span>
+                                                                                                                <span>{(new BigNumber(item1.toAssetUnits)).dividedBy(helpers.addZeros(1, item1.toAssetParts)).toFixed(parseInt(item1.toAssetParts)).toString()} {item1.toAssetName}</span>
                                                                                                             }
 
                                                                                                             {item1.toAssetType == "solo" &&
