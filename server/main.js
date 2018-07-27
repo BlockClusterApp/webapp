@@ -489,8 +489,7 @@ Meteor.methods({
                                                 realImpulsePort: 7558,
                                                 impulseURL: "http://" + Config.workerNodeIP(locationCode) + ":" + response.data.spec.ports[4].nodePort
                                             }
-                                        })
-
+                                        });
                                         let encryptedPassword = md5(instanceId);
                                         let auth = base64.encode(utf8.encode(instanceId + ":" + encryptedPassword))
                                         HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets`, {
@@ -581,7 +580,7 @@ Meteor.methods({
                                                             myFuture.return(instanceId);
                                                         }
                                                     })
-                                            }
+                                                  }
                                         })
                                     }
                                 })
@@ -589,9 +588,9 @@ Meteor.methods({
                         })
                     }
                 });
-            }
-        })
-
+            });
+          }
+        });
         return myFuture.wait();
     },
     "deleteNetwork": function(id) {
