@@ -2,7 +2,7 @@ module.exports = [
   {
     name: "Micro",
     cpu: 0.5,
-    ram: 0.5,
+    ram: 1,
     disk: 5,
     isDiskChangeable: false
   },

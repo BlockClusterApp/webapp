@@ -8,7 +8,7 @@ const insertVoucher = async (voucher) => {
       code: voucher,
       networkConfig: {
         cpu: 0.5,
-        ram: 0.5,
+        ram: 1,
         disk: 5
       },
       expiryDate: moment().add(30 ,'days').toDate(),

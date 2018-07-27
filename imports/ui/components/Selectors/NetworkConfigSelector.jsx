@@ -14,7 +14,7 @@ class NetworkConfigSelector extends Component {
       networkConfig: {
         name: 'Micro',
         cpu: 0.5,
-        ram: 500,
+        ram: 1,
         disk: 5
       }
     };
@@ -25,7 +25,7 @@ class NetworkConfigSelector extends Component {
       this.setState({
         configs: res
       });
-      this.config.value = "Micro";
+      if(this.config) this.config.value = "Micro";
       this.onConfigChange();
     });
 

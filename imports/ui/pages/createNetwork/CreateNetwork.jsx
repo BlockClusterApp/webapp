@@ -1,6 +1,7 @@
 import React, {Component} from "react";
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import { withRouter } from 'react-router-dom'
+import {Networks} from "../../../collections/networks/networks.js"
 import notifications from "../../../modules/notifications"
 import LocationSelector from '../../components/Selectors/LocationSelector.jsx';
 import NetworkConfigSelector from '../../components/Selectors/NetworkConfigSelector.jsx'
@@ -12,13 +13,50 @@ class CreateNetwork extends Component {
         this.locationCode = "us-west-2";
         this.state = {
             formSubmitError: "",
-            loading: true
+            loading: true,
+            microNodesViolated: false
         };
+        this.networks = [];
+    }
+
+    componentDidMount(){
+
+
+      Meteor.call('nodeCount', (err, res) => {
+        if(!err){
+          if(res.micro >= 0){
+            this.setState({
+              microNodesViolated: true,
+              nodeCount: res
+            });
+          }
+        }
+      });
+
     }
 
 
     onSubmit = (e) => {
         e.preventDefault();
+        const isVoucherMicro = (this.config.voucher &&  this.config.voucher.networkConfig && this.config.voucher.networkConfig.cpu === 0.5);
+        const isMicro = (this.config && this.config.config && (this.config.config.cpu === 0.5 || this.config.config.name && this.config.config.name.toLowerCase() === 'micro')) || isVoucherMicro;
+        if(this.state.nodeCount.micro >= 2 && isMicro){
+          return this.setState({
+            formSubmitError: 'You can have at max only 2 micro nodes at a time',
+          });
+        }
+
+        if(!this.networkName.value){
+          return
+          this.setState({
+            formSubmitError: 'Network name is required'
+          });
+        }
+
+        this.setState({
+          formSubmitError: ''
+        });
+
 
         this.setState({
             formSubmitError: '',

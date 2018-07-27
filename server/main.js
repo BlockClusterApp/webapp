@@ -163,24 +163,30 @@ function getNodeConfig(networkConfig, userId) {
 }
 
 function getContainerResourceLimits({cpu, ram }){
-  const percentage = {
-    mongo: 0.1,
-    impulse: 0.25,
+  const CpuPercentage = {
+    mongo: 0.15,
+    impulse: 0.20,
     dynamo: 0.65
+  }
+
+  const RamPercentage = {
+    mongo: 0.05,
+    impulse: 0.15,
+    dynamo: 0.8
   }
 
   const config = {
     mongo: {
-      cpu: Math.floor(cpu * percentage.mongo),
-      ram: Math.floor(ram * percentage.mongo * 1000) / 1000
+      cpu: Math.floor(cpu * CpuPercentage.mongo),
+      ram: Math.floor(ram * RamPercentage.mongo * 1000) / 1000
     },
     dynamo: {
-      cpu: Math.floor(cpu * percentage.dynamo),
-      ram: Math.floor(ram * percentage.dynamo * 1000) / 1000
+      cpu: Math.floor(cpu * CpuPercentage.dynamo),
+      ram: Math.floor(ram * RamPercentage.dynamo * 1000) / 1000
     },
     impulse: {
-      cpu: Math.floor(cpu * percentage.impulse),
-      ram: Math.floor(ram * percentage.impulse * 1000) / 1000
+      cpu: Math.floor(cpu * CpuPercentage.impulse),
+      ram: Math.floor(ram * RamPercentage.impulse * 1000) / 1000
     }
   };
 
@@ -324,8 +330,8 @@ Meteor.methods({
                                                   "memory": `${resourceConfig.mongo.ram}Gi`
                                                 },
                                                 "limits": {
-                                                  "cpu": `${resourceConfig.mongo.cpu}m`,
-                                                  "memory": `${resourceConfig.mongo.ram}Gi`
+                                                  "cpu": `${resourceConfig.mongo.cpu + 50}m`,
+                                                  "memory": `${resourceConfig.mongo.ram + 0.1}Gi`
                                                 }
                                               },
                                               "volumeMounts": [
@@ -338,8 +344,11 @@ Meteor.methods({
                                           {
                                               "name":"dynamo",
                                               "image":`402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}`,
-                                              "tty": true,
-                                              "stdin": true,
+                                              "command":[
+                                                "/bin/bash",
+                                                "-c",
+                                                "./setup.sh"
+                                              ],
                                               "env":[
                                                   {
                                                       "name": "instanceId",
@@ -375,8 +384,8 @@ Meteor.methods({
                                                   "memory": `${resourceConfig.dynamo.ram}Gi`
                                                 },
                                                 "limits": {
-                                                  "cpu": `${resourceConfig.dynamo.cpu}m`,
-                                                  "memory": `${resourceConfig.dynamo.ram}Gi`
+                                                  "cpu": `${resourceConfig.dynamo.cpu + 100}m`,
+                                                  "memory": `${resourceConfig.dynamo.ram + 0.3}Gi`
                                                 }
                                               },
                                               "lifecycle": {
@@ -423,8 +432,8 @@ Meteor.methods({
                                                 "memory": `${resourceConfig.impulse.ram}Gi`
                                               },
                                               "limits": {
-                                                "cpu": `${resourceConfig.impulse.cpu}m`,
-                                                "memory": `${resourceConfig.impulse.ram}Gi`
+                                                "cpu": `${resourceConfig.impulse.cpu + 100}m`,
+                                                "memory": `${resourceConfig.impulse.ram + 0.2}Gi`
                                               }
                                             },
                                             "lifecycle": {
@@ -682,14 +691,17 @@ Meteor.methods({
           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + id, kubeCallback);
           HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(err, response) {
               if(err) return console.log(err);
-              HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name, kubeCallback);
+              HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name, () => {
+                HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(err, response) {
+                  if(err) return console.log(err);
+                  HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, function(err, res) {
+                    HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${id}-pvc`, function(error, response) {});
+                  });
+              });
+            });
           });
 
-          HTTP.call("GET", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent("dynamo-node-" + id), function(err, response) {
-              if(err) return console.log(err);
-              HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name, kubeCallback);
-              HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${id}-pvc`, function(error, response) {});
-          });
+
 
           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + id, kubeCallback);
           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + id, kubeCallback);

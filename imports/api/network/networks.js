@@ -18,4 +18,29 @@ NetworkObj.cleanNetworkDependencies = async (instanceId) => {
   });
 }
 
+NetworkObj.getNodeCount = async () => {
+  const networks = Networks.find({
+    user: Meteor.userId(),
+    active: true,
+  }).fetch();
+
+  const count = {
+    total: 0,
+    micro: 0
+  };
+  networks.forEach(network => {
+    count.total+=1;
+    if(network.networkConfig.cpu === 500) {
+      count.micro += 1
+    }
+  });
+
+  console.log("Micro nodes", count);
+  return count;
+}
+
+Meteor.methods({
+  nodeCount: NetworkObj.getNodeCount
+});
+
 export default NetworkObj;
