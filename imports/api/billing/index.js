@@ -64,7 +64,7 @@ Billing.generateBill = async function(userId, month, year) {
 
     const networkConfig = network.metadata && network.metadata.networkConfig;
     if(networkConfig && networkConfig._id){
-      isMicroNode = isMicroNode || networkConfig.name === 'Micro';
+      isMicroNode = isMicroNode || networkConfig.name === 'Light';
     }
 
 
@@ -108,7 +108,7 @@ Billing.generateBill = async function(userId, month, year) {
       cost = Number(paidHours * ratePerHour + paidMinutes * ratePerMinute).toFixed(2);
       nodeUsageCountMinutes.Micro += usedTime.hours * 60;
       nodeUsageCountMinutes.Micro += usedTime.minutes % 60;
-      label = label || 'micro';
+      label = label || 'light';
     }
 
     // if(isMicroNode && nodeTypeCount.Micro > FreeNodesPerUser.Micro) {
