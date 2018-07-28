@@ -1890,23 +1890,57 @@ spec:
             }
         })
 
-        /*
-        let web3 = new Web3(new Web3.providers.HttpProvider(`http://${Config.workerNodeIP(network.locationCode)}:` + network.rpcNodePort));
+        return myFuture.wait();
+    },
+    "grantAccessStream": function(instanceId, name, address, from) {
+        var myFuture = new Future();
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
 
-        var streamsContract = web3.eth.contract(smartContracts.streams.abi);
-        var streams = streamsContract.at(network.streamsContractAddress);
-
-        streams.publish.sendTransaction(name, key, data, {
-            from: issuer,
-            gas: '99999999999999999'
-        }, function(error, txnHash) {
-            if (!error) {
-                myFuture.return();
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/streams/grantAccessToPublish`, {
+            "content": JSON.stringify({
+                streamName: name,
+                publisher: address,
+                fromAccount: from
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
             } else {
-                myFuture.throw("An unknown error occured");
+                console.log(response)
+                myFuture.return();
             }
         })
-        */
+
+        return myFuture.wait();
+    },
+    "revokeAccessStream": function(instanceId, name, address, from) {
+        var myFuture = new Future();
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/streams/revokeAccessToPublish`, {
+            "content": JSON.stringify({
+                streamName: name,
+                publisher: address,
+                fromAccount: from
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                console.log(response)
+                myFuture.return();
+            }
+        })
 
         return myFuture.wait();
     },
