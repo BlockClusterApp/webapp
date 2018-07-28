@@ -1,15 +1,15 @@
 module.exports = [
   {
-    name: "Micro",
+    name: "Light",
     cpu: 0.5,
     ram: 1,
     disk: 5,
     isDiskChangeable: false
   },
   {
-    name: "Large",
+    name: "Power",
     cpu: 2,
-    ram: 8,
+    ram: 7.5,
     disk: 200,
     isDiskChangeable: true
   }

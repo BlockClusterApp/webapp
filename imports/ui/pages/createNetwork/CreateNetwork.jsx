@@ -13,7 +13,7 @@ class CreateNetwork extends Component {
         this.locationCode = "us-west-2";
         this.state = {
             formSubmitError: "",
-            loading: true,
+            loading: false,
             microNodesViolated: false
         };
         this.networks = [];
@@ -46,6 +46,14 @@ class CreateNetwork extends Component {
           });
         }
 
+        if(!(this.config && this.config.voucher)){
+          if(!this.state.cardVerified){
+            return this.setState({
+              showCreditCardAlert: true
+            });
+          }
+        }
+
         if(!this.networkName.value){
           return
           this.setState({
@@ -74,7 +82,7 @@ class CreateNetwork extends Component {
             } else {
                 this.setState({
                     loading: false,
-                    formSubmitError: error.reason
+                    formSubmitError: error.reason || error.error
                 })
             }
         });
@@ -212,9 +220,11 @@ class CreateNetwork extends Component {
                                                 </div>
                                             </div>
                                         }
-                                        {this.config && this.config.voucher ? null : <CardVerification cardVerificationListener={this.cardVerificationListener}/>}
+                                        <div className="verificationWrapper" style={{display: this.state.showCreditCardAlert ? 'block' : 'none'}}>
+                                          <CardVerification cardVerificationListener={this.cardVerificationListener}/>
+                                        </div>
                                         <LaddaButton
-                                            disabled={this.config && this.config.voucher ? false : !this.state.cardVerified}
+                                            disabled={this.state.showCreditCardAlert && !this.state.cardVerified}
                                             loading={this.state.loading}
                                             data-size={S}
                                             data-style={SLIDE_UP}

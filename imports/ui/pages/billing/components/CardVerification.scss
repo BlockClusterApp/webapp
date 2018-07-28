@@ -1,15 +1,18 @@
-.modal {
-  z-index: 3000;
-  padding-top: 150px;
-  background: rgba(0,0,0,0.4);
-  display: block;
+.card-verification{
+  .modal {
+    z-index: 3000;
+    padding-top: 150px;
+    background: rgba(0,0,0,0.4);
+    display: block;
 
 
-  p {
-    color: #999;
+    p {
+      color: #999;
 
-    b {
-      color: #222;
+      b {
+        color: #222;
+      }
     }
   }
+
 }

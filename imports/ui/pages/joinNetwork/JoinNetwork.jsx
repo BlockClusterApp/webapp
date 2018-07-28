@@ -102,11 +102,21 @@ class JoinNetwork extends Component {
           });
         }
 
+
         if(!this.networkName.value){
           return
           this.setState({
             formSubmitError: 'Network name is required'
           });
+        }
+
+
+        if(!(this.config && this.config.voucher)){
+          if(!this.state.cardVerified){
+            return this.setState({
+              showCreditCardAlert: true
+            });
+          }
         }
 
         let file = this.genesisFile.files[0];
@@ -412,7 +422,9 @@ class JoinNetwork extends Component {
                                                                 </div>
                                                             </div>
                                                         }
-                                                        {this.config && this.config.voucher ? null : <CardVerification cardVerificationListener={this.cardVerificationListener}/>}
+                                                        <div className="verificationWrapper" style={{display: this.state.showCreditCardAlert ? 'block' : 'none'}}>
+                                                          <CardVerification cardVerificationListener={this.cardVerificationListener}/>
+                                                        </div>
                                                         <LaddaButton
                                                             loading={this.state.joinLoading}
                                                             data-size={S}

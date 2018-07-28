@@ -142,7 +142,7 @@ function getNodeConfig(networkConfig, userId) {
       nodeConfig.networkConfig = _config;
       finalNetworkConfig = _config;
       if(_config.isDiskChangeable) {
-        finalNetworkConfig = diskSpace || _config.diskSpace;
+        finalNetworkConfig.disk = diskSpace || _config.diskSpace;
       }
     }
   }
@@ -157,6 +157,7 @@ function getNodeConfig(networkConfig, userId) {
     ram: finalNetworkConfig.ram,
     disk: finalNetworkConfig.disk
   };
+
 
 
   return nodeConfig;
@@ -252,6 +253,7 @@ Meteor.methods({
         }
 
         const nodeConfig = getNodeConfig(networkConfig);
+        console.log(nodeConfig);
         if(!nodeConfig.cpu) {
           throw new Meteor.Error("Invalid Network Configuration");
         }

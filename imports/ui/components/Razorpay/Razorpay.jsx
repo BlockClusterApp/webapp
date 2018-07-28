@@ -112,6 +112,14 @@ class RazorPay extends React.Component {
   }
 
   render() {
+    if(this.props.buttonLayout) {
+      return (
+        <div className="razorpay-holder" onClick={this.triggerPayment}>
+          {this.props.buttonLayour}
+        </div>
+      )
+    }
+
     return (<div className="razorpay-holder">
       <button className="btn btn-primary razorpay-payment-button"
         onClick={this.triggerPayment}
@@ -131,7 +139,8 @@ RazorPay.propTypes = {
   paymentNotes: PropTypes.object,
   preTriggerPaymentListener: PropTypes.func,
   amount: PropTypes.number,
-  buttonText: PropTypes.string
+  buttonText: PropTypes.string,
+  buttonLayout: PropTypes.object
 }
 
 export default RazorPay;

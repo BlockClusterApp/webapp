@@ -69,7 +69,7 @@ class PaymentDashboard extends Component {
                         </tr>
                       </thead>
                       <tbody>
-                        {this.props.payments.map(payment => {
+                        {this.props.payments.filter(payment => payment.paymentStatus > 1).map(payment => {
                           return (
                             <tr key={payment._id} title={payment.paymentStatus === 3 ? `Refund initiated at ${moment(payment.refundedAt).format('DD-MMM-YY HH:mm:SS')}` : null}>
                               <td>{payment._id}</td>

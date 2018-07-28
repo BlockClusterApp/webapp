@@ -51,6 +51,7 @@ class App extends Component {
 		return (
 			<BrowserRouter>
 				<Switch>
+          <Route exact path="/" render={() => (<Redirect to="/login" />)} />
 					<Route exact path="/login" render={this.requireNotLoggedIn(Login)} />
 					<Route exact path="/register" render={this.requireNotLoggedIn(Register)} />
 					<Route exact path="/forgot-password" render={this.requireNotLoggedIn(RequestPasswordReset)} />

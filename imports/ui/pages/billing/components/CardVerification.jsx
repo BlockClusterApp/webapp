@@ -106,15 +106,18 @@ export default class CardVerification extends React.Component {
 
     const Message = (
       <div className="card-verification">
-        <div className="alert alert-danger">
+        <div className="alert alert-success">
           <div className="row clearfix">
-            <div className="col-md-5">
+            {/* <div className="col-md-5">
               <button className="btn btn-primary" onClick={this.openCreditCardDialog}>
                 Verify Credit Card
               </button>
             </div>
             <div className="col-md-7">
               You need to verify your credit card before you can create nodes.
+            </div> */}
+            <div className="col-md-12">
+              You need to <a href="javascript:;" onClick={this.openCreditCardDialog} style={{textDecoration: 'underline'}}>verify your credit card</a> before you can create nodes.
             </div>
           </div>
         </div>
