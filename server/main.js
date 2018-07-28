@@ -359,6 +359,7 @@ Meteor.methods({
                                               "image":`402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}`,
                                               "command":[
                                                 "/bin/bash",
+                                                "-i",
                                                 "-c",
                                                 "./setup.sh"
                                               ],
@@ -854,7 +855,7 @@ spec:
       containers:
       - name: dynamo
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}
-        command: [ "/bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
+        command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
         lifecycle:
           postStart:
             exec:
@@ -912,7 +913,7 @@ spec:
       containers:
       - name: dynamo
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}
-        command: [ "/bin/bash", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
+        command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
         lifecycle:
           postStart:
             exec:
