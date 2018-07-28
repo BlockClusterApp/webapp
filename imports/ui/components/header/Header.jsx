@@ -83,12 +83,12 @@ class Header extends Component {
             </div>
 
             <ul className="dropdown-menu">
-              <li>
+              {/* <li>
                 <Link to="/app/payments">Payments</Link>
               </li>
               <li>
                 <Link to="/app/billing">Billing</Link>
-              </li>
+              </li> */}
               <li>
                 <Link to="/app/profile">Profile</Link>
               </li>

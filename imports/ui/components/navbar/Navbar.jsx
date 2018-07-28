@@ -89,6 +89,19 @@ class Navbar extends Component {
 			                	</li>
 			              	</ul>
 			            </li>
+                  <li>
+                    <a href="javascript:;"><span className="title">Billing</span>
+                      <span className="arrow"></span></a>
+                      <span className="icon-thumbnail"><i className="fa fa-credit-card"></i></span>
+                      <ul className="sub-menu">
+			                	<li>
+                          <Link to="/app/payments">Payments</Link>
+                        </li>
+								        <li>
+                          <Link to="/app/billing">Bills</Link>
+			                  </li>
+			              	</ul>
+                  </li>
 						{/* (this.props.kuberREST_IP[0] !== undefined) &&
 	                    	<li className="">
 		                    	<Link target="_blank" to={this.props.kuberREST_IP + "/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#!/overview?namespace=default"} className="detailed">
