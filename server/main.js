@@ -854,7 +854,11 @@ spec:
     spec:
       containers:
       - name: dynamo
+<<<<<<< HEAD
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}
+=======
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo${['staging', 'production'].includes(process.env.NODE_ENV) ? '' : '-test'}
+>>>>>>> 80aaba8f6be6fa318aee94977731f76425a99bdf
         command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
         lifecycle:
           postStart:
@@ -912,7 +916,11 @@ spec:
     spec:
       containers:
       - name: dynamo
+<<<<<<< HEAD
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}
+=======
+        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo${['staging', 'production'].includes(process.env.NODE_ENV) ? '' : '-test'}
+>>>>>>> 80aaba8f6be6fa318aee94977731f76425a99bdf
         command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
         lifecycle:
           postStart:
