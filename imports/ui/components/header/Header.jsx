@@ -52,7 +52,7 @@ class Header extends Component {
             </li> */}
           </ul>
         </div>
-        <div className="d-flex align-items-center">
+        {/* <div className="d-flex align-items-center">
           <div className="dropdown">
             <div
               className="dropdown-toggle d-flex align-items-center"
@@ -83,12 +83,6 @@ class Header extends Component {
             </div>
 
             <ul className="dropdown-menu">
-              {/* <li>
-                <Link to="/app/payments">Payments</Link>
-              </li>
-              <li>
-                <Link to="/app/billing">Billing</Link>
-              </li> */}
               <li>
                 <Link to="/app/profile">Profile</Link>
               </li>
@@ -101,7 +95,20 @@ class Header extends Component {
             data-toggle="quickview"
             data-toggle-element="#quickview"
           />
-        </div>
+        </div> */}
+        <div className="d-flex align-items-center">
+                    <div className="pull-left p-r-10 fs-14 font-heading hidden-md-down">
+                        <span className="semi-bold">{this.props.user?this.props.user.profile.firstName:''}</span> <span className="text-master">{this.props.user?this.props.user.profile.lastName:''}</span>
+                    </div>
+                    <div className="dropdown pull-right hidden-md-down">
+                        <button className="profile-dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span className="thumbnail-wrapper d32 circular inline">
+                                <img src="/assets/img/icons/profile.png" alt="" width="32" height="32" />
+                            </span>
+                        </button>
+                    </div>
+                    <a href="#" onClick={this.logout} className="header-icon pg pg-power btn-link m-l-10 sm-no-margin d-inline-block" data-toggle="quickview" data-toggle-element="#quickview"></a>
+                </div>
       </div>
     );
   }
