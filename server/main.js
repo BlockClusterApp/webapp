@@ -1331,7 +1331,7 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/issueSoloAsset`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/issueSoloAsset`, {
             "content": JSON.stringify({
                 assetName: assetName,
                 toAccount: toAddress,
@@ -1484,7 +1484,7 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/updateAssetInfo`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/updateAssetInfo`, {
             "content": JSON.stringify({
                 visibility: visibility,
                 key: key,
@@ -1517,7 +1517,7 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/grantAccessToPrivateData`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/grantAccessToPrivateData`, {
             "content": JSON.stringify({
                 assetName: assetName,
                 identifier: identifier,
@@ -1548,7 +1548,7 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/revokeAccessToPrivateData`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/revokeAccessToPrivateData`, {
             "content": JSON.stringify({
                 assetName: assetName,
                 identifier: identifier,
@@ -1579,7 +1579,7 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/closeAsset`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/closeAsset`, {
             "content": JSON.stringify({
                 fromAccount: fromAddress,
                 identifier: identifier,
@@ -1625,7 +1625,7 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/placeOrder`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/placeOrder`, {
             "content": JSON.stringify({
                 toNetworkId: otherInstanceId,
                 fromAssetType: fromType,
@@ -1679,7 +1679,7 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/fulfillOrder`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/fulfillOrder`, {
             "content": JSON.stringify({
                 orderId: hash,
                 toNetworkId: buyerInstanceId
@@ -1709,7 +1709,7 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/fulfillOrder`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/fulfillOrder`, {
             "content": JSON.stringify({
                 orderId: atomicSwapHash,
                 toNetworkId: instanceId
@@ -1744,7 +1744,7 @@ spec:
         var atomicSwapContract = web3.eth.contract(smartContracts.atomicSwap.abi);
         var atomicSwap = atomicSwapContract.at(network.atomicSwapContractAddress);
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/cancelOrder`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/cancelOrder`, {
             "content": JSON.stringify({
                 orderId: orderId
             }),
@@ -1841,7 +1841,7 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/assets/createStream`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/createStream`, {
             "content": JSON.stringify({
                 streamName: name,
                 fromAccount: issuer
@@ -1870,7 +1870,7 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/streams/publish`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/streams/publish`, {
             "content": JSON.stringify({
                 visibility: visibility,
                 fromAccount: issuer,
@@ -1899,7 +1899,7 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/streams/grantAccessToPublish`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/streams/grantAccessToPublish`, {
             "content": JSON.stringify({
                 streamName: name,
                 publisher: address,
@@ -1925,7 +1925,7 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/streams/revokeAccessToPublish`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/streams/revokeAccessToPublish`, {
             "content": JSON.stringify({
                 streamName: name,
                 publisher: address,
@@ -1973,7 +1973,7 @@ spec:
             address: accountAddress
         }).fetch()[0]
 
-        HTTP.call("GET", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${instanceId}/utility/getPrivateKey?address=${accountAddress}&password=${account.password}`, function(error, response) {
+        HTTP.call("GET", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/utility/getPrivateKey?address=${accountAddress}&password=${account.password}`, function(error, response) {
             console.log(error, response)
             if (error) {
                 myFuture.throw("An unknown error occured");
