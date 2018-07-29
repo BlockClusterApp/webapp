@@ -97,7 +97,7 @@ class ViewNetwork extends Component {
                                                         <p className="no-margin fs-12">Send Event</p>
                                                     </div>
                                                     <div className="clickable" onClick={() => {
-															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/streams/subscribe") : ""
+															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/streams/access") : ""
 														}}>
                                                         <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Access Control</p>
                                                         <p className="no-margin fs-12">Permissions and Ownership</p>
@@ -263,11 +263,10 @@ class ViewNetwork extends Component {
 
 export default withTracker(function(props) {
     return {
-        network: Networks.find({instanceId: props.match.params.id}).fetch(),
-        workerNodeIP: Config.workerNodeIP,
+        network: Networks.find({instanceId: props.match.params.id, active: true}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
-        		if(Networks.find({instanceId: props.match.params.id}).fetch().length !== 1) {
+        		if(Networks.find({instanceId: props.match.params.id, active: true}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
         	}

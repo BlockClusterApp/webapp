@@ -39,10 +39,19 @@ class App extends Component {
 		}
 	}
 
+	componentDidMount(){
+		const script = document.createElement("script");
+
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+
+        document.body.appendChild(script);
+	}
+
 	render(){
 		return (
 			<BrowserRouter>
 				<Switch>
+          <Route exact path="/" render={() => (<Redirect to="/login" />)} />
 					<Route exact path="/login" render={this.requireNotLoggedIn(Login)} />
 					<Route exact path="/register" render={this.requireNotLoggedIn(Register)} />
 					<Route exact path="/forgot-password" render={this.requireNotLoggedIn(RequestPasswordReset)} />

@@ -4,7 +4,9 @@ import {withTracker} from "meteor/react-meteor-data";
 import {withRouter} from 'react-router-dom'
 import {Networks} from "../../../collections/networks/networks.js"
 import notifications from "../../../modules/notifications"
-import LocationSelector from '../../components/LocationSelector/LocationSelector';
+import LocationSelector from '../../components/Selectors/LocationSelector';
+import NetworkConfigSelector from '../../components/Selectors/NetworkConfigSelector.jsx'
+import CardVerification from '../billing/components/CardVerification.jsx';
 
 import "./JoinNetwork.scss"
 
@@ -45,6 +47,17 @@ class JoinNetwork extends Component {
         })
     }
 
+    componentDidMount(){
+      Meteor.call('nodeCount', (err, res) => {
+        if(!err){
+            this.setState({
+              microNodesViolated: res.micro > 2,
+              nodeCount: res
+            });
+        }
+      });
+    }
+
     deleteENodeURL = (index) => {
         if(this.state.totalENodes.length > 1) {
             this.state.totalENodes.splice(index, 1);
@@ -81,6 +94,31 @@ class JoinNetwork extends Component {
     onJoinSubmit = (e) => {
         e.preventDefault()
 
+        const isVoucherMicro = (this.config.voucher &&  this.config.voucher.networkConfig && this.config.voucher.networkConfig.cpu === 0.5);
+        const isMicro = (this.config && this.config.config && (this.config.config.cpu === 0.5 || this.config.config.name && this.config.config.name.toLowerCase() === 'light')) || isVoucherMicro;
+        if(this.state.nodeCount.micro >= 2 && isMicro){
+          return this.setState({
+            formSubmitError: 'You can have at max only 2 micro nodes at a time',
+          });
+        }
+
+
+        if(!this.networkName.value){
+          return
+          this.setState({
+            formSubmitError: 'Network name is required'
+          });
+        }
+
+
+        if(!(this.config && this.config.voucher)){
+          if(!this.state.cardVerified){
+            return this.setState({
+              showCreditCardAlert: true
+            });
+          }
+        }
+
         let file = this.genesisFile.files[0];
         let reader = new FileReader();
         reader.readAsText(file, "UTF-8");
@@ -92,7 +130,7 @@ class JoinNetwork extends Component {
                 joinLoading: true
             });
 
-            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, this.state.impulseURL, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, this.state.locationCode, (error) => {
+            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, this.state.impulseURL, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, this.state.locationCode,  {...this.config}, (error) => {
                 if(!error) {
                     this.setState({
                         joinFormSubmitError: '',
@@ -147,6 +185,14 @@ class JoinNetwork extends Component {
         this.locationCode = newLocationCode;
     }
 
+
+    cardVerificationListener = (isVerified) => {
+      this.setState({
+        cardVerified: isVerified
+      })
+    }
+
+
 	render(){
 		return (
             <div className="content ">
@@ -186,7 +232,6 @@ class JoinNetwork extends Component {
                                         <div className="col-lg-7">
                                             <div className="card card-transparent">
                                                 <div className="card-block">
-                                                    <form id="form-project" role="form" onSubmit={this.onJoinSubmit} autoComplete="off">
                                                         <p>Basic Information</p>
                                                         <div className="form-group-attached">
                                                             <div className="row clearfix">
@@ -227,6 +272,12 @@ class JoinNetwork extends Component {
                                                                 </div>
                                                             </div>
                                                         </div>
+                                                        <br />
+                                                        <p>Node Configuration</p>
+                                                        <NetworkConfigSelector configChangeListener={(config) => {
+                                                          this.config = config;
+                                                          this.setState({});
+                                                        }} />
                                                         <p className="m-t-10">Advanced Information</p>
                                                         <div className="form-group-attached">
                                                             <div className="row">
@@ -371,19 +422,22 @@ class JoinNetwork extends Component {
                                                                 </div>
                                                             </div>
                                                         }
-
+                                                        <div className="verificationWrapper" style={{display: this.state.showCreditCardAlert ? 'block' : 'none'}}>
+                                                          <CardVerification cardVerificationListener={this.cardVerificationListener}/>
+                                                        </div>
                                                         <LaddaButton
                                                             loading={this.state.joinLoading}
                                                             data-size={S}
+                                                            disabled={this.config && this.config.voucher ? false : !this.state.cardVerified}
                                                             data-style={SLIDE_UP}
                                                             data-spinner-size={30}
                                                             data-spinner-lines={12}
                                                             className="btn btn-success"
+                                                            onClick={this.onJoinSubmit}
                                                             type="submit"
                                                         >
                                                             <i className="fa fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;Join
                                                         </LaddaButton>
-                                                    </form>
                                                 </div>
                                             </div>
                                         </div>
@@ -483,7 +537,7 @@ class JoinNetwork extends Component {
 
 export default withTracker(() => {
     return {
-        networks: Networks.find({}).fetch(),
+        networks: Networks.find({active: true}).fetch(),
         subscriptions: [Meteor.subscribe("networks")]
     }
 })(withRouter(JoinNetwork))

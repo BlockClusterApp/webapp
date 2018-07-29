@@ -1,13 +1,22 @@
 body.menu-behind .header .brand {
-    margin-right: 25px;
-    margin-left: 25px;
-    padding-left: 7px;
+  margin-right: 25px;
+  margin-left: 25px;
+  padding-left: 7px;
 }
 
 .page-sidebar .sidebar-header {
-    background: white;
+  background: white;
 }
 
 body.fixed-header .header {
-    background: white;
+  background: white;
+}
+
+.dropdown-toggle:after {
+  position: inherit;
+  right: 15px;
+}
+
+.dropdown {
+  cursor: pointer;
 }

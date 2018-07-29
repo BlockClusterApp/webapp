@@ -16,7 +16,8 @@ NetworkInvitation.inviteUserToNetwork = async function(
   userId
 ) {
   const network = Networks.find({
-    instanceId: networkId
+    instanceId: networkId,
+    active: true
   }).fetch()[0];
   if (!network) {
     throw new Error("Invalid network");
@@ -125,7 +126,7 @@ NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
   return { invitation, invitedUser, invitingUser, network };
 };
 
-NetworkInvitation.acceptInvitation = function(invitationId, locationCode) {
+NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networkConfig) {
   return new Promise((resolve, reject) => {
     const invitation = UserInvitation.find({
       _id: invitationId
@@ -135,7 +136,6 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode) {
       _id: invitation.networkId
     }).fetch()[0];
 
-    console.log("Joining network", invitationId, network);
     Meteor.call("joinNetwork",
       network.name,
       invitation.nodeType || "authority",
@@ -147,9 +147,9 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode) {
       network.atomicSwapContractAddress,
       network.streamsContractAddress,
       locationCode,
+      networkConfig,
       invitation.inviteTo,
       (err, res) => {
-        console.log("Join network res", err, res);
         if(err) return reject(err);
         UserInvitation.update({
           _id: invitationId,

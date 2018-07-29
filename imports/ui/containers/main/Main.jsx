@@ -25,9 +25,11 @@ import APIsCreds from "../../pages/apisCreds/APIsCreds.jsx"
 import Peers from "../../pages/peers/Peers.jsx"
 import CreateStream from "../../pages/createStream/CreateStream.jsx"
 import PublishStream from "../../pages/publishStream/PublishStream.jsx"
-import SubscribeStream from "../../pages/subscribeStream/SubscribeStream.jsx"
+import AccessControlStream from "../../pages/accessControlStream/AccessControlStream.jsx"
 import BCAccountsView from "../../pages/bcAccountsView/BCAccountsView.jsx"
 import AssetsAudit from "../../pages/assetsAudit/AssetsAudit.jsx"
+import BillingDashboard from '../../pages/billing/BillingDashboard.jsx'
+import Payments from '../../pages/billing/Payments.jsx'
 
 export default class Main extends Component {
 	render() {
@@ -55,9 +57,11 @@ export default class Main extends Component {
 						<Route exact path="/app/networks/:id/assets/audit" component={AssetsAudit} />
 						<Route exact path="/app/networks/:id/streams/create" component={CreateStream} />
 						<Route exact path="/app/networks/:id/streams/publish" component={PublishStream} />
-						<Route exact path="/app/networks/:id/streams/subscribe" component={SubscribeStream} />
+						<Route exact path="/app/networks/:id/streams/access" component={AccessControlStream} />
 						<Route exact path="/app/networks/:id/bc-accounts" component={BCAccountsView} />
 						<Route exact path="/app/networks/:id/security/apis" component={APIsCreds} />
+            			<Route exact path="/app/billing" component={BillingDashboard} />
+            			<Route exact path="/app/payments" component={Payments} />
 		            </div>
 				</div>
 				<Footer />

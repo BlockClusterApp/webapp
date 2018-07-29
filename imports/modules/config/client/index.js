@@ -35,5 +35,6 @@ module.exports = {
   },
   kubeRestApiHost: process.env.KUBE_REST_API_HOST || defaults.kubeRestApiHost,
   namespace: process.env.NAMESPACE || defaults.namespace,
-  firewallPort: process.env.FIREWALL_PORT || defaults.firewallPort
+  firewallPort: process.env.FIREWALL_PORT || defaults.firewallPort,
+  razorpayId: process.env.RAZORPAY_ID || defaults.razorpay.id
 };
