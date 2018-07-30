@@ -13,8 +13,8 @@ server:
     maxReplicas: 2
 
   production:
-    minReplicas: 1
-    maxRepicas: 5
+    minReplicas: 3
+    maxRepicas: 20
 
 # NODE_ENV: dev
 # image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/webapp

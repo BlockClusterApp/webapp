@@ -67,7 +67,7 @@ https://{{ .Values.ROOT_URL }}
 
 {{- define "envs.redisHost" }}
 {{- if eq .Values.NODE_ENV "production" -}}
-redis.{{ template "server.namespace" . }}.svc.cluster.local
+webapp-production-001.vyqym8.0001.aps1.cache.amazonaws.com
 {{- else -}}
 redis.{{ template "server.namespace" . }}.svc.cluster.local
 {{- end -}}

@@ -4,7 +4,7 @@ export COMMIT_HASH=${CIRCLE_SHA1}
 if [ "$CIRCLE_TAG" = "production" ] || [ "$CIRCLE_BRANCH" = "production" ];
 then
   export NODE_ENV=production
-  export CLUSTER_PREFIX="production";
+  export CLUSTER_PREFIX="production-ap-south-1a";
   export ROOT_URL="app.blockcluster.io";
 elif [ "$CIRCLE_TAG" = "staging" ] || [ "$CIRCLE_BRANCH" = "master" ] || [ "$CIRCLE_BRANCH"  = "staging" ];
 then

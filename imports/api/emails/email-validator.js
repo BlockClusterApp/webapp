@@ -68,11 +68,11 @@ Verifier.validateToken = function(token, emailId) {
       },
       {
         $set: {
-          "emails.$.emailVerified": true
+          "emails.$.verified": true
         }
       }
     );
-        
+
     const emailUpdateResult = EmailVerification.update(
             {
               _id: emailVerificationDoc._id
@@ -82,7 +82,7 @@ Verifier.validateToken = function(token, emailId) {
                 active: false
               }
             }
-          ); 
+          );
 
       return resolve(true);
   });
