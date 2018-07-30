@@ -218,7 +218,7 @@ NetworkInvitation.resendInvitation = async function(inviteId, userId) {
   });
 
   await sendEmail({
-    from: { name: "Jason from Blockcluster", email: "jason@blockcluster.io" },
+    from: { name: "Jason from Blockcluster", email: "no-reply@blockcluster.io" },
     to: invite.metadata.inviteTo.email,
     subject: `Invite to join ${network.name} network on blockcluster.io`,
     text: `Visit the following link to join ${

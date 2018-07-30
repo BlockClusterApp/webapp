@@ -202,4 +202,10 @@ RazorPay.applyCardVerification = async paymentId => {
   }
 };
 
+Meteor.methods({
+  getRazorPayId: async () => {
+    return Config.RazorPay.id
+  }
+});
+
 export default RazorPay;

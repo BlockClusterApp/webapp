@@ -48,8 +48,8 @@ export default class Register extends Component {
 			<div className="full-height">
 				<div className="register-container full-height sm-p-t-30">
 		            <div className="d-flex justify-content-center flex-column full-height ">
-		                <img src="assets/img/logo/blockcluster.png" alt="logo" width="250" />
-					<h3>This BaaS provides the easiest way to create your blockchain consortiums</h3>
+	                <Link to={"//blockcluster.io"} target="_self"><img src="assets/img/logo/blockcluster.png" alt="logo" width="250" /></Link>
+					<h3>This BMS provides the easiest way to create your blockchain consortiums</h3>
 		                <p>
 		                    Create a BlockCluster account. If you already have an account then click <Link to="/login" className="text-info">here</Link> to login
 		                </p>
@@ -125,7 +125,7 @@ export default class Register extends Component {
 		                            <p><small>I agree to the <a href="https://www.blockcluster.io/terms" className="text-info">Pages Terms</a> and <a href="https://www.blockcluster.io/privacy" className="text-info">Privacy</a>.</small></p>
 		                        </div>
 		                        <div className="col-lg-6 text-right">
-		                            <a href="#" className="text-info small">Help? Contact Support</a>
+		                            <a href="https://blockcluster.io/contact" className="text-info small">Help? Contact Support</a>
 		                        </div>
 		                    </div>
 

@@ -16,4 +16,20 @@
     font-size: 0.8em;
     margin-top: 10px;
   }
+
+  .form-group-default .form-control {
+	  height: 25px !important;
+  }
+
+  .delete-button {
+	  cursor: pointer;
+	  background: #fddede;
+	  color: #fff;
+  }
+
+  .apply-button {
+	  cursor: pointer;
+	  background: #1dbb99;
+	  color: #fff;
+  }
 }
