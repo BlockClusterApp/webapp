@@ -66,7 +66,7 @@ NetworkInvitation.inviteUserToNetwork = async function(
   });
 
   await sendEmail({
-    from: { name: "Jason from Blockcluster", email: "jason@blockcluster.io" },
+    from: { name: "Jason from Blockcluster", email: "no-reply@blockcluster.io" },
     to: email,
     subject: `Invite to join ${network.name} network on blockcluster.io`,
     text: `Visit the following link to join ${
