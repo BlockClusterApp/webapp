@@ -13,6 +13,15 @@ class RazorPay extends React.Component {
     };
   }
 
+  componentDidMount() {
+    Meteor.call('getRazorPayId', (err, res) => {
+      if(err){
+        return alert("Internal error. Kindly reload page");
+      }
+      this.razorpayId = res;
+    });
+  }
+
   triggerRazorPay = (customOptions) => {
     this.setState({
       loading: true
@@ -32,8 +41,13 @@ class RazorPay extends React.Component {
     if(!notes.paymentRequestId) {
       return console.log("Payment request id is required for razorpay");
     }
+
+    if(!this.razorpayId){
+      return alert("Internal error. Kindly reload page");
+    }
+
     const razorpayOptions = {
-      key: Config.razorpayId,
+      key: this.razorpayId,
       amount,
       name: 'Blockcluster',
       image: "/assets/img/logo/favicon-96x96.png",
