@@ -1,7 +1,7 @@
 import Config from "../../modules/config/server";
 const RemoteConfig = Config.RemoteConfig();
 
-const LocationConfigs = RemoteConfig.clusters[Config.namespace];
+const LocationConfigs = RemoteConfig.clusters[Config.env];
 
 const LocationApi = {};
 

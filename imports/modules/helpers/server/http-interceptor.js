@@ -1,8 +1,8 @@
 import Config from "../../config/server";
 const RemoteConfig = Config.RemoteConfig();
 
-const namespace = Config.namespace;
-const locationConfigs = Object.values(RemoteConfig.clusters[namespace]);
+const env = Config.env;
+const locationConfigs = Object.values(RemoteConfig.clusters[env]);
 
 function getLocationConfigURL(url) {
   for (let locationConfig of locationConfigs) {
@@ -10,14 +10,14 @@ function getLocationConfigURL(url) {
       return locationConfig;
     }
   }
-  return RemoteConfig.clusters[namespace]["us-west-2"];
+  return RemoteConfig.clusters[env]["us-west-2"];
 }
 
 const kubeURLs = locationConfigs.map(lc => lc.masterApiHost);
 
 HTTP.setInterceptorFunction(requestOptions => {
   /*
-    Sample requestOptions 
+    Sample requestOptions
     {
       url: "https://www.google.com",
       method: "GET",

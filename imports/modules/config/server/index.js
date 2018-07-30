@@ -45,7 +45,14 @@ function getNamespace() {
   return process.env.NAMESPACE || defaults.namespace || "dev";
 };
 
-// const locationConfigs = RemoteConfig.clusters[getNamespace()];
+function getEnv() {
+  if(['production', 'staging', 'test', 'dev'].includes(process.env.NODE_ENV)){
+    return process.env.NODE_ENV;
+  }
+  return "dev";
+}
+
+// const locationConfigs = RemoteConfig.clusters[getEnv()];
 // locationConfigs.forEach(lc => {
 //   locationMapping[lc.locationCode] = lc.locationName;
 // });
@@ -53,7 +60,7 @@ function getNamespace() {
 module.exports = {
   sendgridAPIKey: process.env.SENDGRID_API_KEY || defaults.sendgridApi,
   workerNodeIP: (locationCode = "us-west-2") => {
-    const locationConfig = RemoteConfig.clusters[getNamespace()][locationCode];
+    const locationConfig = RemoteConfig.clusters[getEnv()][locationCode];
     return locationConfig.workerNodeIP;
   },
   redisHost: process.env.REDIS_HOST || defaults.redisHost,
@@ -63,11 +70,11 @@ module.exports = {
     return getDynamoWokerDomainName(locationCode);
   },
   kubeRestApiHost: (locationCode = "us-west-2") => {
-    const locationConfig = RemoteConfig.clusters[getNamespace()][locationCode];
+    const locationConfig = RemoteConfig.clusters[getEnv()][locationCode];
     return locationConfig.masterApiHost;
   },
   clusterApiAuth: (locationCode = "us-west-2") => {
-    const locationConfig = RemoteCOnfig.clusters[getNamespace()][locationCode];
+    const locationConfig = RemoteCOnfig.clusters[getEnv()][locationCode];
     return locationConfig.auth;
   },
   firewallPort: process.env.FIREWALL_PORT || defaults.firewallPort,
@@ -75,6 +82,7 @@ module.exports = {
   RemoteConfig() {
     return RemoteConfig
   },
+  env: getEnv(),
   RazorPay: {
     id: process.env.RAZORPAY_ID || defaults.razorpay.id,
     secret: process.env.RAZORPAY_KEY || defaults.razorpay.secret
