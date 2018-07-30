@@ -106,7 +106,7 @@ export default class CardVerification extends React.Component {
 
     const Message = (
       <div className="card-verification">
-        <div className="alert alert-success">
+        <div className="alert alert-danger">
           <div className="row clearfix">
             {/* <div className="col-md-5">
               <button className="btn btn-primary" onClick={this.openCreditCardDialog}>

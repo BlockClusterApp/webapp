@@ -32,7 +32,7 @@ export default class Login extends Component {
 		return (
 			<div className="login-wrapper">
 	            <div className="bg-pic">
-	                <img src="assets/img/pages/login2.jpg"  alt="" className="lazy" />
+					<img src="assets/img/pages/login2.jpg"  alt="" className="lazy" />
 	                <div className="bg-caption pull-bottom sm-pull-bottom text-white p-l-20 m-b-20">
 	                    <h2 className="semi-bold text-white">
 	                        Blockchain Management System for Consortiums
@@ -44,7 +44,7 @@ export default class Login extends Component {
 	            </div>
 	            <div className="login-container bg-white">
 	                <div className="p-l-50 m-l-20 p-r-50 m-r-20 p-t-50 m-t-30 sm-p-l-15 sm-p-r-15 sm-p-t-40">
-	                    <img src="assets/img/logo/blockcluster.png" alt="logo" height="55" />
+						<Link to={"//blockcluster.io"} target="_self"><img src="assets/img/logo/blockcluster.png" alt="logo" height="55" /></Link>
 	                    <p className="p-t-35">Sign into your account</p>
 	                    <form id="form-login" className="p-t-15" role="form" onSubmit={this.login}>
 	                        <div className="form-group form-group-default">
