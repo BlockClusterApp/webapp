@@ -33,6 +33,18 @@
           "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
         }
       }
+    },
+    "production": {
+      "ap-south-1a": {
+        "masterApiHost": "https://k8s-production-ap-south-1a-api.blockcluster.io",
+        "workerNodeIP": "13.127.197.183",
+        "locationCode": "ap-south-1a",
+        "locationName": "Asia Pacific South (Mumbai) - 1",
+        "auth": {
+          "user": "admin",
+          "pass": "1XF3AzzpYT3en8JQIWIyoar0bY29i5tN"
+        }
+      }
     }
   }
 }

@@ -23,7 +23,7 @@ Verifier.sendEmailVerification = async function(user) {
   });
 
   const emailProps = {
-    from: {email: "jason@blockcluster.io", name: "Jason from Blockcluster"},
+    from: {email: "no-reply@blockcluster.io", name: "Jason from Blockcluster"},
     to: email,
     subject: `Confirm ${user.emails[0].address} on blockcluster.io`,
     text: `Visit the following link to verify your email address. ${link}`,
@@ -42,13 +42,12 @@ Verifier.sendEmailVerification = async function(user) {
   return true;
 };
 
-Verifier.validateToken = function(token, emailId) {
+Verifier.validateToken = function(token) {
   return new Promise(async (resolve, reject) => {
     let emailVerificationDoc;
     try {
       emailVerificationDoc = EmailVerification.find({
         uniqueToken: token,
-        emailId,
         active: true
       }).fetch()[0];
     } catch (err) {
@@ -68,11 +67,11 @@ Verifier.validateToken = function(token, emailId) {
       },
       {
         $set: {
-          "emails.$.emailVerified": true
+          "emails.$.verified": true
         }
       }
     );
-        
+
     const emailUpdateResult = EmailVerification.update(
             {
               _id: emailVerificationDoc._id
@@ -82,7 +81,7 @@ Verifier.validateToken = function(token, emailId) {
                 active: false
               }
             }
-          ); 
+          );
 
       return resolve(true);
   });
@@ -91,8 +90,8 @@ Verifier.validateToken = function(token, emailId) {
 
 
 Meteor.methods({
-    async emailVerification (token, email){
-        const result = await Verifier.validateToken(token, email);
+    async emailVerification (token){
+        const result = await Verifier.validateToken(token);
         return result;
     }
 })

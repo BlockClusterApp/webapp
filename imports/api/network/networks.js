@@ -35,7 +35,6 @@ NetworkObj.getNodeCount = async () => {
     }
   });
 
-  console.log("Micro nodes", count);
   return count;
 }
 
