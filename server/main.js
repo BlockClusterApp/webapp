@@ -1161,7 +1161,7 @@ spec:
         }).fetch()[0];
 
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/utility/vote`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/utility/vote`, {
             "content": JSON.stringify({
                 toVote: toVote
             }),
@@ -1188,7 +1188,7 @@ spec:
         var network = Networks.find({
             _id: networkId
         }).fetch()[0];
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/utility/unVote`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/utility/unVote`, {
             "content": JSON.stringify({
                 toUnvote: toUnvote
             }),
@@ -1216,7 +1216,7 @@ spec:
             _id: networkId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/utility/createAccount`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/utility/createAccount`, {
             "content": JSON.stringify({
                 name: name,
                 password: password
@@ -1268,7 +1268,7 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/assets/createAssetType`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/createAssetType`, {
             "content": JSON.stringify({
                 assetName: assetName,
                 assetType: assetType,
@@ -1300,7 +1300,7 @@ spec:
             instanceId: networkId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/assets/issueBulkAsset`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/issueBulkAsset`, {
             "content": JSON.stringify({
                 fromAccount: fromAddress,
                 assetName: assetName,
@@ -1364,7 +1364,7 @@ spec:
         }).fetch()[0];
 
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/assets/transferBulkAsset`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/transferBulkAsset`, {
             "content": JSON.stringify({
                 fromAccount: fromAddress,
                 toAccount: toAddress,
@@ -1395,7 +1395,7 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/assets/transferSoloAsset`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/transferSoloAsset`, {
             "content": JSON.stringify({
                 fromAccount: fromAddress,
                 toAccount: toAddress,
@@ -1426,7 +1426,7 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/assets/getBulkAssetBalance`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/getBulkAssetBalance`, {
             "content": JSON.stringify({
                 assetName: assetName,
                 account: address
@@ -1455,7 +1455,7 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/api/node/${network.instanceId}/assets/getSoloAssetInfo`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/getSoloAssetInfo`, {
             "content": JSON.stringify({
                 assetName: assetName,
                 identifier: identifier
