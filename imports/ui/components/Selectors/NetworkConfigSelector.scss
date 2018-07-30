@@ -23,13 +23,21 @@
 
   .delete-button {
 	  cursor: pointer;
-	  background: #fddede;
+	  background: #f35958;
 	  color: #fff;
   }
+
+	.delete-button:hover {
+		background: #fb7270;
+	}
 
   .apply-button {
 	  cursor: pointer;
 	  background: #1dbb99;
 	  color: #fff;
+  }
+
+  .apply-button:hover {
+	  background: #4ac9ad;
   }
 }
