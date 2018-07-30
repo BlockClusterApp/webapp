@@ -122,16 +122,12 @@ class NetworkConfigSelector extends Component {
 
     let voucherActionButton = undefined;
     if(this.state.voucher.status === 'success'){
-      voucherActionButton =  <button
-        type="button"
-        className="btn btn-danger" onClick={this.deleteVoucher} disabled={this.state.voucherLoading}>
-        Remove
-      </button>
+      voucherActionButton =  <button onClick={this.deleteVoucher} disabled={this.state.voucherLoading} className="input-group-addon delete-button">
+          <span><i className="fa fa-trash" aria-hidden="true"></i> Delete</span>
+  </button>
     } else {
-      voucherActionButton = <button
-        type="button"
-        className="btn btn-success" onClick={this.validateVoucher} disabled={this.state.voucherLoading}>
-        Apply
+      voucherActionButton = <button onClick={this.validateVoucher} disabled={this.state.voucherLoading} className="input-group-addon apply-button">
+          <span><i className="fa fa-check" aria-hidden="true"></i> Apply</span>
       </button>
     }
 
@@ -143,16 +139,16 @@ class NetworkConfigSelector extends Component {
                     <div className="col-md-4">
                         {dropDown}
                     </div>
-                    <div className="col-md-5">
-                      <div className="form-group form-group-default">
-                          <label>Voucher Code</label>
-                          <input type="text" className="form-control" name="projectName" ref={(input) => this.voucher = input} />
+                    <div className="col-md-8">
+                        <div className="form-group form-group-default input-group">
+                            <div className="form-input-group">
+                                <label>Voucher Code {
+                                  this.state.voucher && this.state.voucher.status === 'error' ? <span className="error-message">{this.state.voucher.error}</span> : this.state.voucher.status === 'success' ? <span className="success-message">Voucher Applied</span> : undefined
+                                }</label>
+                                <input type="text" className="form-control" name="projectName" ref={(input) => this.voucher = input} />
+                            </div>
+                            {voucherActionButton}
                         </div>
-                    </div>
-                    <div className="col-md-3">
-                      <div className="form-group form-group-default" style={{borderLeft: 'none'}}>
-                        {voucherActionButton}
-                      </div>
                     </div>
                 </div>
                 <div className="row clearfix">
@@ -177,9 +173,7 @@ class NetworkConfigSelector extends Component {
                     </div>
                 </div>
               </div>
-              {
-                this.state.voucher && this.state.voucher.status === 'error' ? <span className="error-message">{this.state.voucher.error}</span> : this.state.voucher.status === 'success' ? <span className="success-message">Congrats. You have successfully applied the voucher</span> : undefined
-              }
+
             </div>
         </div>
     );
