@@ -109,7 +109,7 @@ class CreateNetwork extends Component {
                                 </div>
                                 <div className="card-block">
                                     <h3>
-                                        Create Your Own Blockchain Network
+                                        Create Your Blockchain Network
                                     </h3>
                                     <p>This will create a private and permissioned blockchain network. Technically it will create a single node network.</p>
                                     <ul>

@@ -77,12 +77,12 @@ class Navbar extends Component {
 			              	<ul className="sub-menu">
 			                	<li>
 									<Link target="_blank" to={"https://platform.api.blockcluster.io/"}>
-			                    		APIs
+			                    		Platform APIs
 			                    	</Link>
 			                  		<span className="icon-thumbnail"><i className="fa fa-code"></i></span>
 			                	</li>
 								<li>
-									<Link target="_blank" to={"https://docs.platform.api.blockcluster.io/"}>
+									<Link to={"/app/notifications"}>
 			                    		Notifications
 			                    	</Link>
 			                  		<span className="icon-thumbnail"><i className="fa fa-bell"></i></span>

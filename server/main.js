@@ -2000,6 +2000,14 @@ spec:
                 callbackURL: callbackURL
             }
         })
+    },
+    "updateNetworksCallbackURL": function(callbackURL) {
+        console.log(this.userId, callbackURL)
+        Meteor.users.update({ _id: this.userId }, {
+			$set:{
+				"profile.notifyURL": callbackURL
+			}
+		});
     }
 })
 

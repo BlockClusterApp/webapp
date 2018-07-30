@@ -17,6 +17,7 @@ import Invites from '../../pages/userInvitation/Invites.jsx';
 import CreateAssetType from "../../pages/createAssetType/CreateAssetType.jsx"
 import AssetsStats from "../../pages/assetsStats/AssetsStats.jsx"
 import NodeEvents from "../../pages/nodeEvents/NodeEvents.jsx"
+import PlatformNotifications from "../../pages/platformNotifications/PlatformNotifications.jsx"
 import AssetsManagement from "../../pages/assetsManagement/AssetsManagement.jsx"
 import AssetsExchange from "../../pages/assetsExchange/AssetsExchange.jsx"
 import AssetsSearch from "../../pages/assetsSearch/AssetsSearch.jsx"
@@ -40,6 +41,7 @@ export default class Main extends Component {
 					<Header />
 					<div className="page-content-wrapper">
                     	<Route exact path="/app/networks" component={NetworksList} />
+						<Route exact path="/app/notifications" component={PlatformNotifications} />
 						<Route exact path="/app/createNetwork" component={CreateNetwork} />
 						<Route exact path="/app/networks/:id/settings" component={ViewEditNetwork} />
 						<Route exact path="/app/networks/:id/impulse" component={ViewEditImpulse} />
