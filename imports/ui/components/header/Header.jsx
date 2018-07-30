@@ -22,11 +22,13 @@ class Header extends Component {
         />
         <div className="">
           <div className="brand inline">
+            <Link to="/app/networks">
             <img
               src="/assets/img/logo/blockcluster-bw.png"
               alt="logo"
               height="35"
             />
+            </Link>
           </div>
           <ul className="hidden-md-down notification-list no-margin hidden-sm-down b-grey b-l no-style p-l-30 p-r-20">
             <li className="p-r-10 inline" title="Create Network">
