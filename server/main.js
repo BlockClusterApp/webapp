@@ -350,7 +350,7 @@ Meteor.methods({
                                               "volumeMounts": [
                                                 {
                                                   "name": "dynamo-dir",
-                                                  "mountPath": "/data"
+                                                  "mountPath": "/data/db"
                                                 }
                                               ],
                                           },
@@ -391,6 +391,12 @@ Meteor.methods({
                                                   {
                                                       "containerPort":6382
                                                   }
+                                              ],
+                                              "volumeMounts": [
+                                                {
+                                                  "name": "dynamo-dir",
+                                                  "mountPath": "/dynamo/bcData"
+                                                }
                                               ],
                                               "resources": {
                                                 "requests": {
@@ -1263,6 +1269,7 @@ spec:
         // }
     },
     "createAssetType": function(instanceId, assetName, assetType, assetIssuer, reissuable, parts) {
+        this.unblock();
         var myFuture = new Future();
         var network = Networks.find({
             instanceId: instanceId
