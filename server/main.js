@@ -1981,15 +1981,21 @@ spec:
             address: accountAddress
         }).fetch()[0]
 
-        HTTP.call("GET", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/utility/getPrivateKey?address=${accountAddress}&password=${account.password}`, function(error, response) {
-            console.log(error, response)
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/utility/getPrivateKey`, {
+            "content": JSON.stringify({
+                address: accountAddress,
+                password: account.password
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
             if (error) {
                 myFuture.throw("An unknown error occured");
             } else {
                 myFuture.return(response.content);
             }
         })
-
         return myFuture.wait();
     },
     "downloadReport": function(instanceId, assetName, uID) {
