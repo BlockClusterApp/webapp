@@ -82,7 +82,7 @@ class Invites extends Component {
       Meteor.call(
         "acceptInvitation",
         inviteId,
-        this.inviteLocationMapping[inviteId] || "us-west-2",
+        this.inviteLocationMapping[inviteId] || this.state.locations[0].locationCode,
         this.inviteConfigMapping[inviteId],
         () => {
           this.loading[inviteId] = false;
