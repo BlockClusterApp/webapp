@@ -19,6 +19,9 @@ class LocationSelector extends Component {
       this.setState({
         locations: res
       });
+      if (this.props && this.props.locationChangeListener) {
+        this.props.locationChangeListener(res[0] ? res[0].locationCode : 'ap-south-1a');
+      }
     });
   }
 
@@ -39,7 +42,7 @@ class LocationSelector extends Component {
           style={this.props.style}
           ref={input => (this.location = input)}
           onChange={this.onLocationChange.bind(this)}
-          selected="us-west-2"
+          selected="ap-south-1a"
         >
           {locationsList}
         </select>
