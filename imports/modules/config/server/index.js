@@ -30,7 +30,8 @@ function getDynamoWokerDomainName(locationCode) {
   }
   switch (process.env.NODE_ENV) {
     case "production":
-      return `app${prefix}.blockcluster.io`;
+      const URL = process.env.ROOT_URL;
+      return `${URL.split("://")[1].replace(".blockcluster.io", '')}${prefix}.blockcluster.io`;
     case "staging":
       return `app${prefix}.blockcluster.io`;
     case "test":
@@ -60,6 +61,7 @@ function getEnv() {
 module.exports = {
   sendgridAPIKey: process.env.SENDGRID_API_KEY || defaults.sendgridApi,
   workerNodeIP: (locationCode = "us-west-2") => {
+    console.log("Location", locationCode);
     const locationConfig = RemoteConfig.clusters[getEnv()][locationCode];
     return locationConfig.workerNodeIP;
   },

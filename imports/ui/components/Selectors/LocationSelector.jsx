@@ -19,6 +19,9 @@ class LocationSelector extends Component {
       this.setState({
         locations: res
       });
+      if (this.props && this.props.locationChangeListener) {
+        this.props.locationChangeListener(res[0] ? res[0].locationCode : 'ap-south-1a');
+      }
     });
   }
 

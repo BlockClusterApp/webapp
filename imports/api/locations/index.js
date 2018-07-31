@@ -9,7 +9,8 @@ LocationApi.getLocations = function() {
   return Object.values(LocationConfigs).reduce((list, locationConfig) => {
     list.push({
       locationCode: locationConfig.locationCode,
-      locationName: locationConfig.locationName
+      locationName: locationConfig.locationName,
+      workerNodeIP: locationConfig.workerNodeIP
     });
     return list;
   }, []);
