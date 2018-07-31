@@ -204,7 +204,8 @@ Meteor.methods({
           "networkConfig.cpu": 500
         }).fetch();
 
-        if(microNodes.length >= 2) {
+        const isMicro = networkConfig && ((networkConfig.config && networkConfig.config.cpu === 0.5) || (networkConfig.voucher && networkConfig.voucher.cpu === 0.5));
+        if(microNodes.length > 2 && isMicro) {
           throw new Meteor.Error('Can have maximum of 2 micro nodes only');
         }
 
@@ -764,10 +765,10 @@ Meteor.methods({
           "networkConfig.cpu": 500
         }).fetch();
 
-        if(microNodes.length >= 2) {
+        const isMicro = networkConfig && ((networkConfig.config && networkConfig.config.cpu === 0.5) || (networkConfig.voucher && networkConfig.voucher.cpu === 0.5));
+        if(microNodes.length > 2 && isMicro) {
           throw new Meteor.Error('Can have maximum of 2 micro nodes only');
         }
-
 
         locationCode = locationCode || "us-west-2";
 
