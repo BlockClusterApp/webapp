@@ -186,6 +186,7 @@ class JoinNetwork extends Component {
 
     locationChangeListener(newLocationCode){
         this.locationCode = newLocationCode;
+        console.log("New location", newLocationCode);
     }
 
 
