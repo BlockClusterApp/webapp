@@ -26,7 +26,11 @@ class Explorer extends Component {
             totalAccounts: 0,
             blockOrTxnOutput: '',
             totalSmartContracts: 0,
-            totalBlocksScanned: 0
+            totalBlocksScanned: 0,
+            addLatestBlocksTimer: null,
+            refreshTxpoolTimer: null,
+            refreshTotalSmartContractsTimer: null,
+            refreshTotalBlocksScannedTimer: null
         }
 
         this.addLatestBlocks = this.addLatestBlocks.bind(this)
@@ -38,16 +42,23 @@ class Explorer extends Component {
     }
 
     componentDidMount() {
-        setTimeout(this.addLatestBlocks, 2000);
-        setTimeout(this.refreshTxpool, 2000);
-        setTimeout(this.refreshTotalSmartContracts, 2000);
-        setTimeout(this.refreshTotalBlocksScanned, 2000);
+        this.setState({
+            addLatestBlocksTimer: setTimeout(this.addLatestBlocks, 2000),
+            refreshTxpoolTimer: setTimeout(this.refreshTxpool, 2000),
+            refreshTotalSmartContractsTimer: setTimeout(this.refreshTotalSmartContracts, 2000),
+            refreshTotalBlocksScannedTimer: setTimeout(this.refreshTotalBlocksScanned, 2000)
+        })
     }
 
     componentWillUnmount() {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
         });
+
+        clearTimeout(this.state.addLatestBlocksTimer);
+        clearTimeout(this.state.refreshTxpoolTimer);
+        clearTimeout(this.state.refreshTotalSmartContractsTimer);
+        clearTimeout(this.state.refreshTotalBlocksScannedTimer);
     }
 
     selectNetwork(e) {
@@ -83,10 +94,14 @@ class Explorer extends Component {
             this.setState({
                 totalSmartContracts: (this.props.network[0].totalSmartContracts ? this.props.network[0].totalSmartContracts : 0)
             }, () => {
-                setTimeout(this.refreshTotalSmartContracts, 100)
+                this.setState({
+                    refreshTotalSmartContractsTimer: setTimeout(this.refreshTotalSmartContracts, 100)
+                })
             })
         } else {
-            setTimeout(this.refreshTotalSmartContracts, 1000)
+            this.setState({
+                refreshTotalSmartContractsTimer: setTimeout(this.refreshTotalSmartContracts, 1000)
+            })
         }
 
     }
@@ -96,10 +111,14 @@ class Explorer extends Component {
             this.setState({
                 totalBlocksScanned: (this.props.network[0].blockToScan ? (this.props.network[0].blockToScan - 1) : 0)
             }, () => {
-                setTimeout(this.refreshTotalBlocksScanned, 100)
+                this.setState({
+                    refreshTotalBlocksScannedTimer: setTimeout(this.refreshTotalBlocksScanned, 100)
+                })
             })
         } else {
-            setTimeout(this.refreshTotalBlocksScanned, 1000)
+            this.setState({
+                refreshTotalBlocksScannedTimer: setTimeout(this.refreshTotalBlocksScanned, 1000)
+            })
         }
     }
 
@@ -144,20 +163,28 @@ class Explorer extends Component {
                                 totalPending: totalPending,
                                 totalQueued: totalQueued
                             }, () => {
-                                setTimeout(this.refreshTxpool, 500)
+                                this.setState({
+                                    refreshTxpoolTimer: setTimeout(this.refreshTxpool, 500)
+                                })
                             })
 
                         } else {
-                            setTimeout(this.refreshTxpool, 500);
+                            this.setState({
+                                refreshTxpoolTimer: setTimeout(this.refreshTxpool, 500)
+                            })
                         }
 
                     })
                 } else {
-                    setTimeout(this.refreshTxpool, 500);
+                    this.setState({
+                        refreshTxpoolTimer: setTimeout(this.refreshTxpool, 500)
+                    })
                 }
             })
         } else {
-            setTimeout(this.refreshTxpool, 1000)
+            this.setState({
+                refreshTxpoolTimer: setTimeout(this.refreshTxpool, 500)
+            })
         }
     }
 
@@ -189,14 +216,20 @@ class Explorer extends Component {
                                     oldestBlock: latestBlockNumber,
                                     blocks: [latestBlock]
                                 }, () => {
-                                    setTimeout(this.addLatestBlocks, 500);
+                                    this.setState({
+                                        addLatestBlocksTimer: setTimeout(this.addLatestBlocks, 500)
+                                    })
                                 })
                             } else {
-                                setTimeout(this.addLatestBlocks, 500);
+                                this.setState({
+                                    addLatestBlocksTimer: setTimeout(this.addLatestBlocks, 500)
+                                })
                             }
                         })
                     } else {
-                        setTimeout(this.addLatestBlocks, 500);
+                        this.setState({
+                            addLatestBlocksTimer: setTimeout(this.addLatestBlocks, 500)
+                        })
                     }
                 })
             } else {
@@ -207,15 +240,21 @@ class Explorer extends Component {
                             latestBlock: this.state.latestBlock + 1,
                             blocks: this.state.blocks
                         }, () => {
-                            setTimeout(this.addLatestBlocks, 500);
+                            this.setState({
+                                addLatestBlocksTimer: setTimeout(this.addLatestBlocks, 500)
+                            })
                         })
                     } else {
-                        setTimeout(this.addLatestBlocks, 500);
+                        this.setState({
+                            addLatestBlocksTimer: setTimeout(this.addLatestBlocks, 500)
+                        })
                     }
                 })
             }
         } else {
-            setTimeout(this.addLatestBlocks, 500);
+            this.setState({
+                addLatestBlocksTimer: setTimeout(this.addLatestBlocks, 500)
+            })
         }
     }
 
