@@ -9,6 +9,7 @@ export default class CardVerification extends React.Component {
 
     this.state = {
       showModal: false,
+      loading: false,
       cardVerificationStatus: undefined
     }
   }
@@ -22,7 +23,8 @@ export default class CardVerification extends React.Component {
         this.props.cardVerificationListener(!!reply);
       }
       this.setState({
-        cardVerificationStatus: !!reply
+        cardVerificationStatus: !!reply,
+        loading: false
       });
     });
   }
@@ -48,6 +50,9 @@ export default class CardVerification extends React.Component {
   };
 
   rzPaymentHandler = (pgResponse) => {
+    this.setState({
+      loading: true
+    });
     Meteor.call("applyRZCardVerification", pgResponse.razorpay_payment_id, (err, res) => {
       this.checkCardStatus();
     });
@@ -83,8 +88,8 @@ export default class CardVerification extends React.Component {
                       An amount of INR 1.00 will be deducted from your account which would be
                       refunded to your account within 5 working bank days.
                     </p>
-                    <center><RazorPay buttonText={`Verify credit card`} amount={100} paymentHandler={this.rzPaymentHandler} preTriggerPaymentListener={this.preTriggerPaymentListener} /></center>
-                    <p><br />Only credit card is accepted. If you choose any other payment method, the verification won't be successful.</p>
+                    <center><RazorPay loading={this.state.loading} buttonText={`Verify credit card`} amount={100} paymentHandler={this.rzPaymentHandler} preTriggerPaymentListener={this.preTriggerPaymentListener} /></center>
+                    <p><br />Only credit card is accepted for now. If you choose any other payment method, the verification won't be successful.</p>
                   </div>
                 </div>
               </div>

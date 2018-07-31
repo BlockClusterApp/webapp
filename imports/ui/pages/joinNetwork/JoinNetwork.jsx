@@ -19,6 +19,7 @@ class JoinNetwork extends Component {
             joinFormSubmitError: "",
             inviteFormSubmitError: "",
             totalENodes: [""],
+            showSubmitAlert: false,
             totalConstellationNodes: [""],
             joinLoading: false,
             inviteLoading: false,
@@ -93,7 +94,9 @@ class JoinNetwork extends Component {
 
     onJoinSubmit = (e) => {
         e.preventDefault()
-
+        this.setState({
+          showSubmitAlert: true
+        });
         const isVoucherMicro = (this.config.voucher &&  this.config.voucher.networkConfig && this.config.voucher.networkConfig.cpu === 0.5);
         const isMicro = (this.config && this.config.config && (this.config.config.cpu === 0.5 || this.config.config.name && this.config.config.name.toLowerCase() === 'light')) || isVoucherMicro;
         if(this.state.nodeCount.micro >= 2 && isMicro){
@@ -276,7 +279,10 @@ class JoinNetwork extends Component {
                                                         <p>Node Configuration</p>
                                                         <NetworkConfigSelector configChangeListener={(config) => {
                                                           this.config = config;
-                                                          this.setState({});
+                                                          this.setState({
+                                                            formSubmitError: '',
+                                                            showCreditCardAlert: this.state.showSubmitAlert && ((config && config.voucher) ? false : true)
+                                                          });
                                                         }} />
                                                         <p className="m-t-10">Advanced Information</p>
                                                         <div className="form-group-attached">
