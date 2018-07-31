@@ -4,6 +4,7 @@ require('../imports/api/emails/forgot-password')
 require('../imports/api/locations');
 require('../imports/modules/migrations/server');
 require('../imports/api');
+const debug = require('debug')('webapp:server:main');
 
 console.log("env", process.env.NODE_ENV);
 
@@ -151,7 +152,9 @@ function getNodeConfig(networkConfig, userId) {
     return nodeConfig;
   }
 
-   nodeConfig = {
+  debug("Returning node config", networkConfig, userId);
+
+  nodeConfig = {
     ...nodeConfig,
     cpu: finalNetworkConfig.cpu * 1000,
     ram: finalNetworkConfig.ram,
@@ -191,23 +194,26 @@ function getContainerResourceLimits({cpu, ram }){
     }
   };
 
+  debug("Container limits", config);
+
   return config;
 }
 
 Meteor.methods({
     "createNetwork": function(networkName,  locationCode, networkConfig, userId) {
+      debug("CreateNetwork | Arguments", networkName, locationCode, networkConfig, userId);
         var myFuture = new Future();
 
-        const microNodes = Networks.find({
-          user: Meteor.userId(),
-          active: true,
-          "networkConfig.cpu": 500
-        }).fetch();
+        // const microNodes = Networks.find({
+        //   user: Meteor.userId(),
+        //   active: true,
+        //   "networkConfig.cpu": 500
+        // }).fetch();
 
-        const isMicro = networkConfig && ((networkConfig.config && networkConfig.config.cpu === 0.5) || (networkConfig.voucher && networkConfig.voucher.cpu === 0.5));
-        if(microNodes.length > 2 && isMicro) {
-          throw new Meteor.Error('Can have maximum of 2 micro nodes only');
-        }
+        // const isMicro = networkConfig && ((networkConfig.config && networkConfig.config.cpu === 0.5) || (networkConfig.voucher && networkConfig.voucher.cpu === 0.5));
+        // if(microNodes.length > 2 && isMicro) {
+        //   throw new Meteor.Error('Can have maximum of 2 micro nodes only');
+        // }
 
         var instanceId = helpers.instanceIDGenerate();
 
@@ -216,7 +222,7 @@ Meteor.methods({
         }
 
         function deleteNetwork(id) {
-
+            debug("CreateNetwork | Deleting network", id);
             Networks.update({
                 _id: id
             }, {
@@ -254,32 +260,35 @@ Meteor.methods({
         }
 
         const nodeConfig = getNodeConfig(networkConfig);
-        console.log(nodeConfig);
         if(!nodeConfig.cpu) {
           throw new Meteor.Error("Invalid Network Configuration");
         }
 
         const resourceConfig = getContainerResourceLimits({cpu: nodeConfig.cpu, ram: nodeConfig.ram});
 
-        Networks.insert({
-            "instanceId": instanceId,
-            "name": networkName,
-            "type": "new",
-            "peerType": "authority",
-            "workerNodeIP": Config.workerNodeIP(locationCode),
-            "user": userId ? userId : this.userId,
-            "createdOn": Date.now(),
-            "totalENodes": [],
-            "totalConstellationNodes": [],
-            "locationCode": locationCode,
-            voucherId: nodeConfig.voucherId,
-            networkConfigId: nodeConfig.configId,
-            metadata: {
-              voucher: nodeConfig.voucher,
-              networkConfig: nodeConfig.networkConfig
-            },
-            networkConfig: {cpu: nodeConfig.cpu, ram: nodeConfig.ram, disk: nodeConfig.disk}
-        }, (error, id) => {
+        const networkProps = {
+          "instanceId": instanceId,
+          "name": networkName,
+          "type": "new",
+          "peerType": "authority",
+          "workerNodeIP": Config.workerNodeIP(locationCode),
+          "user": userId ? userId : this.userId,
+          "createdOn": Date.now(),
+          "totalENodes": [],
+          "totalConstellationNodes": [],
+          "locationCode": locationCode,
+          voucherId: nodeConfig.voucherId,
+          networkConfigId: nodeConfig.configId,
+          metadata: {
+            voucher: nodeConfig.voucher,
+            networkConfig: nodeConfig.networkConfig
+          },
+          networkConfig: {cpu: nodeConfig.cpu, ram: nodeConfig.ram, disk: nodeConfig.disk}
+        };
+
+        debug("CreateNetwork | Network insert ", networkProps);
+
+        Networks.insert(networkProps, (error, id) => {
             if (error) {
                 console.log(error);
                 myFuture.throw("An unknown error occured");
@@ -684,6 +693,8 @@ Meteor.methods({
     },
     "deleteNetwork": function(id) {
 
+        debug("deleteNetwork | ", id);
+
         function kubeCallback(err, res) {
             if(err) {
                 console.log(err);
@@ -755,20 +766,21 @@ Meteor.methods({
         return myFuture.wait();
     },
     "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, impulseURL, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode, networkConfig, userId) {
+        debug("joinNetwork | Arguments", arguments);
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
 
 
-        const microNodes = Networks.find({
-          user: Meteor.userId(),
-          active: true,
-          "networkConfig.cpu": 500
-        }).fetch();
+        // const microNodes = Networks.find({
+        //   user: Meteor.userId(),
+        //   active: true,
+        //   "networkConfig.cpu": 500
+        // }).fetch();
 
-        const isMicro = networkConfig && ((networkConfig.config && networkConfig.config.cpu === 0.5) || (networkConfig.voucher && networkConfig.voucher.cpu === 0.5));
-        if(microNodes.length > 2 && isMicro) {
-          throw new Meteor.Error('Can have maximum of 2 micro nodes only');
-        }
+        // const isMicro = networkConfig && ((networkConfig.config && networkConfig.config.cpu === 0.5) || (networkConfig.voucher && networkConfig.voucher.cpu === 0.5));
+        // if(microNodes.length > 2 && isMicro) {
+        //   throw new Meteor.Error('Can have maximum of 2 micro nodes only');
+        // }
 
         locationCode = locationCode || "us-west-2";
 

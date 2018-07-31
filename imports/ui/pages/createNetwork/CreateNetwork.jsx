@@ -10,7 +10,7 @@ import CardVerification from '../billing/components/CardVerification.jsx';
 class CreateNetwork extends Component {
     constructor() {
         super()
-        this.locationCode = "us-west-2";
+        this.locationCode = "ap-south-1a";
         this.state = {
             formSubmitError: "",
             loading: false,
@@ -23,16 +23,16 @@ class CreateNetwork extends Component {
     componentDidMount(){
 
 
-      Meteor.call('nodeCount', (err, res) => {
-        if(!err){
-          if(res.micro >= 0){
-            this.setState({
-              microNodesViolated: true,
-              nodeCount: res
-            });
-          }
-        }
-      });
+      // Meteor.call('nodeCount', (err, res) => {
+      //   if(!err){
+      //     if(res.micro >= 0){
+      //       this.setState({
+      //         microNodesViolated: true,
+      //         nodeCount: res
+      //       });
+      //     }
+      //   }
+      // });
 
     }
 
@@ -42,13 +42,13 @@ class CreateNetwork extends Component {
           showSubmitAlert: true
         });
         e.preventDefault();
-        const isVoucherMicro = (this.config.voucher &&  this.config.voucher.networkConfig && this.config.voucher.networkConfig.cpu === 0.5);
-        const isMicro = (this.config && this.config.config && (this.config.config.cpu === 0.5 || this.config.config.name && this.config.config.name.toLowerCase() === 'light')) || isVoucherMicro;
-        if(this.state.nodeCount.micro >= 2 && isMicro){
-          return this.setState({
-            formSubmitError: 'You can have at max only 2 micro nodes at a time',
-          });
-        }
+        // const isVoucherMicro = (this.config.voucher &&  this.config.voucher.networkConfig && this.config.voucher.networkConfig.cpu === 0.5);
+        // const isMicro = (this.config && this.config.config && (this.config.config.cpu === 0.5 || this.config.config.name && this.config.config.name.toLowerCase() === 'light')) || isVoucherMicro;
+        // if(this.state.nodeCount.micro >= 2 && isMicro){
+        //   return this.setState({
+        //     formSubmitError: 'You can have at max only 2 micro nodes at a time',
+        //   });
+        // }
 
         if(!(this.config && this.config.voucher)){
           if(!this.state.cardVerified){

@@ -97,13 +97,13 @@ class JoinNetwork extends Component {
         this.setState({
           showSubmitAlert: true
         });
-        const isVoucherMicro = (this.config.voucher &&  this.config.voucher.networkConfig && this.config.voucher.networkConfig.cpu === 0.5);
-        const isMicro = (this.config && this.config.config && (this.config.config.cpu === 0.5 || this.config.config.name && this.config.config.name.toLowerCase() === 'light')) || isVoucherMicro;
-        if(this.state.nodeCount.micro >= 2 && isMicro){
-          return this.setState({
-            formSubmitError: 'You can have at max only 2 micro nodes at a time',
-          });
-        }
+        // const isVoucherMicro = (this.config.voucher &&  this.config.voucher.networkConfig && this.config.voucher.networkConfig.cpu === 0.5);
+        // const isMicro = (this.config && this.config.config && (this.config.config.cpu === 0.5 || this.config.config.name && this.config.config.name.toLowerCase() === 'light')) || isVoucherMicro;
+        // if(this.state.nodeCount.micro >= 2 && isMicro){
+        //   return this.setState({
+        //     formSubmitError: 'You can have at max only 2 micro nodes at a time',
+        //   });
+        // }
 
 
         if(!this.networkName.value){
