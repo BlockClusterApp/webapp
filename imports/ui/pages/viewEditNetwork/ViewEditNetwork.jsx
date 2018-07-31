@@ -19,6 +19,8 @@ class ViewEditNetwork extends Component {
 			location: "us-west-2",
 			locations: []
         };
+
+      this.locationConfig = {};
     }
 
 	componentWillUnmount() {
@@ -32,7 +34,7 @@ class ViewEditNetwork extends Component {
 			this.setState({
 			  locations: res
 			});
-		  });
+		});
 	}
 
     deleteNetwork = () => {
@@ -118,6 +120,13 @@ class ViewEditNetwork extends Component {
 	}
 
 	render(){
+    if(this.props.network[0]){
+      this.locationConfig = this.state.locations.find(i => i && i.locationCode === this.props.network[0].locationCode);
+      if(!this.locationConfig) {
+        this.locationConfig = {};
+      }
+    }
+
 		return (
 			<div className="content ">
                 <div className="m-t-20 container-fluid container-fixed-lg bg-white">
@@ -166,7 +175,7 @@ class ViewEditNetwork extends Component {
 						       							if (this.props.network.length === 1) {
 						       								if("nodeId" in this.props.network[0]) {
 						       									return (
-						       										"enode://" + this.props.network[0].nodeId + "@" + this.props.workerNodeIP + ":" + this.props.network[0].ethNodePort
+						       										"enode://" + this.props.network[0].nodeId + "@" + this.locationConfig.workerNodeIP + ":" + this.props.network[0].ethNodePort
 						       									)
 						       								}
 						       							}
@@ -184,7 +193,7 @@ class ViewEditNetwork extends Component {
 						       							if (this.props.network.length === 1) {
 						       								if("constellationNodePort" in this.props.network[0]) {
 						       									return (
-						       										this.props.workerNodeIP + ":" + this.props.network[0].constellationNodePort
+						       										this.locationConfig.workerNodeIP + ":" + this.props.network[0].constellationNodePort
 						       									)
 						       								}
 						       							}
@@ -552,7 +561,6 @@ class ViewEditNetwork extends Component {
 export default withTracker(function(props) {
     return {
         network: Networks.find({instanceId: props.match.params.id, active: true}).fetch(),
-		workerNodeIP: Config.workerNodeIP,
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
         		if(Networks.find({instanceId: props.match.params.id, active: true}).fetch().length !== 1) {

@@ -133,7 +133,7 @@ class JoinNetwork extends Component {
                 joinLoading: true
             });
 
-            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, this.state.impulseURL, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, this.state.locationCode,  {...this.config}, (error) => {
+            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, this.state.impulseURL, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, this.locationCode,  {...this.config}, (error) => {
                 if(!error) {
                     this.setState({
                         joinFormSubmitError: '',
