@@ -137,8 +137,8 @@ class RazorPay extends React.Component {
     return (<div className="razorpay-holder">
       <button className="btn btn-primary razorpay-payment-button"
         onClick={this.triggerPayment}
-        disabled={this.state.loading}>
-        { this.state.loading && <i className="fa fa-spin fa-spinner"></i> }&nbsp;{this.props.buttonText || `Pay Now`}
+        disabled={this.props.loading || this.state.loading}>
+        { (this.props.loading || this.state.loading) && <i className="fa fa-spin fa-spinner"></i> }&nbsp;{this.props.buttonText || `Pay Now`}
       </button>
     </div>
     );

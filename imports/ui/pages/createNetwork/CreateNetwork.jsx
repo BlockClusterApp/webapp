@@ -14,6 +14,7 @@ class CreateNetwork extends Component {
         this.state = {
             formSubmitError: "",
             loading: false,
+            showSubmitAlert: false,
             microNodesViolated: false
         };
         this.networks = [];
@@ -37,6 +38,9 @@ class CreateNetwork extends Component {
 
 
     onSubmit = (e) => {
+        this.setState({
+          showSubmitAlert: true
+        });
         e.preventDefault();
         const isVoucherMicro = (this.config.voucher &&  this.config.voucher.networkConfig && this.config.voucher.networkConfig.cpu === 0.5);
         const isMicro = (this.config && this.config.config && (this.config.config.cpu === 0.5 || this.config.config.name && this.config.config.name.toLowerCase() === 'light')) || isVoucherMicro;
@@ -167,7 +171,10 @@ class CreateNetwork extends Component {
                                         <p>Node Configuration</p>
                                         <NetworkConfigSelector configChangeListener={(config) => {
                                           this.config = config;
-                                          this.setState({});
+                                          this.setState({
+                                            formSubmitError: '',
+                                            showCreditCardAlert: this.state.showSubmitAlert && ((config && config.voucher) ? false : true)
+                                          });
                                         }} />
 
                                         <p className="m-t-10">Advanced Information</p>
