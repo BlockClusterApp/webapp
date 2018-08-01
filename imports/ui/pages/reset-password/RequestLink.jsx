@@ -39,7 +39,7 @@ export default class EmailVerification extends Component {
               Blockchain Management System for Consortiums
             </h2>
             <p className="small">
-              the next generation secure and scalable cloud platform for
+              the next generation secure and scalable platform for
               building blockchains.
             </p>
           </div>
@@ -76,7 +76,7 @@ export default class EmailVerification extends Component {
               <button
                 className="btn btn-complete btn-cons m-t-10"
                 onClick={this.requestPasswordReset.bind(this)}
-                disabled={this.state.disabled} 
+                disabled={this.state.disabled}
               >
                 <i className="fa fa-sign-in" aria-hidden="true"/>&nbsp;&nbsp;Reset
                 Password

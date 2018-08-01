@@ -92,45 +92,26 @@ NetworkInvitation.inviteUserToNetwork = async function(
     let invitedUser = Meteor.users.find({
         "emails.address": email
     }).fetch()[0];
+  }
 
 
-    if (!invitedUser) {
-        const createdId = Accounts.createUser({
-            email,
-            password: `a-${new Date().getTime()}`,
-            toBeCreated: true,
-            profile: {
+  const uniqueString = generateRandomString(
+    `${email}-${networkId}-${new Date().toString()}`
+  );
+  const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
 
-            }
-        });
-        invitedUser = Meteor.users.find({
-            _id: createdId
-        }).fetch()[0];
-    }
+  const Template = await getEJSTemplate({ fileName: "invite-user.ejs" });
+  const emailHtml = Template({
+    network,
+    invitingUser,
+    networkJoinLink: joinNetworkLink
+  });
 
-
-    const uniqueString = generateRandomString(
-        `${email}-${networkId}-${new Date().toString()}`
-    );
-    const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
-
-    const Template = await getEJSTemplate({
-        fileName: "invite-user.ejs"
-    });
-    const emailHtml = Template({
-        network,
-        invitingUser,
-        networkJoinLink: joinNetworkLink
-    });
-
-    await sendEmail({
-        from: {
-            name: "Jason from Blockcluster",
-            email: "no-reply@blockcluster.io"
-        },
-        to: email,
-        subject: `Invite to join ${network.name} network on blockcluster.io`,
-        text: `Visit the following link to join ${
+  await sendEmail({
+    from: { name: "Blockcluster", email: "no-reply@blockcluster.io" },
+    to: email,
+    subject: `Invite to join ${network.name} network on blockcluster.io`,
+    text: `Visit the following link to join ${
       network.name
     } network on blockcluster.io - ${joinNetworkLink}`,
         html: emailHtml
@@ -266,41 +247,36 @@ NetworkInvitation.cancelInvitation = async function(inviteId, userId) {
 }
 
 NetworkInvitation.resendInvitation = async function(inviteId, userId) {
-    const invite = UserInvitation.find({
-        _id: inviteId,
-        inviteFrom: userId
-    }).fetch()[0];
-    if (!invite) {
-        return false;
-    }
-    const invitingUser = Meteor.users
-        .find({
-            _id: invite.inviteFrom
-        })
-        .fetch()[0];
-    const network = Networks.find({
-        _id: invite.networkId
-    }).fetch()[0];
-    const uniqueString = invite.uniqueString;
-    const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
+  const invite = UserInvitation.find({
+    _id: inviteId,
+    inviteFrom: userId
+  }).fetch()[0];
+  if(!invite){
+    return false;
+  }
+  const invitingUser = Meteor.users
+    .find({
+      _id: invite.inviteFrom
+    })
+    .fetch()[0];
+  const network = Networks.find({
+    _id: invite.networkId
+  }).fetch()[0];
+  const uniqueString = invite.uniqueString;
+  const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
 
-    const Template = await getEJSTemplate({
-        fileName: "invite-user.ejs"
-    });
-    const emailHtml = Template({
-        network,
-        invitingUser,
-        networkJoinLink: joinNetworkLink
-    });
+  const Template = await getEJSTemplate({ fileName: "invite-user.ejs" });
+  const emailHtml = Template({
+    network,
+    invitingUser,
+    networkJoinLink: joinNetworkLink
+  });
 
-    await sendEmail({
-        from: {
-            name: "Jason from Blockcluster",
-            email: "no-reply@blockcluster.io"
-        },
-        to: invite.metadata.inviteTo.email,
-        subject: `Invite to join ${network.name} network on blockcluster.io`,
-        text: `Visit the following link to join ${
+  await sendEmail({
+    from: { name: "Blockcluster", email: "no-reply@blockcluster.io" },
+    to: invite.metadata.inviteTo.email,
+    subject: `Invite to join ${network.name} network on blockcluster.io`,
+    text: `Visit the following link to join ${
       network.name
     } network on blockcluster.io - ${joinNetworkLink}`,
         html: emailHtml

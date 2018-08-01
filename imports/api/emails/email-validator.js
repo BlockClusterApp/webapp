@@ -23,7 +23,7 @@ Verifier.sendEmailVerification = async function(user) {
   });
 
   const emailProps = {
-    from: {email: "no-reply@blockcluster.io", name: "Jason from Blockcluster"},
+    from: {email: "no-reply@blockcluster.io", name: "Blockcluster"},
     to: email,
     subject: `Confirm ${user.emails[0].address} on blockcluster.io`,
     text: `Visit the following link to verify your email address. ${link}`,

@@ -72,6 +72,8 @@ class Invites extends Component {
         showModal: true,
         modalInvite: invite,
         modalInviteId: inviteId
+      }, () => {
+        $('#modalSlideLeft_soloAssetInfo').modal('show')
       });
     }
     loading[inviteId] = true;
@@ -286,44 +288,95 @@ class Invites extends Component {
     }else {
       isVoucherAlertShown = true;
     }
+
+
     const Modal = this.state.showModal && (
-      <div id="myModal" className="modal fade" role="dialog">
-        <div className="modal-dialog">
-          <div className="modal-content">
-            <div className="modal-header">
-              <button type="button" className="close" data-dismiss="modal" onClick={() => this.setState({showModal: false})}>&times;</button>
-              <h5 className="modal-title">Accept Invitation </h5>
-            </div>
-            <div className="modal-body">
-              <p>Sent by:&nbsp;<b>{this.state.modalInvite.metadata.inviteFrom.name}</b></p>
-              <p>Network Name:&nbsp;<b>{this.state.modalInvite.metadata.network.name}</b></p>
+      <div className="modal fade slide-right" id="modalSlideLeft_soloAssetInfo" tabIndex="-1" role="dialog" aria-hidden="true">
+          <div className="modal-dialog modal-md">
+              <div className="modal-content-wrapper">
+                  <div className="modal-content">
+                      <button type="button" className="close" data-dismiss="modal" aria-hidden="true"><i className="pg-close fs-14"></i>
+                      </button>
+                      <div className="container-md-height full-height">
+                          <div className="row-md-height">
+                              <div className="modal-body col-md-height col-middle">
+                                  <h5 className="text-primary ">Accept Invitation</h5>
+                                  <br />
 
-              <p>Select Location to deploy</p>
-              <LocationSelector locationChangeListener={this.locationChangeListener.bind(this, this.state.modalInviteId)} />
-              <br />
-              <p>Select Node Configuration</p>
-              <NetworkConfigSelector configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)} />
-              {!isVoucherAlertShown? null : <CardVerification cardVerificationListener={this.cardVerificationListener}/>}
-            </div>
-            <div className="modal-footer">
-            <button
-              type="button"
-              className="btn btn-success"
-              onClick={this.acceptInvitation.bind(this, this.state.modalInviteId, this.state.modalInvite, true)}
-              disabled={isButtonDisabled}
-            >
-              {this.state.loading[this.state.modalInviteId] === true ? (
-                <i className="fa fa-spinner fa-spin" />
-              ) : (
-                <i className="fa fa-check" />
-              )}&nbsp;Accept
-            </button>&nbsp;<button type="button" className="btn btn-default" data-dismiss="modal" onClick={() => this.setState({showModal: false})}>Close</button>
-            </div>
+                                  <p>Sent by:&nbsp;<b>{this.state.modalInvite.metadata.inviteFrom.name}</b></p>
+                                  <p>Network Name:&nbsp;<b>{this.state.modalInvite.metadata.network.name}</b></p>
+                                  <form role="form" className="modal-assetInfo">
+                                    <p>Select Location to deploy</p>
+                                    <LocationSelector locationChangeListener={this.locationChangeListener.bind(this, this.state.modalInviteId)} />
+                                    <br />
+                                    <p>Select Node Configuration</p>
+                                    <NetworkConfigSelector configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)} />
+                                    {!isVoucherAlertShown? null : <CardVerification cardVerificationListener={this.cardVerificationListener}/>}
+                                  </form>
+                                  <button
+                                    type="button"
+                                    className="btn btn-success"
+                                    onClick={this.acceptInvitation.bind(this, this.state.modalInviteId, this.state.modalInvite, true)}
+                                    disabled={isButtonDisabled}
+                                  >
+                                    {this.state.loading[this.state.modalInviteId] === true ? (
+                                      <i className="fa fa-spinner fa-spin" />
+                                    ) : (
+                                      <i className="fa fa-check" />
+                                    )}&nbsp;Accept
+                                  </button>&nbsp;<button type="button" className="btn btn-default" data-dismiss="modal" onClick={() => {
+                                    this.setState({showModal: false})
+                                    // $('#modalSlideLeft_soloAssetInfo').modal('hide')
+                                  }}>Close</button>
+                                  </div>
+
+                          </div>
+                      </div>
+                  </div>
+              </div>
           </div>
-
-        </div>
       </div>
-    );
+  );
+
+
+    // const Modal = this.state.showModal && (
+    //   <div id="myModal" className="modal fade" role="dialog">
+    //     <div className="modal-dialog">
+    //       <div className="modal-content">
+    //         <div className="modal-header">
+    //           <button type="button" className="close" data-dismiss="modal" onClick={() => this.setState({showModal: false})}>&times;</button>
+    //           <h5 className="modal-title">Accept Invitation </h5>
+    //         </div>
+    //         <div className="modal-body">
+    //           <p>Sent by:&nbsp;<b>{this.state.modalInvite.metadata.inviteFrom.name}</b></p>
+    //           <p>Network Name:&nbsp;<b>{this.state.modalInvite.metadata.network.name}</b></p>
+
+    //           <p>Select Location to deploy</p>
+    //           <LocationSelector locationChangeListener={this.locationChangeListener.bind(this, this.state.modalInviteId)} />
+    //           <br />
+    //           <p>Select Node Configuration</p>
+    //           <NetworkConfigSelector configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)} />
+    //           {!isVoucherAlertShown? null : <CardVerification cardVerificationListener={this.cardVerificationListener}/>}
+    //         </div>
+    //         <div className="modal-footer">
+    //         <button
+    //           type="button"
+    //           className="btn btn-success"
+    //           onClick={this.acceptInvitation.bind(this, this.state.modalInviteId, this.state.modalInvite, true)}
+    //           disabled={isButtonDisabled}
+    //         >
+    //           {this.state.loading[this.state.modalInviteId] === true ? (
+    //             <i className="fa fa-spinner fa-spin" />
+    //           ) : (
+    //             <i className="fa fa-check" />
+    //           )}&nbsp;Accept
+    //         </button>&nbsp;<button type="button" className="btn btn-default" data-dismiss="modal" onClick={() => this.setState({showModal: false})}>Close</button>
+    //         </div>
+    //       </div>
+
+    //     </div>
+    //   </div>
+    // );
 
     return (
       <div className="content invite">
