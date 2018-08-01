@@ -67,6 +67,7 @@ agenda.define("whitelist nodes", Meteor.bindEnvironment((job) => {
     await agenda.start();
 })();
 
+
 const NetworkInvitation = {};
 
 NetworkInvitation.inviteUserToNetwork = async function(
@@ -96,59 +97,73 @@ NetworkInvitation.inviteUserToNetwork = async function(
     let invitedUser = Meteor.users.find({
         "emails.address": email
     }).fetch()[0];
-}
 
 
-const uniqueString = generateRandomString(
-    `${email}-${networkId}-${new Date().toString()}`
-);
-const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
+    if (!invitedUser) {
+        const createdId = Accounts.createUser({
+            email,
+            password: `a-${new Date().getTime()}`,
+            toBeCreated: true,
+            profile: {
 
-const Template = await getEJSTemplate({
-    fileName: "invite-user.ejs"
-});
-const emailHtml = Template({
-    network,
-    invitingUser,
-    networkJoinLink: joinNetworkLink
-});
+            }
+        });
+        invitedUser = Meteor.users.find({
+            _id: createdId
+        }).fetch()[0];
+    }
 
-await sendEmail({
-    from: {
-        name: "Blockcluster",
-        email: "no-reply@blockcluster.io"
-    },
-    to: email,
-    subject: `Invite to join ${network.name} network on blockcluster.io`,
-    text: `Visit the following link to join ${
+
+    const uniqueString = generateRandomString(
+        `${email}-${networkId}-${new Date().toString()}`
+    );
+    const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
+
+    const Template = await getEJSTemplate({
+        fileName: "invite-user.ejs"
+    });
+    const emailHtml = Template({
+        network,
+        invitingUser,
+        networkJoinLink: joinNetworkLink
+    });
+
+    await sendEmail({
+        from: {
+            name: "Blockcluster",
+            email: "no-reply@blockcluster.io"
+        },
+        to: email,
+        subject: `Invite to join ${network.name} network on blockcluster.io`,
+        text: `Visit the following link to join ${
       network.name
     } network on blockcluster.io - ${joinNetworkLink}`,
-    html: emailHtml
-});
+        html: emailHtml
+    });
 
-UserInvitation.insert({
-    inviteFrom: invitingUser._id,
-    inviteTo: invitedUser._id,
-    uniqueToken: uniqueString,
-    networkId: network._id,
-    nodeType,
-    metadata: {
-        inviteFrom: {
-            name: `${invitingUser.profile.firstName} ${invitingUser.profile.lastName}`,
-            email: invitingUser.emails[0].address
-        },
-        inviteTo: {
-            email,
-            name: invitedUser.profile.firstName ? `${invitedUser.profile.firstName} ${invitedUser.profile.lastName}` : undefined
-        },
-        network: {
-            name: network.name,
-            locationCode: network.locationCode
+    UserInvitation.insert({
+        inviteFrom: invitingUser._id,
+        inviteTo: invitedUser._id,
+        uniqueToken: uniqueString,
+        networkId: network._id,
+        nodeType,
+        metadata: {
+            inviteFrom: {
+                name: `${invitingUser.profile.firstName} ${invitingUser.profile.lastName}`,
+                email: invitingUser.emails[0].address
+            },
+            inviteTo: {
+                email,
+                name: invitedUser.profile.firstName ? `${invitedUser.profile.firstName} ${invitedUser.profile.lastName}` : undefined
+            },
+            network: {
+                name: network.name,
+                locationCode: network.locationCode
+            }
         }
-    }
-});
+    });
 
-return true;
+    return true;
 };
 
 NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
@@ -218,13 +233,11 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
                     }
                 });
 
-                //check if nodeId and ethNodePort exists every 1000ms. Then whitelist them.
-                console.log("Scheduled Now")
                 agenda.schedule(new Date(Date.now() + 30000), "whitelist nodes", {
                     newNode_id: res,
                     node_id: network._id
                 })
-
+                
                 resolve(invitationId);
             }
         );
