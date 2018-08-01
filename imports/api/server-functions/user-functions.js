@@ -15,13 +15,17 @@ import {
 const Agenda = require('agenda');
 import Config from '../../../imports/modules/config/server';
 
-const agenda = new Agenda({db: {address: Config.mongoConnectionString + "/" + Config.database}});
+const agenda = new Agenda({
+    db: {
+        address: Config.mongoConnectionString + "/" + Config.database
+    }
+});
 
 agenda.define("whitelist nodes", Meteor.bindEnvironment((job) => {
     let newNode_id = job.attrs.data.newNode_id;
     let node_id = job.attrs.data.node_id;
 
-    const network_one= Networks.find({
+    const network_one = Networks.find({
         _id: node_id,
         active: true
     }).fetch()[0];
@@ -38,8 +42,8 @@ agenda.define("whitelist nodes", Meteor.bindEnvironment((job) => {
         })
     }
 
-    if(network_one && network_two) {
-        if(network_two.nodeId && network_two.ethNodePort) {
+    if (network_one && network_two) {
+        if (network_two.nodeId && network_two.ethNodePort) {
             HTTP.call("POST", `http://${Config.workerNodeIP(network_one.locationCode)}:${network_one.apisPort}/utility/whitelistPeer`, {
                 "content": JSON.stringify({
                     "url": `enode://${network_two.nodeId}@[::]:${network_two.ethNodePort}?discport=0`
@@ -49,7 +53,7 @@ agenda.define("whitelist nodes", Meteor.bindEnvironment((job) => {
                 }
             }, (error, response) => {
                 console.log(error, response)
-                if(error) {
+                if (error) {
                     reSchedule()
                 }
             })
@@ -60,7 +64,7 @@ agenda.define("whitelist nodes", Meteor.bindEnvironment((job) => {
 }));
 
 (async function() {
-  await agenda.start();
+    await agenda.start();
 })();
 
 const NetworkInvitation = {};
@@ -92,54 +96,59 @@ NetworkInvitation.inviteUserToNetwork = async function(
     let invitedUser = Meteor.users.find({
         "emails.address": email
     }).fetch()[0];
-  }
+}
 
 
-  const uniqueString = generateRandomString(
+const uniqueString = generateRandomString(
     `${email}-${networkId}-${new Date().toString()}`
-  );
-  const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
+);
+const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
 
-  const Template = await getEJSTemplate({ fileName: "invite-user.ejs" });
-  const emailHtml = Template({
+const Template = await getEJSTemplate({
+    fileName: "invite-user.ejs"
+});
+const emailHtml = Template({
     network,
     invitingUser,
     networkJoinLink: joinNetworkLink
-  });
+});
 
-  await sendEmail({
-    from: { name: "Blockcluster", email: "no-reply@blockcluster.io" },
+await sendEmail({
+    from: {
+        name: "Blockcluster",
+        email: "no-reply@blockcluster.io"
+    },
     to: email,
     subject: `Invite to join ${network.name} network on blockcluster.io`,
     text: `Visit the following link to join ${
       network.name
     } network on blockcluster.io - ${joinNetworkLink}`,
-        html: emailHtml
-    });
+    html: emailHtml
+});
 
-    UserInvitation.insert({
-        inviteFrom: invitingUser._id,
-        inviteTo: invitedUser._id,
-        uniqueToken: uniqueString,
-        networkId: network._id,
-        nodeType,
-        metadata: {
-            inviteFrom: {
-                name: `${invitingUser.profile.firstName} ${invitingUser.profile.lastName}`,
-                email: invitingUser.emails[0].address
-            },
-            inviteTo: {
-                email,
-                name: invitedUser.profile.firstName ? `${invitedUser.profile.firstName} ${invitedUser.profile.lastName}` : undefined
-            },
-            network: {
-                name: network.name,
-                locationCode: network.locationCode
-            }
+UserInvitation.insert({
+    inviteFrom: invitingUser._id,
+    inviteTo: invitedUser._id,
+    uniqueToken: uniqueString,
+    networkId: network._id,
+    nodeType,
+    metadata: {
+        inviteFrom: {
+            name: `${invitingUser.profile.firstName} ${invitingUser.profile.lastName}`,
+            email: invitingUser.emails[0].address
+        },
+        inviteTo: {
+            email,
+            name: invitedUser.profile.firstName ? `${invitedUser.profile.firstName} ${invitedUser.profile.lastName}` : undefined
+        },
+        network: {
+            name: network.name,
+            locationCode: network.locationCode
         }
-    });
+    }
+});
 
-    return true;
+return true;
 };
 
 NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
@@ -247,36 +256,41 @@ NetworkInvitation.cancelInvitation = async function(inviteId, userId) {
 }
 
 NetworkInvitation.resendInvitation = async function(inviteId, userId) {
-  const invite = UserInvitation.find({
-    _id: inviteId,
-    inviteFrom: userId
-  }).fetch()[0];
-  if(!invite){
-    return false;
-  }
-  const invitingUser = Meteor.users
-    .find({
-      _id: invite.inviteFrom
-    })
-    .fetch()[0];
-  const network = Networks.find({
-    _id: invite.networkId
-  }).fetch()[0];
-  const uniqueString = invite.uniqueString;
-  const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
+    const invite = UserInvitation.find({
+        _id: inviteId,
+        inviteFrom: userId
+    }).fetch()[0];
+    if (!invite) {
+        return false;
+    }
+    const invitingUser = Meteor.users
+        .find({
+            _id: invite.inviteFrom
+        })
+        .fetch()[0];
+    const network = Networks.find({
+        _id: invite.networkId
+    }).fetch()[0];
+    const uniqueString = invite.uniqueString;
+    const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
 
-  const Template = await getEJSTemplate({ fileName: "invite-user.ejs" });
-  const emailHtml = Template({
-    network,
-    invitingUser,
-    networkJoinLink: joinNetworkLink
-  });
+    const Template = await getEJSTemplate({
+        fileName: "invite-user.ejs"
+    });
+    const emailHtml = Template({
+        network,
+        invitingUser,
+        networkJoinLink: joinNetworkLink
+    });
 
-  await sendEmail({
-    from: { name: "Blockcluster", email: "no-reply@blockcluster.io" },
-    to: invite.metadata.inviteTo.email,
-    subject: `Invite to join ${network.name} network on blockcluster.io`,
-    text: `Visit the following link to join ${
+    await sendEmail({
+        from: {
+            name: "Blockcluster",
+            email: "no-reply@blockcluster.io"
+        },
+        to: invite.metadata.inviteTo.email,
+        subject: `Invite to join ${network.name} network on blockcluster.io`,
+        text: `Visit the following link to join ${
       network.name
     } network on blockcluster.io - ${joinNetworkLink}`,
         html: emailHtml
