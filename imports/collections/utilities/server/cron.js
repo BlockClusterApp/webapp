@@ -42,18 +42,6 @@
 //   );
 // }
 
-// function updateFirewall_Port() {
-//   Utilities.upsert(
-//     {
-//       name: "firewall_Port"
-//     },
-//     {
-//       $set: {
-//         value: Config.firewallPort
-//       }
-//     }
-//   );
-// }
 
 // function updateRedis_Info() {
 //   Utilities.upsert(

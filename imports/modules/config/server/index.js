@@ -79,7 +79,6 @@ module.exports = {
     const locationConfig = RemoteCOnfig.clusters[getEnv()][locationCode];
     return locationConfig.auth;
   },
-  firewallPort: process.env.FIREWALL_PORT || defaults.firewallPort,
   namespace: getNamespace(),
   RemoteConfig() {
     return RemoteConfig
