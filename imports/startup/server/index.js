@@ -1,14 +1,3 @@
-import {Networks} from "../../collections/networks/networks.js"
-// import {Utilities} from "../../collections/utilities/utilities.js"
-
-// import {updateWorkerNodeIP, updateKuberREST_IP, updateFirewall_Port, updateRedis_Info, updateWorkerNodeDomainName} from "../../collections/utilities/server/cron.js"
-
-// updateWorkerNodeIP()
-// updateKuberREST_IP()
-// updateFirewall_Port()
-// updateRedis_Info()
-// updateWorkerNodeDomainName()
-
 require("../../collections/networks/server/publications.js")
 require('../../collections/user-invitation/server/publications.js');
 require("../../collections/utilities/server/publications.js")

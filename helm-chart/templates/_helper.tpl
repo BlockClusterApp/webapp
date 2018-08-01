@@ -78,19 +78,3 @@ redis.{{ template "server.namespace" . }}.svc.cluster.local
 {{- define "envs.redisPort" -}}
 "6379"
 {{- end -}}
-
-{{- define "envs.kubeRestApiHost" -}}
-{{- if eq .Values.NODE_ENV "production" -}}
-https://api.k8s-production.blockcluster.io
-{{- else -}}
-"http://34.217.101.70:8000"
-{{- end -}}
-{{- end -}}
-
-{{- define "envs.firewallPort" -}}
-"31988"
-{{- end -}}
-
-{{- define "envs.workerNodeIP" -}}
-"52.42.137.74"
-{{- end -}}

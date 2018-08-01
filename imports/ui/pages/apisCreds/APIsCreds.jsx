@@ -175,7 +175,6 @@ export default withTracker((props) => {
         networks: Networks.find({active: true}).fetch(),
         workerNodeIP: Config.workerNodeIP,
         workerNodeDomainName: Config.workerNodeDomainName,
-        firewallPort: Config.firewallPort,
         subscriptions: [Meteor.subscribe("networks", {
             onReady: function (){
         		if(Networks.find({instanceId: props.match.params.id, active: true}).fetch().length !== 1) {
