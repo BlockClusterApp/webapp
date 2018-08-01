@@ -28,12 +28,9 @@ function getDynamoWokerDomainName(locationCode) {
 }
 
 module.exports = {
-  workerNodeIP: process.env.WORKER_NODE_IP || defaults.workerNodeIP,
   apiHost: getAPIHost(),
   workerNodeDomainName: (locationCode = "us-west-2") => {
     return getDynamoWokerDomainName(locationCode)
   },
-  kubeRestApiHost: process.env.KUBE_REST_API_HOST || defaults.kubeRestApiHost,
-  namespace: process.env.NAMESPACE || defaults.namespace,
-  firewallPort: process.env.FIREWALL_PORT || defaults.firewallPort
+  namespace: process.env.NAMESPACE || defaults.namespace
 };
