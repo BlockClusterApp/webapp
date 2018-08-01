@@ -38,7 +38,7 @@ export default class Login extends Component {
 	                        Blockchain Management System for Consortiums
 	                    </h2>
 	                    <p className="small">
-	                    the next generation secure and scalable cloud platform for building blockchains.
+	                    the next generation secure and scalable platform for building blockchains.
 	                    </p>
 	                </div>
 	            </div>
