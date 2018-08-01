@@ -5,7 +5,7 @@ metadata:
   name: {{ template "server.name" . }}-ing
   namespace: {{ template "server.namespace" . }}
 spec:
-{{- if eq .Values.NODE_ENV "staging" }}
+{{- if eq .Values.NODE_ENV "production" }}
   tls:
   - hosts:
     - app.blockcluster.io
