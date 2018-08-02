@@ -325,8 +325,9 @@ class Invites extends Component {
                                       <i className="fa fa-check" />
                                     )}&nbsp;Accept
                                   </button>&nbsp;<button type="button" className="btn btn-default" data-dismiss="modal" onClick={() => {
-                                    this.setState({showModal: false})
-                                    // $('#modalSlideLeft_soloAssetInfo').modal('hide')
+                                    $('#modalSlideLeft_soloAssetInfo').modal('hide')
+                                    setTimeout(this.setState({showModal: false}), 1000);
+
                                   }}>Close</button>
                                   </div>
 

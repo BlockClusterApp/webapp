@@ -15,6 +15,8 @@ import {
 const Agenda = require('agenda');
 import Config from '../../../imports/modules/config/server';
 
+console.log("MongoString", Config.mongoConnectionString);
+
 const agenda = new Agenda({
     db: {
         address: Config.mongoConnectionString
