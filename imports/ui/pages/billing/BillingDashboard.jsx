@@ -94,7 +94,7 @@ class BillingDashboard extends Component {
                 </div>
                 <div className="card-block">
                   <div className="table-responsive">
-                    <p>Free micro node usage: {this.state.bill.totalFreeMicroHours ? `${this.state.bill.totalFreeMicroHours.hours}:${this.state.bill.totalFreeMicroHours.minutes%60} `: '0'} / {1490 * 2}</p>
+                    <p>Free micro node usage: {this.state.bill.totalFreeMicroHours ? `${this.state.bill.totalFreeMicroHours.hours}:${this.state.bill.totalFreeMicroHours.minutes%60} `: '0'} / {1490 * 2} hrs</p>
                     <table className="table table-hover" id="basicTable">
                       <thead>
                         <tr>

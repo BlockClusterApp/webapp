@@ -352,7 +352,6 @@ class Explorer extends Component {
                     if(!error && result1 != null) {
                         web3.eth.getTransactionReceipt(value, (error, result2) => {
                             if(!error && result2 != null) {
-                                console.log(result1)
                                 if(result1.to == atomicSwapContractAddress) {
                                     abiDecoder.addABI(smartContracts.atomicSwap.abi);
                                 } else if (result1.to == assetsContractAddress) {

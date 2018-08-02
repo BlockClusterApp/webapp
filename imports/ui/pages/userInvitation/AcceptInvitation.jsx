@@ -143,7 +143,6 @@ export default class AcceptInvitation extends Component {
           this.email.value,
           this.pass.value,
           (error, reply) => {
-            console.log("Error, reply", error, reply);
             window.open("/app/invites", "_self");
           }
         );

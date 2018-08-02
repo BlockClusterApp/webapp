@@ -90,10 +90,11 @@ class Invites extends Component {
           this.loading[inviteId] = false;
           const loading = this.state.loading;
           loading[inviteId] = false;
-          this.setState({
+          $('#modalSlideLeft_soloAssetInfo').modal('hide');
+          setTimeout(this.setState({
             loading,
             showModal: false
-          });
+          }), 1000);
         }
       );
     }
@@ -295,7 +296,7 @@ class Invites extends Component {
           <div className="modal-dialog modal-md">
               <div className="modal-content-wrapper">
                   <div className="modal-content">
-                      <button type="button" className="close" data-dismiss="modal" aria-hidden="true"><i className="pg-close fs-14"></i>
+                      <button type="button" className="close" data-dismiss="modal" aria-hidden="true" ><i className="pg-close fs-14"></i>
                       </button>
                       <div className="container-md-height full-height">
                           <div className="row-md-height">

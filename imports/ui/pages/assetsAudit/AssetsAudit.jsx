@@ -104,7 +104,6 @@ class AssetsAudit extends Component {
                                                                                                             </tr>
                 `;
 
-                console.log(result)
 
                 for(let count = 0; count < result.length; count++) {
                     if(result[count].eventName === "soloAssetIssued") {
