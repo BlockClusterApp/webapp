@@ -81,7 +81,7 @@ class Peers extends Component {
                                                                     }}>
                                                                     <div className="form-group">
                                                                         <label>ENode URL</label>
-                                                                        <input type="text" className="form-control" ref={(input) => {this[this.props.network[0] + "_enodeURL"] = input}} required />
+                                                                        <input type="text" className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_enodeURL"] = input}} required />
                                                                     </div>
                                                                     {this.state[this.props.network[0].instanceId + "_enodeURL_formSubmitError"] &&
                                                                         <div className="row m-t-15">
