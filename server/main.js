@@ -1841,19 +1841,29 @@ spec:
             instanceId: instanceId
         }).fetch()[0]
 
-        if (network.staticPeers == undefined) {
-            network.staticPeers = [eNodeURL]
-        } else {
-            network.staticPeers.push(eNodeURL)
-        }
+        var myFuture = new Future();
 
-        Networks.update({
-            instanceId: instanceId
-        }, {
-            $set: {
-                "staticPeers": network.staticPeers
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/utility/addPeer`, {
+            "content": JSON.stringify({
+                url: eNodeURL
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
             }
         })
+
+        return myFuture.wait();
     },
     "createStream": function(instanceId, name, issuer) {
         var myFuture = new Future();

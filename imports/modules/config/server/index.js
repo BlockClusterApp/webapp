@@ -1,6 +1,7 @@
 const defaults = require("../local.config.js");
 const fs = require("fs");
 const path = require("path");
+var url = require('url');
 
 const RemoteConfig = require('../kube-config.json');
 // let locationMapping = {};
@@ -53,6 +54,30 @@ function getEnv() {
   return "dev";
 }
 
+function getDatabase() {
+    const a  = process.env.MONGO_URL;
+    if(!a){
+        return "admin";
+    }
+
+    if(a.indexOf("?replica") === -1 ){
+        return "admin"
+    }
+
+    const db = a.substring(a.lastIndexOf("/")+1, a.lastIndexOf("?replica"));
+    if(!db){
+        return "admin";
+    }
+    return db;
+}
+
+function getMongoConnectionString() {
+    var adr = process.env.MONGO_URL;
+    var q = url.parse(adr, true);
+
+    return "mongodb://" + q.host;
+}
+
 // const locationConfigs = RemoteConfig.clusters[getEnv()];
 // locationConfigs.forEach(lc => {
 //   locationMapping[lc.locationCode] = lc.locationName;
@@ -68,6 +93,8 @@ module.exports = {
   redisHost: process.env.REDIS_HOST || defaults.redisHost,
   redisPort: process.env.REDIS_PORT || defaults.redisPort,
   apiHost: getAPIHost(),
+  database: getDatabase(),
+  mongoConnectionString: getMongoConnectionString(),
   workerNodeDomainName: (locationCode = "us-west-2") => {
     return getDynamoWokerDomainName(locationCode);
   },
