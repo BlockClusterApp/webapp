@@ -72,10 +72,17 @@ function getDatabase() {
 }
 
 function getMongoConnectionString() {
-    var adr = process.env.MONGO_URL;
-    var q = url.parse(adr, true);
 
-    return "mongodb://" + q.host;
+    if(['production'].includes(process.env.NODE_ENV)){
+      return process.env.MONGO_URL;
+    }
+
+    const database = getDatabase();
+    if(!process.env.MONGO_URL.includes(database)){
+      return `${process.env.MONGO_URL}/${database}`;
+    }
+
+    return `mongodb://${q.host}/admin`;
 }
 
 // const locationConfigs = RemoteConfig.clusters[getEnv()];

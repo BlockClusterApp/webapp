@@ -17,7 +17,7 @@ import Config from '../../../imports/modules/config/server';
 
 const agenda = new Agenda({
     db: {
-        address: Config.mongoConnectionString + "/" + Config.database
+        address: Config.mongoConnectionString
     }
 });
 
@@ -237,7 +237,7 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
                     newNode_id: res,
                     node_id: network._id
                 })
-                
+
                 resolve(invitationId);
             }
         );
