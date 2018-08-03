@@ -72,7 +72,7 @@ export default class EmailVerification extends Component {
       </div>
     );
 
-    const InvalidInviteView = (
+    const InvalidView = (
       <div
         className="d-flex justify-content-center flex-column full-height "
         style={{ textAlign: "center" }}
