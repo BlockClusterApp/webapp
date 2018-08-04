@@ -349,11 +349,11 @@ Meteor.methods({
                                               ],
                                               "resources": {
                                                 "requests": {
-                                                  "cpu": isMicro ? `${resourceConfig.mongo.cpu + 150}m` : `${resourceConfig.mongo.cpu}m`,
-                                                  "memory": isMicro ? `${Number(resourceConfig.mongo.ram + 0.2).toFixed(2)}Gi` : `${resourceConfig.mongo.ram + 0.1}Gi`
+                                                  "cpu": `${resourceConfig.mongo.cpu}m`,
+                                                  "memory": `${resourceConfig.mongo.ram}Gi`
                                                 },
                                                 "limits": {
-                                                  "cpu": `${resourceConfig.mongo.cpu + 250}m`,
+                                                  "cpu": `${resourceConfig.mongo.cpu + 150}m`,
                                                   "memory": `${resourceConfig.mongo.ram + 0.2}Gi`
                                                 }
                                               },
@@ -410,12 +410,12 @@ Meteor.methods({
                                               ],
                                               "resources": {
                                                 "requests": {
-                                                  "cpu": isMicro ? `${resourceConfig.dynamo.cpu + 500}m` : `${resourceConfig.dynamo.cpu}m`,
-                                                  "memory": isMicro ? `${resourceConfig.dynamo.ram + 0.2}Gi` : `${resourceConfig.dynamo.ram}Gi`
+                                                  "cpu": `${resourceConfig.dynamo.cpu}m`,
+                                                  "memory": `${resourceConfig.dynamo.ram}Gi`
                                                 },
                                                 "limits": {
-                                                  "cpu": `${resourceConfig.dynamo.cpu + 650}m`,
-                                                  "memory": `${resourceConfig.dynamo.ram + 2}Gi`
+                                                  "cpu": `${resourceConfig.dynamo.cpu}m`,
+                                                  "memory": `${resourceConfig.dynamo.ram}Gi`
                                                 }
                                               },
                                               "lifecycle": {
@@ -458,12 +458,12 @@ Meteor.methods({
                                             ],
                                             "resources": {
                                               "requests": {
-                                                "cpu": isMicro ? `${resourceConfig.impulse.cpu + 400}m` : `${resourceConfig.impulse.cpu}m`,
-                                                "memory": isMicro ? `${resourceConfig.impulse.ram + 0.2}Gi` : `${resourceConfig.impulse.ram + 0.4}Gi`
+                                                "cpu": `${resourceConfig.impulse.cpu}m`,
+                                                "memory": `${resourceConfig.impulse.ram}Gi`
                                               },
                                               "limits": {
-                                                "cpu": `${resourceConfig.impulse.cpu + 500}m`,
-                                                "memory": `${resourceConfig.impulse.ram + 0.7}Gi`
+                                                "cpu": `${resourceConfig.impulse.cpu}m`,
+                                                "memory": `${resourceConfig.impulse.ram}Gi`
                                               }
                                             },
                                             "lifecycle": {
