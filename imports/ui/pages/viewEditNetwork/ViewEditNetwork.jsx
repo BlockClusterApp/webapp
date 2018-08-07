@@ -160,6 +160,12 @@ class ViewEditNetwork extends Component {
 			                                <b className="value-valign-middle-status">{this.props.network.length === 1 ?  this.getLocationName(this.props.network[0].locationCode) : undefined}</b>
 			                            </div>
 			                        </div>
+									<div className="form-group row">
+			                            <label className="col-md-3 control-label">Machine Type</label>
+			                            <div className="col-md-9">
+			                                <b className="value-valign-middle-status">{this.props.network.length === 1 ?  this.getLocationName(this.props.network[0].metadata.networkConfig.name) : undefined}</b>
+			                            </div>
+			                        </div>
 			                        <div className="form-group row">
 			                            <label className="col-md-3 control-label">Created On</label>
 			                            <div className="col-md-9">
