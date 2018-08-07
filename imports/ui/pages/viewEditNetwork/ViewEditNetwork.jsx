@@ -184,42 +184,6 @@ class ViewEditNetwork extends Component {
 			                                </b>
 			                            </div>
 			                        </div>
-			                        <div className="form-group row">
-			                            <label className="col-md-3 control-label">Constellation IP and Port</label>
-			                            <div className="col-md-9">
-			                                <b className="value-valign-middle">
-			                                	{
-						   							(() => {
-						       							if (this.props.network.length === 1) {
-						       								if("constellationNodePort" in this.props.network[0]) {
-						       									return (
-						       										this.locationConfig.workerNodeIP + ":" + this.props.network[0].constellationNodePort
-						       									)
-						       								}
-						       							}
-						       						})()
-						   						}
-			                                </b>
-			                            </div>
-			                        </div>
-			                        <div className="form-group row">
-			                            <label className="col-md-3 control-label">Constellation Public Key</label>
-			                            <div className="col-md-9">
-			                                <b className="value-valign-middle">
-			                                	{
-						   							(() => {
-						       							if (this.props.network.length === 1) {
-						       								if("constellationPubKey" in this.props.network[0]) {
-						       									return (
-						       										helpers.firstLetterCapital(this.props.network[0].constellationPubKey)
-						       									)
-						       								}
-						       							}
-						       						})()
-						   						}
-			                                </b>
-			                            </div>
-			                        </div>
 			                        {
 			   							(() => {
 			       							if (this.props.network.length === 1) {
