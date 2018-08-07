@@ -275,7 +275,6 @@ Meteor.methods({
           "user": userId ? userId : this.userId,
           "createdOn": Date.now(),
           "totalENodes": [],
-          "totalConstellationNodes": [],
           "locationCode": locationCode,
           voucherId: nodeConfig.voucherId,
           networkConfigId: nodeConfig.configId,
@@ -533,10 +532,6 @@ Meteor.methods({
                                             "port":8545
                                         },
                                         {
-                                            "name":"constellation",
-                                            "port":9001
-                                        },
-                                        {
                                             "name":"eth",
                                             "port":23000
                                         },
@@ -575,17 +570,15 @@ Meteor.methods({
                                         }, {
                                             $set: {
                                                 rpcNodePort: response.data.spec.ports[0].nodePort,
-                                                constellationNodePort: response.data.spec.ports[1].nodePort,
-                                                ethNodePort: response.data.spec.ports[2].nodePort,
-                                                apisPort: response.data.spec.ports[3].nodePort,
-                                                impulsePort: response.data.spec.ports[4].nodePort,
+                                                ethNodePort: response.data.spec.ports[1].nodePort,
+                                                apisPort: response.data.spec.ports[2].nodePort,
+                                                impulsePort: response.data.spec.ports[3].nodePort,
                                                 clusterIP: response.data.spec.clusterIP,
                                                 realRPCNodePort: 8545,
-                                                realConstellationNodePort: 9001,
                                                 realEthNodePort: 23000,
                                                 realAPIsPort: 6382,
                                                 realImpulsePort: 7558,
-                                                impulseURL: "http://" + Config.workerNodeIP(locationCode) + ":" + response.data.spec.ports[4].nodePort
+                                                impulseURL: "http://" + Config.workerNodeIP(locationCode) + ":" + response.data.spec.ports[3].nodePort
                                             }
                                         });
                                         let encryptedPassword = md5(instanceId);
@@ -765,7 +758,7 @@ Meteor.methods({
 
         return myFuture.wait();
     },
-    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, totalConstellationNodes, impulseURL, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode, networkConfig, userId) {
+    "joinNetwork": function(networkName, nodeType, genesisFileContent, totalENodes, impulseURL, assetsContractAddress, atomicSwapContractAddress, streamsContractAddress, locationCode, networkConfig, userId) {
         debug("joinNetwork | Arguments", arguments);
         var myFuture = new Future();
         var instanceId = helpers.instanceIDGenerate();
@@ -838,7 +831,6 @@ Meteor.methods({
             "user": userId ? userId : this.userId,
             "createdOn": Date.now(),
             "totalENodes": totalENodes,
-            "totalConstellationNodes": totalConstellationNodes,
             "genesisBlock": genesisFileContent,
             "locationCode": locationCode,
             voucherId: nodeConfig.voucherId,
@@ -854,7 +846,6 @@ Meteor.methods({
                 console.log(error);
                 myFuture.throw("An unknown error occured");
             } else {
-                totalConstellationNodes = JSON.stringify(totalConstellationNodes).replace(/\"/g, '\\"').replace(/\"/g, '\\"').replace(/\"/g, '\\"')
                 totalENodes = JSON.stringify(totalENodes).replace(/\"/g, '\\"').replace(/\"/g, '\\"').replace(/\"/g, '\\"')
                 genesisFileContent = jsonminify(genesisFileContent.toString()).replace(/\"/g, '\\"')
 
@@ -874,7 +865,7 @@ spec:
       containers:
       - name: dynamo
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}
-        command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'  mine" ]
+        command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalENodes} '${genesisFileContent}'  mine" ]
         lifecycle:
           postStart:
             exec:
@@ -932,7 +923,7 @@ spec:
       containers:
       - name: dynamo
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}
-        command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalConstellationNodes} ${totalENodes} '${genesisFileContent}'" ]
+        command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalENodes} '${genesisFileContent}'" ]
         lifecycle:
           postStart:
             exec:
@@ -1023,10 +1014,6 @@ spec:
                                             "port":8545
                                         },
                                         {
-                                            "name":"constellation",
-                                            "port":9001
-                                        },
-                                        {
                                             "name":"eth",
                                             "port":23000
                                         },
@@ -1061,12 +1048,10 @@ spec:
                                         }, {
                                             $set: {
                                                 rpcNodePort: response.data.spec.ports[0].nodePort,
-                                                constellationNodePort: response.data.spec.ports[1].nodePort,
-                                                ethNodePort: response.data.spec.ports[2].nodePort,
-                                                apisPort: response.data.spec.ports[3].nodePort,
+                                                ethNodePort: response.data.spec.ports[1].nodePort,
+                                                apisPort: response.data.spec.ports[2].nodePort,
                                                 clusterIP: response.data.spec.clusterIP,
                                                 realRPCNodePort: 8545,
-                                                realConstellationNodePort: 9001,
                                                 realEthNodePort: 23000,
                                                 realAPIsPort: 6382
                                             }
