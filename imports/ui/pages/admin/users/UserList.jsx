@@ -53,10 +53,10 @@ class UserList extends Component {
     this.userSubscription =  Meteor.subscribe("users.all", {page: this.state.page + pageOffset}, {
       onReady: () => {
         const page = this.state.page + pageOffset;
-        const users = Meteor.users.find({createdAt: {$ne: null}}, {limit: PAGE_LIMIT, skip: 10 * page}).fetch();
+        const users = Meteor.users.find({/*createdAt: {$ne: null}*/}, {limit: PAGE_LIMIT, skip: 10 * page}).fetch();
         const allUsers = Meteor.users.find({}).fetch();
         this.setState({
-          users: Meteor.users.find({createdAt: {$ne: null}}, {limit: PAGE_LIMIT, skip: 10 * page}).fetch(),
+          users: Meteor.users.find({/*createdAt: {$ne: null}*/}, {limit: PAGE_LIMIT, skip: 10 * page}).fetch(),
           page
         });
       }

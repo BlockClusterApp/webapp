@@ -13,8 +13,8 @@ class UserList extends Component {
     this.state = {
       locations: [],
       page: 0,
-      users: [],
-      userId: null
+      userId: null,
+      user: {}
     };
   }
 
@@ -27,7 +27,15 @@ class UserList extends Component {
   componentDidMount() {
     this.setState({
       userId: this.props.match.params.id
-    }, () => {console.log("UserId", this.state.userId)});
+    });
+    Meteor.call("fetchAdminDashboardDetails", this.props.match.params.id, (err, res)=>{
+      if(err){
+        return alert(`Error ${error.error}`)
+      }
+      this.setState({
+        user: res
+      });
+    });
   }
 
   getEmailVerificationLabel = verification => {
@@ -38,7 +46,43 @@ class UserList extends Component {
     }
   };
 
+
+  getNetworkType = (network) => {
+    if(!network.metadata){
+      return null;
+    }
+    if(network.metadata.networkConfig) {
+      const config = network.metadata.networkConfig;
+      return `${config.cpu} vCPU | ${config.ram} GB | ${config.disk} GB`
+    }
+    if(network.metadata.voucher) {
+      const config = network.metadata.voucher.networkConfig;
+      return `${config.cpu} vCPU | ${config.ram} GB | ${config.disk} GB`
+    }
+
+    return null;
+  }
+
+  getNetworkTypeName = (network) => {
+    const config = network.networkConfig;
+    if(!config){
+      return <span className="label label-info">None</span>
+    }
+    if(config.cpu === 500 && config.ram === 1 && config.disk === 5){
+      return <span className="label label-info">Light</span>
+    } else if(config.cpu === 2000 && config.ram >= 7.5 && config.ram <= 8){
+      return <span className="label label-info">Power</span>
+    }
+    return <span className="label label-info">Custom</span>
+  }
+
   render() {
+
+    const user = this.state.user;
+    if(!user){
+      return null;
+    }
+
     return (
           <div className="page-content-wrapper ">
             <div className="content sm-gutter">
@@ -305,46 +349,36 @@ class UserList extends Component {
                       </div>
                       <div className="padding-25">
                         <div className="pull-left">
-                          <h2 className="text-success no-margin">webarch</h2>
-                          <p className="no-margin">Today's sales</p>
+                          <h2 className="text-success no-margin">Networks</h2>
+                          <p className="no-margin">Network History</p>
                         </div>
                         <h3 className="pull-right semi-bold">
-                          <sup>
-                            <small className="semi-bold">$</small>
-                          </sup>{" "}
-                          102,967
+                          {user.networks && user.networks.length}
                         </h3>
                         <div className="clearfix" />
                       </div>
-                      <div className="auto-overflow widget-11-2-table">
+                      <div className="auto-overflow widget-11-2-table" style={{height: '375px'}}>
                         <table className="table table-condensed table-hover">
                           <tbody>
-                            <tr>
-                              <td className="font-montserrat all-caps fs-12 w-50">
-                                Purchase CODE #2345
-                              </td>
-                              <td className="text-right hidden-lg">
-                                <span className="hint-text small">dewdrops</span>
-                              </td>
-                              <td className="text-right b-r b-dashed b-grey w-25">
-                                <span className="hint-text small">Qty 1</span>
-                              </td>
-                              <td className="w-25">
-                                <span className="font-montserrat fs-18">$27</span>
-                              </td>
-                            </tr>
+                            {
+                              user.networks && user.networks.map((network, index) => {
+                                return (
+                                  <tr key={index+1}>
+                                    <td className="font-montserrat all-caps fs-12 w-40">
+                                      {network.name}
+                                    </td>
+                                    <td className="text-right b-r b-dashed b-grey w-35">
+                                      <span className="hint-text small">{this.getNetworkType(network)}</span>
+                                    </td>
+                                    <td className="w-25">
+                                      <span className="font-montserrat fs-18">{this.getNetworkTypeName(network)}</span>
+                                    </td>
+                                  </tr>
+                                )
+                              })
+                            }
                           </tbody>
                         </table>
-                      </div>
-                      <div className="padding-25 mt-auto">
-                        <p className="small no-margin">
-                          <a href="#">
-                            <i className="fa fs-16 fa-arrow-circle-o-down text-success m-r-10" />
-                          </a>
-                          <span className="hint-text ">
-                            Show more details of APPLE . INC
-                          </span>
-                        </p>
                       </div>
                     </div>
                   </div>
