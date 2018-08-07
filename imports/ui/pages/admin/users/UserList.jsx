@@ -24,6 +24,7 @@ class UserList extends Component {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
         });
+        this.userSubscription.stop();
     }
 
 
@@ -35,7 +36,7 @@ class UserList extends Component {
     });
 
 
-    Meteor.subscribe("users.all", {page: this.state.page}, {
+    this.userSubscription = Meteor.subscribe("users.all", {page: this.state.page}, {
       onReady: () => {
         this.setState({
           users: Meteor.users.find({createdAt: {$ne: null}}).fetch()
@@ -48,7 +49,8 @@ class UserList extends Component {
     if(this.state.page + pageOffset < 0){
       return;
     }
-    Meteor.subscribe("users.all", {page: this.state.page + pageOffset}, {
+    this.userSubscription.stop();
+    this.userSubscription =  Meteor.subscribe("users.all", {page: this.state.page + pageOffset}, {
       onReady: () => {
         const page = this.state.page + pageOffset;
         const users = Meteor.users.find({createdAt: {$ne: null}}, {limit: PAGE_LIMIT, skip: 10 * page}).fetch();
@@ -60,6 +62,11 @@ class UserList extends Component {
       }
     })
   }
+
+
+  openUser = (userId) => {
+    this.props.history.push("/admin/app/users/" + userId);
+}
 
   getEmailVerificationLabel = (verification) => {
     if(verification) {
@@ -98,7 +105,7 @@ class UserList extends Component {
                                               {
                                                 this.state.users.map((user, index) => {
                                                   return (
-                                                    <tr key={index+1}>
+                                                    <tr key={index+1} onClick={() => this.openUser(user._id)}>
                                                       <td>{this.state.page * PAGE_LIMIT + index+1}</td>
                                                       <td>{user._id}</td>
                                                       <td>{user.profile.firstName} {user.profile.lastName}</td>

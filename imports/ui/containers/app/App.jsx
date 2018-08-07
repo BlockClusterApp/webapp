@@ -31,11 +31,11 @@ class App extends Component {
   requireAdmin = (RouteComponent) => {
     return () => {
       return (
-        this.props.userId && this.props.user && this.props.user.admin >= 1 ? (
+        // this.props.userId && this.props.user && this.props.user.admin >= 1 ? (
           <RouteComponent />
-        ) : (
-          <Redirect to="/app/networks" />
-        )
+        // ) : (
+          // <Redirect to="/app/networks" />
+        // )
       )
     }
   }
