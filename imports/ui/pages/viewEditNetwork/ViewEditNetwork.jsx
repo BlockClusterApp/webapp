@@ -163,7 +163,7 @@ class ViewEditNetwork extends Component {
 									<div className="form-group row">
 			                            <label className="col-md-3 control-label">Machine Type</label>
 			                            <div className="col-md-9">
-			                                <b className="value-valign-middle-status">{this.props.network.length === 1 ?  this.getLocationName(this.props.network[0].metadata.networkConfig.name) : undefined}</b>
+			                                <b className="value-valign-middle-status">{this.props.network.length === 1 ? this.props.network[0].metadata.networkConfig.name : ""}</b>
 			                            </div>
 			                        </div>
 			                        <div className="form-group row">
