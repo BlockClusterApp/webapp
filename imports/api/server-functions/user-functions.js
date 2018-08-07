@@ -214,7 +214,6 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
             invitation.nodeType || "authority",
             network.genesisBlock.toString(),
             ["enode://" + network.nodeId + "@" + network.workerNodeIP + ":" + network.ethNodePort].concat(network.totalENodes),
-            [network.workerNodeIP + ":" + network.constellationNodePort].concat(network.totalConstellationNodes),
             network.impulseURL,
             network.assetsContractAddress,
             network.atomicSwapContractAddress,

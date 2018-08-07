@@ -20,7 +20,6 @@ class JoinNetwork extends Component {
             inviteFormSubmitError: "",
             totalENodes: [""],
             showSubmitAlert: false,
-            totalConstellationNodes: [""],
             joinLoading: false,
             inviteLoading: false,
             locationCode: "us-west-2"
@@ -68,30 +67,6 @@ class JoinNetwork extends Component {
         }
     }
 
-    onConstellationChange = (index, event) => {
-        this.state.totalConstellationNodes[index] = event.target.value;
-        this.setState({
-            totalConstellationNodes: this.state.totalConstellationNodes
-        })
-    }
-
-    addConstellationURL = (e) => {
-        e.preventDefault()
-        this.state.totalConstellationNodes[this.state.totalConstellationNodes.length] = "";
-        this.setState({
-            totalConstellationNodes: this.state.totalConstellationNodes
-        })
-    }
-
-    deleteConstellationURL = (index) => {
-        if(this.state.totalConstellationNodes.length > 1) {
-            this.state.totalConstellationNodes.splice(index, 1);
-            this.setState({
-                totalConstellationNodes: this.state.totalConstellationNodes
-            })
-        }
-    }
-
     onJoinSubmit = (e) => {
         e.preventDefault()
         this.setState({
@@ -133,7 +108,7 @@ class JoinNetwork extends Component {
                 joinLoading: true
             });
 
-            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.totalConstellationNodes, this.state.impulseURL, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, this.locationCode,  {...this.config}, (error) => {
+            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.impulseURL, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, this.locationCode,  {...this.config}, (error) => {
                 if(!error) {
                     this.setState({
                         joinFormSubmitError: '',
@@ -254,20 +229,6 @@ class JoinNetwork extends Component {
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <div className="row clearfix">
-                                                                <div className="col-md-6">
-                                                                    <div className="form-group form-group-default ">
-                                                                        <label>Constellation</label>
-                                                                        <input type="text" className="form-control" name="firstName" required disabled value="Enabled" />
-                                                                    </div>
-                                                                </div>
-                                                                <div className="col-md-6">
-                                                                    <div className="form-group form-group-default ">
-                                                                        <label>Gas Price</label>
-                                                                        <input type="text" className="form-control" name="firstName" required disabled value="0" />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
 
                                                             <div className="row clearfix">
                                                                 <div className="col-md-12">
@@ -382,35 +343,6 @@ class JoinNetwork extends Component {
                                                                             })}
                                                                             <div className="col-md-12 clearfix">
                                                                                 <button className="btn btn-complete btn-xs m-t-10 pull-right add-url" onClick={this.addENodeURL}>&nbsp;<i className="fa fa-plus" aria-hidden="true"></i>&nbsp;</button>
-                                                                            </div>
-                                                                        </div>
-                                                                    )
-                                                                })()
-                                                            }
-                                                        </div>
-                                                        <p className="m-t-10">Add other constellation nodes URLs</p>
-                                                        <div className="form-group-attached">
-                                                            {
-                                                                (() => {
-                                                                    return (
-                                                                        <div className="row">
-                                                                            {this.state.totalConstellationNodes.map((item, index) => {
-                                                                                return (
-                                                                                    <div className="col-md-12" key={index}>
-                                                                                        <div className="form-group form-group-default input-group">
-                                                                                            <div className="form-input-group">
-                                                                                                <label>URL</label>
-                                                                                                <input type="text" className="form-control usd" required placeholder="ip:port" onChange={(event) => {this.onConstellationChange(index, event)}} value={item} value={item} />
-                                                                                            </div>
-                                                                                            <div className="input-group-addon delete-button" onClick={() => {this.deleteConstellationURL(index)}}>
-                                                                                                <i className="fa fa-trash" aria-hidden="true"></i>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                )
-                                                                            })}
-                                                                            <div className="col-md-12 clearfix">
-                                                                                <button className="btn btn-complete btn-xs m-t-10 pull-right add-url" onClick={this.addConstellationURL}>&nbsp;<i className="fa fa-plus" aria-hidden="true"></i>&nbsp;</button>
                                                                             </div>
                                                                         </div>
                                                                     )
