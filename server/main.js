@@ -415,7 +415,7 @@ Meteor.methods({
                                                 },
                                                 "limits": {
                                                   "cpu": `${resourceConfig.dynamo.cpu}m`,
-                                                  "memory": `${resourceConfig.dynamo.ram}Gi`
+                                                  "memory": `${resourceConfig.dynamo.ram + 0.2}Gi`
                                                 }
                                               },
                                               "lifecycle": {
@@ -463,7 +463,7 @@ Meteor.methods({
                                               },
                                               "limits": {
                                                 "cpu": `${resourceConfig.impulse.cpu}m`,
-                                                "memory": `${resourceConfig.impulse.ram}Gi`
+                                                "memory": `${resourceConfig.impulse.ram + 0.2}Gi`
                                               }
                                             },
                                             "lifecycle": {
