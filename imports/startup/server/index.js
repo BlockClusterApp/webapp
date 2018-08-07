@@ -7,6 +7,7 @@ require("../../api/platform")
 require("../../collections/streams/server/publications.js")
 require("../../collections/assetTypes/server/publications.js")
 require("../../collections/bcAccounts/server/publications.js")
+require("../../collections/users/server/publications");
 require('../../api/payments');
 require('../../api/billing');
 

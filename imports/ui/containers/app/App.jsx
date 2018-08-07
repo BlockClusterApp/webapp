@@ -4,6 +4,7 @@ import {BrowserRouter, Route, Switch, Redirect} from "react-router-dom"
 import {withTracker} from "meteor/react-meteor-data";
 
 import Main from "../main/Main.jsx"
+import AdminApp from "../admin/Admin.jsx"
 
 import Login from "../../pages/login/Login.jsx"
 import Register from "../../pages/register/Register.jsx"
@@ -25,7 +26,19 @@ class App extends Component {
 				)
 			)
 		}
-	}
+  }
+
+  requireAdmin = (RouteComponent) => {
+    return () => {
+      return (
+        this.props.userId && this.props.user && this.props.user.admin >= 1 ? (
+          <RouteComponent />
+        ) : (
+          <Redirect to="/app/networks" />
+        )
+      )
+    }
+  }
 
 	requireNotLoggedIn = (RouteComponent) => {
 		return () => {
@@ -58,6 +71,7 @@ class App extends Component {
 					<Route exact path="/reset-password" component={ResetPassword} />
 					<Route exact path="/email-verify" component={EmailVerify} />
 					<Route exact path="/accept-invitation" component={AcceptInvitation} />
+          <Route path="/admin/app" render={this.requireAdmin(AdminApp)} />
 					<Route path="/app" render={this.requireAuth(Main)} />
 					{/*<Route component={Notfound} />*/}
 				</Switch>
@@ -68,7 +82,8 @@ class App extends Component {
 
 export default withTracker(() => {
 	return {
-		userId: Meteor.userId()
+    userId: Meteor.userId(),
+    user: Meteor.user()
 	}
 })(App)
 
