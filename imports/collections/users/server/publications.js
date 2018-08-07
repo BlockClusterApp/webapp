@@ -5,11 +5,19 @@ Meteor.publish(null, function() {
 
 const pageSize = 10;
 Meteor.publish("users.all", function({page}) {
+
   return Meteor.users.find({}, {
-    limit: 10,
+    limit: pageSize,
     skip: page * pageSize,
     sort: {
       createdAt: -1
+    },
+    fields: {
+      emails: 1,
+      profile: 1,
+      admin: 1,
+      _id: 1,
+      createdAt: 1
     }
   });
 });

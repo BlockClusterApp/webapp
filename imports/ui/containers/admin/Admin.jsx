@@ -7,7 +7,9 @@ import Footer from "../../components/footer/Footer.jsx"
 
 import UserList from "../../pages/admin/userList/UserList.jsx";
 
-export default class Main extends Component {
+ export default class Main extends Component {
+
+
 	render() {
 		return (
 			<div>
