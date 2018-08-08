@@ -1,9 +1,6 @@
 import React, {Component} from "react";
 import {withTracker} from "meteor/react-meteor-data";
-import {Networks} from "../../../../collections/networks/networks.js"
-import helpers from "../../../../modules/helpers"
 import {withRouter} from 'react-router-dom'
-import { ReactiveVar } from 'meteor/reactive-var'
 import moment from 'moment';
 
 
@@ -29,13 +26,6 @@ class UserList extends Component {
 
 
 	componentDidMount(){
-		Meteor.call("getClusterLocations", (err, res) => {
-			this.setState({
-			  locations: res
-			});
-    });
-
-
     this.userSubscription = Meteor.subscribe("users.all", {page: this.state.page}, {
       onReady: () => {
         this.setState({
@@ -53,8 +43,6 @@ class UserList extends Component {
     this.userSubscription =  Meteor.subscribe("users.all", {page: this.state.page + pageOffset}, {
       onReady: () => {
         const page = this.state.page + pageOffset;
-        const users = Meteor.users.find({/*createdAt: {$ne: null}*/}, {limit: PAGE_LIMIT, skip: 10 * page}).fetch();
-        const allUsers = Meteor.users.find({}).fetch();
         this.setState({
           users: Meteor.users.find({/*createdAt: {$ne: null}*/}, {limit: PAGE_LIMIT, skip: 10 * page}).fetch(),
           page
@@ -94,9 +82,9 @@ class UserList extends Component {
                                             <thead>
                                                 <tr>
                                                     <th style={{width: "5%"}}>S.No</th>
-                                                    <th style={{width: "15%"}}>Id</th>
-                                                    <th style={{width: "25%"}}>Name</th>
-                                                    <th style={{width: "23%"}}>Email</th>
+                                                    {/* <th style={{width: "15%"}}>Id</th> */}
+                                                    <th style={{width: "30%"}}>Name</th>
+                                                    <th style={{width: "33%"}}>Email</th>
                                                     <th style={{width: "12%"}}>Email Verified</th>
                                                     <th style={{width: "20%"}}>Created on</th>
                                                 </tr>
@@ -107,7 +95,6 @@ class UserList extends Component {
                                                   return (
                                                     <tr key={index+1} onClick={() => this.openUser(user._id)}>
                                                       <td>{this.state.page * PAGE_LIMIT + index+1}</td>
-                                                      <td>{user._id}</td>
                                                       <td>{user.profile.firstName} {user.profile.lastName}</td>
                                                       <td>{user.emails[0].address}</td>
                                                       <td>{this.getEmailVerificationLabel(user.emails[0].verified)}</td>
