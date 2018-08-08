@@ -163,7 +163,7 @@ class ViewEditNetwork extends Component {
 									<div className="form-group row">
 			                            <label className="col-md-3 control-label">Machine Details</label>
 			                            <div className="col-md-9">
-			                                <span className="value-valign-middle-status">{this.props.network.length === 1 ? (parseInt(this.props.network[0].networkConfig.cpu) / 1000) + " vCPU" : ""}, {this.props.network.length === 1 ? (parseInt(this.props.network[0].networkConfig.ram)) + " GB RAM" : ""}, {this.props.network.length === 1 ? (parseInt(this.props.network[0].networkConfig.disk)) + " GB Disk" : ""}</span>
+			                                <span className="value-valign-middle-status">{this.props.network.length === 1 ? (parseFloat(this.props.network[0].networkConfig.cpu) / 1000) + " vCPU" : ""}, {this.props.network.length === 1 ? (parseFloat(this.props.network[0].networkConfig.ram)) + " GB RAM" : ""}, {this.props.network.length === 1 ? (parseFloat(this.props.network[0].networkConfig.disk)) + " GB Disk" : ""}</span>
 			                            </div>
 			                        </div>
 			                        <div className="form-group row">
