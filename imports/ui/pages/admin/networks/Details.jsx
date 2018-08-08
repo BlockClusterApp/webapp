@@ -4,6 +4,7 @@ import helpers from "../../../../modules/helpers";
 import { withRouter } from "react-router-dom";
 import { Link } from "react-router-dom";
 import moment from "moment";
+import KubeDashboard from './components/KubeDashboard';
 
 class NetworkList extends Component {
   constructor(props) {
@@ -272,6 +273,11 @@ class NetworkList extends Component {
                 }
               </div>
             </div>
+              <div className="row">
+                <div className="col-md-12">
+                  <KubeDashboard instanceId={network.instanceId} />
+                </div>
+              </div>
           </div>
         </div>
       </div>
