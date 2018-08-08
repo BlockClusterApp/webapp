@@ -4,18 +4,20 @@ import {UserInvitation} from '../../collections/user-invitation';
 import PaymentRequests from '../../collections/payments/payment-requests';
 import Voucher from '../../collections/vouchers/voucher';
 import Billing from '../billing';
+import Bluebird from 'bluebird';
 
 const User = {};
 
 User.fetchAdminDashboardDetails = async (userId) => {
-  const result = {};
-  result.details = Meteor.users.find({_id: userId}, {fields: {services: 0}}).fetch()[0];
-  result.networks = Networks.find({user: userId}).fetch();
-  result.invitations = UserInvitation.find({inviteFrom: userId}).fetch();
-  result.cards = UserCards.find({userId}).fetch();
-  result.payments = PaymentRequests.find({userId}).fetch();
-  result.vouchers = Voucher.find({claimedBy: userId}).fetch();
-  result.bill = await Billing.generateBill(userId);
+  const result = await Bluebird.props({
+    details: Meteor.users.find({_id: userId}, {fields: {services: 0}}).fetch()[0],
+    networks : Networks.find({user: userId}).fetch(),
+    invitations : UserInvitation.find({inviteFrom: userId}).fetch(),
+    cards : UserCards.find({userId}).fetch(),
+    payments : PaymentRequests.find({userId}).fetch(),
+    vouchers : Voucher.find({claimedBy: userId}).fetch(),
+    bill : Billing.generateBill(userId)
+  })
 
   return result;
 };

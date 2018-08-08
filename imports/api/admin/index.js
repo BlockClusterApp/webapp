@@ -1,1 +1,2 @@
-require('./user.js')
+require('./user')
+require('./networks');
