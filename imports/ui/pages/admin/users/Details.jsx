@@ -3,6 +3,7 @@ import { withTracker } from "meteor/react-meteor-data";
 import { Networks } from "../../../../collections/networks/networks.js";
 import helpers from "../../../../modules/helpers";
 import { withRouter } from "react-router-dom";
+import {Link} from "react-router-dom"
 import { ReactiveVar } from "meteor/reactive-var";
 import moment from "moment";
 
@@ -32,6 +33,7 @@ class UserList extends Component {
       if(err){
         return alert(`Error ${error.error}`)
       }
+      console.log("Res", res);
       this.setState({
         user: res
       });
@@ -45,6 +47,16 @@ class UserList extends Component {
       return <span className="label label-important">No</span>;
     }
   };
+
+
+  getEmailVerificationLabel = (verification) => {
+    if(verification) {
+      return <span className="label label-success">Verified</span>
+    } else {
+      return <span className="label label-important">Not Verified</span>
+    }
+  };
+
 
 
   getNetworkType = (network) => {
@@ -79,9 +91,11 @@ class UserList extends Component {
   render() {
 
     const user = this.state.user;
-    if(!user){
+    if(!(user.details && user.details.profile)){
       return null;
     }
+
+    const { cards, bill, invitations, payments, vouchers } = user;
 
     return (
           <div className="page-content-wrapper ">
@@ -91,9 +105,9 @@ class UserList extends Component {
                   <div className="inner">
                     <ol className="breadcrumb sm-p-b-5">
                       <li className="breadcrumb-item">
-                        <a href="/admin/app">Admin</a>
+                        <Link to="/admin/app">Admin</Link>
                       </li>
-                      <li className="breadcrumb-item" ><a href="/admin/app/users">Users</a></li>
+                      <li className="breadcrumb-item" ><Link to="/admin/app/users">Users</Link></li>
                       <li className="breadcrumb-item active">{this.state.userId}</li>
                     </ol>
                   </div>
@@ -108,26 +122,25 @@ class UserList extends Component {
                     >
                       <div className="card-header ">
                         <h5 className="text-primary pull-left fs-12">
-                          Update <i className="fa fa-circle text-complete fs-11" />
+                          User <i className="fa fa-circle text-complete fs-11" />
                         </h5>
                         <div className="pull-right small hint-text">
-                          5,345 <i className="fa fa-comment-o" />
+                          Details <i className="fa fa-comment-o" />
                         </div>
                         <div className="clearfix" />
                       </div>
                       <div className="card-description">
-                        <h3>
-                          page dashboard Version 3.0 now release with limitless
-                          layout possibilities
-                        </h3>
+                        <p>
+                          {user.details.profile.firstName} {user.details.profile.lastName}
+                        </p>
                       </div>
-                      <div className="card-footer clearfix">
+                      {/* <div className="card-footer clearfix">
                         <div className="pull-left">
                           via <span className="text-complete">Pages</span>
                         </div>
                         <div className="pull-right hint-text">July 23</div>
                         <div className="clearfix" />
-                      </div>
+                      </div> */}
                     </div>
                     <div className="card no-border widget-loader-bar m-b-10">
                       <div className="container-xs-height full-height">
@@ -136,7 +149,7 @@ class UserList extends Component {
                             <div className="card-header  top-left top-right">
                               <div className="card-title">
                                 <span className="font-montserrat fs-11 all-caps">
-                                  Weekly Sales <i className="fa fa-chevron-right" />
+                                  Email <i className="fa fa-chevron-right" />
                                 </span>
                               </div>
                               <div className="card-controls">
@@ -158,12 +171,9 @@ class UserList extends Component {
                         <div className="row-xs-height">
                           <div className="col-xs-height col-top">
                             <div className="p-l-20 p-t-50 p-b-40 p-r-20">
-                              <h3 className="no-margin p-b-5">$24,000</h3>
+                              <p className="no-margin p-b-5">{user.details.emails[0].address}</p>
                               <span className="small hint-text pull-left">
-                                71% of total goal
-                              </span>
-                              <span className="pull-right small text-primary">
-                                $23,000
+                                {this.getEmailVerificationLabel(user.details.emails[0].verified)}
                               </span>
                             </div>
                           </div>
@@ -173,7 +183,7 @@ class UserList extends Component {
                             <div className="progress progress-small m-b-0">
                               <div
                                 className="progress-bar progress-bar-primary"
-                                style={{width:"71%"}}
+                                style={{width: user.details.emails[0].verified ? '100%' : '0%' }}
                               />
                             </div>
                           </div>
@@ -187,7 +197,7 @@ class UserList extends Component {
                             <div className="card-header  top-left top-right">
                               <div className="card-title">
                                 <span className="font-montserrat fs-11 all-caps">
-                                  Page Visits <i className="fa fa-chevron-right" />
+                                  Bill <i className="fa fa-chevron-right" />
                                 </span>
                               </div>
                               <div className="card-controls">
@@ -209,12 +219,12 @@ class UserList extends Component {
                         <div className="row-xs-height">
                           <div className="col-xs-height col-top">
                             <div className="p-l-20 p-t-50 p-b-40 p-r-20">
-                              <h3 className="no-margin p-b-5">423</h3>
+                              <h3 className="no-margin p-b-5">$ {bill.totalAmount}</h3>
                               <span className="small hint-text pull-left">
-                                22% higher
+                                Free Node Usage
                               </span>
                               <span className="pull-right small text-danger">
-                                $23,000
+                                {bill.totalFreeMicroHours.hours}/{1490 * 2} hrs
                               </span>
                             </div>
                           </div>
@@ -224,7 +234,7 @@ class UserList extends Component {
                             <div className="progress progress-small m-b-0">
                               <div
                                 className="progress-bar progress-bar-danger"
-                                style={{width: '15%'}}
+                                style={{width: `${(bill.totalFreeMicroHours.hours * 100)/(1490 * 2)}%`}}
                               />
                             </div>
                           </div>
@@ -239,31 +249,35 @@ class UserList extends Component {
                     >
                       <div className="card-header clearfix">
                         <h5 className="text-success pull-left fs-12">
-                          Stock Market{" "}
+                          Credit Cards
                           <i className="fa fa-circle text-success fs-11" />
                         </h5>
-                        <div className="pull-right small hint-text">
+                        {/* <div className="pull-right small hint-text">
                           5,345 <i className="fa fa-comment-o" />
-                        </div>
+                        </div> */}
                         <div className="clearfix" />
                       </div>
                       <div className="card-description">
-                        <h5 className="hint-text no-margin">Apple Inc.</h5>
-                        <h5 className="small hint-text no-margin">
-                          NASDAQ: AAPL - Nov 13 8:37 AM ET
-                        </h5>
-                        <h3 className="m-b-0">
-                          111.25{" "}
-                          <span className="text-success">
-                            <i className="fa fa-sort-up small text-success" /> 0.15
-                          </span>
-                        </h3>
+                        {
+                          cards[0].cards.map(card => {
+                            return (<div key={card.last4}>
+                              <h5 className="hint-text no-margin">{card.issuer} XX..XX<span className="text-success">{card.last4}</span></h5>
+                              <h5 className="small hint-text no-margin">
+                                {card.network}
+                              </h5>
+                              <h5 className="m-b-0">
+                                {card.name} | {helpers.firstLetterCapital(card.type)}
+                              </h5>
+                            </div>)
+                          })
+                        }
+
                       </div>
                       <div className="card-footer clearfix">
                         <div className="pull-left">
-                          by <span className="text-success">John Smith</span>
+                          Added on
                         </div>
-                        <div className="pull-right hint-text">Apr 23</div>
+                        <div className="pull-right hint-text">{moment(cards[0].updatedAt).format('DD-MMM-YYYY')}</div>
                         <div className="clearfix" />
                       </div>
                     </div>

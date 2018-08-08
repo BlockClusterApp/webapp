@@ -39,7 +39,7 @@ class UserList extends Component {
     this.userSubscription = Meteor.subscribe("users.all", {page: this.state.page}, {
       onReady: () => {
         this.setState({
-          users: Meteor.users.find({createdAt: {$ne: null}}).fetch()
+          users: Meteor.users.find().fetch()
         });
       }
     });
@@ -80,7 +80,7 @@ class UserList extends Component {
 	render(){
 		return (
             <div className="content networksList">
-                <div className="m-t-20 container-fluid container-fixed-lg bg-white">
+                <div className="m-t-20 container-fluid container-fixed-lg bg-white" style={{marginLeft: '25px', marginRight: '25px'}}>
                     <div className="row">
                         <div className="col-lg-12">
                             <div className="card card-transparent">

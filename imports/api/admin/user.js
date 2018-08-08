@@ -9,7 +9,7 @@ const User = {};
 
 User.fetchAdminDashboardDetails = async (userId) => {
   const result = {};
-  result.details = Meteor.users.find({_id: userId}).fetch()[0];
+  result.details = Meteor.users.find({_id: userId}, {fields: {services: 0}}).fetch()[0];
   result.networks = Networks.find({user: userId}).fetch();
   result.invitations = UserInvitation.find({inviteFrom: userId}).fetch();
   result.cards = UserCards.find({userId}).fetch();
