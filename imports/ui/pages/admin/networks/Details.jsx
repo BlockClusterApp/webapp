@@ -211,7 +211,7 @@ class NetworkList extends Component {
                 >
                   <div className="card-header clearfix">
                     <h5 className="text-success pull-left fs-12">
-                     Network Info
+                     Network Info | {network.instanceId}
                     </h5>
                     <div className="clearfix" />
                   </div>
@@ -282,7 +282,7 @@ class NetworkList extends Component {
             </div>
               <div className="row">
                 <div className="col-md-12">
-                  <KubeDashboard instanceId={network.instanceId} />
+                  <KubeDashboard instanceId={network.instanceId} networkId={network._id} />
                 </div>
               </div>
           </div>
