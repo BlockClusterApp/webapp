@@ -111,7 +111,7 @@ Network.fetchPodStatus =  (id) => {
             imageID: containerStatus.imageID
           })
         });
-        result.pods.push(pod);
+        result.pods.push(podDetails);
       });
       resolve(result);
     });

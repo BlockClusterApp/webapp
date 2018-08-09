@@ -97,7 +97,6 @@ class NetworkList extends Component {
       networkType,
       bill
     } = this.state.network;
-    console.log(this.state);
     if (!user) {
       const LoadingView = (
         <div

@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import helpers from "../../../../../modules/helpers";
 import moment from "moment";
 
+import './KubeDashboard.scss';
+
 export default class KubeDashboard extends Component {
   constructor(props) {
     super(props);
@@ -10,6 +12,7 @@ export default class KubeDashboard extends Component {
 
   componentDidMount(){
     Meteor.call("fetchPodStatus", this.props.networkId, (err, res) => {
+      console.log("Pod status", res);
       this.setState({
         pod: res
       })
@@ -28,7 +31,7 @@ export default class KubeDashboard extends Component {
     const containersHeaders = pod.spec.containers.map(container => {
       containerNames.push(container.name);
       return (
-        <li className="" aria-expanded="false" key={container.name} onClick={() => console.log("Clicked", container.name)}>
+        <li className="" aria-expanded="false" key={container.name}>
           <a href={`#${container.name}`} data-toggle="tab" role="tab" className="b-a b-grey text-master active" aria-expanded="true">
             {helpers.firstLetterCapital(container.name)}
           </a>
@@ -42,23 +45,41 @@ export default class KubeDashboard extends Component {
       return (
         <div className="col-md-4 padding-25  d-flex flex-column" id={`${containerName}`} key={containerName}>
           <h5>{helpers.firstLetterCapital(containerName)}</h5>
-          <p className="hint-text all-caps font-montserrat small no-margin text-success ">{helpers.firstLetterCapital(Object.keys(containerStatus.state)[0])}</p>
+          <p className="hint-text all-caps font-montserrat small no-margin text-success " ><b>{helpers.firstLetterCapital(Object.keys(containerStatus.state)[0])}</b></p>
           <p className="font-montserrat  no-margin fs-12">Since {moment(Object.values(containerStatus.state)[0].startedAt).format('DD-MMM-YY HH:mm:SS')}</p>
           <br />
           <p className="hint-text font-montserrat small no-margin  all-caps fs-14">Resources</p>
-          <p className="all-caps no-margin text-primary ">Requests</p>
+          <p className="no-margin text-primary ">Requests</p>
           <p className="font-montserrat  no-margin fs-11">{containerSpec.resources.requests.cpu} | {containerSpec.resources.requests.memory}</p>
-          <p className="all-caps no-margin text-danger fs-12">Limits</p>
+          <p className="no-margin text-danger fs-12">Limits</p>
           <p className="font-montserrat  no-margin fs-11">{containerSpec.resources.limits.cpu} | {containerSpec.resources.limits.memory}</p>
           <br />
           <p className="hint-text all-caps font-montserrat small no-margin ">Image</p>
-          <textarea className="font-montserrat  no-margin " style={{border: 'none'}}>{containerStatus.imageID}</textarea>
+          <textarea className="font-montserrat  no-margin " style={{border: 'none', fontSize: '11px'}} disabled>{containerStatus.imageID}</textarea>
         </div>
       )
     });
 
+    const volumes = pod.spec.volumes.map(vol => {
+      return (
+        <p style={{margin: '0px'}} key={vol.name}>{vol.name} | {vol.persistentVolumeClaim && <span className="label-custom">{vol.persistentVolumeClaim.claimName}</span>} {vol.secret && <span className="label-custom">{vol.secret.secretName}</span>}</p>
+      )
+    })
+
     return (
       <div className="full-width">
+        <div className="row" style={{paddingLeft: '25px', paddingRight: '25px'}}>
+          <div className="col-md-6 d-flex flex-column">
+            <h5>{pod.name}</h5>
+            <p><span className="label-custom">Namespace:</span> {pod.namespace}</p>
+            <p><span className="label-custom">Node name:</span> {pod.spec.nodeName}</p>
+            <p><span className="label-custom">Restart policy:</span> {pod.spec.restartPolicy}</p>
+          </div>
+          <div className="col-md-6 d-flex flex-column">
+            <h6>Volumes</h6>
+              {volumes}
+          </div>
+        </div>
         <div className="row">
           {containerContents}
         </div>
@@ -68,7 +89,7 @@ export default class KubeDashboard extends Component {
 
   render() {
     return (
-      <div className="card card-borderless">
+      <div className="card card-borderless kube-dashboard">
         <ul
           className="nav nav-tabs nav-tabs-simple hidden-sm-down"
           role="tablist"
@@ -137,13 +158,13 @@ export default class KubeDashboard extends Component {
               className="cs-select cs-skin-slide full-width"
               data-init-plugin="cs-select"
             >
-              <option value="#tab2Pods" selected="">
+              <option defaultValue="#tab2Pods" selected="">
                 Pods
               </option>
-              <option value="#tab2Deployments">Deployments</option>
-              <option value="#tab2Volumes">Volumes</option>
-              <option value="#tab2Services">Services</option>
-              <option value="#tab2Ingress">Ingress</option>
+              <option defaultValue="#tab2Deployments">Deployments</option>
+              <option defaultValue="#tab2Volumes">Volumes</option>
+              <option defaultValue="#tab2Services">Services</option>
+              <option defaultValue="#tab2Ingress">Ingress</option>
             </select>
             <div className="cs-backdrop" />
           </div>
