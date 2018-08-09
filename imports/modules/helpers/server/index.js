@@ -8,11 +8,13 @@ require('./http-interceptor');
 const EmailVerificationTemplate = require('../../template/email-verification');
 const ForgotPasswordTemplate = require('../../template/forgot-password');
 const InviteUserTemplate = require('../../template/invite-user');
+const CreditCardLink48hrs = require('../../template/credit-card-link-reminder');
 
 const EJSMapping = {
   'email-verification.ejs': EmailVerificationTemplate,
   'forgot-password.ejs': ForgotPasswordTemplate,
-  'invite-user.ejs': InviteUserTemplate
+  'invite-user.ejs': InviteUserTemplate,
+  'credit-card-link-reminder.ejs': CreditCardLink48hrs
 };
 
 function generateRandomString(placeholder, salt = "I<3BlockCluster") {
