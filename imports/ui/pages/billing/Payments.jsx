@@ -5,6 +5,7 @@ import helpers from "../../../modules/helpers";
 import PaymentRequests from '../../../collections/payments/payment-requests';
 import { withRouter } from "react-router-dom";
 import moment from 'moment';
+import CardVerification from './components/CardVerification.jsx';
 
 import "./Dashboard.scss";
 
@@ -46,6 +47,13 @@ class PaymentDashboard extends Component {
     return null;
   }
 
+  cardVerificationListener = (isVerified) => {
+    this.setState({
+      cardVerified: isVerified,
+      loading: false
+    })
+  }
+
   render() {
     return (
       <div className="content networksList">
@@ -55,6 +63,7 @@ class PaymentDashboard extends Component {
               <div className="card card-transparent">
                 <div className="card-header ">
                   <div className="card-title">Payments</div>
+                  <CardVerification cardVerificationListener={this.cardVerificationListener}/>
                 </div>
                 <div className="card-block">
                   <div className="table-responsive">
