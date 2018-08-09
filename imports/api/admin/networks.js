@@ -118,9 +118,124 @@ Network.fetchPodStatus =  (id) => {
   });
 }
 
+Network.fetchServiceStatus = async (id) => {
+  return new Promise((resolve, reject) => {
+    const network = Networks.find({_id: id}).fetch()[0];
+    if(!network){
+      return {};
+    }
+    const URL = `${Config.kubeRestApiHost(network.locationCode)}/api/v1/namespaces/${Config.namespace}/services/${network.instanceId}`;
+    HTTP.get(URL, (err, res) => {
+      if(err){
+        return reject(new Meteor.Error("Error", err));
+      }
+      const service = JSON.parse(res.content);
+      const result = {
+        apiVersion: service.apiVersion,
+        name: service.metadata.name,
+        namespace: service.metadata.namespace,
+        selfLink: service.metadata.selfLink,
+        createdAt: moment(service.metadata.creationTimestamp).format('DD-MMM-YYYY HH:mm:SS'),
+        ports: service.spec.ports,
+        type: service.spec.type,
+        clusterIP: service.spec.clusterIP,
+      }
+      resolve(result);
+    });
+  });
+}
+
+
+Network.fetchDeploymentStatus = async (id) => {
+  return new Promise((resolve, reject) => {
+    const network = Networks.find({_id: id}).fetch()[0];
+    if(!network){
+      return {};
+    }
+    const URL = `${Config.kubeRestApiHost(network.locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/${network.instanceId}`;
+    HTTP.get(URL, (err, res) => {
+      if(err){
+        return reject(new Meteor.Error("Error", err));
+      }
+      const deploy = JSON.parse(res.content);
+      const result = {
+        apiVersion: deploy.apiVersion,
+        name: deploy.metadata.name,
+        namespace: deploy.metadata.namespace,
+        selfLink: deploy.metadata.selfLink,
+        createdAt: moment(deploy.metadata.creationTimestamp).format('DD-MMM-YYYY HH:mm:SS'),
+        strategy: deploy.spec.strategy,
+        revisionHistoryLimit: deploy.spec.revisionHistoryLimit,
+        status: deploy.status
+      }
+      resolve(result);
+    });
+  });
+}
+
+Network.fetchPVCStatus = async (id) => {
+  return new Promise((resolve, reject) => {
+    const network = Networks.find({_id: id}).fetch()[0];
+    if(!network){
+      return {};
+    }
+    const URL = `${Config.kubeRestApiHost(network.locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/${network.instanceId}-pvc`;
+    HTTP.get(URL, (err, res) => {
+      if(err){
+        return reject(new Meteor.Error("Error", err));
+      }
+      const pvc = JSON.parse(res.content);
+      const result = {
+        apiVersion: pvc.apiVersion,
+        name: pvc.metadata.name,
+        namespace: pvc.metadata.namespace,
+        selfLink: pvc.metadata.selfLink,
+        provisioner: pvc.metadata.annotations['volume.beta.kubernetes.io/storage-provisioner'],
+        createdAt: moment(pvc.metadata.creationTimestamp).format('DD-MMM-YYYY HH:mm:SS'),
+        spec: pvc.spec,
+        status: pvc.status
+      }
+      resolve(result);
+    });
+  });
+}
+
+
+Network.fetchIngressStatus = async (id) => {
+  return new Promise((resolve, reject) => {
+    const network = Networks.find({_id: id}).fetch()[0];
+    if(!network){
+      return {};
+    }
+    const URL = `${Config.kubeRestApiHost(network.locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/ingress-${network.instanceId}`;
+    HTTP.get(URL, (err, res) => {
+      if(err){
+        return reject(new Meteor.Error("Error", err));
+      }
+      const ingress = JSON.parse(res.content);
+      const result = {
+        apiVersion: ingress.apiVersion,
+        name: ingress.metadata.name,
+        namespace: ingress.metadata.namespace,
+        selfLink: ingress.metadata.selfLink,
+        authSecret: ingress.metadata.annotations['nginx.ingress.kubernetes.io/auth-secret'],
+        configuration: ingress.metadata.annotations['nginx.ingress.kubernetes.io/configuration-snippet'].replace(/\\n/g, "&#13;&#10;"),
+        createdAt: moment(ingress.metadata.creationTimestamp).format('DD-MMM-YYYY HH:mm:SS'),
+        rules: ingress.spec.rules,
+        status: ingress.status
+      }
+      resolve(result);
+    });
+  });
+}
+
 Meteor.methods({
   fetchNetworkForAdmin: Network.fetchNetworkForAdmin,
-  fetchPodStatus: Network.fetchPodStatus
+  fetchPodStatus: Network.fetchPodStatus,
+  fetchServiceStatus: Network.fetchServiceStatus,
+  fetchDeploymentStatus: Network.fetchDeploymentStatus,
+  fetchPVCStatus: Network.fetchPVCStatus,
+  fetchIngressStatus: Network.fetchIngressStatus
 });
 
 export default Network;

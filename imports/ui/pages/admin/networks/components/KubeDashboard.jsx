@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import helpers from "../../../../../modules/helpers";
 import moment from "moment";
+import ReactHtmlParser from "react-html-parser";
 
 import './KubeDashboard.scss';
 
@@ -12,11 +13,48 @@ export default class KubeDashboard extends Component {
 
   componentDidMount(){
     Meteor.call("fetchPodStatus", this.props.networkId, (err, res) => {
-      console.log("Pod status", res);
+      if(err){
+        return console.log(err);
+      }
       this.setState({
         pod: res
-      })
+      });
     });
+    Meteor.call("fetchServiceStatus", this.props.networkId, (err, res) => {
+      if(err){
+        return console.log(err);
+      }
+      this.setState({
+        service: res
+      });
+    });
+
+    Meteor.call("fetchDeploymentStatus", this.props.networkId, (err, res) => {
+      if(err){
+        return console.log(err);
+      }
+      this.setState({
+        deployments: res
+      });
+    })
+
+    Meteor.call("fetchPVCStatus", this.props.networkId, (err, res) => {
+      if(err){
+        return console.log(err);
+      }
+      this.setState({
+        pvc: res
+      });
+    })
+
+    Meteor.call("fetchIngressStatus", this.props.networkId, (err, res) => {
+      if(err){
+        return console.log(err);
+      }
+      this.setState({
+        ingress: res
+      });
+    })
   }
 
   getPodView = () => {
@@ -71,9 +109,10 @@ export default class KubeDashboard extends Component {
         <div className="row" style={{paddingLeft: '25px', paddingRight: '25px'}}>
           <div className="col-md-6 d-flex flex-column">
             <h5>{pod.name}</h5>
-            <p><span className="label-custom">Namespace:</span> {pod.namespace}</p>
-            <p><span className="label-custom">Node name:</span> {pod.spec.nodeName}</p>
-            <p><span className="label-custom">Restart policy:</span> {pod.spec.restartPolicy}</p>
+            <p><span className="label-custom no-margin">Namespace:</span> {pod.namespace}</p>
+            <p><span className="label-custom no-margin">Node name:</span> {pod.spec.nodeName}</p>
+            <p><span className="label-custom no-margin">Restart policy:</span> {pod.spec.restartPolicy}</p>
+            <p><span className="label-custom">Created At:</span> {pod.createdAt}</p>
           </div>
           <div className="col-md-6 d-flex flex-column">
             <h6>Volumes</h6>
@@ -82,6 +121,159 @@ export default class KubeDashboard extends Component {
         </div>
         <div className="row">
           {containerContents}
+        </div>
+      </div>
+    )
+  }
+
+  getServiceView = () => {
+    let service = this.state.service;
+    if(!service) {
+      return <p>Service Status Loading</p>;
+    }
+
+    const leftPorts = [];
+    const rightPorts = [];
+
+    service.ports.forEach((port, index) => {
+      const view =  (
+        <div key={index+1}>
+          <p className="hint-text font-montserrat small no-margin  all-caps fs-14 text-primary"><b>{port.name}</b></p>
+          <p className="all-caps no-margin text-default ">{port.protocol} | {port.port}</p>
+          <p className="all-caps text-default ">{port.targetPort} -> {port.nodePort}</p>
+        </div>
+      )
+      if(index % 2 === 0 ){
+        leftPorts.push(view)
+      } else {
+        rightPorts.push(view);
+      }
+    });
+
+    return (
+      <div className="full-width">
+        <div className="row" style={{paddingLeft: '25px', paddingRight: '25px'}}>
+          <div className="col-md-6 d-flex flex-column">
+            <h5>{service.name}</h5>
+            <p><span className="label-custom no-margin">Namespace:</span> {service.namespace}</p>
+            <p><span className="label-custom no-margin">Created At:</span> {service.createdAt}</p>
+          </div>
+          <div className="col-md-6 d-flex flex-column">
+            <h5 className="all-caps font-montserrat ">Ports</h5>
+            <div className="row">
+              <div className="col-md-6 d-flex flex-column">
+                {leftPorts}
+              </div>
+              <div className="col-md-6 d-flex flex-column">
+                {rightPorts}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  getDeploymentView = () => {
+    let deployments = this.state.deployments;
+    if(!deployments) {
+      return <p>Deployments Status Loading</p>;
+    }
+
+    return (
+      <div className="full-width">
+        <div className="row" style={{paddingLeft: '25px', paddingRight: '25px'}}>
+          <div className="col-md-6 d-flex flex-column">
+            <h5>{deployments.name}</h5>
+            <p><span className="label-custom no-margin">Namespace:</span> {deployments.namespace}</p>
+            <p><span className="label-custom no-margin">Created At:</span> {deployments.createdAt}</p>
+            <p><span className="label-custom no-margin">Replicas:</span> {deployments.status.readyReplicas}/{deployments.status.replicas}</p>
+          </div>
+          <div className="col-md-6 d-flex flex-column">
+            <h6>Strategy</h6>
+            <p><span className="label-custom no-margin">Type:</span> {deployments.strategy.type}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  getPVCView = () => {
+    let pvc = this.state.pvc;
+    if(!pvc) {
+      return <p>PVC Status Loading</p>;
+    }
+
+    return (
+      <div className="full-width">
+        <div className="row" style={{paddingLeft: '25px', paddingRight: '25px'}}>
+          <div className="col-md-6 d-flex flex-column">
+            <h5>{pvc.name}</h5>
+            <p><span className="label-custom no-margin">Namespace:</span> {pvc.namespace}</p>
+            <p><span className="label-custom no-margin">Created At:</span> {pvc.createdAt}</p>
+            <p><span className="label-custom no-margin">Storage Provisioner:</span> {pvc.provisioner}</p>
+            <br />
+            <h6>Status</h6>
+            <p><span className="label-custom no-margin">Phase:</span> {pvc.status.phase}</p>
+            <p><span className="label-custom no-margin">Access Mode:</span> {pvc.status.accessModes.join(', ')}</p>
+            <p><span className="label-custom no-margin">Capacity:</span> {pvc.status.capacity.storage}</p>
+          </div>
+
+          <div className="col-md-6 d-flex flex-column">
+            <h6>Specs</h6>
+            <p><b>{pvc.spec.volumeName}</b></p>
+            <p><span className="label-custom no-margin">Storage Class:</span> {pvc.spec.storageClassName}</p>
+            <p><span className="label-custom no-margin">Storage Request:</span> {pvc.spec.resources.requests.storage}</p>
+            <p><span className="label-custom no-margin">Access Modes:</span> {pvc.spec.accessModes.join(', ')}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+
+
+  getIngressView = () => {
+    let ingress = this.state.ingress;
+    if(!ingress) {
+      return <p>Ingress Status Loading</p>;
+    }
+
+    const rules = ingress.rules.map((rule, index) => {
+      const paths = rule.http.paths;
+      const pathView = paths.map((path, index) => {
+        return (<div key={index+1} style={{background: ''}}>
+          <p className="no-margin" style={{fontFamily: 'monospace'}}>{path.path}</p>
+          <p className="label-custom no-margin">{path.backend.serviceName}:{path.backend.servicePort}</p>
+          <br />
+        </div>);
+      });
+      return (
+        <div key={index+1}>
+          <h6 className="font-montserrat  all-caps text-primary">{rule.host}</h6>
+          {pathView}
+        </div>
+      )
+    });
+
+    return (
+      <div className="full-width">
+        <div className="row" style={{paddingLeft: '25px', paddingRight: '25px'}}>
+          <div className="col-md-6 d-flex flex-column">
+            <h5>{ingress.name}</h5>
+            <p><span className="label-custom no-margin">Namespace:</span> {ingress.namespace}</p>
+            <p><span className="label-custom no-margin">Created At:</span> {ingress.createdAt}</p>
+            <br />
+            <h6 className="font-montserrat  all-caps">Rules</h6>
+            {rules}
+          </div>
+
+          <div className="col-md-6 d-flex flex-column">
+            <h6 className="font-montserrat  all-caps">Configuration</h6>
+            <textarea style={{padding: '5px', background: '#efefef', border: 'none', minHeight: '400px', fontSize: '12px', fontFamily: 'monospace'}} disabled>
+              {ReactHtmlParser(ingress.configuration)}
+            </textarea>
+          </div>
         </div>
       </div>
     )
@@ -122,7 +314,7 @@ export default class KubeDashboard extends Component {
             </a>
           </li>
           <li className="nav-item">
-            <a href="#" data-toggle="tab" role="tab" data-target="#tab2Service">
+            <a href="#" data-toggle="tab" role="tab" data-target="#tab2Services">
               Services
             </a>
           </li>
@@ -177,22 +369,22 @@ export default class KubeDashboard extends Component {
           </div>
           <div className="tab-pane" id="tab2Deployments">
             <div className="row column-seperation">
-              <p>Deployments Coming soon</p>
+              {this.getDeploymentView()}
             </div>
           </div>
           <div className="tab-pane" id="tab2Volumes">
             <div className="row column-seperation">
-              <p>Volumes Coming soon</p>
+              {this.getPVCView()}
             </div>
           </div>
           <div className="tab-pane" id="tab2Services">
             <div className="row column-seperation">
-              <p>Services Coming soon</p>
+              {this.getServiceView()}
             </div>
           </div>
           <div className="tab-pane" id="tab2Ingress">
             <div className="row column-seperation">
-              <p>Ingress Coming soon</p>
+              {this.getIngressView()}
             </div>
           </div>
         </div>
