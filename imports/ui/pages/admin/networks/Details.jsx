@@ -118,6 +118,8 @@ class NetworkList extends Component {
       return LoadingView;
     }
 
+    const thisLocation = locations.find(loc => loc.locationCode === network.locationCode);
+
     return (
       <div className="page-content-wrapper ">
         <div className="content sm-gutter">
@@ -150,13 +152,17 @@ class NetworkList extends Component {
                       User <i className="fa fa-circle text-complete fs-11" />
                     </h5>
                     <div className="pull-right small hint-text">
+                    <Link to={`/admin/app/users/${user._id}`}>
                       Details <i className="fa fa-comment-o" />
+                    </Link>
                     </div>
                     <div className="clearfix" />
                   </div>
                   <div className="card-description">
                     <p>
+                    <Link to={`/admin/app/users/${user._id}`}>
                       {user.profile.firstName} {user.profile.lastName}
+                    </Link>
                     </p>
                   </div>
                 </div>
@@ -246,7 +252,8 @@ class NetworkList extends Component {
                     <div className="clearfix" />
                   </div>
                   <div className="card-description" >
-                    {this.getNetworkType(network.networkConfig)}
+                    Location: <b>{thisLocation.locationCode}</b> <span style={{color: '#777', fontSize: '11px'}}>&nbsp;{thisLocation.locationName} </span><br />
+                    Specs: <b>{this.getNetworkType(network.networkConfig)}</b>
                   </div>
                   <div className="clearfix" />
                 </div>
