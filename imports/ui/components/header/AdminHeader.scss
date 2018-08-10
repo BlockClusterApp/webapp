@@ -1,0 +1,30 @@
+body.menu-behind .header .brand {
+  margin-right: 25px;
+  margin-left: 25px;
+  padding-left: 7px;
+}
+
+.admin.header .page-sidebar .sidebar-header {
+  background: #222;
+}
+
+.admin.header body.fixed-header .header {
+  background: #222;
+}
+
+.dropdown-toggle:after {
+  position: inherit;
+  right: 15px;
+}
+
+.dropdown {
+  cursor: pointer;
+}
+
+.admin.header .text-master {
+  color: #fff !important;
+}
+
+.admin.header {
+  color: #fff;
+}
