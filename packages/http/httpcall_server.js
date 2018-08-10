@@ -114,7 +114,7 @@ function _call(method, url, options, callback) {
   requestInterceptorFunction(reqOptions);
 
 
-  console.log("Final request options", reqOptions);
+  console.log("Sending request to ", reqOptions.url);
   request(reqOptions, function(error, res, body) {
     var response = null;
 

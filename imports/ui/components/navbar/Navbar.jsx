@@ -104,7 +104,13 @@ class Navbar extends Component {
 		                    	</Link>
 		                        <span className="icon-thumbnail"><i className="fa fa-cubes"></i></span>
 		                    </li>
-	                    */}
+                      */}
+                      {
+                        this.props.user && this.props.user.admin >= 2 &&
+                        <li className="">
+                          <Link to="/admin/app">Admin</Link>
+                        </li>
+                      }
 	                </ul>
 	                <div className="clearfix"></div>
 	            </div>
@@ -116,6 +122,7 @@ class Navbar extends Component {
 export default withTracker(() => {
     return {
         kuberREST_IP: Config.kubeRestApiHost,
-        subscriptions: [Meteor.subscribe("utilities")]
+        subscriptions: [Meteor.subscribe("utilities")],
+        user: Meteor.user()
     }
 })(Navbar)

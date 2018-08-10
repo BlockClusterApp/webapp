@@ -2,8 +2,6 @@ import Vouchers from '../../../collections/vouchers/voucher';
 import moment from 'moment';
 const data = require('./data/voucher-prod-2');
 
-console.log("jello");
-
 const insertVoucher = async (voucher) => {
   console.log(`Creating voucher ${voucher}`);
     Vouchers.insert({
