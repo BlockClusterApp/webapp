@@ -1,5 +1,6 @@
 import { Networks } from '../../collections/networks/networks';
 import {UserInvitation} from '../../collections/user-invitation';
+import BullSystem from '../../modules/bull';
 
 const NetworkObj = {};
 
@@ -37,6 +38,19 @@ NetworkObj.getNodeCount = async () => {
 
   return count;
 }
+
+NetworkObj.updateContainerImages = async function(req, res, next) {
+  //TODO: Add authorization in circleci
+  const container = req.body.containerName;
+  const imageTag = req.body.imageTag;
+
+  BullSystem.addJob('start-repull-images', {
+    container,
+    imageTag
+  });
+}
+
+JsonRoutes.add("post", "/api/update-container-images", NetworkObj.updateContainerImages);
 
 Meteor.methods({
   nodeCount: NetworkObj.getNodeCount

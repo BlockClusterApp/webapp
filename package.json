@@ -10,13 +10,17 @@
     "@fortawesome/react-fontawesome": "0.1.0-11",
     "@sendgrid/mail": "^6.3.1",
     "abi-decoder": "1.1.0",
+    "agenda": "2.0.0",
     "apache-md5": "*",
+    "atob": "2.1.1",
     "babel-runtime": "^6.26.0",
     "base-64": "*",
     "bcrypt": "1.0.3",
     "bignumber.js": "^7.2.1",
     "bluebird": "^3.5.1",
+    "btoa": "1.2.1",
     "buffer": "^5.1.0",
+    "bull": "^3.4.4",
     "crypto": "^1.0.1",
     "debug": "^3.1.0",
     "ejs": "^2.6.1",
@@ -46,11 +50,8 @@
     "redis-jwt": "1.4.0",
     "simpl-schema": "^1.5.0",
     "stringquery": "^1.0.8",
+    "url": "^0.11.0",
     "utf8": "*",
-    "web3": "0.20.6",
-    "btoa": "1.2.1",
-    "atob": "2.1.1",
-    "agenda": "2.0.0",
-    "url": "^0.11.0"
+    "web3": "0.20.6"
   }
 }

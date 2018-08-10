@@ -12,4 +12,6 @@ require("../../collections/vouchers/server/publications");
 require('../../api/payments');
 require('../../api/billing');
 
+require('../../modules/bull');
+
 export {}
