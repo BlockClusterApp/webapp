@@ -1489,15 +1489,29 @@ spec:
         var network = Networks.find({
             instanceId: instanceId
         }).fetch()[0];
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/updateAssetInfo`, {
-            "content": JSON.stringify({
-                visibility: visibility,
-                key: key,
-                value: value,
+
+        if(visibility === "private") {
+            var obj = {
+                private: {
+                    [key]: value
+                },
                 assetName: assetName,
                 identifier: identifier,
                 fromAccount: fromAddress
-            }),
+            }
+        } else {
+            var obj = {
+                public: {
+                    [key]: value
+                },
+                assetName: assetName,
+                identifier: identifier,
+                fromAccount: fromAddress
+            }
+        }
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/updateAssetInfo`, {
+            "content": JSON.stringify(obj),
             "headers": {
                 "Content-Type": "application/json"
             }
