@@ -36,7 +36,6 @@ class UserList extends Component {
         if (err) {
           return alert(`Error ${error.error}`);
         }
-        console.log("Res", res);
         this.setState({
           user: res
         });

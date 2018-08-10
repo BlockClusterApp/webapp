@@ -7,8 +7,13 @@ import moment from 'moment';
 
 const Network = {};
 
+const SUPER_ADMIN_LEVEL = 2;
+
 Network.fetchNetworkForAdmin = async (networkId) => {
   const network = Networks.find({_id: networkId}).fetch()[0];
+  if(Meteor.user().admin <= 0) {
+    return reject(new Meteor.Error("Unauthorized"));
+  }
   if(!network) {
     return {network};
   }
@@ -42,6 +47,9 @@ Network.fetchNetworkForAdmin = async (networkId) => {
 
 Network.fetchPodStatus =  (id) => {
   return new Promise((resolve, reject) => {
+    if(Meteor.user().admin < SUPER_ADMIN_LEVEL) {
+      return reject(new Meteor.Error("Unauthorized"));
+    }
     const network = Networks.find({_id: id}).fetch()[0];
     if(!network){
       return {};
@@ -120,6 +128,9 @@ Network.fetchPodStatus =  (id) => {
 
 Network.fetchServiceStatus = async (id) => {
   return new Promise((resolve, reject) => {
+    if(Meteor.user().admin < SUPER_ADMIN_LEVEL) {
+      return reject(new Meteor.Error("Unauthorized"));
+    }
     const network = Networks.find({_id: id}).fetch()[0];
     if(!network){
       return {};
@@ -148,6 +159,9 @@ Network.fetchServiceStatus = async (id) => {
 
 Network.fetchDeploymentStatus = async (id) => {
   return new Promise((resolve, reject) => {
+    if(Meteor.user().admin < SUPER_ADMIN_LEVEL) {
+      return reject(new Meteor.Error("Unauthorized"));
+    }
     const network = Networks.find({_id: id}).fetch()[0];
     if(!network){
       return {};
@@ -175,6 +189,9 @@ Network.fetchDeploymentStatus = async (id) => {
 
 Network.fetchPVCStatus = async (id) => {
   return new Promise((resolve, reject) => {
+    if(Meteor.user().admin < SUPER_ADMIN_LEVEL) {
+      return reject(new Meteor.Error("Unauthorized"));
+    }
     const network = Networks.find({_id: id}).fetch()[0];
     if(!network){
       return {};
@@ -203,6 +220,9 @@ Network.fetchPVCStatus = async (id) => {
 
 Network.fetchIngressStatus = async (id) => {
   return new Promise((resolve, reject) => {
+    if(Meteor.user().admin < SUPER_ADMIN_LEVEL) {
+      return reject(new Meteor.Error("Unauthorized"));
+    }
     const network = Networks.find({_id: id}).fetch()[0];
     if(!network){
       return {};

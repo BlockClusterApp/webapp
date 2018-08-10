@@ -7,8 +7,12 @@ import Billing from '../billing';
 import Bluebird from 'bluebird';
 
 const User = {};
+const ADMIN_LEVEL = 0;
 
 User.fetchAdminDashboardDetails = async (userId) => {
+  if(Meteor.user().admin <= ADMIN_LEVEL) {
+    return reject(new Meteor.Error("Unauthorized"));
+  }
   const result = await Bluebird.props({
     details: Meteor.users.find({_id: userId}, {fields: {services: 0}}).fetch()[0],
     networks : Networks.find({user: userId}).fetch(),

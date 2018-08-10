@@ -15,6 +15,8 @@ class UserList extends Component {
             page: 0,
             users: []
         }
+
+        this.query = {};
     }
 
     componentWillUnmount() {
@@ -26,13 +28,53 @@ class UserList extends Component {
 
 
 	componentDidMount(){
-    this.userSubscription = Meteor.subscribe("users.all", {page: this.state.page}, {
+    this.search();
+  }
+
+
+  search = () => {
+    this.userSubscription = Meteor.subscribe("users.search", {
+      query: this.query
+    }, {
       onReady: () => {
         this.setState({
-          users: Meteor.users.find().fetch()
+          users: Meteor.users.find(this.query).fetch(),
         });
       }
-    });
+    })
+  }
+
+
+  onSearch = (e) => {
+    const searchQuery = e.target.value;
+    if(!searchQuery) {
+      delete this.query.$or;
+      return this.changePage(0);
+    }
+    if(searchQuery.length <= 3){
+      delete this.query.$or;
+      return this.changePage(0);
+    }
+    this.query.$or = [
+        {"profile.firstName": {$regex: `${searchQuery}*`, $options: "i"} },
+        {"profile.lastName": {$regex: `${searchQuery}*`, $options: "i"} },
+        {_id: {$regex: `${searchQuery}*`, $options: "i"} },
+        {"emails.address": {$regex: `${searchQuery}*`, $options: "i"} }
+      ];
+    this.search();
+  }
+
+
+  onEmailVerificationChange = (e) => {
+    const value = e.target.value;
+    if(value === "all"){
+      delete this.query["emails.verified"];
+    } else if(value === "verified") {
+      this.query["emails.verified"] = true;
+    } else if(value === "unverified") {
+      this.query["emails.verified"] = false;
+    }
+    this.search();
   }
 
   changePage = (pageOffset) => {
@@ -75,6 +117,25 @@ class UserList extends Component {
                                 <div className="card-header ">
                                     <div className="card-title">Users
                                     </div>
+                                    <div className="row">
+                                    <div className="col-md-9">
+                                    <div className="input-group transparent">
+                                      <span className="input-group-addon">
+                                          <i className="fa fa-search"></i>
+                                      </span>
+                                      <input type="text" placeholder="User name, email or id" className="form-control" onChange={this.onSearch} />
+                                    </div>
+                                    </div>
+                                    <div className="col-md-3">
+                                      <div className="form-group ">
+                                        <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onEmailVerificationChange}>
+                                            <option value="all">Email: All</option>
+                                            <option value="verified">Verified</option>
+                                            <option value="unverified">Not Verified</option>
+                                        </select>
+                                      </div>
+                                    </div>
+                                  </div>
                                 </div>
                                 <div className="card-block">
                                     <div className="table-responsive">
