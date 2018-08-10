@@ -64,6 +64,9 @@ export default class KubeDashboard extends Component {
     }
 
     pod = pod.pods[0];
+    if(!pod) {
+      return <p>No data available</p>;
+    }
 
     const containerNames = [];
     const containersHeaders = pod.spec.containers.map(container => {
@@ -86,12 +89,13 @@ export default class KubeDashboard extends Component {
           <p className="hint-text all-caps font-montserrat small no-margin text-success " ><b>{helpers.firstLetterCapital(Object.keys(containerStatus.state)[0])}</b></p>
           <p className="font-montserrat  no-margin fs-12">Since {moment(Object.values(containerStatus.state)[0].startedAt).format('DD-MMM-YY HH:mm:SS')}</p>
           <br />
-          <p className="hint-text font-montserrat small no-margin  all-caps fs-14">Resources</p>
+          {containerSpec.resources && containerSpec.resources.requests && <div><p className="hint-text font-montserrat small no-margin  all-caps fs-14">Resources</p>
           <p className="no-margin text-primary ">Requests</p>
           <p className="font-montserrat  no-margin fs-11">{containerSpec.resources.requests.cpu} | {containerSpec.resources.requests.memory}</p>
           <p className="no-margin text-danger fs-12">Limits</p>
           <p className="font-montserrat  no-margin fs-11">{containerSpec.resources.limits.cpu} | {containerSpec.resources.limits.memory}</p>
-          <br />
+          <br /></div>
+          }
           <p className="hint-text all-caps font-montserrat small no-margin ">Image</p>
           <textarea className="font-montserrat  no-margin " style={{border: 'none', fontSize: '11px'}} disabled>{containerStatus.imageID}</textarea>
         </div>
