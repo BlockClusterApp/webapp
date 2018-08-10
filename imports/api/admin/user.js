@@ -26,8 +26,24 @@ User.fetchAdminDashboardDetails = async (userId) => {
   return result;
 };
 
+User.updateAdmin = async (userId, updateQuery) => {
+  if(Meteor.userId() === userId || Meteor.user().admin <= ADMIN_LEVEL) {
+    return false;
+  }
+  console.log("Updating admin for", userId, updateQuery);
+  Meteor.users.update({
+    _id: userId
+  }, {
+    $set: {
+      admin: updateQuery.admin
+    }
+  });
+  return true;
+}
+
 Meteor.methods({
-  fetchAdminDashboardDetails: User.fetchAdminDashboardDetails
+  fetchAdminDashboardDetails: User.fetchAdminDashboardDetails,
+  updateUserAdmin: User.updateAdmin
 });
 
 export default User;

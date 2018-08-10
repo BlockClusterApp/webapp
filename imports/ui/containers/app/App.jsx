@@ -28,17 +28,19 @@ class App extends Component {
 		}
   }
 
+
   requireAdmin = (RouteComponent) => {
     return () => {
-      return (
-        // this.props.userId && this.props.user && this.props.user.admin >= 1 ? (
-          <RouteComponent />
-        // ) : (
-          // <Redirect to="/app/networks" />
-        // )
-      )
+      // if(this.props.user) {
+      //   if(this.props.user.admin >= 1) {
+      //     return <RouteComponent />
+      //   }
+      //   return <Redirect to ="/app/networks" />
+      // }
+      return <RouteComponent />
     }
   }
+
 
 	requireNotLoggedIn = (RouteComponent) => {
 		return () => {

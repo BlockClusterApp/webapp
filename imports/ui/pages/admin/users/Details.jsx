@@ -34,7 +34,7 @@ class UserList extends Component {
       this.props.match.params.id,
       (err, res) => {
         if (err) {
-          return alert(`Error ${error.error}`);
+          return alert(`Error ${err.error}`);
         }
         this.setState({
           user: res
@@ -173,6 +173,21 @@ class UserList extends Component {
                       {user.details.profile.firstName}{" "}
                       {user.details.profile.lastName}
                     </p>
+                  </div>
+                  <div className="row-xs-height">
+                    <div className="col-xs-height col-bottom fs-12" style={{paddingLeft: '16px', paddingRight: '16px', paddingBottom: "10px"}}>
+                     Admin&nbsp;&nbsp;
+                     <input type="checkbox" value="1" defaultChecked={user.details.admin > 0 ? "checked" : ""} id="checkbox2" onClick={(e) => {
+                        let admin = e.target.checked;
+                        const updateQuery = {};
+                        if(admin) {
+                          updateQuery.admin = 2;
+                        } else {
+                          updateQuery.admin = 0;
+                        }
+                        Meteor.call("updateUserAdmin", user.details._id, updateQuery);
+                      }} />
+                    </div>
                   </div>
                 </div>
                 <div className="card no-border widget-loader-bar m-b-10">

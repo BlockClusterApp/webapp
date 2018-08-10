@@ -12,7 +12,7 @@ const SUPER_ADMIN_LEVEL = 2;
 Network.fetchNetworkForAdmin = async (networkId) => {
   const network = Networks.find({_id: networkId}).fetch()[0];
   if(Meteor.user().admin <= 0) {
-    return reject(new Meteor.Error("Unauthorized"));
+    return new Meteor.Error("Unauthorized");
   }
   if(!network) {
     return {network};
