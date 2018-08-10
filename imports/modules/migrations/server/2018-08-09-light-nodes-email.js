@@ -8,6 +8,16 @@ import {
 
 async function fetchUsersWithVouchers(){
   const networks = Networks.find({
+    createdAt: {
+      $gte: moment().subtract(10, 'days').toDate(),
+      $lte: moment().subtract(3, 'days').toDate()
+    },
+    voucherId: {
+      $ne: null
+    },
+    deletedAt: {
+      $ne: null
+    }
   }).fetch();
 
   return networks;
@@ -16,7 +26,7 @@ async function fetchUsersWithVouchers(){
 async function fetchUsers(networks) {
   const userIds = [];
   networks.forEach(network => {
-    console.log("Got networks", network.instanceId);
+    console.log("Got networks", network.insanceId);
     if(!userIds.includes(network.user)) {
       userIds.push(network.user)
     }

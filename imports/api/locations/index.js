@@ -19,3 +19,5 @@ LocationApi.getLocations = function() {
 Meteor.methods({
   getClusterLocations: LocationApi.getLocations
 });
+
+export default LocationApi;
