@@ -4,7 +4,6 @@ import {BrowserRouter, Route, Switch, Redirect} from "react-router-dom"
 import {withTracker} from "meteor/react-meteor-data";
 
 import Main from "../main/Main.jsx"
-import AdminApp from "../admin/Admin.jsx"
 
 import Login from "../../pages/login/Login.jsx"
 import Register from "../../pages/register/Register.jsx"
@@ -31,12 +30,12 @@ class App extends Component {
 
   requireAdmin = (RouteComponent) => {
     return () => {
-      // if(this.props.user) {
-      //   if(this.props.user.admin >= 1) {
-      //     return <RouteComponent />
-      //   }
-      //   return <Redirect to ="/app/networks" />
-      // }
+       if(this.props.user) {
+         if(this.props.user.admin >= 1) {
+           return <RouteComponent />
+         }
+         return <Redirect to ="/app/networks" />
+       }
       return <RouteComponent />
     }
   }
@@ -66,14 +65,14 @@ class App extends Component {
 		return (
 			<BrowserRouter>
 				<Switch>
-          <Route exact path="/" render={() => (<Redirect to="/login" />)} />
+          			<Route exact path="/" render={() => (<Redirect to="/login" />)} />
 					<Route exact path="/login" render={this.requireNotLoggedIn(Login)} />
 					<Route exact path="/register" render={this.requireNotLoggedIn(Register)} />
 					<Route exact path="/forgot-password" render={this.requireNotLoggedIn(RequestPasswordReset)} />
 					<Route exact path="/reset-password" component={ResetPassword} />
 					<Route exact path="/email-verify" component={EmailVerify} />
 					<Route exact path="/accept-invitation" component={AcceptInvitation} />
-          <Route path="/admin/app" render={this.requireAdmin(AdminApp)} />
+					<Route path="/app/admin" render={this.requireAdmin(Main)} />
 					<Route path="/app" render={this.requireAuth(Main)} />
 					{/*<Route component={Notfound} />*/}
 				</Switch>
@@ -84,8 +83,8 @@ class App extends Component {
 
 export default withTracker(() => {
 	return {
-    userId: Meteor.userId(),
-    user: Meteor.user()
+	    userId: Meteor.userId(),
+	    user: Meteor.user()
 	}
 })(App)
 

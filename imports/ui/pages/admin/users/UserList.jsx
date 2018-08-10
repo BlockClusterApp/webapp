@@ -95,7 +95,7 @@ class UserList extends Component {
 
 
   openUser = (userId) => {
-    this.props.history.push("/admin/app/users/" + userId);
+    this.props.history.push("/app/admin/users/" + userId);
 }
 
   getEmailVerificationLabel = (verification) => {

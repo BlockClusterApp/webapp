@@ -97,7 +97,7 @@ class VoucherList extends Component {
 
 
   openVoucher = (voucherId) => {
-    this.props.history.push("/admin/app/vouchers/" + voucherId);
+    this.props.history.push("/app/admin/vouchers/" + voucherId);
   }
 
 

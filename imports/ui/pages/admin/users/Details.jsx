@@ -140,10 +140,10 @@ class UserList extends Component {
               <div className="inner">
                 <ol className="breadcrumb sm-p-b-5">
                   <li className="breadcrumb-item">
-                    <Link to="/admin/app">Admin</Link>
+                    <Link to="/app/admin">Admin</Link>
                   </li>
                   <li className="breadcrumb-item">
-                    <Link to="/admin/app/users">Users</Link>
+                    <Link to="/app//admin/users">Users</Link>
                   </li>
                   <li className="breadcrumb-item active">
                     {this.state.userId}
@@ -390,7 +390,7 @@ class UserList extends Component {
                               return (
                                 <tr key={index + 1}>
                                   <td className="font-montserrat all-caps fs-12 w-40">
-                                    <Link to={`/admin/app/networks/${network._id}`}>
+                                    <Link to={`/app/admin/networks/${network._id}`}>
                                       {network.name}
                                     </Link>
                                   </td>
@@ -521,10 +521,10 @@ class UserList extends Component {
                           return (
                             <tr key={index + 1}>
                               <td className="font-montserrat fs-12 w-30" title={data.network.name}>
-                                <Link to={`/admin/app/networks/${invitation.networkId}`}>{data.network.name}</Link>
+                                <Link to={`/app/admin/networks/${invitation.networkId}`}>{data.network.name}</Link>
                               </td>
                               <td className="text-right b-r b-dashed b-grey w-25" title={data.inviteTo.name | data.inviteTo.email}>
-                                <Link to={`/admin/app/users/${invitation.inviteTo}`}>{data.inviteTo.email}</Link>
+                                <Link to={`/app/admin/users/${invitation.inviteTo}`}>{data.inviteTo.email}</Link>
                               </td>
                               <td className="w-25">
                                 <span className="font-montserrat fs-12">

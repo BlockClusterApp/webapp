@@ -32,6 +32,13 @@ import AssetsAudit from "../../pages/assetsAudit/AssetsAudit.jsx"
 import BillingDashboard from '../../pages/billing/BillingDashboard.jsx'
 import Payments from '../../pages/billing/Payments.jsx'
 
+import UserList from "../../pages/admin/users/UserList.jsx";
+import UserDetails from "../../pages/admin/users/Details.jsx";
+import NetworkList from '../../pages/admin/networks/NetworkList.jsx';
+import NetworkDetails from '../../pages/admin/networks/Details.jsx';
+import Vouchers from '../../pages/admin/vouchers/VoucherList.jsx';
+import VoucherList from "../../pages/admin/vouchers/VoucherList.jsx";
+
 export default class Main extends Component {
 	render() {
 		return (
@@ -64,6 +71,12 @@ export default class Main extends Component {
 						<Route exact path="/app/networks/:id/security/apis" component={APIsCreds} />
             			<Route exact path="/app/billing" component={BillingDashboard} />
             			<Route exact path="/app/payments" component={Payments} />
+						<Route exact path="/app/admin" render={() => <Redirect to="/app/admin/users" />} />
+						<Route exact path="/app/admin/users" component={UserList} />
+		                <Route exact path="/app/admin/users/:id" component={UserDetails} />
+						<Route exact path="/app/admin/networks" component={NetworkList} />
+		                <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
+						<Route exact path="/app/admin/vouchers" component={VoucherList} />
 		            </div>
 				</div>
 				<Footer />

@@ -127,10 +127,10 @@ class NetworkList extends Component {
               <div className="inner">
                 <ol className="breadcrumb sm-p-b-5">
                   <li className="breadcrumb-item">
-                    <Link to="/admin/app">Admin</Link>
+                    <Link to="/app/admin">Admin</Link>
                   </li>
                   <li className="breadcrumb-item">
-                    <Link to="/admin/app/networks">Networks</Link>
+                    <Link to="/app/admin/networks">Networks</Link>
                   </li>
                   <li className="breadcrumb-item active">
                     {this.state.networkId}
@@ -151,7 +151,7 @@ class NetworkList extends Component {
                       User <i className="fa fa-circle text-complete fs-11" />
                     </h5>
                     <div className="pull-right small hint-text">
-                    <Link to={`/admin/app/users/${user._id}`}>
+                    <Link to={`/app/admin/users/${user._id}`}>
                       Details <i className="fa fa-comment-o" />
                     </Link>
                     </div>
@@ -159,7 +159,7 @@ class NetworkList extends Component {
                   </div>
                   <div className="card-description">
                     <p>
-                    <Link to={`/admin/app/users/${user._id}`}>
+                    <Link to={`/app/admin/users/${user._id}`}>
                       {user.profile.firstName} {user.profile.lastName}
                     </Link>
                     </p>

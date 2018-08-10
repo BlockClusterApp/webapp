@@ -106,7 +106,7 @@ class NetworkList extends Component {
   }
 
   openNetwork = (networkId) => {
-    this.props.history.push("/admin/app/networks/" + networkId);
+    this.props.history.push("/app/admin/networks/" + networkId);
   }
 
   getEmailVerificationLabel = (verification) => {
