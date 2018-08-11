@@ -42,6 +42,10 @@ spec:
           value: {{ template "envs.redisPort" . }}
         - name: NAMESPACE
           value: {{ template "server.namespace" . }}
+        - name: NETWORK_UPDATE_ID
+          value: {{ .Values.NETWORK_UPDATE_ID }}
+        - name: NETWORK_UPDATE_KEY
+          value: {{ .Values.NETWORK_UPDATE_KEY }}
         - name: SENDGRID_API_KEY
           valueFrom:
             secretKeyRef:

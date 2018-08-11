@@ -1,5 +1,7 @@
 import { Networks } from '../../collections/networks/networks';
 import {UserInvitation} from '../../collections/user-invitation';
+import Config from '../../modules/config/server';
+import BullSystem from '../../modules/bull';
 
 const NetworkObj = {};
 
@@ -37,6 +39,24 @@ NetworkObj.getNodeCount = async () => {
 
   return count;
 }
+
+NetworkObj.updateContainerImages = async function(req, res, next) {
+  if(!(req.headers && req.headers.authorization && req.headers.authorization === `${Config.NetworkUpdate.id}:${Config.NetworkUpdate.key}`)) {
+    console.log("Network update request unauthorized ", req.headers && req.headers.authorization, `${Config.NetworkUpdate.id}:${Config.NetworkUpdate.key}`);
+    return new Meteor.Error("Unauthorized");
+  }
+  const container = req.body.containerName;
+  const imageTag = req.body.imageTag;
+
+  BullSystem.addJob('start-repull-images', {
+    container,
+    imageTag
+  });
+
+  res.end("Ok");
+}
+
+JsonRoutes.add("post", "/api/networks/update-container-images", NetworkObj.updateContainerImages);
 
 Meteor.methods({
   nodeCount: NetworkObj.getNodeCount
