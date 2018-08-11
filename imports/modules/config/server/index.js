@@ -121,6 +121,10 @@ module.exports = {
   RazorPay: {
     id: process.env.RAZORPAY_ID || defaults.razorpay.id,
     secret: process.env.RAZORPAY_KEY || defaults.razorpay.secret
+  },
+  NetworkUpdate: {
+    id: process.env.NETWORK_UPDATE_ID,
+    key: process.env.NETWORK_UPDATE_KEY
   }
   // locationMapping
 };

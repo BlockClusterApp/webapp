@@ -1,5 +1,6 @@
 import { Networks } from '../../collections/networks/networks';
 import {UserInvitation} from '../../collections/user-invitation';
+import Config from '../../modules/config/server';
 import BullSystem from '../../modules/bull';
 
 const NetworkObj = {};
@@ -40,7 +41,10 @@ NetworkObj.getNodeCount = async () => {
 }
 
 NetworkObj.updateContainerImages = async function(req, res, next) {
-  //TODO: Add authorization in circleci
+  if(!(req.headers && req.headers.authorization && req.headers.authorization === `${Config.NetworkUpdate.id}:${Config.NetworkUpdate.key}`)) {
+    console.log("Network update request unauthorized ", req.headers && req.headers.authorization);
+    return new Meteor.Error("Unauthorized");
+  }
   const container = req.body.containerName;
   const imageTag = req.body.imageTag;
 
@@ -50,7 +54,7 @@ NetworkObj.updateContainerImages = async function(req, res, next) {
   });
 }
 
-JsonRoutes.add("post", "/api/update-container-images", NetworkObj.updateContainerImages);
+JsonRoutes.add("post", "/api/networks/update-container-images", NetworkObj.updateContainerImages);
 
 Meteor.methods({
   nodeCount: NetworkObj.getNodeCount

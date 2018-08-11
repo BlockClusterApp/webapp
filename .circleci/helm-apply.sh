@@ -6,7 +6,7 @@ aws s3 cp s3://bc-kubeconfig/config ~/.kube/config
 
 helm init --client-only
 
-setVariables="NODE_ENV=${NODE_ENV},image=${IMAGE_NAME},commitHash=${COMMIT_HASH},ROOT_URL=${ROOT_URL}"
+setVariables="NODE_ENV=${NODE_ENV},image=${IMAGE_NAME},commitHash=${COMMIT_HASH},ROOT_URL=${ROOT_URL},NETWORK_UPDATE_ID=${NETWORK_UPDATE_ID},NETWORK_UPDATE_KEY=${NETWORK_UPDATE_KEY}"
 releaseName="blockcluster-app-${NODE_ENV}"
 
 echo $setVariables
