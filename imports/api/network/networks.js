@@ -42,7 +42,7 @@ NetworkObj.getNodeCount = async () => {
 
 NetworkObj.updateContainerImages = async function(req, res, next) {
   if(!(req.headers && req.headers.authorization && req.headers.authorization === `${Config.NetworkUpdate.id}:${Config.NetworkUpdate.key}`)) {
-    console.log("Network update request unauthorized ", req.headers && req.headers.authorization);
+    console.log("Network update request unauthorized ", req.headers && req.headers.authorization, `${Config.NetworkUpdate.id}:${Config.NetworkUpdate.key}`);
     return new Meteor.Error("Unauthorized");
   }
   const container = req.body.containerName;
@@ -52,6 +52,8 @@ NetworkObj.updateContainerImages = async function(req, res, next) {
     container,
     imageTag
   });
+
+  res.end("Ok");
 }
 
 JsonRoutes.add("post", "/api/networks/update-container-images", NetworkObj.updateContainerImages);

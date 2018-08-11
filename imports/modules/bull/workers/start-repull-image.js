@@ -1,21 +1,20 @@
-import bullSystem from '../';
-import { Networks } from '../../../collections/networks/networks';
+import { Networks } from "../../../collections/networks/networks";
 
-module.exports = function() {
-  bullSystem.bullJobs.process('start-repull-image', (job, done) => {
+module.exports = function(bullSystem) {
+  const processFunction = Meteor.bindEnvironment(function(job, done) {
+    console.log("Starting image pull", job.data);
     const networks = Networks.find({
       active: true,
-      deletedAt: {
-        $ne: null
-      }
-    });
+      deletedAt: null
+    }).fetch();
+    console.log("Netwoks to restart ", networks.map(i => i.instanceId));
     networks.forEach(network => {
-      bullSystem.addJob('repull-image', {
+      bullSystem.addJob("repull-image", {
         instanceId: network.instanceId,
-        newImageTag: job.imageTag,
-        container: job.container
+        newImageTag: job.data.imageTag,
+        container: job.data.container
       });
     });
-    done();
   });
-}
+  bullSystem.bullJobs.process("start-repull-images", processFunction);
+};

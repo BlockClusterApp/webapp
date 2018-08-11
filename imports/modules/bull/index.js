@@ -28,15 +28,6 @@ if (env === 'production') {
 
 const bullSystem = {};
 
-
-bullSystem.startBullWorkers = function() {
-  if (bullSystem.bullJobs) {
-    console.log('Starting Bull Workers');
-    require('./workers')()
-  }
-};
-
-
 bullSystem.initBull = function() {
   const queue = new Bull('queue', { redis: { port, host }, prefix: bullPrefix });
 
@@ -64,18 +55,27 @@ bullSystem.initBull = function() {
 
   queue.on('active', job => {
     // log worker start
+    // console.log("Worker active", job);
   });
 
   queue.on('completed', (job, result) => {
    // log worker completed
+  //  console.log("Worker completed", job);
   });
 
   queue.on('failed', (job, err) => {
     // log worker failed
-    console.log("Bull worker failed", job, err);
+    // console.log("Bull worker failed", job, err);
   });
 
-  bullSystem.startBullWorkers();
+  bullSystem.startBullWorkers = function(system) {
+    if (bullSystem.bullJobs) {
+      console.log('Starting Bull Workers');
+      require('./workers')(system)
+    }
+  };
+
+  bullSystem.startBullWorkers(bullSystem);
 };
 
 bullSystem.initBull();

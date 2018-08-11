@@ -1,4 +1,4 @@
-module.exports = () => {
-  require('./repull-image');
-  require('./start-repull-image');
+module.exports = (bullSystem) => {
+  require('./repull-image')(bullSystem);
+  require('./start-repull-image')(bullSystem);
 }
