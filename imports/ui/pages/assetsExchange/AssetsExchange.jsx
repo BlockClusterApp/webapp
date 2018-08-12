@@ -1,14 +1,11 @@
 import React, {Component} from "react";
 import {withTracker} from "meteor/react-meteor-data";
 import {Networks} from "../../../collections/networks/networks.js"
-import {Orders} from "../../../collections/orders/orders.js"
 import helpers from "../../../modules/helpers"
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
 import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
-import {AssetTypes} from "../../../collections/assetTypes/assetTypes.js"
-import {BCAccounts} from "../../../collections/bcAccounts/bcAccounts.js"
 import {Link} from "react-router-dom"
 var BigNumber = require('bignumber.js');
 
@@ -16,10 +13,35 @@ import "./AssetsExchange.scss"
 
 class AssetsManagement extends Component {
     constructor() {
+
         super()
-        this.state = {}
+
+        this.state = {
+            assetTypes: [],
+            accounts: [],
+            fullFillNetworkAccounts: [],
+            otherSelectedNetworkAssetTypes: [],
+            orders: []
+        }
+
         Session.set("otherSelectedNetwork", null)
         Session.set("fullFillNetwork", null)
+
+        this.getAccounts = this.getAccounts.bind(this)
+        this.getAssetTypes = this.getAssetTypes.bind(this)
+        this.getOtherAccounts = this.getOtherAccounts.bind(this)
+        this.getOtherAssetTypes = this.getOtherAssetTypes.bind(this)
+        this.getOrders = this.getOrders.bind(this)
+    }
+
+    componentDidMount() {
+        this.setState({
+            refreshAssetTypesTimer: setInterval(this.getAssetTypes, 2000),
+            refreshAccountsTimer: setInterval(this.getAccounts, 2000),
+            refreshOtherAssetTypesTimer: setInterval(this.getOtherAssetTypes, 2000),
+            refreshOtherAccountsTimer: setInterval(this.getOtherAccounts, 2000),
+            refreshOrders: setInterval(this.getOrders, 2000)
+        })
     }
 
     componentWillUnmount() {
@@ -29,6 +51,88 @@ class AssetsManagement extends Component {
 
         delete Session.keys['otherSelectedNetwork']
         delete Session.keys['fullFillNetwork']
+
+        clearInterval(this.state.refreshAssetTypesTimer);
+        clearInterval(this.state.refreshAccountsTimer);
+        clearInterval(this.state.refreshOtherAssetTypesTimer);
+        clearInterval(this.state.refreshOtherAccountsTimer);
+        clearInterval(this.state.refreshOrders);
+    }
+
+    getOtherAssetTypes() {
+        if(this.props.network[0]) {
+            let otherNetwork = Networks.find({instanceId: Session.get("otherSelectedNetwork"), active: true}).fetch()[0];
+            if(otherNetwork) {
+                let url = `http://18.237.94.215:${otherNetwork.apisPort}/assets/assetTypes`;
+                //let url = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/accounts`;
+                HTTP.get(url, { auth : `${Session.get("otherSelectedNetwork")}:${otherNetwork["api-password"]}`}, (err, res) => {
+                    if(!err) {
+                        this.setState({
+                            otherSelectedNetworkAssetTypes: res.data
+                        });
+                    }
+                })
+            }
+        }
+    }
+
+    getOtherAccounts() {
+        if(this.props.network[0]) {
+            let otherNetwork = Networks.find({instanceId: Session.get("otherSelectedNetwork"), active: true}).fetch()[0];
+            if(otherNetwork) {
+                let url = `http://18.237.94.215:${otherNetwork.apisPort}/utility/accounts`;
+                //let url = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/accounts`;
+                HTTP.get(url, { auth : `${Session.get("otherSelectedNetwork")}:${otherNetwork["api-password"]}`}, (err, res) => {
+                    if(!err) {
+                        this.setState({
+                            fullFillNetworkAccounts: res.data
+                        });
+                    }
+                })
+            }
+        }
+    }
+
+    getAssetTypes() {
+        if(this.props.network[0]) {
+            let url = `http://18.237.94.215:${this.props.network[0].apisPort}/assets/assetTypes`;
+            //let url = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/accounts`;
+            HTTP.get(url, { auth : `${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`}, (err, res) => {
+                if(!err) {
+                    this.setState({
+                        assetTypes: res.data
+                    });
+                }
+            })
+        }
+    }
+
+    getOrders() {
+        if(this.props.network[0]) {
+            let url = `http://18.237.94.215:${this.props.network[0].apisPort}/assets/orders`;
+            //let url = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/accounts`;
+            HTTP.get(url, { auth : `${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`}, (err, res) => {
+                if(!err) {
+                    this.setState({
+                        orders: res.data
+                    });
+                }
+            })
+        }
+    }
+
+    getAccounts() {
+        if(this.props.network[0]) {
+            let url = `http://18.237.94.215:${this.props.network[0].apisPort}/utility/accounts`;
+            //let url = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/accounts`;
+            HTTP.get(url, { auth : `${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`}, (err, res) => {
+                if(!err) {
+                    this.setState({
+                        accounts: res.data
+                    });
+                }
+            })
+        }
     }
 
 
@@ -353,7 +457,7 @@ class AssetsManagement extends Component {
                                                                                         <div className="form-group">
                                                                                             <label>Asset Name</label>
                                                                                             <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_assetName"] = input}} required>
-                                                                                                {this.props.assetTypes.map((item) => {
+                                                                                                {this.state.assetTypes.map((item) => {
                                                                                                     if(item.type === "bulk") {
                                                                                                         return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                     }
@@ -366,7 +470,7 @@ class AssetsManagement extends Component {
                                                                                         <div className="form-group">
                                                                                             <label>Asset Name</label>
                                                                                             <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_assetName"] = input}} required>
-                                                                                                {this.props.assetTypes.map((item) => {
+                                                                                                {this.state.assetTypes.map((item) => {
                                                                                                     if(item.type === "solo") {
                                                                                                         return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                     }
@@ -379,7 +483,7 @@ class AssetsManagement extends Component {
                                                                                         <div className="form-group">
                                                                                             <label>Asset Name</label>
                                                                                             <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_assetName"] = input}} required>
-                                                                                                {this.props.assetTypes.map((item) => {
+                                                                                                {this.state.assetTypes.map((item) => {
                                                                                                     if(item.type === "bulk") {
                                                                                                         return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                     }
@@ -410,7 +514,7 @@ class AssetsManagement extends Component {
                                                                                     <div className="form-group">
                                                                                         <label>Seller Account</label>
                                                                                         <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_fromAddress"] = input}} required>
-                                                                                            {this.props.accounts.map((item) => {
+                                                                                            {this.state.accounts.map((item) => {
                                                                                                 return <option key={item.address} value={item.address}>{item.address}</option>
                                                                                             })}
                                                                                         </select>
@@ -440,7 +544,7 @@ class AssetsManagement extends Component {
                                                                                             <label>Asset Name</label>
                                                                                             <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_buyAsset_assetName"] = input}} required>
                                                                                                 {Session.get("otherSelectedNetwork") &&
-                                                                                                    this.props.otherSelectedNetworkAssetTypes.map((item) => {
+                                                                                                    this.state.otherSelectedNetworkAssetTypes.map((item) => {
                                                                                                         if(item.type === "bulk") {
                                                                                                             return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                         }
@@ -455,7 +559,7 @@ class AssetsManagement extends Component {
                                                                                             <label>Asset Name</label>
                                                                                             <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_buyAsset_assetName"] = input}} required>
                                                                                                 {Session.get("otherSelectedNetwork") &&
-                                                                                                    this.props.otherSelectedNetworkAssetTypes.map((item) => {
+                                                                                                    this.state.otherSelectedNetworkAssetTypes.map((item) => {
                                                                                                         if(item.type === "solo") {
                                                                                                             return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                         }
@@ -470,7 +574,7 @@ class AssetsManagement extends Component {
                                                                                             <label>Asset Name</label>
                                                                                             <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_buyAsset_assetName"] = input}} required>
                                                                                                 {Session.get("otherSelectedNetwork") &&
-                                                                                                    this.props.otherSelectedNetworkAssetTypes.map((item) => {
+                                                                                                    this.state.otherSelectedNetworkAssetTypes.map((item) => {
                                                                                                         if(item.type === "bulk") {
                                                                                                             return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                                                         }
@@ -544,7 +648,7 @@ class AssetsManagement extends Component {
                                                                                         </tr>
                                                                                     </thead>
                                                                                     <tbody>
-                                                                                        {this.props.orders.map((item1, index) => {
+                                                                                        {this.state.orders.map((item1, index) => {
                                                                                             if(item1.instanceId == this.props.network[0].instanceId) {
                                                                                                 return (
                                                                                                     <tr key={item1.atomicSwapHash}>
@@ -623,7 +727,7 @@ class AssetsManagement extends Component {
                                                                                         return "";
                                                                                     })()}
                                                                                     <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_fullfill_address"] = input}} required>
-                                                                                        {this.props.fullFillNetworkAccounts.map((item) => {
+                                                                                        {this.state.fullFillNetworkAccounts.map((item) => {
                                                                                             return <option key={item.address} value={item.address}>{item.address}</option>
                                                                                         })}
                                                                                     </select>
@@ -670,7 +774,7 @@ class AssetsManagement extends Component {
                                                                                 <div className="form-group">
                                                                                     <label>Account</label>
                                                                                     <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_cancel_address"] = input}} required>
-                                                                                        {this.props.accounts.map((item) => {
+                                                                                        {this.state.accounts.map((item) => {
                                                                                             return <option key={item.address} value={item.address}>{item.address}</option>
                                                                                         })}
                                                                                     </select>
@@ -723,11 +827,6 @@ export default withTracker((props) => {
     return {
         network: Networks.find({instanceId: props.match.params.id, active: true}).fetch(),
         networks: Networks.find({active: true}).fetch(),
-        otherSelectedNetworkAssetTypes: AssetTypes.find({instanceId: Session.get("otherSelectedNetwork")}).fetch(),
-        orders: Orders.find({}).fetch(),
-        assetTypes: AssetTypes.find({instanceId: props.match.params.id}).fetch(),
-        accounts: BCAccounts.find({instanceId: props.match.params.id}).fetch(),
-        fullFillNetworkAccounts: BCAccounts.find({instanceId: Session.get("fullFillNetwork")}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
             onReady: function () {
         		if(Networks.find({instanceId: props.match.params.id, active: true}).fetch().length !== 1) {
@@ -738,12 +837,6 @@ export default withTracker((props) => {
                     Session.set("otherSelectedNetwork",  Networks.find({active: true}).fetch()[0].instanceId)
                 }
         	}
-        }),
-            Meteor.subscribe("orders", props.match.params.id),
-            Meteor.subscribe("assetTypes", Session.get("otherSelectedNetwork")),
-            Meteor.subscribe("assetTypes", props.match.params.id),
-            Meteor.subscribe("bcAccounts", props.match.params.id),
-            Meteor.subscribe("bcAccounts", Session.get("fullFillNetwork"))
-        ]
+        })]
     }
 })(withRouter(AssetsManagement))

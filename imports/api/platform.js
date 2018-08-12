@@ -2,18 +2,7 @@ import {Networks} from "../collections/networks/networks.js"
 import smartContracts from "../modules/smart-contracts"
 import Web3 from "web3";
 import RedisJwt from "redis-jwt";
-import {soloAssets} from "../collections/soloAssets/soloAssets.js"
-import {StreamsItems} from "../collections/streamsItems/streamsItems.js"
 import helpers from "../modules/helpers"
-import {
-    Orders
-} from "../collections/orders/orders.js"
-import {
-    Secrets
-} from "../collections/secrets/secrets.js"
-import {
-    AcceptedOrders
-} from "../collections/acceptedOrders/acceptedOrders.js"
 import Config from '../modules/config/server';
 
 var BigNumber = require('bignumber.js');
@@ -23,7 +12,7 @@ const jwt = new RedisJwt({
     port: Config.redisPort,
     secret: 'rch4nuct90i3t9ik#%$^&u3jrmv29r239cr2',
     multiple: true
-}) 
+})
 
 JsonRoutes.add("get", "/ping", function(req, res, next) {
     JsonRoutes.sendResult(res, {

@@ -7,7 +7,6 @@ import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
 import {Link} from "react-router-dom"
-import {BCAccounts} from "../../../collections/bcAccounts/bcAccounts.js"
 
 import "./CreateAssetType.scss"
 
@@ -15,7 +14,40 @@ class CreateAssetType extends Component {
 
     constructor() {
         super()
-        this.state = {}
+
+        this.state = {
+            accounts: []
+        }
+
+        this.getAccounts = this.getAccounts.bind(this)
+    }
+
+    componentDidMount() {
+        this.setState({
+            refreshAccountsTimer: setInterval(this.getAccounts, 2000)
+        })
+    }
+
+    componentWillUnmount() {
+        this.props.subscriptions.forEach((s) =>{
+            s.stop();
+        });
+
+        clearInterval(this.state.refreshAccountsTimer);
+    }
+
+    getAccounts() {
+        if(this.props.network[0]) {
+            let url = `http://18.237.94.215:${this.props.network[0].apisPort}/utility/accounts`;
+            //let url = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/accounts`;
+            HTTP.get(url, { auth : `${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`}, (err, res) => {
+                if(!err) {
+                    this.setState({
+                        accounts: res.data
+                    });
+                }
+            })
+        }
     }
 
     createAssetType = (e, instanceId) => {
@@ -48,12 +80,6 @@ class CreateAssetType extends Component {
                     [instanceId + "_createAssetType_formSubmitError"]: error.reason
                 })
             }
-        });
-    }
-
-    componentWillUnmount() {
-        this.props.subscriptions.forEach((s) =>{
-            s.stop();
         });
     }
 
@@ -134,7 +160,7 @@ class CreateAssetType extends Component {
                                                                 <label>Issuing Address</label>
                                                                 <span className="help"> e.g. "0x84eddb1..."</span>
                                                                 <select className="form-control" required ref={(input) => {this[this.props.network[0].instanceId + "_createAssetType_assetIssuer"] = input}}>
-                                                                    {this.props.accounts.map((item) => {
+                                                                    {this.state.accounts.map((item) => {
                                                                         return <option key={item.address} value={item.address}>{item.address}</option>
                                                                     })}
                                                                 </select>
@@ -180,13 +206,12 @@ class CreateAssetType extends Component {
 export default withTracker((props) => {
     return {
         network: Networks.find({instanceId: props.match.params.id, active: true}).fetch(),
-        accounts: BCAccounts.find({instanceId: props.match.params.id}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
         		if(Networks.find({instanceId: props.match.params.id, active: true}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
         	}
-        }), Meteor.subscribe("bcAccounts", props.match.params.id)]
+        })]
     }
 })(withRouter(CreateAssetType))

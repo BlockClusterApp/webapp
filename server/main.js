@@ -15,44 +15,6 @@ import {
 import NetworkFunctions from '../imports/api/network/networks';
 import Vouchers from '../imports/collections/vouchers/voucher';
 import NetworkConfiguration from '../imports/collections/network-configuration/network-configuration';
-import {
-    SoloAssets
-} from "../imports/collections/soloAssets/soloAssets.js"
-import {
-    StreamsItems
-} from "../imports/collections/streamsItems/streamsItems.js"
-import {
-    Streams
-} from "../imports/collections/streams/streams.js"
-import {
-    AssetTypes
-} from "../imports/collections/assetTypes/assetTypes.js"
-import {
-    Orders
-} from "../imports/collections/orders/orders.js"
-import {
-    Secrets
-} from "../imports/collections/secrets/secrets.js"
-import {
-    AcceptedOrders
-} from "../imports/collections/acceptedOrders/acceptedOrders.js"
-import {
-    BCAccounts
-} from "../imports/collections/bcAccounts/bcAccounts.js"
-import {
-    SoloAssetAudit
-} from "../imports/collections/soloAssetAudit/soloAssetAudit.js"
-
-import {
-    DerivationKeys
-} from "../imports/collections/derivationKeys/derivationKeys.js"
-import {
-    EncryptedObjects
-} from "../imports/collections/encryptedObjects/encryptedObjects.js"
-import {
-    EncryptionKeys
-} from "../imports/collections/encryptionKeys/encryptionKeys.js"
-
 import Verifier from '../imports/api/emails/email-validator'
 import Config from '../imports/modules/config/server';
 
@@ -671,7 +633,7 @@ Meteor.methods({
                                                             myFuture.return(instanceId);
                                                         }
                                                     })
-                                                  }
+                                            }
                                         })
                                     }
                                 })
@@ -1324,6 +1286,7 @@ spec:
                 if(responseBody.error) {
                     myFuture.throw(responseBody.error);
                 } else {
+                    console.log(responseBody)
                     myFuture.return();
                 }
             }
