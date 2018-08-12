@@ -8,6 +8,7 @@ import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
 import {Link} from "react-router-dom"
 var BigNumber = require('bignumber.js');
+import Config from '../../../modules/config/client'
 
 import "./AssetsExchange.scss"
 
@@ -63,9 +64,12 @@ class AssetsManagement extends Component {
         if(this.props.network[0]) {
             let otherNetwork = Networks.find({instanceId: Session.get("otherSelectedNetwork"), active: true}).fetch()[0];
             if(otherNetwork) {
-                let url = `http://18.237.94.215:${otherNetwork.apisPort}/assets/assetTypes`;
-                //let url = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/accounts`;
-                HTTP.get(url, { auth : `${Session.get("otherSelectedNetwork")}:${otherNetwork["api-password"]}`}, (err, res) => {
+                let url = `https://${Config.workerNodeDomainName(otherNetwork.locationCode)}/api/node/${otherNetwork.instanceId}/assets/assetTypes`;
+                HTTP.get(url, {
+                    headers: {
+                        'Authorization': "Basic " + (new Buffer(`${otherNetwork.instanceId}:${otherNetwork["api-password"]}`).toString("base64"))
+                    }
+                }, (err, res) => {
                     if(!err) {
                         this.setState({
                             otherSelectedNetworkAssetTypes: res.data
@@ -80,9 +84,13 @@ class AssetsManagement extends Component {
         if(this.props.network[0]) {
             let otherNetwork = Networks.find({instanceId: Session.get("otherSelectedNetwork"), active: true}).fetch()[0];
             if(otherNetwork) {
-                let url = `http://18.237.94.215:${otherNetwork.apisPort}/utility/accounts`;
-                //let url = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/accounts`;
-                HTTP.get(url, { auth : `${Session.get("otherSelectedNetwork")}:${otherNetwork["api-password"]}`}, (err, res) => {
+                let url = `https://${Config.workerNodeDomainName(otherNetwork.locationCode)}/api/node/${otherNetwork.instanceId}/utility/accounts`;
+
+                HTTP.get(url, {
+                    headers: {
+                        'Authorization': "Basic " + (new Buffer(`${otherNetwork.instanceId}:${otherNetwork["api-password"]}`).toString("base64"))
+                    }
+                }, (err, res) => {
                     if(!err) {
                         this.setState({
                             fullFillNetworkAccounts: res.data
@@ -95,9 +103,12 @@ class AssetsManagement extends Component {
 
     getAssetTypes() {
         if(this.props.network[0]) {
-            let url = `http://18.237.94.215:${this.props.network[0].apisPort}/assets/assetTypes`;
-            //let url = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/accounts`;
-            HTTP.get(url, { auth : `${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`}, (err, res) => {
+            let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/assets/assetTypes`;
+            HTTP.get(url, {
+                headers: {
+                    'Authorization': "Basic " + (new Buffer(`${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`).toString("base64"))
+                }
+            }, (err, res) => {
                 if(!err) {
                     this.setState({
                         assetTypes: res.data
@@ -109,9 +120,12 @@ class AssetsManagement extends Component {
 
     getOrders() {
         if(this.props.network[0]) {
-            let url = `http://18.237.94.215:${this.props.network[0].apisPort}/assets/orders`;
-            //let url = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/accounts`;
-            HTTP.get(url, { auth : `${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`}, (err, res) => {
+            let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/assets/orders`;
+            HTTP.get(url, {
+                headers: {
+                    'Authorization': "Basic " + (new Buffer(`${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`).toString("base64"))
+                }
+            }, (err, res) => {
                 if(!err) {
                     this.setState({
                         orders: res.data
@@ -123,9 +137,12 @@ class AssetsManagement extends Component {
 
     getAccounts() {
         if(this.props.network[0]) {
-            let url = `http://18.237.94.215:${this.props.network[0].apisPort}/utility/accounts`;
-            //let url = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/accounts`;
-            HTTP.get(url, { auth : `${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`}, (err, res) => {
+            let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/accounts`;
+            HTTP.get(url, {
+                headers: {
+                    'Authorization': "Basic " + (new Buffer(`${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`).toString("base64"))
+                }
+            }, (err, res) => {
                 if(!err) {
                     this.setState({
                         accounts: res.data

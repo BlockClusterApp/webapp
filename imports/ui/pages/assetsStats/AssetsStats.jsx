@@ -15,7 +15,7 @@ class AssetsStats extends Component {
 
     constructor() {
         super()
-        
+
         this.state = {
             assetTypes: []
         }
@@ -39,9 +39,12 @@ class AssetsStats extends Component {
 
     getAssetTypes() {
         if(this.props.network[0]) {
-            let url = `http://18.237.94.215:${this.props.network[0].apisPort}/assets/assetTypes`;
-            //let url = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/accounts`;
-            HTTP.get(url, { auth : `${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`}, (err, res) => {
+            let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/assets/assetTypes`;
+            HTTP.get(url, {
+                headers: {
+                    'Authorization': "Basic " + (new Buffer(`${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`).toString("base64"))
+                }
+            }, (err, res) => {
                 if(!err) {
                     this.setState({
                         assetTypes: res.data
