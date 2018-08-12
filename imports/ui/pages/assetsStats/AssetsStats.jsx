@@ -8,6 +8,7 @@ import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
 var BigNumber = require('bignumber.js');
 import {Link} from "react-router-dom"
+import Config from '../../../modules/config/client'
 
 import "./AssetsStats.scss"
 

@@ -8,6 +8,7 @@ import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
 var CodeMirror = require('react-codemirror');
 import {Link} from "react-router-dom"
+import Config from '../../../modules/config/client'
 
 import "./AssetsManagement.scss"
 import "/node_modules/codemirror/lib/codemirror.css"
