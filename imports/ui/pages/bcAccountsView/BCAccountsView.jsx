@@ -7,6 +7,7 @@ import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
 import {Link} from "react-router-dom"
 import {BCAccounts} from "../../../collections/bcAccounts/bcAccounts.js"
+import Config from '../../../modules/config/client'
 
 import "./BCAccountsView.scss"
 
@@ -17,12 +18,31 @@ class BCAccountsView extends Component {
         this.state = {
             defaultJSONQuery: JSON.stringify(JSON.parse('{"assetName":"license","uniqueIdentifier":"1234","company":"blockcluster"}'), undefined, 4)
         }
+
+        this.getAccounts = this.getAccounts.bind(this)
+    }
+
+    componentDidMount() {
+        this.setState({
+            refreshAccountsTimer: setInterval(this.getAccounts, 2000)
+        })
     }
 
     componentWillUnmount() {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
         });
+
+        clearInterval(this.state.refreshAccountsTimer);
+    }
+
+    getAccounts() {
+        if(this.props.network[0]) {
+            let url = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/accounts`;
+            HTTP.get(url, { auth : `${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`}, (err, res) => {
+                console.log(err, res)
+            })
+        }
     }
 
     createAccount(e) {
@@ -217,6 +237,7 @@ export default withTracker((props) => {
     return {
         accounts: BCAccounts.find({instanceId: props.match.params.id}).fetch(),
         network: Networks.find({instanceId: props.match.params.id, active: true}).fetch(),
+        workerNodeDomainName: Config.workerNodeDomainName,
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
         		if(Networks.find({instanceId: props.match.params.id, active: true}).fetch().length !== 1) {

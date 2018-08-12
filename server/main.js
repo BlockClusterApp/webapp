@@ -863,6 +863,22 @@ spec:
         app: dynamo-node-${instanceId}
     spec:
       containers:
+      - name: mongo
+        image: mongo
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 27017
+        resources:
+          requests:
+            memory: "${resourceConfig.mongo.ram}Gi"
+            cpu: "${resourceConfig.mongo.cpu}m"
+          limits:
+            memory: "${resourceConfig.mongo.ram + 0.2}Gi"
+            cpu: "${resourceConfig.mongo.cpu + 150}m"
+      volumes:
+        - name: dynamo-dir
+          persistentVolumeClaim:
+            claimName: ${instanceId}-pvc
       - name: dynamo
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}
         command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalENodes} '${genesisFileContent}'  mine" ]
@@ -896,11 +912,11 @@ spec:
           value: ${impulseURL}
         resources:
           requests:
-            memory: "${nodeConfig.ram}Gi"
-            cpu: "${nodeConfig.cpu}m"
+            memory: "${resourceConfig.dynamo.ram}Gi"
+            cpu: "${resourceConfig.dynamo.cpu}m"
           limits:
-            memory: "${nodeConfig.ram}Gi"
-            cpu: "${nodeConfig.cpu}m"
+            memory: "${resourceConfig.dynamo.ram + 0.2}Gi"
+            cpu: "${resourceConfig.dynamo.cpu}m"
       volumes:
         - name: dynamo-dir
           persistentVolumeClaim:
@@ -921,6 +937,22 @@ spec:
         app: dynamo-node-${instanceId}
     spec:
       containers:
+      - name: mongo
+        image: mongo
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 27017
+        resources:
+          requests:
+            memory: "${resourceConfig.mongo.ram}Gi"
+            cpu: "${resourceConfig.mongo.cpu}m"
+          limits:
+            memory: "${resourceConfig.mongo.ram + 0.2}Gi"
+            cpu: "${resourceConfig.mongo.cpu + 150}m"
+      volumes:
+        - name: dynamo-dir
+          persistentVolumeClaim:
+            claimName: ${instanceId}-pvc
       - name: dynamo
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}
         command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalENodes} '${genesisFileContent}'" ]
@@ -954,11 +986,11 @@ spec:
           value: ${impulseURL}
         resources:
           requests:
-            memory: "${nodeConfig.ram}Gi"
-            cpu: "${nodeConfig.cpu}m"
+            memory: "${resourceConfig.dynamo.ram}Gi"
+            cpu: "${resourceConfig.dynamo.cpu}m"
           limits:
-            memory: "${nodeConfig.ram}Gi"
-            cpu: "${nodeConfig.cpu}m"
+            memory: "${resourceConfig.dynamo.ram + 0.2}Gi"
+            cpu: "${resourceConfig.dynamo.cpu}m"
       volumes:
         - name: dynamo-dir
           persistentVolumeClaim:

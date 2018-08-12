@@ -7,7 +7,6 @@ import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
 import {Link} from "react-router-dom"
-import {BCAccounts} from "../../../collections/bcAccounts/bcAccounts.js"
 import {AssetTypes} from "../../../collections/assetTypes/assetTypes.js"
 var html2pdf = require("html2pdf.js")
 import "./AssetsAudit.scss"
@@ -377,7 +376,6 @@ class AssetsAudit extends Component {
 export default withTracker((props) => {
     return {
         network: Networks.find({instanceId: props.match.params.id, active: true}).fetch(),
-        accounts: BCAccounts.find({instanceId: props.match.params.id}).fetch(),
         assetTypes: AssetTypes.find({instanceId: props.match.params.id}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
