@@ -17,6 +17,9 @@ import Vouchers from '../imports/collections/vouchers/voucher';
 import {
     Secrets
 } from "../imports/collections/secrets/secrets.js"
+import {
+    AcceptedOrders
+} from "../imports/collections/acceptedOrders/acceptedOrders.js"
 import NetworkConfiguration from '../imports/collections/network-configuration/network-configuration';
 import Verifier from '../imports/api/emails/email-validator'
 import Config from '../imports/modules/config/server';
@@ -699,6 +702,10 @@ Meteor.methods({
             instanceId: id
         });
 
+
+        AcceptedOrders.remove({
+            instanceId: id
+        })
 
         myFuture.return();
 
@@ -1762,9 +1769,33 @@ spec:
         return myFuture.wait();
     },
     "searchSoloAssets": function(instanceId, query) {
-        query = JSON.parse(query)
-        query.instanceId = instanceId;
-        return SoloAssets.find(query).fetch();
+        var myFuture = new Future();
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+
+        console.log(JSON.parse(query), JSON.stringify(JSON.parse(query)))
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/search`, {
+            "content": JSON.stringify(JSON.parse(query)),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                console.log(response)
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return(responseBody);
+                }
+            }
+        })
+
+        return myFuture.wait();
     },
     "rpcPasswordUpdate": function(instanceId, password, locationCode="us-west-2") {
         var myFuture = new Future();
