@@ -71,7 +71,7 @@ https://{{ .Values.ROOT_URL }}
 {{- if eq .Values.NODE_ENV "production" -}}
 webapp-production-001.vyqym8.0001.aps1.cache.amazonaws.com
 {{- else -}}
-redis.{{ template "server.namespace" . }}.svc.cluster.local
+redis-master.{{ template "server.namespace" . }}.svc.cluster.local
 {{- end -}}
 {{- end -}}
 

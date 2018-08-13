@@ -134,17 +134,17 @@ function getNodeConfig(networkConfig, userId) {
   return nodeConfig;
 }
 
-function getContainerResourceLimits({cpu, ram }){
+function getContainerResourceLimits({cpu, ram, isJoining }){
   const CpuPercentage = {
     mongo: 0.15,
-    impulse: 0.20,
-    dynamo: 0.65
+    impulse: isJoining ? 0 : 0.20,
+    dynamo: isJoining ? 0.85 : 0.65
   }
 
   const RamPercentage = {
     mongo: 0.05,
-    impulse: 0.15,
-    dynamo: 0.8
+    impulse: isJoining? 0 : 0.15,
+    dynamo: isJoining ? 0.95 : 0.8
   }
 
   const config = {
@@ -772,7 +772,7 @@ Meteor.methods({
           throw new Meteor.Error("Invalid Network Configuration");
         }
 
-        const resourceConfig = getContainerResourceLimits({cpu: nodeConfig.cpu, ram: nodeConfig.ram});
+        const resourceConfig = getContainerResourceLimits({cpu: nodeConfig.cpu, ram: nodeConfig.ram, isJoining: true});
 
         Networks.insert({
             "instanceId": instanceId,

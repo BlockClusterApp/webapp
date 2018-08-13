@@ -25,14 +25,14 @@ module.exports = function(bullSystem) {
         HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/${name}`, function(error, response) {
           if(error) {
             throw new Error(`Error deleting pod ${pod.name} - ${JSON.stringify(error)}`);
-
-          // wait 10 seconds. We don't want to overload the kube api server
-          setTimeout(() => done(), 10 * 1000);
           }
+          console.log("Deleted pod ", name);
+          // wait 60 seconds. We don't want to overload the kube api server
+          setTimeout(() => done(), 60 * 1000);
         });
       });
     });
   });
 
-  bullSystem.bullJobs.process('repull-image', 3, processFunction);
+  bullSystem.bullJobs.process('repull-image', 2, processFunction);
 }
