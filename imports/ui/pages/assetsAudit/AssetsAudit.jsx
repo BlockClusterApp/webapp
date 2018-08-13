@@ -11,6 +11,7 @@ var html2pdf = require("html2pdf.js")
 import "./AssetsAudit.scss"
 import Config from '../../../modules/config/client'
 
+
 class AssetsAudit extends Component {
 
     constructor() {
