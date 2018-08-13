@@ -64,7 +64,7 @@ class NetworkList extends Component {
       onReady: () => {
         const page = this.state.page + pageOffset;
         this.setState({
-          networks: Networks.find(this.query,{limit: PAGE_LIMIT, skip: 10 * page}).fetch(),
+          networks: Networks.find(this.query).fetch(),
           page
         });
       }
