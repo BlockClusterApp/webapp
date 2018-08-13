@@ -79,6 +79,6 @@ bullSystem.initBull = function() {
   bullSystem.startBullWorkers(bullSystem);
 };
 
-//bullSystem.initBull();
+bullSystem.initBull();
 
 export default bullSystem;

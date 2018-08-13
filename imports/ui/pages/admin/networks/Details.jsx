@@ -47,7 +47,7 @@ class NetworkList extends Component {
     if (!config) {
       return null;
     }
-    return `${config.cpu >= 100 ? config.cpu / 100 : config.cpu} vCPU | ${config.ram} GB | ${config.disk} GB`;
+    return `${config.cpu >= 100 ? config.cpu / 1000 : config.cpu} vCPU | ${config.ram} GB | ${config.disk} GB`;
   };
 
   getNetworkTypeName = config => {
