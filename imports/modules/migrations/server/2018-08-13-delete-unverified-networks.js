@@ -19,9 +19,7 @@ async function getToBeDeletedNetworks(userIds) {
     user: {
       $in: userIds
     },
-    deletedAt: {
-      $ne: null
-    },
+    deletedAt: null,
     createdAt: {
       $lte: moment().subtract(5, 'days').toDate()
     },
@@ -50,7 +48,9 @@ Migrations.add({
     getNonVerifiedUsers()
     .then(getToBeDeletedNetworks)
     .then(deleteNetworks)
-    .then
+    .then(() => {
+      console.log("FInished deleting networks");
+    });
   },
   down: function(){
     console.log("Cannot undo network deletion");
