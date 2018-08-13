@@ -1,7 +1,7 @@
 module.exports = {
     sendgridApi: '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',
-    redisHost: "localhost",
-    redisPort: 6379,
+    redisHost: "35.161.9.16",
+    redisPort: 30645,
     apiHost: "localhost:3000",
     kubeRestApiHost: "http://34.217.101.70:8000",
     workerNodeIP: "52.43.83.54",
