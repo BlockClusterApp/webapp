@@ -1261,7 +1261,8 @@ spec:
                 assetType: assetType,
                 assetIssuer: assetIssuer,
                 reissuable: reissuable,
-                parts: parts
+                parts: parts,
+                description: ""
             }),
             "headers": {
                 "Content-Type": "application/json"
@@ -1357,6 +1358,7 @@ spec:
                 fromAccount: fromAddress,
                 toAccount: toAddress,
                 assetName: assetName,
+                description: "",
                 units: units
             }),
             "headers": {
@@ -1388,7 +1390,8 @@ spec:
                 fromAccount: fromAddress,
                 toAccount: toAddress,
                 assetName: assetName,
-                identifier: identifier
+                identifier: identifier,
+                description: ""
             }),
             "headers": {
                 "Content-Type": "application/json"
@@ -1774,8 +1777,6 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        console.log(JSON.parse(query), JSON.stringify(JSON.parse(query)))
-
         HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/search`, {
             "content": JSON.stringify(JSON.parse(query)),
             "headers": {
@@ -2027,12 +2028,33 @@ spec:
         return myFuture.wait();
     },
     "downloadReport": function(instanceId, assetName, uID) {
-        return SoloAssetAudit.find({
-            instanceId: instanceId,
-            assetName: assetName,
-            uniqueIdentifier: uID,
+        var myFuture = new Future();
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
 
-        }, {sort: {date_created: 1}}).fetch()
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/audit`, {
+            "content": JSON.stringify({
+                assetName: assetName,
+                uniqueIdentifier: uID
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return(responseBody);
+                }
+            }
+        })
+
+        return myFuture.wait();
     },
     "updateNodeCallbackURL": function(instanceId, callbackURL) {
         Networks.update({
