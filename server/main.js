@@ -2035,7 +2035,7 @@ spec:
 
         HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/audit`, {
             "content": JSON.stringify({
-                ssetName: assetName,
+                assetName: assetName,
                 uniqueIdentifier: uID
             }),
             "headers": {
