@@ -86,7 +86,7 @@ class UserList extends Component {
       onReady: () => {
         const page = this.state.page + pageOffset;
         this.setState({
-          users: Meteor.users.find({/*createdAt: {$ne: null}*/}, {limit: PAGE_LIMIT, skip: 10 * page}).fetch(),
+          users: Meteor.users.find({/*createdAt: {$ne: null}*/}).fetch(),
           page
         });
       }
