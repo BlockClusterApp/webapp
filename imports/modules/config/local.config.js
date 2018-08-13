@@ -5,7 +5,7 @@ module.exports = {
     apiHost: "localhost:3000",
     kubeRestApiHost: "https://k8s-dev-us-west-2-api.blockcluster.io",
     firewallPort: "31988",
-    workerNodeIP: "18.237.94.215",
+    workerNodeIP: "35.161.9.16",
     namespace: "dev",
     razorpay: {
         id: 'rzp_test_RfYYCpLXMKzUmF',
