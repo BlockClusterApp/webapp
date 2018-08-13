@@ -14,45 +14,13 @@ import {
 } from "../imports/collections/networks/networks.js"
 import NetworkFunctions from '../imports/api/network/networks';
 import Vouchers from '../imports/collections/vouchers/voucher';
-import NetworkConfiguration from '../imports/collections/network-configuration/network-configuration';
-import {
-    SoloAssets
-} from "../imports/collections/soloAssets/soloAssets.js"
-import {
-    StreamsItems
-} from "../imports/collections/streamsItems/streamsItems.js"
-import {
-    Streams
-} from "../imports/collections/streams/streams.js"
-import {
-    AssetTypes
-} from "../imports/collections/assetTypes/assetTypes.js"
-import {
-    Orders
-} from "../imports/collections/orders/orders.js"
 import {
     Secrets
 } from "../imports/collections/secrets/secrets.js"
 import {
     AcceptedOrders
 } from "../imports/collections/acceptedOrders/acceptedOrders.js"
-import {
-    BCAccounts
-} from "../imports/collections/bcAccounts/bcAccounts.js"
-import {
-    SoloAssetAudit
-} from "../imports/collections/soloAssetAudit/soloAssetAudit.js"
-
-import {
-    DerivationKeys
-} from "../imports/collections/derivationKeys/derivationKeys.js"
-import {
-    EncryptedObjects
-} from "../imports/collections/encryptedObjects/encryptedObjects.js"
-import {
-    EncryptionKeys
-} from "../imports/collections/encryptionKeys/encryptionKeys.js"
-
+import NetworkConfiguration from '../imports/collections/network-configuration/network-configuration';
 import Verifier from '../imports/api/emails/email-validator'
 import Config from '../imports/modules/config/server';
 
@@ -245,9 +213,6 @@ Meteor.methods({
                                             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {})
                                             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + instanceId, function(error, response) {})
                                             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${instanceId}-pvc`, function(error, response) {});
-                                            BCAccounts.remove({
-                                                instanceId: id
-                                            })
                                         })
                                     }
                                 }
@@ -671,7 +636,7 @@ Meteor.methods({
                                                             myFuture.return(instanceId);
                                                         }
                                                     })
-                                                  }
+                                            }
                                         })
                                     }
                                 })
@@ -726,30 +691,19 @@ Meteor.methods({
             });
           });
 
-
-
           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + id, kubeCallback);
           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + id, kubeCallback);
         }catch(err){
           console.log("Kube delete error ", err);
         }
-        Orders.remove({
-            instanceId: id
-        });
-        SoloAssets.remove({
-            instanceId: id
-        });
-        StreamsItems.remove({
-            instanceId: id
-        });
-        AssetTypes.remove({
-            instanceId: id
-        })
+
+
         Secrets.remove({
             instanceId: id
         });
 
-        BCAccounts.remove({
+
+        AcceptedOrders.remove({
             instanceId: id
         })
 
@@ -800,9 +754,7 @@ Meteor.methods({
                                           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${instanceId}-pvc`, function(error, response) {});
                                           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {})
                                             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + instanceId, function(error, response) {})
-                                            BCAccounts.remove({
-                                                instanceId: id
-                                            })
+
                                         })
                                     }
                                 }
@@ -863,6 +815,21 @@ spec:
         app: dynamo-node-${instanceId}
     spec:
       containers:
+      - name: mongo
+        image: mongo
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 27017
+        resources:
+          requests:
+            memory: "${resourceConfig.mongo.ram}Gi"
+            cpu: "${resourceConfig.mongo.cpu}m"
+          limits:
+            memory: "${resourceConfig.mongo.ram + 0.2}Gi"
+            cpu: "${resourceConfig.mongo.cpu + 150}m"
+        volumeMounts:
+        - name: dynamo-dir
+          mountPath: /data/db
       - name: dynamo
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}
         command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalENodes} '${genesisFileContent}'  mine" ]
@@ -896,11 +863,11 @@ spec:
           value: ${impulseURL}
         resources:
           requests:
-            memory: "${nodeConfig.ram}Gi"
-            cpu: "${nodeConfig.cpu}m"
+            memory: "${resourceConfig.dynamo.ram}Gi"
+            cpu: "${resourceConfig.dynamo.cpu}m"
           limits:
-            memory: "${nodeConfig.ram}Gi"
-            cpu: "${nodeConfig.cpu}m"
+            memory: "${resourceConfig.dynamo.ram + 0.2}Gi"
+            cpu: "${resourceConfig.dynamo.cpu}m"
       volumes:
         - name: dynamo-dir
           persistentVolumeClaim:
@@ -921,6 +888,21 @@ spec:
         app: dynamo-node-${instanceId}
     spec:
       containers:
+      - name: mongo
+        image: mongo
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 27017
+        resources:
+          requests:
+            memory: "${resourceConfig.mongo.ram}Gi"
+            cpu: "${resourceConfig.mongo.cpu}m"
+          limits:
+            memory: "${resourceConfig.mongo.ram + 0.2}Gi"
+            cpu: "${resourceConfig.mongo.cpu + 150}m"
+        volumeMounts:
+        - name: dynamo-dir
+          mountPath: /data/db
       - name: dynamo
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}
         command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalENodes} '${genesisFileContent}'" ]
@@ -954,11 +936,11 @@ spec:
           value: ${impulseURL}
         resources:
           requests:
-            memory: "${nodeConfig.ram}Gi"
-            cpu: "${nodeConfig.cpu}m"
+            memory: "${resourceConfig.dynamo.ram}Gi"
+            cpu: "${resourceConfig.dynamo.cpu}m"
           limits:
-            memory: "${nodeConfig.ram}Gi"
-            cpu: "${nodeConfig.cpu}m"
+            memory: "${resourceConfig.dynamo.ram + 0.2}Gi"
+            cpu: "${resourceConfig.dynamo.cpu}m"
       volumes:
         - name: dynamo-dir
           persistentVolumeClaim:
@@ -1292,6 +1274,7 @@ spec:
                 if(responseBody.error) {
                     myFuture.throw(responseBody.error);
                 } else {
+                    console.log(responseBody)
                     myFuture.return();
                 }
             }
@@ -1786,9 +1769,33 @@ spec:
         return myFuture.wait();
     },
     "searchSoloAssets": function(instanceId, query) {
-        query = JSON.parse(query)
-        query.instanceId = instanceId;
-        return SoloAssets.find(query).fetch();
+        var myFuture = new Future();
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+
+        console.log(JSON.parse(query), JSON.stringify(JSON.parse(query)))
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/search`, {
+            "content": JSON.stringify(JSON.parse(query)),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                console.log(response)
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return(responseBody);
+                }
+            }
+        })
+
+        return myFuture.wait();
     },
     "rpcPasswordUpdate": function(instanceId, password, locationCode="us-west-2") {
         var myFuture = new Future();

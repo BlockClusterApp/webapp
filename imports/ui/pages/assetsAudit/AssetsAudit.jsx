@@ -7,16 +7,43 @@ import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
 import {Link} from "react-router-dom"
-import {BCAccounts} from "../../../collections/bcAccounts/bcAccounts.js"
-import {AssetTypes} from "../../../collections/assetTypes/assetTypes.js"
 var html2pdf = require("html2pdf.js")
 import "./AssetsAudit.scss"
+import Config from '../../../modules/config/client'
+
 
 class AssetsAudit extends Component {
 
     constructor() {
         super()
-        this.state = {}
+        this.state = {
+            assetTypes: []
+        }
+
+        this.getAssetTypes = this.getAssetTypes.bind(this)
+    }
+
+    componentDidMount() {
+        this.setState({
+            refreshAssetTypesTimer: setInterval(this.getAssetTypes, 2000)
+        })
+    }
+
+    getAssetTypes() {
+        if(this.props.network[0]) {
+            let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/assets/assetTypes`;
+            HTTP.get(url, {
+                headers: {
+                    'Authorization': "Basic " + (new Buffer(`${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`).toString("base64"))
+                }
+            }, (err, res) => {
+                if(!err) {
+                    this.setState({
+                        assetTypes: res.data
+                    });
+                }
+            })
+        }
     }
 
     downloadReport = (e, instanceId) => {
@@ -291,6 +318,8 @@ class AssetsAudit extends Component {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
         });
+
+        clearInterval(this.state.refreshAssetTypesTimer);
     }
 
 	render(){
@@ -323,7 +352,7 @@ class AssetsAudit extends Component {
                                                                 <label>Asset Name</label>
                                                                 <span className="help"> e.g. "License"</span>
                                                                 <select className="form-control" required ref={(input) => {this["_auditReport_assetName"] = input}}>
-                                                                    {this.props.assetTypes.map((item) => {
+                                                                    {this.state.assetTypes.map((item) => {
                                                                         if(item.type === "solo") {
                                                                             return <option key={item.assetName} value={item.assetName}>{item.assetName}</option>
                                                                         }
@@ -377,14 +406,12 @@ class AssetsAudit extends Component {
 export default withTracker((props) => {
     return {
         network: Networks.find({instanceId: props.match.params.id, active: true}).fetch(),
-        accounts: BCAccounts.find({instanceId: props.match.params.id}).fetch(),
-        assetTypes: AssetTypes.find({instanceId: props.match.params.id}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
         		if(Networks.find({instanceId: props.match.params.id, active: true}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
         	}
-        }), Meteor.subscribe("assetTypes", props.match.params.id)]
+        })]
     }
 })(withRouter(AssetsAudit))

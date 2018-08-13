@@ -34,5 +34,5 @@ module.exports = function(bullSystem) {
     });
   });
 
-  bullSystem.bullJobs.process('repull-image',processFunction);
+  bullSystem.bullJobs.process('repull-image', 3, processFunction);
 }
