@@ -6,9 +6,8 @@ import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from
 import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
-import {Streams} from "../../../collections/streams/streams.js"
 import {Link} from "react-router-dom"
-import {BCAccounts} from "../../../collections/bcAccounts/bcAccounts.js"
+import Config from '../../../modules/config/client'
 
 import "./PublishStream.scss"
 
@@ -16,7 +15,55 @@ class PublishStream extends Component {
 
     constructor() {
         super()
-        this.state = {}
+
+        this.state = {
+            accounts: [],
+            streams: []
+        }
+
+        this.getAccounts = this.getAccounts.bind(this)
+        this.getStreams = this.getStreams.bind(this)
+    }
+
+    componentDidMount() {
+        this.setState({
+            refreshAccountsTimer: setInterval(this.getAccounts, 2000),
+            refreshStreamsTimer: setInterval(this.getStreams, 2000)
+        })
+    }
+
+    getAccounts() {
+        if(this.props.network[0]) {
+            let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/accounts`;
+            HTTP.get(url, {
+                headers: {
+                    'Authorization': "Basic " + (new Buffer(`${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`).toString("base64"))
+                }
+            }, (err, res) => {
+                if(!err) {
+                    this.setState({
+                        accounts: res.data
+                    });
+                }
+            })
+        }
+    }
+
+    getStreams() {
+        if(this.props.network[0]) {
+            let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/streams/streamTypes`;
+            HTTP.get(url, {
+                headers: {
+                    'Authorization': "Basic " + (new Buffer(`${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`).toString("base64"))
+                }
+            }, (err, res) => {
+                if(!err) {
+                    this.setState({
+                        streams: res.data
+                    });
+                }
+            })
+        }
     }
 
     publishStream = (e, instanceId) => {
@@ -54,6 +101,9 @@ class PublishStream extends Component {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
         });
+
+        clearInterval(this.state.refreshAccountsTimer);
+        clearInterval(this.state.refreshStreamsTimer);
     }
 
     visibilityChanged = (instanceId, e) => {
@@ -98,7 +148,7 @@ class PublishStream extends Component {
                                                                     <label>Stream Name</label>
                                                                     <span className="help"> e.g. "Renew"</span>
                                                                     <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_publishStream_name"] = input}} required>
-                                                                        {this.props.streams.map((item) => {
+                                                                        {this.state.streams.map((item) => {
                                                                             return <option key={item.streamName} value={item.streamName}>{item.streamName}</option>
                                                                         })}
                                                                     </select>
@@ -133,7 +183,7 @@ class PublishStream extends Component {
                                                                     <label>From Account</label>
                                                                     <span className="help"> e.g. "0x84eddb1..."</span>
                                                                     <select className="form-control" required ref={(input) => {this[this.props.network[0].instanceId + "_publishStream_issuer"] = input}}>
-                                                                        {this.props.accounts.map((item) => {
+                                                                        {this.state.accounts.map((item) => {
                                                                             return <option key={item.address} value={item.address}>{item.address}</option>
                                                                         })}
                                                                     </select>
@@ -180,14 +230,12 @@ class PublishStream extends Component {
 export default withTracker((props) => {
     return {
         network: Networks.find({instanceId: props.match.params.id, active: true}).fetch(),
-        streams: Streams.find({instanceId: props.match.params.id}).fetch(),
-        accounts: BCAccounts.find({instanceId: props.match.params.id}).fetch(),
         subscriptions: [Meteor.subscribe("networks", {
         	onReady: function (){
         		if(Networks.find({instanceId: props.match.params.id, active: true}).fetch().length !== 1) {
         			props.history.push("/app/networks");
         		}
         	}
-        }), Meteor.subscribe("streams", props.match.params.id), Meteor.subscribe("bcAccounts", props.match.params.id)]
+        })]
     }
 })(withRouter(PublishStream))

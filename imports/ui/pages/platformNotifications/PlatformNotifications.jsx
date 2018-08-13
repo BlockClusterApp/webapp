@@ -6,9 +6,7 @@ import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from
 import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
-import {Streams} from "../../../collections/streams/streams.js"
 import {Link} from "react-router-dom"
-import {BCAccounts} from "../../../collections/bcAccounts/bcAccounts.js"
 
 import "./PlatformNotifications.scss"
 

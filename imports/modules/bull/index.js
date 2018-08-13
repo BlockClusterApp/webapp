@@ -29,7 +29,8 @@ if (env === 'production') {
 const bullSystem = {};
 
 bullSystem.initBull = function() {
-  const queue = new Bull('queue', { redis: { port, host }, prefix: bullPrefix });
+  console.log("Bull redis",`redis://${Config.redisHost}:${Config.redisPort}` );
+  const queue = new Bull('queue', `redis://${Config.redisHost}:${Config.redisPort}`, {prefix: bullPrefix });
 
   bullSystem.bullJobs = queue;
 
@@ -78,6 +79,6 @@ bullSystem.initBull = function() {
   bullSystem.startBullWorkers(bullSystem);
 };
 
-bullSystem.initBull();
+//bullSystem.initBull();
 
 export default bullSystem;
