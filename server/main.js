@@ -14,6 +14,9 @@ import {
 } from "../imports/collections/networks/networks.js"
 import NetworkFunctions from '../imports/api/network/networks';
 import Vouchers from '../imports/collections/vouchers/voucher';
+import {
+    Secrets
+} from "../imports/collections/secrets/secrets.js"
 import NetworkConfiguration from '../imports/collections/network-configuration/network-configuration';
 import Verifier from '../imports/api/emails/email-validator'
 import Config from '../imports/modules/config/server';
@@ -207,9 +210,6 @@ Meteor.methods({
                                             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {})
                                             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + instanceId, function(error, response) {})
                                             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${instanceId}-pvc`, function(error, response) {});
-                                            BCAccounts.remove({
-                                                instanceId: id
-                                            })
                                         })
                                     }
                                 }
@@ -688,32 +688,17 @@ Meteor.methods({
             });
           });
 
-
-
           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + id, kubeCallback);
           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + id, kubeCallback);
         }catch(err){
           console.log("Kube delete error ", err);
         }
-        Orders.remove({
-            instanceId: id
-        });
-        SoloAssets.remove({
-            instanceId: id
-        });
-        StreamsItems.remove({
-            instanceId: id
-        });
-        AssetTypes.remove({
-            instanceId: id
-        })
+
+
         Secrets.remove({
             instanceId: id
         });
 
-        BCAccounts.remove({
-            instanceId: id
-        })
 
         myFuture.return();
 
@@ -762,9 +747,7 @@ Meteor.methods({
                                           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${instanceId}-pvc`, function(error, response) {});
                                           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {})
                                             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + instanceId, function(error, response) {})
-                                            BCAccounts.remove({
-                                                instanceId: id
-                                            })
+
                                         })
                                     }
                                 }

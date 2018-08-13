@@ -187,31 +187,45 @@ class AssetsManagement extends Component {
 
     fullfillOrder_orderIdChange = (e, instanceId) => {
         let orderId = e.target.value;
-        let genesisBlockHash = Orders.find({instanceId: instanceId, atomicSwapHash: orderId}).fetch();
 
-        if(genesisBlockHash.length === 1) {
-            genesisBlockHash = genesisBlockHash[0].toGenesisBlockHash;
-            this.setState({
-                [instanceId + "_fullOrder_genesisBlockHash"]: genesisBlockHash
-            })
+        let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/assets/getOrderInfo`;
 
-            this[instanceId + "_fullOrder_continueAccountLoop"] = true;
+        HTTP.call("POST", url, {
+            "content": JSON.stringify({
+                orderId: orderId
+            }),
+            "headers": {
+                "Content-Type": "application/json",
+                'Authorization': "Basic " + (new Buffer(`${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`).toString("base64"))
+            }
+        }, (err, res) => {
+            if(!err) {
+                let order = res.data;
 
-            for(let count  = 0; count < this.props.networks.length; count++) {
-                if(this.props.networks[count].genesisBlockHash === genesisBlockHash) {
-                    Session.set("fullFillNetwork", this.props.networks[count].instanceId)
-                    break;
+                if(!order.error) {
+                    let genesisBlockHash = order.toGenesisBlockHash;
+                    this.setState({
+                        [instanceId + "_fullOrder_genesisBlockHash"]: genesisBlockHash
+                    })
+
+                    this[instanceId + "_fullOrder_continueAccountLoop"] = true;
+
+                    for(let count  = 0; count < this.props.networks.length; count++) {
+                        if(this.props.networks[count].genesisBlockHash === genesisBlockHash) {
+                            Session.set("fullFillNetwork", this.props.networks[count].instanceId)
+                            break;
+                        }
+                    }
+                } else {
+                    this.setState({
+                        [instanceId + "_fullOrder_genesisBlockHash"]: undefined,
+                        [instanceId + "_fullfillOrder_selectedNetwork"]: undefined
+                    })
+
+                    this[instanceId + "_fullOrder_continueAccountLoop"] = false;
                 }
             }
-
-        } else {
-            this.setState({
-                [instanceId + "_fullOrder_genesisBlockHash"]: undefined,
-                [instanceId + "_fullfillOrder_selectedNetwork"]: undefined
-            })
-
-            this[instanceId + "_fullOrder_continueAccountLoop"] = false;
-        }
+        })
     }
 
     fullfillOrder_networkChange = (e, instanceId) => {
@@ -302,88 +316,101 @@ class AssetsManagement extends Component {
             [instanceId + "_fullfill_formSubmitError"]: ''
         });
 
-        let order = Orders.find({instanceId: instanceId, atomicSwapHash: this[instanceId + "_fullfill_orderID"].value}).fetch()[0];
+        let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/assets/getOrderInfo`;
 
-        let otherInstanceId = this[instanceId + "_fullfillOrder_networkId"].value;
-
-        if(Networks.find({instanceId: instanceId, active: true}).fetch()[0].genesisBlockHash === order.toGenesisBlockHash) {
-            Meteor.call(
-                "claimOrder",
-                otherInstanceId,
-                this[instanceId + "_fullfill_orderID"].value,
-                this[instanceId + "_fullfill_address"].value,
-                order.toAssetType,
-                order.toAssetName,
-                order.toAssetId,
-                order.toAssetUnits,
-                (error) => {
-                    if(error) {
-                        this.setState({
-                            [instanceId + "_fullfill_formloading"]: false,
-                            [instanceId + "_fullfill_formSubmitError"]: error.reason
-                        });
-                    } else {
-                        this.setState({
-                            [instanceId + "_fullfill_formloading"]: false,
-                            [instanceId + "_fullfill_formSubmitError"]: ""
-                        });
-
-                        notifications.success("Transaction sent");
-                    }
-                }
-            )
-        } else {
-            let expiryTimestamp = order.fromLockPeriod;
-            let currentTimestamp = new Date().getTime() / 1000;
-            let newMin = null;
-
-            if(expiryTimestamp - currentTimestamp <= 0) {
-                this.setState({
-                    [instanceId + "_fullfill_formloading"]: false,
-                    [instanceId + "_fullfill_formSubmitError"]: "Order has expired"
-                });
-
-                return;
-            } else {
-                let temp = currentTimestamp + ((expiryTimestamp - currentTimestamp) / 2)
-                temp = (temp - currentTimestamp) / 60;
-                newMin = temp;
+        HTTP.call("POST", url, {
+            "content": JSON.stringify({
+                orderId: this[instanceId + "_fullfill_orderID"].value
+            }),
+            "headers": {
+                "Content-Type": "application/json",
+                'Authorization': "Basic " + (new Buffer(`${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`).toString("base64"))
             }
+        }, (err, res) => {
+            if(!err) {
+                let order = res.data;
+                let otherInstanceId = this[instanceId + "_fullfillOrder_networkId"].value;
 
-            Meteor.call(
-                "fullfillOrder",
-                instanceId,
-                otherInstanceId,
-                order.toAssetType,
-                order.fromAssetType,
-                order.toAssetName,
-                order.fromAssetName,
-                order.toAssetUnits,
-                order.fromAssetUnits,
-                order.toAssetId,
-                order.fromAssetId,
-                order.toAddress,
-                order.fromAddress,
-                Networks.find({instanceId: instanceId, active: true}).fetch()[0].genesisBlockHash,
-                newMin,
-                this[instanceId + "_fullfill_orderID"].value,
-                (error) => {
-                    if(error) {
+                if(Networks.find({instanceId: instanceId, active: true}).fetch()[0].genesisBlockHash === order.toGenesisBlockHash) {
+                    Meteor.call(
+                        "claimOrder",
+                        otherInstanceId,
+                        this[instanceId + "_fullfill_orderID"].value,
+                        this[instanceId + "_fullfill_address"].value,
+                        order.toAssetType,
+                        order.toAssetName,
+                        order.toAssetId,
+                        order.toAssetUnits,
+                        (error) => {
+                            if(error) {
+                                this.setState({
+                                    [instanceId + "_fullfill_formloading"]: false,
+                                    [instanceId + "_fullfill_formSubmitError"]: error.reason
+                                });
+                            } else {
+                                this.setState({
+                                    [instanceId + "_fullfill_formloading"]: false,
+                                    [instanceId + "_fullfill_formSubmitError"]: ""
+                                });
+
+                                notifications.success("Transaction sent");
+                            }
+                        }
+                    )
+                } else {
+                    let expiryTimestamp = order.fromLockPeriod;
+                    let currentTimestamp = new Date().getTime() / 1000;
+                    let newMin = null;
+
+                    if(expiryTimestamp - currentTimestamp <= 0) {
                         this.setState({
                             [instanceId + "_fullfill_formloading"]: false,
-                            [instanceId + "_fullfill_formSubmitError"]: error.reason
+                            [instanceId + "_fullfill_formSubmitError"]: "Order has expired"
                         });
+
+                        return;
                     } else {
-                        this.setState({
-                            [instanceId + "_fullfill_formloading"]: false,
-                            [instanceId + "_fullfill_formSubmitError"]: ""
-                        });
-
-                        notifications.success("Transaction sent");
+                        let temp = currentTimestamp + ((expiryTimestamp - currentTimestamp) / 2)
+                        temp = (temp - currentTimestamp) / 60;
+                        newMin = temp;
                     }
+
+                    Meteor.call(
+                        "fullfillOrder",
+                        instanceId,
+                        otherInstanceId,
+                        order.toAssetType,
+                        order.fromAssetType,
+                        order.toAssetName,
+                        order.fromAssetName,
+                        order.toAssetUnits,
+                        order.fromAssetUnits,
+                        order.toAssetId,
+                        order.fromAssetId,
+                        order.toAddress,
+                        order.fromAddress,
+                        Networks.find({instanceId: instanceId, active: true}).fetch()[0].genesisBlockHash,
+                        newMin,
+                        this[instanceId + "_fullfill_orderID"].value,
+                        (error) => {
+                            if(error) {
+                                this.setState({
+                                    [instanceId + "_fullfill_formloading"]: false,
+                                    [instanceId + "_fullfill_formSubmitError"]: error.reason
+                                });
+                            } else {
+                                this.setState({
+                                    [instanceId + "_fullfill_formloading"]: false,
+                                    [instanceId + "_fullfill_formSubmitError"]: ""
+                                });
+
+                                notifications.success("Transaction sent");
+                            }
+                        }
+                    )
                 }
-            )
-        }
+            }
+        })
     }
 
 
