@@ -837,10 +837,9 @@ spec:
           limits:
             memory: "${resourceConfig.mongo.ram + 0.2}Gi"
             cpu: "${resourceConfig.mongo.cpu + 150}m"
-      volumes:
+        volumeMounts:
         - name: dynamo-dir
-          persistentVolumeClaim:
-            claimName: ${instanceId}-pvc
+          mountPath: /data/db
       - name: dynamo
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}
         command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalENodes} '${genesisFileContent}'  mine" ]
@@ -911,10 +910,9 @@ spec:
           limits:
             memory: "${resourceConfig.mongo.ram + 0.2}Gi"
             cpu: "${resourceConfig.mongo.cpu + 150}m"
-      volumes:
+        volumeMounts:
         - name: dynamo-dir
-          persistentVolumeClaim:
-            claimName: ${instanceId}-pvc
+          mountPath: /data/db
       - name: dynamo
         image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || "dev"}
         command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalENodes} '${genesisFileContent}'" ]
