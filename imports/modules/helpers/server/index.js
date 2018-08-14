@@ -9,12 +9,14 @@ const EmailVerificationTemplate = require('../../template/email-verification');
 const ForgotPasswordTemplate = require('../../template/forgot-password');
 const InviteUserTemplate = require('../../template/invite-user');
 const CreditCardLink48hrs = require('../../template/credit-card-link-reminder');
+const InitialSupportTicket = require('../../template/new-support-ticket');
 
 const EJSMapping = {
   'email-verification.ejs': EmailVerificationTemplate,
   'forgot-password.ejs': ForgotPasswordTemplate,
   'invite-user.ejs': InviteUserTemplate,
-  'credit-card-link-reminder.ejs': CreditCardLink48hrs
+  'credit-card-link-reminder.ejs': CreditCardLink48hrs,
+  'new-support-ticket.ejs': InitialSupportTicket
 };
 
 function generateRandomString(placeholder, salt = "I<3BlockCluster") {

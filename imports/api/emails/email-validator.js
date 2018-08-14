@@ -32,7 +32,6 @@ Verifier.sendEmailVerification = async function(user) {
 
   await Email.sendEmail(emailProps);
 
-  // TODO: Wrapper around callback insert for async await to work
   const reply = EmailVerification.insert({
     accountId: user._id,
     emailId: email,
