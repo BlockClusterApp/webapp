@@ -8,6 +8,15 @@ Array.prototype.remByVal = function(val) {
     return this;
 }
 
+const SupportTicketCodes = {
+  1: 'Opened',
+  2: 'BlockCluster Action Pending',
+  3: 'Customer Action Pending',
+  4: 'Cancelled',
+  5: 'Resolved',
+  6: 'Closed'
+}
+
 export default {
     firstLetterCapital: function(str) {
         return str.charAt(0).toUpperCase() + str.slice(1);
@@ -113,5 +122,8 @@ export default {
             hex[hex.length] = tmp;
         }
         return hex.join("");
+    },
+    getSupportTicketStatus(statusCode) {
+      return SupportTicketCodes[statusCode];
     }
 }

@@ -10,12 +10,6 @@ class SupportContainer extends Component {
     this.state = {};
   }
 
-  componentWillUnmount() {
-    this.props.subscriptions.forEach(s => {
-      s.stop();
-    });
-  }
-
   render() {
     return (
       <div className="content ">
@@ -32,10 +26,10 @@ class SupportContainer extends Component {
                     className="active"
                     data-toggle="tab"
                     role="tab"
-                    data-target="#create"
+                    data-target="#history"
                     href="#"
                   >
-                    Create Ticket
+                  Ticket History
                   </a>
                 </li>
                 <li className="nav-item">
@@ -43,18 +37,18 @@ class SupportContainer extends Component {
                     href="#"
                     data-toggle="tab"
                     role="tab"
-                    data-target="#history"
+                    data-target="#create"
                   >
-                    Ticket History
+                  Create Ticket
                   </a>
                 </li>
               </ul>
               <div className="tab-content">
-                <div className="tab-pane active" id="create">
-                  <CreateTicket />
-                </div>
-                <div className="tab-pane " id="history">
+                <div className="tab-pane active" id="history">
                   <TicketList />
+                </div>
+                <div className="tab-pane " id="create">
+                  <CreateTicket />
                 </div>
               </div>
             </div>

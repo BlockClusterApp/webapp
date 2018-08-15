@@ -30,6 +30,7 @@ import BCAccountsView from "../../pages/bcAccountsView/BCAccountsView.jsx"
 import AssetsAudit from "../../pages/assetsAudit/AssetsAudit.jsx"
 import BillingDashboard from '../../pages/billing/BillingDashboard.jsx'
 import Payments from '../../pages/billing/Payments.jsx'
+import SupportDetails from '../../pages/support/Support.jsx';
 
 import UserList from "../../pages/admin/users/UserList.jsx";
 import UserDetails from "../../pages/admin/users/Details.jsx";
@@ -70,6 +71,7 @@ export default class Main extends Component {
             <Route exact path="/app/billing" component={BillingDashboard} />
             <Route exact path="/app/payments" component={Payments} />
             <Route exact path="/app/support" component={SupportContainer} />
+            <Route exact path="/app/support/:id" component={SupportDetails} />
 
 
 						<Route exact path="/app/admin" render={() => <Redirect to="/app/admin/users" />} />

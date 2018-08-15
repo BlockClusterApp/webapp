@@ -2,8 +2,8 @@ import { Mongo } from 'meteor/mongo';
 import SimpleSchema from "simpl-schema";
 import AttachBaseHooks from "../../modules/helpers/model-helpers";
 
-const randomChars = 'ABCDEFGHJKLMNPRSTUVWXYZ';
-const padToFive = number => number <= 99999 ? ("0000"+number).slice(-4) : number;
+const randomChars = 'ABCDEFGHJKLMNPRSTUVWXZ';
+const padToFive = number => number <= 99999 ? ("00000"+number).slice(-4) : number;
 
 const SupportTicket = new Mongo.Collection("supportTickets");
 
@@ -15,8 +15,7 @@ SupportTicket.StatusMapping = {
   CustomerActionPending: 3,
   Cancelled: 4,
   Resolved: 5,
-  SystemNoResponse: 6,
-  SystemClosed: 7
+  SystemClosed: 6
 }
 
 SupportTicket.before.insert((userId, doc) => {
@@ -29,7 +28,7 @@ SupportTicket.before.insert((userId, doc) => {
 
   const count = SupportTicket.find().count();
   const randomChar = randomChars[Math.floor(Math.random() * randomChars.length)];
-  doc.caseId = `${randomChar}${padToFive(count)}`;
+  doc.caseId = `${randomChar}${padToFive(count+10001)}`;
 
   console.log("Inserting   ", doc);
 });
@@ -101,6 +100,9 @@ SupportTicket.Schema = new SimpleSchema({
   },
   supportObject: {
     type: Object
+  },
+  ticketType: {
+    type: String
   }
 });
 

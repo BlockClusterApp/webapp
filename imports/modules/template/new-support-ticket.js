@@ -42,13 +42,13 @@ module.exports = `<!DOCTYPE html>
         <hr style="border-top: 1px solid #eee" />
         <div style="padding: 20px; padding-left: 5%; background: #f0f0f0;">
           <h3><%= support.subject %></h3>
-          <p style="font-size: 0.9em; text-align: justify;">
+          <p style="text-align: justify;">
               <!-- Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ut suscipit ipsum, ut gravida turpis. Integer pellentesque nisl quis mauris dapibus, in blandit nunc euismod. Suspendisse condimentum, urna vel tincidunt vulputate, massa mauris porttitor libero, eget ullamcorper purus ante porttitor magna. Suspendisse mollis, lectus eu lobortis vehicula, tellus eros maximus lacus, id fermentum nunc arcu et sapien. Duis tortor diam, tincidunt eu hendrerit at, interdum quis tellus. Pellentesque ultrices sapien in lacus convallis, a dictum velit finibus. In porta purus blandit sapien ultrices luctus. Curabitur rhoncus est at purus sodales, et rhoncus ex lobortis. Quisque ultricies ultrices massa a tincidunt. -->
               <!-- <br /><br /> -->
               <!-- Nullam ut nibh dignissim, sodales sem at, suscipit quam. Aenean rhoncus erat eget hendrerit pulvinar. Vestibulum luctus ac tellus eget vehicula. Nam non lectus sit amet est ultricies ullamcorper. Phasellus libero augue, maximus in mauris et, interdum accumsan sem. Sed nec libero id eros ultricies commodo at in erat. Aenean viverra, justo luctus faucibus vulputate, sem nulla mollis risus, vel elementum est ipsum a velit. Quisque elementum porta odio, in pretium sapien laoreet eu. Integer tincidunt, turpis ac feugiat convallis, erat nibh pharetra elit, aliquam convallis ligula mi porta sem. Duis fringilla, nulla sed malesuada viverra, diam libero volutpat odio, in consequat dolor tortor et lorem. Fusce porta purus sapien, et fringilla urna placerat sit amet. Sed odio dui, convallis ac est eget, interdum ornare odio. Integer efficitur gravida massa non facilisis. Aenean ut efficitur tellus. Quisque bibendum ipsum non turpis vestibulum, eu lobortis enim dapibus. -->
 
 
-            <%= support.description %>
+            <%- support.description %>
           </p>
         </div>
 
