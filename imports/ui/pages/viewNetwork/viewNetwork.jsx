@@ -187,7 +187,7 @@ class ViewNetwork extends Component {
                                                     <div className="clickable" onClick={() => {
 															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/impulse") : ""
 														}}>
-                                                        <p className="no-margin text-black bold text-uppercase fs-12">Proxy Re-Encryption</p>
+                                                        <p className="no-margin text-black bold text-uppercase fs-12">Impulse</p>
                                                         <p className="no-margin fs-12">Store Encrypted Data</p>
                                                     </div>
                                                     <div className="clickable" onClick={() => {
