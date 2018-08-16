@@ -2,8 +2,25 @@ import SupportTicket from "../../collections/support-ticket";
 import { sendEmail } from "../emails/email-sender";
 import Slack from "../slack";
 import { getEJSTemplate } from "../../modules/helpers/server";
+import multer from 'multer';
+const Parser = require('bc-sendgrid/packages/inbound-mail-parser');
+const upload = multer();
 
 const Support = {};
+
+const getSupportFromEmail = (caseId) => {
+  const env = process.env.NODE_ENV || "development";
+  switch(env) {
+    case "production":
+      return `support+${caseId}@support.blockcluster.io`;
+    case "staging":
+      return `support+${caseId}@support-staging.blockcluster.io`;
+    case "dev":
+      return `support+${caseId}@support-dev.blockcluster.io`;
+    default:
+      return `support+${caseId}@support-local.blockcluster.io`;
+  }
+}
 
 Support.createTicket = async details => {
   if (!Meteor.userId() && !details.userId) {
@@ -45,7 +62,7 @@ Support.createTicket = async details => {
 
   const emailProps = {
     from: {
-      email: `support+${support.caseId}@blockcluster.io`,
+      email: getSupportFromEmail(support.caseId),
       name: "Blockcluster"
     },
     to: user.emails[0].address,
@@ -142,7 +159,7 @@ Support.addBlockclusterReply = async ({id, description}) => {
 
   const emailProps = {
     from: {
-      email: `support+${support.caseId}@blockcluster.io`,
+      email: getSupportFromEmail(support.caseId),
       name: "Blockcluster"
     },
     to: user.emails[0].address,
@@ -158,6 +175,51 @@ Support.addBlockclusterReply = async ({id, description}) => {
   return true;
 
 }
+
+JsonRoutes.Middleware.use( "/api/emails/incoming", upload.fields([]));
+
+JsonRoutes.add("post", "/api/emails/incoming", (req, res) => {
+  const parser = new Parser({
+    keys: [
+      'to', 'from', 'subject', 'html', 'attachments', 'email', 'rawEmail'
+    ]
+  }, req);
+
+
+  const email = parser.keyValues();
+  console.log("Email", email);
+  const content = email.html.substring(0, email.html.indexOf(`<div class="gmail_extra">`));
+  const caseId = email.to.substring(email.to.indexOf('<'), email.to.indexOf('>')).split("+")[1].split("@")[0];
+  const userEmail = email.from.substring(email.from.indexOf('<')+1, email.from.indexOf('>'));
+
+  const user = Meteor.users.find({
+    "emails.address": userEmail
+  }).fetch()[0];
+
+  if(!user) {
+    throw new Error("Cannot find user who sent this email");
+  }
+
+  const history = {
+    description: content,
+    via: 'email',
+    updatedBy: user._id
+  };
+  const updateResult = SupportTicket.update({
+    caseId,
+    createdBy: user._id
+  }, {
+    $set: {
+      status: SupportTicket.StatusMapping.BlockclusterActionPending
+    },
+    $push: {
+      history
+    }
+  });
+  res.end("OK");
+
+  return true;
+});
 
 Meteor.methods({
   createSupportTicket: Support.createTicket,

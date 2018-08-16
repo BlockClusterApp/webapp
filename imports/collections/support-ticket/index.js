@@ -19,7 +19,6 @@ SupportTicket.StatusMapping = {
 }
 
 SupportTicket.before.insert((userId, doc) => {
-  console.log("Creating support ticket", userId, doc);
   doc.createdAt = new Date();
   doc.active = true;
 
@@ -29,12 +28,9 @@ SupportTicket.before.insert((userId, doc) => {
   const count = SupportTicket.find().count();
   const randomChar = randomChars[Math.floor(Math.random() * randomChars.length)];
   doc.caseId = `${randomChar}${padToFive(count+10001)}`;
-
-  console.log("Inserting   ", doc);
 });
 
 SupportTicket.before.update((userId, doc, fieldNames, modifier, options) => {
-  console.log("Updating support ticket", userId, doc, fieldNames, modifier, options);
   modifier.$set = modifier.$set || {};
   modifier.$set.updatedAt = new Date();
 
@@ -46,11 +42,11 @@ SupportTicket.before.update((userId, doc, fieldNames, modifier, options) => {
   if(modifier.$push) {
     if(typeof modifier.$push.history === "object") {
       modifier.$push.history.createdAt = new Date();
-      modifier.$push.history.updatedBy = userId
+      modifier.$push.history.updatedBy = modifier.$push.history.updatedBy || userId
     }
     if(typeof modifier.$push.attachments === "object") {
       modifier.$push.attachments.createdAt = new Date();
-      modifier.$push.attachments.uploadedBy = userId
+      modifier.$push.attachments.uploadedBy = modifier.$push.attachments.uploadedBy || userId
     }
   }
 });
