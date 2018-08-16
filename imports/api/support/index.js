@@ -8,6 +8,8 @@ const upload = multer();
 
 const Support = {};
 
+const MIN_ADMIN_LEVEL = 1;
+
 const getSupportFromEmail = (caseId) => {
   const env = process.env.NODE_ENV || "development";
   switch(env) {
@@ -114,6 +116,9 @@ Support.addCustomerReply = async ({id, description}) => {
 }
 
 Support.addBlockclusterReply = async ({id, description}) => {
+  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
   const support = SupportTicket.find({
     _id: id
   }).fetch()[0];
@@ -123,13 +128,14 @@ Support.addBlockclusterReply = async ({id, description}) => {
 
   const history = {
     description,
-    isFromBlockcluster: true
+    isFromBlockcluster: true,
+    status: SupportTicket.StatusMapping.CustomerActionPending
   };
   const updateResult = SupportTicket.update({
     _id: support._id
   }, {
     $set: {
-      status: SupportTicket.StatusMapping.BlockclusterActionPending
+      status: SupportTicket.StatusMapping.CustomerActionPending
     },
     $push: {
       history
@@ -175,6 +181,198 @@ Support.addBlockclusterReply = async ({id, description}) => {
   return true;
 
 }
+Support.closeTicketByCustomer = (id) => {
+  const support = SupportTicket.find({
+    _id: id,
+    createdBy: Meteor.userId()
+  }).fetch()[0];
+  if(!support) {
+    throw new Meteor.Error("Invaid support ticket id for the user");
+  }
+
+  const user = Meteor.user();
+
+  SupportTicket.update({
+    _id: id
+  }, {
+    $set: {
+      status: SupportTicket.StatusMapping.Resolved
+    },
+    $push: {
+      history: {
+        description: `Closed by ${user.emails[0].address}`,
+        status: SupportTicket.StatusMapping.Resolved
+      }
+    }
+  });
+
+  return true;
+}
+
+Support.reopenTicketByCustomer = (id) => {
+  const support = SupportTicket.find({
+    _id: id,
+    createdBy: Meteor.userId()
+  }).fetch()[0];
+  if(!support) {
+    throw new Meteor.Error("Invaid support ticket id for the user");
+  }
+
+  const user = Meteor.user();
+
+  SupportTicket.update({
+    _id: id
+  }, {
+    $set: {
+      status: SupportTicket.StatusMapping.BlockclusterActionPending
+    },
+    $push: {
+      history: {
+        description: `Reopened by ${user.emails[0].address}`,
+        status: SupportTicket.StatusMapping.BlockclusterActionPending
+      }
+    }
+  });
+
+  return true;
+}
+
+Support.closeTicketByAdmin = async (id) => {
+  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
+  const support = SupportTicket.find({
+    _id: id
+  }).fetch()[0];
+  if(!support) {
+    throw new Meteor.Error("Invaid support ticket id for the user");
+  }
+
+  const admin = Meteor.user();
+  const user = Meteor.users.find({
+    _id: support.createdBy
+  }).fetch()[0];
+
+  const description = `Closed by Blockcluster Support`;
+
+  SupportTicket.update({
+    _id: id
+  }, {
+    $set: {
+      status: SupportTicket.StatusMapping.Resolved
+    },
+    $push: {
+      history: {
+        description,
+        status: SupportTicket.StatusMapping.Resolved,
+        isFromBlockcluster: true
+      }
+    }
+  });
+
+  const ejsTemplate = await getEJSTemplate({
+    fileName: "updated-support-ticket.ejs"
+  });
+  const finalHTML = ejsTemplate({
+    user: {
+      email: user.emails[0].address,
+      name: `${user.profile.firstName}`
+    },
+    support,
+    description,
+    updatedBy: {
+      name: `${admin.profile.firstName} ${admin.profile.lastName}`,
+      email: admin.emails[0].address
+    }
+  });
+
+  const emailProps = {
+    from: {
+      email: getSupportFromEmail(support.caseId),
+      name: "Blockcluster"
+    },
+    to: user.emails[0].address,
+    subject: `[BlockCluster] Support case #${support.caseId}`,
+    text: `Your support ticket #${
+      support.caseId
+    } has been closed.`,
+    html: finalHTML
+  };
+
+  await sendEmail(emailProps);
+
+  return true;
+}
+
+
+Support.reopenTicketByAdmin = async (id) => {
+  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
+  const support = SupportTicket.find({
+    _id: id
+  }).fetch()[0];
+  if(!support) {
+    throw new Meteor.Error("Invaid support ticket id for the user");
+  }
+
+  const admin = Meteor.user();
+  const user = Meteor.users.find({
+    _id: support.createdBy
+  }).fetch()[0];
+
+  const description = `Reopened by Blockcluster Support`;
+
+  SupportTicket.update({
+    _id: id
+  }, {
+    $set: {
+      status: SupportTicket.StatusMapping.CustomerActionPending
+    },
+    $push: {
+      history: {
+        description,
+        status: SupportTicket.StatusMapping.CustomerActionPending,
+        isFromBlockcluster: true
+      }
+    }
+  });
+
+  const ejsTemplate = await getEJSTemplate({
+    fileName: "updated-support-ticket.ejs"
+  });
+  const finalHTML = ejsTemplate({
+    user: {
+      email: user.emails[0].address,
+      name: `${user.profile.firstName}`
+    },
+    support,
+    description,
+    updatedBy: {
+      name: `${admin.profile.firstName} ${admin.profile.lastName}`,
+      email: admin.emails[0].address
+    }
+  });
+
+  const emailProps = {
+    from: {
+      email: getSupportFromEmail(support.caseId),
+      name: "Blockcluster"
+    },
+    to: user.emails[0].address,
+    subject: `[BlockCluster] Support case #${support.caseId}`,
+    text: `Your support ticket #${
+      support.caseId
+    } has been reopened.`,
+    html: finalHTML
+  };
+
+  await sendEmail(emailProps);
+
+  return true;
+}
+
+
 
 JsonRoutes.Middleware.use( "/api/emails/incoming", upload.fields([]));
 
@@ -187,8 +385,14 @@ JsonRoutes.add("post", "/api/emails/incoming", (req, res) => {
 
 
   const email = parser.keyValues();
-  console.log("Email", email);
-  const content = email.html.substring(0, email.html.indexOf(`<div class="gmail_extra">`));
+  let contentEndIndex = email.html.indexOf(`<div class="gmail_extra">`) ;
+  if(contentEndIndex < 0) {
+    contentEndIndex = email.html.indexOf(`<div class="gmail_quote">`) ;
+  }
+  if(contentEndIndex < 0) {
+    contentEndIndex = email.html.length;
+  }
+  const content = email.html.substring(0,  contentEndIndex);
   const caseId = email.to.substring(email.to.indexOf('<'), email.to.indexOf('>')).split("+")[1].split("@")[0];
   const userEmail = email.from.substring(email.from.indexOf('<')+1, email.from.indexOf('>'));
 
@@ -207,7 +411,14 @@ JsonRoutes.add("post", "/api/emails/incoming", (req, res) => {
   };
   const updateResult = SupportTicket.update({
     caseId,
-    createdBy: user._id
+    createdBy: user._id,
+    status: {
+      $nin: [
+        SupportTicket.StatusMapping.Resolved,
+        SupportTicket.StatusMapping.Cancelled,
+        SupportTicket.StatusMapping.SystemClosed
+      ]
+    }
   }, {
     $set: {
       status: SupportTicket.StatusMapping.BlockclusterActionPending
@@ -221,10 +432,15 @@ JsonRoutes.add("post", "/api/emails/incoming", (req, res) => {
   return true;
 });
 
+
 Meteor.methods({
   createSupportTicket: Support.createTicket,
   addSupportTicketReplyByCustomer: Support.addCustomerReply,
-  addSupportBlockclusterReply: Support.addBlockclusterReply
+  addSupportBlockclusterReply: Support.addBlockclusterReply,
+  closeTicketFromCustomer: Support.closeTicketByCustomer,
+  closeTicketByAdmin: Support.closeTicketByAdmin,
+  reopenTicketFromCustomer: Support.reopenTicketByCustomer,
+  reopenTicketByAdmin: Support.reopenTicketByAdmin
 });
 
 export default Support;

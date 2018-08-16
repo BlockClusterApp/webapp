@@ -107,8 +107,8 @@ class CreateTicket extends React.Component {
             <div className="radio radio-success" style={{display: "inline"}}>
               <input type="radio" value="account" name="regarding" id="accounts" onChange={(e) => this.setState({regarding: 'accounts'})}/>
               <label htmlFor="accounts">Accounts And Billing</label>
-              <input type="radio" value="technical" name="regarding" id="technical" onChange={(e) => this.setState({regarding: 'technical'})}/>
-              <label htmlFor="technical">Technical Support</label>
+              <input type="radio" value="technical" name="regarding" id="technical" onChange={(e) => this.setState({regarding: 'technical'})} disabled/>
+              <label htmlFor="technical">Technical Support &nbsp; (<span style={{fontSize: '0.8em'}}>Not available in free plan</span>)</label>
               {this.state.regardingError && <span className="form-error">{this.state.regardingError}</span>}
             </div>
           </div>

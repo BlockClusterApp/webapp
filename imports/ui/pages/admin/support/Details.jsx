@@ -84,6 +84,14 @@ class Support extends Component {
     });
   }
 
+  closeTicket = () => {
+    if (![4, 5, 6].includes(this.props.ticket.status) ){
+      Meteor.call("closeTicketByAdmin", this.props.ticket._id);
+    } else {
+      Meteor.call("reopenTicketByAdmin", this.props.ticket._id);
+    }
+  }
+
   render() {
     const { ticket } = this.props;
     if (!ticket) {
@@ -170,14 +178,18 @@ class Support extends Component {
               >
                 <div className="card-header ">
                   <h3 className="text-primary pull-left">Correspondance</h3>
+                  <div className="pull-right">
+                      <button className="btn btn-danger" onClick={this.closeTicket}>{[4, 5, 6].includes(ticket.status) ?'Reopen ticket' : 'Close Ticket'}</button>
+                    </div>
                   <div className="clearfix" />
                 </div>
                 <div className="card-description">
-                  <div className="row">
+                  {![4, 5, 6].includes(ticket.status) && <div className="row">
                     <div className="form-group col-md-9">
                       <textarea type="text" className="form-control" ref={input => this.description = input} required style={{minHeight: '150px'}} description="Add Reply"/>
                       {this.state.descriptionError && <span className="form-error">{this.state.descriptionError}</span>}
                     </div>
+
                     <div className="col-md-3">
                       <LaddaButton
                         loading={this.state.loading}
@@ -193,7 +205,7 @@ class Support extends Component {
                         <i className="fa fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;Add Reply
                       </LaddaButton>
                     </div>
-                  </div>
+                  </div>}
                   {
                     ticket.history && ticket.history.sort((h1, h2) => (new Date(h2.createdAt).getTime()) - (new Date(h1.createdAt).getTime())).map((history, index) => {
                       return <Conversation key={`history_${index}`} isCustomerMessage={!history.isFromBlockcluster} message={history.description} extra={{time: history.createdAt}}/>

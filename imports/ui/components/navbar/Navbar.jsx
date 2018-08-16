@@ -138,6 +138,12 @@ class Navbar extends Component {
                                 <li>
                                     <Link to="/app/billing">Bills</Link>
                                 </li>
+                                <li>
+                                    <Link to="/app/support">Support</Link>
+                                    <span className="icon-thumbnail">
+                                        <i className="fa fa-ticket" />
+                                    </span>
+                                </li>
                             </ul>
                         </li>
                         {this.props.user &&
