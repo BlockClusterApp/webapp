@@ -21,8 +21,10 @@ const sendEmail = function(emailOptions) {
   return new Promise( (resolve, reject) => {
     process.nextTick(async () => {
       if(!['production','staging'].includes(process.env.NODE_ENV)){
-        emailOptions.subject = `${emailOptions.subject} | To: ${emailOptions.to}`
-        emailOptions.to = toEmail;
+        if(!emailsOptions.to.includes('@blockcluster.io')){
+          emailOptions.subject = `${emailOptions.subject} | To: ${emailOptions.to}`
+          emailOptions.to = toEmail;
+        }
       }
       sg.setApiKey(Config.sendgridAPIKey);
       const res = await sg.send(emailOptions);
