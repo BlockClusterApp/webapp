@@ -43,28 +43,14 @@ SupportTicket.before.update((userId, doc, fieldNames, modifier, options) => {
       throw new Error(`Support ticket status not valid. Received ${modifier.$set.status}`)
     }
   }
-
-  const user = Meteor.users.find({_id: userId});
   if(modifier.$push) {
     if(typeof modifier.$push.history === "object") {
       modifier.$push.history.createdAt = new Date();
-      modifier.$push.history.updatedBy = {
-        userId,
-        user: {
-          name: `${user.profile.firstName} ${user.profile.lastName}`,
-          email: user.emails[0].address
-        }
-      }
+      modifier.$push.history.updatedBy = userId
     }
     if(typeof modifier.$push.attachments === "object") {
       modifier.$push.attachments.createdAt = new Date();
-      modifier.$push.attachments.uploadedBy = {
-        userId,
-        user: {
-          name: `${user.profile.firstName} ${user.profile.lastName}`,
-          email: user.emails[0].address
-        }
-      }
+      modifier.$push.attachments.uploadedBy = userId
     }
   }
 });
@@ -76,9 +62,6 @@ SupportTicket.Schema = new SimpleSchema({
   },
   title: {
     type: String
-  },
-  description: {
-    type: String,
   },
   attachments: {
     type: Array

@@ -34,7 +34,7 @@ module.exports = `<!DOCTYPE html>
     <img src="https://app.blockcluster.io/assets/img/logo/blockcluster.png" alt="logo" />
     <h2 style="margin-bottom: 5px;">Support Case #<%= support.caseId %></h2>
 
-    <h4 style="margin-bottom: 0px">Hello
+    <h4 style="margin-bottom: 0px">Hi
         <%= user.name %>,</h4>
     <p style="margin-top: 5px;">
         We have received the following support request from you. Our team is looking into it and will get back to you within 48 hours. Kindly note your case id #<%= support.caseId %> for all future correspondance.
@@ -48,7 +48,7 @@ module.exports = `<!DOCTYPE html>
               <!-- Nullam ut nibh dignissim, sodales sem at, suscipit quam. Aenean rhoncus erat eget hendrerit pulvinar. Vestibulum luctus ac tellus eget vehicula. Nam non lectus sit amet est ultricies ullamcorper. Phasellus libero augue, maximus in mauris et, interdum accumsan sem. Sed nec libero id eros ultricies commodo at in erat. Aenean viverra, justo luctus faucibus vulputate, sem nulla mollis risus, vel elementum est ipsum a velit. Quisque elementum porta odio, in pretium sapien laoreet eu. Integer tincidunt, turpis ac feugiat convallis, erat nibh pharetra elit, aliquam convallis ligula mi porta sem. Duis fringilla, nulla sed malesuada viverra, diam libero volutpat odio, in consequat dolor tortor et lorem. Fusce porta purus sapien, et fringilla urna placerat sit amet. Sed odio dui, convallis ac est eget, interdum ornare odio. Integer efficitur gravida massa non facilisis. Aenean ut efficitur tellus. Quisque bibendum ipsum non turpis vestibulum, eu lobortis enim dapibus. -->
 
 
-            <%- support.description %>
+            <%- support.history[0].description %>
           </p>
         </div>
 

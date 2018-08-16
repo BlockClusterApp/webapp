@@ -37,9 +37,9 @@ class TicketList extends React.Component {
               </thead>
               <tbody>
                 {
-                  this.props.tickets.sort((t1, t2) => new Date(t1).getTime() - new Date(t2).getTime()).map((ticket, index) => {
+                  this.props.tickets.sort((t1, t2) => new Date(t2.createdAt).getTime() - new Date(t1.createdAt).getTime()).map((ticket, index) => {
                     return (
-                      <tr key={index+1} onClick={() => this.openSupport(ticket.caseId)}>
+                      <tr key={index+1} onClick={() => this.openSupport(ticket.caseId)} style={{cursor: 'pointer'}}>
                         <td>{this.state.page * PAGE_LIMIT + index+1}</td>
                         <td>{ticket.subject.substring(0, 50)}{ticket.subject.length > 70 ? '...': ''}</td>
                         <td>{ticket.caseId}</td>

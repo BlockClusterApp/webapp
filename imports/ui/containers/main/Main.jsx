@@ -38,6 +38,8 @@ import NetworkList from '../../pages/admin/networks/NetworkList.jsx';
 import NetworkDetails from '../../pages/admin/networks/Details.jsx';
 import SupportContainer from '../../pages/support/Container.jsx';
 import VoucherList from "../../pages/admin/vouchers/VoucherList.jsx";
+import AdminSupport from "../../pages/admin/support/TicketList.jsx";
+import AdminSupportDetails from '../../pages/admin/support/Details.jsx';
 
 export default class Main extends Component {
 	render() {
@@ -80,6 +82,8 @@ export default class Main extends Component {
 						<Route exact path="/app/admin/networks" component={NetworkList} />
 		        <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
 						<Route exact path="/app/admin/vouchers" component={VoucherList} />
+            <Route exact path="/app/admin/support" component={AdminSupport} />
+            <Route exact path="/app/admin/support/:id" component={AdminSupportDetails} />
 		        </div>
 				</div>
 				<Footer />

@@ -1,12 +1,11 @@
 import React, { Component } from "react";
-import SupportTickets from "../../../collections/support-ticket";
-import { Networks } from "../../../collections/networks/networks";
+import SupportTickets from "../../../../collections/support-ticket";
+import { Networks } from "../../../../collections/networks/networks";
 import { withRouter } from "react-router-dom";
 import { withTracker } from "meteor/react-meteor-data";
-import helpers from "../../../modules/helpers";
+import helpers from "../../../../modules/helpers";
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
-import Conversation from './components/Conversation.jsx';
-import "./Support.scss";
+import Conversation from '../../support/components/Conversation.jsx';
 
 
 class Support extends Component {
@@ -69,7 +68,7 @@ class Support extends Component {
       loading: true,
       descriptionError: null
     });
-    Meteor.call("addSupportTicketReplyByCustomer", {
+    Meteor.call("addSupportBlockclusterReply", {
       id: this.props.ticket._id,
       description: this.description.value
     }, (err, res) => {
@@ -212,7 +211,7 @@ class Support extends Component {
 
 export default withTracker(props => {
   return {
-    ticket: SupportTickets.find({ caseId: props.match.params.id }).fetch()[0],
-    subscriptions: [Meteor.subscribe("support.caseId", props.match.params.id)]
+    ticket: SupportTickets.find({ _id: props.match.params.id }).fetch()[0],
+    subscriptions: [Meteor.subscribe("support.id", props.match.params.id)]
   };
 })(withRouter(Support));

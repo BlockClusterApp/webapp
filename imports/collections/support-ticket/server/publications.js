@@ -1,7 +1,8 @@
 import SupportTicket from "../index";
-import { Network, Networks } from "../../networks/networks";
+import { Networks } from "../../networks/networks";
 
 const MIN_ADMIN_LEVEL = 0;
+const pageSize = 20
 Meteor.publish("support.user", function() {
   return SupportTicket.find({
     createdBy: Meteor.userId()
@@ -9,6 +10,9 @@ Meteor.publish("support.user", function() {
 });
 
 Meteor.publish("support.id", function(id) {
+  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
   return SupportTicket.find({
     createdBy: Meteor.userId(),
     _id: id

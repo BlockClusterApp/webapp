@@ -11,9 +11,16 @@ Support.createTicket = async details => {
   }
   const createResult = SupportTicket.insert({
     subject: details.subject,
-    description: details.description.replace(/\r?\n/g, '<br />'),
     supportObject: details.supportObject,
-    ticketType: details.ticketType
+    ticketType: details.ticketType,
+    history: [
+      {
+        description: details.description.replace(/\r?\n/g, '<br />'),
+        status: SupportTicket.StatusMapping.Filed,
+        updatedBy: Meteor.userId(),
+        createdAt: new Date()
+      }
+    ]
   });
 
   console.log("Support create result", createResult);
@@ -31,7 +38,7 @@ Support.createTicket = async details => {
   const finalHTML = ejsTemplate({
     user: {
       email: user.emails[0].address,
-      name: `${user.profile.firstName} ${user.profile.lastName}`
+      name: `${user.profile.firstName}`
     },
     support
   });
@@ -56,14 +63,106 @@ Support.createTicket = async details => {
     type: "new-support",
     message: `Support case #${support.caseId} | ${
       user.emails[0].address
-    } \n\n *${support.subject}*\n\n${support.description}`
+    } \n\n *${support.subject}*\n\n${support.history[0].description}`
   });
 
   return support.caseId;
 };
 
+Support.addCustomerReply = async ({id, description}) => {
+  const supportTicket = SupportTicket.find({
+    _id: id,
+    createdBy: Meteor.userId()
+  }).fetch()[0];
+
+  if(!supportTicket) {
+    throw new Meteor.Error("Invaid support ticket id for the user");
+  }
+
+  const history = {
+    description
+  };
+  const updateResult = SupportTicket.update({
+    _id: supportTicket._id
+  }, {
+    $set: {
+      status: SupportTicket.StatusMapping.BlockclusterActionPending
+    },
+    $push: {
+      history
+    }
+  });
+
+  return true;
+}
+
+Support.addBlockclusterReply = async ({id, description}) => {
+  const support = SupportTicket.find({
+    _id: id
+  }).fetch()[0];
+  if(!support) {
+    throw new Meteor.Error("Invaid support ticket id for the user");
+  }
+
+  const history = {
+    description,
+    isFromBlockcluster: true
+  };
+  const updateResult = SupportTicket.update({
+    _id: support._id
+  }, {
+    $set: {
+      status: SupportTicket.StatusMapping.BlockclusterActionPending
+    },
+    $push: {
+      history
+    }
+  });
+
+  const createdBy = Meteor.user();
+  const user = Meteor.users.find({
+    _id: support.createdBy
+  }).fetch()[0];
+
+  const ejsTemplate = await getEJSTemplate({
+    fileName: "updated-support-ticket.ejs"
+  });
+  const finalHTML = ejsTemplate({
+    user: {
+      email: user.emails[0].address,
+      name: `${user.profile.firstName}`
+    },
+    support,
+    description,
+    updatedBy: {
+      name: `${createdBy.profile.firstName} ${createdBy.profile.lastName}`,
+      email: createdBy.emails[0].address
+    }
+  });
+
+  const emailProps = {
+    from: {
+      email: `support+${support.caseId}@blockcluster.io`,
+      name: "Blockcluster"
+    },
+    to: user.emails[0].address,
+    subject: `[BlockCluster] Support case #${support.caseId}`,
+    text: `Your support ticket #${
+      support.caseId
+    } has been updated.`,
+    html: finalHTML
+  };
+
+  await sendEmail(emailProps);
+
+  return true;
+
+}
+
 Meteor.methods({
-  createSupportTicket: Support.createTicket
+  createSupportTicket: Support.createTicket,
+  addSupportTicketReplyByCustomer: Support.addCustomerReply,
+  addSupportBlockclusterReply: Support.addBlockclusterReply
 });
 
 export default Support;
