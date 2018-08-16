@@ -138,10 +138,16 @@ class Navbar extends Component {
                                 <li>
                                     <Link to="/app/billing">Bills</Link>
                                 </li>
+                                <li>
+                                    <Link to="/app/support">Support</Link>
+                                    <span className="icon-thumbnail">
+                                        <i className="fa fa-ticket" />
+                                    </span>
+                                </li>
                             </ul>
                         </li>
                         {this.props.user &&
-                            this.props.user.admin >= 2 && (
+                            this.props.user.admin >= 1 && (
                                 <li>
                                     <a href="javascript:;">
                                         <span className="title">Admin</span>
@@ -167,6 +173,12 @@ class Navbar extends Component {
                                             <Link to="/app/admin/vouchers">Vouchers</Link>
                                             <span className="icon-thumbnail">
                                                 <i className="fa fa-tags" />
+                                            </span>
+                                        </li>
+                                        <li>
+                                            <Link to="/app/admin/support">Support</Link>
+                                            <span className="icon-thumbnail">
+                                                <i className="fa fa-ticket" />
                                             </span>
                                         </li>
                                     </ul>

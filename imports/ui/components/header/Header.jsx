@@ -50,6 +50,10 @@ class Header extends Component {
                 <Link target="_blank" to={"//docs.blockcluster.io"} className="header-icon fa fa-book">
                 </Link>
             </li>
+            {/* <li className="p-r-10 inline">
+                <Link  to="/app/support" className="header-icon fa fa-ticket">
+                </Link>
+            </li> */}
             {/* <li className="inline">
               <RazorPay paymentHandler={() => {}} paymentNotes={{}} />
             </li> */}
