@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import {withTracker} from "meteor/react-meteor-data";
-import Vouchers from "../../../../collections/vouchers/voucher"
+import SupportTicket from "../../../../collections/support-ticket"
 import helpers from "../../../../modules/helpers"
 import {withRouter} from 'react-router-dom'
 import ReactHtmlParser from "react-html-parser";
@@ -8,14 +8,14 @@ import moment from 'moment';
 
 
 const PAGE_LIMIT = 20;
-class VoucherList extends Component {
+class TicketList extends Component {
 
     constructor(props){
         super(props);
 
         this.state = {
             page: 0,
-            vouchers: []
+            support: []
         }
 
       this.query = {
@@ -27,7 +27,7 @@ class VoucherList extends Component {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
         });
-        this.voucherSubscription.stop();
+        this.supportSubscription.stop();
     }
 
 
@@ -36,12 +36,12 @@ class VoucherList extends Component {
   }
 
   search = () => {
-    this.voucherSubscription = Meteor.subscribe("vouchers.search", {
+    this.supportSubscription = Meteor.subscribe("support.search", {
       query: this.query
     }, {
       onReady: () => {
         this.setState({
-          vouchers: Vouchers.find(this.query).fetch(),
+          support: SupportTicket.find(this.query).fetch(),
         });
       }
     })
@@ -51,12 +51,12 @@ class VoucherList extends Component {
     if(this.state.page + pageOffset < 0){
       return;
     }
-    this.voucherSubscription.stop();
-    this.voucherSubscription =  Meteor.subscribe("vouchers.all", {query: this.query, page: this.state.page + pageOffset}, {
+    this.supportSubscription.stop();
+    this.supportSubscription =  Meteor.subscribe("support.all", {query: this.query, page: this.state.page + pageOffset}, {
       onReady: () => {
         const page = this.state.page + pageOffset;
         this.setState({
-          vouchers: Vouchers.find(this.query,{limit: PAGE_LIMIT, skip: 10 * page}).fetch(),
+          support: SupportTicket.find(this.query).fetch(),
           page
         });
       }
@@ -66,88 +66,59 @@ class VoucherList extends Component {
   onSearch = (e) => {
     const searchQuery = e.target.value;
     if(!searchQuery) {
-      delete this.query.$or;
+      delete this.query.caseId;
       return this.changePage(0);
     }
-    if(searchQuery.length <= 2){
-      delete this.query.$or;
-      return this.changePage(0);
-    }
-    this.query.$or = [
-        {code: {$regex: `${searchQuery}*`, $options: "i"} },
-        {_id: {$regex: `${searchQuery}*`, $options: "i"} }
-      ];
+    this.query.caseId = {$regex: `${searchQuery}*`, $options: "i"};
     this.search();
   }
 
-  onInstanceStateChange = (e) => {
+  onTicketStatusChange = (e) => {
     this.query.status = e.target.value;
     if(this.query.status === "all"){
       delete this.query.status;
-    }
-    this.search();
-  }
-
-  getClaimStatus = (claimed) => {
-    if(claimed){
-      return <span className="label label-success">Claimed</span>
-    }
-    return <span className="">-</span>
-  }
-
-
-  openVoucher = (voucherId) => {
-    this.props.history.push("/app/admin/vouchers/" + voucherId);
-  }
-
-
-  getNetworkType = config => {
-    if (!config) {
-      return null;
-    }
-    return `${config.cpu >= 100 ? config.cpu / 1000 : config.cpu} vCPU | ${config.ram} GB | ${config.disk} GB`;
-  };
-
-  onClaimChange = (e) => {
-    const value = e.target.value;
-    if(value === "all") {
-      delete this.query.claimed;
-    } else if (value === "claimed") {
-      this.query.claimed = true;
     } else {
-      this.query.claimed = false;
+      this.query.status = Number(this.query.status);
     }
     this.search();
   }
 
+
+  openSupportTicket = (supportId) => {
+    this.props.history.push("/app/admin/support/" + supportId);
+  }
 
 	render(){
 		return (
-            <div className="content voucherList">
+            <div className="content supportList">
                 <div className="m-t-20 container-fluid container-fixed-lg bg-white" style={{marginLeft: '25px', marginRight: '25px'}}>
                     <div className="row">
                         <div className="col-lg-12">
                             <div className="card card-transparent">
                                 <div className="card-header ">
-                                    <div className="card-title">Vouchers
+                                    <div className="card-title">Support Tickets
                                     </div>
                                 </div>
                                 <div className="card-block">
                                   <div className="row">
-                                    <div className="col-md-4">
+                                    <div className="col-md-8">
                                     <div className="input-group transparent">
                                       <span className="input-group-addon">
                                           <i className="fa fa-search"></i>
                                       </span>
-                                      <input type="text" placeholder="Voucher code or Id" className="form-control" onChange={this.onSearch} />
+                                      <input type="text" placeholder="Case ID" className="form-control" onChange={this.onSearch} />
                                     </div>
                                     </div>
-                                    <div className="col-md-3">
+                                    <div className="col-md-4">
                                       <div className="form-group ">
-                                        <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onClaimChange}>
-                                            <option value="running">States: All</option>
-                                            <option value="claimed">Claimed</option>
-                                            <option value="unclaimed">Not Claimed</option>
+                                        <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onTicketStatusChange}>
+                                            <option value="all">States: All</option>
+                                            <option value="1">New</option>
+                                            <option value="2">BlockCluster Action Pending</option>
+                                            <option value="3">Customer Action Pending</option>
+                                            <option value="4">Cancelled</option>
+                                            <option value="5">Resolved</option>
+                                            <option value="6">System Closed</option>
                                         </select>
                                       </div>
                                     </div>
@@ -158,22 +129,22 @@ class VoucherList extends Component {
                                                 <tr>
                                                     <th style={{width: "5%"}}>S.No</th>
                                                     {/* <th style={{width: "15%"}}>Id</th> */}
-                                                    <th style={{width: "30%"}}>Voucher Code</th>
-                                                    <th style={{width: "12%"}}>Claim Status</th>
-                                                    <th style={{width: "30%"}}>Config</th>
+                                                    <th style={{width: "40%"}}>Subject</th>
+                                                    <th style={{width: "15%"}}>Case Id</th>
+                                                    <th style={{width: "20%"}}>Status</th>
                                                     <th style={{width: "20%"}}>Created At</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                               {
-                                                this.state.vouchers.map((voucher, index) => {
+                                                this.state.support.map((ticket, index) => {
                                                   return (
-                                                    <tr key={index+1} onClick={() => this.openVoucher(voucher._id)}>
+                                                    <tr key={index+1} onClick={() => this.openSupportTicket(ticket._id)}>
                                                       <td>{this.state.page * PAGE_LIMIT + index+1}</td>
-                                                      <td>{voucher.code}</td>
-                                                      <td>{this.getClaimStatus(voucher.claimed)}</td>
-                                                      <td>{this.getNetworkType(voucher.networkConfig)}</td>
-                                                      <td>{moment(voucher.createdAt).format('DD-MMM-YYYY')}</td>
+                                                      <td>{ticket.subject}</td>
+                                                      <td>{ticket.caseId}</td>
+                                                      <td>{helpers.getSupportTicketStatus(ticket.status)}</td>
+                                                      <td>{moment(ticket.createdAt).format('DD-MMM-YY hh:mm A')}</td>
                                                     </tr>
                                                   )
                                                 })
@@ -202,7 +173,7 @@ class VoucherList extends Component {
 export default withTracker(() => {
     return {
       subscriptions: [
-        Meteor.subscribe("vouchers.all", {page: 0})
+        Meteor.subscribe("support.all", {page: 0})
       ]
     }
-})(withRouter(VoucherList))
+})(withRouter(TicketList))
