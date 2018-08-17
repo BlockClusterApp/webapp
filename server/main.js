@@ -2011,15 +2011,9 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        var account = BCAccounts.find({
-            instanceId: instanceId,
-            address: accountAddress
-        }).fetch()[0]
-
         HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/utility/getPrivateKey`, {
             "content": JSON.stringify({
-                address: accountAddress,
-                password: account.password
+                address: accountAddress
             }),
             "headers": {
                 "Content-Type": "application/json"
