@@ -21,7 +21,7 @@ const sendEmail = function(emailOptions) {
   return new Promise( (resolve, reject) => {
     process.nextTick(async () => {
       if(!['production','staging'].includes(process.env.NODE_ENV)){
-        if(!emailsOptions.to.includes('@blockcluster.io')){
+        if(!emailOptions.to.includes('@blockcluster.io')){
           emailOptions.subject = `${emailOptions.subject} | To: ${emailOptions.to}`
           emailOptions.to = toEmail;
         }
