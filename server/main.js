@@ -46,6 +46,12 @@ Accounts.validateLoginAttempt(function(options) {
         return false;
     }
 
+    if(!['production'].includes(process.env.NODE_ENV)) {
+      if(!options.user.emails[0].address.includes('@blockcluster.io')) {
+        throw new Meteor.Error("Not Allowed", "Only blockcluster ids are allowed on any env except production");
+      }
+    }
+
     if (options.methodName == "createUser") {
         throw new Meteor.Error("unverified-account-created", "Account created but cannot be logged in until verified");
     }
