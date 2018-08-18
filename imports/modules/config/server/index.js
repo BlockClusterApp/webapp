@@ -93,8 +93,10 @@ function getMongoConnectionString() {
 module.exports = {
   sendgridAPIKey: process.env.SENDGRID_API_KEY || defaults.sendgridApi,
   workerNodeIP: (locationCode = "us-west-2") => {
-    console.log("Location", locationCode);
     const locationConfig = RemoteConfig.clusters[getEnv()][locationCode];
+    if(!locationConfig){
+      return RemoteConfig.clusters[getEnv()]["ap-south-1b"].workerNodeIP;
+    }
     return locationConfig.workerNodeIP;
   },
   redisHost: process.env.REDIS_HOST || defaults.redisHost,
@@ -107,10 +109,16 @@ module.exports = {
   },
   kubeRestApiHost: (locationCode = "us-west-2") => {
     const locationConfig = RemoteConfig.clusters[getEnv()][locationCode];
+    if(!locationConfig){
+      return RemoteConfig.clusters[getEnv()]["ap-south-1b"].masterApiHost;
+    }
     return locationConfig.masterApiHost;
   },
   clusterApiAuth: (locationCode = "us-west-2") => {
-    const locationConfig = RemoteCOnfig.clusters[getEnv()][locationCode];
+    const locationConfig = RemoteConfig.clusters[getEnv()][locationCode];
+    if(!locationConfig){
+      return RemoteConfig.clusters[getEnv()]["ap-south-1b"].auth;
+    }
     return locationConfig.auth;
   },
   namespace: getNamespace(),

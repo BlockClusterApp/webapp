@@ -117,7 +117,11 @@ class NetworkList extends Component {
       return LoadingView;
     }
 
-    const thisLocation = locations.find(loc => loc.locationCode === network.locationCode);
+    let thisLocation = locations.find(loc => loc.locationCode === network.locationCode);
+
+    if(!thisLocation) {
+      thisLocation = locations[0];
+    }
 
     return (
       <div className="page-content-wrapper ">
