@@ -35,7 +35,7 @@
       }
     },
     "production": {
-      "ap-south-1a": {
+      "ap-south-1b": {
         "masterApiHost": "https://k8s-production-ap-south-1b-api.blockcluster.io",
         "workerNodeIP": "13.232.213.158",
         "locationCode": "ap-south-1b",
