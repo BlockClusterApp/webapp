@@ -78,3 +78,16 @@ redis-master.{{ template "server.namespace" . }}.svc.cluster.local
 {{- define "envs.redisPort" -}}
 "6379"
 {{- end -}}
+
+{{- define "server.nodeAffinities" -}}
+{{- if eq .Values.NODE_ENV "production" }}
+nodeAffinity:
+  requiredDuringSchedulingIgnoredDuringExecution:
+    nodeSelectorTerms:
+    - matchExpressions:
+      - key: optimizedFor
+        operator: In
+        values:
+        - compute
+{{- end -}}
+{{- end -}}
