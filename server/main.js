@@ -301,21 +301,23 @@ Meteor.methods({
                                       }
                                   },
                                   "spec":{
-                                      "nodeAffinity": {
-                                        "requiredDuringSchedulingIgnoredDuringExecution": {
-                                          "nodeSelectorTerms": [
-                                            {
-                                              "matchExpressions": [
-                                                {
-                                                  "key": "optimizedFor",
-                                                  "operator": "In",
-                                                  "values": [
-                                                    "memory"
-                                                  ]
-                                                }
-                                              ]
-                                            }
-                                          ]
+                                      "affinity": {
+                                        "nodeAffinity": {
+                                          "requiredDuringSchedulingIgnoredDuringExecution": {
+                                            "nodeSelectorTerms": [
+                                              {
+                                                "matchExpressions": [
+                                                  {
+                                                    "key": "optimizedFor",
+                                                    "operator": "In",
+                                                    "values": [
+                                                      "memory"
+                                                    ]
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          }
                                         }
                                       },
                                       "containers":[
@@ -831,17 +833,15 @@ spec:
       labels:
         app: dynamo-node-${instanceId}
     spec:
-      ${process.env.NODE_ENV === "production" ?
-      `
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: optimizedFor
-            operator: In
-            values:
-            - memory
-      ` : ''}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: optimizedFor
+              operator: In
+              values:
+              - memory
       containers:
       - name: mongo
         image: mongo
@@ -915,17 +915,15 @@ spec:
       labels:
         app: dynamo-node-${instanceId}
     spec:
-      ${process.env.NODE_ENV === "production" ?
-      `
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: optimizedFor
-            operator: In
-            values:
-            - memory
-      ` : ''}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: optimizedFor
+              operator: In
+              values:
+              - memory
       containers:
       - name: mongo
         image: mongo

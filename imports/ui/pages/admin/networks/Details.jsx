@@ -34,6 +34,10 @@ class NetworkList extends Component {
     this.setState({
       networkId: this.props.match.params.id
     });
+    this.fetchNetwork();
+  }
+
+  fetchNetwork(){
     Meteor.call(
       "fetchNetworkForAdmin",
       this.props.match.params.id,
@@ -96,9 +100,10 @@ class NetworkList extends Component {
 
     Meteor.call("adminDeleteNetwork", this.state.network.network.instanceId, (err, res) => {
       if(!err){
-        this.state({
+        this.setState({
           deleteDisabled: true
         });
+        this.fetchNetwork();
         notifications.success("Network deleted successfully");
       } else {
         notifications.error(err.reason);
@@ -334,11 +339,11 @@ class NetworkList extends Component {
                 }
               </div>
             </div>
-              <div className="row">
+              {!network.deletedAt && <div className="row">
                 <div className="col-md-12">
                   <KubeDashboard instanceId={network.instanceId} networkId={network._id} />
                 </div>
-              </div>
+              </div>}
           </div>
         </div>
       </div>

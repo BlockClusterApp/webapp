@@ -25,7 +25,8 @@ Meteor.publish("networks.all", function({page}) {
       deletedAt: 1,
       networkConfig: 1,
       _id: 1,
-      name: 1
+      name: 1,
+      peerType: 1
     }
   });
 });

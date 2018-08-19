@@ -82,7 +82,7 @@ NetworkObj.adminDeleteNetwork = (instanceId) => {
     }
     Meteor.call("deleteNetwork", instanceId, (err, res) => {
       if(err){
-        throw new Meteor.Error(err);
+        throw new Meteor.Error(err.error, err.reason);
       }
       return resolve(true);
     });

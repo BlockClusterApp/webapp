@@ -93,7 +93,6 @@ function getMongoConnectionString() {
 module.exports = {
   sendgridAPIKey: process.env.SENDGRID_API_KEY || defaults.sendgridApi,
   workerNodeIP: (locationCode = "us-west-2") => {
-    console.log("Location", locationCode);
     const locationConfig = RemoteConfig.clusters[getEnv()][locationCode];
     return locationConfig.workerNodeIP;
   },
