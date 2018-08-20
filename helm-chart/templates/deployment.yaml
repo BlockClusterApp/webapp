@@ -21,9 +21,7 @@ spec:
         app: {{ template "server.app" . }}
         env: {{ .Values.NODE_ENV }}
     spec:
-      {{- if eq .Values.NODE_ENV "production" }}
 {{- include "server.nodeAffinities" . | indent 6 }}
-      {{- end }}
       restartPolicy: Always
       containers:
       - name: {{ template "server.name" . }}
