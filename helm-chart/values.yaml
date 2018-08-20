@@ -16,7 +16,7 @@ server:
     minReplicas: 3
     maxReplicas: 20
 
-# NODE_ENV: dev
+# NODE_ENV: production
 # image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/webapp
-# commitHash: 84bdc20182fdde1b7b95430adde3fcfc048af2ad
-# ROOT_URL: dev.blockcluster.io
+# commitHash: 2ed83cb76042c974637b588542243e9cf7334f49
+# ROOT_URL: app.blockcluster.io

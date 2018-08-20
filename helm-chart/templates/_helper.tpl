@@ -79,7 +79,7 @@ redis-master.{{ template "server.namespace" . }}.svc.cluster.local
 "6379"
 {{- end -}}
 
-{{- define "server.nodeAffinities" -}}
+{{- define "server.nodeAffinities" }}
 affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
