@@ -26,11 +26,11 @@ blockcluster-app
 {{- if eq .Values.NODE_ENV "production" -}}
 mongodb://webapp:QUyQsaJ6fkSshWDN@ds259861-a0.xqd11.fleet.mlab.com:59861,ds259861-a1.xqd11.fleet.mlab.com:59861/webapp?replicaSet=rs-ds259861&ssl=true
 {{- else if eq .Values.NODE_ENV "staging" -}}
-mongodb://18.237.94.215:31972
+mongodb://35.161.9.16:31972
 {{- else if eq .Values.NODE_ENV "test" -}}
-mongodb://18.237.94.215:32153
+mongodb://35.161.9.16:32153
 {{- else if eq .Values.NODE_ENV "dev" -}}
-mongodb://18.237.94.215:32153
+mongodb://35.161.9.16:32153
 {{- end -}}
 {{- end -}}
 
@@ -77,4 +77,16 @@ redis-master.{{ template "server.namespace" . }}.svc.cluster.local
 
 {{- define "envs.redisPort" -}}
 "6379"
+{{- end -}}
+
+{{- define "server.nodeAffinities" -}}
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: optimizedFor
+          operator: In
+          values:
+          - compute
 {{- end -}}
