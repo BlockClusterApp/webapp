@@ -51,6 +51,8 @@
     "react-router-dom": "4.2.2",
     "redis-fast-driver": "^2.1.2",
     "redis-jwt": "1.4.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.2",
     "simpl-schema": "^1.5.0",
     "stringquery": "^1.0.8",
     "url": "^0.11.0",
