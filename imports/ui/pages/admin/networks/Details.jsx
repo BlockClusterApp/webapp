@@ -4,6 +4,7 @@ import helpers from "../../../../modules/helpers";
 import { withRouter } from "react-router-dom";
 import { Link } from "react-router-dom";
 import moment from "moment";
+import notifications from '../../../../modules/notifications'
 import KubeDashboard from './components/KubeDashboard';
 
 class NetworkList extends Component {
@@ -20,6 +21,10 @@ class NetworkList extends Component {
   }
 
   componentWillUnmount() {
+    this.unmounted = true;
+    if(this.timer){
+      clearTimeout(this.timer);
+    }
     this.props.subscriptions.forEach(s => {
       s.stop();
     });
@@ -29,6 +34,10 @@ class NetworkList extends Component {
     this.setState({
       networkId: this.props.match.params.id
     });
+    this.fetchNetwork();
+  }
+
+  fetchNetwork(){
     Meteor.call(
       "fetchNetworkForAdmin",
       this.props.match.params.id,
@@ -76,14 +85,64 @@ class NetworkList extends Component {
 
   deleteNode = () => {
     if(!this.state.deleteConfirmAsked) {
+      this.timer = setTimeout(() => {
+        if(this.state && !this.unmounted) {
+          this.setState({
+            deleteConfirmAsked: false
+          });
+        }
+      }, 5 * 1000);
+
       return this.setState({
         deleteConfirmAsked: true
-      })
+      });
     }
 
-    Meteor.call("deleteNetwork", this.state.network.network.instanceId, (err, res) => {
+    Meteor.call("adminDeleteNetwork", this.state.network.network.instanceId, (err, res) => {
       if(!err){
-        this.props.history.push("/admin/app/networks/");
+        this.setState({
+          deleteDisabled: true
+        });
+        this.fetchNetwork();
+        notifications.success("Network deleted successfully");
+      } else {
+        notifications.error(err.reason);
+      }
+    });
+  }
+
+  restartPod = () => {
+    if(!this.state.restartConfirmAsked) {
+      this.restartTimer = setTimeout(() => {
+        if(this.state && !this.unmounted) {
+          this.setState({
+            restartConfirmAsked: false
+          });
+        }
+      }, 5 * 1000);
+
+      return this.setState({
+        restartConfirmAsked: true
+      });
+    }
+
+    this.setState({
+      restartingPod: true
+    });
+
+    Meteor.call("restartPod", this.state.network.network.instanceId, (err, res) => {
+      this.setState({
+        restartConfirmAsked: false,
+      });
+      if(!err){
+        this.restartTimer = setTimeout(() => {
+          this.setState({
+            restartingPod: false
+          })
+        }, 60 * 1000);
+        notifications.success("Pod restarted successfully");
+      } else {
+        notifications.error(err.reason);
       }
     });
   }
@@ -238,7 +297,8 @@ class NetworkList extends Component {
                     <div className="clearfix" />
                   </div>
                   <div className="card-description">
-                    <button className="btn btn-danger" onClick={this.deleteNode} disabled={!!network.deletedAt}>{!!network.deletedAt ? "Already deleted" : this.state.deleteConfirmAsked ? "Are you sure? This is irreversible" : "Delete Node"}</button>
+                    <button className="btn btn-danger" style={{marginBottom: '5px'}} onClick={this.deleteNode} disabled={!!network.deletedAt || this.state.deleteDisabled}>{!!network.deletedAt ? "Already deleted" : this.state.deleteConfirmAsked ? "Are you sure? This is irreversible" : "Delete Node"}</button>&nbsp;
+                    <button className="btn btn-danger"  style={{marginBottom: '5px'}} onClick={this.restartPod} disabled={this.state.restartingPod}>{this.state.restartingPod && (<i className="fa fa-spinner fa-spin" />)}&nbsp;{!!this.state.restartingPod ? "Restarting Pod" : this.state.restartConfirmAsked ? "Are you sure? This is irreversible" : "Restart Pod"}</button>
                   </div>
                   <div className="clearfix" />
                 </div>
@@ -283,11 +343,11 @@ class NetworkList extends Component {
                 }
               </div>
             </div>
-              <div className="row">
+              {!network.deletedAt && <div className="row">
                 <div className="col-md-12">
                   <KubeDashboard instanceId={network.instanceId} networkId={network._id} />
                 </div>
-              </div>
+              </div>}
           </div>
         </div>
       </div>

@@ -32,6 +32,9 @@ class NetworkConfigSelector extends Component {
   }
 
   onConfigChange(skipDefault) {
+    if(!this.config){
+      return;
+    }
     const config = this.state.configs[this.config.value];
 
     if(!skipDefault) {

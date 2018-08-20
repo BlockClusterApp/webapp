@@ -117,7 +117,7 @@ class NetworksList extends Component {
 
 export default withTracker(() => {
     return {
-        networks: Networks.find({}).fetch(),
+        networks: Networks.find({user: Meteor.userId(), active: true}).fetch(),
         subscriptions: [Meteor.subscribe("networks")]
     }
 })(withRouter(NetworksList))
