@@ -4,13 +4,14 @@ import moment from 'moment';
 const debug = require('debug')('payments:zoho');
 
 function getRedirectURL() {
+  const param = `/app/payments/zoho/success`;
   if(process.env.NODE_ENV === 'development') {
-    return `http://localhost:3000`
+    return `http://localhost:3000${param}`
   }
   if(process.env.NODE_ENV === 'production') {
-    return 'https://app.blockcluster.io';
+    return `https://app.blockcluster.io${param}`;
   }
-  return `https://${process.env.NODE_ENV}.blockcluster.io`;
+  return `https://${process.env.NODE_ENV}.blockcluster.io${param}`;
 }
 
 class ZohoSubscription {
@@ -90,7 +91,10 @@ class ZohoSubscription {
   };
 
   // ----------------------   Subscription Related  ----------------------
-  createPaymentLink = async ({ zohoCustomerId, plan, custom_fields, card, redirectUrl }) => {
+  createPaymentLink = async ({ zohoCustomerId, plan, customFields, redirectUrl }) => {
+    if(!customFields) {
+      customFields = [];
+    }
     const data = {
       customer_id: String(zohoCustomerId),
       plan: {
@@ -99,10 +103,10 @@ class ZohoSubscription {
         quantity: plan.quantity || '1',
         price: plan.price,
       },
-      custom_fields: [...custom_fields],
+      custom_fields: [...customFields],
       auto_collect: true,
       starts_at: moment().format('YYYY-MM-DD'),
-      redirect_url: redirectUrl,
+      redirect_url: redirectUrl || getRedirectURL(),
     };
 
     if (['production'].includes(process.env.NODE_ENV)) {
@@ -136,6 +140,7 @@ class ZohoSubscription {
       interval: plan.interval || 1,
       interval_unit: plan.intervalUnit || 'months',
       recurring_price: plan.price,
+      exclude_setup_fee: true
     };
 
     return this.sendRequest({

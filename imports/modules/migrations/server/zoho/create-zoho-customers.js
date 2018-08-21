@@ -1,4 +1,4 @@
-import { ZohoSubscription } from '../../../../api/payments/zoho';
+import Zoho from '../../../../api/payments/zoho';
 import Bluebird from 'bluebird';
 
 Migrations.add({
@@ -12,28 +12,7 @@ Migrations.add({
       users,
       async user => {
         console.log('Creating for user ', user.emails[0].address);
-        try {
-          const response = await ZohoSubscription.createCustomer({
-            firstName: user.profile.firstName,
-            currencyCode: 'USD',
-            email: user.emails[0].address,
-            id: user._id,
-            lastName: user.profile.lastName,
-          });
-          if (response.customer) {
-            Meteor.users.update(
-              { _id: user._id },
-              {
-                $set: {
-                  zohoCustomerId: response.customer.customer_id,
-                  currencyCode: response.customer.currency_code,
-                },
-              }
-            );
-          }
-        } catch (err) {
-          console.log('Zoho migration err', err);
-        }
+        await Zoho.createCustomerFromUser(user._id);
         return true;
       },
       {

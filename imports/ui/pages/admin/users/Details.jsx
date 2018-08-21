@@ -143,7 +143,7 @@ class UserList extends Component {
                     <Link to="/app/admin">Admin</Link>
                   </li>
                   <li className="breadcrumb-item">
-                    <Link to="/app//admin/users">Users</Link>
+                    <Link to="/app/admin/users">Users</Link>
                   </li>
                   <li className="breadcrumb-item active">
                     {this.state.userId}
