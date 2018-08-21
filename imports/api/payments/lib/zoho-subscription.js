@@ -29,24 +29,24 @@ class ZohoSubscription {
   sendRequest = async ({ method, url, data }) => {
     try {
       const options = {
-        method,
+        method: method.toUpperCase(),
         uri: url,
         headers: {
-          'content-type': 'application/json',
-          authorization: `Zoho-authtoken ${this.authToken}`,
-          'x-com-zoho-subscriptions-organizationid': `${this.organizationId}`,
+          'Authorization': `Zoho-authtoken ${this.authToken}`,
+          'X-com-zoho-subscriptions-organizationid': `${this.organizationId}`,
+          'content-type': 'application/json'
         },
         json: true,
       };
       if (['post', 'put'].includes(method.toLowerCase())) {
         options.body = data;
       }
+      debug('Zoho options %0', options);
       const response = await request(options);
-      debug('Zoho response %O', response);
       return response;
     } catch (err) {
       debug('Zoho error %O', err);
-      if (err.statusCodo) {
+      if (err.StatusCodeError) {
         return err;
       }
       throw new Error(err);
@@ -64,7 +64,6 @@ class ZohoSubscription {
       last_name: lastName,
       email,
       currency_code: currencyCode,
-      notes: 'Bowman Furniture',
       is_portal_enabled: false,
       custom_fields: [
         {
@@ -74,7 +73,7 @@ class ZohoSubscription {
       ],
     };
     return this.sendRequest({
-      url: `https://subscriptions.zoho.in/api/${this.version}/customers`,
+      url: `https://subscriptions.zoho.com/api/${this.version}/customers`,
       method: 'post',
       data,
     });
@@ -86,7 +85,7 @@ class ZohoSubscription {
     }
     return this.sendRequest({
       method: 'get',
-      url: `https://subscriptions.zoho.in/api/${this.version}/customers/${zohoCustomerId}`,
+      url: `https://subscriptions.zoho.com/api/${this.version}/customers/${zohoCustomerId}`,
     });
   };
 
