@@ -31,11 +31,9 @@ const insertVoucher = async savable_doc => {
  */
 Voucher.create = async function(payload) {
   let voucher_codes = await generateVouchers(payload.noOfVouchers, 6); //lets keep it by default 6 for now
-
   let savabl_doc = [];
   voucher_codes.forEach(voucher => {
     savabl_doc.push({
-      createdAt: new Date(),
       usablity: {
         recurring: payload.usablity.recurring || false,
         no_months: payload.usablity.no_months || 0
@@ -50,17 +48,22 @@ Voucher.create = async function(payload) {
       },
       code: voucher,
       networkConfig: payload.networkConfig,
-      expiryDate:
-        payload.expiryDate ||
-        moment()
-          .add(30, "days")
-          .toDate(), //lets take by default 30days
+      expiryDate: payload.expiryDate
+        ? new Date(payload.expiryDate)
+        : moment()
+            .add(30, "days")
+            .toDate(), //lets take by default 30days
       isDiskChangeable: payload.isDiskChangeable || false,
       discountedDays: payload.discountedDays || 0,
       claimed: payload.claimed || false
     });
   });
-  return insertVoucher(savabl_doc);
+
+  const promises = [];
+  savabl_doc.forEach(voucher => {
+    promises.push(insertVoucher(voucher));
+  });
+  return Promise.all(promises);
 };
 /**
  *
@@ -82,9 +85,10 @@ function generateVouchers(items, size) {
           .toUpperCase()
       );
       if (voucherArray.length + flag == items) {
-        const existing_codes = Vouchers.find({ code: { $in: voucherArray } })
-          .select({ code: 1 })
-          .fetch();
+        const existing_codes = Vouchers.find(
+          { code: { $in: voucherArray } },
+          { fields: { code: 1 } }
+        ).fetch();
         if (existing_codes.length) {
           existing_codes.forEach(element => {
             let index = voucherArray.indexOf(element.code);
