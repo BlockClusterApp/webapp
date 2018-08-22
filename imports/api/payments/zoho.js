@@ -12,6 +12,10 @@ Zoho.createProduct = async productDetails => {
       .join('-');
   }
   try {
+    const count = ZohoProduct.find({identifier: productDetails.indentifier}).count();
+    if(count > 0) {
+      return ZohoProduct.find({identifier: productDetails.indentifier}).fetch()[0];
+    }
     const productResponse = await ZohoApi.createProduct({
       name: productDetails.name,
       description: productDetails.description,
@@ -36,6 +40,10 @@ Zoho.createPlan = async (planDetails, zohoProduct) => {
   }
 
   try {
+    const count = ZohoPlan.find({plan_code: planDetails.code}).count();
+    if(count > 0) {
+      return ZohoPlan.find({ plan_code: planDetails.code }).fetch()[0];
+    }
     const planResponse = await ZohoApi.createPlan({
       plan: {
         name: planDetails.name,

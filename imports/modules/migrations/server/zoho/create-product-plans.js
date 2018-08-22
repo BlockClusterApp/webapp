@@ -1,4 +1,6 @@
 import Zoho from '../../../../api/payments/zoho';
+import { ZohoPlan, ZohoProduct } from '../../../../collections/zoho';
+import Bluebird from 'bluebird';
 
 const plans = [
   {
@@ -32,8 +34,17 @@ Migrations.add({
       return;
     }
 
+    await Bluebird.map(plans, async plan => {
+      const planResult = Zoho.createPlan(plan, nodeProduct);
+      if(!planResult) {
+        console.log(`Error creating Plan ${plan.name} in zoho`);
+        return false;
+      }
+      return true;
+    });
   },
   down: function() {
-
+    ZohoProduct.remove({});
+    ZohoPlan.remove({});
   },
 });
