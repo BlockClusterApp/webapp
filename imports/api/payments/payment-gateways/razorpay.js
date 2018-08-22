@@ -3,9 +3,10 @@ import Config from "../../../modules/config/server";
 import UserCards from "../../../collections/payments/user-cards";
 import PaymentRequests from "../../../collections/payments/payment-requests";
 import request from "request";
-import { resolve } from "dns";
+import { RZPlan, RZSubscription, RZAddOn } from '../../../collections/razorpay';
+import moment from 'moment';
 
-const debug = require("debug")("Razorpay");
+const debug = require("debug")("api:razorpay");
 
 const RazorPayInstance = new razorpay({
   key_id: Config.RazorPay.id,
@@ -17,6 +18,98 @@ const RazorPay = {};
 const RZ_URL = `https://${Config.RazorPay.id}:${
   Config.RazorPay.secret
 }@api.razorpay.com`;
+
+function getStartDate(){
+    return moment().add(1, 'month').startOf('month').add(5, 'days').add(5, 'hour');
+}
+
+/* Flow:
+Plan:
+1. The plan will be 'verification' which will always have an amount of Rs 1
+2. No other plans will be there. Any extra charge will be an addon
+
+Subscription:
+1. Create a subscription for user with start date as 5th of next month
+2. On 1st of every month, calculate the bill for the previous month for the user
+3. Add the above amount as an addon charge to the subscription.
+4. Due to some error if something fails, we have 4 days buffer.
+*/
+RazorPay.createPlan = async ({params, identifier}) => {
+  let rzPlan;
+  try{
+    rzPlan = await RazorPayInstance.plans.create(params);
+    debug('CreatePlan | RzPlan Response', rzPlan);
+  } catch(err){
+    debug('CreatePlan | error razorpay', err);
+    return false;
+  }
+
+  const rzPlanId = RZPlan.insert({...rzPlan, identifier})
+  return RZPlan.find({_id: rzPlanId}).fetch()[0];
+}
+
+RazorPay.createSubscription = async ({rzPlan, type}) => {
+  type = type || 'Node Monthly';
+  let rzSubscription;
+  try{
+    rzSubscription = await RazorPayInstance.subscriptions.create({
+      plan_id: rzPlan.id,
+      "customer_notify": 0,
+      "total_count": 12 * 10,
+      "start_at": Math.floor(getStartDate().toDate().getTime() / 1000),
+    });
+    debug('CreateSubscription | RzSubscription Response', rzPlan);
+  } catch(err) {
+    debug('CreateSubscription | error razorpay', err);
+    return false;
+  }
+  const rzSubscriptionId = RZSubscription.insert({...rzSubscription, userId: Meteor.userId(), type: 'Node Monthly'});
+  return RZSubscription.find({_id: rzSubscriptionId}).fetch()[0];
+}
+
+RazorPay.cancelSubscription = async ({rzSubscription}) => {
+  // Cancels the subscription at the end of cycle so that the we can attach addons before the 5th of next month.
+  try{
+    const cancelResponse = await RazorPayInstance.subscriptions.cancel(rzSubscription.id, true);
+    debug('Cancel Subscription | Response', cancelResponse);
+    RZSubscription.update({
+      _id: rzSubscription._d
+    }, {
+      $set: {
+        bc_status: 'cancelled'
+      }
+    })
+    return cancelResponse;
+  }catch(err){
+    debug('Cancel Subscription | Error', err);
+  }
+
+  return false;
+}
+
+RazorPay.createAddOn = async ({subscriptionId, addOn}) => {
+  try{
+    const addOnResponse = await RazorPayInstance.subscriptions.createAddon(subscriptionId, {
+      item: {
+        name: addOn.name,
+        description: addOn.description,
+        amount: addOn.amount,
+        currency: addOn.currency || 'INR'
+      },
+      quantity: addOn.quantity || 1,
+      subscription_id: subscriptionId
+    });
+    debug('Cancel AddOn | Response', addOnResponse);
+    const addOnId = RZAddOn.insert({...addOnResponse, userId: Meteor.userId()});
+    return RZAddOn.find({_id: addOnOn}).fetch()[0];
+  } catch(err) {
+    debug('Create AddOn | Error', err);
+  }
+}
+
+
+
+
 
 RazorPay.capturePayment = async paymentResponse => {
   let rzpayment = { notes: {} };

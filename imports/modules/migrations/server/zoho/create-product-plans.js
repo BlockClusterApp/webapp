@@ -4,6 +4,14 @@ import Bluebird from 'bluebird';
 
 const plans = [
   {
+    name: 'verification',
+    code: 'verification',
+    description: 'Card verification',
+    interval: 1,
+    intervalUnit: 'months',
+    price: 1
+  },
+  {
     name: 'Light Nodes',
     code: 'light-node',
     description: 'Small nodes for testing and deveopment: 0.5vCPU, 1GB RAM, 5GB Disk',
