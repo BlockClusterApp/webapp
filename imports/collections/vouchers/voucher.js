@@ -24,20 +24,25 @@ VoucherCollection.schema = new SimpleSchema(
       type: Date
     },
     usablity: {
-      recurring: { type: Boolean }, //false means one time per user
+     type:
+     { recurring: { type: Boolean }, //false means one time per user
       no_months: { type: Number }
+    }
     },
     availability: {
+      type:{
       for_all: { type: Boolean }, //false means available to all
       email_ids: { type: Array }
+      }
     },
     discount: {
-      value: {
+      type:{value: {
         type: Number
       },
       percent: {
         type: Boolean //false means consider the value as a flat amount.
       }
+    }
     },
     networkConfig: {
       type: Object
@@ -60,8 +65,7 @@ VoucherCollection.schema = new SimpleSchema(
     claimedOn: {
       type: Date
     }
-  },
-  { timesta }
+  }
 );
 
 export default VoucherCollection;
