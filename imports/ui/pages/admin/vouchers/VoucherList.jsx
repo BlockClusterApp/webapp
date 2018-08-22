@@ -2,7 +2,7 @@ import React, {Component} from "react";
 import {withTracker} from "meteor/react-meteor-data";
 import Vouchers from "../../../../collections/vouchers/voucher"
 import helpers from "../../../../modules/helpers"
-import {withRouter} from 'react-router-dom'
+import {withRouter,Link} from 'react-router-dom'
 import ReactHtmlParser from "react-html-parser";
 import moment from 'moment';
 
@@ -150,6 +150,11 @@ class VoucherList extends Component {
                                             <option value="unclaimed">Not Claimed</option>
                                         </select>
                                       </div>
+                                    </div>
+                                    <div className="col-md-4" align="right">
+                                    <Link to={"/app/admin/vouchers/create"}>
+                                    <span className="icon-thumbnail"><i className="fa fa-plus fa-2x"/></span>
+                                    </Link>                                    
                                     </div>
                                   </div>
                                     <div className="table-responsive">
