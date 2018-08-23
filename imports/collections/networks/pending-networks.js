@@ -6,7 +6,7 @@ const PendingNetworkCollection = new Mongo.Collection("pendingNetworks");
 
 AttachModelHooks(PendingNetworkCollection);
 
-PendingNetworkCollection.Schema = new SimeplSchema({
+PendingNetworkCollection.Schema = new SimpleSchema({
   hostedPageId: {
     type: String
   },

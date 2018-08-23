@@ -31,10 +31,8 @@ export default class CardVerification extends React.Component {
 
   preTriggerPaymentListener = () => {
     return new Promise((resolve) => {
-      Meteor.call('createPaymentRequest', {amount: 100, reason: 'Credit card verification', paymentGateway: 'razorpay'}, (err, res) => {
-        resolve({
-          paymentRequestId: res
-        });
+      Meteor.call('createPaymentRequest', {amount: 500, reason: 'verification', paymentGateway: 'razorpay'}, (err, res) => {
+        resolve(res);
       });
     });
   }
@@ -53,7 +51,8 @@ export default class CardVerification extends React.Component {
     this.setState({
       loading: true
     });
-    Meteor.call("applyRZCardVerification", pgResponse.razorpay_payment_id, (err, res) => {
+    console.log("Pg Response", pgResponse);
+    Meteor.call("applyRZCardVerification", pgResponse, (err, res) => {
       this.checkCardStatus();
     });
   };
@@ -85,7 +84,7 @@ export default class CardVerification extends React.Component {
                 <div className="row clearfix">
                   <div className="col-md-12">
                     <p style={{textAlign: 'justify'}}>
-                      An amount of INR 1.00 will be deducted from your account which would be
+                      An amount of INR 5.00 will be deducted from your account which would be
                       refunded to your account within 5 working bank days.
                     </p>
                     <center><RazorPay loading={this.state.loading} buttonText={`Verify credit card`} amount={100} paymentHandler={this.rzPaymentHandler} preTriggerPaymentListener={this.preTriggerPaymentListener} /></center>

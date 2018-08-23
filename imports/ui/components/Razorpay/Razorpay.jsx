@@ -92,6 +92,11 @@ class RazorPay extends React.Component {
       }
     };
 
+    if(notes.rzSubscriptionId) {
+      razorpayOptions.subscription_id = notes.rzSubscriptionId;
+      delete razorpayOptions.amount;
+    }
+
     try {
 
       if(!window.rzp1) {

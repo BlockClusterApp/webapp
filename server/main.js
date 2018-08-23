@@ -5,9 +5,6 @@ require('../imports/api/locations');
 require('../imports/modules/migrations/server');
 require('../imports/api');
 const debug = require('debug')('server:main');
-
-console.log("env", process.env.NODE_ENV);
-
 import UserFunctions from '../imports/api/server-functions/user-functions';
 import {
     Networks
@@ -39,6 +36,7 @@ import {
     authoritiesListCronJob
 } from "../imports/collections/networks/server/cron.js"
 import fs from 'fs';
+import { RZSubscription } from "../imports/collections/razorpay";
 var md5 = require("apache-md5");
 var base64 = require('base-64');
 var utf8 = require('utf8');
@@ -176,60 +174,70 @@ function getContainerResourceLimits({cpu, ram, isJoining }){
   return config;
 }
 
-function stop(){
-  return new Promise(resolve => {
-    setTimeout(() =>  !console.log("Resolving") && resolve(), 20 * 1000);
-  });
+async function fetchZohoStatus({myFuture, nodeConfig, hostedPageId}) {
+  let hostedPage = {};
+  if(!nodeConfig.voucher && !hostedPageId) {
+    let plan;
+    if(nodeConfig.cpu === 500 && nodeConfig.ram === 1 && nodeConfig.disk === 5 ) {
+      plan = ZohoPlan.find({plan_code: 'light-node'}).fetch()[0];
+    } else if(nodeConfig.cpu === 2 && nodeConfig.ram === 7.5 && nodeConfig.disk === 200) {
+      plan = ZohoPlan.find({plan_code: 'power-node'}).fetch()[0];
+    } else {
+      return myFuture.throw("Invalid plan");
+    }
+
+    const newHostedPage = await Zoho.createHostedPage({
+      userId: Meteor.userId(),
+      plan
+    });
+
+    if(!newHostedPage) {
+      return myFuture.throw("Error creating payment link");
+    }
+
+    PendingNetwork.insert({
+      hostedPageId: newHostedPage.hostedpage_id,
+      networkMetadata: {
+        networkName,
+        locationCode,
+        networkConfig,
+        userId
+      }
+    });
+    return myFuture.return({
+      type: 'payment-link',
+      value: newHostedPage.url
+    });
+  } else if (!nodeConfig.voucher) {
+    hostedPage = ZohoHostedPage.find({hostedpage_id: hostedPageId}).fetch()[0];
+    if(!hostedPage) {
+      return myFuture.throw("Invalid hosted page id");
+    }
+  }
+}
+
+async function fetchRazorPayStatus({nodeConfig}) {
+  if(nodeConfig.voucher) {
+    return true;
+  }
+  const rzSubscriptionForCustomer = RZSubscription.find({userId: Meteor.userId(), status: 'active', bc_status: 'active'}).fetch()[0];
+  if(!rzSubscriptionForCustomer) {
+    return false;
+  }
+  return true;
 }
 
 Meteor.methods({
-    "createNetwork": async function(networkName,  locationCode, networkConfig, userId, hostedPageId) {
+    "createNetwork": async function({networkName,  locationCode, networkConfig, userId, hostedPageId}) {
       debug("CreateNetwork | Arguments", networkName, locationCode, networkConfig, userId);
         var myFuture = new Future();
-        let hostedPage = {};
         const nodeConfig = getNodeConfig(networkConfig);
 
-        if(!nodeConfig.voucher && !hostedPageId) {
-          let plan;
-          if(nodeConfig.cpu === 500 && nodeConfig.ram === 1 && nodeConfig.disk === 5 ) {
-            plan = ZohoPlan.find({plan_code: 'light-node'}).fetch()[0];
-          } else if(nodeConfig.cpu === 2 && nodeConfig.ram === 7.5 && nodeConfig.disk === 200) {
-            plan = ZohoPlan.find({plan_code: 'power-node'}).fetch()[0];
-          } else {
-            return myFuture.throw("Invalid plan");
-          }
-
-          const newHostedPage = await Zoho.createHostedPage({
-            userId: Meteor.userId(),
-            plan
-          });
-
-          if(!newHostedPage) {
-            return myFuture.throw("Error creating payment link");
-          }
-
-          PendingNetwork.insert({
-            hostedPageId: newHostedPage.hostedpage_id,
-            networkMetadata: {
-              networkName,
-              locationCode,
-              networkConfig,
-              userId
-            }
-          });
-          return myFuture.return({
-            type: 'payment-link',
-            value: newHostedPage.url
-          });
-        } else if (!nodeConfig.voucher) {
-          hostedPage = ZohoHostedPage.find({hostedpage_id: hostedPageId}).fetch()[0];
-          if(!hostedPage) {
-            return myFuture.throw("Invalid hosted page id");
-          }
+        // const hostedPage = await fetchZohoStatus({myFuture, nodeConfig, hostedPageId});
+        const isUserSubscribedToRZPlan = await fetchRazorPayStatus({nodeConfig});
+        if(!isUserSubscribedToRZPlan) {
+          throw new Meteor.Error('unauthorized', 'Credit card not verified');
         }
-
-
-
 
         // const microNodes = Networks.find({
         //   user: Meteor.userId(),
@@ -312,7 +320,7 @@ Meteor.methods({
             ram: nodeConfig.ram,
             disk: nodeConfig.disk
           },
-          hostedPageId: hostedPage._id
+          // hostedPageId: hostedPage._id
         };
 
         debug("CreateNetwork | Network insert ", networkProps);

@@ -65,6 +65,9 @@ PaymentRequests.schema = new SimpleSchema({
   },
   refundedAt: {
     type: Date
+  },
+  rzSubscription: {
+    type: Object
   }
 });
 

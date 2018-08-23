@@ -1,5 +1,6 @@
 import { Networks } from '../../collections/networks/networks';
 import UserCards from '../../collections/payments/user-cards';
+import { RZPlan, RZSubscription, RZAddOn } from '../../collections/razorpay';
 import moment from 'moment';
 
 const Billing = {};
@@ -145,22 +146,29 @@ Billing.shouldHideCreditCardVerification = async function() {
     return false;
   }
 
-  const userCards = UserCards.find({userId: userId}).fetch()[0];
-  const networks = Networks.find({user: userId, active: true}).fetch();
+  const verificationPlan = RZPlan.find({identifier: 'verification'}).fetch()[0];
+  const userRZSubscription = RZSubscription.find({userId: Meteor.userId(), plan_id: verificationPlan.id, bc_status: 'active'}).fetch()[0];
 
-  if(networks.length > 2 && !(userCards && userCards.cards.length > 0)){
+  if(!userRZSubscription) {
     return false;
   }
 
-  if(!userCards){
-    return false;
-  }
+  return true;
 
-  if(userCards.cards && userCards.cards.length > 0){
-    return true;
-  }
+  // const userCards = UserCards.find({userId: userId}).fetch()[0];
+  // const networks = Networks.find({user: userId, active: true}).fetch();
 
-  return false;
+  // if(networks.length > 2 && !(userCards && userCards.cards.length > 0)){
+  //   return false;
+  // }
+
+  // if(!userCards){
+  //   return false;
+  // }
+
+  // if(userCards.cards && userCards.cards.length > 0){
+  //   return true;
+  // }
 
 }
 

@@ -2,7 +2,7 @@ import Zoho from '../../../../api/payments/zoho';
 import Bluebird from 'bluebird';
 
 Migrations.add({
-  version: 8,
+  version: 1000000,
   up: async function() {
     const users = Meteor.users.find({
       zohoCustomerId: null

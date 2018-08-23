@@ -30,7 +30,7 @@ const plans = [
 ];
 
 Migrations.add({
-  version: 9,
+  version: 10000000,
   up: async function() {
     const nodeProduct = await Zoho.createProduct({
       name: 'Node',
