@@ -14,6 +14,7 @@ import {
 } from "../imports/collections/networks/networks.js"
 import NetworkFunctions from '../imports/api/network/networks';
 import Vouchers from '../imports/collections/vouchers/voucher';
+import UserCards from '../imports/collections/payments/user-cards';
 import {
     Secrets
 } from "../imports/collections/secrets/secrets.js"
@@ -40,6 +41,14 @@ var md5 = require("apache-md5");
 var base64 = require('base-64');
 var utf8 = require('utf8');
 var BigNumber = require('bignumber.js');
+const Agenda = require('agenda');
+
+const agenda = new Agenda({
+    db: {
+        address: Config.mongoConnectionString
+    }
+});
+
 
 Accounts.validateLoginAttempt(function(options) {
     if (!options.allowed) {
@@ -671,7 +680,17 @@ Meteor.methods({
                 });
             });
           }
+          let userCard = UserCards.findOne({userId:userId,active:true},{fields:{_id:1}}).fetch();
+          //check wheather the user has verified cards or not. and also for active payment methods.
+          if(!userCard || !userCard.cards || !userCard.cards.length){
+          agenda.schedule(new Date(new Date().setDate(new Date().getDate()+3)), "warning email step 1", {
+            network_id: id,
+            userId:userId
+          });
+          }
+
         });
+        
         return myFuture.wait();
     },
     "deleteNetwork": function(id) {
