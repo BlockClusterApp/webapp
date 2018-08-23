@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { withTracker } from "meteor/react-meteor-data";
 import { withRouter } from "react-router-dom";
-import notifications from "../../../../modules/notifications"
+import notifications from "../../../../modules/notifications";
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import Toggle from "react-toggle";
 import "react-toggle/style.css";
@@ -21,11 +21,12 @@ class VoucherCreate extends Component {
       recurring: false,
       no_months: "",
       email_ids: "",
-      discount_amt: "",
+      discount_amt: 0,
       is_percent: false,
       expiry_date: "",
       discountedDays: 0,
-      isDiskChangeable: false
+      isDiskChangeable: false,
+      voucher_status: false
     };
   }
 
@@ -172,6 +173,7 @@ class VoucherCreate extends Component {
                       <input
                         name="no_months"
                         type="number"
+                        placeholder="e.g 3"
                         className="form-control"
                         onChange={this.handleChanges.bind(this)}
                         value={this.state.no_months}
@@ -199,6 +201,7 @@ class VoucherCreate extends Component {
                       <input
                         name="email_ids"
                         type="text"
+                        placeHolder="Comma (`,`) seperated"
                         className="form-control"
                         onChange={this.handleChanges.bind(this)}
                         value={this.state.email_ids}
@@ -231,6 +234,16 @@ class VoucherCreate extends Component {
                       onChange={this.handleChangesToggle.bind(this)}
                     />
                   </div>
+                  <div className="col-md-4 form-input-group">
+                    <label>Discounted Days</label>
+                    <input
+                      name="discountedDays"
+                      type="number"
+                      className="form-control"
+                      onChange={this.handleChanges.bind(this)}
+                      value={this.state.discountedDays}
+                    />
+                  </div>
                 </div>
                 <br />
                 <label>Others</label>
@@ -256,13 +269,13 @@ class VoucherCreate extends Component {
                     />
                   </div>
                   <div className="col-md-4 form-input-group">
-                    <label>Discounted Days</label>
-                    <input
-                      name="discountedDays"
-                      type="number"
+                    <label>Voucher Status</label>
+                    <Toggle
+                      name="voucher_status"
                       className="form-control"
-                      onChange={this.handleChanges.bind(this)}
-                      value={this.state.discountedDays}
+                      icons={false}
+                      checked={this.state.voucher_status}
+                      onChange={this.handleChangesToggle.bind(this)}
                     />
                   </div>
                 </div>

@@ -26,7 +26,7 @@ const insertVoucher = async savable_doc => {
 };
 
 /**
- * @param { noOfVouchers*, networkConfig*, expiryDate*, isDiskChangeable*, discountedDays*, claimed*, active*} payload
+ * @param { noOfVouchers*, networkConfig*, voucher_status*, expiryDate*, isDiskChangeable*, discountedDays*, claimed*, active*} payload
  * @param { cpu: Number, ram: Number, disk: Number } payload.networkConfig
  */
 Voucher.create = async function(payload) {
@@ -47,6 +47,7 @@ Voucher.create = async function(payload) {
         percent: payload.discount.value || false
       },
       code: voucher,
+      active:payload.voucher_status || true,
       networkConfig: payload.networkConfig,
       expiryDate: payload.expiryDate
         ? new Date(payload.expiryDate)
