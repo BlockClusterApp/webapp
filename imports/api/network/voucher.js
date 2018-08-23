@@ -26,11 +26,11 @@ const insertVoucher = async savable_doc => {
 };
 
 /**
- * @param { noOfVouchers*, networkConfig*, voucher_status*, expiryDate*, isDiskChangeable*, discountedDays*, claimed*, active*} payload
+ * @param { voucher_code_size*, noOfVouchers*, networkConfig*, voucher_status*, expiryDate*, isDiskChangeable*, discountedDays*, claimed*, active*} payload
  * @param { cpu: Number, ram: Number, disk: Number } payload.networkConfig
  */
 Voucher.create = async function(payload) {
-  let voucher_codes = await generateVouchers(payload.noOfVouchers, 6); //lets keep it by default 6 for now
+  let voucher_codes = await generateVouchers(payload.noOfVouchers, payload.voucher_code_size); //lets keep it by default 6 for now
   let savabl_doc = [];
   voucher_codes.forEach(voucher => {
     savabl_doc.push({

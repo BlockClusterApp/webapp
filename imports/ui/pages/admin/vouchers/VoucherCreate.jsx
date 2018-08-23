@@ -17,6 +17,7 @@ class VoucherCreate extends Component {
       cpu: "",
       disk: "",
       ram: "",
+      voucher_code_size:6,
       for_all: true,
       recurring: false,
       no_months: "",
@@ -34,6 +35,7 @@ class VoucherCreate extends Component {
     payload = this.state;
     const _doc_voucher = {
       noOfVouchers: payload.noOfVouchers,
+      voucher_code_size:payload.voucher_code_size,
       usablity: {
         recurring: payload.recurring,
         no_months: payload.no_months || 0
@@ -100,15 +102,29 @@ class VoucherCreate extends Component {
           <div className="row">
             <div className="card-block">
               <div className="form-group">
-                <label>No of Vouchers</label>
                 <div className="row">
                   <div className="col-md-4 form-input-group">
+                  <label>No of Vouchers</label>
                     <input
                       name="noOfVouchers"
                       type="number"
                       placeholder="e.g 10"
                       className="form-control"
                       onChange={this.handleChanges.bind(this)}
+                      required
+                      // value={this.state.networkConfig.cpu}
+                    />
+                  </div>
+                  <div className="col-md-4 form-input-group">
+                    <label>Size Of Voucher Code</label>
+                    <span className="help"> e.g. "HI12JG" Size 6 </span>
+                    <input
+                      name="voucher_code_size"
+                      type="number"
+                      placeholder="e.g 6"
+                      className="form-control"
+                      onChange={this.handleChanges.bind(this)}
+                      value={this.state.voucher_code_size}
                       required
                       // value={this.state.networkConfig.cpu}
                     />
