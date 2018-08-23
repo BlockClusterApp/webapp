@@ -39,6 +39,7 @@ class Explorer extends Component {
         this.refreshTotalSmartContracts = this.refreshTotalSmartContracts.bind(this)
         this.fetchBlockOrTxn = this.fetchBlockOrTxn.bind(this)
         this.refreshTotalBlocksScanned = this.refreshTotalBlocksScanned.bind(this)
+        this.refreshLatestTxns = this.refreshLatestTxns.bind(this)
     }
 
     componentDidMount() {
@@ -46,7 +47,8 @@ class Explorer extends Component {
             addLatestBlocksTimer: setTimeout(this.addLatestBlocks, 2000),
             refreshTxpoolTimer: setTimeout(this.refreshTxpool, 2000),
             refreshTotalSmartContractsTimer: setTimeout(this.refreshTotalSmartContracts, 2000),
-            refreshTotalBlocksScannedTimer: setTimeout(this.refreshTotalBlocksScanned, 2000)
+            refreshTotalBlocksScannedTimer: setTimeout(this.refreshTotalBlocksScanned, 2000),
+            refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, 2000)
         })
     }
 
@@ -59,6 +61,8 @@ class Explorer extends Component {
         clearTimeout(this.state.refreshTxpoolTimer);
         clearTimeout(this.state.refreshTotalSmartContractsTimer);
         clearTimeout(this.state.refreshTotalBlocksScannedTimer);
+        clearTimeout(this.state.refreshTotalBlocksScannedTimer);
+        clearTimeout(this.state.refreshLatestTxnsTimer);
     }
 
     selectNetwork(e) {
@@ -73,7 +77,8 @@ class Explorer extends Component {
             totalAccounts: 0,
             blockOrTxnOutput: '',
             totalSmartContracts: 0,
-            totalBlocksScanned: 0
+            totalBlocksScanned: 0,
+            latestTxns: []
         })
     }
 
@@ -184,6 +189,40 @@ class Explorer extends Component {
         } else {
             this.setState({
                 refreshTxpoolTimer: setTimeout(this.refreshTxpool, 500)
+            })
+        }
+    }
+
+    refreshLatestTxns() {
+        let rpc = null;
+        let status = null;
+
+        if(this.props.network.length === 1) {
+            username = this.props.network[0].instanceId
+            password = this.props.network[0]["api-password"]
+            status = this.props.network[0].status
+        }
+
+        if(status == "running") {
+            let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/transactions/last100`;
+            HTTP.get(url, {
+                headers: {
+                    'Authorization': "Basic " + (new Buffer(`${username}:${password}`).toString("base64"))
+                }
+            }, (err, res) => {
+                if(!err) {
+                    this.setState({
+                        latestTxns: res.data
+                    }, () => {
+                        this.setState({
+                            refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, 500)
+                        })
+                    });
+                }
+            })
+        } else {
+            this.setState({
+                refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, 500)
             })
         }
     }
