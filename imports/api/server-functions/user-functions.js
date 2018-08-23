@@ -8,7 +8,6 @@ import { UserInvitation } from "../../collections/user-invitation";
 import { UserCards } from "../../collections/payments/user-cards";
 import { sendEmail } from "../emails/email-sender";
 import { Networks } from "../../collections/networks/networks";
-import {} from "../../collections/users/server/";
 import Config from "../../../imports/modules/config/server";
 const Agenda = require("agenda");
 
