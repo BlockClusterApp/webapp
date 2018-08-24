@@ -76,13 +76,57 @@ Billing.generateBill = async function(userId, month, year) {
 
     const voucher = network.metadata && network.metadata.voucher;
 
+    /**
+     * First Time inside Voucher Object voucher_claim_status array is of length 0.
+     * when we generate bill after month check if recurring type voucher of not.
+     * if recurring type voucher:
+     *         check the `voucher.usability.no_months` field conatins value for recurring.
+     *         now on applying voucher insert a doc in voucher.voucher_claim_status.
+     *         and every time before applying voucher in bill, check this if `voucher.usability.no_months` is less than
+     *         the inserted docs in `voucher_claim_status` or not.
+     *          if not then understad, limit of recurring is over, dont consider.
+     * if not recuring:
+     *         after applying voucher we are inserting a doc in the same voucher_claim_status field.
+     *         and also every time before applying ,checking if voucher_claim_status legth is 0 or more.
+     *         if 0 then that means first time, good to go. if there is any. then dont consider to apply.
+     *
+     * And Also check for expiry date.
+     */
+
+    const vouchar_usable = (voucher.usability.recurring == true) ? ( (voucher.usability.no_months > voucher.voucher_claim_status.length) ? true:false ) : (voucher.voucher_claim_status.length ? false : true);
+    const voucher_expired = voucher.expiryDate ? new Date(voucher.expiryDate) <= new Date() : false
+
     let cost = Number(time.hours * ratePerHour + ((time.minutes) % 60) * ratePerMinute).toFixed(2);
 
-    if(voucher && voucher._id && !isMicroNode) {
+    if(voucher && voucher._id && !isMicroNode && vouchar_usable && voucher_expired) {
       const hoursFree = voucher.discountedDays * 24;
       const paidHours = Math.max(time.hours - hoursFree, 0);
       const paidMinutes = time.hours > 0 && paidHours < 1 ? time.minutes % 60 : 0;
       cost = Number(paidHours * ratePerHour + paidMinutes * ratePerMinute).toFixed(2);
+
+      let discount = voucher.discount.value || 0;
+      if(voucher.discount.percent){
+        //in this case discout value will be percentage of discount.
+        cost = cost* ( (100-discount) / 100 );
+      }else{
+        cost = cost-discount;
+      }
+
+      //so that we can track record how many times he used.
+      //and also helps to validate if next time need to consider voucher or not.
+      Networks.update(
+        { _id: network._id },
+        {
+          $push: {
+            voucher_claim_status: {
+              claimedBy: Meteor.userId(),
+              claimedOn: new Date(),
+              claimed: true
+            }
+          }
+        }
+      );
+      
     }
     let label = voucher ? voucher.code : networkConfig && networkConfig.name === 'Micro free' ? networkConfig.name : null;
 
