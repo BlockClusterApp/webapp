@@ -1,5 +1,6 @@
 import Vouchers from "../../collections/vouchers/voucher";
 import moment from "moment";
+import { Meteor } from 'meteor/meteor';
 
 const Voucher = {};
 
@@ -7,15 +8,22 @@ Voucher.validate = async function(voucherCode) {
   const voucher = Vouchers.find({
     code: voucherCode,
     active: true,
-    claimed: false,
     expiryDate: {
       $gt: new Date()
     }
   }).fetch()[0];
 
+  const email_matching = voucher.availability.email_ids.indexOf(Meteor.user().emails[0].address);
+  const claim_status = voucher.claim_status.filter((i)=>{return i["claimedBy"] == Meteor.userId()});
   if (!voucher) {
     throw new Meteor.Error("Invalid or expired voucher");
+  }else if(!voucher.availability.for_all && email_matching<= -1){
+    throw new Meteor.Error("Voucher is not valid");
   }
+  if(claim_status.length){
+    throw new Meteor.Error("already claimed");
+  }
+
 
   return voucher;
 };
@@ -34,7 +42,7 @@ Voucher.create = async function(payload) {
   let savabl_doc = [];
   voucher_codes.forEach(voucher => {
     savabl_doc.push({
-      usablity: {
+      usability: {
         recurring: payload.usablity.recurring || false,
         no_months: payload.usablity.no_months || 0
       },
@@ -56,7 +64,7 @@ Voucher.create = async function(payload) {
             .toDate(), //lets take by default 30days
       isDiskChangeable: payload.isDiskChangeable || false,
       discountedDays: payload.discountedDays || 0,
-      claimed: payload.claimed || false
+      claim_status:[]
     });
   });
 
