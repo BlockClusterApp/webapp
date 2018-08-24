@@ -14,13 +14,13 @@ Voucher.validate = async function(voucherCode) {
   }).fetch()[0];
 
   const email_matching = voucher.availability.email_ids.indexOf(Meteor.user().emails[0].address);
-  const claim_status = voucher.claim_status.filter((i)=>{return i["claimedBy"] == Meteor.userId()});
+  const claimed_status = voucher.voucher_claim_status.filter((i)=>{return i["claimedBy"] == Meteor.userId()});
   if (!voucher) {
     throw new Meteor.Error("Invalid or expired voucher");
   }else if(!voucher.availability.for_all && email_matching<= -1){
     throw new Meteor.Error("Voucher is not valid");
   }
-  if(claim_status.length){
+  if(claimed_status.length){
     throw new Meteor.Error("already claimed");
   }
 
@@ -64,7 +64,7 @@ Voucher.create = async function(payload) {
             .toDate(), //lets take by default 30days
       isDiskChangeable: payload.isDiskChangeable || false,
       discountedDays: payload.discountedDays || 0,
-      claim_status:[]
+      voucher_claim_status:[]
     });
   });
 

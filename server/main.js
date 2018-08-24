@@ -110,7 +110,7 @@ function getNodeConfig(networkConfig, userId) {
       _id: voucher._id
     }, {
       $push: {
-          claim_status:{
+          voucher_claim_status:{
         claimedBy: Meteor.userId(),
         claimedOn: new Date(),
         claimed: true

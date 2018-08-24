@@ -56,7 +56,7 @@ VoucherCollection.schema = new SimpleSchema({
   discountedDays: {
     type: Number
   },
-  claim_status: [
+  voucher_claim_status: [
     {
       type: {
         claimed: {

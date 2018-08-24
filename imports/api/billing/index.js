@@ -77,23 +77,23 @@ Billing.generateBill = async function(userId, month, year) {
     const voucher = network.metadata && network.metadata.voucher;
 
     /**
-     * First Time inside Voucher Object claim_status array is of length 0.
+     * First Time inside Voucher Object voucher_claim_status array is of length 0.
      * when we generate bill after month check if recurring type voucher of not.
      * if recurring type voucher:
      *         check the `voucher.usability.no_months` field conatins value for recurring.
-     *         now on applying voucher insert a doc in voucher.claim_status.
+     *         now on applying voucher insert a doc in voucher.voucher_claim_status.
      *         and every time before applying voucher in bill, check this if `voucher.usability.no_months` is less than
-     *         the inserted docs in `claim_status` or not.
+     *         the inserted docs in `voucher_claim_status` or not.
      *          if not then understad, limit of recurring is over, dont consider.
      * if not recuring:
-     *         after applying voucher we are inserting a doc in the same claim_status field.
-     *         and also every time before applying ,checking if claim_status legth is 0 or more.
+     *         after applying voucher we are inserting a doc in the same voucher_claim_status field.
+     *         and also every time before applying ,checking if voucher_claim_status legth is 0 or more.
      *         if 0 then that means first time, good to go. if there is any. then dont consider to apply.
      *
      * And Also check for expiry date.
      */
 
-    const vouchar_usable = (voucher.usability.recurring == true) ? ( (voucher.usability.no_months > voucher.claim_status.length) ? true:false ) : (voucher.claim_status.length ? false : true);
+    const vouchar_usable = (voucher.usability.recurring == true) ? ( (voucher.usability.no_months > voucher.voucher_claim_status.length) ? true:false ) : (voucher.voucher_claim_status.length ? false : true);
     const voucher_expired = voucher.expiryDate ? new Date(voucher.expiryDate) <= new Date() : false
 
     let cost = Number(time.hours * ratePerHour + ((time.minutes) % 60) * ratePerMinute).toFixed(2);
@@ -118,7 +118,7 @@ Billing.generateBill = async function(userId, month, year) {
         { _id: network._id },
         {
           $push: {
-            claim_status: {
+            voucher_claim_status: {
               claimedBy: Meteor.userId(),
               claimedOn: new Date(),
               claimed: true
