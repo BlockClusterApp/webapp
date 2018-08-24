@@ -29,24 +29,23 @@ class Explorer extends Component {
             totalBlocksScanned: 0,
             addLatestBlocksTimer: null,
             refreshTxpoolTimer: null,
-            refreshTotalSmartContractsTimer: null,
-            refreshTotalBlocksScannedTimer: null
+            refreshConfigTimer: null
         }
 
         this.addLatestBlocks = this.addLatestBlocks.bind(this)
         this.loadMoreBlocks = this.loadMoreBlocks.bind(this)
         this.refreshTxpool = this.refreshTxpool.bind(this)
-        this.refreshTotalSmartContracts = this.refreshTotalSmartContracts.bind(this)
+        this.refreshConfig = this.refreshConfig.bind(this)
         this.fetchBlockOrTxn = this.fetchBlockOrTxn.bind(this)
-        this.refreshTotalBlocksScanned = this.refreshTotalBlocksScanned.bind(this)
+        this.refreshLatestTxns = this.refreshLatestTxns.bind(this)
     }
 
     componentDidMount() {
         this.setState({
             addLatestBlocksTimer: setTimeout(this.addLatestBlocks, 2000),
             refreshTxpoolTimer: setTimeout(this.refreshTxpool, 2000),
-            refreshTotalSmartContractsTimer: setTimeout(this.refreshTotalSmartContracts, 2000),
-            refreshTotalBlocksScannedTimer: setTimeout(this.refreshTotalBlocksScanned, 2000)
+            refreshConfigTimer: setTimeout(this.refreshConfig, 2000),
+            refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, 2000)
         })
     }
 
@@ -57,8 +56,8 @@ class Explorer extends Component {
 
         clearTimeout(this.state.addLatestBlocksTimer);
         clearTimeout(this.state.refreshTxpoolTimer);
-        clearTimeout(this.state.refreshTotalSmartContractsTimer);
-        clearTimeout(this.state.refreshTotalBlocksScannedTimer);
+        clearTimeout(this.state.refreshConfigTimer);
+        clearTimeout(this.state.refreshLatestTxnsTimer);
     }
 
     selectNetwork(e) {
@@ -73,7 +72,8 @@ class Explorer extends Component {
             totalAccounts: 0,
             blockOrTxnOutput: '',
             totalSmartContracts: 0,
-            totalBlocksScanned: 0
+            totalBlocksScanned: 0,
+            latestTxns: []
         })
     }
 
@@ -89,35 +89,42 @@ class Explorer extends Component {
         }
     }
 
-    refreshTotalSmartContracts() {
+    refreshConfig() {
+        let rpc = null;
+        let status = null;
+
         if(this.props.network.length === 1) {
-            this.setState({
-                totalSmartContracts: (this.props.network[0].totalSmartContracts ? this.props.network[0].totalSmartContracts : 0)
-            }, () => {
-                this.setState({
-                    refreshTotalSmartContractsTimer: setTimeout(this.refreshTotalSmartContracts, 100)
-                })
-            })
-        } else {
-            this.setState({
-                refreshTotalSmartContractsTimer: setTimeout(this.refreshTotalSmartContracts, 1000)
-            })
+            username = this.props.network[0].instanceId
+            password = this.props.network[0]["api-password"]
+            status = this.props.network[0].status
         }
 
-    }
-
-    refreshTotalBlocksScanned() {
-        if(this.props.network.length === 1) {
-            this.setState({
-                totalBlocksScanned: (this.props.network[0].blockToScan ? (this.props.network[0].blockToScan - 1) : 0)
-            }, () => {
-                this.setState({
-                    refreshTotalBlocksScannedTimer: setTimeout(this.refreshTotalBlocksScanned, 100)
-                })
+        if(status == "running") {
+            let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/nodeInfo`;
+            HTTP.get(url, {
+                headers: {
+                    'Authorization': "Basic " + (new Buffer(`${username}:${password}`).toString("base64"))
+                }
+            }, (err, res) => {
+                if(!err) {
+                    this.setState({
+                        totalSmartContracts: res.data.totalSmartContracts,
+                        diskSize: res.data.diskSize ? res.data.diskSize : 0,
+                        totalBlocksScanned: res.data.blockToScan ? (res.data.blockToScan - 1) : 0
+                    }, () => {
+                        this.setState({
+                            refreshConfigTimer: setTimeout(this.refreshConfig, 500)
+                        })
+                    });
+                } else {
+                    this.setState({
+                        refreshConfigTimer: setTimeout(this.refreshConfig, 500)
+                    })
+                }
             })
         } else {
             this.setState({
-                refreshTotalBlocksScannedTimer: setTimeout(this.refreshTotalBlocksScanned, 1000)
+                refreshConfigTimer: setTimeout(this.refreshConfig, 500)
             })
         }
     }
@@ -184,6 +191,40 @@ class Explorer extends Component {
         } else {
             this.setState({
                 refreshTxpoolTimer: setTimeout(this.refreshTxpool, 500)
+            })
+        }
+    }
+
+    refreshLatestTxns() {
+        let rpc = null;
+        let status = null;
+
+        if(this.props.network.length === 1) {
+            username = this.props.network[0].instanceId
+            password = this.props.network[0]["api-password"]
+            status = this.props.network[0].status
+        }
+
+        if(status == "running") {
+            let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/transactions/last100`;
+            HTTP.get(url, {
+                headers: {
+                    'Authorization': "Basic " + (new Buffer(`${username}:${password}`).toString("base64"))
+                }
+            }, (err, res) => {
+                if(!err) {
+                    this.setState({
+                        latestTxns: res.data.reverse()
+                    }, () => {
+                        this.setState({
+                            refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, 500)
+                        })
+                    });
+                }
+            })
+        } else {
+            this.setState({
+                refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, 500)
             })
         }
     }
