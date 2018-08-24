@@ -95,11 +95,12 @@ class VoucherList extends Component {
     this.search();
   };
 
-  getClaimStatus = claimed => {
-    if (claimed) {
-      return <span className="label label-success">Claimed</span>;
+  getActiveStatus = active => {
+    if (active) {
+      return <span className="label label-success">Active</span>;
+    }else{
+      return <span className="label label-danger">Inactive</span>;
     }
-    return <span className="">-</span>;
   };
 
   openVoucher = voucherId => {
@@ -118,11 +119,21 @@ class VoucherList extends Component {
   onClaimChange = e => {
     const value = e.target.value;
     if (value === "all") {
-      delete this.query.claimed;
-    } else if (value === "claimed") {
-      this.query.claimed = true;
-    } else {
-      this.query.claimed = false;
+      delete this.query["availability.for_all"];
+      delete this.query["usability.recurring"];
+    } else if (value === "recurring") {
+      delete this.query["availability.for_all"];
+      this.query["usability.recurring"]=true;
+    } else if(value === "for_all"){
+      delete this.query["usability.recurring"];
+      this.query["availability.for_all"]= true;
+    }else if(value === "not_for_all"){
+      delete this.query["usability.recurring"];
+      this.query["availability.for_all"]= false;
+    }else{
+      //more options will come here
+      delete this.query["availability.for_all"];
+      delete this.query["usability.recurring"];
     }
     this.search();
   };
@@ -164,9 +175,10 @@ class VoucherList extends Component {
                           aria-hidden="true"
                           onChange={this.onClaimChange}
                         >
-                          <option value="running">States: All</option>
-                          <option value="claimed">Claimed</option>
-                          <option value="unclaimed">Not Claimed</option>
+                          <option value="running">Show by: All</option>
+                          <option value="recurring">Recurring Vouchers</option>
+                          <option value="for_all">Accessible to all</option>
+                          <option value="not_for_all">Not accessible to all</option>
                         </select>
                       </div>
                     </div>
@@ -192,8 +204,9 @@ class VoucherList extends Component {
                           <th style={{ width: "5%" }}>S.No</th>
                           {/* <th style={{width: "15%"}}>Id</th> */}
                           <th style={{ width: "30%" }}>Voucher Code</th>
-                          <th style={{ width: "12%" }}>Claim Status</th>
+                          <th style={{ width: "13%" }}>Times Used</th>
                           <th style={{ width: "30%" }}>Config</th>
+                          <th style={{width:"7%"}}>Status</th>
                           <th style={{ width: "20%" }}>Created At</th>
                         </tr>
                       </thead>
@@ -208,9 +221,12 @@ class VoucherList extends Component {
                                 {this.state.page * PAGE_LIMIT + index + 1}
                               </td>
                               <td>{voucher.code}</td>
-                              <td>{this.getClaimStatus(voucher.claimed)}</td>
+                              <td>{voucher.voucher_claim_status ? voucher.voucher_claim_status.length : 0}</td>
                               <td>
                                 {this.getNetworkType(voucher.networkConfig)}
+                              </td>
+                              <td>
+                              {this.getActiveStatus(voucher.active)}
                               </td>
                               <td>
                                 {moment(voucher.createdAt).format(

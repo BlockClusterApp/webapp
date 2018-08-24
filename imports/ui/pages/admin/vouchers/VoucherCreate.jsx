@@ -27,7 +27,9 @@ class VoucherCreate extends Component {
       expiry_date: "",
       discountedDays: 0,
       isDiskChangeable: false,
-      voucher_status: false
+      voucher_status: false,
+      once_per_user:true,
+      no_times_per_user:5
     };
   }
 
@@ -37,12 +39,14 @@ class VoucherCreate extends Component {
       noOfVouchers: payload.noOfVouchers,
       voucher_code_size:payload.voucher_code_size,
       usablity: {
-        recurring: payload.recurring,
-        no_months: payload.no_months || 0
+        recurring: payload.recurring || false,
+        no_months: payload.no_months || 0,
+        once_per_user:payload.once_per_user || true,
+        no_times_per_user:payload.no_times_per_user || 1
       },
       availability: {
         for_all: payload.for_all || false,
-        email_ids: payload.email_ids ? payload.email_ids.join(",") : []
+        email_ids: payload.email_ids ? payload.email_ids.split(",") : []
       },
       discount: {
         value: payload.discount_amt || 0,
@@ -173,7 +177,7 @@ class VoucherCreate extends Component {
                 <br />
                 <label>Usability</label>
                 <div className="row">
-                  <div className="col-md-4 form-input-group">
+                  <div className="col-md-2 form-input-group">
                     <label>Is Recurring</label>
                     <Toggle
                       name="recurring"
@@ -184,7 +188,7 @@ class VoucherCreate extends Component {
                     />
                   </div>
                   {this.state.recurring == true && (
-                    <div className="col-md-4 form-input-group">
+                    <div className="col-md-3 form-input-group">
                       <label>Number Of Months</label>
                       <input
                         name="no_months"
@@ -196,6 +200,32 @@ class VoucherCreate extends Component {
                         required
                       />
                     </div>
+                  )}
+                  <div className="col-md-4 form-input-group">
+                    <label>Once Per User</label>
+                    <span className="help"> e.g {this.state.once_per_user ? "once" : "multiple times"} per user</span>
+                    <Toggle
+                      name="once_per_user"
+                      className="form-control"
+                      icons={false}
+                      checked={this.state.once_per_user}
+                      onChange={this.handleChangesToggle.bind(this)}
+                    />
+                  </div>
+                  { this.state.once_per_user == false &&(
+                    <div className="col-md-3 form-input-group">
+                    <label>Number Of Times</label>
+                    <span className="help"> e.g voucher will be applicable for user {this.state.no_times_per_user} times.</span>
+                    <input
+                      name="no_times_per_user"
+                      type="number"
+                      placeholder="e.g 3"
+                      className="form-control"
+                      onChange={this.handleChanges.bind(this)}
+                      value={this.state.no_times_per_user}
+                      required
+                    />
+                  </div>
                   )}
                 </div>
                 <br />
@@ -217,7 +247,7 @@ class VoucherCreate extends Component {
                       <input
                         name="email_ids"
                         type="text"
-                        placeHolder="Comma (`,`) seperated"
+                        placeholder="Comma ( , ) seperated"
                         className="form-control"
                         onChange={this.handleChanges.bind(this)}
                         value={this.state.email_ids}
@@ -230,17 +260,6 @@ class VoucherCreate extends Component {
                 <label>Discounts</label>
                 <div className="row">
                   <div className="col-md-4 form-input-group">
-                    <label>Discount Amount Or Percentage</label>
-                    <input
-                      name="discount_amt"
-                      type="number"
-                      placeholder="USD / %"
-                      className="form-control"
-                      onChange={this.handleChanges.bind(this)}
-                      required
-                    />
-                  </div>
-                  <div className="col-md-4 form-input-group">
                     <label>Discount in Percentage</label>
                     <Toggle
                       name="is_percent"
@@ -250,7 +269,18 @@ class VoucherCreate extends Component {
                       onChange={this.handleChangesToggle.bind(this)}
                     />
                   </div>
-                  <div className="col-md-4 form-input-group">
+                  <div className="col-md-3 form-input-group">
+                    <label>Discount Amount ({this.state.is_percent ? "percentage" :"Flat Amount" })</label>
+                    <input
+                      name="discount_amt"
+                      type="number"
+                      placeholder={this.state.is_percent ? "50 %" : "50 USD"}
+                      className="form-control"
+                      onChange={this.handleChanges.bind(this)}
+                      required
+                    />
+                  </div>
+                  <div className="col-md-4 form-input-group" align="right">
                     <label>Discounted Days</label>
                     <input
                       name="discountedDays"

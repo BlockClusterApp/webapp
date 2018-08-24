@@ -14,14 +14,16 @@ Voucher.validate = async function(voucherCode) {
   }).fetch()[0];
 
   const email_matching = voucher.availability.email_ids.indexOf(Meteor.user().emails[0].address);
-  const claimed_status = voucher.voucher_claim_status.filter((i)=>{return i["claimedBy"] == Meteor.userId()});
+  const claimed_status = voucher.voucher_claim_status ? (voucher.voucher_claim_status.filter((i)=>{return i["claimedBy"] == Meteor.userId()})) :0
   if (!voucher) {
     throw new Meteor.Error("Invalid or expired voucher");
-  }else if(!voucher.availability.for_all && email_matching<= -1){
+  }else if(!voucher.availability.for_all && email_matching > -1){
     throw new Meteor.Error("Voucher is not valid");
   }
-  if(claimed_status.length){
+  if(voucher.usability.once_per_user && claimed_status.length){
     throw new Meteor.Error("already claimed");
+  }else if(!voucher.usability.once_per_user && (claimed_status.length==voucher.usability.no_times_per_user)){
+    throw new Meteor.Error("Use Limit Exceed");
   }
 
 
@@ -44,7 +46,9 @@ Voucher.create = async function(payload) {
     savabl_doc.push({
       usability: {
         recurring: payload.usablity.recurring || false,
-        no_months: payload.usablity.no_months || 0
+        no_months: payload.usablity.no_months || 0,
+        once_per_user:payload.usablity.once_per_user || true,
+        no_times_per_user:payload.usablity.no_times_per_user || 1
       },
       availability: {
         for_all: payload.availability.for_all || false,

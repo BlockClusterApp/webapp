@@ -25,7 +25,9 @@ VoucherCollection.schema = new SimpleSchema({
   usability: {
     type: {
       recurring: { type: Boolean }, //false means one time per user
-      no_months: { type: Number }
+      no_months: { type: Number },
+      once_per_user:{type:Boolean},
+      no_times_per_user:{type:Number}
     }
   },
   availability: {
