@@ -65,7 +65,7 @@ class CreateStream extends Component {
                 this.setState({
                     [instanceId + "_createStream_formloading"]: false,
                     [instanceId + "_createStream_formSubmitError"]: error.reason
-                })
+                });
             }
         });
     }
