@@ -100,7 +100,7 @@ class Explorer extends Component {
         }
 
         if(status == "running") {
-            let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/config`;
+            let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/nodeInfo`;
             HTTP.get(url, {
                 headers: {
                     'Authorization': "Basic " + (new Buffer(`${username}:${password}`).toString("base64"))
