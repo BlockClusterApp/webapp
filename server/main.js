@@ -109,11 +109,12 @@ function getNodeConfig(networkConfig, userId) {
     Vouchers.update({
       _id: voucher._id
     }, {
-      $set: {
-        claimedBy: userId,
+      $push: {
+          claim_status:{
+        claimedBy: Meteor.userId(),
         claimedOn: new Date(),
         claimed: true
-      }
+      }}
     });
   }
 
@@ -245,7 +246,7 @@ Meteor.methods({
         }
 
         const resourceConfig = getContainerResourceLimits({cpu: nodeConfig.cpu, ram: nodeConfig.ram});
-
+            
         const networkProps = {
           "instanceId": instanceId,
           "name": networkName,
@@ -680,7 +681,7 @@ Meteor.methods({
                 });
             });
           }
-          let userCard = UserCards.findOne({userId:userId,active:true},{fields:{_id:1}}).fetch();
+          let userCard = UserCards.find({userId:userId,active:true},{fields:{_id:1}}).fetch()[0];
           //check wheather the user has verified cards or not. and also for active payment methods.
           if(!userCard || !userCard.cards || !userCard.cards.length){
           agenda.schedule(new Date(new Date().setDate(new Date().getDate()+3)), "warning email step 1", {
