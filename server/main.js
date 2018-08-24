@@ -49,7 +49,6 @@ const agenda = new Agenda({
     }
 });
 
-
 Accounts.validateLoginAttempt(function(options) {
     if (!options.allowed) {
         return false;
@@ -236,7 +235,7 @@ Meteor.methods({
         }
 
         const resourceConfig = getContainerResourceLimits({cpu: nodeConfig.cpu, ram: nodeConfig.ram});
-            
+
         const networkProps = {
           "instanceId": instanceId,
           "name": networkName,
@@ -672,7 +671,7 @@ Meteor.methods({
             });
           }
           //mark the voucher as claimed
-        Vouchers.update({ _id: nodeConfig.voucherId }, {  $push: { voucher_claim_status:{ 
+        Vouchers.update({ _id: nodeConfig.voucherId }, {  $push: { voucher_claim_status:{
             claimedBy: Meteor.userId(),
             claimedOn: new Date(),
             claimed: true
@@ -688,7 +687,7 @@ Meteor.methods({
           }
 
         });
-        
+
         return myFuture.wait();
     },
     "deleteNetwork": function(id) {
