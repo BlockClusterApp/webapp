@@ -22,7 +22,7 @@ VoucherCollection.schema = new SimpleSchema({
   expiryDate: {
     type: Date
   },
-  usablity: {
+  usability: {
     type: {
       recurring: { type: Boolean }, //false means one time per user
       no_months: { type: Number }
@@ -56,15 +56,21 @@ VoucherCollection.schema = new SimpleSchema({
   discountedDays: {
     type: Number
   },
-  claimed: {
-    type: Boolean
-  },
-  claimedBy: {
-    type: String
-  },
-  claimedOn: {
-    type: Date
-  }
+  claim_status: [
+    {
+      type: {
+        claimed: {
+          type: Boolean
+        },
+        claimedBy: {
+          type: String
+        },
+        claimedOn: {
+          type: Date
+        }
+      }
+    }
+  ]
 });
 
 export default VoucherCollection;
