@@ -13,11 +13,15 @@ Voucher.validate = async function(voucherCode) {
     }
   }).fetch()[0];
 
-  const email_matching = voucher.availability.email_ids.indexOf(Meteor.user().emails[0].address);
-  const claimed_status = voucher.voucher_claim_status ? (voucher.voucher_claim_status.filter((i)=>{return i["claimedBy"] == Meteor.userId()})) :0
   if (!voucher) {
     throw new Meteor.Error("Invalid or expired voucher");
-  }else if(!voucher.availability.for_all && email_matching > -1){
+  }
+
+  const email_matching = voucher.availability.email_ids.indexOf(Meteor.user().emails[0].address);
+  const claimed_status = voucher.voucher_claim_status ? (voucher.voucher_claim_status.filter((i)=>{return i["claimedBy"] == Meteor.userId()})) :0
+  
+  console.log(email_matching,voucher)
+  if(!voucher.availability.for_all && email_matching <= -1){
     throw new Meteor.Error("Voucher is not valid");
   }
   if(voucher.usability.once_per_user && claimed_status.length){
