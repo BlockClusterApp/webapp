@@ -14,6 +14,7 @@ import {
 } from "../imports/collections/networks/networks.js"
 import NetworkFunctions from '../imports/api/network/networks';
 import Vouchers from '../imports/collections/vouchers/voucher';
+import UserCards from '../imports/collections/payments/user-cards';
 import {
     Secrets
 } from "../imports/collections/secrets/secrets.js"
@@ -40,6 +41,14 @@ var md5 = require("apache-md5");
 var base64 = require('base-64');
 var utf8 = require('utf8');
 var BigNumber = require('bignumber.js');
+const Agenda = require('agenda');
+
+const agenda = new Agenda({
+    db: {
+        address: Config.mongoConnectionString
+    }
+});
+
 
 Accounts.validateLoginAttempt(function(options) {
     if (!options.allowed) {
@@ -97,15 +106,6 @@ function getNodeConfig(networkConfig, userId) {
       }
     }
 
-    Vouchers.update({
-      _id: voucher._id
-    }, {
-      $set: {
-        claimedBy: userId,
-        claimedOn: new Date(),
-        claimed: true
-      }
-    });
   }
 
   if(!finalNetworkConfig && config) {
@@ -236,7 +236,7 @@ Meteor.methods({
         }
 
         const resourceConfig = getContainerResourceLimits({cpu: nodeConfig.cpu, ram: nodeConfig.ram});
-
+            
         const networkProps = {
           "instanceId": instanceId,
           "name": networkName,
@@ -671,7 +671,24 @@ Meteor.methods({
                 });
             });
           }
+          //mark the voucher as claimed
+        Vouchers.update({ _id: nodeConfig.voucherId }, {  $push: { voucher_claim_status:{ 
+            claimedBy: Meteor.userId(),
+            claimedOn: new Date(),
+            claimed: true
+        }}
+      });
+          let userCard = UserCards.find({userId:userId,active:true},{fields:{_id:1}}).fetch()[0];
+          //check wheather the user has verified cards or not. and also for active payment methods.
+          if(!userCard || !userCard.cards || !userCard.cards.length){
+          agenda.schedule(new Date(new Date().setDate(new Date().getDate()+3)), "warning email step 1", {
+            network_id: id,
+            userId:userId
+          });
+          }
+
         });
+        
         return myFuture.wait();
     },
     "deleteNetwork": function(id) {
