@@ -393,39 +393,24 @@ class Explorer extends Component {
                     }
                 })
             } else {
-                web3.eth.getTransaction(value, (error, result1) => {
-                    if(!error && result1 != null) {
-                        web3.eth.getTransactionReceipt(value, (error, result2) => {
-                            if(!error && result2 != null) {
-                                if(result1.to == atomicSwapContractAddress) {
-                                    abiDecoder.addABI(smartContracts.atomicSwap.abi);
-                                } else if (result1.to == assetsContractAddress) {
-                                    abiDecoder.addABI(smartContracts.assets.abi);
-                                } else if (result1.to == streamsContractAddress) {
-                                    abiDecoder.addABI(smartContracts.streams.abi);
-                                }
-
-                                let decodedData = abiDecoder.decodeMethod(result1.input);
-                                if(decodedData !== undefined) {
-                                    result1.decodedinput = decodedData
-                                }
-
-                                if(result2.logs.length > 0) {
-                                    let decodedLogs = abiDecoder.decodeLogs(result2.logs);
-
-                                    if(decodedLogs[0] !== undefined) {
-                                        result2.decodedLogs = decodedLogs
-                                    }
-                                }
-
-                                this.setState({
-                                    blockOrTxnOutput: JSON.stringify(Object.assign(result1, result2), undefined, 4)
-                                })
-                            }
+                let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/transactions/audit?hash=${value}`;
+                HTTP.get(url, {
+                    headers: {
+                        'Authorization': "Basic " + (new Buffer(`${username}:${password}`).toString("base64"))
+                    }
+                }, (err, res) => {
+                    if(!err) {
+                        this.setState({
+                            blockOrTxnOutput: JSON.stringify(res.data, undefined, 4)
+                        })
+                    } else {
+                        this.setState({
+                            blockOrTxnOutput: JSON.stringify({
+                                "message": "Unable to Audit Txn"
+                            }, undefined, 4)
                         })
                     }
                 })
-
             }
         }
     }
