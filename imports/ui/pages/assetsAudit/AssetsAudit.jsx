@@ -25,7 +25,7 @@ class AssetsAudit extends Component {
 
     componentDidMount() {
         this.setState({
-            refreshAssetTypesTimer: setInterval(this.getAssetTypes, 2000)
+            refreshAssetTypesTimer: setInterval(this.getAssetTypes, 500)
         })
     }
 

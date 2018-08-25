@@ -29,7 +29,10 @@ class Explorer extends Component {
             totalBlocksScanned: 0,
             addLatestBlocksTimer: null,
             refreshTxpoolTimer: null,
-            refreshConfigTimer: null
+            refreshConfigTimer: null,
+            latestTxns: [],
+            diskSize: 0,
+            totalTransactions: 0
         }
 
         this.addLatestBlocks = this.addLatestBlocks.bind(this)
@@ -42,10 +45,10 @@ class Explorer extends Component {
 
     componentDidMount() {
         this.setState({
-            addLatestBlocksTimer: setTimeout(this.addLatestBlocks, 2000),
-            refreshTxpoolTimer: setTimeout(this.refreshTxpool, 2000),
-            refreshConfigTimer: setTimeout(this.refreshConfig, 2000),
-            refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, 2000)
+            addLatestBlocksTimer: setTimeout(this.addLatestBlocks, 500),
+            refreshTxpoolTimer: setTimeout(this.refreshTxpool, 500),
+            refreshConfigTimer: setTimeout(this.refreshConfig, 500),
+            refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, 500)
         })
     }
 
@@ -110,7 +113,8 @@ class Explorer extends Component {
                     this.setState({
                         totalSmartContracts: res.data.totalSmartContracts,
                         diskSize: res.data.diskSize ? res.data.diskSize : 0,
-                        totalBlocksScanned: res.data.blockToScan ? (res.data.blockToScan - 1) : 0
+                        totalBlocksScanned: res.data.blockToScan ? (res.data.blockToScan - 1) : 0,
+                        totalTransactions: res.data.totalTransactions ? res.data.totalTransactions : 0
                     }, () => {
                         this.setState({
                             refreshConfigTimer: setTimeout(this.refreshConfig, 500)
@@ -434,14 +438,14 @@ class Explorer extends Component {
             <div className="content explorer sm-gutter">
                 <div className="container-fluid container-fixed-lg m-t-20 p-l-25 p-r-25 p-t-0 p-b-25 sm-padding-10">
                     <div className="row">
-                        <div className="col-lg-6 col-sm-12">
+                        <div className="col-lg-8 col-sm-12">
                             <div className="row">
                                 <div className="col-lg-12 m-b-10">
                                     <Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Explorer
                                 </div>
                             </div>
                             <div className="row">
-                                <div className="col-lg-6">
+                                <div className="col-lg-4">
                                     <div className="card no-border bg-white no-margin widget-loader-bar">
                                         <div className="card-header  top-left top-right ">
 
@@ -466,13 +470,13 @@ class Explorer extends Component {
                                                     <div className="pull-left small">
                                                         <span>Pending</span>
                                                         <span className=" text-success font-montserrat">
-                                                        <i className="fa fa-caret-up m-l-10"></i> {this.state.totalPending} Txns
+                                                        <i className="fa fa-caret-up m-l-10"></i> {this.state.totalPending}
                                                         </span>
                                                     </div>
                                                     <div className="pull-left m-l-20 small">
                                                         <span>Queue</span>
                                                         <span className=" text-danger font-montserrat">
-                                                        <i className="fa fa-caret-down m-l-10"></i> {this.state.totalQueued} Txns
+                                                        <i className="fa fa-caret-down m-l-10"></i> {this.state.totalQueued}
                                                         </span>
                                                     </div>
                                                     <div className="clearfix"></div>
@@ -481,19 +485,19 @@ class Explorer extends Component {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="col-lg-6">
+                                <div className="col-lg-4">
                                     <div className="widget-9 card no-border bg-success no-margin widget-loader-bar">
                                         <div className="full-height d-flex flex-column">
                                             <div className="card-header ">
                                                 <div className="card-title text-black">
-                                                    <span className="font-montserrat fs-11 all-caps">Smart Contracts IN NETWORK <i
+                                                    <span className="font-montserrat fs-11 all-caps text-white">Smart Contracts <i
                                                         className="fa fa-chevron-right"></i>
                                                     </span>
                                                 </div>
                                                 <div className="card-controls">
                                                     <ul>
-                                                        <li><a href="#" className="card-refresh text-black" data-toggle="refresh"><i
-                                                            className="fa fa-file-o"></i></a>
+                                                        <li><a href="#" className="card-refresh " style={{"color": "white"}} data-toggle="refresh"><i
+                                                            className="fa fa-file-o text-white"></i></a>
                                                         </li>
                                                     </ul>
                                                 </div>
@@ -504,14 +508,37 @@ class Explorer extends Component {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="col-lg-12 m-t-10">
+                                <div className="col-lg-4">
+                                    <div className="widget-9 card no-border bg-primary no-margin widget-loader-bar">
+                                        <div className="full-height d-flex flex-column">
+                                            <div className="card-header ">
+                                                <div className="card-title text-black">
+                                                    <span className="font-montserrat fs-11 all-caps text-white">Size of Blockchain <i
+                                                        className="fa fa-chevron-right"></i>
+                                                    </span>
+                                                </div>
+                                                <div className="card-controls">
+                                                    <ul>
+                                                        <li><a href="#" className="card-refresh" data-toggle="refresh"><i
+                                                            className="card-icon card-icon-refresh text-white"></i></a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div className="p-l-20">
+                                                <h3 className="no-margin p-b-30 text-white ">{helpers.bytesToSize(this.state.diskSize, 2)}</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="col-lg-6 m-t-10">
                                     <div className="card no-border no-margin details">
                                         <hr className="no-margin" />
                                         <div className="">
                                             <form role="form">
                                                 <div className="form-group form-group-default input-group m-b-0">
                                                     <div className="form-input-group">
-                                                        <label>Enter Block Number or Txn Hash for details</label>
+                                                        <label>Enter Block Number or Txn Hash to Audit</label>
                                                         <input type="email" className="form-control" placeholder="0x...." onChange={(e) => {this.fetchBlockOrTxn(e.target.value)}} />
                                                     </div>
                                                     <div className="input-group-addon p-l-20 p-r-20 search-button">
@@ -527,9 +554,42 @@ class Explorer extends Component {
                                         </div>
                                     </div>
                                 </div>
+                                <div className="col-lg-6 m-t-10">
+                                    <div className="widget-9  widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch details">
+                                        <div className="padding-25">
+                                            <div className="pull-left">
+                                                <h2 className="text-success no-margin">Latest Txns</h2>
+                                                <p className="no-margin">Descending Order</p>
+                                            </div>
+                                            <h3 className="pull-right semi-bold"><sup>
+                                                <small className="semi-bold">#</small>
+                                                </sup> {this.state.totalTransactions}
+                                            </h3>
+                                            <div className="clearfix"></div>
+                                        </div>
+                                        <div className="auto-overflow widget-11-2-table-2">
+                                            <table className="table table-condensed table-hover">
+                                                <tbody>
+                                                    {this.state.latestTxns.map((item, index) => {
+                                                        return (
+                                                            <tr key={item.txnHash}>
+                                                                <td className="font-montserrat all-caps fs-12 break-word">{item.txnHash}</td>
+                                                                <td className="text-right b-r b-dashed b-grey w-0">
+                                                                </td>
+                                                                <td className="w-25">
+                                                                    <span className="font-montserrat fs-18">{helpers.firstLetterCapital(item.type)}</span>
+                                                                </td>
+                                                            </tr>
+                                                        )
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div className="col-lg-6">
+                        <div className="col-lg-4">
                             <div className="row">
                                 <div className="col-lg-12 m-b-30">
                                 </div>
