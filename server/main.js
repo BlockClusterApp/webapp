@@ -49,7 +49,6 @@ const agenda = new Agenda({
     }
 });
 
-
 Accounts.validateLoginAttempt(function(options) {
     if (!options.allowed) {
         return false;
@@ -236,7 +235,7 @@ Meteor.methods({
         }
 
         const resourceConfig = getContainerResourceLimits({cpu: nodeConfig.cpu, ram: nodeConfig.ram});
-            
+
         const networkProps = {
           "instanceId": instanceId,
           "name": networkName,
@@ -690,7 +689,7 @@ Meteor.methods({
           }
 
         });
-        
+
         return myFuture.wait();
     },
     "deleteNetwork": function(id) {
