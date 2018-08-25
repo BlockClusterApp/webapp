@@ -672,12 +672,14 @@ Meteor.methods({
             });
           }
           //mark the voucher as claimed
+          if(nodeConfig.voucherId){
         Vouchers.update({ _id: nodeConfig.voucherId }, {  $push: { voucher_claim_status:{ 
             claimedBy: Meteor.userId(),
             claimedOn: new Date(),
             claimed: true
         }}
       });
+        }
           let userCard = UserCards.find({userId:userId,active:true},{fields:{_id:1}}).fetch()[0];
           //check wheather the user has verified cards or not. and also for active payment methods.
           if(!userCard || !userCard.cards || !userCard.cards.length){
