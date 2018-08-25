@@ -6,6 +6,8 @@ import request from 'request';
 import { RZPlan, RZSubscription, RZAddOn } from '../../../collections/razorpay';
 import moment from 'moment';
 import crypto from 'crypto';
+import Bull from '../../../modules/bull';
+import bullSystem from '../../../modules/bull';
 
 const debug = require('debug')('api:razorpay');
 
@@ -378,6 +380,14 @@ RazorPay.applyCardVerification = async pgResponse => {
     return RazorPay.processSubscriptionPayment(pgResponse);
   }
 };
+
+RazorPay.processWebHook = async function(req, res) {
+  console.log("Razorpay payload", req.body);
+  bullSystem.addJob('razorpay-webhook', req.body);
+  res.end('OK');
+}
+
+JsonRoutes.add('post', '/api/payments/razorpay/webhook', RazorPay.processWebHook);
 
 Meteor.methods({
   getRazorPayId: async () => {

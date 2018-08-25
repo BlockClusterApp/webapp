@@ -10,7 +10,7 @@ RazorPaySubscription.before.insert((userId, doc) => {
   doc.createdAt = new Date();
   doc.active = true;
 
-  doc.bc_status = 'active'
+  doc.bc_status = 'pending'
 });
 
 

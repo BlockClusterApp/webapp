@@ -53,7 +53,8 @@ class RazorPay extends React.Component {
       image: "/assets/img/logo/favicon-96x96.png",
       prefill: {
         name: `${user.profile.firstName} ${user.profile.lastName}`,
-        email: `${user.emails[0].address}`
+        email: `${user.emails[0].address}`,
+        method: 'card'
       },
       theme: {
         color: '#004286'
