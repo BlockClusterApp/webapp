@@ -45,10 +45,10 @@ class Explorer extends Component {
 
     componentDidMount() {
         this.setState({
-            addLatestBlocksTimer: setTimeout(this.addLatestBlocks, 2000),
-            refreshTxpoolTimer: setTimeout(this.refreshTxpool, 2000),
-            refreshConfigTimer: setTimeout(this.refreshConfig, 2000),
-            refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, 2000)
+            addLatestBlocksTimer: setTimeout(this.addLatestBlocks, 500),
+            refreshTxpoolTimer: setTimeout(this.refreshTxpool, 500),
+            refreshConfigTimer: setTimeout(this.refreshConfig, 500),
+            refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, 500)
         })
     }
 
@@ -470,13 +470,13 @@ class Explorer extends Component {
                                                     <div className="pull-left small">
                                                         <span>Pending</span>
                                                         <span className=" text-success font-montserrat">
-                                                        <i className="fa fa-caret-up m-l-10"></i> {this.state.totalPending} Txns
+                                                        <i className="fa fa-caret-up m-l-10"></i> {this.state.totalPending}
                                                         </span>
                                                     </div>
                                                     <div className="pull-left m-l-20 small">
                                                         <span>Queue</span>
                                                         <span className=" text-danger font-montserrat">
-                                                        <i className="fa fa-caret-down m-l-10"></i> {this.state.totalQueued} Txns
+                                                        <i className="fa fa-caret-down m-l-10"></i> {this.state.totalQueued}
                                                         </span>
                                                     </div>
                                                     <div className="clearfix"></div>
@@ -490,7 +490,7 @@ class Explorer extends Component {
                                         <div className="full-height d-flex flex-column">
                                             <div className="card-header ">
                                                 <div className="card-title text-black">
-                                                    <span className="font-montserrat fs-11 all-caps text-white">Smart Contracts IN NETWORK <i
+                                                    <span className="font-montserrat fs-11 all-caps text-white">Smart Contracts <i
                                                         className="fa fa-chevron-right"></i>
                                                     </span>
                                                 </div>
