@@ -143,7 +143,6 @@ class VoucherList extends Component {
       <div className="content voucherList">
         <div
           className="m-t-20 container-fluid container-fixed-lg bg-white"
-          style={{ marginLeft: "25px", marginRight: "25px" }}
         >
           <div className="row">
             <div className="col-lg-12">
