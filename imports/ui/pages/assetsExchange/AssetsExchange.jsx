@@ -37,11 +37,11 @@ class AssetsManagement extends Component {
 
     componentDidMount() {
         this.setState({
-            refreshAssetTypesTimer: setInterval(this.getAssetTypes, 2000),
-            refreshAccountsTimer: setInterval(this.getAccounts, 2000),
-            refreshOtherAssetTypesTimer: setInterval(this.getOtherAssetTypes, 2000),
-            refreshOtherAccountsTimer: setInterval(this.getOtherAccounts, 2000),
-            refreshOrders: setInterval(this.getOrders, 2000)
+            refreshAssetTypesTimer: setInterval(this.getAssetTypes, 500),
+            refreshAccountsTimer: setInterval(this.getAccounts, 500),
+            refreshOtherAssetTypesTimer: setInterval(this.getOtherAssetTypes, 500),
+            refreshOtherAccountsTimer: setInterval(this.getOtherAccounts, 500),
+            refreshOrders: setInterval(this.getOrders, 500)
         })
     }
 

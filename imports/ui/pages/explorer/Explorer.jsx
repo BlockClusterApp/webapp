@@ -45,10 +45,10 @@ class Explorer extends Component {
 
     componentDidMount() {
         this.setState({
-            addLatestBlocksTimer: setTimeout(this.addLatestBlocks, 2000),
-            refreshTxpoolTimer: setTimeout(this.refreshTxpool, 2000),
-            refreshConfigTimer: setTimeout(this.refreshConfig, 2000),
-            refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, 2000)
+            addLatestBlocksTimer: setTimeout(this.addLatestBlocks, 500),
+            refreshTxpoolTimer: setTimeout(this.refreshTxpool, 500),
+            refreshConfigTimer: setTimeout(this.refreshConfig, 500),
+            refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, 500)
         })
     }
 
@@ -393,39 +393,24 @@ class Explorer extends Component {
                     }
                 })
             } else {
-                web3.eth.getTransaction(value, (error, result1) => {
-                    if(!error && result1 != null) {
-                        web3.eth.getTransactionReceipt(value, (error, result2) => {
-                            if(!error && result2 != null) {
-                                if(result1.to == atomicSwapContractAddress) {
-                                    abiDecoder.addABI(smartContracts.atomicSwap.abi);
-                                } else if (result1.to == assetsContractAddress) {
-                                    abiDecoder.addABI(smartContracts.assets.abi);
-                                } else if (result1.to == streamsContractAddress) {
-                                    abiDecoder.addABI(smartContracts.streams.abi);
-                                }
-
-                                let decodedData = abiDecoder.decodeMethod(result1.input);
-                                if(decodedData !== undefined) {
-                                    result1.decodedinput = decodedData
-                                }
-
-                                if(result2.logs.length > 0) {
-                                    let decodedLogs = abiDecoder.decodeLogs(result2.logs);
-
-                                    if(decodedLogs[0] !== undefined) {
-                                        result2.decodedLogs = decodedLogs
-                                    }
-                                }
-
-                                this.setState({
-                                    blockOrTxnOutput: JSON.stringify(Object.assign(result1, result2), undefined, 4)
-                                })
-                            }
+                let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/transactions/audit?hash=${value}`;
+                HTTP.get(url, {
+                    headers: {
+                        'Authorization': "Basic " + (new Buffer(`${username}:${password}`).toString("base64"))
+                    }
+                }, (err, res) => {
+                    if(!err) {
+                        this.setState({
+                            blockOrTxnOutput: JSON.stringify(res.data, undefined, 4)
+                        })
+                    } else {
+                        this.setState({
+                            blockOrTxnOutput: JSON.stringify({
+                                "message": "Unable to Audit Txn"
+                            }, undefined, 4)
                         })
                     }
                 })
-
             }
         }
     }
@@ -470,13 +455,13 @@ class Explorer extends Component {
                                                     <div className="pull-left small">
                                                         <span>Pending</span>
                                                         <span className=" text-success font-montserrat">
-                                                        <i className="fa fa-caret-up m-l-10"></i> {this.state.totalPending} Txns
+                                                        <i className="fa fa-caret-up m-l-10"></i> {this.state.totalPending}
                                                         </span>
                                                     </div>
                                                     <div className="pull-left m-l-20 small">
                                                         <span>Queue</span>
                                                         <span className=" text-danger font-montserrat">
-                                                        <i className="fa fa-caret-down m-l-10"></i> {this.state.totalQueued} Txns
+                                                        <i className="fa fa-caret-down m-l-10"></i> {this.state.totalQueued}
                                                         </span>
                                                     </div>
                                                     <div className="clearfix"></div>
@@ -490,7 +475,7 @@ class Explorer extends Component {
                                         <div className="full-height d-flex flex-column">
                                             <div className="card-header ">
                                                 <div className="card-title text-black">
-                                                    <span className="font-montserrat fs-11 all-caps text-white">Smart Contracts IN NETWORK <i
+                                                    <span className="font-montserrat fs-11 all-caps text-white">Smart Contracts <i
                                                         className="fa fa-chevron-right"></i>
                                                     </span>
                                                 </div>
