@@ -24,7 +24,7 @@ class BCAccountsView extends Component {
 
     componentDidMount() {
         this.setState({
-            refreshAccountsTimer: setInterval(this.getAccounts, 2000)
+            refreshAccountsTimer: setInterval(this.getAccounts, 500)
         })
     }
 

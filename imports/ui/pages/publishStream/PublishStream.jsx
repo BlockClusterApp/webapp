@@ -27,8 +27,8 @@ class PublishStream extends Component {
 
     componentDidMount() {
         this.setState({
-            refreshAccountsTimer: setInterval(this.getAccounts, 2000),
-            refreshStreamsTimer: setInterval(this.getStreams, 2000)
+            refreshAccountsTimer: setInterval(this.getAccounts, 500),
+            refreshStreamsTimer: setInterval(this.getStreams, 500)
         })
     }
 
