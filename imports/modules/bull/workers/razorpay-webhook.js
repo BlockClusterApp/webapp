@@ -10,6 +10,46 @@ const PaymentRequestReverseMap = {
   'failed': 4
 }
 
+async function getUserFromPayment(payment) {
+  const user = Meteor.users.find({
+    rzCustomerId: payment.customer_id
+  }).fetch()[0];
+  if(user){
+    return user;
+  }
+  if(payment.notes.paymentRequestId) {
+    const request = PaymentRequest.find({
+      _id: id
+    }).fetch()[0];
+    const user = Meteor.users.find({
+      _id: request.userId
+    }).fetch()[0];
+    if(!user.rzCustomerId || !(user.rzCustomerId && user.rzCustomerId.includes(payment.customer_id))) {
+      Meteor.update({
+        "emails.address": payment.email
+      }, {
+        $push: {
+          rzCustomerId: payment.customer_id
+        }
+      });
+    }
+    return Meteor.users.find({_id: user._id}).fetch()[0];
+  }
+  const emailuser = await getUserFromEmail(payment.email);
+  if(!emailuser.rzCustomerId || !(emailuser.rzCustomerId && emailuser.rzCustomerId.includes(payment.customer_id))) {
+  Meteor.update({
+    _id: emailuser._id
+  }, {
+    $push: {
+      rzCustomerId: payment.customer_id
+    }
+  });
+  return Meteor.users.find({
+    _id: emailuser._id
+  }).fetch()[0];
+  }
+}
+
 async function getUserFromEmail(email) {
   const user = Meteor.users.find({
     "email.address": email
@@ -55,12 +95,12 @@ async function updateRZPaymentToUser(user, payment) {
       }
     }
   }
-  if(payment.customer_id && (!user.rzCustomerId || !(user.rzCustomerId && user.rzCustomerId.includes(payment.customer_id)))) {
-    if(!updateObject.$push) {
-      updateObject.$push = {};
-    }
-    updateObject.$push.rzCustomerId = payment.customer_id;
-  }
+  // if(payment.customer_id && (!user.rzCustomerId || !(user.rzCustomerId && user.rzCustomerId.includes(payment.customer_id)))) {
+  //   if(!updateObject.$push) {
+  //     updateObject.$push = {};
+  //   }
+  //   updateObject.$push.rzCustomerId = payment.customer_id;
+  // }
   if(Object.keys(updateObject).length > 0) {
     await safeUpdateUser(user._id, updateObject);
   }
@@ -112,7 +152,7 @@ async function attachPaymentToRequest(payment) {
   return true;
 }
 
-async function insertOrUpdatePayment(userId, payment) {
+async function insertOrUpdatePayment(user, payment) {
 
   if(payment.notes.paymentRequestId) {
     try{
@@ -122,46 +162,105 @@ async function insertOrUpdatePayment(userId, payment) {
     }
   }
 
-  const rzPaymentCount = RZPayment.find(payment.id).count();
+  const rzPaymentCount = RZPayment.find({id: payment.id}).count();
   if(rzPaymentCount > 0) {
     return true;
   }
   RZPayment.insert({
-    userId,
+    userId: user._id,
     ...payment
   });
   return true;
 }
 
-async function insertOrUpdateSubscription(subscription) {
+async function insertOrUpdateSubscription({subscription, payment}) {
+  const rzSubscription = RZSubscription.find({
+    id: subscription.id
+  }).fetch()[0];
+  if(!rzSubscription){
+    throw new Error(`RZ Subscription ${subscription.id} does not exists`);
+  }
+  if(!(rzSubscription.payments && rzSubscription.payments.map(p => p.id).includes(payment.id))){
+    RZSubscription.update({
+      _id: rzSubscription._id
+    }, {
+      $push: {
+        payments: payment
+      },
+      $unset: {
+        currentStatus: '',
+        paymentFailedDate: ''
+      }
+    });
+  } else {
+    RZSubscription.update({
+      _id: rzSubscription._id
+    }, {
+      $unset: {
+        currentStatus: '',
+        paymentFailedDate: ''
+      }
+    });
+  }
 
+  // TODO: Settle bill
+
+  return true;
 }
 
 const HandlerFunctions = {
   "payments.authorized": async ({data}) => {
     const payment = data.payload.payment.entity;
-    const user = await getUserFromEmail(payment.email);
+    const user = await getUserFromPayment(payment);
     updateRZPaymentToUser(user, data.payload.payment.entity);
     await insertOrUpdatePayment(user._id, payment);
+    return true;
   },
   "payments.captured": async ({data}) => {
     const payment = data.payload.payment.entity;
-    const user = await getUserFromEmail(payment.email);
+    const user = await getUserFromPayment(payment);
     updateRZPaymentToUser(user, data.payload.payment.entity);
+    return true;
   },
   "payments.failed": async ({data}) => {
     const payment = data.payload.payment.entity;
-    const user = await getUserFromEmail(payment.email);
-    insertOrUpdatePayment()
+    const user = await getUserFromPayment(payment);
+    insertOrUpdatePayment(user, payment)
+    return true;
   },
   "subscription.pending": async ({data}) => {
-
+    let { subscription } = data.payload;
+    RZSubscription.update({
+      id: subscription.id
+    }, {
+      $set: {
+        currentStatus: 'payment failed',
+        paymentFailedDate: new Date()
+      }
+    });
+    return true;
   },
   "subscription.activated": async ({data}) => {
+    let { subscription, payment } = data.payload;
+    subscription = subscription.entity;
+    payment = payment.entity;
 
+    const user = await getUserFromPayment(payment);
+    await insertOrUpdatePayment(user, payment);
+    await insertOrUpdateSubscription({user, subscription, payment});
+
+    return true;
   },
   "subscription.charged": async ({data}) => {
+    let { subscription, payment } = data.payload;
+    subscription = subscription.entity;
+    payment = payment.entity;
 
+    const user = await getUserFromPayment(payment);
+    await insertOrUpdatePayment(user, payment);
+    await insertOrUpdateSubscription({user, subscription, payment});
+
+    return true;
   }
 }
 
