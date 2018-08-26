@@ -1285,6 +1285,36 @@ spec:
 
         return myFuture.wait();
     },
+    "addSmartContract": function(name, bytecode, abi, networkId) {
+        var myFuture = new Future();
+        var network = Networks.find({
+            _id: networkId
+        }).fetch()[0];
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/contracts/addOrUpdate`, {
+            "content": JSON.stringify({
+                name: name,
+                bytecode: bytecode,
+                abi: abi
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
+            }
+        })
+
+        return myFuture.wait();
+    },
     "inviteUserToNetwork": async function(networkId, nodeType, email, userId) {
         return UserFunctions.inviteUserToNetwork(networkId, nodeType, email, userId || this.userId);
         // let user = Accounts.findUserByEmail(email);

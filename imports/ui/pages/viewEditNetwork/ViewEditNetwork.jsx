@@ -42,7 +42,7 @@ class ViewEditNetwork extends Component {
 		});
 
 		this.setState({
-            refreshAuthoritiesListTimer: setTimeout(this.refreshAuthoritiesList, 2000)
+            refreshAuthoritiesListTimer: setTimeout(this.refreshAuthoritiesList, 500)
         })
 	}
 
