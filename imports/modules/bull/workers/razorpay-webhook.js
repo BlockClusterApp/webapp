@@ -25,7 +25,7 @@ async function getUserFromPayment(payment) {
       _id: request.userId
     }).fetch()[0];
     if(!user.rzCustomerId || !(user.rzCustomerId && user.rzCustomerId.includes(payment.customer_id))) {
-      Meteor.update({
+      Meteor.users.update({
         "emails.address": payment.email
       }, {
         $push: {
@@ -37,7 +37,7 @@ async function getUserFromPayment(payment) {
   }
   const emailuser = await getUserFromEmail(payment.email);
   if(!emailuser.rzCustomerId || !(emailuser.rzCustomerId && emailuser.rzCustomerId.includes(payment.customer_id))) {
-  Meteor.update({
+  Meteor.users.update({
     _id: emailuser._id
   }, {
     $push: {
@@ -52,7 +52,7 @@ async function getUserFromPayment(payment) {
 
 async function getUserFromEmail(email) {
   const user = Meteor.users.find({
-    "email.address": email
+    "emails.address": email
   }).fetch()[0];
 
   return user;
@@ -162,8 +162,8 @@ async function insertOrUpdatePayment(user, payment) {
     }
   }
 
-  const rzPaymentCount = RZPayment.find({id: payment.id}).count();
-  if(rzPaymentCount > 0) {
+  const rzPayment = RZPayment.find({id: payment.id}).fetch()[0];
+  if(rzPayment) {
     return true;
   }
   RZPayment.insert({
@@ -209,7 +209,7 @@ async function insertOrUpdateSubscription({subscription, payment}) {
 }
 
 const HandlerFunctions = {
-  "payments.authorized": async ({data}) => {
+  "payment.authorized": async ({data}) => {
     const payment = data.payload.payment.entity;
     const user = await getUserFromPayment(payment);
     updateRZPaymentToUser(user, data.payload.payment.entity);
@@ -267,7 +267,7 @@ const HandlerFunctions = {
 
 module.exports = function(bullSystem) {
   const processFunction = function(job) {
-    return new Promise(Meteor.bindEnvironment(async resolve => {
+    return new Promise(async resolve => {
       const data = job.data;
       if(typeof HandlerFunctions[data.event] === "function"){
         await HandlerFunctions[data.event]({data});
@@ -275,7 +275,7 @@ module.exports = function(bullSystem) {
         console.log("Razorpay webhook not handled", data.event);
       }
       return resolve(true);
-    }));
+    });
   };
 
   bullSystem.bullJobs.process('razorpay-webhook', processFunction);
