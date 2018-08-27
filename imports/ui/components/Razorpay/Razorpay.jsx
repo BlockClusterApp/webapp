@@ -56,6 +56,9 @@ class RazorPay extends React.Component {
         email: `${user.emails[0].address}`,
         method: 'card'
       },
+      readonly: {
+        email: true
+      },
       theme: {
         color: '#004286'
       },

@@ -88,7 +88,7 @@ export default class CardVerification extends React.Component {
                       refunded to your account within 5 working bank days.
                     </p>
                     <center><RazorPay loading={this.state.loading} buttonText={`Verify credit card`} amount={100} paymentHandler={this.rzPaymentHandler} preTriggerPaymentListener={this.preTriggerPaymentListener} /></center>
-                    <p><br />Only credit card is accepted for now. If you choose any other payment method, the verification won't be successful.</p>
+                    {/* <p><br />Only credit card is accepted for now. If you choose any other payment method, the verification won't be successful.</p> */}
                   </div>
                 </div>
               </div>
