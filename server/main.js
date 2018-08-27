@@ -37,6 +37,7 @@ import {
     authoritiesListCronJob
 } from "../imports/collections/networks/server/cron.js"
 import fs from 'fs';
+import moment from "moment";
 var md5 = require("apache-md5");
 var base64 = require('base-64');
 var utf8 = require('utf8');
@@ -46,7 +47,8 @@ const Agenda = require('agenda');
 const agenda = new Agenda({
     db: {
         address: Config.mongoConnectionString
-    }
+    },
+    processEvery: '30 seconds'
 });
 
 Accounts.validateLoginAttempt(function(options) {
@@ -679,13 +681,14 @@ Meteor.methods({
         }}
       });
         }
-          let userCard = UserCards.find({userId:userId,active:true},{fields:{_id:1}}).fetch();
+          let userCard = UserCards.find({userId:Meteor.userId(),active:true},{fields:{_id:1}}).fetch();
           //check wheather the user has verified cards or not. and also for active payment methods.
 
           if(!userCard || !userCard.length || !userCard[0].cards || !userCard[0].cards.length){
-          agenda.schedule(moment().add(3, 'days').toDate(), "warning email step 1", {
+          agenda.schedule(moment().add(2, 'minutes').toDate(), "warning email step 1", {
+            
             network_id: id,
-            userId:userId
+            userId:Meteor.userId()
           });
           }
 
