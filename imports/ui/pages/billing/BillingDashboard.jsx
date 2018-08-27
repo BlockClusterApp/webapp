@@ -1,12 +1,9 @@
-import React, { Component } from "react";
-import { withTracker } from "meteor/react-meteor-data";
-import { Networks } from "../../../collections/networks/networks.js";
-import helpers from "../../../modules/helpers";
-import { withRouter } from "react-router-dom";
+import React, { Component } from 'react';
+import { withTracker } from 'meteor/react-meteor-data';
+import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
+import { withRouter } from 'react-router-dom';
 
-import RazorPay from '../../components/Razorpay/Razorpay.jsx';
-
-import "./Dashboard.scss";
+import './Dashboard.scss';
 
 class BillingDashboard extends Component {
   constructor(props) {
@@ -15,7 +12,7 @@ class BillingDashboard extends Component {
     this.state = {
       locations: [],
       bill: {},
-      loading: true
+      loading: true,
     };
   }
 
@@ -26,7 +23,7 @@ class BillingDashboard extends Component {
   }
 
   openNetwork = networkId => {
-    this.props.history.push("/app/networks/" + networkId);
+    this.props.history.push('/app/networks/' + networkId);
   };
 
   componentDidMount() {
@@ -40,46 +37,62 @@ class BillingDashboard extends Component {
 
   updateBilling() {
     const date = new Date();
-    Meteor.call('fetchBilling', {userId: Meteor.userId(), month: date.getMonth(), year: date.getFullYear(), isFromFrontend: true}, (err, reply) => {
+    Meteor.call('fetchBilling', { userId: Meteor.userId(), month: date.getMonth(), year: date.getFullYear(), isFromFrontend: true }, (err, reply) => {
       this.setState({
         bill: reply,
-        loading: false
-      })
+        loading: false,
+      });
     });
   }
 
   getLocationName = locationCode => {
-    const locationConfig = this.state.locations.find(
-      a => a.locationCode === locationCode
-    );
+    const locationConfig = this.state.locations.find(a => a.locationCode === locationCode);
     if (!locationConfig) {
       return undefined;
     }
     return locationConfig.locationName;
   };
 
-  convertCostToTag = (label) => {
-    if(!label){
+  convertCostToTag = label => {
+    if (!label) {
       return null;
     }
     return <span className="label label-info">{label}</span>;
+  };
+
+  onYearChange = (e) => {
+    this.selectedYear = e.target.value;
+  };
+
+  onMonthChange = (e) => {
+    this.selectedMonth = e.target.value;
+  };
+
+  showBill = () => {
+    Meteor.call('fetchBilling', { userId: Meteor.userId(), month: this.selectedMonth, year: this.selectedYear, isFromFrontend: true }, (err, reply) => {
+      this.setState({
+        bill: reply,
+        loading: false,
+      });
+    });
   }
 
   render() {
-
     let billView = undefined;
 
-    if( this.state.bill && this.state.bill.networks) {
+    if (this.state.bill && this.state.bill.networks) {
       billView = this.state.bill.networks.map((network, index) => {
         return (
-          <tr title={network.timeperiod} key={index+1}>
+          <tr title={network.timeperiod} key={index + 1}>
             <td>{network.name}</td>
             <td>{network.instanceId}</td>
             <td>{network.rate}</td>
             <td>{network.runtime}</td>
-            <td>$ {network.cost} {this.convertCostToTag(network.label)} </td>
+            <td>
+              $ {network.cost} {this.convertCostToTag(network.label)}{' '}
+            </td>
           </tr>
-        )
+        );
       });
     }
 
@@ -94,28 +107,75 @@ class BillingDashboard extends Component {
                 </div>
                 <div className="card-block">
                   <div className="table-responsive">
-                    <p>Free micro node usage: {this.state.bill && this.state.bill.totalFreeMicroHours ? `${this.state.bill.totalFreeMicroHours.hours}:${this.state.bill.totalFreeMicroHours.minutes%60} `: '0'} / {1490 * 2} hrs</p>
+                    <div className="row">
+                      <div className="col-md-5">
+                        <p>
+                          Free micro node usage:&nbsp;
+                          {this.state.bill && this.state.bill.totalFreeMicroHours
+                            ? `${this.state.bill.totalFreeMicroHours.hours}:${this.state.bill.totalFreeMicroHours.minutes % 60} `
+                            : '0'}{' '}
+                          / {1490 * 2} hrs
+                        </p>
+                      </div>
+                      <div className="col-md-7">
+                        <div className="row">
+                          <div className="col-md-2">Show Bill for:</div>
+                          <div className="col-md-4">
+                            <div className="form-group ">
+                              <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onMonthChange}>
+                                <option value="0">January</option>
+                                <option value="1">February</option>
+                                <option value="2">March</option>
+                                <option value="3">April</option>
+                                <option value="4">May</option>
+                                <option value="5">June</option>
+                                <option value="6">July</option>
+                                <option value="7">August</option>
+                                <option value="8">September</option>
+                                <option value="9">August</option>
+                                <option value="10">November</option>
+                                <option value="11">December</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="col-md-3">
+                            <div className="form-group ">
+                              <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onYearChange}>
+                                <option value="2018">2018</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="col-md-3">
+                            <LaddaButton data-size={S} data-style={SLIDE_UP} data-spinner-size={30} data-spinner-lines={12} className="btn btn-success m-t-10" onClick={this.showBill} style={{marginTop: 0}}>
+                              &nbsp;&nbsp;Select
+                            </LaddaButton>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     <table className="table table-hover" id="basicTable">
                       <thead>
                         <tr>
-                          <th style={{ width: "18%" }}>Network Name</th>
-                          <th style={{ width: "15%" }}>Instance ID</th>
-                          <th style={{ width: "15%" }}>Rate</th>
-                          <th style={{ width: "18%" }}>Runtime</th>
-                          <th style={{ width: "19%" }}>Cost</th>
+                          <th style={{ width: '18%' }}>Network Name</th>
+                          <th style={{ width: '15%' }}>Instance ID</th>
+                          <th style={{ width: '15%' }}>Rate</th>
+                          <th style={{ width: '18%' }}>Runtime</th>
+                          <th style={{ width: '19%' }}>Cost</th>
                         </tr>
                       </thead>
-                      <tbody>
-                        {billView}
-                      </tbody>
+                      <tbody>{billView}</tbody>
                       <tfoot>
                         <tr>
-                          <td colSpan="4" style={{textAlign: 'right'}}>Total Amount</td>
+                          <td colSpan="4" style={{ textAlign: 'right' }}>
+                            Total Amount
+                          </td>
                           <td>{this.state.bill.totalAmount ? `$ ${this.state.bill.totalAmount.toFixed(2)}` : '0'}</td>
                         </tr>
                         <tr>
-                        <td colSpan="4" style={{textAlign: 'right'}}>&nbsp;</td>
-                          <td >{/* <RazorPay amountDisplay={`$ ${}`} /> */}</td>
+                          <td colSpan="4" style={{ textAlign: 'right' }}>
+                            &nbsp;
+                          </td>
+                          <td>{/* <RazorPay amountDisplay={`$ ${}`} /> */}</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -132,6 +192,6 @@ class BillingDashboard extends Component {
 
 export default withTracker(() => {
   return {
-    subscriptions: [Meteor.subscribe("networks")]
+    subscriptions: [Meteor.subscribe('networks')],
   };
 })(withRouter(BillingDashboard));

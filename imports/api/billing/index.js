@@ -1,7 +1,8 @@
 import { Networks } from '../../collections/networks/networks';
 import UserCards from '../../collections/payments/user-cards';
 import { RZPlan, RZSubscription, RZAddOn } from '../../collections/razorpay';
-import moment from 'moment';
+import moment, { invalid } from 'moment';
+import Invoice from '../../collections/payments/invoice';
 
 const Billing = {};
 
@@ -58,7 +59,7 @@ Billing.generateBill = async function({userId, month, year, isFromFrontend}) {
     Micro: 0
   }
 
-  result.networks =  userNetworks.map(network => {
+  result.networks = userNetworks.map(network => {
 
     let isMicroNode = network.networkConfig && network.networkConfig.cpu === 500;
 
@@ -226,6 +227,20 @@ Billing.generateBill = async function({userId, month, year, isFromFrontend}) {
       timeperiod: `Started at: ${moment(network.createdOn).format('DD-MMM-YYYY HH:mm')} ${network.deletedAt ? ` to ${moment(network.deletedAt).format('DD-MMM-YYYY HH:mm:SS')}` : 'and still running'}`
     };
   }).filter(n => !!n);
+
+  if(!(selectedMonth.month() === moment().month() && selectedMonth.year() === moment().year())) {
+    const prevMonthInvoice = Invoice.find({
+      userId: Meteor.userId(),
+      billingPeriodLabel: selectedMonth.format('MMM-YYYY')
+    }).fetch()[0];
+    if(!prevMonthInvoice){
+      result.networks = [];
+      result.totalAmount = 0;
+    } else {
+      result.networks = prevMonthInvoice.items;
+      result.totalAmount = invalid.totalAmount;
+    }
+  }
 
   result.totalFreeMicroHours = convertMilliseconds(nodeUsageCountMinutes.Micro * 60 * 1000);
 

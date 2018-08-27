@@ -20,7 +20,7 @@ InvoiceObj.generateInvoice = async ({
     console.log(`Not generating invoice for ${userId} as amount is 0 `);
     return true;
   }
-  const items = [];
+
   const invoiceObject = {
     user: {
       email: user.emails[0].address,
@@ -35,19 +35,7 @@ InvoiceObj.generateInvoice = async ({
     totalAmount,
   };
 
-  bill.networks.forEach(network => {
-    items.push({
-      name: `${network.name} - ${network.instanceId}`,
-      runtime: network.runtime,
-      createdOn: network.createdOn,
-      deletedAt: network.deletedAt,
-      rate: network.rate,
-      networkConfig: network.networkConfig,
-      voucher: network.voucher,
-      cost: network.cost,
-      time: network.time
-    })
-  });
+  const items = bill.networks;
 
   invoiceObject.items = items;
 
