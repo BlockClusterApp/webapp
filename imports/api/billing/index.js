@@ -68,8 +68,10 @@ Billing.generateBill = async function({userId, month, year}) {
       isMicroNode = isMicroNode || networkConfig.name === 'Light';
     }
 
+    const billingStartDate = selectedMonth.startOf('month').toDate();
 
-    const time = convertMilliseconds(thisCalculationEndDate.getTime() - new Date(network.createdOn).getTime());
+
+    const time = convertMilliseconds(thisCalculationEndDate.getTime() - billingStartDate.getTime());
     const rate = isMicroNode ? 0.05 * 24 * 30 : 199; // per month
     let rateString = isMicroNode ? `$ 0.05 / hr` : `$ ${rate} / month `;
     const ratePerHour = rate / (30 * 24);
@@ -171,6 +173,8 @@ Billing.generateBill = async function({userId, month, year}) {
       rate: rateString,
       runtime: `${time.hours}:${(time.minutes % 60) < 10 ? `0${time.minutes % 60}`: time.minutes % 60}`,
       cost,
+      time,
+      deletedAt: network.deletedAt,
       voucher: voucher,
       networkConfig,
       label,

@@ -20,8 +20,16 @@ Payments.createRequest = async ({paymentGateway, reason, amount}) => {
   return {paymentRequestId: insertResult, rzSubscriptionId: rzSubscription.id};
 };
 
+Payments.getConversionToINRRate = async ({currencyCode}) => {
+  currencyCode = currencyCode || 'USD';
+
+  return 70;
+}
+
 Meteor.methods({
     capturePaymentRazorPay: RazorPay.capturePayment,
     applyRZCardVerification: RazorPay.applyCardVerification,
     createPaymentRequest: Payments.createRequest
 });
+
+export default Payments;
