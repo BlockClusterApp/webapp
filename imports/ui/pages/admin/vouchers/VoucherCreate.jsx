@@ -65,7 +65,6 @@ class VoucherCreate extends Component {
       createVoucher_formSubmitError: "",
       createVoucher_formloading: true
     });
-    console.log("Inside, _doc_voucher");
     Meteor.call("CreateVoucher", _doc_voucher, (error, done) => {
       console.log(error, done);
       if (!error) {
