@@ -43,12 +43,15 @@ module.exports = function(agenda) {
   } else if (process.env.NODE_ENV === "staging"){
     agenda.schedule('in 10 seconds', 'forex-update');
   } else {
+    console.log("Manual update forex");
     Forex.update({}, {
       $set: {
         inr: 1,
         usd: 68,
         eur: 82
       }
+    }, {
+      upsert: true
     });
   }
 };

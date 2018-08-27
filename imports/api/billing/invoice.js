@@ -58,13 +58,14 @@ InvoiceObj.generateInvoice = async ({
     addOn: {
       name: `Bill for ${moment(billingMonth).format('MMM-YYYY')}`,
       description: `Node usage charges`,
-      amount: ((Number(totalAmount) * 100 * conversion) - 100),
+      amount: ((Number(totalAmount) * 100 * conversion) - 100), // Since we are already charging Rs 1 for subscription so deduct Rs 1 from final here
       currency: 'INR'
     },
     userId
   });
 
   invoiceObject.conversionRate = conversion;
+  invoiceObject.totalAmountINR = Number(Number(invoiceObject.totalAmount * conversion).toFixed(2));
 
   invoiceObject.rzAddOnId = rzAddOn._id;
 

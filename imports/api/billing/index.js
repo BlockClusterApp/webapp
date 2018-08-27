@@ -9,6 +9,14 @@ const FreeNodesPerUser = {
   Micro: 2
 }
 
+// Price per hour in $
+const Price = {
+  lightNode: 0.1375, // $99 a month
+  powerNode: 0.4158, // $299
+  extraDisk: 0.30
+}
+const POWER_NODE_INCLUDED_STORAGE  = 200;
+
 const FreeHoursPerUser = {
   Micro: 1490 * 2
 }
@@ -22,7 +30,7 @@ function convertMilliseconds(ms) {
   return { seconds, minutes, hours, days }
 }
 
-Billing.generateBill = async function({userId, month, year}) {
+Billing.generateBill = async function({userId, month, year, isFromFrontend}) {
   month = month || moment().month();
   year = year || moment().year();
 
@@ -36,10 +44,6 @@ Billing.generateBill = async function({userId, month, year}) {
 
   const userNetworks = Networks.find({
     user: userId,
-    createdOn: {
-      $lt: selectedMonth.endOf('month').toDate().getTime(),
-      $gte: selectedMonth.startOf('month').toDate().getTime()
-    }
   }).fetch();
 
   const result = {
@@ -59,7 +63,7 @@ Billing.generateBill = async function({userId, month, year}) {
     let isMicroNode = network.networkConfig && network.networkConfig.cpu === 500;
 
     let thisCalculationEndDate = calculationEndDate;
-    if (network.deletedAt < calculationEndDate.getTime()) {
+    if (network.deletedAt && network.deletedAt < calculationEndDate.getTime()) {
       thisCalculationEndDate = new Date(network.deletedAt);
     }
 
@@ -75,9 +79,9 @@ Billing.generateBill = async function({userId, month, year}) {
 
 
     const time = convertMilliseconds(thisCalculationEndDate.getTime() - billingStartDate.getTime());
-    const rate = isMicroNode ? 0.05 * 24 * 30 : 199; // per month
-    let rateString = isMicroNode ? `$ 0.05 / hr` : `$ ${rate} / month `;
-    const ratePerHour = rate / (30 * 24);
+    const rate = isMicroNode ? Price.lightNode : Price.powerNode; // per month
+    let rateString =`$ ${rate} / hr`;
+    const ratePerHour = rate;
     const ratePerMinute = ratePerHour / 60;
 
     const voucher = network.metadata && network.metadata.voucher;
@@ -143,18 +147,20 @@ Billing.generateBill = async function({userId, month, year}) {
 
       //so that we can track record how many times he used.
       //and also helps to validate if next time need to consider voucher or not.
-      Networks.update(
-        { _id: network._id },
-        {
-          $push: {
-            voucher_claim_status: {
-              claimedBy: Meteor.userId(),
-              claimedOn: new Date(),
-              claimed: true
+      if(!isFromFrontend) {
+        Networks.update(
+          { _id: network._id },
+          {
+            $push: {
+              voucher_claim_status: {
+                claimedBy: Meteor.userId(),
+                claimedOn: new Date(),
+                claimed: true
+              }
             }
           }
-        }
-      );
+        );
+      }
 
     }
     let label = voucher ? voucher.code : networkConfig && networkConfig.name === 'Micro free' ? networkConfig.name : null;
@@ -162,6 +168,8 @@ Billing.generateBill = async function({userId, month, year}) {
     // if(isMicroNode && network.active){
     //   nodeTypeCount.Micro += 1;
     // }
+    let extraDiskAmount = 0;
+    let extraDiskStorage = 0;
     if(isMicroNode){
     // calculate hours
       let endTime = network.deletedAt ? network.deletedAt : new Date();
@@ -178,9 +186,18 @@ Billing.generateBill = async function({userId, month, year}) {
       paidHours = Math.max(0, paidHours);
 
       cost = Number(paidHours * ratePerHour + paidMinutes * ratePerMinute).toFixed(2);
-      nodeUsageCountMinutes.Micro += usedTime.hours * 60;
-      nodeUsageCountMinutes.Micro += usedTime.minutes % 60;
+
+      const runtimeStart = moment(network.createdOn);
+      const runtime = convertMilliseconds(moment(endTime).toDate().getTime() - runtimeStart.toDate().getTime());
+      nodeUsageCountMinutes.Micro += runtime.hours * 60;
+      nodeUsageCountMinutes.Micro += runtime.minutes % 60;
       label = label || 'light';
+    } else {
+      if(network.networkConfig.disk > 200) {
+        extraDiskStorage = network.networkConfig.disk - POWER_NODE_INCLUDED_STORAGE;
+        extraDiskAmount = Price.extraDisk * extraDiskStorage;
+        cost = cost + extraDiskAmount;
+      }
     }
 
     // if(isMicroNode && nodeTypeCount.Micro > FreeNodesPerUser.Micro) {
@@ -191,12 +208,15 @@ Billing.generateBill = async function({userId, month, year}) {
     result.totalAmount += Number(cost);
 
 
+    if(network.deletedAt && moment(network.deletedAt).isBefore(selectedMonth.startOf('month'))){
+      return undefined;
+    }
     return {
       name: network.name,
       instanceId: network.instanceId,
       createdOn: new Date(network.createdOn),
       rate: rateString,
-      runtime: `${time.hours}:${(time.minutes % 60) < 10 ? `0${time.minutes % 60}`: time.minutes % 60}`,
+      runtime: `${time.hours}:${(time.minutes % 60) < 10 ? `0${time.minutes % 60}`: time.minutes % 60} hrs | ${extraDiskStorage} GB extra`,
       cost,
       time,
       deletedAt: network.deletedAt,
@@ -205,7 +225,7 @@ Billing.generateBill = async function({userId, month, year}) {
       label,
       timeperiod: `Started at: ${moment(network.createdOn).format('DD-MMM-YYYY HH:mm')} ${network.deletedAt ? ` to ${moment(network.deletedAt).format('DD-MMM-YYYY HH:mm:SS')}` : 'and still running'}`
     };
-  });
+  }).filter(n => !!n);
 
   result.totalFreeMicroHours = convertMilliseconds(nodeUsageCountMinutes.Micro * 60 * 1000);
 

@@ -40,7 +40,7 @@ class BillingDashboard extends Component {
 
   updateBilling() {
     const date = new Date();
-    Meteor.call('fetchBilling', {userId: Meteor.userId(), month: date.getMonth(), year: date.getFullYear()}, (err, reply) => {
+    Meteor.call('fetchBilling', {userId: Meteor.userId(), month: date.getMonth(), year: date.getFullYear(), isFromFrontend: true}, (err, reply) => {
       this.setState({
         bill: reply,
         loading: false
@@ -76,7 +76,7 @@ class BillingDashboard extends Component {
             <td>{network.name}</td>
             <td>{network.instanceId}</td>
             <td>{network.rate}</td>
-            <td>{network.runtime} hrs</td>
+            <td>{network.runtime}</td>
             <td>$ {network.cost} {this.convertCostToTag(network.label)} </td>
           </tr>
         )
