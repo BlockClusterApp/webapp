@@ -93,7 +93,10 @@ Billing.generateBill = async function(userId, month, year) {
      * And Also check for expiry date.
      */
 
-    const vouchar_usable = (voucher.usability.recurring == true) ? ( (voucher.usability.no_months > voucher.voucher_claim_status.length) ? true:false ) : (voucher.voucher_claim_status.length ? false : true);
+    console.log(voucher)
+      
+    const vouchar_usable =  (voucher.usability && voucher.usability.recurring == true) ? ( (voucher.usability.no_months > (voucher.voucher_claim_status ? voucher.voucher_claim_status.length : 0)) ? true:false ) : ( (voucher.voucher_claim_status ? voucher.voucher_claim_status.length : false) ? false : true);
+    
     const voucher_expired = voucher.expiryDate ? new Date(voucher.expiryDate) <= new Date() : false
 
     let cost = Number(time.hours * ratePerHour + ((time.minutes) % 60) * ratePerMinute).toFixed(2);
@@ -191,7 +194,7 @@ Billing.shouldHideCreditCardVerification = async function() {
 
   const userCards = UserCards.find({userId: userId}).fetch()[0];
   const networks = Networks.find({user: userId, active: true}).fetch();
-
+  console.log(networks);
   if(networks.length > 2 && !(userCards && userCards.cards.length > 0)){
     return false;
   }
