@@ -18,7 +18,11 @@ module.exports = (bullSystem) => {
 
       const { userId } = job.data;
       debug("Generating invoice for ", userId);
-      const billingMonth = moment().subtract('1', 'month');
+
+      let billingMonth = moment().subtract('1', 'month');
+      if(process.env.GENERATE_BILL) {
+        billingMonth = moment();
+      }
       const prevMonth = billingMonth.get('month');
       const prevYear = billingMonth.get('year');
       const bill = await Billing.generateBill({

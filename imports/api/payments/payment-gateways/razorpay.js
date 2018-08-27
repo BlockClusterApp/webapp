@@ -134,7 +134,7 @@ RazorPay.cancelSubscription = async ({ rzSubscription }) => {
   return false;
 };
 
-RazorPay.createAddOn = async ({ subscriptionId, addOn }) => {
+RazorPay.createAddOn = async ({ subscriptionId, addOn, userId }) => {
   debug('Creating addon', addOn, subscriptionId);
   try {
     const addOnResponse = await RazorPayInstance.subscriptions.createAddon(subscriptionId, {
@@ -147,7 +147,7 @@ RazorPay.createAddOn = async ({ subscriptionId, addOn }) => {
       quantity: addOn.quantity || 1
     });
     debug('Create AddOn | Response', addOnResponse);
-    const addOnId = RZAddOn.insert({ ...addOnResponse, userId: Meteor.userId(), subscriptionId });
+    const addOnId = RZAddOn.insert({ ...addOnResponse, userId, subscriptionId });
     return RZAddOn.find({ _id: addOnId }).fetch()[0];
   } catch (err) {
     debug('Create AddOn | Error', err);

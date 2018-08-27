@@ -32,6 +32,7 @@ var jsonminify = require("jsonminify");
 import helpers from "../imports/modules/helpers"
 import server_helpers from "../imports/modules/helpers/server"
 import smartContracts from "../imports/modules/smart-contracts"
+import moment from 'moment';
 import {
     scanBlocksOfNode,
     authoritiesListCronJob
@@ -214,7 +215,7 @@ async function fetchRazorPayStatus({nodeConfig}) {
   if(nodeConfig.voucher) {
     return true;
   }
-  const rzSubscriptionForCustomer = RZSubscription.find({userId: Meteor.userId(), status: 'active', bc_status: 'active'}).fetch()[0];
+  const rzSubscriptionForCustomer = RZSubscription.find({userId: Meteor.userId(), bc_status: 'active'}).fetch()[0];
   if(!rzSubscriptionForCustomer) {
     return false;
   }
@@ -734,7 +735,7 @@ Meteor.methods({
           }
           //mark the voucher as claimed
           if(nodeConfig.voucherId){
-        Vouchers.update({ _id: nodeConfig.voucherId }, {  $push: { voucher_claim_status:{ 
+        Vouchers.update({ _id: nodeConfig.voucherId }, {  $push: { voucher_claim_status:{
             claimedBy: Meteor.userId(),
             claimedOn: new Date(),
             claimed: true

@@ -51,14 +51,17 @@ InvoiceObj.generateInvoice = async ({
 
   invoiceObject.items = items;
 
+  const conversion = await Payment.getConversionToINRRate({});
+
   const rzAddOn = await RazorPay.createAddOn({
     subscriptionId: rzSubscription.id,
     addOn: {
       name: `Bill for ${moment(billingMonth).format('MMM-YYYY')}`,
       description: `Node usage charges`,
-      amount: Number(totalAmount) * 100 * Payment.getConversionToINRRate({}),
+      amount: ((Number(totalAmount) * 100 * conversion) - 100),
       currency: 'INR'
-    }
+    },
+    userId
   });
 
   invoiceObject.rzAddOnId = rzAddOn._id;

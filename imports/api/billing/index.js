@@ -68,7 +68,10 @@ Billing.generateBill = async function({userId, month, year}) {
       isMicroNode = isMicroNode || networkConfig.name === 'Light';
     }
 
-    const billingStartDate = selectedMonth.startOf('month').toDate();
+    let billingStartDate = selectedMonth.startOf('month').toDate();
+    if(moment(billingStartDate).isBefore(moment(new Date(network.createdOn)))){
+      billingStartDate = new Date(network.createdOn);
+    }
 
 
     const time = convertMilliseconds(thisCalculationEndDate.getTime() - billingStartDate.getTime());
@@ -162,7 +165,7 @@ Billing.generateBill = async function({userId, month, year}) {
     if(isMicroNode){
     // calculate hours
       let endTime = network.deletedAt ? network.deletedAt : new Date();
-      const usedTime =  convertMilliseconds(moment(endTime).toDate().getTime() - moment(network.createdOn).toDate().getTime());
+      const usedTime =  convertMilliseconds(moment(endTime).toDate().getTime() - billingStartDate.getTime());
       const freeHoursLeft = Math.max(FreeHoursPerUser.Micro - (nodeUsageCountMinutes.Micro / 60), 0);
       let paidHours = -1, paidMinutes = 0;
       if(freeHoursLeft < usedTime.hours) {
