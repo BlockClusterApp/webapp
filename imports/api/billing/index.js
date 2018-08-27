@@ -22,11 +22,11 @@ function convertMilliseconds(ms) {
   return { seconds, minutes, hours, days }
 }
 
-Billing.generateBill = async function(userId, month, year) {
+Billing.generateBill = async function({userId, month, year}) {
   month = month || moment().month();
   year = year || moment().year();
 
-  const selectedMonth = moment().month(month).year(year);
+  const selectedMonth = moment().year(year).month(month);
   const currentMonth = moment();
 
   let calculationEndDate = selectedMonth.endOf('month').toDate();
@@ -127,7 +127,7 @@ Billing.generateBill = async function(userId, month, year) {
           }
         }
       );
-      
+
     }
     let label = voucher ? voucher.code : networkConfig && networkConfig.name === 'Micro free' ? networkConfig.name : null;
 

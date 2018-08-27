@@ -1,6 +1,6 @@
-import { RZPlan, RZSubscription, RZPayment } from '../../../collections/razorpay';
-import UserCards from '../../../collections/payments/user-cards';
-import PaymentRequest from '../../../collections/payments/payment-requests';
+import { RZPlan, RZSubscription, RZPayment } from '../../../../collections/razorpay';
+import UserCards from '../../../../collections/payments/user-cards';
+import PaymentRequest from '../../../../collections/payments/payment-requests';
 const debug = require('debug')('bull:razorpay');
 
 const PaymentRequestReverseMap = {

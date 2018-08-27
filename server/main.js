@@ -38,17 +38,12 @@ import {
 } from "../imports/collections/networks/server/cron.js"
 import fs from 'fs';
 import { RZSubscription } from "../imports/collections/razorpay";
+import agenda from '../imports/modules/schedulers/agenda';
 var md5 = require("apache-md5");
 var base64 = require('base-64');
 var utf8 = require('utf8');
 var BigNumber = require('bignumber.js');
-const Agenda = require('agenda');
 
-const agenda = new Agenda({
-    db: {
-        address: Config.mongoConnectionString
-    }
-});
 
 Accounts.validateLoginAttempt(function(options) {
     if (!options.allowed) {

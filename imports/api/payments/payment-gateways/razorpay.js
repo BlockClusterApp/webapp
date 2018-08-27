@@ -6,8 +6,8 @@ import request from 'request';
 import { RZPlan, RZSubscription, RZAddOn } from '../../../collections/razorpay';
 import moment from 'moment';
 import crypto from 'crypto';
-import Bull from '../../../modules/bull';
-import bullSystem from '../../../modules/bull';
+import Bull from '../../../modules/schedulers/bull';
+import bullSystem from '../../../modules/schedulers/bull';
 
 const debug = require('debug')('api:razorpay');
 

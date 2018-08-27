@@ -40,7 +40,7 @@ class BillingDashboard extends Component {
 
   updateBilling() {
     const date = new Date();
-    Meteor.call('fetchBilling', Meteor.userId(), date.getMonth(), date.getFullYear(), (err, reply) => {
+    Meteor.call('fetchBilling', {userId: Meteor.userId(), month: date.getMonth(), year: date.getFullYear()}, (err, reply) => {
       this.setState({
         bill: reply,
         loading: false

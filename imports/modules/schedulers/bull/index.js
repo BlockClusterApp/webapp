@@ -2,7 +2,7 @@
 'use strict';
 import Bull from 'bull';
 
-import Config from '../config/server';
+import Config from '../../config/server';
 
 const env = process.env.NODE_ENV || 'dev';
 
