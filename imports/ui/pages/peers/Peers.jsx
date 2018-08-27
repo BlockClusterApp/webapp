@@ -6,6 +6,7 @@ import {withRouter} from 'react-router-dom'
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import notifications from "../../../modules/notifications"
 import {Link} from "react-router-dom"
+import Config from '../../../modules/config/client'
 
 import "./Peers.scss"
 
@@ -14,14 +15,63 @@ class Peers extends Component {
     constructor() {
         super()
         this.state = {
-            defaultJSONQuery: JSON.stringify(JSON.parse('{"assetName":"license","uniqueIdentifier":"1234","company":"blockcluster"}'), undefined, 4)
+            defaultJSONQuery: JSON.stringify(JSON.parse('{"assetName":"license","uniqueIdentifier":"1234","company":"blockcluster"}'), undefined, 4),
+            connectedPeers: []
         }
+
+        this.refreshConnectedPeers = this.refreshConnectedPeers.bind(this)
+    }
+
+    componentDidMount() {
+        this.setState({
+            connectedPeersTimer: setTimeout(this.refreshConnectedPeers, 500)
+        })
     }
 
     componentWillUnmount() {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
         });
+
+        clearTimeout(this.state.connectedPeersTimer);
+    }
+
+    refreshConnectedPeers() {
+        let rpc = null;
+        let status = null;
+
+        if(this.props.network.length === 1) {
+            username = this.props.network[0].instanceId
+            password = this.props.network[0]["api-password"]
+            status = this.props.network[0].status
+        }
+
+        if(status == "running") {
+            let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/nodeInfo`;
+            HTTP.get(url, {
+                headers: {
+                    'Authorization': "Basic " + (new Buffer(`${username}:${password}`).toString("base64"))
+                }
+            }, (err, res) => {
+                if(!err) {
+                    this.setState({
+                        connectedPeers: (res.data.connectedPeers ? res.data.connectedPeers : [])
+                    }, () => {
+                        this.setState({
+                            connectedPeersTimer: setTimeout(this.refreshConnectedPeers, 500)
+                        })
+                    });
+                } else {
+                    this.setState({
+                        connectedPeersTimer: setTimeout(this.refreshConnectedPeers, 500)
+                    })
+                }
+            })
+        } else {
+            this.setState({
+                connectedPeersTimer: setTimeout(this.refreshConnectedPeers, 500)
+            })
+        }
     }
 
     addPeer(e, instanceId) {
@@ -141,27 +191,21 @@ class Peers extends Component {
                                                 </thead>
                                                 <tbody>
                                                     {
-                                                        (() => {
-                                                            if (this.props.network[0].connectedPeers) {
-                                                                return (
-                                                                    this.props.network[0].connectedPeers.map((item, index) => {
-                                                                        return (
-                                                                            <tr key={item.id}>
-                                                                                <td className="v-align-middle">
-                                                                                    <i className="fa fa-circle text-success fs-11"></i>
-                                                                                </td>
-                                                                                <td className="v-align-middle">
-                                                                                    {item.network.remoteAddress}
-                                                                                </td>
-                                                                                <td className="v-align-middle ">
-                                                                                    {item.id}
-                                                                                </td>
-                                                                            </tr>
-                                                                        )
-                                                                    })
-                                                                )
-                                                            }
-                                                        })()
+                                                        this.state.connectedPeers.map((item, index) => {
+                                                            return (
+                                                                <tr key={item.id}>
+                                                                    <td className="v-align-middle">
+                                                                        <i className="fa fa-circle text-success fs-11"></i>
+                                                                    </td>
+                                                                    <td className="v-align-middle">
+                                                                        {item.network.remoteAddress}
+                                                                    </td>
+                                                                    <td className="v-align-middle ">
+                                                                        {item.id}
+                                                                    </td>
+                                                                </tr>
+                                                            )
+                                                        })
                                                     }
                                                 </tbody>
                                             </table>

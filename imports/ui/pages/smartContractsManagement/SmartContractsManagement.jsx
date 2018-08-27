@@ -8,23 +8,22 @@ import notifications from "../../../modules/notifications"
 import {Link} from "react-router-dom"
 import Config from '../../../modules/config/client'
 
-import "./BCAccountsView.scss"
+import "./SmartContractsManagement.scss"
 
-class BCAccountsView extends Component {
+class SmartContractsManagement extends Component {
 
     constructor() {
         super()
         this.state = {
-            defaultJSONQuery: JSON.stringify(JSON.parse('{"assetName":"license","uniqueIdentifier":"1234","company":"blockcluster"}'), undefined, 4),
-            accounts: []
+            smartContracts: []
         }
 
-        this.getAccounts = this.getAccounts.bind(this)
+        this.getSC = this.getSC.bind(this)
     }
 
     componentDidMount() {
         this.setState({
-            refreshAccountsTimer: setInterval(this.getAccounts, 500)
+            refreshSCTimer: setInterval(this.getSC, 2000)
         })
     }
 
@@ -33,85 +32,83 @@ class BCAccountsView extends Component {
             s.stop();
         });
 
-        clearInterval(this.state.refreshAccountsTimer);
+        clearInterval(this.state.refreshSCTimer);
     }
 
-    getAccounts() {
-        if(this.props.network[0]) {
-            let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/accounts`;
-            HTTP.get(url, {
-                headers: {
+    getSC() {
+        if(this.props.network.length === 1) {
+            let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/contracts/search`;
+
+            HTTP.call("POST", url, {
+                "content": JSON.stringify({}),
+                "headers": {
+                    "Content-Type": "application/json",
                     'Authorization': "Basic " + (new Buffer(`${this.props.network[0].instanceId}:${this.props.network[0]["api-password"]}`).toString("base64"))
                 }
-            }, (err, res) => {
-                if(!err) {
+            }, (error, response) => {
+                if (!error) {
                     this.setState({
-                        accounts: res.data
+                        smartContracts: response.data
                     });
+                } else {
+                    console.log(error)
                 }
             })
         }
     }
 
-    createAccount(e) {
+    addSC(e) {
         e.preventDefault();
 
         this.setState({
-            ["_accounts_formSubmitError"]: '',
-            ["_accounts_formloading"]: true,
-            ["_accounts_formSubmitSuccess"]: ''
+            ["_sc_formSubmitError"]: '',
+            ["_sc_formloading"]: true,
+            ["_sc_formSubmitSuccess"]: ''
         });
 
         e.preventDefault();
-		Meteor.call("createAccount", this.name.value, this.accountPassword.value, this.props.network[0]._id, (error) => {
+		Meteor.call("addSmartContract", this.name.value, this.bytecode.value, this.abi.value, this.props.network[0]._id, (error) => {
 			if(error) {
                 this.setState({
-                    ["_accounts_formSubmitError"]: error.reason,
-                    ["_accounts_formSubmitSuccess"]: "",
-                    ["_accounts_formloading"]: false
+                    ["_sc_formSubmitError"]: error.reason,
+                    ["_sc_formSubmitSuccess"]: "",
+                    ["_sc_formloading"]: false
                 });
 			} else {
                 this.setState({
-                    ["_accounts_formSubmitError"]: '',
-                    ["_accounts_formSubmitSuccess"]: "Successfully created account",
-                    ["_accounts_formloading"]: false
+                    ["_sc_formSubmitError"]: '',
+                    ["_sc_formSubmitSuccess"]: "Successfully added contract",
+                    ["_sc_formloading"]: false
                 });
-				this.accountPassword.value = "";
 			}
 		})
     }
 
-    downloadAccount = (e, item) => {
+    downloadSC = (e, item) => {
 		e.preventDefault();
-        let address = item.address;
+        let name = item.name;
 
 		this.setState({
-            [address + "_downloading"]: true
+            [name + "_downloading"]: true
         });
 
-		Meteor.call("downloadAccount", this.props.network[0].instanceId, address, (error, result) => {
-			if(!error) {
-				helpers.downloadString(result, "application/json", "key.json")
-			} else {
-				notifications.error("An error occured")
-			}
+        helpers.downloadString(JSON.stringify(item, null, "\t"), "application/json", `${item.name}.json`)
 
-			this.setState({
-	            [address + "_downloading"]: false
-	        });
-		})
+        this.setState({
+            [name + "_downloading"]: false
+        });
 	}
 
 	render(){
 		return (
-            <div className="accounts content">
+            <div className="smartContractsManagement content">
                 <div className="m-t-20 container-fluid container-fixed-lg bg-white">
                     <div className="row dashboard">
                         <div className="col-lg-12">
                             <div className="card card-transparent">
                                 <div className="card-header ">
                                     <div className="card-title">
-                                        <Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Accounts Management
+                                        <Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Smart Contracts Management
                                     </div>
                                 </div>
                                 <div className="card-block">
@@ -122,41 +119,45 @@ class BCAccountsView extends Component {
                                                     <div className="card card-transparent">
                                                         <div className="row column-seperation">
                                                             <div className="col-lg-4">
-                                                                <h4>Create New Account</h4>
+                                                                <h4>Add Smart Contract</h4>
                                                                 <form role="form" onSubmit={(e) => {
-                                                                        this.createAccount(e);
+                                                                        this.addSC(e);
                                                                     }}>
                                                                     <div className="form-group">
                                                                         <label>Name</label>
                                                                         <input type="text" className="form-control" ref={(input) => {this.name = input;}} required />
                                                                     </div>
                                                                     <div className="form-group">
-                                                                        <label>Password</label>
-                                                                        <input type="password" className="form-control" ref={(input) => {this.accountPassword = input;}} required />
+                                                                        <label>Bytecode</label>
+                                                                        <textarea className="form-control" ref={(input) => {this.bytecode = input;}} style={{"height": "100px"}}></textarea>
                                                                     </div>
-                                                                    {this.state["_accounts_formSubmitError"] &&
+                                                                    <div className="form-group">
+                                                                        <label>ABI</label>
+                                                                        <textarea className="form-control" ref={(input) => {this.abi = input;}} style={{"height": "100px"}}></textarea>
+                                                                    </div>
+                                                                    {this.state["_sc_formSubmitError"] &&
                                                                         <div className="row m-t-15">
                                                                             <div className="col-md-12">
                                                                                 <div className="m-b-20 alert alert-danger m-b-0" role="alert">
                                                                                     <button className="close" data-dismiss="alert"></button>
-                                                                                    {this.state["_accounts_formSubmitError"]}
+                                                                                    {this.state["_sc_formSubmitError"]}
                                                                                 </div>
                                                                             </div>
                                                                         </div>
                                                                     }
-                                                                    {this.state["_accounts_formSubmitSuccess"] &&
+                                                                    {this.state["_sc_formSubmitSuccess"] &&
                                                                         <div className="row m-t-15">
                                                                             <div className="col-md-12">
                                                                                 <div className="m-b-20 alert alert-success m-b-0" role="alert">
                                                                                     <button className="close" data-dismiss="alert"></button>
-                                                                                    {this.state["_accounts_formSubmitSuccess"]}
+                                                                                    {this.state["_sc_formSubmitSuccess"]}
                                                                                 </div>
                                                                             </div>
                                                                         </div>
                                                                     }
                                                                     <p className="pull-right">
                                                                         <LaddaButton
-                                                                            loading={this.state["_accounts_formloading"]}
+                                                                            loading={this.state["_sc_formloading"]}
                                                                             data-size={S}
                                                                             data-style={SLIDE_UP}
                                                                             data-spinner-size={30}
@@ -164,34 +165,30 @@ class BCAccountsView extends Component {
                                                                             className="btn btn-success"
                                                                             type="submit"
                                                                         >
-                                                                            <i className="fa fa-plus" aria-hidden="true"></i>&nbsp;&nbsp;Create
+                                                                            <i className="fa fa-plus" aria-hidden="true"></i>&nbsp;&nbsp;Add
                                                                         </LaddaButton>
                                                                     </p>
                                                                 </form>
                                                             </div>
                                                             <div className="col-lg-8">
-                                                                <h4>Accounts</h4>
+                                                                <h4>Smart Contracts</h4>
                                                                 <div className="table-responsive">
                                                                     <table className="table table-hover" id="basicTable">
                                                                         <thead>
                                                                             <tr>
-                                                                                <th style={{width: "25%"}}>Name</th>
-                                                                                <th style={{width: "25%"}}>Address</th>
+                                                                                <th style={{width: "50%"}}>Name</th>
                                                                                 <th style={{width: "25%"}}>Download</th>
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
-                                                                            {this.state.accounts.map((item) => {
+                                                                            {this.state.smartContracts.map((item) => {
                                                                                 return (
-                                                                                    <tr key={item.address}>
+                                                                                    <tr key={item.name}>
                                                                                         <td className="v-align-middle">
                                                                                             {item.name}
                                                                                         </td>
                                                                                         <td className="v-align-middle">
-                                                                                            {item.address}
-                                                                                        </td>
-                                                                                        <td className="v-align-middle">
-                                                                                            {(this.state[item.address + "_downloading"] == true) &&
+                                                                                            {(this.state[item.name + "_downloading"] == true) &&
 																								<div className="clickable" style={{width: "14px", height: "14px", "display": "inline-block"}}>
 																								    <div style={{width: "100%", height: "100%"}} className="lds-wedges">
 																								        <div>
@@ -213,8 +210,8 @@ class BCAccountsView extends Component {
 																								    </style>
 																								</div>
 																							}
-                                                                                            {(this.state[item.address + "_downloading"] != true) &&
-																								<i className="clickable fa fa-download" onClick={(e) => {this.downloadAccount(e, item)}}></i>
+                                                                                            {(this.state[item.name + "_downloading"] != true) &&
+																								<i className="clickable fa fa-download" onClick={(e) => {this.downloadSC(e, item)}}></i>
 																							}
                                                                                         </td>
                                                                                     </tr>
@@ -241,7 +238,6 @@ class BCAccountsView extends Component {
 }
 
 export default withTracker((props) => {
-
     return {
         network: Networks.find({instanceId: props.match.params.id, active: true}).fetch(),
         workerNodeDomainName: Config.workerNodeDomainName,
@@ -251,6 +247,6 @@ export default withTracker((props) => {
         			props.history.push("/app/networks");
         		}
         	}
-        }), Meteor.subscribe("utilities"), Meteor.subscribe("bcAccounts", props.match.params.id)]
+        }), Meteor.subscribe("utilities")]
     }
-})(withRouter(BCAccountsView))
+})(withRouter(SmartContractsManagement))

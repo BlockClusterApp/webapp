@@ -17,16 +17,21 @@ class ViewEditNetwork extends Component {
         this.state = {
 			deleting: false,
 			location: "us-west-2",
-			locations: []
+			locations: [],
+			currentValidators: []
         };
 
       this.locationConfig = {};
+
+	  this.refreshAuthoritiesList = this.refreshAuthoritiesList.bind(this)
     }
 
 	componentWillUnmount() {
         this.props.subscriptions.forEach((s) =>{
             s.stop();
         });
+
+		clearTimeout(this.state.refreshAuthoritiesListTimer);
 	}
 
 	componentDidMount(){
@@ -35,7 +40,49 @@ class ViewEditNetwork extends Component {
 			  locations: res
 			});
 		});
+
+		this.setState({
+            refreshAuthoritiesListTimer: setTimeout(this.refreshAuthoritiesList, 500)
+        })
 	}
+
+	refreshAuthoritiesList() {
+        let rpc = null;
+        let status = null;
+
+        if(this.props.network.length === 1) {
+            username = this.props.network[0].instanceId
+            password = this.props.network[0]["api-password"]
+            status = this.props.network[0].status
+        }
+
+        if(status == "running") {
+            let url = `https://${Config.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/utility/nodeInfo`;
+            HTTP.get(url, {
+                headers: {
+                    'Authorization': "Basic " + (new Buffer(`${username}:${password}`).toString("base64"))
+                }
+            }, (err, res) => {
+                if(!err) {
+                    this.setState({
+                        currentValidators: (res.data.currentValidators ? res.data.currentValidators : [])
+                    }, () => {
+                        this.setState({
+                            refreshAuthoritiesListTimer: setTimeout(this.refreshAuthoritiesList, 500)
+                        })
+                    });
+                } else {
+                    this.setState({
+                        refreshAuthoritiesListTimer: setTimeout(this.refreshAuthoritiesList, 500)
+                    })
+                }
+            })
+        } else {
+            this.setState({
+                refreshAuthoritiesListTimer: setTimeout(this.refreshAuthoritiesList, 500)
+            })
+        }
+    }
 
     deleteNetwork = () => {
 		this.setState({
@@ -395,21 +442,11 @@ class ViewEditNetwork extends Component {
 			                            <div className="col-md-9">
 			                            	<ul className="customList">
 			                            		{
-						   							(() => {
-						       							if (this.props.network.length === 1) {
-						       								if("currentValidators" in this.props.network[0]) {
-						       									return (
-						       										<div>
-						       											{this.props.network[0].currentValidators.map((item, index) => {
-									                                        return (
-									                                            <li key={item}>{item}</li>
-									                                        )
-									                                    })}
-						       										</div>
-						       									)
-						       								}
-						       							}
-						       						})()
+													this.state.currentValidators.map((item, index) => {
+														return (
+															<li key={item}>{item}</li>
+														)
+													})
 						   						}
 			                            	</ul>
 			                            </div>

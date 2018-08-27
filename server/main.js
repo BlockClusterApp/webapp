@@ -14,6 +14,7 @@ import { ZohoHostedPage, ZohoPlan } from '../imports/collections/zoho';
 import Zoho from '../imports/api/payments/zoho';
 import NetworkFunctions from '../imports/api/network/networks';
 import Vouchers from '../imports/collections/vouchers/voucher';
+import UserCards from '../imports/collections/payments/user-cards';
 import {
     Secrets
 } from "../imports/collections/secrets/secrets.js"
@@ -41,6 +42,13 @@ var md5 = require("apache-md5");
 var base64 = require('base-64');
 var utf8 = require('utf8');
 var BigNumber = require('bignumber.js');
+const Agenda = require('agenda');
+
+const agenda = new Agenda({
+    db: {
+        address: Config.mongoConnectionString
+    }
+});
 
 Accounts.validateLoginAttempt(function(options) {
     if (!options.allowed) {
@@ -98,15 +106,6 @@ function getNodeConfig(networkConfig, userId) {
       }
     }
 
-    Vouchers.update({
-      _id: voucher._id
-    }, {
-      $set: {
-        claimedBy: userId,
-        claimedOn: new Date(),
-        claimed: true
-      }
-    });
   }
 
   if(!finalNetworkConfig && config) {
@@ -738,7 +737,24 @@ Meteor.methods({
                 });
             });
           }
+          //mark the voucher as claimed
+        Vouchers.update({ _id: nodeConfig.voucherId }, {  $push: { voucher_claim_status:{
+            claimedBy: Meteor.userId(),
+            claimedOn: new Date(),
+            claimed: true
+        }}
+      });
+          let userCard = UserCards.find({userId:userId,active:true},{fields:{_id:1}}).fetch()[0];
+          //check wheather the user has verified cards or not. and also for active payment methods.
+          if(!userCard || !userCard.cards || !userCard.cards.length){
+          agenda.schedule(new Date(new Date().setDate(new Date().getDate()+3)), "warning email step 1", {
+            network_id: id,
+            userId:userId
+          });
+          }
+
         });
+
         return myFuture.wait();
     },
     "deleteNetwork": function(id) {
@@ -1325,6 +1341,36 @@ spec:
                 myFuture.throw(error);
             } else {
                 console.log(typeof response.content)
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
+            }
+        })
+
+        return myFuture.wait();
+    },
+    "addSmartContract": function(name, bytecode, abi, networkId) {
+        var myFuture = new Future();
+        var network = Networks.find({
+            _id: networkId
+        }).fetch()[0];
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/contracts/addOrUpdate`, {
+            "content": JSON.stringify({
+                name: name,
+                bytecode: bytecode,
+                abi: abi
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
                 let responseBody = JSON.parse(response.content);
                 if(responseBody.error) {
                     myFuture.throw(responseBody.error);
