@@ -63,7 +63,7 @@ agenda.define(
       .then(sent_mails => {
         //now schedule job after 48 hours,that checks and deletes node if needed.
         agenda.schedule(
-          moment().add(2, 'minutes').toDate(),
+          moment().add(48, 'hours').toDate(),
           "card verification action step 2",
           {
             network_id: network_id,

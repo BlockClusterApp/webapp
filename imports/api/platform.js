@@ -40,9 +40,14 @@ JsonRoutes.add("post", "/api/platform/login", function(req, res, next) {
         jwt.sign(req.body.email, {
             ttl: "1 year"
         }).then(token => {
-            res.end(JSON.stringify({
-                access_token: token
-            }))
+            JsonRoutes.sendResult(res, {
+                data: {
+                        access_token: token
+                    }
+            })
+            // res.end(JSON.stringify({
+            //     access_token: token
+            // }))
         }).catch(err => {
             authenticationFailed()
         })

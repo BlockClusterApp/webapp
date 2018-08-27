@@ -685,7 +685,7 @@ Meteor.methods({
           //check wheather the user has verified cards or not. and also for active payment methods.
 
           if(!userCard || !userCard.length || !userCard[0].cards || !userCard[0].cards.length){
-          agenda.schedule(moment().add(2, 'minutes').toDate(), "warning email step 1", {
+          agenda.schedule(moment().add(3, 'days').toDate(), "warning email step 1", {
             
             network_id: id,
             userId:Meteor.userId()
