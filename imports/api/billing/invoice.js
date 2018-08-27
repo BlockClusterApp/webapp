@@ -64,6 +64,8 @@ InvoiceObj.generateInvoice = async ({
     userId
   });
 
+  invoiceObject.conversionRate = conversion;
+
   invoiceObject.rzAddOnId = rzAddOn._id;
 
   const invoiceId = Invoice.insert(invoiceObject);

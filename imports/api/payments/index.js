@@ -1,4 +1,5 @@
 import RazorPay from './payment-gateways/razorpay';
+import Forex from '../../collections/payments/forex';
 import PaymentRequests from '../../collections/payments/payment-requests';
 import { RZSubscription, RZPlan } from '../../collections/razorpay';
 
@@ -27,9 +28,10 @@ Payments.createRequest = async ({ paymentGateway, reason, amount }) => {
 };
 
 Payments.getConversionToINRRate = async ({ currencyCode }) => {
-  currencyCode = currencyCode || 'USD';
+  currencyCode = currencyCode || 'usd';
 
-  return 70;
+  const exchangeRates = Forex.find({}).fetch()[0];
+  return Number(Number(exchangeRates[currencyCode.toLowerCase()]).toFixed(4));
 };
 
 Meteor.methods({
