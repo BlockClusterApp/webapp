@@ -92,13 +92,33 @@ Billing.generateBill = async function(userId, month, year) {
      *
      * And Also check for expiry date.
      */
-
-    console.log(voucher)
-      
-    const vouchar_usable =  (voucher.usability && voucher.usability.recurring == true) ? ( (voucher.usability.no_months > (voucher.voucher_claim_status ? voucher.voucher_claim_status.length : 0)) ? true:false ) : ( (voucher.voucher_claim_status ? voucher.voucher_claim_status.length : false) ? false : true);
+    let vouchar_usable;
+    let voucher_expired;
+    if(voucher){
+    if(!voucher.usability){
+      voucher.usability= {
+        recurring:  false,
+        no_months: 0,
+        once_per_user: true,
+        no_times_per_user:1
+      }
+    }
+    if(!voucher.availability){
+      voucher.availability = { for_all: false,
+        email_ids:[]
+      }
+    }
+    if(!voucher.discount){
+      voucher.discount= {
+        value:  0,
+        percent:  false
+      }
+    }
     
-    const voucher_expired = voucher.expiryDate ? new Date(voucher.expiryDate) <= new Date() : false
-
+     vouchar_usable =  (voucher.usability.recurring == true) ? ( (voucher.usability.no_months > (voucher.voucher_claim_status ? voucher.voucher_claim_status.length : 0)) ? true:false ) : ( (voucher.voucher_claim_status ? voucher.voucher_claim_status.length : false) ? false : true);
+    
+     voucher_expired = voucher.expiryDate ? new Date(voucher.expiryDate) <= new Date() : false
+  }
     let cost = Number(time.hours * ratePerHour + ((time.minutes) % 60) * ratePerMinute).toFixed(2);
 
     if(voucher && voucher._id && !isMicroNode && vouchar_usable && voucher_expired) {
@@ -136,9 +156,8 @@ Billing.generateBill = async function(userId, month, year) {
     // if(isMicroNode && network.active){
     //   nodeTypeCount.Micro += 1;
     // }
-
     if(isMicroNode){
-      // calculate hours
+    // calculate hours
       let endTime = network.deletedAt ? network.deletedAt : new Date();
       const usedTime =  convertMilliseconds(moment(endTime).toDate().getTime() - moment(network.createdOn).toDate().getTime());
       const freeHoursLeft = Math.max(FreeHoursPerUser.Micro - (nodeUsageCountMinutes.Micro / 60), 0);
