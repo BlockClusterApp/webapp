@@ -1,27 +1,37 @@
-import { Mongo } from "meteor/mongo";
+import { Mongo } from 'meteor/mongo';
 
 import AttachBaseHooks from '../../modules/helpers/model-helpers';
 
-const UserCards = new Mongo.Collection("userCards");
+const UserCards = new Mongo.Collection('userCards');
 AttachBaseHooks(UserCards);
 
 UserCards.schema = new SimpleSchema({
   createdAt: {
-    type: Date
+    type: Date,
   },
   updatedAt: {
-    type: Date
+    type: Date,
   },
   userId: {
-    type: String
+    type: String,
   },
   cards: {
-    type: Array
+    type: Array,
   },
-  "cards.$": {
-    type: Object
-  }
-
+  'cards.$': {
+    type: Object,
+  },
 });
+
+if (!Meteor.isClient) {
+  UserCards._ensureIndex(
+    {
+      userId: 1,
+    },
+    {
+      unique: true,
+    }
+  );
+}
 
 export default UserCards;

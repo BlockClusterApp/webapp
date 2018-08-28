@@ -1,13 +1,15 @@
 import PaymentRequests from "../payment-requests"
+import RZPayment from '../../razorpay/payments';
 import UserCards from '../user-cards';
 
 Meteor.publish("userPayments", function () {
-	return PaymentRequests.find({userId: Meteor.userId()}, {
+	return [PaymentRequests.find({userId: Meteor.userId()}, {
     fields: {
-      pgResponse: 0,
       pgReference: 0
     }
-  });
+  }), RZPayment.find({
+    userId: Meteor.userId()
+  })];
 });
 
 Meteor.publish("userCards", function() {

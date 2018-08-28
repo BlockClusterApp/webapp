@@ -1,5 +1,5 @@
-import { Networks } from '../../../collections/networks/networks';
-import Config from '../../config/server';
+import { Networks } from '../../../../collections/networks/networks';
+import Config from '../../../config/server';
 
 
 const IMAGE_REPULL_CONCURRENCY = 2;
