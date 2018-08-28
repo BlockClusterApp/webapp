@@ -32,29 +32,19 @@ var jsonminify = require("jsonminify");
 import helpers from "../imports/modules/helpers"
 import server_helpers from "../imports/modules/helpers/server"
 import smartContracts from "../imports/modules/smart-contracts"
+import moment from 'moment';
 import {
     scanBlocksOfNode,
     authoritiesListCronJob
 } from "../imports/collections/networks/server/cron.js"
 import fs from 'fs';
-import moment from "moment";
+import { RZSubscription } from "../imports/collections/razorpay";
+import agenda from '../imports/modules/schedulers/agenda';
 var md5 = require("apache-md5");
 var base64 = require('base-64');
 var utf8 = require('utf8');
 var BigNumber = require('bignumber.js');
 
-const agenda = new Agenda({
-    db: {
-        address: Config.mongoConnectionString,
-        server:{
-            auto_reconnect : true
-        }
-    },
-    processEvery: '30 seconds',
-    maxConcurrency : 20, 
-    defaultConcurrency : 5,
-    defaultLockLifetime : 60000
-});
 
 Accounts.validateLoginAttempt(function(options) {
     if (!options.allowed) {

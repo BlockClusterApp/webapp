@@ -9,16 +9,7 @@ import { UserCards } from "../../collections/payments/user-cards";
 import { sendEmail } from "../emails/email-sender";
 import { Networks } from "../../collections/networks/networks";
 import Config from "../../../imports/modules/config/server";
-import moment from "moment";
-const Agenda = require("agenda");
-
-console.log("MongoString", Config.mongoConnectionString);
-
-const agenda = new Agenda({
-  db: {
-    address: Config.mongoConnectionString
-  }
-});
+import agenda from '../../modules/schedulers/agenda';
 
 async function sendEmails(users) {
   const ejsTemplate = await getEJSTemplate({
@@ -95,7 +86,6 @@ agenda.define(
 agenda.define(
   "card verification action step 2",
   Meteor.bindEnvironment(job => {
-    console.log("Its here?>>>>>>>>>>>>>>>>>>>>>")
     const network_id = job.attrs.data.network_id;
     const userId = job.attrs.data.userId;
     const userCard = UserCards.find({userId:userId,active:true},{fields:{_id:1}}).fetch()[0];
