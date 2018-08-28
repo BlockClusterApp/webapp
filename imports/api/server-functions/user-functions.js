@@ -52,13 +52,26 @@ async function sendEmails(users) {
 agenda.define(
   "warning email step 1",
   Meteor.bindEnvironment((job,done) => {
-    console.log(">>>>>>>>Job")
     const network_id = job.attrs.data.network_id;
     const userId = job.attrs.data.userId;
     const userData = Meteor.users.find({
       userId: userId
     });
-
+    const found_notworks = Networks.find({
+      _id:network_id,
+      "deletedAt": {
+       "$exists": false
+      }
+     })[0];
+     if(!found_notworks){
+      job.remove(err => {
+        if (!err) {
+          console.log('Successfully removed job from collection');
+        }else{
+          console.log(err);
+        }
+      });
+     }else{
     sendEmails(userData, { fields: { profile: 1, emails: 1 } })
       .then(sent_mails => {
         //now schedule job after 48 hours,that checks and deletes node if needed.
@@ -75,16 +88,33 @@ agenda.define(
       .catch(error_sending_mail => {
         console.log(error_sending_mail)
       });
+    }
   })
 );
 
 agenda.define(
   "card verification action step 2",
   Meteor.bindEnvironment(job => {
+    console.log("Its here?>>>>>>>>>>>>>>>>>>>>>")
     const network_id = job.attrs.data.network_id;
     const userId = job.attrs.data.userId;
     const userCard = UserCards.find({userId:userId,active:true},{fields:{_id:1}}).fetch()[0];
-    if(!userCard || !userCard.cards || !userCard.cards.length){
+    const found_notworks = Networks.find({
+      _id:network_id,
+      "deletedAt": {
+       "$exists": false
+      }
+     })[0];
+     console.log(found_notworks)
+     if(!found_notworks){
+      job.remove(err => {
+        if (!err) {
+          console.log('Successfully removed job from collection');
+        }else{
+          console.log("Job removed!")
+        }
+      });
+     }else if(!userCard || !userCard.cards || !userCard.cards.length){
       Meteor.call("deleteNetwork",network_id,(error,done)=>{
         if(error){
           //Some issue detected during deletion of node.
