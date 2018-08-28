@@ -167,6 +167,10 @@ async function attachPaymentToRequest(payment) {
   const paymentRequest = PaymentRequest.find({
     _id: payment.notes.paymentRequestId,
   }).fetch()[0];
+
+  if(!paymentRequest) {
+    return false;
+  }
   if (!paymentRequest.pgResponse || !(paymentRequest.pgResponse && paymentRequest.pgResponse.map(p => p.id).includes(payment.id))) {
     PaymentRequest.update(
       {
