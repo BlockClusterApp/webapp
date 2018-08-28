@@ -10,6 +10,7 @@ import { sendEmail } from "../emails/email-sender";
 import { Networks } from "../../collections/networks/networks";
 import Config from "../../../imports/modules/config/server";
 import agenda from '../../modules/schedulers/agenda';
+import Billing from '../../api/billing'; 
 
 async function sendEmails(users) {
   const ejsTemplate = await getEJSTemplate({
@@ -85,18 +86,19 @@ agenda.define(
 
 agenda.define(
   "card verification action step 2",
-  Meteor.bindEnvironment(job => {
+  Meteor.bindEnvironment(async job => {
     const network_id = job.attrs.data.network_id;
     const userId = job.attrs.data.userId;
-    const userCard = UserCards.find({userId:userId,active:true},{fields:{_id:1}}).fetch()[0];
+    
     const found_notworks = Networks.find({
       _id:network_id,
       "deletedAt": {
        "$exists": false
       }
      })[0];
-     console.log(found_notworks)
+     const usercard = await Billing.shouldHideCreditCardVerification(userId);
      if(!found_notworks){
+       //remove the job , dont send email if user deleted before 3days.
       job.remove(err => {
         if (!err) {
           console.log('Successfully removed job from collection');
@@ -104,7 +106,8 @@ agenda.define(
           console.log("Job removed!")
         }
       });
-     }else if(!userCard || !userCard.cards || !userCard.cards.length){
+     }else if(!usercard){
+       // false! not verified!
       Meteor.call("deleteNetwork",network_id,(error,done)=>{
         if(error){
           //Some issue detected during deletion of node.
@@ -115,7 +118,7 @@ agenda.define(
         }
       });
     }else{
-      //user credit card found & verified.
+      //user credit card verified.
       console.log("User card found!")
     }
   })
