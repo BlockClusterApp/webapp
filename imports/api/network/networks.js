@@ -1,7 +1,7 @@
 import { Networks } from '../../collections/networks/networks';
 import {UserInvitation} from '../../collections/user-invitation';
 import Config from '../../modules/config/server';
-import BullSystem from '../../modules/bull';
+import BullSystem from '../../modules/schedulers/bull';
 
 const NetworkObj = {};
 

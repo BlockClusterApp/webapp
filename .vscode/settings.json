@@ -1,2 +1,7 @@
 {
+	"settings": {
+		"editor.autoIndent": true,
+		"editor.wordWrap": "on",
+		"editor.wordWrapColumn": 180
+	}
 }

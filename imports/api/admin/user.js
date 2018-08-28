@@ -30,13 +30,18 @@ User.updateAdmin = async (userId, updateQuery) => {
   if(Meteor.userId() === userId || Meteor.user().admin <= ADMIN_LEVEL) {
     return false;
   }
+  const update = {};
+  if(updateQuery.admin !== undefined) {
+    update.admin = updateQuery.admin
+  }
+  if(updateQuery.demo !== undefined) {
+    update.demoUser = updateQuery.demo;
+  }
   console.log("Updating admin for", userId, updateQuery);
   Meteor.users.update({
     _id: userId
   }, {
-    $set: {
-      admin: updateQuery.admin
-    }
+    $set: updateQuery
   });
   return true;
 }

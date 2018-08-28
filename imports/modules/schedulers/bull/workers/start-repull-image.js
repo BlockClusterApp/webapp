@@ -1,4 +1,4 @@
-import { Networks } from "../../../collections/networks/networks";
+import { Networks } from "../../../../collections/networks/networks";
 
 module.exports = function(bullSystem) {
   const processFunction = Meteor.bindEnvironment(function(job) {
