@@ -32,6 +32,7 @@ var jsonminify = require("jsonminify");
 import helpers from "../imports/modules/helpers"
 import server_helpers from "../imports/modules/helpers/server"
 import smartContracts from "../imports/modules/smart-contracts"
+
 import {
     scanBlocksOfNode,
     authoritiesListCronJob
@@ -46,9 +47,15 @@ const Agenda = require('agenda');
 
 const agenda = new Agenda({
     db: {
-        address: Config.mongoConnectionString
+        address: Config.mongoConnectionString,
+        server:{
+            auto_reconnect : true
+        }
     },
-    processEvery: '30 seconds'
+    processEvery: '30 seconds',
+    maxConcurrency : 20, 
+    defaultConcurrency : 5,
+    defaultLockLifetime : 60000
 });
 
 Accounts.validateLoginAttempt(function(options) {
@@ -685,7 +692,7 @@ Meteor.methods({
           //check wheather the user has verified cards or not. and also for active payment methods.
 
           if(!userCard || !userCard.length || !userCard[0].cards || !userCard[0].cards.length){
-          agenda.schedule(moment().add(3, 'days').toDate(), "warning email step 1", {
+          agenda.schedule(moment().add(3, 'minutes').toDate(), "warning email step 1", {
             
             network_id: id,
             userId:Meteor.userId()
@@ -748,14 +755,14 @@ Meteor.methods({
         Secrets.remove({
             instanceId: id
         });
-
-
+        
         AcceptedOrders.remove({
             instanceId: id
         })
 
         myFuture.return();
-
+        
+        
 
         return myFuture.wait();
     },
@@ -1202,7 +1209,6 @@ spec:
                 });
             }
         })
-
         return myFuture.wait();
     },
     "vote": function(networkId, toVote) {
