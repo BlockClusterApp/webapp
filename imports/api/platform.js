@@ -105,7 +105,7 @@ JsonRoutes.add("post", "/api/platform/networks/create", function(req, res, next)
 
     let user = Accounts.findUserByEmail(req.email)
 
-    Meteor.call("createNetwork", name, locationCode, user._id, (error, instanceId) => {
+    Meteor.call("createNetwork", {networkName: name, locationCode, userId: user._id}, (error, instanceId) => {
         if(error) {
             JsonRoutes.sendResult(res, {
                 code: 401,

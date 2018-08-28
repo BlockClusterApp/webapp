@@ -24,7 +24,7 @@ class Peers extends Component {
 
     componentDidMount() {
         this.setState({
-            connectedPeersTimer: setTimeout(this.refreshConnectedPeers, 2000)
+            connectedPeersTimer: setTimeout(this.refreshConnectedPeers, 500)
         })
     }
 

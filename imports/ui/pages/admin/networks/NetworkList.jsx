@@ -125,7 +125,7 @@ class NetworkList extends Component {
     })
 		return (
             <div className="content networksList">
-                <div className="m-t-20 container-fluid container-fixed-lg bg-white" style={{marginLeft: '25px', marginRight: '25px'}}>
+                <div className="m-t-20 container-fluid container-fixed-lg bg-white">
                     <div className="row">
                         <div className="col-lg-12">
                             <div className="card card-transparent">

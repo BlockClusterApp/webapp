@@ -4,14 +4,14 @@ require('../imports/api/emails/forgot-password')
 require('../imports/api/locations');
 require('../imports/modules/migrations/server');
 require('../imports/api');
-const debug = require('debug')('webapp:server:main');
-
-console.log("env", process.env.NODE_ENV);
-
+const debug = require('debug')('server:main');
 import UserFunctions from '../imports/api/server-functions/user-functions';
 import {
     Networks
 } from "../imports/collections/networks/networks.js"
+import PendingNetwork from '../imports/collections/networks/pending-networks.js';
+import { ZohoHostedPage, ZohoPlan } from '../imports/collections/zoho';
+import Zoho from '../imports/api/payments/zoho';
 import NetworkFunctions from '../imports/api/network/networks';
 import Vouchers from '../imports/collections/vouchers/voucher';
 import UserCards from '../imports/collections/payments/user-cards';
@@ -32,7 +32,6 @@ var jsonminify = require("jsonminify");
 import helpers from "../imports/modules/helpers"
 import server_helpers from "../imports/modules/helpers/server"
 import smartContracts from "../imports/modules/smart-contracts"
-
 import {
     scanBlocksOfNode,
     authoritiesListCronJob
@@ -43,7 +42,6 @@ var md5 = require("apache-md5");
 var base64 = require('base-64');
 var utf8 = require('utf8');
 var BigNumber = require('bignumber.js');
-const Agenda = require('agenda');
 
 const agenda = new Agenda({
     db: {
@@ -181,10 +179,70 @@ function getContainerResourceLimits({cpu, ram, isJoining }){
   return config;
 }
 
+async function fetchZohoStatus({myFuture, nodeConfig, hostedPageId}) {
+  let hostedPage = {};
+  if(!nodeConfig.voucher && !hostedPageId) {
+    let plan;
+    if(nodeConfig.cpu === 500 && nodeConfig.ram === 1 && nodeConfig.disk === 5 ) {
+      plan = ZohoPlan.find({plan_code: 'light-node'}).fetch()[0];
+    } else if(nodeConfig.cpu === 2 && nodeConfig.ram === 7.5 && nodeConfig.disk === 200) {
+      plan = ZohoPlan.find({plan_code: 'power-node'}).fetch()[0];
+    } else {
+      return myFuture.throw("Invalid plan");
+    }
+
+    const newHostedPage = await Zoho.createHostedPage({
+      userId: Meteor.userId(),
+      plan
+    });
+
+    if(!newHostedPage) {
+      return myFuture.throw("Error creating payment link");
+    }
+
+    PendingNetwork.insert({
+      hostedPageId: newHostedPage.hostedpage_id,
+      networkMetadata: {
+        networkName,
+        locationCode,
+        networkConfig,
+        userId
+      }
+    });
+    return myFuture.return({
+      type: 'payment-link',
+      value: newHostedPage.url
+    });
+  } else if (!nodeConfig.voucher) {
+    hostedPage = ZohoHostedPage.find({hostedpage_id: hostedPageId}).fetch()[0];
+    if(!hostedPage) {
+      return myFuture.throw("Invalid hosted page id");
+    }
+  }
+}
+
+async function fetchRazorPayStatus({nodeConfig}) {
+  if(nodeConfig.voucher) {
+    return true;
+  }
+  const rzSubscriptionForCustomer = RZSubscription.find({userId: Meteor.userId(), bc_status: 'active'}).fetch()[0];
+  if(!rzSubscriptionForCustomer) {
+    return false;
+  }
+  return true;
+}
+
 Meteor.methods({
-    "createNetwork": function(networkName,  locationCode, networkConfig, userId) {
+    "createNetwork": async function({networkName,  locationCode, networkConfig, userId, hostedPageId}) {
       debug("CreateNetwork | Arguments", networkName, locationCode, networkConfig, userId);
         var myFuture = new Future();
+        const nodeConfig = getNodeConfig(networkConfig);
+
+        // const hostedPage = await fetchZohoStatus({myFuture, nodeConfig, hostedPageId});
+        const isUserSubscribedToRZPlan = await fetchRazorPayStatus({nodeConfig});
+        if(!isUserSubscribedToRZPlan) {
+          throw new Meteor.Error('unauthorized', 'Credit card not verified');
+        }
 
         // const microNodes = Networks.find({
         //   user: Meteor.userId(),
@@ -200,7 +258,7 @@ Meteor.methods({
         var instanceId = helpers.instanceIDGenerate();
 
         if(!locationCode){
-            locationCode = "us-west-2";
+            throw new Meteor.Error('bad-request', "Location code is required");
         }
 
         function deleteNetwork(id) {
@@ -227,6 +285,7 @@ Meteor.methods({
                                             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {})
                                             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + instanceId, function(error, response) {})
                                             HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${instanceId}-pvc`, function(error, response) {});
+                                            myFuture.throw("Error creating network");
                                         })
                                     }
                                 }
@@ -238,7 +297,7 @@ Meteor.methods({
 
         }
 
-        const nodeConfig = getNodeConfig(networkConfig);
+
         if(!nodeConfig.cpu) {
           throw new Meteor.Error("Invalid Network Configuration");
         }
@@ -261,7 +320,12 @@ Meteor.methods({
             voucher: nodeConfig.voucher,
             networkConfig: nodeConfig.networkConfig
           },
-          networkConfig: {cpu: nodeConfig.cpu, ram: nodeConfig.ram, disk: nodeConfig.disk}
+          networkConfig: {
+            cpu: nodeConfig.cpu,
+            ram: nodeConfig.ram,
+            disk: nodeConfig.disk
+          },
+          // hostedPageId: hostedPage._id
         };
 
         debug("CreateNetwork | Network insert ", networkProps);
@@ -681,7 +745,7 @@ Meteor.methods({
           }
           //mark the voucher as claimed
           if(nodeConfig.voucherId){
-        Vouchers.update({ _id: nodeConfig.voucherId }, {  $push: { voucher_claim_status:{ 
+        Vouchers.update({ _id: nodeConfig.voucherId }, {  $push: { voucher_claim_status:{
             claimedBy: Meteor.userId(),
             claimedOn: new Date(),
             claimed: true
@@ -692,7 +756,7 @@ Meteor.methods({
           //check wheather the user has verified cards or not. and also for active payment methods.
 
           if(!userCard || !userCard.length || !userCard[0].cards || !userCard[0].cards.length){
-          agenda.schedule(moment().add(3, 'minutes').toDate(), "warning email step 1", {
+          agenda.schedule(moment().add(3, 'days').toDate(), "warning email step 1", {
             
             network_id: id,
             userId:Meteor.userId()
@@ -1286,6 +1350,36 @@ spec:
                 myFuture.throw(error);
             } else {
                 console.log(typeof response.content)
+                let responseBody = JSON.parse(response.content);
+                if(responseBody.error) {
+                    myFuture.throw(responseBody.error);
+                } else {
+                    myFuture.return();
+                }
+            }
+        })
+
+        return myFuture.wait();
+    },
+    "addSmartContract": function(name, bytecode, abi, networkId) {
+        var myFuture = new Future();
+        var network = Networks.find({
+            _id: networkId
+        }).fetch()[0];
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/contracts/addOrUpdate`, {
+            "content": JSON.stringify({
+                name: name,
+                bytecode: bytecode,
+                abi: abi
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
                 let responseBody = JSON.parse(response.content);
                 if(responseBody.error) {
                     myFuture.throw(responseBody.error);
@@ -2146,7 +2240,7 @@ Meteor.startup(()=>{
 
 const LOCK_FILE_PATH = '/tmp/webapp.lock';
 function serverStartup(){
-    Migrations.migrateTo(7);
+    Migrations.migrateTo(8);
     fs.writeFileSync(LOCK_FILE_PATH, `Server started at  ${new Date()}`)
 }
 

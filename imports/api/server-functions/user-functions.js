@@ -185,10 +185,6 @@ agenda.define(
   })
 );
 
-(async function() {
-  await agenda.start();
-})();
-
 const NetworkInvitation = {};
 
 NetworkInvitation.inviteUserToNetwork = async function(

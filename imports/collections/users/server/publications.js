@@ -18,6 +18,7 @@ Meteor.publish("users.all", function({page}) {
       emails: 1,
       profile: 1,
       admin: 1,
+      demo: 1,
       _id: 1,
       createdAt: 1
     }

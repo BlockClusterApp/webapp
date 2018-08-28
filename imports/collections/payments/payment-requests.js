@@ -14,7 +14,8 @@ PaymentRequests.paymentGateways = {
 PaymentRequests.StatusMapping = {
     Pending: 1,
     Approved: 2,
-    Refunded: 3
+    Refunded: 3,
+    Failed: 4
 }
 
 PaymentRequests.before.insert((userId, doc) => {
@@ -65,7 +66,16 @@ PaymentRequests.schema = new SimpleSchema({
   },
   refundedAt: {
     type: Date
+  },
+  rzSubscription: {
+    type: Object
   }
 });
+
+if(!Meteor.isClient) {
+  PaymentRequests._ensureIndex({
+    userId: 1
+  });
+}
 
 export default PaymentRequests;

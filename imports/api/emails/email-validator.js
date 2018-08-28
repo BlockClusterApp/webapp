@@ -1,10 +1,12 @@
 import { EmailVerification } from "../../collections/email-verification";
+import Zoho from '../payments/zoho';
 import Email from "./email-sender";
 import {
   generateRandomString,
   generateCompleteURLForEmailVerification,
   getEJSTemplate
 } from "../../modules/helpers/server";
+const debug = require('debug')('api:email-validation');
 
 const Verifier = {};
 
@@ -70,6 +72,12 @@ Verifier.validateToken = function(token) {
         }
       }
     );
+
+    try{
+      Zoho.createCustomerFromUser(accountId)
+    }catch (err) {
+      debug('Zoho create customer failed | Email Verification ', err);
+    }
 
     const emailUpdateResult = EmailVerification.update(
             {
