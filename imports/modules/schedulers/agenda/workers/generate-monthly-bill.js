@@ -2,7 +2,6 @@ import bull from '../../bull';
 const debug = require('debug')('scheduler:agenda:generateMonthlyBill');
 
 module.exports = function(agenda) {
-  console.log('Starting generate bill agenda');
   agenda.define(
     'generate-monthly-bill',
     { priority: 'highest' },

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import { withRouter } from 'react-router-dom';
+import moment from 'moment';
 
 import './Dashboard.scss';
 
@@ -123,25 +124,25 @@ class BillingDashboard extends Component {
                           <div className="col-md-4">
                             <div className="form-group ">
                               <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onMonthChange}>
-                                <option value="0">January</option>
-                                <option value="1">February</option>
-                                <option value="2">March</option>
-                                <option value="3">April</option>
-                                <option value="4">May</option>
-                                <option value="5">June</option>
-                                <option value="6">July</option>
-                                <option value="7">August</option>
-                                <option value="8">September</option>
-                                <option value="9">August</option>
-                                <option value="10">November</option>
-                                <option value="11">December</option>
+                                <option value="0" selected={moment().month() === 0}>January</option>
+                                <option value="1" selected={moment().month() === 1}>February</option>
+                                <option value="2" selected={moment().month() === 2}>March</option>
+                                <option value="3" selected={moment().month() === 3}>April</option>
+                                <option value="4" selected={moment().month() === 4}>May</option>
+                                <option value="5" selected={moment().month() === 5}>June</option>
+                                <option value="6" selected={moment().month() === 6}>July</option>
+                                <option value="7" selected={moment().month() === 7}>August</option>
+                                <option value="8" selected={moment().month() === 8}>September</option>
+                                <option value="9" selected={moment().month() === 9}>October</option>
+                                <option value="10" selected={moment().month() === 10}>November</option>
+                                <option value="11" selected={moment().month() === 11}>December</option>
                               </select>
                             </div>
                           </div>
                           <div className="col-md-3">
                             <div className="form-group ">
                               <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onYearChange}>
-                                <option value="2018">2018</option>
+                                <option value="2018" selected={moment().year() === 2018}>2018</option>
                               </select>
                             </div>
                           </div>
@@ -169,7 +170,7 @@ class BillingDashboard extends Component {
                           <td colSpan="4" style={{ textAlign: 'right' }}>
                             Total Amount
                           </td>
-                          <td>{this.state.bill.totalAmount ? `$ ${this.state.bill.totalAmount.toFixed(2)}` : '0'}</td>
+                          <td>{this.state.bill && this.state.bill.totalAmount ? `$ ${Number(this.state.bill.totalAmount).toFixed(2)}` : '0'}</td>
                         </tr>
                         <tr>
                           <td colSpan="4" style={{ textAlign: 'right' }}>

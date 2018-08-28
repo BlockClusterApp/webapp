@@ -72,4 +72,10 @@ PaymentRequests.schema = new SimpleSchema({
   }
 });
 
+if(!Meteor.isClient) {
+  PaymentRequests._ensureIndex({
+    userId: 1
+  });
+}
+
 export default PaymentRequests;

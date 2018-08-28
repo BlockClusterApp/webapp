@@ -188,6 +188,19 @@ class UserList extends Component {
                         Meteor.call("updateUserAdmin", user.details._id, updateQuery);
                       }} />
                     </div>
+                    <div className="col-xs-height col-bottom fs-12" style={{paddingLeft: '16px', paddingRight: '16px', paddingBottom: "10px"}}>
+                     Demo User&nbsp;&nbsp;
+                     <input type="checkbox" value="1" defaultChecked={user.details.demoUser > 0 ? "checked" : ""} id="checkbox3" onClick={(e) => {
+                        let demo = e.target.checked;
+                        const updateQuery = {};
+                        if(demo) {
+                          updateQuery.demo = 1;
+                        } else {
+                          updateQuery.demo = 0;
+                        }
+                        Meteor.call("updateUserAdmin", user.details._id, updateQuery);
+                      }} />
+                    </div>
                   </div>
                 </div>
                 <div className="card no-border widget-loader-bar m-b-10">

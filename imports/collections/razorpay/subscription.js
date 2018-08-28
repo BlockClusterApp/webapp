@@ -14,4 +14,18 @@ RazorPaySubscription.before.insert((userId, doc) => {
 });
 
 
+if(!Meteor.isClient) {
+  RazorPaySubscription._ensureIndex({
+    id: 1
+  });
+  RazorPaySubscription._ensureIndex({
+    userId: 1
+  });
+  RazorPaySubscription._ensureIndex({
+    userId: 1,
+    plan_id: 1
+  });
+}
+
+
 export default RazorPaySubscription;
