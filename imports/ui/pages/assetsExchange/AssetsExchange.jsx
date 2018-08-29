@@ -559,7 +559,7 @@ class AssetsManagement extends Component {
                                                                                         <label>Seller Account</label>
                                                                                         <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_sellAsset_fromAddress"] = input}} required>
                                                                                             {this.state.accounts.map((item) => {
-                                                                                                return <option key={item.address} value={item.address}>{item.address}</option>
+                                                                                                return <option key={item.address} value={item.address}>{item.name} ({item.address})</option>
                                                                                             })}
                                                                                         </select>
                                                                                     </div>
@@ -772,7 +772,7 @@ class AssetsManagement extends Component {
                                                                                     })()}
                                                                                     <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_fullfill_address"] = input}} required>
                                                                                         {this.state.fullFillNetworkAccounts.map((item) => {
-                                                                                            return <option key={item.address} value={item.address}>{item.address}</option>
+                                                                                            return <option key={item.address} value={item.address}>{item.name} ({item.address})</option>
                                                                                         })}
                                                                                     </select>
                                                                                 </div>
@@ -819,7 +819,7 @@ class AssetsManagement extends Component {
                                                                                     <label>Account</label>
                                                                                     <select className="form-control" ref={(input) => {this[this.props.network[0].instanceId + "_cancel_address"] = input}} required>
                                                                                         {this.state.accounts.map((item) => {
-                                                                                            return <option key={item.address} value={item.address}>{item.address}</option>
+                                                                                            return <option key={item.address} value={item.address}>{item.name} ({item.address})</option>
                                                                                         })}
                                                                                     </select>
                                                                                 </div>

@@ -606,7 +606,7 @@ class Explorer extends Component {
                                             {this.state.blocks.map((item, index) => {
                                                 return (
                                                     <tr key={item.number}>
-                                                        <td className="font-montserrat all-caps fs-12 w-50">Block Number #{item.number}</td>
+                                                        <td className="font-montserrat all-caps fs-12 w-50">Block #{item.number}</td>
                                                         <td className="text-right hidden-lg">
                                                             <span className="hint-text small">dewdrops</span>
                                                         </td>
