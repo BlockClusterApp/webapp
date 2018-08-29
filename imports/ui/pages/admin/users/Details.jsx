@@ -329,9 +329,9 @@ class UserList extends Component {
                     <div className="clearfix" />
                   </div>
                   <div className="card-description">
-                    {cards[0] && cards[0].cards.map(card => {
+                    {cards[0] && cards[0].cards.map((card, index) => {
                       return (
-                        <div key={card.last4}>
+                        <div key={index}>
                           <h5 className="hint-text no-margin">
                             {card.issuer} XX..XX<span className="text-success">
                               {card.last4}
