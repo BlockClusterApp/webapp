@@ -13,6 +13,15 @@ The repository uses circleci for CI/CD pipeline.
 5. To deploy to production, create pull request on the ` feature-1 ` branch to merge to ` master ` branch and then merge it.
 6. Do NOT merge ` dev ` branch to ` staging ` or ` staging ` branch to ` master `. Always merge your feature branches to the respective base branches.
 
+## Agenda Dashboards
+Here are the links to access the agenda dashboard:
+
+Dev & Local:  `https://7oi0hnco3l.execute-api.ap-south-1.amazonaws.com/dev/dash?access_id=BlockCluster&access_key=JamesBond007` 
+
+Staging:  `https://h1w85m5208.execute-api.ap-south-1.amazonaws.com/staging/dash?access_id=BlockCluster&access_key=0c9d3170f6275a4d2` 
+
+Once you go to the URL, it might redirect you to ` hostname/dash?... `  instead of ` hostname/{env}/dash?... `. So just add the env in between. Basically double check the URL from above once redirected
+
 ## Certs
 ```
 kubectl create secret tls blockcluster-ssl --key _.blockcluster.io_private_key.key --cert tls.cert
