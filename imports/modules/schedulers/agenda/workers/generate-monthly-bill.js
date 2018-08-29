@@ -22,7 +22,7 @@ module.exports = function(agenda) {
     })
   );
 
-  if (process.env.NODE_ENV === 'production') {
+  if (['staging', 'production'].includes(process.env.NODE_ENV)) {
     agenda.every('0 6 1 * *', 'generate-monthly-bill');
   } else if (process.env.GENERATE_BILL) {
     console.log('Bill will be generated in 20 seconds');

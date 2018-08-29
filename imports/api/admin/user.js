@@ -27,7 +27,7 @@ User.fetchAdminDashboardDetails = async (userId) => {
 };
 
 User.updateAdmin = async (userId, updateQuery) => {
-  if(Meteor.userId() === userId || Meteor.user().admin <= ADMIN_LEVEL) {
+  if((Meteor.userId() === userId && updateQuery.admin !== undefined) || Meteor.user().admin <= ADMIN_LEVEL) {
     return false;
   }
   const update = {};
@@ -41,7 +41,7 @@ User.updateAdmin = async (userId, updateQuery) => {
   Meteor.users.update({
     _id: userId
   }, {
-    $set: updateQuery
+    $set: update
   });
   return true;
 }

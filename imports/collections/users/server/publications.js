@@ -1,6 +1,6 @@
 
 Meteor.publish(null, function() {
-  return Meteor.users.find(this.userId, {fields: {emails: 1, profile: 1, admin: 1, _id: 1}})
+  return Meteor.users.find(this.userId, {fields: {emails: 1, profile: 1, admin: 1, _id: 1, demo: 1}})
 });
 const MIN_ADMIN_LEVEL = 0;
 const pageSize = 10;
