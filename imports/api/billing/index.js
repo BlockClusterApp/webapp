@@ -284,6 +284,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
 Billing.shouldHideCreditCardVerification = async function(userid) {
   const userId = userid || Meteor.userId();
 
+
   if (!userId) {
     return false;
   }

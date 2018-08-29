@@ -167,7 +167,7 @@ async function attachPaymentToRequest(payment) {
   const paymentRequest = PaymentRequest.find({
     _id: payment.notes.paymentRequestId,
   }).fetch()[0];
-
+  
   if(!paymentRequest) {
     return false;
   }
