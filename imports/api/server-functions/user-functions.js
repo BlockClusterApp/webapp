@@ -10,6 +10,7 @@ import { sendEmail } from "../emails/email-sender";
 import { Networks } from "../../collections/networks/networks";
 import Config from "../../../imports/modules/config/server";
 import agenda from '../../modules/schedulers/agenda';
+import Billing from '../../api/billing'; 
 
 async function sendEmails(users) {
   const ejsTemplate = await getEJSTemplate({
@@ -41,52 +42,84 @@ async function sendEmails(users) {
 }
 
 agenda.define(
-  "warning email check 1",
+  "warning email step 1",
   Meteor.bindEnvironment((job,done) => {
     const network_id = job.attrs.data.network_id;
     const userId = job.attrs.data.userId;
-    const userData = Meteor.user.find({
+    const userData = Meteor.users.find({
       userId: userId
     });
-
+    const found_notworks = Networks.find({
+      _id:network_id,
+      "deletedAt": {
+       "$exists": false
+      }
+     })[0];
+     if(!found_notworks){
+      job.remove(err => {
+        if (!err) {
+          console.log('Successfully removed job from collection');
+        }else{
+          console.log(err);
+        }
+      });
+     }else{
     sendEmails(userData, { fields: { profile: 1, emails: 1 } })
       .then(sent_mails => {
         //now schedule job after 48 hours,that checks and deletes node if needed.
         agenda.schedule(
-          new Date(new Date().setHours(new Date().getHours() + 48)),
+          moment().add(48, 'hours').toDate(),
           "card verification action step 2",
           {
             network_id: network_id,
             userId: userId
           }
         );
-        return done();
+        console.log(sent_mails)
       })
       .catch(error_sending_mail => {
-        return done(error_sending_mail)
+        console.log(error_sending_mail)
       });
+    }
   })
 );
 
 agenda.define(
   "card verification action step 2",
-  Meteor.bindEnvironment(job => {
+  Meteor.bindEnvironment(async job => {
     const network_id = job.attrs.data.network_id;
     const userId = job.attrs.data.userId;
-    const userCard = UserCards.findOne({userId:userId,active:true},{fields:{_id:1}}).fetch();
-    if(!userCard || !userCard.cards || !userCard.cards.length){
+    
+    const found_notworks = Networks.find({
+      _id:network_id,
+      "deletedAt": {
+       "$exists": false
+      }
+     })[0];
+     const usercard = await Billing.shouldHideCreditCardVerification(userId);
+     if(!found_notworks){
+       //remove the job , dont send email if user deleted before 3days.
+      job.remove(err => {
+        if (!err) {
+          console.log('Successfully removed job from collection');
+        }else{
+          console.log("Job removed!")
+        }
+      });
+     }else if(!usercard){
+       // false! not verified!
       Meteor.call("deleteNetwork",network_id,(error,done)=>{
         if(error){
           //Some issue detected during deletion of node.
-          return done(error);
+          console.log(error);
         }else{
           //successfully deleted node
-          return done();
+          console.log(done);
         }
       });
     }else{
-      //user credit card found & verified.
-      return done();
+      //user credit card verified.
+      console.log("User card found!")
     }
   })
 );
