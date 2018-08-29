@@ -133,6 +133,10 @@ module.exports = {
   NetworkUpdate: {
     id: process.env.NETWORK_UPDATE_ID,
     key: process.env.NETWORK_UPDATE_KEY
+  },
+  Zoho: {
+    organizationId: process.env.ZOHO_ORGANIZATION_ID || defaults.zoho.organizationId,
+    authToken: process.env.ZOHO_AUTH_TOKEN || defaults.zoho.authToken
   }
   // locationMapping
 };

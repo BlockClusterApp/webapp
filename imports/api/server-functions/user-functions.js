@@ -9,15 +9,7 @@ import { UserCards } from "../../collections/payments/user-cards";
 import { sendEmail } from "../emails/email-sender";
 import { Networks } from "../../collections/networks/networks";
 import Config from "../../../imports/modules/config/server";
-const Agenda = require("agenda");
-
-console.log("MongoString", Config.mongoConnectionString);
-
-const agenda = new Agenda({
-  db: {
-    address: Config.mongoConnectionString
-  }
-});
+import agenda from '../../modules/schedulers/agenda';
 
 async function sendEmails(users) {
   const ejsTemplate = await getEJSTemplate({
@@ -152,10 +144,6 @@ agenda.define(
     }
   })
 );
-
-(async function() {
-  await agenda.start();
-})();
 
 const NetworkInvitation = {};
 

@@ -15,9 +15,7 @@ async function fetchUsersWithVouchers(){
     voucherId: {
       $ne: null
     },
-    deletedAt: {
-      $ne: null
-    }
+    deletedAt: null
   }).fetch();
 
   return networks;

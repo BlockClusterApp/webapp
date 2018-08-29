@@ -9,6 +9,6 @@ require('../../collections/support-ticket/server/publications');
 require('../../api/payments');
 require('../../api/billing');
 
-require('../../modules/bull');
+require('../../modules/schedulers');
 
 export {}

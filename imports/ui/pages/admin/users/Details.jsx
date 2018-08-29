@@ -143,7 +143,7 @@ class UserList extends Component {
                     <Link to="/app/admin">Admin</Link>
                   </li>
                   <li className="breadcrumb-item">
-                    <Link to="/app//admin/users">Users</Link>
+                    <Link to="/app/admin/users">Users</Link>
                   </li>
                   <li className="breadcrumb-item active">
                     {this.state.userId}
@@ -184,6 +184,19 @@ class UserList extends Component {
                           updateQuery.admin = 2;
                         } else {
                           updateQuery.admin = 0;
+                        }
+                        Meteor.call("updateUserAdmin", user.details._id, updateQuery);
+                      }} />
+                    </div>
+                    <div className="col-xs-height col-bottom fs-12" style={{paddingLeft: '16px', paddingRight: '16px', paddingBottom: "10px"}}>
+                     Demo User&nbsp;&nbsp;
+                     <input type="checkbox" value="1" defaultChecked={user.details.demoUser > 0 ? "checked" : ""} id="checkbox3" onClick={(e) => {
+                        let demo = e.target.checked;
+                        const updateQuery = {};
+                        if(demo) {
+                          updateQuery.demo = 1;
+                        } else {
+                          updateQuery.demo = 0;
                         }
                         Meteor.call("updateUserAdmin", user.details._id, updateQuery);
                       }} />
@@ -316,9 +329,9 @@ class UserList extends Component {
                     <div className="clearfix" />
                   </div>
                   <div className="card-description">
-                    {cards[0] && cards[0].cards.map(card => {
+                    {cards[0] && cards[0].cards.map((card, index) => {
                       return (
-                        <div key={card.last4}>
+                        <div key={index}>
                           <h5 className="hint-text no-margin">
                             {card.issuer} XX..XX<span className="text-success">
                               {card.last4}

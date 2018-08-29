@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { withTracker } from "meteor/react-meteor-data";
-import { Networks } from "../../../collections/networks/networks.js";
-import helpers from "../../../modules/helpers";
+
+import RZPayments from '../../../collections/razorpay/payments';
 import PaymentRequests from '../../../collections/payments/payment-requests';
 import { withRouter } from "react-router-dom";
 import moment from 'moment';
@@ -47,6 +47,17 @@ class PaymentDashboard extends Component {
     return null;
   }
 
+  convertRZStatusToTag = (status) => {
+    if(status === 'captured') {
+      return <span className="label label-success">Success</span>
+    } else if(status === 'refuneded'){
+      return <span className="label label-info">Refunded</span>;
+    } else if(status === 'failed') {
+      return <span className="label label-info">Failed</span>;
+    }
+    return <span className="label label-info">Pending</span>;
+  }
+
   cardVerificationListener = (isVerified) => {
     this.setState({
       cardVerified: isVerified,
@@ -55,6 +66,7 @@ class PaymentDashboard extends Component {
   }
 
   render() {
+    const pgPayments = [];
     return (
       <div className="content networksList">
         <div className="m-t-20 container-fluid container-fixed-lg bg-white">
@@ -79,6 +91,7 @@ class PaymentDashboard extends Component {
                       </thead>
                       <tbody>
                         {this.props.payments.filter(payment => payment.paymentStatus > 1).map(payment => {
+                          payment.pgResponse && pgPayments.push(...payment.pgResponse.map(g => g.id));
                           return (
                             <tr key={payment._id} title={payment.paymentStatus === 3 ? `Refund initiated at ${moment(payment.refundedAt).format('DD-MMM-YY HH:mm:SS')}` : null}>
                               <td>{payment._id}</td>
@@ -86,6 +99,17 @@ class PaymentDashboard extends Component {
                               <td>{moment(payment.createdAt).format('DD-MMM-YY HH:mm:SS')}</td>
                               <td>INR {Number(payment.amount / 100).toFixed(2)}</td>
                               <td>{this.convertStatusToTag(payment.paymentStatus)}</td>
+                            </tr>
+                          )
+                        })}
+                        {this.props.rzPayments.filter(payment => !pgPayments.includes(payment.id)).map(payment => {
+                          return (
+                            <tr key={payment.id} title={payment.status === 'refunded' ? `Refund initiated at ${moment(payment.created_at * 1000).format('DD-MMM-YY hh:mm:SS A')}` : null}>
+                              <td>{payment.id}</td>
+                              <td>Monthly usage charges</td>
+                              <td>{moment(payment.created_at * 1000).format('DD-MMM-YY HH:mm:SS')}</td>
+                              <td>INR {Number(payment.amount / 100).toFixed(2)}</td>
+                              <td>{this.convertRZStatusToTag(payment.status)}</td>
                             </tr>
                           )
                         })}
@@ -107,9 +131,11 @@ class PaymentDashboard extends Component {
   }
 }
 
+
 export default withTracker(() => {
   return {
     payments: PaymentRequests.find({}).fetch(),
+    rzPayments: RZPayments.find({}).fetch(),
     subscriptions: [Meteor.subscribe("userPayments")]
   };
 })(withRouter(PaymentDashboard));
