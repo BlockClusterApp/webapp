@@ -165,7 +165,7 @@ class CreateAssetType extends Component {
                                                                 <span className="help"> e.g. "0x84eddb1..."</span>
                                                                 <select className="form-control" required ref={(input) => {this[this.props.network[0].instanceId + "_createAssetType_assetIssuer"] = input}}>
                                                                     {this.state.accounts.map((item) => {
-                                                                        return <option key={item.address} value={item.address}>{item.address}</option>
+                                                                        return <option key={item.address} value={item.address}>{item.name} ({item.address})</option>
                                                                     })}
                                                                 </select>
                                                             </div>
