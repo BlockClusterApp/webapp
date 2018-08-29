@@ -742,13 +742,14 @@ Meteor.methods({
         }}
       });
         }
-          let userCard = UserCards.find({userId:userId,active:true},{fields:{_id:1}}).fetch();
+          let userCard = UserCards.find({userId:Meteor.userId(),active:true},{fields:{_id:1}}).fetch();
           //check wheather the user has verified cards or not. and also for active payment methods.
 
           if(!userCard || !userCard.length || !userCard[0].cards || !userCard[0].cards.length){
           agenda.schedule(moment().add(3, 'days').toDate(), "warning email step 1", {
+            
             network_id: id,
-            userId:userId
+            userId:Meteor.userId()
           });
           }
 
@@ -808,14 +809,14 @@ Meteor.methods({
         Secrets.remove({
             instanceId: id
         });
-
-
+        
         AcceptedOrders.remove({
             instanceId: id
         })
 
         myFuture.return();
-
+        
+        
 
         return myFuture.wait();
     },
@@ -1262,7 +1263,6 @@ spec:
                 });
             }
         })
-
         return myFuture.wait();
     },
     "vote": function(networkId, toVote) {

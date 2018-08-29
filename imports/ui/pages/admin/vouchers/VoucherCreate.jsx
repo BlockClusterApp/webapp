@@ -98,10 +98,7 @@ class VoucherCreate extends Component {
   render() {
     return (
       <div className="content VoucherCreate">
-        <div
-          className="m-t-20 container-fluid container-fixed-lg bg-white"
-          style={{ marginLeft: "25px", marginRight: "25px" }}
-        >
+        <div className="m-t-20 container-fluid container-fixed-lg bg-white">
           <div className="row">
             <div className="card-block">
               <div className="form-group">
