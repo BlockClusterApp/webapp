@@ -171,7 +171,6 @@ async function attachPaymentToRequest(payment) {
   if(!paymentRequest) {
     return false;
   }
-
   if (!paymentRequest.pgResponse || !(paymentRequest.pgResponse && paymentRequest.pgResponse.map(p => p.id).includes(payment.id))) {
     PaymentRequest.update(
       {
