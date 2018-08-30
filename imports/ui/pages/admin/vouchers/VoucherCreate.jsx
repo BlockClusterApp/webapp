@@ -29,7 +29,8 @@ class VoucherCreate extends Component {
       isDiskChangeable: false,
       voucher_status: false,
       once_per_user:true,
-      no_times_per_user:5
+      no_times_per_user:5,
+      card_vfctn_needed:true
     };
   }
 
@@ -45,6 +46,7 @@ class VoucherCreate extends Component {
         no_times_per_user:payload.no_times_per_user || 1
       },
       availability: {
+        card_vfctn_needed:payload.card_vfctn_needed || true,
         for_all: payload.for_all || false,
         email_ids: payload.email_ids ? payload.email_ids.split(",") : []
       },
@@ -227,7 +229,7 @@ class VoucherCreate extends Component {
                 <br />
                 <label>Availability</label>
                 <div className="row">
-                  <div className="col-md-4 form-input-group">
+                  <div className="col-md-3 form-input-group">
                     <label>For Everyone</label>
                     <Toggle
                       name="for_all"
@@ -238,7 +240,7 @@ class VoucherCreate extends Component {
                     />
                   </div>
                   {this.state.for_all == false && (
-                    <div className="col-md-4 form-input-group">
+                    <div className="col-md-3 form-input-group">
                       <label>Email Ids</label>
                       <input
                         name="email_ids"
@@ -251,6 +253,17 @@ class VoucherCreate extends Component {
                       />
                     </div>
                   )}
+                   <div className="col-md-3 form-input-group">
+                    <label>Card Verification Needed</label>
+                    <span className="help">  card verification needed to use this voucher(s).</span>
+                    <Toggle
+                      name="card_vfctn_needed"
+                      className="form-control"
+                      icons={false}
+                      checked={this.state.card_vfctn_needed}
+                      onChange={this.handleChangesToggle.bind(this)}
+                    />
+                  </div>
                 </div>
                 <br />
                 <label>Discounts</label>

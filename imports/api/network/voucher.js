@@ -1,4 +1,5 @@
 import Vouchers from "../../collections/vouchers/voucher";
+import Billing from '../../api/billing'; 
 import moment from "moment";
 import { Meteor } from 'meteor/meteor';
 
@@ -16,7 +17,10 @@ Voucher.validate = async function(voucherCode) {
   if (!voucher) {
     throw new Meteor.Error("Invalid or expired voucher");
   }
-
+  const card_validated= await Billing.shouldHideCreditCardVerification(Meteor.userId());
+  if(voucher.availability.card_vfctn_needed && !card_validated){
+    throw new Meteor.Error("Not Eligible");
+  }
   const email_matching = voucher.availability.email_ids.indexOf(Meteor.user().emails[0].address);
   const claimed_status = voucher.voucher_claim_status ? (voucher.voucher_claim_status.filter((i)=>{return i["claimedBy"] == Meteor.userId()})) :0
   
@@ -55,6 +59,7 @@ Voucher.create = async function(payload) {
         no_times_per_user:payload.usablity.no_times_per_user || 1
       },
       availability: {
+        card_vfctn_needed:payload.availability.card_vfctn_needed || true,
         for_all: payload.availability.for_all || false,
         email_ids: payload.availability.email_ids || []
       },

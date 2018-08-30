@@ -1,78 +1,79 @@
-import { Mongo } from "meteor/mongo";
+import { Mongo } from 'meteor/mongo';
 
-import SimpleSchema from "simpl-schema";
+import SimpleSchema from 'simpl-schema';
 
-import AttachBaseHooks from "../../modules/helpers/model-helpers";
+import AttachBaseHooks from '../../modules/helpers/model-helpers';
 
-const VoucherCollection = new Mongo.Collection("vouchers");
+const VoucherCollection = new Mongo.Collection('vouchers');
 
 AttachBaseHooks(VoucherCollection);
 
 VoucherCollection.schema = new SimpleSchema({
   createdAt: {
-    type: Date
+    type: Date,
   },
   updatedAt: {
-    type: Date
+    type: Date,
   },
   code: {
     type: String,
-    required: true
+    required: true,
   },
   expiryDate: {
-    type: Date
+    type: Date,
   },
   usability: {
     type: {
       recurring: { type: Boolean }, //false means one time per user
       no_months: { type: Number },
-      once_per_user:{type:Boolean},
-      no_times_per_user:{type:Number}
-    }
+      once_per_user: { type: Boolean },
+      no_times_per_user: { type: Number },
+    },
   },
   availability: {
     type: {
+      card_vfctn_needed: { type: Boolean }, //card verification needed if true
       for_all: { type: Boolean }, //false means available to all
-      email_ids: { type: Array }
-    }
+      email_ids: { type: Array },
+    },
   },
   discount: {
     type: {
       value: {
-        type: Number
+        type: Number,
       },
       percent: {
-        type: Boolean //false means consider the value as a flat amount.
-      }
-    }
+        type: Boolean, //false means consider the value as a flat amount.
+      },
+    },
   },
   networkConfig: {
-    type: Object
+    type: Object,
   },
   active: {
-    type: Boolean
+    type: Boolean,
   },
   isDiskChangeable: {
-    type: Boolean
+    type: Boolean,
   },
   discountedDays: {
-    type: Number
+    type: Number,
   },
   voucher_claim_status: [
     {
       type: {
         claimed: {
-          type: Boolean
+          type: Boolean,
         },
         claimedBy: {
-          type: String
+          type: String,
         },
         claimedOn: {
-          type: Date
-        }
-      }
-    }
-  ]
+          type: Date,
+        },
+      },
+    },
+  ],
 });
 
 export default VoucherCollection;
