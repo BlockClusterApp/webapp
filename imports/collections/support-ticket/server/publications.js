@@ -1,59 +1,50 @@
-import SupportTicket from "../index";
-import { Networks } from "../../networks/networks";
+import SupportTicket from '../index';
+import { Networks } from '../../networks/networks';
 
 const MIN_ADMIN_LEVEL = 0;
-const pageSize = 20
-Meteor.publish("support.user", function() {
+const pageSize = 20;
+Meteor.publish('support.user', function() {
   return SupportTicket.find({
-    createdBy: Meteor.userId()
+    createdBy: Meteor.userId(),
   });
 });
 
-Meteor.publish("support.id", function(id) {
+Meteor.publish('support.id', function(id) {
   if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
-  return SupportTicket.find({
-    createdBy: Meteor.userId(),
-    _id: id
-  });
-});
 
-Meteor.publish("support.caseId", function(id) {
   const support = SupportTicket.find({
-    createdBy: Meteor.userId(),
-    caseId: id
+    _id: id,
   }).fetch()[0];
 
   if (!support) {
     return [];
   }
 
+
   const result = [];
-  if (
-    support.supportObject &&
-    support.supportObject.serviceType === "network"
-  ) {
+  if (support.supportObject && support.supportObject.serviceType === 'network') {
     result.push(
       Networks.find(
         {
           _id: support.supportObject.serviceTypeId,
-          user: support.createdBy
+          user: support.createdBy,
         },
         {
           fields: {
             name: 1,
             _id: 1,
-            instanceId: 1
-          }
+            instanceId: 1,
+          },
         }
       )
     );
   }
+
   return [
     SupportTicket.find({
-      createdBy: Meteor.userId(),
-      caseId: id
+      _id: id,
     }),
     Meteor.users.find(
       { _id: support.createdBy },
@@ -61,15 +52,62 @@ Meteor.publish("support.caseId", function(id) {
         fields: {
           profile: 1,
           emails: 1,
-          _id: 1
-        }
+          _id: 1,
+        },
       }
     ),
-    ...result
+    ...result,
   ];
 });
 
-Meteor.publish("support.all", function({ page }) {
+Meteor.publish('support.caseId', function(id) {
+  const support = SupportTicket.find({
+    createdBy: Meteor.userId(),
+    caseId: id,
+  }).fetch()[0];
+
+  if (!support) {
+    return [];
+  }
+
+  const result = [];
+  if (support.supportObject && support.supportObject.serviceType === 'network') {
+    result.push(
+      Networks.find(
+        {
+          _id: support.supportObject.serviceTypeId,
+          user: support.createdBy,
+        },
+        {
+          fields: {
+            name: 1,
+            _id: 1,
+            instanceId: 1,
+          },
+        }
+      )
+    );
+  }
+  return [
+    SupportTicket.find({
+      createdBy: Meteor.userId(),
+      caseId: id,
+    }),
+    Meteor.users.find(
+      { _id: support.createdBy },
+      {
+        fields: {
+          profile: 1,
+          emails: 1,
+          _id: 1,
+        },
+      }
+    ),
+    ...result,
+  ];
+});
+
+Meteor.publish('support.all', function({ page }) {
   if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
@@ -79,13 +117,13 @@ Meteor.publish("support.all", function({ page }) {
       limit: pageSize,
       skip: page * pageSize,
       sort: {
-        createdAt: 1
-      }
+        createdAt: 1,
+      },
     }
   );
 });
 
-Meteor.publish("support.search", function({ query, limit, page }) {
+Meteor.publish('support.search', function({ query, limit, page }) {
   if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
@@ -93,9 +131,9 @@ Meteor.publish("support.search", function({ query, limit, page }) {
   page = page || 0;
   return SupportTicket.find(query, {
     sort: {
-      createdAt: 1
+      createdAt: 1,
     },
     limit: limit,
-    skip: page * pageSize
+    skip: page * pageSize,
   });
 });
