@@ -40,19 +40,19 @@ class VoucherCreate extends Component {
       noOfVouchers: payload.noOfVouchers,
       voucher_code_size:payload.voucher_code_size,
       usablity: {
-        recurring: payload.recurring || false,
+        recurring: payload.recurring ,
         no_months: payload.no_months || 0,
-        once_per_user:payload.once_per_user || true,
+        once_per_user:payload.once_per_user ,
         no_times_per_user:payload.no_times_per_user || 1
       },
       availability: {
-        card_vfctn_needed:payload.card_vfctn_needed || true,
-        for_all: payload.for_all || false,
+        card_vfctn_needed:payload.card_vfctn_needed ,
+        for_all: payload.for_all ,
         email_ids: payload.email_ids ? payload.email_ids.split(",") : []
       },
       discount: {
         value: payload.discount_amt || 0,
-        percent: payload.is_percent || false
+        percent: payload.is_percent 
       },
       networkConfig: { cpu: payload.cpu, disk: payload.disk, ram: payload.ram },
       expiryDate:
@@ -60,7 +60,7 @@ class VoucherCreate extends Component {
         moment()
           .add(30, "days")
           .toDate(), //lets take by default 30days
-      isDiskChangeable: payload.isDiskChangeable || false,
+      isDiskChangeable: payload.isDiskChangeable ,
       discountedDays: payload.discountedDays || 0
     };
     this.setState({

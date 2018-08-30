@@ -19,6 +19,7 @@ Voucher.validate = async function(voucherCode) {
   }
   const card_validated= await Billing.shouldHideCreditCardVerification(Meteor.userId());
   if(voucher.availability.card_vfctn_needed && !card_validated){
+    console.log(voucher.availability.card_vfctn_needed, card_validated)
     throw new Meteor.Error("Not Eligible");
   }
   const email_matching = voucher.availability.email_ids.indexOf(Meteor.user().emails[0].address);
@@ -53,29 +54,29 @@ Voucher.create = async function(payload) {
   voucher_codes.forEach(voucher => {
     savabl_doc.push({
       usability: {
-        recurring: payload.usablity.recurring || false,
+        recurring: payload.usablity.recurring,
         no_months: payload.usablity.no_months || 0,
-        once_per_user:payload.usablity.once_per_user || true,
+        once_per_user:payload.usablity.once_per_user,
         no_times_per_user:payload.usablity.no_times_per_user || 1
       },
       availability: {
-        card_vfctn_needed:payload.availability.card_vfctn_needed || true,
-        for_all: payload.availability.for_all || false,
+        card_vfctn_needed:payload.availability.card_vfctn_needed ,
+        for_all: payload.availability.for_all ,
         email_ids: payload.availability.email_ids || []
       },
       discount: {
         value: payload.discount.value || 0,
-        percent: payload.discount.value || false
+        percent: payload.discount.value 
       },
       code: voucher,
-      active:payload.voucher_status || true,
+      active:payload.voucher_status,
       networkConfig: payload.networkConfig,
       expiryDate: payload.expiryDate
         ? new Date(payload.expiryDate)
         : moment()
             .add(30, "days")
             .toDate(), //lets take by default 30days
-      isDiskChangeable: payload.isDiskChangeable || false,
+      isDiskChangeable: payload.isDiskChangeable ,
       discountedDays: payload.discountedDays || 0,
       voucher_claim_status:[]
     });
