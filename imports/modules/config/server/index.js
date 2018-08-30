@@ -73,6 +73,8 @@ function getDatabase() {
 
 function getMongoConnectionString() {
 
+    return process.env.MONGO_URL;
+
     if(['production'].includes(process.env.NODE_ENV)){
       return process.env.MONGO_URL;
     }
