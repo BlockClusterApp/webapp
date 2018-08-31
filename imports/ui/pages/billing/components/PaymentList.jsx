@@ -69,7 +69,7 @@ class PaymentDashboard extends Component {
     const pgPayments = [];
     return (
       <div className="networksList">
-        <div className="m-t-20 container-fluid container-fixed-lg bg-white">
+        <div className="m-t-20 m-l-20 m-r-20  container-fluid container-fixed-lg bg-white">
           <div className="row">
             <div className="col-lg-12">
               <div className="card card-transparent">

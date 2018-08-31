@@ -41,8 +41,9 @@ class CardsAndNewPayment extends Component {
     return (
       <div className="row padding-25 saved-cards">
         <div className="card card-transparent">
-          <h3>Saved Cards &amp; Payments</h3>
-          {cardsView}
+          {/* <h3>Saved Cards &amp; Payments</h3> */}
+          {/* {cardsView} */}
+
         </div>
       </div>
     );

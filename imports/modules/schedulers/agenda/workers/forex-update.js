@@ -35,7 +35,7 @@ module.exports = function(agenda) {
           usd: usdInINR,
           eur: eurInINR
         }
-      });
+      }, {upsert: true});
     })
   );
   if(process.env.NODE_ENV === 'production') {
