@@ -54,6 +54,7 @@ class VoucherCreate extends Component {
         value: payload.discount_amt || 0,
         percent: payload.is_percent 
       },
+      active: payload.voucher_status,
       networkConfig: { cpu: payload.cpu, disk: payload.disk, ram: payload.ram },
       expiryDate:
         payload.expiry_date ||

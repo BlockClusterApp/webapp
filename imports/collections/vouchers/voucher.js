@@ -53,6 +53,9 @@ VoucherCollection.schema = new SimpleSchema({
   active: {
     type: Boolean,
   },
+  voucher_status: {
+    type: Boolean,
+  },
   isDiskChangeable: {
     type: Boolean,
   },

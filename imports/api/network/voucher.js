@@ -9,6 +9,7 @@ Voucher.validate = async function(voucherCode) {
   const voucher = Vouchers.find({
     code: voucherCode,
     active: true,
+    voucher_status:true,
     expiryDate: {
       $gt: new Date()
     }
@@ -32,8 +33,6 @@ Voucher.validate = async function(voucherCode) {
   }else if(!voucher.usability.once_per_user && (claimed_status.length==voucher.usability.no_times_per_user)){
     throw new Meteor.Error("Use Limit Exceed");
   }
-
-
   return voucher;
 };
 
@@ -43,13 +42,12 @@ const insertVoucher = async savable_doc => {
 };
 
 /**
- * @param { voucher_code_size*, noOfVouchers*, networkConfig*, voucher_status*, expiryDate*, isDiskChangeable*, discountedDays*, claimed*, active*} payload
+ * @param { voucher_code_size*, noOfVouchers*, networkConfig*, active*, expiryDate*, isDiskChangeable*, discountedDays*, claimed*} payload
  * @param { cpu: Number, ram: Number, disk: Number } payload.networkConfig
  */
 Voucher.create = async function(payload) {
+  
   let voucher_codes = await generateVouchers(payload.noOfVouchers, Number(payload.voucher_code_size)!= NaN ? Number(payload.voucher_code_size) :6 ); //lets keep it by default 6 for now
-  debugger;
-  console.log(voucher_codes);
   let savabl_doc = [];
   voucher_codes.forEach(voucher => {
     savabl_doc.push({
@@ -69,7 +67,7 @@ Voucher.create = async function(payload) {
         percent: payload.discount.value 
       },
       code: voucher,
-      active:payload.voucher_status,
+      voucher_status: payload.active,
       networkConfig: payload.networkConfig,
       expiryDate: payload.expiryDate
         ? new Date(payload.expiryDate)
@@ -96,7 +94,6 @@ Voucher.create = async function(payload) {
  * @returns {Promise*}
  */
 async function generateVouchers(items, size) {
-  console.log(items,size);
   let voucherArray = [];
     let flag = 0;
     for (i = 1; i <= items; i++) {
@@ -123,8 +120,7 @@ async function generateVouchers(items, size) {
       }
       
     }
-    console.log(voucherArray);
-    return voucherArray;
+  return voucherArray;
 }
 
 Meteor.methods({
