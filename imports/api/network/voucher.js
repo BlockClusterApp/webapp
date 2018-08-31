@@ -1,4 +1,5 @@
 import Vouchers from "../../collections/vouchers/voucher";
+import Billing from '../../api/billing'; 
 import moment from "moment";
 import { Meteor } from 'meteor/meteor';
 
@@ -16,11 +17,13 @@ Voucher.validate = async function(voucherCode) {
   if (!voucher) {
     throw new Meteor.Error("Invalid or expired voucher");
   }
-
+  const card_validated= await Billing.shouldHideCreditCardVerification(Meteor.userId());
+  if(voucher.availability.card_vfctn_needed && !card_validated){
+    throw new Meteor.Error("Not Eligible");
+  }
   const email_matching = voucher.availability.email_ids.indexOf(Meteor.user().emails[0].address);
   const claimed_status = voucher.voucher_claim_status ? (voucher.voucher_claim_status.filter((i)=>{return i["claimedBy"] == Meteor.userId()})) :0
   
-  console.log(email_matching,voucher)
   if(!voucher.availability.for_all && email_matching <= -1){
     throw new Meteor.Error("Voucher is not valid");
   }
@@ -44,33 +47,36 @@ const insertVoucher = async savable_doc => {
  * @param { cpu: Number, ram: Number, disk: Number } payload.networkConfig
  */
 Voucher.create = async function(payload) {
-  let voucher_codes = await generateVouchers(payload.noOfVouchers, payload.voucher_code_size); //lets keep it by default 6 for now
+  let voucher_codes = await generateVouchers(payload.noOfVouchers, Number(payload.voucher_code_size)!= NaN ? Number(payload.voucher_code_size) :6 ); //lets keep it by default 6 for now
+  debugger;
+  console.log(voucher_codes);
   let savabl_doc = [];
   voucher_codes.forEach(voucher => {
     savabl_doc.push({
       usability: {
-        recurring: payload.usablity.recurring || false,
+        recurring: payload.usablity.recurring,
         no_months: payload.usablity.no_months || 0,
-        once_per_user:payload.usablity.once_per_user || true,
+        once_per_user:payload.usablity.once_per_user,
         no_times_per_user:payload.usablity.no_times_per_user || 1
       },
       availability: {
-        for_all: payload.availability.for_all || false,
+        card_vfctn_needed:payload.availability.card_vfctn_needed ,
+        for_all: payload.availability.for_all ,
         email_ids: payload.availability.email_ids || []
       },
       discount: {
         value: payload.discount.value || 0,
-        percent: payload.discount.value || false
+        percent: payload.discount.value 
       },
       code: voucher,
-      active:payload.voucher_status || true,
+      active:payload.voucher_status,
       networkConfig: payload.networkConfig,
       expiryDate: payload.expiryDate
         ? new Date(payload.expiryDate)
         : moment()
             .add(30, "days")
             .toDate(), //lets take by default 30days
-      isDiskChangeable: payload.isDiskChangeable || false,
+      isDiskChangeable: payload.isDiskChangeable ,
       discountedDays: payload.discountedDays || 0,
       voucher_claim_status:[]
     });
@@ -89,18 +95,16 @@ Voucher.create = async function(payload) {
  * @param {Number*} size
  * @returns {Promise*}
  */
-function generateVouchers(items, size) {
+async function generateVouchers(items, size) {
+  console.log(items,size);
   let voucherArray = [];
-  return new Promise((resolve, reject) => {
     let flag = 0;
     for (i = 1; i <= items; i++) {
-      console.log(i);
-      voucherArray.push(
-        Math.round(Math.pow(36, size + 1) - Math.random() * Math.pow(36, size))
+      const codes = Math.round(Math.pow(36, size + 1) - Math.random() * Math.pow(36, size))
           .toString(36)
           .slice(1)
           .toUpperCase()
-      );
+      voucherArray.push(codes);
       if (voucherArray.length + flag == items) {
         const existing_codes = Vouchers.find(
           { code: { $in: voucherArray } },
@@ -115,13 +119,12 @@ function generateVouchers(items, size) {
               flag++;
             }
           });
-        } else {
-          return resolve(voucherArray);
         }
       }
+      
     }
-    return resolve(voucherArray);
-  });
+    console.log(voucherArray);
+    return voucherArray;
 }
 
 Meteor.methods({

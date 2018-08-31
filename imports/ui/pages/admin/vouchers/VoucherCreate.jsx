@@ -29,7 +29,8 @@ class VoucherCreate extends Component {
       isDiskChangeable: false,
       voucher_status: false,
       once_per_user:true,
-      no_times_per_user:5
+      no_times_per_user:5,
+      card_vfctn_needed:true
     };
   }
 
@@ -39,18 +40,19 @@ class VoucherCreate extends Component {
       noOfVouchers: payload.noOfVouchers,
       voucher_code_size:payload.voucher_code_size,
       usablity: {
-        recurring: payload.recurring || false,
+        recurring: payload.recurring ,
         no_months: payload.no_months || 0,
-        once_per_user:payload.once_per_user || true,
+        once_per_user:payload.once_per_user ,
         no_times_per_user:payload.no_times_per_user || 1
       },
       availability: {
-        for_all: payload.for_all || false,
+        card_vfctn_needed:payload.card_vfctn_needed ,
+        for_all: payload.for_all ,
         email_ids: payload.email_ids ? payload.email_ids.split(",") : []
       },
       discount: {
         value: payload.discount_amt || 0,
-        percent: payload.is_percent || false
+        percent: payload.is_percent 
       },
       networkConfig: { cpu: payload.cpu, disk: payload.disk, ram: payload.ram },
       expiryDate:
@@ -58,7 +60,7 @@ class VoucherCreate extends Component {
         moment()
           .add(30, "days")
           .toDate(), //lets take by default 30days
-      isDiskChangeable: payload.isDiskChangeable || false,
+      isDiskChangeable: payload.isDiskChangeable ,
       discountedDays: payload.discountedDays || 0
     };
     this.setState({
@@ -227,7 +229,7 @@ class VoucherCreate extends Component {
                 <br />
                 <label>Availability</label>
                 <div className="row">
-                  <div className="col-md-4 form-input-group">
+                  <div className="col-md-3 form-input-group">
                     <label>For Everyone</label>
                     <Toggle
                       name="for_all"
@@ -238,7 +240,7 @@ class VoucherCreate extends Component {
                     />
                   </div>
                   {this.state.for_all == false && (
-                    <div className="col-md-4 form-input-group">
+                    <div className="col-md-3 form-input-group">
                       <label>Email Ids</label>
                       <input
                         name="email_ids"
@@ -251,6 +253,17 @@ class VoucherCreate extends Component {
                       />
                     </div>
                   )}
+                   <div className="col-md-3 form-input-group">
+                    <label>Card Verification Needed</label>
+                    <span className="help">  card verification needed to use this voucher(s).</span>
+                    <Toggle
+                      name="card_vfctn_needed"
+                      className="form-control"
+                      icons={false}
+                      checked={this.state.card_vfctn_needed}
+                      onChange={this.handleChangesToggle.bind(this)}
+                    />
+                  </div>
                 </div>
                 <br />
                 <label>Discounts</label>
