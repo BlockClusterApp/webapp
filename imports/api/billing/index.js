@@ -233,16 +233,18 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         }
       }
 
+
       // if(isMicroNode && nodeTypeCount.Micro > FreeNodesPerUser.Micro) {
       //   cost = Number(time.hours * ratePerHour + ((time.minutes) % 60) * ratePerMinute).toFixed(2);
       //   label = undefined;
       // }
 
-      result.totalAmount += Number(cost);
+
 
       if (network.deletedAt && moment(network.deletedAt).isBefore(selectedMonth.startOf('month'))) {
         return undefined;
       }
+      result.totalAmount += Number(cost);
       return {
         name: network.name,
         instanceId: network.instanceId,
