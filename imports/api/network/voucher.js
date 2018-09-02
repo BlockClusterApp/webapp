@@ -37,8 +37,7 @@ Voucher.validate = async function(voucherCode) {
 };
 
 const insertVoucher = async savable_doc => {
-  Vouchers.insert(savable_doc);
-  return true;
+  return Vouchers.insert(savable_doc);
 };
 
 /**
