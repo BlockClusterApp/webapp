@@ -118,7 +118,6 @@ class VoucherCreate extends Component {
               ['createVoucher_formloading']: false,
               ['createVoucher_formSubmitError']: '',
             });
-            debugger;
             notifications.success('Vouchers Created!');
           } else {
             this.setState({
@@ -165,7 +164,6 @@ class VoucherCreate extends Component {
         {
           onReady: () => {
             const csv_data = Vouchers.find(query, { limit: Number(this.state.noOfVouchers),skip:0 }).fetch();
-            debugger;
             this.setState(
               {
                 ['csv_data']: this.formatData(csv_data),
