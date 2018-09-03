@@ -15,6 +15,7 @@ import Zoho from '../imports/api/payments/zoho';
 import NetworkFunctions from '../imports/api/network/networks';
 import Vouchers from '../imports/collections/vouchers/voucher';
 import UserCards from '../imports/collections/payments/user-cards';
+import Billing from '../imports/api/billing';
 import {
     Secrets
 } from "../imports/collections/secrets/secrets.js"
@@ -211,26 +212,16 @@ async function fetchZohoStatus({myFuture, nodeConfig, hostedPageId}) {
   }
 }
 
-async function fetchRazorPayStatus({nodeConfig}) {
-  if(nodeConfig.voucher) {
-    return true;
-  }
-  const rzSubscriptionForCustomer = RZSubscription.find({userId: Meteor.userId(), bc_status: 'active'}).fetch()[0];
-  if(!rzSubscriptionForCustomer) {
-    return false;
-  }
-  return true;
-}
-
 Meteor.methods({
     "createNetwork": async function({networkName,  locationCode, networkConfig, userId, hostedPageId}) {
       debug("CreateNetwork | Arguments", networkName, locationCode, networkConfig, userId);
+      userId = userId || Meteor.userId();
         var myFuture = new Future();
         const nodeConfig = getNodeConfig(networkConfig);
 
         // const hostedPage = await fetchZohoStatus({myFuture, nodeConfig, hostedPageId});
-        const isUserSubscribedToRZPlan = await fetchRazorPayStatus({nodeConfig});
-        if(!isUserSubscribedToRZPlan) {
+        const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(userId);
+        if(!isPaymentMethodVerified) {
           throw new Meteor.Error('unauthorized', 'Credit card not verified');
         }
 
@@ -747,7 +738,7 @@ Meteor.methods({
 
           if(!userCard || !userCard.length || !userCard[0].cards || !userCard[0].cards.length){
           agenda.schedule(moment().add(3, 'days').toDate(), "warning email step 1", {
-            
+
             network_id: id,
             userId:Meteor.userId()
           });
@@ -809,14 +800,14 @@ Meteor.methods({
         Secrets.remove({
             instanceId: id
         });
-        
+
         AcceptedOrders.remove({
             instanceId: id
         })
 
         myFuture.return();
-        
-        
+
+
 
         return myFuture.wait();
     },
