@@ -63,7 +63,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   const conversion = await Payment.getConversionToINRRate({});
   invoiceObject.totalAmountINR = Math.max(Math.floor(Number(totalAmount) * 100 * conversion - 100), 0 );
 
-  if (!user.demoUser && Math.round(invoiceObject.totalAmountINR) > 100) && !user.byPassOnlinePayment && rzSubscription) {
+  if (!user.demoUser && Math.round(invoiceObject.totalAmountINR) > 100 && !user.byPassOnlinePayment && rzSubscription) {
     const rzAddOn = await RazorPay.createAddOn({
       subscriptionId: rzSubscription.id,
       addOn: {
