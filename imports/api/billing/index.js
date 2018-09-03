@@ -284,42 +284,36 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
   return result;
 };
 
-Billing.shouldHideCreditCardVerification = async function(userid) {
-  const userId = userid || Meteor.userId();
+Billing.isPaymentMethodVerified = async function(userId) {
+  userId = userId || Meteor.userId();
 
 
   if (!userId) {
     return false;
   }
 
+  let userCards = UserCards.find({userId: userId}).fetch()[0];
+  if(userCards) {
+    userCards = userCards.cards && userCards.cards[0];
+  }
   const verificationPlan = RZPlan.find({ identifier: 'verification' }).fetch()[0];
-  const userRZSubscription = RZSubscription.find({ userId: Meteor.userId(), plan_id: verificationPlan.id, bc_status: 'active' }).fetch()[0];
+  const userRZSubscription = RZSubscription.find({ userId: userId, plan_id: verificationPlan.id, bc_status: 'active' }).fetch()[0];
 
-  if (!userRZSubscription) {
+  // debit card
+  if(userCards && !userRZSubscription) {
+    return true;
+  }
+
+  if (!userCards && !userRZSubscription) {
     return false;
   }
 
   return true;
-
-  // const userCards = UserCards.find({userId: userId}).fetch()[0];
-  // const networks = Networks.find({user: userId, active: true}).fetch();
-
-  // if(networks.length > 2 && !(userCards && userCards.cards.length > 0)){
-  //   return false;
-  // }
-
-  // if(!userCards){
-  //   return false;
-  // }
-
-  // if(userCards.cards && userCards.cards.length > 0){
-  //   return true;
-  // }
 };
 
 Meteor.methods({
   fetchBilling: Billing.generateBill,
-  shouldShowCreditCardVerification: Billing.shouldHideCreditCardVerification,
+  shouldShowCreditCardVerification: Billing.isPaymentMethodVerified,
 });
 
 export default Billing;

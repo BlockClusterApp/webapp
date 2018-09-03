@@ -18,7 +18,7 @@ Voucher.validate = async function(voucherCode) {
   if (!voucher) {
     throw new Meteor.Error("Invalid or expired voucher");
   }
-  const card_validated= await Billing.shouldHideCreditCardVerification(Meteor.userId());
+  const card_validated= await Billing.isPaymentMethodVerified(Meteor.userId());
   if(voucher.availability.card_vfctn_needed && !card_validated){
     throw new Meteor.Error("Not Eligible");
   }
