@@ -9,6 +9,7 @@ Voucher.validate = async function(voucherCode) {
   const voucher = Vouchers.find({
     code: voucherCode,
     active: true,
+    voucher_status:true,
     expiryDate: {
       $gt: new Date()
     }
@@ -24,7 +25,6 @@ Voucher.validate = async function(voucherCode) {
   const email_matching = voucher.availability.email_ids.indexOf(Meteor.user().emails[0].address);
   const claimed_status = voucher.voucher_claim_status ? (voucher.voucher_claim_status.filter((i)=>{return i["claimedBy"] == Meteor.userId()})) :0
   
-  console.log(email_matching,voucher)
   if(!voucher.availability.for_all && email_matching <= -1){
     throw new Meteor.Error("Voucher is not valid");
   }
@@ -33,49 +33,47 @@ Voucher.validate = async function(voucherCode) {
   }else if(!voucher.usability.once_per_user && (claimed_status.length==voucher.usability.no_times_per_user)){
     throw new Meteor.Error("Use Limit Exceed");
   }
-
-
   return voucher;
 };
 
 const insertVoucher = async savable_doc => {
-  Vouchers.insert(savable_doc);
-  return true;
+  return Vouchers.insert(savable_doc);
 };
 
 /**
- * @param { voucher_code_size*, noOfVouchers*, networkConfig*, voucher_status*, expiryDate*, isDiskChangeable*, discountedDays*, claimed*, active*} payload
+ * @param { voucher_code_size*, noOfVouchers*, networkConfig*, active*, expiryDate*, isDiskChangeable*, discountedDays*, claimed*} payload
  * @param { cpu: Number, ram: Number, disk: Number } payload.networkConfig
  */
 Voucher.create = async function(payload) {
-  let voucher_codes = await generateVouchers(payload.noOfVouchers, payload.voucher_code_size); //lets keep it by default 6 for now
+  
+  let voucher_codes = await generateVouchers(payload.noOfVouchers, Number(payload.voucher_code_size)!= NaN ? Number(payload.voucher_code_size) :6 ); //lets keep it by default 6 for now
   let savabl_doc = [];
   voucher_codes.forEach(voucher => {
     savabl_doc.push({
       usability: {
-        recurring: payload.usablity.recurring || false,
+        recurring: payload.usablity.recurring,
         no_months: payload.usablity.no_months || 0,
-        once_per_user:payload.usablity.once_per_user || true,
+        once_per_user:payload.usablity.once_per_user,
         no_times_per_user:payload.usablity.no_times_per_user || 1
       },
       availability: {
-        card_vfctn_needed:payload.availability.card_vfctn_needed || true,
-        for_all: payload.availability.for_all || false,
+        card_vfctn_needed:payload.availability.card_vfctn_needed ,
+        for_all: payload.availability.for_all ,
         email_ids: payload.availability.email_ids || []
       },
       discount: {
         value: payload.discount.value || 0,
-        percent: payload.discount.value || false
+        percent: payload.discount.value 
       },
       code: voucher,
-      active:payload.voucher_status || true,
+      voucher_status: payload.active,
       networkConfig: payload.networkConfig,
       expiryDate: payload.expiryDate
         ? new Date(payload.expiryDate)
         : moment()
             .add(30, "days")
             .toDate(), //lets take by default 30days
-      isDiskChangeable: payload.isDiskChangeable || false,
+      isDiskChangeable: payload.isDiskChangeable ,
       discountedDays: payload.discountedDays || 0,
       voucher_claim_status:[]
     });
@@ -94,18 +92,15 @@ Voucher.create = async function(payload) {
  * @param {Number*} size
  * @returns {Promise*}
  */
-function generateVouchers(items, size) {
+async function generateVouchers(items, size) {
   let voucherArray = [];
-  return new Promise((resolve, reject) => {
     let flag = 0;
     for (i = 1; i <= items; i++) {
-      console.log(i);
-      voucherArray.push(
-        Math.round(Math.pow(36, size + 1) - Math.random() * Math.pow(36, size))
+      const codes = Math.round(Math.pow(36, size + 1) - Math.random() * Math.pow(36, size))
           .toString(36)
           .slice(1)
           .toUpperCase()
-      );
+      voucherArray.push(codes);
       if (voucherArray.length + flag == items) {
         const existing_codes = Vouchers.find(
           { code: { $in: voucherArray } },
@@ -120,13 +115,11 @@ function generateVouchers(items, size) {
               flag++;
             }
           });
-        } else {
-          return resolve(voucherArray);
         }
       }
+      
     }
-    return resolve(voucherArray);
-  });
+  return voucherArray;
 }
 
 Meteor.methods({

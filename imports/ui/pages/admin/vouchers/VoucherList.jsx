@@ -95,9 +95,11 @@ class VoucherList extends Component {
     this.search();
   };
 
-  getActiveStatus = active => {
+  getActiveStatus = (active,expiry) => {
     if (active) {
       return <span className="label label-success">Active</span>;
+    }else if(new Date(expiry) < new Date()){
+      return <span className="label label-danger">Expired</span>;
     }else{
       return <span className="label label-danger">Inactive</span>;
     }
@@ -225,7 +227,7 @@ class VoucherList extends Component {
                                 {this.getNetworkType(voucher.networkConfig)}
                               </td>
                               <td>
-                              {this.getActiveStatus(voucher.active)}
+                              {this.getActiveStatus(voucher.voucher_status, voucher.expiryDate)}
                               </td>
                               <td>
                                 {moment(voucher.createdAt).format(
