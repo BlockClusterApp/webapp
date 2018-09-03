@@ -127,6 +127,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         }
         if (!voucher.availability) {
           voucher.availability = {
+            card_vfctn_needed:true,
             for_all: false,
             email_ids: [],
           };
