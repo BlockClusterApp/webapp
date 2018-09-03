@@ -175,6 +175,11 @@ class CreateNetwork extends Component {
                   <NetworkConfigSelector
                     configChangeListener={config => {
                       this.config = config;
+                      if(config.diskSpace > 16000) { // 16TiB
+                        return this.setState({
+                          formSubmitError: 'Disk space cannot exceed 16000 GB',
+                        });
+                      }
                       this.setState({
                         formSubmitError: '',
                         showCreditCardAlert: this.state.showSubmitAlert && (config && config.voucher ? false : true),

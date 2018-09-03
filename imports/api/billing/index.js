@@ -284,7 +284,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
   return result;
 };
 
-Billing.shouldHideCreditCardVerification = async function(userId) {
+Billing.isPaymentMethodVerified = async function(userId) {
   userId = userId || Meteor.userId();
 
 
@@ -292,7 +292,10 @@ Billing.shouldHideCreditCardVerification = async function(userId) {
     return false;
   }
 
-  const userCards = UserCards.find({userId: userId}).fetch()[0];
+  let userCards = UserCards.find({userId: userId}).fetch()[0];
+  if(userCards) {
+    userCards = userCards.cards && userCards.cards[0];
+  }
   const verificationPlan = RZPlan.find({ identifier: 'verification' }).fetch()[0];
   const userRZSubscription = RZSubscription.find({ userId: userId, plan_id: verificationPlan.id, bc_status: 'active' }).fetch()[0];
 
@@ -306,21 +309,11 @@ Billing.shouldHideCreditCardVerification = async function(userId) {
   }
 
   return true;
-
-  // const userCards = UserCards.find({userId: userId}).fetch()[0];
-
-  // if(!userCards){
-  //   return false;
-  // }
-
-  // if(userCards.cards && userCards.cards.length > 0){
-  //   return true;
-  // }
 };
 
 Meteor.methods({
   fetchBilling: Billing.generateBill,
-  shouldShowCreditCardVerification: Billing.shouldHideCreditCardVerification,
+  shouldShowCreditCardVerification: Billing.isPaymentMethodVerified,
 });
 
 export default Billing;

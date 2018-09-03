@@ -43,6 +43,11 @@ class CardsAndNewPayment extends Component {
     });
   };
 
+  modalDismissListener = () => {
+    this.setState({
+      loading: false
+    });
+  }
 
   render() {
     const { user } = this.props;
@@ -127,6 +132,7 @@ class CardsAndNewPayment extends Component {
                 loading={this.state.loading}
                 preTriggerPaymentListener={this.preTriggerPaymentListener}
                 paymentHandler={this.rzPaymentHandler}
+                modalDismissListener={this.modalDismissListener}
               />
             )}
           </div>

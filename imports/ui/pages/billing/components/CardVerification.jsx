@@ -1,5 +1,6 @@
 import React from "react";
 import RazorPay from "../../../components/Razorpay/Razorpay";
+import { Link } from "react-router-dom";
 
 import "./CardVerification.scss";
 
@@ -120,11 +121,11 @@ export default class CardVerification extends React.Component {
               You need to verify your credit card before you can create nodes.
             </div> */}
             <div className="col-md-12">
-              You need to <a href="javascript:;" onClick={this.openCreditCardDialog} style={{textDecoration: 'underline'}}>verify your credit card</a> before you can create nodes.
+              You need to <Link to="/app/payments">verify your credit card</Link> before you can create nodes.
             </div>
           </div>
         </div>
-        {Modal}
+        {/* {Modal} */}
       </div>
     );
 
