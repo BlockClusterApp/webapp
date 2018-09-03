@@ -100,7 +100,7 @@ InvoiceObj.settleInvoice = async ({rzSubscriptionId, rzCustomerId, billingMonth,
     }
   });
 
-  return true;
+  return invoice._id;
 }
 
 export default InvoiceObj;
