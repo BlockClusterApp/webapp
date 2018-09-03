@@ -99,7 +99,7 @@ class BillingDashboard extends Component {
 
     return (
       <div className="content networksList">
-        <div className="m-t-20 container-fluid container-fixed-lg bg-white">
+        <div className="m-t-20  m-l-20 m-r-20 container-fluid container-fixed-lg bg-white">
           <div className="row">
             <div className="col-lg-12">
               <div className="card card-transparent">
@@ -120,7 +120,7 @@ class BillingDashboard extends Component {
                       </div>
                       <div className="col-md-7">
                         <div className="row">
-                          <div className="col-md-2">Show Bill for:</div>
+                          <div className="col-md-2">Bill for:</div>
                           <div className="col-md-4">
                             <div className="form-group ">
                               <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onMonthChange}>

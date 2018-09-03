@@ -101,11 +101,13 @@ class RazorPay extends React.Component {
       delete razorpayOptions.amount;
     }
 
-    try {
+    if(notes.display_amount && notes.display_currency) {
+      razorpayOptions.display_amount = notes.display_amount;
+      razorpayOptions.display_currency = notes.display_currency;
+    }
 
-      if(!window.rzp1) {
-        window.rzp1 = new window.Razorpay(razorpayOptions);
-      }
+    try {
+      window.rzp1 = new window.Razorpay(razorpayOptions);
       window.rzp1.open();
     }catch(err) {
       this.setState({
@@ -147,7 +149,7 @@ class RazorPay extends React.Component {
       <button className="btn btn-primary razorpay-payment-button"
         onClick={this.triggerPayment}
         disabled={this.props.loading || this.state.loading}>
-        { (this.props.loading || this.state.loading) && <i className="fa fa-spin fa-spinner"></i> }&nbsp;{this.props.buttonText || `Pay Now`}
+        { (this.props.loading || this.state.loading) && <i className="fa fa-spin fa-spinner">&nbsp;</i> }{this.props.buttonText || `Pay Now`}
       </button>
     </div>
     );

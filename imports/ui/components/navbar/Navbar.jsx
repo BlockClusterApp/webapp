@@ -134,9 +134,15 @@ class Navbar extends Component {
                             <ul className="sub-menu">
                                 <li>
                                     <Link to="/app/payments">Payments</Link>
+                                    <span className="icon-thumbnail">
+                                        <i className="fa fa-money" />
+                                    </span>
                                 </li>
                                 <li>
                                     <Link to="/app/billing">Bills</Link>
+                                    <span className="icon-thumbnail">
+                                        <i className="fa fa-list-alt" />
+                                    </span>
                                 </li>
                                 <li>
                                     <Link to="/app/support">Support</Link>

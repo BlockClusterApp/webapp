@@ -96,7 +96,7 @@ agenda.define(
        "$exists": false
       }
      })[0];
-     const usercard = await Billing.shouldHideCreditCardVerification(userId);
+     const usercard = await Billing.isPaymentMethodVerified(userId);
      if(!found_notworks){
        //remove the job , dont send email if user deleted before 3days.
       job.remove(err => {

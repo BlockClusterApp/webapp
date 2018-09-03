@@ -1,0 +1,47 @@
+.saved-cards {
+  .card-row {
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+
+  .card-custom {
+    border: none;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    cursor: pointer;
+    transition: all 300ms;
+  }
+
+  .card-custom:hover {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-custom.selected {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-custom.selected:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    display: block;
+    border-left: 35px solid transparent;
+    border-bottom: 35px solid transparent;
+    border-top: 35px solid #57b396;
+    z-index: 0;
+    margin-right: 15px;
+  }
+
+  .razorpay-payment-button {
+    background-color: #57b396;
+    border-color: #57b396;
+  }
+
+  .razorpay-payment-button[disabled], .razorpay-payment-button[disabled]:hover {
+    background-color: #57b396;
+    border-color: #57b396;
+  }
+}
