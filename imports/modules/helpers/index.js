@@ -18,6 +18,13 @@ const SupportTicketCodes = {
 }
 
 export default {
+    getCurrencySymbol: function(currencyCode) {
+      currencyCode = currencyCode.toUpperCase();
+      if(currencyCode === 'USD') {
+        return '$';
+      }
+      return 'INR'
+    },
     firstLetterCapital: function(str) {
         return str.charAt(0).toUpperCase() + str.slice(1);
     },

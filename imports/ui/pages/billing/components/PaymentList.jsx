@@ -5,6 +5,7 @@ import { withRouter } from "react-router-dom";
 import RZPayments from '../../../../collections/razorpay/payments';
 import PaymentRequests from '../../../../collections/payments/payment-requests';
 import moment from 'moment';
+import Helpers from '../../../../modules/helpers';
 import CardVerification from '../components/CardVerification.jsx';
 
 import "../Dashboard.scss";
@@ -65,17 +66,19 @@ class PaymentDashboard extends Component {
     })
   }
 
+
+
   render() {
     const pgPayments = [];
     return (
       <div className="networksList">
-        <div className="m-t-20 m-l-20 m-r-20  container-fluid container-fixed-lg bg-white">
+        <div className="m-t-20 container-fluid container-fixed-lg bg-white">
           <div className="row">
             <div className="col-lg-12">
               <div className="card card-transparent">
                 <div className="card-header ">
                   <div className="card-title">Payments</div>
-                  <CardVerification cardVerificationListener={this.cardVerificationListener}/>
+                  {/* <CardVerification cardVerificationListener={this.cardVerificationListener}/> */}
                 </div>
                 <div className="card-block">
                   <div className="table-responsive">
@@ -92,12 +95,13 @@ class PaymentDashboard extends Component {
                       <tbody>
                         {this.props.payments.filter(payment => payment.paymentStatus > 1).map(payment => {
                           payment.pgResponse && pgPayments.push(...payment.pgResponse.map(g => g.id));
+                          const pgResponse = payment.pgResponse && payment.pgResponse.find(g => g.status === 'captured');
                           return (
                             <tr key={payment._id} title={payment.paymentStatus === 3 ? `Refund initiated at ${moment(payment.refundedAt).format('DD-MMM-YY HH:mm:SS')}` : null}>
                               <td>{payment._id}</td>
-                              <td>{payment.reason}</td>
+                              <td>{Helpers.firstLetterCapital(payment.reason)}</td>
                               <td>{moment(payment.createdAt).format('DD-MMM-YY HH:mm:SS')}</td>
-                              <td>INR {Number(payment.amount / 100).toFixed(2)}</td>
+                              <td>{pgResponse && pgResponse.notes && pgResponse.notes.display_amount ? `${Helpers.getCurrencySymbol(pgResponse.notes.display_currency)} ${Number(pgResponse.notes.display_amount).toFixed(2)}`  : `INR ${Number(payment.amount / 100).toFixed(2)}`}</td>
                               <td>{this.convertStatusToTag(payment.paymentStatus)}</td>
                             </tr>
                           )

@@ -51,7 +51,6 @@ export default class CardVerification extends React.Component {
     this.setState({
       loading: true
     });
-    console.log("Pg Response", pgResponse);
     Meteor.call("applyRZCardVerification", pgResponse, (err, res) => {
       this.checkCardStatus();
     });
