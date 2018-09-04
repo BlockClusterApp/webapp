@@ -1,3 +1,9 @@
+import Config from '../../modules/config/server';
+
+RavenLogger.initialize({
+  server: Config.Raven.dsn
+});
+
 require("../../collections/networks/server/publications.js")
 require('../../collections/user-invitation/server/publications.js');
 require("../../collections/utilities/server/publications.js")

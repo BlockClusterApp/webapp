@@ -34,3 +34,4 @@ aldeed:simple-schema
 matb33:collection-hooks
 percolate:migrations
 maxfi:remote-collection
+deepwell:raven

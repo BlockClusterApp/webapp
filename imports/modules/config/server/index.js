@@ -139,6 +139,9 @@ module.exports = {
   Zoho: {
     organizationId: process.env.ZOHO_ORGANIZATION_ID || defaults.zoho.organizationId,
     authToken: process.env.ZOHO_AUTH_TOKEN || defaults.zoho.authToken
+  },
+  Raven: {
+    dsn: process.env.RAVEN_DSN || defaults.Raven.dsn
   }
   // locationMapping
 };

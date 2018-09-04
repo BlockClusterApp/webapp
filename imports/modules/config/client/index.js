@@ -32,5 +32,8 @@ module.exports = {
   workerNodeDomainName: (locationCode = "us-west-2") => {
     return getDynamoWokerDomainName(locationCode)
   },
-  namespace: process.env.NAMESPACE || defaults.namespace
+  namespace: process.env.NAMESPACE || defaults.namespace,
+  Raven: {
+    dsn: 'https://30e285a684c74bb5a726673ca0cf6707@sentry.io/1274301'
+  }
 };
