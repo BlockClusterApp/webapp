@@ -61,10 +61,37 @@ Payments.getConversionToINRRate = async ({ currencyCode }) => {
   return Number(Number(exchangeRates[currencyCode.toLowerCase()]).toFixed(4));
 };
 
+Payments.refundAmount = async ({paymentRequestId, options}) => {
+  const request = PaymentRequests.find({_id: paymentRequestId}).fetch()[0];
+  if(!request) {
+    throw new Meteor.Error('bad-request', 'Invalid request id');
+  }
+  const paymentId  = request.pgReference;
+  if(!paymentId){
+    throw new Meteor.Error('bad-request', 'Payment not yet initiated');
+  }
+
+  if(!options) {
+    options = {};
+  }
+  if(!options.notes) {
+    options.notes = {};
+  }
+
+  if(!options.notes.reason) {
+    options.notes.reason = 'Refund for verification'
+  }
+
+  await RazorPay.refundPayment(paymentId, options);
+
+  return true;
+}
+
 Meteor.methods({
   capturePaymentRazorPay: RazorPay.capturePayment,
   applyRZCardVerification: RazorPay.applyCardVerification,
   createPaymentRequest: Payments.createRequest,
+  refundPayment: Payments.refundAmount
 });
 
 export default Payments;

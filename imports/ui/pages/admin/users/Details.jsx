@@ -1,12 +1,18 @@
-import React, { Component } from "react";
-import { withTracker } from "meteor/react-meteor-data";
-import helpers from "../../../../modules/helpers";
-import { withRouter } from "react-router-dom";
-import { Link } from "react-router-dom";
-import moment from "moment";
+import React, { Component } from 'react';
+import { withTracker } from 'meteor/react-meteor-data';
+import helpers from '../../../../modules/helpers';
+import { withRouter } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import moment from 'moment';
 import PaymentModal from './components/PaymentModal';
 
-class UserList extends Component {
+import { Networks } from '../../../../collections/networks/networks';
+import UserCards from '../../../../collections/payments/user-cards';
+import { UserInvitation } from '../../../../collections/user-invitation';
+import PaymentRequests from '../../../../collections/payments/payment-requests';
+import Voucher from '../../../../collections/vouchers/voucher';
+
+class UserDetails extends Component {
   constructor(props) {
     super(props);
 
@@ -15,7 +21,7 @@ class UserList extends Component {
       page: 0,
       userId: null,
       user: {},
-      payment: {}
+      payment: {},
     };
   }
 
@@ -27,29 +33,17 @@ class UserList extends Component {
 
   componentDidMount() {
     this.setState({
-      userId: this.props.match.params.id
+      userId: this.props.match.params.id,
     });
-    Meteor.call(
-      "fetchAdminDashboardDetails",
-      this.props.match.params.id,
-      (err, res) => {
-        if (err) {
-          return alert(`Error ${err.error}`);
-        }
-        this.setState({
-          user: res
-        });
+    Meteor.call('fetchAdminDashboardDetails', this.props.match.params.id, (err, res) => {
+      if (err) {
+        return alert(`Error ${err.error}`);
       }
-    );
+      this.setState({
+        user: res,
+      });
+    });
   }
-
-  getEmailVerificationLabel = verification => {
-    if (verification) {
-      return <span className="label label-success">Yes</span>;
-    } else {
-      return <span className="label label-important">No</span>;
-    }
-  };
 
   getEmailVerificationLabel = verification => {
     if (verification) {
@@ -97,7 +91,7 @@ class UserList extends Component {
       case 4:
         return <span className="label label-warn">Cancelled</span>;
       default:
-      return <span className="label label-info">Pending</span>;
+        return <span className="label label-info">Pending</span>;
     }
   };
 
@@ -110,30 +104,32 @@ class UserList extends Component {
     return null;
   };
 
+  refundListener = () => {
+    this.setState({
+      showPaymentModal: false
+    });
+  }
 
   render() {
-    const user = this.state.user;
-    if (!(user.details && user.details.profile)) {
+    const { cards, invitations, payments, vouchers, user, networks } = this.props;
+
+    if (!(user && user.profile)) {
       const LoadingView = (
-        <div
-          className="d-flex justify-content-center flex-column full-height"
-          style={{ marginTop: "250px", paddingBottom: "250px", paddingLeft: '250px' }}
-        >
+        <div className="d-flex justify-content-center flex-column full-height" style={{ marginTop: '250px', paddingBottom: '250px', paddingLeft: '250px' }}>
           <div id="loader" />
           <br />
-          <p style={{ textAlign: "center", fontSize: "1.2em" }}>
-            Just a minute
-          </p>
+          <p style={{ textAlign: 'center', fontSize: '1.2em' }}>Just a minute</p>
         </div>
       );
       return LoadingView;
     }
 
-    const { cards, bill, invitations, payments, vouchers } = user;
+
+    const { bill } = this.state.user;
 
     return (
       <div className="page-content-wrapper ">
-        <PaymentModal payment={this.state.selectedPayment} showModal={this.state.showPaymentModal} />
+        <PaymentModal payment={this.state.selectedPayment} refundListener={this.refundListener} showModal={this.state.showPaymentModal} />
         <div className="content sm-gutter">
           <div data-pages="parallax">
             <div className="container-fluid p-l-25 p-r-25 sm-p-l-0 sm-p-r-0">
@@ -145,9 +141,7 @@ class UserList extends Component {
                   <li className="breadcrumb-item">
                     <Link to="/app/admin/users">Users</Link>
                   </li>
-                  <li className="breadcrumb-item active">
-                    {this.state.userId}
-                  </li>
+                  <li className="breadcrumb-item active">{this.state.userId}</li>
                 </ol>
               </div>
             </div>
@@ -155,10 +149,7 @@ class UserList extends Component {
           <div className="container-fluid p-l-25 p-r-25 p-t-0 p-b-25 sm-padding-10">
             <div className="row">
               <div className="col-lg-3 col-sm-6  d-flex flex-column">
-                <div
-                  className="card social-card share  full-width m-b-10 no-border"
-                  data-social="item"
-                >
+                <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
                   <div className="card-header ">
                     <h5 className="text-primary pull-left fs-12">
                       User <i className="fa fa-circle text-complete fs-11" />
@@ -170,36 +161,47 @@ class UserList extends Component {
                   </div>
                   <div className="card-description">
                     <p>
-                      {user.details.profile.firstName}{" "}
-                      {user.details.profile.lastName}
+                      {user.profile.firstName} {user.profile.lastName}
                     </p>
                   </div>
                   <div className="row-xs-height">
-                    <div className="col-xs-height col-bottom fs-12" style={{paddingLeft: '16px', paddingRight: '16px', paddingBottom: "10px"}}>
-                     Admin&nbsp;&nbsp;
-                     <input type="checkbox" value="1" defaultChecked={user.details.admin > 0 ? "checked" : ""} id="checkbox2" onClick={(e) => {
-                        let admin = e.target.checked;
-                        const updateQuery = {};
-                        if(admin) {
-                          updateQuery.admin = 2;
-                        } else {
-                          updateQuery.admin = 0;
-                        }
-                        Meteor.call("updateUserAdmin", user.details._id, updateQuery);
-                      }} />
+                    <div className="col-xs-height col-bottom fs-12" style={{ paddingLeft: '16px', paddingRight: '16px', paddingBottom: '10px' }}>
+                      Admin&nbsp;&nbsp;
+                      <input
+                        type="checkbox"
+                        value="1"
+                        defaultChecked={user.admin > 0 ? 'checked' : ''}
+                        id="checkbox2"
+                        onClick={e => {
+                          let admin = e.target.checked;
+                          const updateQuery = {};
+                          if (admin) {
+                            updateQuery.admin = 2;
+                          } else {
+                            updateQuery.admin = 0;
+                          }
+                          Meteor.call('updateUserAdmin', user._id, updateQuery);
+                        }}
+                      />
                     </div>
-                    <div className="col-xs-height col-bottom fs-12" style={{paddingLeft: '16px', paddingRight: '16px', paddingBottom: "10px"}}>
-                     Demo User&nbsp;&nbsp;
-                     <input type="checkbox" value="1" defaultChecked={user.details.demoUser > 0 ? "checked" : ""} id="checkbox3" onClick={(e) => {
-                        let demo = e.target.checked;
-                        const updateQuery = {};
-                        if(demo) {
-                          updateQuery.demo = 1;
-                        } else {
-                          updateQuery.demo = 0;
-                        }
-                        Meteor.call("updateUserAdmin", user.details._id, updateQuery);
-                      }} />
+                    <div className="col-xs-height col-bottom fs-12" style={{ paddingLeft: '16px', paddingRight: '16px', paddingBottom: '10px' }}>
+                      Demo User&nbsp;&nbsp;
+                      <input
+                        type="checkbox"
+                        value="1"
+                        defaultChecked={user.demoUser > 0 ? 'checked' : ''}
+                        id="checkbox3"
+                        onClick={e => {
+                          let demo = e.target.checked;
+                          const updateQuery = {};
+                          if (demo) {
+                            updateQuery.demo = 1;
+                          } else {
+                            updateQuery.demo = 0;
+                          }
+                          Meteor.call('updateUserAdmin', user._id, updateQuery);
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -216,11 +218,7 @@ class UserList extends Component {
                           <div className="card-controls">
                             <ul>
                               <li>
-                                <a
-                                  href="#"
-                                  className="portlet-refresh text-black"
-                                  data-toggle="refresh"
-                                >
+                                <a href="#" className="portlet-refresh text-black" data-toggle="refresh">
                                   <i className="portlet-icon portlet-icon-refresh" />
                                 </a>
                               </li>
@@ -232,14 +230,8 @@ class UserList extends Component {
                     <div className="row-xs-height">
                       <div className="col-xs-height col-top">
                         <div className="p-l-20 p-t-50 p-b-40 p-r-20">
-                          <p className="no-margin p-b-5">
-                            {user.details.emails[0].address}
-                          </p>
-                          <span className="small hint-text pull-left">
-                            {this.getEmailVerificationLabel(
-                              user.details.emails[0].verified
-                            )}
-                          </span>
+                          <p className="no-margin p-b-5">{user.emails[0].address}</p>
+                          <span className="small hint-text pull-left">{this.getEmailVerificationLabel(user.emails[0].verified)}</span>
                         </div>
                       </div>
                     </div>
@@ -249,9 +241,7 @@ class UserList extends Component {
                           <div
                             className="progress-bar progress-bar-primary"
                             style={{
-                              width: user.details.emails[0].verified
-                                ? "100%"
-                                : "0%"
+                              width: user.emails[0].verified ? '100%' : '0%',
                             }}
                           />
                         </div>
@@ -272,11 +262,7 @@ class UserList extends Component {
                           <div className="card-controls">
                             <ul>
                               <li>
-                                <a
-                                  href="#"
-                                  className="portlet-refresh text-black"
-                                  data-toggle="refresh"
-                                >
+                                <a href="#" className="portlet-refresh text-black" data-toggle="refresh">
                                   <i className="portlet-icon portlet-icon-refresh" />
                                 </a>
                               </li>
@@ -288,14 +274,10 @@ class UserList extends Component {
                     <div className="row-xs-height">
                       <div className="col-xs-height col-top">
                         <div className="p-l-20 p-t-50 p-b-40 p-r-20">
-                          <h3 className="no-margin p-b-5">
-                            $ {bill.totalAmount}
-                          </h3>
-                          <span className="small hint-text pull-left">
-                            Free Node Usage
-                          </span>
+                          <h3 className="no-margin p-b-5">$ {bill && bill.totalAmount}</h3>
+                          <span className="small hint-text pull-left">Free Node Usage</span>
                           <span className="pull-right small text-danger">
-                            {bill.totalFreeMicroHours.hours}/{1490 * 2} hrs
+                            {bill && bill.totalFreeMicroHours.hours}/{1490 * 2} hrs
                           </span>
                         </div>
                       </div>
@@ -306,8 +288,7 @@ class UserList extends Component {
                           <div
                             className="progress-bar progress-bar-danger"
                             style={{
-                              width: `${(bill.totalFreeMicroHours.hours * 100) /
-                                (1490 * 2)}%`
+                              width: `${bill && (bill.totalFreeMicroHours.hours * 100) / (1490 * 2)}%`,
                             }}
                           />
                         </div>
@@ -317,10 +298,7 @@ class UserList extends Component {
                 </div>
               </div>
               <div className="col-lg-3 col-sm-6  d-flex flex-column">
-                <div
-                  className="card social-card share  full-width m-b-10 no-border"
-                  data-social="item"
-                >
+                <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
                   <div className="card-header clearfix">
                     <h5 className="text-success pull-left fs-12">
                       Credit Cards
@@ -329,36 +307,29 @@ class UserList extends Component {
                     <div className="clearfix" />
                   </div>
                   <div className="card-description">
-                    {cards[0] && cards[0].cards.map((card, index) => {
-                      return (
-                        <div key={index}>
-                          <h5 className="hint-text no-margin">
-                            {card.issuer} XX..XX<span className="text-success">
-                              {card.last4}
-                            </span>
-                          </h5>
-                          <h5 className="small hint-text no-margin">
-                            {card.network}
-                          </h5>
-                          <h5 className="m-b-0">
-                            {card.name} |{" "}
-                            {helpers.firstLetterCapital(card.type)}
-                          </h5>
-                        </div>
-                      );
-                    })}
+                    {cards[0] &&
+                      cards[0].cards.map((card, index) => {
+                        return (
+                          <div key={index}>
+                            <h5 className="hint-text no-margin">
+                              {card.issuer} XX..XX
+                              <span className="text-success">{card.last4}</span>
+                            </h5>
+                            <h5 className="small hint-text no-margin">{card.network}</h5>
+                            <h5 className="m-b-0">
+                              {card.name} | {helpers.firstLetterCapital(card.type)}
+                            </h5>
+                          </div>
+                        );
+                      })}
                   </div>
                   <div className="card-footer clearfix">
-                      {
-                        cards[0] && (
-                          <div>
-                            <div className="pull-left">Added on</div>
-                            <div className="pull-right hint-text">
-                              {moment(cards[0].updatedAt).format("DD-MMM-YYYY")}
-                            </div>
-                          </div>
-                        )
-                      }
+                    {cards[0] && (
+                      <div>
+                        <div className="pull-left">Added on</div>
+                        <div className="pull-right hint-text">{moment(cards[0].updatedAt).format('DD-MMM-YYYY')}</div>
+                      </div>
+                    )}
                     <div className="clearfix" />
                   </div>
                 </div>
@@ -369,11 +340,7 @@ class UserList extends Component {
                     <div className="card-controls">
                       <ul>
                         <li>
-                          <a
-                            data-toggle="refresh"
-                            className="portlet-refresh text-black"
-                            href="#"
-                          >
+                          <a data-toggle="refresh" className="portlet-refresh text-black" href="#">
                             <i className="portlet-icon portlet-icon-refresh" />
                           </a>
                         </li>
@@ -385,41 +352,28 @@ class UserList extends Component {
                       <h2 className="text-success no-margin">Networks</h2>
                       <p className="no-margin">Network History</p>
                     </div>
-                    <h3 className="pull-right semi-bold">
-                      {user.networks && user.networks.length}
-                    </h3>
+                    <h3 className="pull-right semi-bold">{networks && networks.length}</h3>
                     <div className="clearfix" />
                   </div>
-                  <div
-                    className="auto-overflow widget-11-2-table"
-                    style={{ height: "375px" }}
-                  >
+                  <div className="auto-overflow widget-11-2-table" style={{ height: '375px' }}>
                     <table className="table table-condensed table-hover">
                       <tbody>
-                        {user.networks &&
-                          user.networks
-                            .sort((a, b) => b.createdOn - a.createdOn)
-                            .map((network, index) => {
-                              return (
-                                <tr key={index + 1}>
-                                  <td className="font-montserrat all-caps fs-12 w-40">
-                                    <Link to={`/app/admin/networks/${network._id}`}>
-                                      {network.name}
-                                    </Link>
-                                  </td>
-                                  <td className="text-right b-r b-dashed b-grey w-35">
-                                    <span className="hint-text small">
-                                      {this.getNetworkType(network)}
-                                    </span>
-                                  </td>
-                                  <td className="w-25">
-                                    <span className="font-montserrat fs-18">
-                                      {this.getNetworkTypeName(network)}
-                                    </span>
-                                  </td>
-                                </tr>
-                              );
-                            })}
+                        {networks &&
+                          networks.sort((a, b) => b.createdOn - a.createdOn).map((network, index) => {
+                            return (
+                              <tr key={index + 1}>
+                                <td className="font-montserrat all-caps fs-12 w-40">
+                                  <Link to={`/app/admin/networks/${network._id}`}>{network.name}</Link>
+                                </td>
+                                <td className="text-right b-r b-dashed b-grey w-35">
+                                  <span className="hint-text small">{this.getNetworkType(network)}</span>
+                                </td>
+                                <td className="w-25">
+                                  <span className="font-montserrat fs-18">{this.getNetworkTypeName(network)}</span>
+                                </td>
+                              </tr>
+                            );
+                          })}
                       </tbody>
                       <tfoot>
                         <tr>
@@ -440,11 +394,7 @@ class UserList extends Component {
                     <div className="card-controls">
                       <ul>
                         <li>
-                          <a
-                            data-toggle="refresh"
-                            className="portlet-refresh text-black"
-                            href="#"
-                          >
+                          <a data-toggle="refresh" className="portlet-refresh text-black" href="#">
                             <i className="portlet-icon portlet-icon-refresh" />
                           </a>
                         </li>
@@ -456,41 +406,32 @@ class UserList extends Component {
                       <h2 className="text-success no-margin">Payments</h2>
                       <p className="no-margin">Previous Payments</p>
                     </div>
-                    <h3 className="pull-right semi-bold">
-                      {payments && payments.length}
-                    </h3>
+                    <h3 className="pull-right semi-bold">{payments && payments.length}</h3>
                     <div className="clearfix" />
                   </div>
-                  <div
-                    className="auto-overflow widget-11-2-table"
-                    style={{ height: "275px" }}
-                  >
+                  <div className="auto-overflow widget-11-2-table" style={{ height: '275px' }}>
                     <table className="table table-condensed table-hover">
                       <tbody>
-                        {payments && payments.map((payment, index) => {
-                          return (
-                            <tr key={index + 1} onClick={() => {
-                              this.setState({
-                                selectedPayment: payment,
-                                showPaymentModal: true
-                              })
-                            }} >
-                              <td className="font-montserrat all-caps fs-12 w-40">
-                                {payment.reason}
-                              </td>
-                              <td className="text-right b-r b-dashed b-grey w-25">
-                                ₹{payment.amount / 100}
-                              </td>
-                              <td className="w-25">
-                                <span className="font-montserrat fs-18">
-                                  {this.convertStatusToTag(
-                                    payment.paymentStatus
-                                  )}
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
+                        {payments &&
+                          payments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((payment, index) => {
+                            return (
+                              <tr
+                                key={index + 1}
+                                onClick={() => {
+                                  this.setState({
+                                    selectedPayment: payment,
+                                    showPaymentModal: true,
+                                  });
+                                }}
+                              >
+                                <td className="font-montserrat all-caps fs-12 w-40">{payment.reason}</td>
+                                <td className="text-right b-r b-dashed b-grey w-25">₹{payment.amount / 100}</td>
+                                <td className="w-25">
+                                  <span className="font-montserrat fs-18">{this.convertStatusToTag(payment.paymentStatus)}</span>
+                                </td>
+                              </tr>
+                            );
+                          })}
                       </tbody>
                     </table>
                   </div>
@@ -502,11 +443,7 @@ class UserList extends Component {
                     <div className="card-controls">
                       <ul>
                         <li>
-                          <a
-                            data-toggle="refresh"
-                            className="portlet-refresh text-black"
-                            href="#"
-                          >
+                          <a data-toggle="refresh" className="portlet-refresh text-black" href="#">
                             <i className="portlet-icon portlet-icon-refresh" />
                           </a>
                         </li>
@@ -518,42 +455,32 @@ class UserList extends Component {
                       <h2 className="text-success no-margin">Invitations</h2>
                       <p className="no-margin">Invitation History</p>
                     </div>
-                    <h3 className="pull-right semi-bold">
-                      {invitations && invitations.length}
-                    </h3>
+                    <h3 className="pull-right semi-bold">{invitations && invitations.length}</h3>
                     <div className="clearfix" />
                   </div>
-                  <div
-                    className="auto-overflow widget-11-2-table"
-                    style={{ height: "275px" }}
-                  >
+                  <div className="auto-overflow widget-11-2-table" style={{ height: '275px' }}>
                     <table className="table table-condensed table-hover">
                       <tbody>
-                        {invitations && invitations.map((invitation, index) => {
-                          const data = invitation.metadata;
-                          return (
-                            <tr key={index + 1}>
-                              <td className="font-montserrat fs-12 w-30" title={data.network.name}>
-                                <Link to={`/app/admin/networks/${invitation.networkId}`}>{data.network.name}</Link>
-                              </td>
-                              <td className="text-right b-r b-dashed b-grey w-25" title={data.inviteTo.name | data.inviteTo.email}>
-                                <Link to={`/app/admin/users/${invitation.inviteTo}`}>{data.inviteTo.email}</Link>
-                              </td>
-                              <td className="w-25">
-                                <span className="font-montserrat fs-12">
-                                  {this.getInvitationStatus(
-                                    invitation.invitationStatus
-                                  )}
-                                </span>
-                              </td>
-                              <td className="w-25">
-                                <span className="font-montserrat fs-12">
-                                  {moment(invitation.createdAt).format('DD-MMM-YY')}
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
+                        {invitations &&
+                          invitations.map((invitation, index) => {
+                            const data = invitation.metadata;
+                            return (
+                              <tr key={index + 1}>
+                                <td className="font-montserrat fs-12 w-30" title={data.network.name}>
+                                  <Link to={`/app/admin/networks/${invitation.networkId}`}>{data.network.name}</Link>
+                                </td>
+                                <td className="text-right b-r b-dashed b-grey w-25" title={data.inviteTo.name | data.inviteTo.email}>
+                                  <Link to={`/app/admin/users/${invitation.inviteTo}`}>{data.inviteTo.email}</Link>
+                                </td>
+                                <td className="w-25">
+                                  <span className="font-montserrat fs-12">{this.getInvitationStatus(invitation.invitationStatus)}</span>
+                                </td>
+                                <td className="w-25">
+                                  <span className="font-montserrat fs-12">{moment(invitation.createdAt).format('DD-MMM-YY')}</span>
+                                </td>
+                              </tr>
+                            );
+                          })}
                       </tbody>
                     </table>
                   </div>
@@ -567,9 +494,15 @@ class UserList extends Component {
   }
 }
 
-export default withTracker(() => {
+export default withTracker(props => {
+  const userId = props.match.params.id;
   return {
-    users: Meteor.users.find({}).fetch(),
-    subscriptions: [Meteor.subscribe("users.all", { page: 0 })]
+    user: Meteor.users.find({_id: userId}).fetch()[0],
+    networks: Networks.find({ user: userId }).fetch(),
+    invitations: UserInvitation.find({ inviteFrom: userId }).fetch(),
+    cards: UserCards.find({ userId }).fetch(),
+    payments: PaymentRequests.find({ userId }).fetch(),
+    vouchers: Voucher.find({ claimedBy: userId }).fetch(),
+    subscriptions: [Meteor.subscribe('users.details', { userId: props.match.params.id })],
   };
-})(withRouter(UserList));
+})(withRouter(UserDetails));
