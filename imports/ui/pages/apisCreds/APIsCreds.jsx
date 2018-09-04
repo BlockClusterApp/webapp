@@ -85,11 +85,11 @@ class APIsCreds extends Component {
                                                     <pre>
                                                         var web3 = new Web3(
                                                             new Web3.providers.HttpProvider(
-                                                                {"\"https://" + this.props.workerNodeDomainName(this.props.network[0].locationCode) + "/api/node/networkId/jsonrpc" + "\", 0, " + "\"username\", \"password\""}
+                                                                {"\"https://" + this.props.workerNodeDomainName(this.props.network[0] ? this.props.network[0].locationCode : "") + "/api/node/networkId/jsonrpc" + "\", 0, " + "\"username\", \"password\""}
                                                             )
                                                         );
                                                     </pre>
-                                                    <p>Default username and password is your network's instance id</p>
+                                                    <p>By defualt basic auth is not enabled. Update password to enable basic auth.</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -114,7 +114,7 @@ class APIsCreds extends Component {
                                                                     <div className="form-group form-group-default required">
                                                                         <label>Password</label>
                                                                         {this.props.network.length === 1 &&
-                                                                            <input ref={(input) => {this.rpcPassword = input;}} type="password" className="form-control" name="password" required placeholder={this.props.network[0].instanceId} />
+                                                                            <input ref={(input) => {this.rpcPassword = input;}} type="password" className="form-control" name="password" placeholder={this.props.network[0].instanceId} />
                                                                         }
                                                                     </div>
                                                                 </div>
