@@ -2,6 +2,7 @@ import RazorPay from './payment-gateways/razorpay';
 import Forex from '../../collections/payments/forex';
 import PaymentRequests from '../../collections/payments/payment-requests';
 import { RZSubscription, RZPlan } from '../../collections/razorpay';
+const debug = require('debug')('api:payments')
 
 const Payments = {};
 
@@ -36,29 +37,61 @@ Payments.createRequest = async ({ paymentGateway, reason, amount, mode }) => {
       userId: Meteor.userId(),
       paymentGateway,
       reason,
-      amount: amount * 100,
+      amount: Math.round(amount * 100),
       conversionFactor
     });
-    return {paymentRequestId: insertResult, amount: amount * 100, display_amount: 1, display_currency: 'USD' };
+    const returnValue = {paymentRequestId: insertResult, amount: Math.round(amount * 100), display_amount: 1, display_currency: 'USD' };
+    debug('Payment create request | Debit RZP Options', returnValue);
+    return returnValue;
   }
 
 
   const display_amount = Number(amount / conversionFactor).toFixed(2);
 
-  return { paymentRequestId: insertResult, rzSubscriptionId: subscription.id, amount: amount * 100, display_amount, display_currency: 'USD' };
+  const returnValue = { paymentRequestId: insertResult, rzSubscriptionId: subscription.id, amount: amount * 100, display_amount, display_currency: 'USD' };
+  debug('Payment create request | Credit RZP Options', returnValue);
+  return returnValue;
 };
 
 Payments.getConversionToINRRate = async ({ currencyCode }) => {
   currencyCode = currencyCode || 'usd';
 
   const exchangeRates = Forex.find({}).fetch()[0];
+  debug('Get Conversion to INR | Forex ', exchangeRates);
   return Number(Number(exchangeRates[currencyCode.toLowerCase()]).toFixed(4));
 };
+
+Payments.refundAmount = async ({paymentRequestId, options}) => {
+  const request = PaymentRequests.find({_id: paymentRequestId}).fetch()[0];
+  if(!request) {
+    throw new Meteor.Error('bad-request', 'Invalid request id');
+  }
+  const paymentId  = request.pgReference;
+  if(!paymentId){
+    throw new Meteor.Error('bad-request', 'Payment not yet initiated');
+  }
+
+  if(!options) {
+    options = {};
+  }
+  if(!options.notes) {
+    options.notes = {};
+  }
+
+  if(!options.notes.reason) {
+    options.notes.reason = 'Refund for verification'
+  }
+
+  await RazorPay.refundPayment(paymentId, options);
+
+  return true;
+}
 
 Meteor.methods({
   capturePaymentRazorPay: RazorPay.capturePayment,
   applyRZCardVerification: RazorPay.applyCardVerification,
   createPaymentRequest: Payments.createRequest,
+  refundPayment: Payments.refundAmount
 });
 
 export default Payments;
