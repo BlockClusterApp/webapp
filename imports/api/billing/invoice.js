@@ -28,18 +28,33 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
     billingPeriod: billingMonth,
     billingPeriodLabel: moment(billingMonth).format('MMM-YYYY'),
     totalAmount,
-    rzSubscriptionId: rzSubscription.id
   };
 
-
-  const existingInvoice = Invoice.find({
-    billingPeriodLabel: invoiceObject.billingPeriodLabel,
-    rzSubscriptionId: invoiceObject.rzSubscriptionId
-  }).fetch()[0];
-  if(existingInvoice) {
-    console.log(`Bill already exists for ${invoiceObject.rzSubscriptionId} for ${invoiceObject.billingPeriodLabel}`);
-    return true;
+  if(rzSubscription){
+    invoiceObject.rzSubscriptionId = rzSubscription.id;
   }
+
+
+  if(rzSubscription) {
+    const existingInvoice = Invoice.find({
+      billingPeriodLabel: invoiceObject.billingPeriodLabel,
+      rzSubscriptionId: invoiceObject.rzSubscriptionId
+    }).fetch()[0];
+    if(existingInvoice) {
+      console.log(`Bill already exists for ${invoiceObject.rzSubscriptionId} for ${invoiceObject.billingPeriodLabel}`);
+      return true;
+    }
+  } else {
+    const existingInvoice = Invoice.find({
+      billingPeriodLabel: invoiceObject.billingPeriodLabel,
+      userId
+    }).fetch()[0];
+    if(existingInvoice) {
+      console.log(`Bill already exists for ${invoiceObject.userId} for ${invoiceObject.billingPeriodLabel}`);
+      return true;
+    }
+  }
+
 
   const items = bill.networks;
 
@@ -48,7 +63,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   const conversion = await Payment.getConversionToINRRate({});
   invoiceObject.totalAmountINR = Math.max(Math.floor(Number(totalAmount) * 100 * conversion - 100), 0 );
 
-  if (!user.demoUser && Math.round(invoiceObject.totalAmountINR) > 100) {
+  if (!user.demoUser && Math.round(invoiceObject.totalAmountINR) > 100 && !user.byPassOnlinePayment && rzSubscription) {
     const rzAddOn = await RazorPay.createAddOn({
       subscriptionId: rzSubscription.id,
       addOn: {
