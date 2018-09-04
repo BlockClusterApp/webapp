@@ -264,14 +264,11 @@ RazorPay.capturePayment = async paymentResponse => {
  * @property {object} options.notes
  */
 RazorPay.refundPayment = async (paymentId, options) => {
-  if (!options.amount) {
-    throw new Error('Amount not specified for refund');
-  }
 
   const paymentRequest = PaymentRequests.find({
     pgReference: paymentId,
     'pgResponse.status': 'captured',
-  });
+  }).fetch()[0];
 
   if (!paymentRequest) {
     throw new Error(`Invalid payment Id ${paymentId}`);
@@ -279,6 +276,9 @@ RazorPay.refundPayment = async (paymentId, options) => {
 
   if (!options.amount) {
     options.amount = paymentRequest.amount;
+  }
+  if (!options.amount) {
+    throw new Error('Amount not specified for refund');
   }
 
   options.notes = options.notes || {};

@@ -90,7 +90,7 @@ async function safeUpdateUser(userId, updateObject) {
       _id: userId,
     },
     {
-      $set: updateObject,
+      ...updateObject,
     }
   );
   return updateResult;
