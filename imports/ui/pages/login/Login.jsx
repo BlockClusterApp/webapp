@@ -9,6 +9,13 @@ export default class Login extends Component {
 	      formSubmitError: "",
 	    };
 	}
+	alertHandler=()=>{
+		this.setState({
+			formSubmitError:''	
+		},()=>{
+			return true;
+		});
+	};
 
 	login = (e) => {
 		e.preventDefault();
@@ -63,7 +70,7 @@ export default class Login extends Component {
 						        <div className="row">
 			                        <div className="col-md-12">
 			                        	<div className="alert alert-danger m-b-0" role="alert">
-	                      					<button className="close" data-dismiss="alert"></button>
+	                      					<button className="close" onClick={this.alertHandler.bind(this)} data-dismiss="alert"></button>
 	                      					{this.state.formSubmitError}
 	                    				</div>
 			                        </div>
