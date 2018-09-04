@@ -9,9 +9,6 @@ import UserFunctions from '../imports/api/server-functions/user-functions';
 import {
     Networks
 } from "../imports/collections/networks/networks.js"
-import PendingNetwork from '../imports/collections/networks/pending-networks.js';
-import { ZohoHostedPage, ZohoPlan } from '../imports/collections/zoho';
-import Zoho from '../imports/api/payments/zoho';
 import NetworkFunctions from '../imports/api/network/networks';
 import Vouchers from '../imports/collections/vouchers/voucher';
 import UserCards from '../imports/collections/payments/user-cards';
@@ -170,47 +167,6 @@ function getContainerResourceLimits({cpu, ram, isJoining }){
   return config;
 }
 
-async function fetchZohoStatus({myFuture, nodeConfig, hostedPageId}) {
-  let hostedPage = {};
-  if(!nodeConfig.voucher && !hostedPageId) {
-    let plan;
-    if(nodeConfig.cpu === 500 && nodeConfig.ram === 1 && nodeConfig.disk === 5 ) {
-      plan = ZohoPlan.find({plan_code: 'light-node'}).fetch()[0];
-    } else if(nodeConfig.cpu === 2 && nodeConfig.ram === 7.5 && nodeConfig.disk === 200) {
-      plan = ZohoPlan.find({plan_code: 'power-node'}).fetch()[0];
-    } else {
-      return myFuture.throw("Invalid plan");
-    }
-
-    const newHostedPage = await Zoho.createHostedPage({
-      userId: Meteor.userId(),
-      plan
-    });
-
-    if(!newHostedPage) {
-      return myFuture.throw("Error creating payment link");
-    }
-
-    PendingNetwork.insert({
-      hostedPageId: newHostedPage.hostedpage_id,
-      networkMetadata: {
-        networkName,
-        locationCode,
-        networkConfig,
-        userId
-      }
-    });
-    return myFuture.return({
-      type: 'payment-link',
-      value: newHostedPage.url
-    });
-  } else if (!nodeConfig.voucher) {
-    hostedPage = ZohoHostedPage.find({hostedpage_id: hostedPageId}).fetch()[0];
-    if(!hostedPage) {
-      return myFuture.throw("Invalid hosted page id");
-    }
-  }
-}
 
 Meteor.methods({
     "createNetwork": async function({networkName,  locationCode, networkConfig, userId, hostedPageId}) {
@@ -219,7 +175,6 @@ Meteor.methods({
         var myFuture = new Future();
         const nodeConfig = getNodeConfig(networkConfig);
 
-        // const hostedPage = await fetchZohoStatus({myFuture, nodeConfig, hostedPageId});
         const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(userId);
         if(!isPaymentMethodVerified) {
           throw new Meteor.Error('unauthorized', 'Credit card not verified');

@@ -73,11 +73,11 @@ Verifier.validateToken = function(token) {
       }
     );
 
-    try{
-      Zoho.createCustomerFromUser(accountId)
-    }catch (err) {
-      debug('Zoho create customer failed | Email Verification ', err);
-    }
+    // try{
+    //   Zoho.createCustomerFromUser(accountId)
+    // }catch (err) {
+    //   debug('Zoho create customer failed | Email Verification ', err);
+    // }
 
     const emailUpdateResult = EmailVerification.update(
             {
