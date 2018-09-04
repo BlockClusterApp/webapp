@@ -83,6 +83,24 @@ RazorPay.deletePlan = async ({ identifier }) => {
   return true;
 };
 
+RazorPay.fetchInvoices = async({paymentId, customerId}) => {
+  const query = {
+    payment_id: paymentId,
+    customer_id: customerId
+  };
+  try{
+    const rzInvoice = await RazorPayInstance.invoices.all(query);
+    debug('Fetch Invoice | response', rzInvoice);
+    if(rzInvoice.items) {
+      return rzInvoice.items[0];
+    }
+    return undefined;
+  }catch(err) {
+    debug('Fetch Invoices | err razorpay', err);
+    return false;
+  }
+}
+
 RazorPay.createSubscription = async ({ rzPlan, type }) => {
   type = type || 'Node Monthly';
   let rzSubscription;

@@ -123,7 +123,7 @@ class ViewEditImpulse extends Component {
                 <div className="m-t-20 container-fluid container-fixed-lg bg-white">
 		            <div className="row viewEditPulse">
 		                <div className="col-lg-12">
-		                	<div className="m-t-20">
+		                	<div className="m-t-20 m-b-20">
 		                		<Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Impulse Info
 			                    <div className="form-horizontal">
 									{

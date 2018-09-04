@@ -8,7 +8,8 @@ AttachBaseHooks(Invoice);
 Invoice.PaymentStatusMapping = {
   Pending: 1,
   Settled: 2,
-  DemoUser: 3
+  DemoUser: 3,
+  Failed: 4
 };
 
 Invoice.schema = new SimpleSchema({
