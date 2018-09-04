@@ -13,7 +13,7 @@ class SupportContainer extends Component {
   render() {
     return (
       <div className="content ">
-        <div className="m-t-20 container-fluid container-fixed-lg">
+        <div className="m-t-20 container-fixed-lg">
           <div className="row supportTickets">
             <div className="card card-borderless card-transparent">
               <ul
