@@ -100,7 +100,7 @@ class Support extends Component {
     }
     return (
       <div className="content support-details">
-        <div className="m-t-20 container-fixed-lg">
+        <div className="m-t-20 container-fluid container-fixed-lg">
           <div className="row">
             <div className="col-lg-12 col-sm-12  d-flex flex-column">
               <div
