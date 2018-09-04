@@ -47,8 +47,8 @@ module.exports = function(agenda) {
     Forex.update({}, {
       $set: {
         inr: 1,
-        usd: 68,
-        eur: 82
+        usd: 71.1898028968593,
+        eur: 82.713937
       }
     }, {
       upsert: true

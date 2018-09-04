@@ -37,17 +37,18 @@ module.exports = (bullSystem) => {
         plan_id: plan.id
       }).fetch()[0];
 
-      if(!rzSubscription) {
-        console.log("Subscription not found", userId, plan.id);
-        return resolve(false);
-      }
-
       const invoiceId = await Invoice.generateInvoice({
         userId,
         billingMonth: billingMonth.toDate(),
         bill,
         rzSubscription
       });
+
+
+      // if(!rzSubscription) {
+      //   console.log("Subscription not found", userId, plan.id);
+      //   return resolve(false);
+      // }
 
       return resolve(invoiceId);
     });
