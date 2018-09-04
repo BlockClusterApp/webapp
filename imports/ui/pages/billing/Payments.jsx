@@ -12,7 +12,7 @@ class PaymentsContainer extends Component {
   render() {
     return (
       <div className="content ">
-        <div className="m-t-20 container-fluid container-fixed-lg">
+        <div className="m-t-20 container-fixed-lg">
           <div className="row payments-container">
             <div className="card card-borderless card-transparent">
               <ul
