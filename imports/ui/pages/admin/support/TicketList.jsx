@@ -91,7 +91,7 @@ class TicketList extends Component {
 	render(){
 		return (
             <div className="content supportList">
-                <div className="m-t-20 container-fixed-lg bg-white" >
+                <div className="m-t-20 container-fluid container-fixed-lg bg-white" >
                     <div className="row">
                         <div className="col-lg-12">
                             <div className="card card-transparent">
