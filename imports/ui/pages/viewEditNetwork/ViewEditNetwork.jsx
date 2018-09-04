@@ -179,7 +179,7 @@ class ViewEditNetwork extends Component {
                 <div className="m-t-20 container-fluid container-fixed-lg bg-white">
 		            <div className="row viewEditNetwork">
 		                <div className="col-lg-12">
-		                	<div className="m-t-20 m-b-20 m-l-20 m-r-20">
+		                	<div className="m-t-20">
 		                		<Link to={"/app/networks/" + this.props.match.params.id}> Control Panel <i className="fa fa-angle-right"></i></Link> Node Info
 			                    <div className="form-horizontal">
 			                        <div className="form-group row">
