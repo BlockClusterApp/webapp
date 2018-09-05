@@ -213,13 +213,13 @@ async function fetchZohoStatus({myFuture, nodeConfig, hostedPageId}) {
 }
 
 process.on('unhandledRejection', (reason, p) => {
-  console.log("Unhandled rejection");
-  RavenLogger.log(reason, p);
+  console.log("Unhandled rejection", reason);
+  RavenLogger.log(reason);
 });
 
 process.on('uncaughtException', (reason, p) => {
-  console.log("Unhandled exception");
-  RavenLogger.log(reason, p);
+  console.log("Unhandled exception", reason);
+  RavenLogger.log(reason);
 })
 
 
