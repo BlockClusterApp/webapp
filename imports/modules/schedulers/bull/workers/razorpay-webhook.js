@@ -15,9 +15,9 @@ const PaymentRequestReverseMap = {
 };
 
 async function getUserFromPayment(payment) {
-  if(payment.notes && payment.nodes.paymentRequestId) {
+  if(payment.notes && payment.notes.paymentRequestId) {
     const paymentRequest = PaymentRequest.find({
-      _id: payment.nodes.paymentRequestId
+      _id: payment.notes.paymentRequestId
     }).fetch()[0];
     if(paymentRequest) {
       return Meteor.users.find({
@@ -179,7 +179,11 @@ async function attachPaymentToRequest(payment) {
     _id: payment.notes.paymentRequestId,
   }).fetch()[0];
 
+<<<<<<< HEAD
   if (!paymentRequest) {
+=======
+  if(!paymentRequest) {
+>>>>>>> Typo
     return false;
   }
   if (!paymentRequest.pgResponse || !(paymentRequest.pgResponse && paymentRequest.pgResponse.map(p => p.id).includes(payment.id))) {
