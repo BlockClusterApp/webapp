@@ -139,6 +139,17 @@ module.exports = {
   Zoho: {
     organizationId: process.env.ZOHO_ORGANIZATION_ID || defaults.zoho.organizationId,
     authToken: process.env.ZOHO_AUTH_TOKEN || defaults.zoho.authToken
+  },
+  Raven: {
+    dsn: ( () => {
+      if(process.env.NODE_ENV === 'production') {
+        return 'https://30e285a684c74bb5a726673ca0cf6707:198e6d34e7094612a771ee388fdad1dd@sentry.io/1274301'
+      } else if (process.env.NODE_ENV === 'staging') {
+        return 'https://e6be112ac8e343d2b0409d561d578e4e@sentry.io/1275118'
+      } else if (process.env.ENABLE_SENTRY) {
+        return 'https://4d3e7232bb49468da0eb16c4cb370b5f@sentry.io/1275120'
+      }
+    })()
   }
   // locationMapping
 };

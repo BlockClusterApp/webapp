@@ -15,4 +15,7 @@ module.exports = {
     organizationId: '673423965',
     authToken: '282d00893155f7eadec90a38006e6b55'
   },
+  Raven: {
+    dsn: 'https://30e285a684c74bb5a726673ca0cf6707:198e6d34e7094612a771ee388fdad1dd@sentry.io/1274301'
+  }
 };

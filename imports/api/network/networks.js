@@ -54,6 +54,7 @@ NetworkObj.restartPod = (instanceId) => {
     }
     HTTP.get(`${Config.kubeRestApiHost(network.locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3Ddynamo-node-${network.instanceId}`, (err, res) => {
       if(err){
+        RavenLogger.log(err);
         throw new Meteor.Error(`Delete pod failed for ${network.instanceId} - ${JSON.stringify(err)}`);
       }
       const podList = JSON.parse(res.content);
@@ -64,6 +65,7 @@ NetworkObj.restartPod = (instanceId) => {
         const name = pod.metadata.name;
         HTTP.call("DELETE", `${Config.kubeRestApiHost(network.locationCode)}/api/v1/namespaces/${Config.namespace}/pods/${name}`, function(error, response) {
           if(error) {
+            RavenLogger.log(err);
             throw new Error(`Error deleting pod ${pod.name} - ${JSON.stringify(error)}`);
           }
           console.log("Deleted pod ", name);
@@ -82,6 +84,7 @@ NetworkObj.adminDeleteNetwork = (instanceId) => {
     }
     Meteor.call("deleteNetwork", instanceId, (err, res) => {
       if(err){
+        RavenLogger.log(err);
         throw new Meteor.Error(err.error, err.reason);
       }
       return resolve(true);
