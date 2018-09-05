@@ -85,11 +85,11 @@ class APIsCreds extends Component {
                                                     <pre>
                                                         var web3 = new Web3(
                                                             new Web3.providers.HttpProvider(
-                                                                {"\"https://" + this.props.workerNodeDomainName(this.props.network[0] ? this.props.network[0].locationCode : "") + "/api/node/networkId/jsonrpc" + "\", 0, " + "\"username\", \"password\""}
+                                                                {"\"https://" + this.props.workerNodeDomainName(this.props.network[0] ? this.props.network[0].locationCode : "") + "/api/node/" + (this.props.network[0] ? this.props.network[0].instanceId : "") + "/jsonrpc" + "\", 0, " + "\"username\", \"password\""}
                                                             )
                                                         );
                                                     </pre>
-                                                    <p>By defualt basic auth is not enabled. Update password to enable basic auth.</p>
+                                                    <p>By default basic auth is not enabled. Update password to enable basic auth.</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -102,7 +102,7 @@ class APIsCreds extends Component {
                                                             <div className="row clearfix">
                                                                 <div className="col-md-12">
                                                                     <div className="form-group form-group-default required">
-                                                                        <label>Network name</label>
+                                                                        <label>Username</label>
                                                                         {this.props.network.length === 1 &&
                                                                             <input type="text" className="form-control readOnly-Value" ref={(input) => {this.networkNameRPCUpdate = input;}} readOnly value={this.props.network[0].instanceId} />
                                                                         }
