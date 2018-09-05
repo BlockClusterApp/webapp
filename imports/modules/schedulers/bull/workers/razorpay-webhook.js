@@ -179,11 +179,7 @@ async function attachPaymentToRequest(payment) {
     _id: payment.notes.paymentRequestId,
   }).fetch()[0];
 
-<<<<<<< HEAD
-  if (!paymentRequest) {
-=======
   if(!paymentRequest) {
->>>>>>> Typo
     return false;
   }
   if (!paymentRequest.pgResponse || !(paymentRequest.pgResponse && paymentRequest.pgResponse.map(p => p.id).includes(payment.id))) {
