@@ -40,7 +40,7 @@ module.exports = {
         return 'https://778581990f3e46daaac3995e1e756de5@sentry.io/1274848'
       } else if (process.env.NODE_ENV === 'staging' || (window && window.location && window.location.origin.includes('https://staging.blockcluster.io'))) {
         return 'https://05bdf7f60e944515b1f4a59a79116063@sentry.io/1275121'
-      } else if (process.env.ENABLE_SENTRY  || window && window.location && window.location.origin.includes('https://dev.blockcluster.io')) {
+      } else if (window && window.location && window.location.origin.includes('https://dev.blockcluster.io')) {
         return 'https://52847e2f5c05463e91789eb2c1b75bcb@sentry.io/1275122'
       }
     })()
