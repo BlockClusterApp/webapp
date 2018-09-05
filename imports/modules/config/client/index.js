@@ -35,7 +35,6 @@ module.exports = {
   namespace: process.env.NAMESPACE || defaults.namespace,
   Raven: {
     dsn: ( () => {
-      console.log("Client config", window.location.origin);
       if(process.env.NODE_ENV === 'production' || (window && window.location && window.location.origin.includes('https://app.blockcluster.io'))) {
         return 'https://778581990f3e46daaac3995e1e756de5@sentry.io/1274848'
       } else if (process.env.NODE_ENV === 'staging' || (window && window.location && window.location.origin.includes('https://staging.blockcluster.io'))) {
