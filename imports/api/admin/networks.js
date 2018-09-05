@@ -57,6 +57,7 @@ Network.fetchPodStatus =  (id) => {
     const URL = `${Config.kubeRestApiHost(network.locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3Ddynamo-node-${network.instanceId}`;
     HTTP.get(URL, (err, res) => {
       if(err){
+        RavenLogger.log(err);
         return reject(new Meteor.Error("Error", err));
       }
       const podList = JSON.parse(res.content);
@@ -138,6 +139,7 @@ Network.fetchServiceStatus = async (id) => {
     const URL = `${Config.kubeRestApiHost(network.locationCode)}/api/v1/namespaces/${Config.namespace}/services/${network.instanceId}`;
     HTTP.get(URL, (err, res) => {
       if(err){
+        RavenLogger.log(err);
         return reject(new Meteor.Error("Error", err));
       }
       const service = JSON.parse(res.content);
@@ -169,6 +171,7 @@ Network.fetchDeploymentStatus = async (id) => {
     const URL = `${Config.kubeRestApiHost(network.locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/${network.instanceId}`;
     HTTP.get(URL, (err, res) => {
       if(err){
+        RavenLogger.log(err);
         return reject(new Meteor.Error("Error", err));
       }
       const deploy = JSON.parse(res.content);
@@ -199,6 +202,7 @@ Network.fetchPVCStatus = async (id) => {
     const URL = `${Config.kubeRestApiHost(network.locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/${network.instanceId}-pvc`;
     HTTP.get(URL, (err, res) => {
       if(err){
+        RavenLogger.log(err);
         return reject(new Meteor.Error("Error", err));
       }
       const pvc = JSON.parse(res.content);
@@ -230,6 +234,7 @@ Network.fetchIngressStatus = async (id) => {
     const URL = `${Config.kubeRestApiHost(network.locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/ingress-${network.instanceId}`;
     HTTP.get(URL, (err, res) => {
       if(err){
+        RavenLogger.log(err);
         return reject(new Meteor.Error("Error", err));
       }
       const ingress = JSON.parse(res.content);

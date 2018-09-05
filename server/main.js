@@ -212,6 +212,17 @@ async function fetchZohoStatus({myFuture, nodeConfig, hostedPageId}) {
   }
 }
 
+process.on('unhandledRejection', (reason, p) => {
+  console.log("Unhandled rejection");
+  RavenLogger.log(reason, p);
+});
+
+process.on('uncaughtException', (reason, p) => {
+  console.log("Unhandled exception");
+  RavenLogger.log(reason, p);
+})
+
+
 Meteor.methods({
     "createNetwork": async function({networkName,  locationCode, networkConfig, userId, hostedPageId}) {
       debug("CreateNetwork | Arguments", networkName, locationCode, networkConfig, userId);
@@ -280,6 +291,7 @@ Meteor.methods({
 
 
         if(!nodeConfig.cpu) {
+          RavenLogger.log('CreateNetwork : Invalid network configuration', {nodeConfig, networkConfig});
           throw new Meteor.Error("Invalid Network Configuration");
         }
 
@@ -844,6 +856,7 @@ Meteor.methods({
         const nodeConfig = getNodeConfig(networkConfig);
 
         if(!nodeConfig.cpu) {
+          RavenLogger.log('JoinNetwork : Invalid network config', {nodeConfig, networkConfig});
           throw new Meteor.Error("Invalid Network Configuration");
         }
 
