@@ -2,6 +2,8 @@ import Config from '../../modules/config/server';
 
 RavenLogger.initialize({
   server: Config.Raven.dsn
+}, {
+  release: process.env.COMMIT_HASH
 });
 
 require("../../collections/networks/server/publications.js")

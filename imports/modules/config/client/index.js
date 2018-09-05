@@ -34,6 +34,6 @@ module.exports = {
   },
   namespace: process.env.NAMESPACE || defaults.namespace,
   Raven: {
-    dsn: 'https://30e285a684c74bb5a726673ca0cf6707@sentry.io/1274301'
+    dsn: 'https://778581990f3e46daaac3995e1e756de5@sentry.io/1274848'
   }
 };
