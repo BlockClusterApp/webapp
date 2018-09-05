@@ -9,6 +9,11 @@ if [ "$CIRCLE_TAG" = "production" ] || [ "$CIRCLE_BRANCH" = "master" ];
 then
  SERVER_URL="https://sentry.io/api/hooks/release/builtin/1274301/329643f35065970b2cb199c8288711ddfec70bad68a9e25b1080860ebc848205/"
  CLIENT_URL="https://sentry.io/api/hooks/release/builtin/1274848/683726c50dca0e147903caf91ab6447f592c8344947580ebd63af2ff0db26caa/"
+
+  URL="https://hooks.slack.com/services/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"
+  curl -X POST $URL -H 'Content-type: application/json' --data """{
+    \"text\":\" Deploying \` $CIRCLE_PROJECT_REPONAME \` to \` $CIRCLE_BRANCH \` finished \"
+  }"""
 elif [ "$CIRCLE_TAG" = "staging" ] || [ "$CIRCLE_BRANCH"  = "staging" ];
 then
   SERVER_URL="https://sentry.io/api/hooks/release/builtin/1275118/cba3d299747162c479c0010e5a2e2d5a1d9790315545806da00bbdb5f45015bd/"
@@ -28,11 +33,5 @@ curl $CLIENT_URL \
   -X POST \
   -H 'Content-Type: application/json' \
   -d "${DATA}"
-
-
-URL="https://hooks.slack.com/services/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"
-curl -X POST $URL -H 'Content-type: application/json' --data """{
-  \"text\":\" Deploying \` $CIRCLE_PROJECT_REPONAME \` to \` $CIRCLE_BRANCH \` finished \"
-}"""
 
 exit 0;
