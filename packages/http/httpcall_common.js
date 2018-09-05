@@ -11,6 +11,11 @@ exports.makeErrorByStatus = function(statusCode, content) {
     message += ' ' + truncate(stringContent.replace(/\n/g, ' '), MAX_LENGTH);
   }
 
+  console.log("Making error", status, content);
+  RavenLogger.log(new Error(message), {
+    statusCode,
+    content
+  });
   return new Error(message);
 };
 
