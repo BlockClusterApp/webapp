@@ -6,5 +6,10 @@ RavenLogger.initialize({
   client: Config.Raven.dsn
 }, {
   trackUser: true,
-  release: process.env.COMMIT_HASH
+  release: process.env.COMMIT_HASH,
+  autoBreadcrumbs: true,
+  maxBreadcrumbs: 20,
+  ignoreError: [
+    /\*Modal is transitioning*/
+  ]
 });
