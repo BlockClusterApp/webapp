@@ -401,6 +401,7 @@ JsonRoutes.add("post", "/api/emails/incoming", (req, res) => {
   }).fetch()[0];
 
   if(!user) {
+    RavenLogger.log('JSONRoute:/api/emails/incoming: Cannot find related user', email);
     throw new Error("Cannot find user who sent this email");
   }
 

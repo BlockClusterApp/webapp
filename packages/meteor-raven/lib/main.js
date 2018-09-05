@@ -36,15 +36,19 @@ function initialize(settings, options) {
       clientOptions.release = options.release;
     }
     client.config(settings.client, clientOptions).install();
+    // client.setRelease({
+    //   release: options.release
+    // });
     isRavenEnabled = true;
   }
   if (Meteor.isServer && settings.server !== false) {
     debug('Server initialize ' + settings.server);
     var Raven = Npm.require('raven');
-    client = new Raven.Client(settings.server, {
-      release: options.release
-    });
-    addServerOptions(options);
+    client = Raven;
+    Raven.config(settings.server, options).install();
+    // client.setRelease({
+    //   release: options.release
+    // });
     isRavenEnabled = true;
   }
 }
@@ -78,16 +82,16 @@ function log(message, tags) {
  * @param options object
  */
 function addServerOptions(options) {
-  if (options.patchGlobal) {
-    var callback = function() {
-      process.exit(1);
-    };
-    if (typeof options.patchGlobal === 'function') {
-      callback = options.patchGlobal;
-    }
-    client.patchGlobal(callback);
-    debug('Patched global error handler');
-  }
+  // if (options.patchGlobal) {
+  //   var callback = function() {
+  //     process.exit(1);
+  //   };
+  //   if (typeof options.patchGlobal === 'function') {
+  //     callback = options.patchGlobal;
+  //   }
+  //   client.patchGlobal(callback);
+  //   debug('Patched global error handler');
+  // }
 }
 
 /**
@@ -120,5 +124,5 @@ function debug(message) {
 
 RavenLogger = {
   initialize: initialize,
-  log: log
+  log: log,
 };
