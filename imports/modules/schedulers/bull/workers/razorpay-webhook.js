@@ -15,6 +15,16 @@ const PaymentRequestReverseMap = {
 };
 
 async function getUserFromPayment(payment) {
+  if(payment.notes && payment.nodes.paymentRequestId) {
+    const paymentRequest = PaymentRequest.find({
+      _id: payment.nodes.paymentRequestId
+    }).fetch()[0];
+    if(paymentRequest) {
+      return Meteor.users.find({
+        _id: paymentRequest.userId
+      }).fetch()[0];
+    }
+  }
   const user = Meteor.users
     .find({
       rzCustomerId: payment.customer_id,

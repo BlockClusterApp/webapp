@@ -29,4 +29,10 @@ curl $CLIENT_URL \
   -H 'Content-Type: application/json' \
   -d "${DATA}"
 
+
+URL="https://hooks.slack.com/services/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"
+curl -X POST $URL -H 'Content-type: application/json' --data """{
+  \"text\":\" Deploying \` $CIRCLE_PROJECT_REPONAME \` to \` $CIRCLE_BRANCH \` finished \"
+}"""
+
 exit 0;
