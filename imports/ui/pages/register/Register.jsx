@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {Link} from 'react-router-dom'
 import validations from "../../../modules/validations"
+import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 
 export default class Register extends Component {
 	constructor(props){
@@ -14,6 +15,9 @@ export default class Register extends Component {
 
 	createAccount = (e) => {
 		e.preventDefault();
+		this.setState({
+			register_formloading:true
+		  },()=>{
 		Accounts.createUser({
 			email: this.email.value,
 			password: this.pass.value,
@@ -22,25 +26,36 @@ export default class Register extends Component {
 				lastName: this.lname.value
 			}
 		}, (error) => {
+			console.log(error);
 			if(error) {
-				if(error.error === "unverified-account-created") {
+				if(error.error && error.error === "unverified-account-created") {
 					this.setState({
+						register_formloading:false,
 						formSubmitError: '',
 						formSubmitSuccess: true
 					})
-				} else {
+				} else if(error && !error.error){
 					this.setState({
+						register_formloading:false,
+						formSubmitError: 'An error occured during creating your account.',
+						formSubmitSuccess: true
+					})
+				}else {
+					this.setState({
+						register_formloading:false,
 						formSubmitError: error.reason,
 						formSubmitSuccess: false
 					})
 				}
 			} else {
 				this.setState({
+					register_formloading:false,
 					formSubmitError: '',
 					formSubmitSuccess: false
 				})
 			}
 		})
+	});
 	}
 
 	render(){
@@ -128,8 +143,18 @@ export default class Register extends Component {
 		                            <a href="https://blockcluster.io/contact" className="text-info small">Help? Contact Support</a>
 		                        </div>
 		                    </div>
-
-		                    <button className="btn btn-complete btn-cons m-t-10" type="submit"><i className="fa fa-user-plus" aria-hidden="true"></i>&nbsp;Create a new account</button>
+							<LaddaButton
+								loading={this.state.register_formloading ? this.state.register_formloading : false}
+								data-size={S}
+								data-style={SLIDE_UP}
+								data-spinner-size={30}
+								data-spinner-lines={12}
+								className="btn btn-complete btn-cons m-t-10" 
+								type="sumbit"
+							>
+								<i className="fa fa-user-plus" aria-hidden="true" />
+								&nbsp;&nbsp;Create a new account
+							</LaddaButton>
 		                </form>
 		            </div>
 		        </div>
