@@ -107,11 +107,8 @@ jobs:
             echo 'export IS_TEST=1' >> $BASH_ENV
             source $BASH_ENV
       - run:
-          name: "Install chrome dependencies"
-          command: "sudo apt-get update & sudo apt-get install -y --no-install-recommends libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 libnss3 "
-      - run:
           name: "Install dependencies"
-          command: "npm install"
+          command: "./.circleci/install-chrome-dependencies.sh"
       - run:
           name: "Chrome tests"
           command: "npm run ui-test"
