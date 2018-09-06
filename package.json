@@ -4,7 +4,7 @@
   "scripts": {
     "start": "meteor run",
     "test": "MONGO_URL=mongodb://localhost:27017/admin meteor test --once --driver-package meteortesting:mocha",
-    "test-jest": "jest"
+    "ui-test": "jest"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.0-14",
