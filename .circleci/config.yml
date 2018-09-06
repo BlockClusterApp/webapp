@@ -8,7 +8,7 @@ references:
 
   ui_test_container: &ui_test_container
     docker:
-      - image: circleci/node:latest-browsers
+      - image: circleci/node:8.9
     working_directory: ~/repo
 
   helm_container: &helm_container
