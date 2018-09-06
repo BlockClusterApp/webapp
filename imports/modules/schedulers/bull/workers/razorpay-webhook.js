@@ -15,14 +15,16 @@ const PaymentRequestReverseMap = {
 };
 
 async function getUserFromPayment(payment) {
-  if(payment.notes && payment.notes.paymentRequestId) {
+  if (payment.notes && payment.notes.paymentRequestId) {
     const paymentRequest = PaymentRequest.find({
-      _id: payment.notes.paymentRequestId
+      _id: payment.notes.paymentRequestId,
     }).fetch()[0];
-    if(paymentRequest) {
-      return Meteor.users.find({
-        _id: paymentRequest.userId
-      }).fetch()[0];
+    if (paymentRequest) {
+      return Meteor.users
+        .find({
+          _id: paymentRequest.userId,
+        })
+        .fetch()[0];
     }
   }
   const user = Meteor.users
@@ -113,15 +115,13 @@ async function updateRZPaymentToUser(user, payment) {
       if (!updateObject.$set) {
         updateObject.$set = {};
       }
-      updateObject.$set.profile = {
-        mobiles: [
-          {
-            number: payment.contact,
-            verified: true,
-            from: 'razorpay',
-          },
-        ],
-      };
+      updateObject.$set['profile.mobiles'] = [
+        {
+          number: payment.contact,
+          verified: true,
+          from: 'razorpay',
+        },
+      ];
     } else if (!(user.profile.mobiles && user.profile.mobiles.map(m => m.number).includes(payment.contact))) {
       updateObject.$push = {
         'profile.mobiles': {
@@ -179,7 +179,7 @@ async function attachPaymentToRequest(payment) {
     _id: payment.notes.paymentRequestId,
   }).fetch()[0];
 
-  if(!paymentRequest) {
+  if (!paymentRequest) {
     return false;
   }
   if (!paymentRequest.pgResponse || !(paymentRequest.pgResponse && paymentRequest.pgResponse.map(p => p.id).includes(payment.id))) {
@@ -317,7 +317,7 @@ async function handleSubscriptionHalted({ subscription }, bullSystem) {
 
   if (!rzSubscription) {
     RavenLogger.log('RazorPayWebhook | HandleSubscriptionHalted: RZSubscription does not exists', {
-      subscription
+      subscription,
     });
     throw new Error(`RZSubscription does not exists for ${subscription.id}`);
   }
@@ -371,7 +371,7 @@ async function handleSubscriptionHalted({ subscription }, bullSystem) {
 async function updateFailedInvoice({ payment }) {
   const rzInvoice = await Razorpay.fetchInvoices({ paymentId: payment.id, customerId: payment.customer_id });
   if (!rzInvoice) {
-    RavenLogger.log('RazorpayWebhook | updateFailedInvoice : Error handling invoice', {payment});
+    RavenLogger.log('RazorpayWebhook | updateFailedInvoice : Error handling invoice', { payment });
     throw new Error(`Error handling failed invoice | ${payment.id}`);
   }
 
@@ -405,7 +405,7 @@ async function handleInvoicePaid({ invoice, payment }) {
     status: 'halted',
   }).fetch()[0];
   if (!rzSubscription) {
-    RavenLogger.log('RazorPayWebhook | handleInvoicePaid : Invoice paid for unknown subscription', {invoice, payment});
+    RavenLogger.log('RazorPayWebhook | handleInvoicePaid : Invoice paid for unknown subscription', { invoice, payment });
     throw new Error(`Invoice paid for unknown subscription ${invoice.subscription_id}`);
   }
   RZSubscription.update(
