@@ -81,18 +81,26 @@ jobs:
       - setup_remote_docker:
           version: 17.11.0-ce
       - run:
+          name: "Update IS_TEST"
+          command: |
+            echo 'export IS_TEST=1' >> $BASH_ENV
+            source $BASH_ENV
+      - run:
           name: "Docker build"
-          command: ./.circleci/docker-build.sh
-          environment:
-            IS_TEST: "1"
+          command: "IS_TEST=1 ./.circleci/docker-build.sh"
       - run:
           name: "Docker push"
-          command: ./.circleci/docker-push.sh
+          command: "IS_TEST=1 ./.circleci/docker-push.sh"
 
   run_ui_tests:
     <<: *container_config
     steps:
       - *restore_repo
+      - run:
+          name: "Update IS_TEST"
+          command: |
+            echo 'export IS_TEST=1' >> $BASH_ENV
+            source $BASH_ENV
       - run:
           name: "Install dependencies"
           command: "npm install"
@@ -155,6 +163,7 @@ workflows:
           <<: *build_tags
           requires:
             - docker_push_for_test
+          context: aws-creds
       - build:
           <<: *build_tags
           requires:
