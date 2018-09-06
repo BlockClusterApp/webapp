@@ -10,7 +10,7 @@ Meteor.publish(null, function() {
 const MIN_ADMIN_LEVEL = 0;
 const pageSize = 10;
 Meteor.publish("users.all", function({page}) {
-  if(Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+  if(Meteor.user() &&Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
   return Meteor.users.find({}, {
@@ -31,7 +31,7 @@ Meteor.publish("users.all", function({page}) {
 });
 
 Meteor.publish("users.search", function({query, limit, page}) {
-  if(Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+  if(Meteor.user() && Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
   limit = limit || pageSize;

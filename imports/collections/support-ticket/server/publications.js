@@ -10,7 +10,7 @@ Meteor.publish('support.user', function() {
 });
 
 Meteor.publish('support.id', function(id) {
-  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+  if (Meteor.user() && Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
 
@@ -108,7 +108,7 @@ Meteor.publish('support.caseId', function(id) {
 });
 
 Meteor.publish('support.all', function({ page }) {
-  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+  if (Meteor.user() && Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
   return SupportTicket.find(
@@ -124,7 +124,7 @@ Meteor.publish('support.all', function({ page }) {
 });
 
 Meteor.publish('support.search', function({ query, limit, page }) {
-  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+  if (Meteor.user() && Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
   limit = limit || pageSize;
