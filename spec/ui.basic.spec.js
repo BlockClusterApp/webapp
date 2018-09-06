@@ -64,12 +64,13 @@ describe("Basic Flow", () => {
 
   test("Can login", async () => {
     await page.goto(BASE_URL);
-    await page.waitForSelector("#form-login");
+    await page.waitForSelector(".ladda-button.btn.btn-complete.btn-cons.m-t-10");
     await page.click("input[name=email]");
     await page.type("input[name=email]", validUser.email);
     await page.click("input[name=password]");
-    await page.type("input[name=password]", validUser.password);
-    await page.click("button[type=submit]");
+    await page.type("input[name=password]", validUser.password, {delay: 50});
+
+    await page.click(".ladda-button.btn.btn-complete.btn-cons.m-t-10");
     await page.waitForSelector(".thumbnail-wrapper.d32.circular.inline")
   }, TIMEOUT);
 
@@ -92,8 +93,9 @@ describe("Basic Flow", () => {
 
   test("Can delete a network", async () => {
     await page.goto(`${BASE_URL}/app/networks/${networkDetails.instanceId}/settings`);
+    await sleep(5000);
     await page.waitForSelector('.ladda-button.btn.btn-danger.btn-cons');
-    await sleep(2000);
+    await sleep(5000);
     await page.click('.ladda-button.btn.btn-danger.btn-cons');
     await page.waitForSelector('.networksList');
   }, TIMEOUT);
