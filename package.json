@@ -4,7 +4,8 @@
   "scripts": {
     "start": "meteor run",
     "test": "MONGO_URL=mongodb://localhost:27017/admin meteor test --once --driver-package meteortesting:mocha",
-    "ui-test": "jest"
+    "ui-test": "jest",
+    "prepush": "npm run ui-test"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.0-14",
@@ -69,6 +70,7 @@
     "babel-jest": "^23.4.2",
     "babel-preset-env": "^1.7.0",
     "faker": "^4.1.0",
+    "husky": "^0.14.3",
     "jest": "^23.5.0",
     "puppeteer": "^1.7.0"
   }

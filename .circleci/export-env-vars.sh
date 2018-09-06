@@ -11,7 +11,7 @@ then
   export NODE_ENV=staging
   export CLUSTER_PREFIX="dev";
   export ROOT_URL="staging.blockcluster.io";
-elif [ "$CIRCLE_TAG" = "test" ] || [ "$CIRCLE_BRANCH" = "test" ];
+elif [ "$CIRCLE_TAG" = "test" ] || [ "$CIRCLE_BRANCH" = "test" ] || [ "$IS_TEST_MODE" = "1" ];
 then
   export NODE_ENV=test
   export CLUSTER_PREFIX="dev";

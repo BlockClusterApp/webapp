@@ -28,7 +28,7 @@ afterAll(() => {
   browser.close();
 });
 
-const BASE_URL="http://localhost:3000"
+const BASE_URL="https://test.blockcluster.io"
 
 const validUser = {
   email: 'jibin.mathews@blockcluster.io',
