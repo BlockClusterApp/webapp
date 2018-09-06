@@ -7,7 +7,7 @@ Meteor.publish("networks", function () {
 const MIN_ADMIN_LEVEL = 0;
 const pageSize = 20;
 Meteor.publish("networks.all", function({page}) {
-  if(Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+  if(Meteor.user() && Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
   return Networks.find({}, {
@@ -33,7 +33,7 @@ Meteor.publish("networks.all", function({page}) {
 
 
 Meteor.publish("networks.search", function({query, limit, page}) {
-  if(Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+  if(Meteor.user() && Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
   limit = limit || pageSize;

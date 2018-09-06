@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import queryString from "stringquery";
-
+import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 export default class EmailVerification extends Component {
   constructor(props) {
     super(props);
@@ -57,7 +57,8 @@ export default class EmailVerification extends Component {
   submitToReset() {
     this.setState({
       disabled: true,
-      showMessage: false
+      showMessage: false,
+      chpass_formloading:true
     });
     Meteor.call(
       "changeUserPassword",
@@ -67,6 +68,7 @@ export default class EmailVerification extends Component {
         this.setState({
           disabled: true,
           showMessage: true,
+          chpass_formloading:false,
           message: (
             <p>
               Congrats...!!! Your password has been changed successfully. You
@@ -133,14 +135,21 @@ export default class EmailVerification extends Component {
               />
             </div>
           </div>
-          <button
-            className="btn btn-complete btn-cons m-t-10"
-            onClick={this.submitToReset.bind(this)}
-            disabled={this.state.disabled}
-            style={this.state.isInvalidCode ? {backgroundColor: "#aaa", borderColor: "#aaa"}: {}}
-          >
-            <i className="fa fa-sign-in" aria-hidden="true" />&nbsp;&nbsp;Change Password
-          </button>
+          <LaddaButton
+                loading={this.state.chpass_formloading ? this.state.chpass_formloading : false}
+                data-size={S}
+                data-style={SLIDE_UP}
+                data-spinner-size={30}
+                data-spinner-lines={12}
+                className="btn btn-complete btn-cons m-t-10"
+                onClick={this.submitToReset.bind(this)}
+                disabled={this.state.disabled}
+                style={this.state.isInvalidCode ? {backgroundColor: "#aaa", borderColor: "#aaa"}: {}}
+              >
+                <i className="fa fa-sign-in" aria-hidden="true" />
+                &nbsp;&nbsp;Change Password
+              </LaddaButton>
+
           <br />
           <br />
           {this.state.showMessage ? this.state.message : ""}

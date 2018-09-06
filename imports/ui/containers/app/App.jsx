@@ -30,13 +30,17 @@ class App extends Component {
 
   requireAdmin = (RouteComponent) => {
     return () => {
+		console.log(this.props.user)
        if(this.props.user) {
          if(this.props.user.admin >= 1) {
            return <RouteComponent />
-         }
+         }else{
+
+		 }
          return <Redirect to ="/app/networks" />
-       }
-      return <RouteComponent />
+       }else{
+		return <Redirect to ="/login" />
+	   }
     }
   }
 

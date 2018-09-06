@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
+import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 
 export default class Login extends Component {
   constructor(props) {
@@ -13,29 +14,37 @@ export default class Login extends Component {
     this.setState(
       {
         formSubmitError: '',
-      },
-      () => {
-        return true;
       }
     );
   };
-
   login = e => {
     e.preventDefault();
-    Meteor.loginWithPassword(this.email.value, this.pass.value, error => {
-      if (error) {
+    this.setState({
+      login_formloading:true
+    },()=>{
+      Meteor.loginWithPassword(this.email.value, this.pass.value, error => {
+      if (error && error.reason) {
+        
         this.setState({
+          login_formloading:false,
           formSubmitError: error.reason,
         });
-      } else {
+      } else if (error && !error.reason){
+        this.setState({
+          login_formloading:false,
+          formSubmitError: "An error occured.please try again.",
+        });
+      }else {
         if (window.location.search.includes('action=join-network')) {
           window.open('/app/invites', '_self');
         }
         this.setState({
+          login_formloading:false,
           formSubmitError: '',
         });
       }
     });
+  });
   };
 
   render() {
@@ -108,10 +117,18 @@ export default class Login extends Component {
                   &nbsp; <Link to="/register">Register</Link>
                 </div>
               </div>
-              <button className="btn btn-complete btn-cons m-t-10" type="submit">
+              <LaddaButton
+                loading={this.state.login_formloading ? this.state.login_formloading : false}
+                data-size={S}
+                data-style={SLIDE_UP}
+                data-spinner-size={30}
+                data-spinner-lines={12}
+                className="btn btn-complete btn-cons m-t-10"
+                type="sumbit"
+              >
                 <i className="fa fa-sign-in" aria-hidden="true" />
                 &nbsp;&nbsp;Sign in
-              </button>
+              </LaddaButton>
             </form>
             <div className="pull-bottom sm-pull-bottom">
               <div className="m-b-30 p-r-80 sm-m-t-20 sm-p-r-15 sm-p-b-20 clearfix">

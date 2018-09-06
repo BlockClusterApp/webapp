@@ -5,6 +5,7 @@ require('../imports/api/locations');
 require('../imports/modules/migrations/server');
 require('../imports/api');
 const debug = require('debug')('server:main');
+import { Meteor } from 'meteor/meteor';
 import UserFunctions from '../imports/api/server-functions/user-functions';
 import {
     Networks
@@ -59,7 +60,7 @@ Accounts.validateLoginAttempt(function(options) {
     }
 
     if (options.methodName == "createUser") {
-        throw new Meteor.Error("unverified-account-created", "Account created but cannot be logged in until verified");
+        throw new Meteor.Error("unverified-account-created");
     }
 
     if (options.user.emails[0].verified === true) {
