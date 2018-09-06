@@ -17,7 +17,7 @@ function sleep(time) {
 
 beforeAll(async () => {
   browser = await puppeteer.launch({
-    headless: false,
+    headless: true,
     slowMo: 1,
     args: [`--window-size=${width},${height}`]
   });
