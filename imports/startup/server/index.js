@@ -32,7 +32,7 @@ class RavenError extends Error {
   }
 }
 
-Meteor.Error = RavenError;
+// Meteor.Error = RavenError;
 
 require("../../collections/networks/server/publications.js")
 require('../../collections/user-invitation/server/publications.js');
