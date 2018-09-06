@@ -32,6 +32,7 @@ references:
       branches:
         only:
          - master
+         - hot-fix
          - staging
          - dev
          - test
@@ -109,6 +110,9 @@ jobs:
       - run:
           name: "Install dependencies"
           command: "./.circleci/install-chrome-dependencies.sh"
+      - run:
+          name: "Wait for deployment"
+          command: "sleep 60"
       - run:
           name: "Chrome tests"
           command: "npm run ui-test"
