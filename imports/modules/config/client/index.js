@@ -9,7 +9,7 @@ function getAPIHost() {
     case "staging":
       return "https://staging.blockcluster.io";
     case "test":
-      return "https://test.blockcluster.io";
+      return "https://dev.blockcluster.io";
     case "dev":
       return "https://dev.blockcluster.io";
     default:
