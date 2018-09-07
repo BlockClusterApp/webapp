@@ -1,6 +1,10 @@
 const defaults = require("../local.config.js");
 function getAPIHost() {
+  console.log("ROOT_URL", process.env.ROOT_URL);
   if (process.env.ROOT_URL) {
+    if(process.env.ROOT_URL === 'https://test.blockcluster.io') {
+      return "https://dev.blockcluster.io";
+    }
     return process.env.ROOT_URL;
   }
   switch (process.env.NODE_ENV) {
@@ -9,7 +13,7 @@ function getAPIHost() {
     case "staging":
       return "https://staging.blockcluster.io";
     case "test":
-      return "https://test.blockcluster.io";
+      return "https://dev.blockcluster.io";
     case "dev":
       return "https://dev.blockcluster.io";
     default:
@@ -22,7 +26,7 @@ function getDynamoWokerDomainName(locationCode) {
     if(locationCode !== "us-west-2"){
       prefix = `-${locationCode}`
     }
-  const host = window.location.origin.includes("localhost") ? 'https://dev.blockcluster.io' : window.location.origin;
+  const host = window.location.origin.includes("localhost") || window.location.origin.includes("test.blockcluster.io") ? 'https://dev.blockcluster.io' : window.location.origin;
   const url = `${host.split("://")[1].replace(".blockcluster.io", '')}${prefix}.blockcluster.io`;
   return url;
 }
@@ -34,7 +38,8 @@ module.exports = {
   },
   namespace: process.env.NAMESPACE || defaults.namespace,
   Raven: {
-    dsn: ( () => {
+    dsn: () => {
+      console.log("DSN", process.env.NODE_ENV, window.location.origin);
       if(process.env.NODE_ENV === 'production' || (window && window.location && window.location.origin.includes('https://app.blockcluster.io'))) {
         return 'https://778581990f3e46daaac3995e1e756de5@sentry.io/1274848'
       } else if (process.env.NODE_ENV === 'staging' || (window && window.location && window.location.origin.includes('https://staging.blockcluster.io'))) {
@@ -42,6 +47,7 @@ module.exports = {
       } else if (window && window.location && window.location.origin.includes('https://dev.blockcluster.io')) {
         return 'https://52847e2f5c05463e91789eb2c1b75bcb@sentry.io/1275122'
       }
-    })()
+      return false;
+    }
   }
 };
