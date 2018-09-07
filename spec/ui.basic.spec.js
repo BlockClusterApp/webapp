@@ -1,5 +1,7 @@
 const helpers = require('./helpers');
 const puppeteer = require('puppeteer');
+const cheerio = require('cheerio');
+const { expect } = require('chai');
 
 const width = 1366;
 const height = 720;
@@ -124,7 +126,7 @@ describe('Asset Management', () => {
   beforeAll(async () => {
     browser = await puppeteer.launch({
       headless: true,
-      slowMo: 1,
+      slowMo: 20,
       args: [`--window-size=${width},${height}`, '--no-sandbox', '--disable-setuid-sandbox'],
     });
     page = await browser.newPage();
@@ -158,11 +160,65 @@ describe('Asset Management', () => {
       await page.waitForSelector('form div.form-group select.form-control:nth-child(3) option');
       await page.click('input[type=text]');
       await page.type('input[type=text]', asset.solo.name);
+      await sleep(3000);
       await page.click('.ladda-button.btn.btn-success.m-t-10');
       await sleep(5000);
       await page.goto(`${BASE_URL}/app/networks/${network.instanceId}/assets/stats`);
       await page.waitForSelector('div.table-responsive table#basicTable.table tbody tr td.v-align-middle');
+      await sleep(4000);
+      const body = await page.evaluate(el => el.innerHTML, await page.$('body'));
+      const $ = cheerio.load(body);
+      const trs = $('tbody').find('tr');
+      let isAssetCreated = false;
+      for(let i = 0 ; i < trs.length ; i++) {
+        if($($(trs[i]).find('td:nth-child(1)')).html() === asset.solo.name) {
+          isAssetCreated = true;
+          asset.solo.administrator = $($(trs[i]).find('td:nth-child(4)')).html();
+          asset.solo.quantity = Number($($(trs[i]).find('td:nth-child(3)')).html());
+          asset.solo.type = $($(trs[i]).find('td:nth-child(2)')).html();
+          break;
+        }
+      }
+      expect(isAssetCreated).to.true;
+      expect(asset.solo.type).to.equal("solo");
+      expect(asset.solo.quantity).to.equal(0);
+      await sleep(2000);
+    },
+    TIMEOUT
+  );
+
+  test(
+    'Can Create Bulk Asset',
+    async () => {
+      await page.goto(`${BASE_URL}/app/networks/${network.instanceId}/assets/create`);
+      await page.waitForSelector('form div.form-group select.form-control:nth-child(3) option');
+      await page.click('input[type=text]');
+      await page.type('input[type=text]', asset.bulk.name);
+      await sleep(1000);
+      await page.select('form > .form-group:nth-child(2) > select', 'bulk');
+      await sleep(3000);
+      await page.click('.ladda-button.btn.btn-success.m-t-10');
       await sleep(5000);
+      await page.goto(`${BASE_URL}/app/networks/${network.instanceId}/assets/stats`);
+      await page.waitForSelector('div.table-responsive table#basicTable.table tbody tr td.v-align-middle');
+      await sleep(4000);
+      const body = await page.evaluate(el => el.innerHTML, await page.$('body'));
+      const $ = cheerio.load(body);
+      const trs = $('tbody').find('tr');
+      let isAssetCreated = false;
+      for(let i = 0 ; i < trs.length ; i++) {
+        if($($(trs[i]).find('td:nth-child(1)')).html() === asset.bulk.name) {
+          isAssetCreated = true;
+          asset.bulk.administrator = $($(trs[i]).find('td:nth-child(4)')).html();
+          asset.bulk.quantity = Number($($(trs[i]).find('td:nth-child(3)')).html());
+          asset.bulk.type = $($(trs[i]).find('td:nth-child(2)')).html();
+          break;
+        }
+      }
+      expect(isAssetCreated).to.true;
+      expect(asset.bulk.type).to.equal("bulk");
+      expect(asset.bulk.quantity).to.equal(0);
+      await sleep(2000);
     },
     TIMEOUT
   );
