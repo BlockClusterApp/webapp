@@ -13,11 +13,13 @@ module.exports = function(bullSystem) {
         instanceId: job.data.instanceId
       }).fetch()[0];
       if(!network){
-        throw new Error("Network has been deleted before pulling image ", job.instanceId);
+        RavenLogger.log('ImageRepull: Network deleted before pulling image', job.data);
+        throw new Error("Network has been deleted before pulling image ", job.data.instanceId);
       }
       const locationCode = network.locationCode;
       HTTP.get(`${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3Ddynamo-node-${network.instanceId}`, (err, res) => {
         if(err){
+          RavenLogger.log(err);
           throw new Error(`Repull image failed for ${job.instanceId} - ${JSON.stringify(err)}`);
         }
         const podList = JSON.parse(res.content);
@@ -25,6 +27,7 @@ module.exports = function(bullSystem) {
           const name = pod.metadata.name;
           HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/${name}`, function(error, response) {
             if(error) {
+              RavenLogger.log(error);
               throw new Error(`Error deleting pod ${pod.name} - ${JSON.stringify(error)}`);
             }
             console.log("Deleted pod ", name);

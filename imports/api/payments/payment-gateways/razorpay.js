@@ -50,12 +50,14 @@ Subscription:
 RazorPay.createPlan = async ({ plan, identifier }) => {
   let rzPlan = RZPlan.find({ identifier }).count();
   if (rzPlan > 0) {
+    RavenLogger.log('RazorPay.createPlan: Plan already exists', { plan, identifier });
     throw new Meteor.Error('bad-request', 'RZPlan identifier already exists ');
   }
   try {
     rzPlan = await RazorPayInstance.plans.create(plan);
     debug('CreatePlan | RzPlan Response', rzPlan);
   } catch (err) {
+    RavenLogger.log(err);
     debug('CreatePlan | error razorpay', err);
     return false;
   }
@@ -67,6 +69,7 @@ RazorPay.createPlan = async ({ plan, identifier }) => {
 RazorPay.deletePlan = async ({ identifier }) => {
   const rzPlan = RZPlan.find({ identifier }).fetch()[0];
   if (!rzPlan) {
+    RavenLogger.log('RazorPay.deletePlan: Plan does not exists', {identifier});
     throw new Meteor.Error('bad-request', `Invalid RZPlan identifier ${identifier}`);
   }
   RZPlan.update(
@@ -96,6 +99,7 @@ RazorPay.fetchInvoices = async({paymentId, customerId}) => {
     }
     return undefined;
   }catch(err) {
+    RavenLogger.log(err);
     debug('Fetch Invoices | err razorpay', err);
     return false;
   }
@@ -117,6 +121,7 @@ RazorPay.createSubscription = async ({ rzPlan, type }) => {
     });
     debug('CreateSubscription | RzSubscription Response', rzPlan);
   } catch (err) {
+    RavenLogger.log(err);
     debug('CreateSubscription | error razorpay', err);
     return false;
   }
@@ -146,6 +151,7 @@ RazorPay.cancelSubscription = async ({ rzSubscription }) => {
     );
     return cancelResponse;
   } catch (err) {
+    RavenLogger.log(err);
     debug('Cancel Subscription | Error', err);
   }
 
@@ -168,6 +174,7 @@ RazorPay.createAddOn = async ({ subscriptionId, addOn, userId }) => {
     const addOnId = RZAddOn.insert({ ...addOnResponse, userId, subscriptionId });
     return RZAddOn.find({ _id: addOnId }).fetch()[0];
   } catch (err) {
+    RavenLogger.log(err);
     debug('Create AddOn | Error', err);
     return false;
   }
@@ -207,6 +214,7 @@ RazorPay.capturePayment = async paymentResponse => {
     }).fetch()[0];
 
     if (!paymentRequest) {
+      RavenLogger.log('RazorPay.capturePayment: Invalid payment request id for rzpayment', paymentResponse);
       throw new Error('Invalid payment request id for rzpayment ', paymentResponse);
     }
 
@@ -240,6 +248,7 @@ RazorPay.capturePayment = async paymentResponse => {
     );
   } catch (err) {
     // rollback
+    RavenLogger.log(err);
     debug('Error capturing', err);
     PaymentRequests.update(
       {
@@ -264,14 +273,11 @@ RazorPay.capturePayment = async paymentResponse => {
  * @property {object} options.notes
  */
 RazorPay.refundPayment = async (paymentId, options) => {
-  if (!options.amount) {
-    throw new Error('Amount not specified for refund');
-  }
 
   const paymentRequest = PaymentRequests.find({
     pgReference: paymentId,
     'pgResponse.status': 'captured',
-  });
+  }).fetch()[0];
 
   if (!paymentRequest) {
     throw new Error(`Invalid payment Id ${paymentId}`);
@@ -279,6 +285,9 @@ RazorPay.refundPayment = async (paymentId, options) => {
 
   if (!options.amount) {
     options.amount = paymentRequest.amount;
+  }
+  if (!options.amount) {
+    throw new Error('Amount not specified for refund');
   }
 
   options.notes = options.notes || {};
@@ -307,6 +316,7 @@ RazorPay.refundPayment = async (paymentId, options) => {
 
     return updateResult;
   } catch (err) {
+    RavenLogger.log(err);
     debug('Refund error', err);
     // rollback
   }
@@ -316,6 +326,7 @@ RazorPay.fetchCard = paymentId => {
   return new Promise((resolve, reject) => {
     request.get(`${RZ_URL}/v1/payments/${paymentId}/card`, (err, res, body) => {
       if (err) {
+        RavenLogger.log(err);
         return reject(err);
       }
       resolve(JSON.parse(body));
@@ -345,6 +356,7 @@ RazorPay.processSubscriptionPayment = async pgResponse => {
     debug('Process Subscription | Success', subscription);
     return true;
   } catch (err) {
+    RavenLogger.log(err);
     debug('Process Subscription Payment', err);
     return false;
   }
@@ -392,6 +404,7 @@ RazorPay.applyCardVerification = async pgResponse => {
 
       return true;
     } catch (err) {
+      RavenLogger.log(err);
       console.log(err);
       return false;
     }

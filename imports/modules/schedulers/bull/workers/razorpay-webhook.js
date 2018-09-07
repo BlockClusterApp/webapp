@@ -2,7 +2,7 @@ import { RZSubscription, RZPayment } from '../../../../collections/razorpay';
 import UserCards from '../../../../collections/payments/user-cards';
 import PaymentRequest from '../../../../collections/payments/payment-requests';
 import Invoice from '../../../../api/billing/invoice';
-import InvoiceModel from '../../../../collections/payments/invoice'
+import InvoiceModel from '../../../../collections/payments/invoice';
 import Razorpay from '../../../../api/payments/payment-gateways/razorpay';
 import moment from 'moment';
 const debug = require('debug')('bull:razorpay');
@@ -15,6 +15,18 @@ const PaymentRequestReverseMap = {
 };
 
 async function getUserFromPayment(payment) {
+  if (payment.notes && payment.notes.paymentRequestId) {
+    const paymentRequest = PaymentRequest.find({
+      _id: payment.notes.paymentRequestId,
+    }).fetch()[0];
+    if (paymentRequest) {
+      return Meteor.users
+        .find({
+          _id: paymentRequest.userId,
+        })
+        .fetch()[0];
+    }
+  }
   const user = Meteor.users
     .find({
       rzCustomerId: payment.customer_id,
@@ -90,7 +102,7 @@ async function safeUpdateUser(userId, updateObject) {
       _id: userId,
     },
     {
-      $set: updateObject,
+      ...updateObject,
     }
   );
   return updateResult;
@@ -103,15 +115,13 @@ async function updateRZPaymentToUser(user, payment) {
       if (!updateObject.$set) {
         updateObject.$set = {};
       }
-      updateObject.$set.profile = {
-        mobiles: [
-          {
-            number: payment.contact,
-            verified: true,
-            from: 'razorpay',
-          },
-        ],
-      };
+      updateObject.$set['profile.mobiles'] = [
+        {
+          number: payment.contact,
+          verified: true,
+          from: 'razorpay',
+        },
+      ];
     } else if (!(user.profile.mobiles && user.profile.mobiles.map(m => m.number).includes(payment.contact))) {
       updateObject.$push = {
         'profile.mobiles': {
@@ -199,17 +209,20 @@ async function insertOrUpdatePayment(user, payment) {
 
   const rzPayment = RZPayment.find({ id: payment.id }).fetch()[0];
   if (rzPayment) {
-    RZPayment.update({
-      _id: rzPayment._id
-    }, {
-      $set: {
-        ...payment,
-        userId: rzPayment.userId
+    RZPayment.update(
+      {
+        _id: rzPayment._id,
       },
-      $push: {
-        history: rzPayment
-      },
-    });
+      {
+        $set: {
+          ...payment,
+          userId: rzPayment.userId,
+        },
+        $push: {
+          history: rzPayment,
+        },
+      }
+    );
     return true;
   }
   RZPayment.insert({
@@ -224,6 +237,12 @@ async function insertOrUpdateSubscription(event, { user, subscription, payment }
     id: subscription.id,
   }).fetch()[0];
   if (!rzSubscription) {
+    RavenLogger.log('RazorpayWebook | insertOrUpdateSubscription | RZSubscription does not exists', {
+      event,
+      user,
+      subscription,
+      payment,
+    });
     throw new Error(`RZ Subscription ${subscription.id} does not exists`);
   }
   if (!(rzSubscription.payments && rzSubscription.payments.map(p => p.id).includes(payment.id))) {
@@ -265,7 +284,7 @@ async function insertOrUpdateSubscription(event, { user, subscription, payment }
             status: subscription.status,
             updatedAt: new Date(),
           },
-        }
+        },
       }
     );
   }
@@ -284,8 +303,8 @@ async function insertOrUpdateSubscription(event, { user, subscription, payment }
       user,
       subscription,
       payment,
-      event
-    })
+      event,
+    });
   }
 
   return true;
@@ -297,6 +316,9 @@ async function handleSubscriptionHalted({ subscription }, bullSystem) {
   }).fetch()[0];
 
   if (!rzSubscription) {
+    RavenLogger.log('RazorPayWebhook | HandleSubscriptionHalted: RZSubscription does not exists', {
+      subscription,
+    });
     throw new Error(`RZSubscription does not exists for ${subscription.id}`);
   }
 
@@ -320,77 +342,88 @@ async function handleSubscriptionHalted({ subscription }, bullSystem) {
   const invoice = InvoiceModel.find({
     paymentStatus: InvoiceModel.PaymentStatusMapping.Pending,
     rzCustomerId: subscription.customer_id,
-    rzSubscriptionId: subscription.id
+    rzSubscriptionId: subscription.id,
   }).fetch()[0];
 
-  if(!invoice) {
-    console.log("No invoice to be halted", subscription.id)
+  if (!invoice) {
+    console.log('No invoice to be halted', subscription.id);
   }
 
-  InvoiceModel.update({
-    _id: invoice._id
-  }, {
-    $set: {
-      paymentStatus: InvoiceModel.PaymentStatusMapping.Failed,
-      paymentFailedOn: new Date()
+  InvoiceModel.update(
+    {
+      _id: invoice._id,
+    },
+    {
+      $set: {
+        paymentStatus: InvoiceModel.PaymentStatusMapping.Failed,
+        paymentFailedOn: new Date(),
+      },
     }
-  });
+  );
 
   bullSystem.addJob('notify-subscription-halted', {
-    subscription
+    subscription,
   });
 
   return true;
 }
 
 async function updateFailedInvoice({ payment }) {
-  const rzInvoice = await Razorpay.fetchInvoices({paymentId: payment.id, customerId: payment.customer_id});
-  if(!invoice){
+  const rzInvoice = await Razorpay.fetchInvoices({ paymentId: payment.id, customerId: payment.customer_id });
+  if (!rzInvoice) {
+    RavenLogger.log('RazorpayWebhook | updateFailedInvoice : Error handling invoice', { payment });
     throw new Error(`Error handling failed invoice | ${payment.id}`);
   }
 
   const rzSubscription = RZSubscription.find({
-    id: rzInvoice.subscription_id
+    id: rzInvoice.subscription_id,
   }).fetch()[0];
 
-  if(!rzSubscription) {
+  if (!rzSubscription) {
     return true;
   }
 
-  RZSubscription.update({
-    _id: rzSubscription._id
-  }, {
-    $set: {
-      rzInvoiceId: payment.invoice_id,
-      lastPaymentAttempt: new Date()
+  RZSubscription.update(
+    {
+      _id: rzSubscription._id,
+    },
+    {
+      $set: {
+        rzInvoiceId: payment.invoice_id,
+        lastPaymentAttempt: new Date(),
+      },
     }
-  });
+  );
 
   return true;
 }
 
-async function handleInvoicePaid({invoice, payment}) {
+async function handleInvoicePaid({ invoice, payment }) {
   // we only want the halted subscriptions to trigger this as others will be processed by subscription.charged
   const rzSubscription = RZSubscription.find({
     id: invoice.subscription_id,
-    status: 'halted'
+    status: 'halted',
   }).fetch()[0];
-  if(!rzSubscription) {
+  if (!rzSubscription) {
+    RavenLogger.log('RazorPayWebhook | handleInvoicePaid : Invoice paid for unknown subscription', { invoice, payment });
     throw new Error(`Invoice paid for unknown subscription ${invoice.subscription_id}`);
   }
-  RZSubscription.update({
-    _id: rzSubscription._id
-  }, {
-    $set: {
-      status: 'active'
+  RZSubscription.update(
+    {
+      _id: rzSubscription._id,
     },
-    $push: {
-      statusHistory: {
+    {
+      $set: {
         status: 'active',
-        updatedAt: new Date()
-      }
+      },
+      $push: {
+        statusHistory: {
+          status: 'active',
+          updatedAt: new Date(),
+        },
+      },
     }
-  });
+  );
 
   await Invoice.settleInvoice({
     rzSubscriptionId: rzSubscription.id,
@@ -474,15 +507,15 @@ const HandlerFunctions = {
 
     return true;
   },
-  'invoice.paid': async ({data}, bullSystem) => {
+  'invoice.paid': async ({ data }, bullSystem) => {
     let { invoice, payment } = data;
     invoice = invoice.entity;
     payment = payment.entity;
 
-    await handleInvoicePaid({payment, invoice}, bullSystem);
+    await handleInvoicePaid({ payment, invoice }, bullSystem);
 
     return true;
-  }
+  },
 };
 
 module.exports = function(bullSystem) {

@@ -6,10 +6,15 @@ references:
       - image: circleci/node:8.9
     working_directory: ~/repo
 
+  ui_test_container: &ui_test_container
+    docker:
+      - image: circleci/node:8.9
+    working_directory: ~/repo
+
   helm_container: &helm_container
     docker:
       - image: blockcluster/circleci-kubectl-base
-    working_directory: ~/repo  
+    working_directory: ~/repo
 
   restore_repo: &restore_repo
     restore_cache:
@@ -21,12 +26,13 @@ references:
       key: repo-bc-app-{{ .Branch }}-{{ .Revision }}
       paths:
         - .
- 
+
   deploy_tag_filters: &deploy_tag_filters
     filters:
       branches:
         only:
          - master
+         - hot-fix
          - staging
          - dev
          - test
@@ -34,7 +40,7 @@ references:
         only:
           - dev
           - development
-          - test       
+          - test
           - staging
           - production
 
@@ -47,7 +53,7 @@ references:
           - staging
           - test
           - production
-          
+
 
 jobs:
   checkout_code:
@@ -73,6 +79,44 @@ jobs:
           name: "Docker push"
           command: ./.circleci/docker-push.sh
 
+
+  docker_push_for_test:
+    <<: *helm_container
+    steps:
+      - *restore_repo
+      - setup_remote_docker:
+          version: 17.11.0-ce
+      - run:
+          name: "Update IS_TEST"
+          command: |
+            echo 'export IS_TEST=1' >> $BASH_ENV
+            source $BASH_ENV
+      - run:
+          name: "Docker build"
+          command: "IS_TEST=1 ./.circleci/docker-build.sh"
+      - run:
+          name: "Docker push"
+          command: "IS_TEST=1 ./.circleci/docker-push.sh"
+
+  run_ui_tests:
+    <<: *ui_test_container
+    steps:
+      - *restore_repo
+      - run:
+          name: "Update IS_TEST"
+          command: |
+            echo 'export IS_TEST=1' >> $BASH_ENV
+            source $BASH_ENV
+      - run:
+          name: "Install dependencies"
+          command: "./.circleci/install-chrome-dependencies.sh"
+      - run:
+          name: "Wait for deployment"
+          command: "sleep 60"
+      - run:
+          name: "Chrome tests"
+          command: "npm run ui-test"
+
   apply_kube_config:
     <<: *helm_container
     steps:
@@ -84,6 +128,15 @@ jobs:
           name: "Build end notification"
           command: ./.circleci/build-end-notification.sh
 
+
+  apply_kube_config_for_test:
+    <<: *helm_container
+    steps:
+      - *restore_repo
+      - run:
+          name: "Helm apply"
+          command: "IS_TEST=1 ./.circleci/helm-apply.sh"
+
   build:
     <<: *container_config
     steps:
@@ -91,7 +144,7 @@ jobs:
       - run:
           name: "Repo Build"
           command: ./.circleci/build.sh
-        
+
 workflows:
   version: 2
   build-and-push:
@@ -106,22 +159,34 @@ workflows:
 
       - docker_push:
           <<: *deploy_tag_filters
-          requires: 
+          requires:
             - checkout_code
           context: aws-creds
 
       - apply_kube_config:
           <<: *deploy_tag_filters
-          requires: 
+          requires:
             - docker_push
           context: aws-creds
   build-and-test:
     jobs:
       - checkout_code:
           <<: *build_tags
-
+      - docker_push_for_test:
+          <<: *build_tags
+          requires:
+            - checkout_code
+          context: aws-creds
+      - apply_kube_config_for_test:
+          <<: *build_tags
+          requires:
+            - docker_push_for_test
+          context: aws-creds
+      - run_ui_tests:
+          <<: *build_tags
+          requires:
+            - apply_kube_config_for_test
       - build:
           <<: *build_tags
           requires:
             - checkout_code
-      

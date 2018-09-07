@@ -36,3 +36,4 @@ percolate:migrations
 maxfi:remote-collection
 meteortesting:mocha
 xolvio:cleaner
+blockcluster:raven

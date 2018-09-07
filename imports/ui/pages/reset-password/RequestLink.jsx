@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
+import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 
 export default class EmailVerification extends Component {
   constructor(props) {
@@ -14,19 +15,25 @@ export default class EmailVerification extends Component {
 
   requestPasswordReset() {
     const email = this.email.value;
+    this.setState({
+      reset_formloading:true
+    },()=>{
     if(!email.includes('@') || email.lastIndexOf(".") < email.indexOf('@')){
       return this.setState({
         showMessage: true,
-        message: 'Invalid email address'
+        message: 'Invalid email address',
+        reset_formloading:false
       })
     }
     Meteor.call("requestPasswordReset", email, () => {
       this.setState({
+        reset_formloading:false,
         disabled: true,
         showMessage: true,
         message: <p><br />We have sent a link to reset your password on your registered email address. Kindly check your email for further details.</p>
       })
     });
+  });
   }
 
   render() {
@@ -73,14 +80,20 @@ export default class EmailVerification extends Component {
                   New here?&nbsp;<Link to="/register">Register</Link>
                 </div>
               </div>
-              <button
+              <LaddaButton
+                loading={this.state.reset_formloading ? this.state.reset_formloading : false}
+                data-size={S}
+                data-style={SLIDE_UP}
+                data-spinner-size={30}
+                data-spinner-lines={12}
                 className="btn btn-complete btn-cons m-t-10"
                 onClick={this.requestPasswordReset.bind(this)}
                 disabled={this.state.disabled}
               >
-                <i className="fa fa-sign-in" aria-hidden="true"/>&nbsp;&nbsp;Reset
+                <i className="fa fa-sign-in" aria-hidden="true" />
+                &nbsp;&nbsp;Reset
                 Password
-              </button>
+              </LaddaButton>
             <p>{this.state.showMessage ? this.state.message : ""}</p>
             <div className="pull-bottom sm-pull-bottom">
               <div className="m-b-30 p-r-80 sm-m-t-20 sm-p-r-15 sm-p-b-20 clearfix">

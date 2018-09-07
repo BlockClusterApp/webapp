@@ -45,7 +45,7 @@ class PlatformNotifications extends Component {
 	render(){
 		return (
             <div className="nodeEvents content">
-                <div className="m-t-20 m-l-20 m-r-20 container-fluid container-fixed-lg bg-white">
+                <div className="m-t-20 container-fluid container-fixed-lg bg-white">
                     <div className="row dashboard">
                         <div className="col-lg-12">
                             <div className="card card-transparent">

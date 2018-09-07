@@ -154,9 +154,14 @@ class ViewNetwork extends Component {
                                                     <div className="light-black-bg p-t-30 p-b-35"></div>
                                                 </div>
                                                 <div className="col-10 bg-white b-a b-grey padding-10">
-                                                    <div className="clickable">
-                                                        <p className="no-margin text-black bold text-uppercase fs-12">Write Smart Contract</p>
-														<p className="no-margin fs-12">Compile and Deploy <small className="text-danger">Upcoming</small></p>
+                                                    <div className="clickable" onClick={() => {
+															window.open(
+																'https://github.com/BlockClusterApp/proxy-contract',
+																'_blank'
+															);
+														}}>
+                                                        <p className="no-margin text-black bold text-uppercase fs-12">Write Proxy Contract</p>
+														<p className="no-margin fs-12">Compile and Deploy</p>
                                                     </div>
                                                     <div className="clickable" onClick={() => {
 															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/sc/management") : ""

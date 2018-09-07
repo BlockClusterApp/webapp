@@ -5,6 +5,7 @@ require('../imports/api/locations');
 require('../imports/modules/migrations/server');
 require('../imports/api');
 const debug = require('debug')('server:main');
+import { Meteor } from 'meteor/meteor';
 import UserFunctions from '../imports/api/server-functions/user-functions';
 import {
     Networks
@@ -56,7 +57,7 @@ Accounts.validateLoginAttempt(function(options) {
     }
 
     if (options.methodName == "createUser") {
-        throw new Meteor.Error("unverified-account-created", "Account created but cannot be logged in until verified");
+        throw new Meteor.Error("unverified-account-created");
     }
 
     if (options.user.emails[0].verified === true) {
@@ -168,6 +169,17 @@ function getContainerResourceLimits({cpu, ram, isJoining }){
 }
 
 
+process.on('unhandledRejection', (reason, p) => {
+  console.log("Unhandled rejection", reason);
+  RavenLogger.log(reason);
+});
+
+process.on('uncaughtException', (reason, p) => {
+  console.log("Unhandled exception", reason);
+  RavenLogger.log(reason);
+})
+
+
 Meteor.methods({
     "createNetwork": async function({networkName,  locationCode, networkConfig, userId, hostedPageId}) {
       debug("CreateNetwork | Arguments", networkName, locationCode, networkConfig, userId);
@@ -235,6 +247,7 @@ Meteor.methods({
 
 
         if(!nodeConfig.cpu) {
+          RavenLogger.log('CreateNetwork : Invalid network configuration', {nodeConfig, networkConfig});
           throw new Meteor.Error("Invalid Network Configuration");
         }
 
@@ -579,98 +592,74 @@ Meteor.methods({
                                                 impulseURL: "http://" + Config.workerNodeIP(locationCode) + ":" + response.data.spec.ports[3].nodePort
                                             }
                                         });
-                                        let encryptedPassword = md5(instanceId);
-                                        let auth = base64.encode(utf8.encode(instanceId + ":" + encryptedPassword))
-                                        HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets`, {
-                                            "content": JSON.stringify({
-                                                "apiVersion": "v1",
-                                                "data": {
-                                                    "auth": auth
-                                                },
-                                                "kind": "Secret",
-                                                "metadata": {
-                                                    "name": "basic-auth-" + instanceId,
-                                                    "namespace": Config.namespace
-                                                },
-                                                "type": "Opaque"
-                                            }),
-                                            "headers": {
-                                                "Content-Type": "application/json"
-                                            }
-                                        }, (error) => {
-                                            if (error) {
-                                                console.log(error);
-                                                deleteNetwork(id)
-                                            } else {
-                                                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses`, {
-                                                        "content": JSON.stringify({
-                                                            "apiVersion": "extensions/v1beta1",
-                                                            "kind": "Ingress",
-                                                            "metadata": {
-                                                                "name": "ingress-" + instanceId,
-                                                                "annotations": {
-                                                                    "nginx.ingress.kubernetes.io/rewrite-target": "/",
-                                                                    "nginx.ingress.kubernetes.io/auth-type": "basic",
-                                                                    "nginx.ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
-                                                                    "nginx.ingress.kubernetes.io/auth-realm": "Authentication Required",
-                                                                    "nginx.ingress.kubernetes.io/enable-cors": "true",
-                                                                    "nginx.ingress.kubernetes.io/cors-credentials": "true",
-                                                                    "kubernetes.io/ingress.class": "nginx",
-                                                                    "nginx.ingress.kubernetes.io/configuration-snippet": `if ($http_origin ~* (^https?://([^/]+\\.)*(localhost:3000|${Config.workerNodeDomainName()}))) {\n    set $cors \"true\";\n}\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`
-                                                                }
-                                                            },
-                                                            "spec": {
-                                                                "tls": [
-                                                                    {
-                                                                        "hosts": [
-                                                                            Config.workerNodeDomainName(locationCode)
-                                                                        ],
-                                                                        "secretName": "blockcluster-ssl"
-                                                                    }
+
+                                        HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses`, {
+                                                "content": JSON.stringify({
+                                                    "apiVersion": "extensions/v1beta1",
+                                                    "kind": "Ingress",
+                                                    "metadata": {
+                                                        "name": "ingress-" + instanceId,
+                                                        "annotations": {
+                                                            "nginx.ingress.kubernetes.io/rewrite-target": "/",
+                                                            //"nginx.ingress.kubernetes.io/auth-type": "basic",
+                                                            //"nginx.ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
+                                                            //"nginx.ingress.kubernetes.io/auth-realm": "Authentication Required",
+                                                            "nginx.ingress.kubernetes.io/enable-cors": "true",
+                                                            "nginx.ingress.kubernetes.io/cors-credentials": "true",
+                                                            "kubernetes.io/ingress.class": "nginx",
+                                                            "nginx.ingress.kubernetes.io/configuration-snippet": `set $cors \"true\";\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`
+                                                        }
+                                                    },
+                                                    "spec": {
+                                                        "tls": [
+                                                            {
+                                                                "hosts": [
+                                                                    Config.workerNodeDomainName(locationCode)
                                                                 ],
-                                                                "rules": [{
-                                                                    "host": Config.workerNodeDomainName(locationCode),
-                                                                    "http": {
-                                                                        "paths": [{
-                                                                            "path": "/api/node/" + instanceId + "/jsonrpc",
-                                                                            "backend": {
-                                                                                "serviceName": instanceId,
-                                                                                "servicePort": 8545
-                                                                            }
-                                                                        },
-                                                                        {
-                                                                            "path": "/api/node/" + instanceId,
-                                                                            "backend": {
-                                                                                "serviceName": instanceId,
-                                                                                "servicePort": 6382
-                                                                            }
-                                                                        }]
+                                                                "secretName": "blockcluster-ssl"
+                                                            }
+                                                        ],
+                                                        "rules": [{
+                                                            "host": Config.workerNodeDomainName(locationCode),
+                                                            "http": {
+                                                                "paths": [{
+                                                                    "path": "/api/node/" + instanceId + "/jsonrpc",
+                                                                    "backend": {
+                                                                        "serviceName": instanceId,
+                                                                        "servicePort": 8545
+                                                                    }
+                                                                },
+                                                                {
+                                                                    "path": "/api/node/" + instanceId,
+                                                                    "backend": {
+                                                                        "serviceName": instanceId,
+                                                                        "servicePort": 6382
                                                                     }
                                                                 }]
                                                             }
-                                                        }),
-                                                        "headers": {
-                                                            "Content-Type": "application/json"
-                                                        }
-                                                    },
-                                                    (error) => {
-                                                        if (error) {
-                                                            console.log(error);
-                                                            deleteNetwork(id)
-                                                        } else {
-                                                            Networks.update({
-                                                                _id: id
-                                                            }, {
-                                                                $set: {
-                                                                    "api-password": instanceId
-                                                                }
-                                                            })
-
-                                                            myFuture.return(instanceId);
+                                                        }]
+                                                    }
+                                                }),
+                                                "headers": {
+                                                    "Content-Type": "application/json"
+                                                }
+                                            },
+                                            (error) => {
+                                                if (error) {
+                                                    console.log(error);
+                                                    deleteNetwork(id)
+                                                } else {
+                                                    Networks.update({
+                                                        _id: id
+                                                    }, {
+                                                        $set: {
+                                                            "api-password": ""
                                                         }
                                                     })
-                                            }
-                                        })
+
+                                                    myFuture.return(instanceId);
+                                                }
+                                            })
                                     }
                                 })
                             }
@@ -823,6 +812,7 @@ Meteor.methods({
         const nodeConfig = getNodeConfig(networkConfig);
 
         if(!nodeConfig.cpu) {
+          RavenLogger.log('JoinNetwork : Invalid network config', {nodeConfig, networkConfig});
           throw new Meteor.Error("Invalid Network Configuration");
         }
 
@@ -1111,96 +1101,68 @@ spec:
                                             }
                                         })
 
-                                        let encryptedPassword = md5(instanceId);
-                                        let auth = base64.encode(utf8.encode(instanceId + ":" + encryptedPassword))
-                                        HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets`, {
-                                            "content": JSON.stringify({
-                                                "apiVersion": "v1",
-                                                "data": {
-                                                    "auth": auth
-                                                },
-                                                "kind": "Secret",
-                                                "metadata": {
-                                                    "name": "basic-auth-" + instanceId,
-                                                    "namespace": Config.namespace
-                                                },
-                                                "type": "Opaque"
-                                            }),
-                                            "headers": {
-                                                "Content-Type": "application/json"
-                                            }
-                                        }, function(error) {
-                                            if (error) {
-                                                console.log(error);
-                                                deleteNetwork(id)
-                                            } else {
-                                                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses`, {
-                                                        "content": JSON.stringify({
-                                                            "apiVersion": "extensions/v1beta1",
-                                                            "kind": "Ingress",
-                                                            "metadata": {
-                                                                "name": "ingress-" + instanceId,
-                                                                "annotations": {
-                                                                    "nginx.ingress.kubernetes.io/rewrite-target": "/",
-                                                                    "nginx.ingress.kubernetes.io/auth-type": "basic",
-                                                                    "nginx.ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
-                                                                    "nginx.ingress.kubernetes.io/auth-realm": "Authentication Required",
-                                                                    "nginx.ingress.kubernetes.io/enable-cors": "true",
-                                                                    "nginx.ingress.kubernetes.io/cors-credentials": "true",
-                                                                    "kubernetes.io/ingress.class": "nginx",
-                                                                    "nginx.ingress.kubernetes.io/configuration-snippet": `if ($http_origin ~* (^https?://([^/]+\\.)*(localhost:3000|${Config.workerNodeDomainName()}))) {\n    set $cors \"true\";\n}\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`
-                                                                }
-                                                            },
-                                                            "spec": {
-                                                                "tls": [
-                                                                    {
-                                                                        "hosts": [
-                                                                            Config.workerNodeDomainName(locationCode)
-                                                                        ],
-                                                                        "secretName": "blockcluster-ssl"
-                                                                    }
+                                        HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses`, {
+                                                "content": JSON.stringify({
+                                                    "apiVersion": "extensions/v1beta1",
+                                                    "kind": "Ingress",
+                                                    "metadata": {
+                                                        "name": "ingress-" + instanceId,
+                                                        "annotations": {
+                                                            "nginx.ingress.kubernetes.io/rewrite-target": "/",
+                                                            "nginx.ingress.kubernetes.io/enable-cors": "true",
+                                                            "nginx.ingress.kubernetes.io/cors-credentials": "true",
+                                                            "kubernetes.io/ingress.class": "nginx",
+                                                            "nginx.ingress.kubernetes.io/configuration-snippet": `set $cors \"true\"\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`
+                                                        }
+                                                    },
+                                                    "spec": {
+                                                        "tls": [
+                                                            {
+                                                                "hosts": [
+                                                                    Config.workerNodeDomainName(locationCode)
                                                                 ],
-                                                                "rules": [{
-                                                                    "host": Config.workerNodeDomainName(locationCode),
-                                                                    "http": {
-                                                                        "paths": [{
-                                                                            "path": "/api/node/" + instanceId + "/jsonrpc",
-                                                                            "backend": {
-                                                                                "serviceName": instanceId,
-                                                                                "servicePort": 8545
-                                                                            }
-                                                                        }, {
-                                                                            "path": "/api/node/" + instanceId,
-                                                                            "backend": {
-                                                                                "serviceName": instanceId,
-                                                                                "servicePort": 6382
-                                                                            }
-                                                                        }]
+                                                                "secretName": "blockcluster-ssl"
+                                                            }
+                                                        ],
+                                                        "rules": [{
+                                                            "host": Config.workerNodeDomainName(locationCode),
+                                                            "http": {
+                                                                "paths": [{
+                                                                    "path": "/api/node/" + instanceId + "/jsonrpc",
+                                                                    "backend": {
+                                                                        "serviceName": instanceId,
+                                                                        "servicePort": 8545
+                                                                    }
+                                                                }, {
+                                                                    "path": "/api/node/" + instanceId,
+                                                                    "backend": {
+                                                                        "serviceName": instanceId,
+                                                                        "servicePort": 6382
                                                                     }
                                                                 }]
                                                             }
-                                                        }),
-                                                        "headers": {
-                                                            "Content-Type": "application/json"
-                                                        }
-                                                    },
-                                                    function(error) {
-                                                        if (error) {
-                                                            console.log(error);
-                                                            deleteNetwork(id)
-                                                        } else {
-                                                            Networks.update({
-                                                                _id: id
-                                                            }, {
-                                                                $set: {
-                                                                    "api-password": instanceId
-                                                                }
-                                                            })
-                                                            myFuture.return(id);
+                                                        }]
+                                                    }
+                                                }),
+                                                "headers": {
+                                                    "Content-Type": "application/json"
+                                                }
+                                            },
+                                            function(error) {
+                                                if (error) {
+                                                    console.log(error);
+                                                    deleteNetwork(id)
+                                                } else {
+                                                    Networks.update({
+                                                        _id: id
+                                                    }, {
+                                                        $set: {
+                                                            "api-password": ""
                                                         }
                                                     })
-                                            }
-                                        })
+                                                    myFuture.return(id);
+                                                }
+                                            })
                                     }
                                 })
                             }
@@ -1901,13 +1863,11 @@ spec:
     },
     "rpcPasswordUpdate": function(instanceId, password, locationCode="us-west-2") {
         var myFuture = new Future();
-        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {
-            if (error) {
-                console.log(error);
-                myFuture.throw("An unknown error occured while deleting secret");
-            } else {
+
+        if(password) {
+            HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {
                 let encryptedPassword = md5(password);
-                let auth = base64.encode(utf8.encode(instanceId + ":" + password))
+                let auth = base64.encode(utf8.encode(instanceId + ":" + encryptedPassword))
                 HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets`, {
                     "content": JSON.stringify({
                         "apiVersion": "v1",
@@ -1928,19 +1888,156 @@ spec:
                         console.log(error);
                         myFuture.throw("An unknown error occured while creating secret");
                     } else {
-                        Networks.update({
-                            instanceId: instanceId
-                        }, {
-                            $set: {
-                                "apis-password": password
+                        HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + instanceId, function(error, response) {
+                            if (error) {
+                                console.log(error);
+                                myFuture.throw("An unknown error occured");
+                            } else {
+                                HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses`, {
+                                        "content": JSON.stringify({
+                                            "apiVersion": "extensions/v1beta1",
+                                            "kind": "Ingress",
+                                            "metadata": {
+                                                "name": "ingress-" + instanceId,
+                                                "annotations": {
+                                                    "nginx.ingress.kubernetes.io/rewrite-target": "/",
+                                                    "nginx.ingress.kubernetes.io/auth-type": "basic",
+                                                    "nginx.ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
+                                                    "nginx.ingress.kubernetes.io/auth-realm": "Authentication Required",
+                                                    "nginx.ingress.kubernetes.io/enable-cors": "true",
+                                                    "nginx.ingress.kubernetes.io/cors-credentials": "true",
+                                                    "kubernetes.io/ingress.class": "nginx",
+                                                    "nginx.ingress.kubernetes.io/configuration-snippet": `set $cors \"true\";\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`
+                                                }
+                                            },
+                                            "spec": {
+                                                "tls": [
+                                                    {
+                                                        "hosts": [
+                                                            Config.workerNodeDomainName(locationCode)
+                                                        ],
+                                                        "secretName": "blockcluster-ssl"
+                                                    }
+                                                ],
+                                                "rules": [{
+                                                    "host": Config.workerNodeDomainName(locationCode),
+                                                    "http": {
+                                                        "paths": [{
+                                                            "path": "/api/node/" + instanceId + "/jsonrpc",
+                                                            "backend": {
+                                                                "serviceName": instanceId,
+                                                                "servicePort": 8545
+                                                            }
+                                                        }, {
+                                                            "path": "/api/node/" + instanceId,
+                                                            "backend": {
+                                                                "serviceName": instanceId,
+                                                                "servicePort": 6382
+                                                            }
+                                                        }]
+                                                    }
+                                                }]
+                                            }
+                                        }),
+                                        "headers": {
+                                            "Content-Type": "application/json"
+                                        }
+                                    },
+                                    function(error) {
+                                        if (error) {
+                                            console.log(error);
+                                            deleteNetwork(id)
+                                        } else {
+                                            Networks.update({
+                                                instanceId: instanceId
+                                            }, {
+                                                $set: {
+                                                    "api-password": password
+                                                }
+                                            })
+
+                                            myFuture.return();
+                                        }
+                                    })
                             }
                         })
-
-                        myFuture.return();
                     }
                 })
-            }
-        })
+            })
+        } else {
+            HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + "basic-auth-" + instanceId, function(error, response) {
+                HTTP.call("DELETE", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + "ingress-" + instanceId, function(error, response) {
+                    if (error) {
+                        console.log(error);
+                        myFuture.throw("An unknown error occured");
+                    } else {
+                        HTTP.call("POST", `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses`, {
+                                "content": JSON.stringify({
+                                    "apiVersion": "extensions/v1beta1",
+                                    "kind": "Ingress",
+                                    "metadata": {
+                                        "name": "ingress-" + instanceId,
+                                        "annotations": {
+                                            "nginx.ingress.kubernetes.io/rewrite-target": "/",
+                                            "nginx.ingress.kubernetes.io/enable-cors": "true",
+                                            "nginx.ingress.kubernetes.io/cors-credentials": "true",
+                                            "kubernetes.io/ingress.class": "nginx",
+                                            "nginx.ingress.kubernetes.io/configuration-snippet": `set $cors \"true\";\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`
+                                        }
+                                    },
+                                    "spec": {
+                                        "tls": [
+                                            {
+                                                "hosts": [
+                                                    Config.workerNodeDomainName(locationCode)
+                                                ],
+                                                "secretName": "blockcluster-ssl"
+                                            }
+                                        ],
+                                        "rules": [{
+                                            "host": Config.workerNodeDomainName(locationCode),
+                                            "http": {
+                                                "paths": [{
+                                                    "path": "/api/node/" + instanceId + "/jsonrpc",
+                                                    "backend": {
+                                                        "serviceName": instanceId,
+                                                        "servicePort": 8545
+                                                    }
+                                                }, {
+                                                    "path": "/api/node/" + instanceId,
+                                                    "backend": {
+                                                        "serviceName": instanceId,
+                                                        "servicePort": 6382
+                                                    }
+                                                }]
+                                            }
+                                        }]
+                                    }
+                                }),
+                                "headers": {
+                                    "Content-Type": "application/json"
+                                }
+                            },
+                            function(error) {
+                                if (error) {
+                                    console.log(error);
+                                    deleteNetwork(id)
+                                } else {
+                                    Networks.update({
+                                        instanceId: instanceId
+                                    }, {
+                                        $set: {
+                                            "api-password": password
+                                        }
+                                    })
+
+                                    myFuture.return();
+                                }
+                            })
+                    }
+                })
+            })
+        }
 
         return myFuture.wait();
     },

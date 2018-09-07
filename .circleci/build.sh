@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-echo "Nothing to build"
+. ./.circleci/background-meteor.sh
 
 exit 0;

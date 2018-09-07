@@ -3,7 +3,7 @@ import Voucher from '../voucher';
 const pageSize = 20;
 const MIN_ADMIN_LEVEL = 0;
 Meteor.publish("vouchers.all", function({page}) {
-  if(Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+  if(Meteor.user() && Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
   return Voucher.find({}, {
@@ -17,7 +17,7 @@ Meteor.publish("vouchers.all", function({page}) {
 
 
 Meteor.publish("vouchers.search", function({query, limit, page}) {
-  if(Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+  if(Meteor.user() && Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
   limit = limit || pageSize;

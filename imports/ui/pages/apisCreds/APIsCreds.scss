@@ -2,4 +2,9 @@
     .readOnly-Value {
         color: #2c2c2c
     }
+
+    pre {
+        word-break: break-all;
+        white-space: pre-wrap;
+    }
 }

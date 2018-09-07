@@ -114,7 +114,7 @@ function _call(method, url, options, callback) {
   requestInterceptorFunction(reqOptions);
 
 
-  console.log("Sending request to ", reqOptions.url);
+  console.log("Sending request to ", method, reqOptions.url);
   request(reqOptions, function(error, res, body) {
     var response = null;
 
@@ -127,11 +127,15 @@ function _call(method, url, options, callback) {
       common.populateData(response);
 
       if (response.statusCode >= 400) {
+        console.log("Making error", response);
         error = common.makeErrorByStatus(
           response.statusCode,
           response.content
         );
       }
+    } else {
+      console.log("Error", error);
+      RavenLogger.log(error, reqOptions);
     }
 
     callback(error, response);

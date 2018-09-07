@@ -1,6 +1,6 @@
 FROM node:8.9.3 as builder
 
-RUN curl /bin/sh -c curl https://install.meteor.com/ | sh
+RUN  curl https://install.meteor.com/ | sh
 
 WORKDIR /blockcluster
 COPY . /blockcluster
@@ -11,7 +11,7 @@ RUN meteor build /meteor-output-tar --architecture os.linux.x86_64 --allow-super
 RUN mkdir /meteor-output
 RUN tar -xzf /meteor-output-tar/blockcluster.tar.gz -C /meteor-output
 
-FROM node:8.9.3 
+FROM node:8.9.3
 RUN mkdir /blockcluster
 WORKDIR /blockcluster
 COPY --from=builder /meteor-output/bundle ./
