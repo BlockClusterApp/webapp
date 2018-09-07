@@ -140,6 +140,7 @@ jobs:
   notify_github_bot:
     <<: *ui_test_container
     steps:
+      - *restore_repo
       - run:
           name: 'Curl'
           command: "./.circleci/notify-github-bot.sh"
