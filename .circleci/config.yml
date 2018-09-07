@@ -137,6 +137,13 @@ jobs:
           name: "Helm apply"
           command: "IS_TEST=1 ./.circleci/helm-apply.sh"
 
+  notify_github_bot:
+    <<: *ui_test_container
+    steps:
+      - run:
+          name: 'Curl'
+          command: "./.circleci/notify-github-bot.sh"
+
   build:
     <<: *container_config
     steps:
@@ -186,7 +193,7 @@ workflows:
           <<: *build_tags
           requires:
             - apply_kube_config_for_test
-      - build:
+      - notify_github_bot:
           <<: *build_tags
           requires:
-            - checkout_code
+            - run_ui_tests
