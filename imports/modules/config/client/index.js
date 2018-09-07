@@ -1,6 +1,10 @@
 const defaults = require("../local.config.js");
 function getAPIHost() {
+  console.log("ROOT_URL", process.env.ROOT_URL);
   if (process.env.ROOT_URL) {
+    if(process.env.ROOT_URL === 'https://test.blockcluster.io') {
+      return "https://dev.blockcluster.io";
+    }
     return process.env.ROOT_URL;
   }
   switch (process.env.NODE_ENV) {
