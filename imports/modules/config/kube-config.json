@@ -3,7 +3,7 @@
     "dev": {
       "us-west-2": {
         "masterApiHost": "https://k8s-dev-us-west-2-api.blockcluster.io",
-        "workerNodeIP": "35.161.9.17",
+        "workerNodeIP": "35.161.9.16",
         "locationCode": "us-west-2",
         "locationName": "US West (Oregon)",
         "auth": {
@@ -15,7 +15,7 @@
     "test": {
       "us-west-2": {
         "masterApiHost": "https://k8s-dev-us-west-2-api.blockcluster.io",
-        "workerNodeIP": "35.161.9.17",
+        "workerNodeIP": "35.161.9.16",
         "locationCode": "us-west-2",
         "locationName": "US West (Oregon)",
         "auth": {
