@@ -2173,6 +2173,58 @@ spec:
 
         return myFuture.wait();
     },
+    "addPublisher": function(instanceId, streamName, newPublisher, fromAccount) {
+        var myFuture = new Future();
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/streams/grantAccessToPublish`, {
+            "content": JSON.stringify({
+                streamName: streamName,
+                publisher: newPublisher,
+                fromAccount: fromAccount
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                console.log(response)
+                myFuture.return();
+            }
+        })
+
+        return myFuture.wait();
+    },
+    "removePublisher": function(instanceId, streamName, removePublisher, fromAccount) {
+        var myFuture = new Future();
+        var network = Networks.find({
+            instanceId: instanceId
+        }).fetch()[0];
+
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/streams/revokeAccessToPublish`, {
+            "content": JSON.stringify({
+                streamName: streamName,
+                publisher: removePublisher,
+                fromAccount: fromAccount
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }, function(error, response) {
+            if(error) {
+                myFuture.throw(error);
+            } else {
+                console.log(response)
+                myFuture.return();
+            }
+        })
+
+        return myFuture.wait();
+    },
     "grantAccessStream": function(instanceId, name, address, from) {
         var myFuture = new Future();
         var network = Networks.find({
