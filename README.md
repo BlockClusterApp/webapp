@@ -8,6 +8,11 @@ The repository uses circleci for CI/CD pipeline.
 ## CI/CD Pipeline
 [ONLY MASTER branch] Once a pull request is opened, everything is taken care by itself. If you want the PR to be automatically merged after all tests, then add the label ' Ready for merge ' to the PR.
 
+Once a PR is created, CircleCI will run all the tests and the blockcluster bot will finally merge the PR. If some error occurs then the bot comments the error on the PR. 
+
+#### Note
+You can manually trigger merge by commenting ` /merge ` irrespective of the base branch. Only this command will work on all branches.
+
 ## Git usage guidelines
 1. Don't rebase. Just merge
 2. Any new feature you build should be on a separate branch. Eg say ` feature-1 `
