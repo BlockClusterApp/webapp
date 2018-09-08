@@ -26,6 +26,7 @@ import APIsCreds from "../../pages/apisCreds/APIsCreds.jsx"
 import Peers from "../../pages/peers/Peers.jsx"
 import CreateStream from "../../pages/createStream/CreateStream.jsx"
 import PublishStream from "../../pages/publishStream/PublishStream.jsx"
+import AccessControlStreams from "../../pages/accessControlStreams/AccessControlStreams.jsx"
 import BCAccountsView from "../../pages/bcAccountsView/BCAccountsView.jsx"
 import AssetsAudit from "../../pages/assetsAudit/AssetsAudit.jsx"
 import BillingDashboard from '../../pages/billing/BillingDashboard.jsx'
@@ -70,6 +71,7 @@ export default class Main extends Component {
 						<Route exact path="/app/networks/:id/assets/audit" component={AssetsAudit} />
 						<Route exact path="/app/networks/:id/streams/create" component={CreateStream} />
 						<Route exact path="/app/networks/:id/streams/publish" component={PublishStream} />
+						<Route exact path="/app/networks/:id/streams/access-control" component={AccessControlStreams} />
 						<Route exact path="/app/networks/:id/bc-accounts" component={BCAccountsView} />
 						<Route exact path="/app/networks/:id/security/apis" component={APIsCreds} />
 						<Route exact path="/app/networks/:id/sc/management" component={SmartContractsManagement} />
