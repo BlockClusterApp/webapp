@@ -108,15 +108,9 @@ class CreateNetwork extends Component {
                   <h3>Create Your Blockchain Network</h3>
                   <p>This will create a private and permissioned blockchain network. Technically it will create a single node network.</p>
                   <ul>
-                    <li>
-                      <i>Maximum block time</i>: is the maximum time to wait for a new block
-                    </li>
-                    <li>
-                      <i>Minimum block time</i>: is the minimum time to wait for a new block
-                    </li>
-                    <li>
-                      <i>Block pause time</i>: is the pause time when zero transactions in previous block. values should be larger than minimum block time
-                    </li>
+                      <li><i>Voucher Code</i>: enter voucher code if you have one to get discount and other benefits</li>
+                      <li><i>Node Type</i>: select either development or production grade node i.e., light or power node</li>
+                      <li><i>Impulse URL</i>: add the impulse server URL of the network you want to join to achieve privacy features</li>
                   </ul>
                 </div>
               </div>
@@ -149,20 +143,6 @@ class CreateNetwork extends Component {
                         </div>
                       </div>
                     </div>
-                    <div className="row clearfix">
-                      <div className="col-md-6">
-                        <div className="form-group form-group-default ">
-                          <label>Private Transactions</label>
-                          <input type="text" className="form-control" name="firstName" required disabled value="Enabled" />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group form-group-default ">
-                          <label>Transaction Cost</label>
-                          <input type="text" className="form-control" name="firstName" required disabled value="0" />
-                        </div>
-                      </div>
-                    </div>
 
                     <div className="row clearfix">
                       <div className="col-md-12">
@@ -186,39 +166,6 @@ class CreateNetwork extends Component {
                       });
                     }}
                   />
-
-                  <p className="m-t-10">Advanced Information</p>
-                  <div className="form-group-attached">
-                    <div className="row">
-                      <div className="col-md-4">
-                        <div className="form-group form-group-default input-group">
-                          <div className="form-input-group">
-                            <label>Maximum Block Time</label>
-                            <input type="text" className="form-control usd" defaultValue="10000" required disabled />
-                          </div>
-                          <div className="input-group-addon">MS</div>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="form-group form-group-default input-group">
-                          <div className="form-input-group">
-                            <label>Minimum</label>
-                            <input type="text" className="form-control usd" required defaultValue="1" disabled />
-                          </div>
-                          <div className="input-group-addon">S</div>
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="form-group form-group-default input-group">
-                          <div className="form-input-group">
-                            <label>Pause Time for 0 Txns</label>
-                            <input type="text" className="form-control usd" required defaultValue="2" disabled />
-                          </div>
-                          <div className="input-group-addon">S</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                   <br />
                   {this.state.formSubmitError != '' && (
                     <div className="row">

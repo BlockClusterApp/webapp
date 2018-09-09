@@ -125,60 +125,62 @@ class NetworkConfigSelector extends Component {
 
     let voucherActionButton = undefined;
     if(this.state.voucher.status === 'success'){
-      voucherActionButton =  <button onClick={this.deleteVoucher} disabled={this.state.voucherLoading} className="input-group-addon delete-button">
-          <span><i className="fa fa-trash" aria-hidden="true"></i> Delete</span>
+      voucherActionButton =  <button onClick={this.deleteVoucher} disabled={this.state.voucherLoading} className="btn btn-warning btn-cons voucher-btn">
+          <span><i className="fa fa-trash" aria-hidden="true"></i> Remove</span>
   </button>
     } else {
-      voucherActionButton = <button onClick={this.validateVoucher} disabled={this.state.voucherLoading} className="input-group-addon apply-button">
-          <span><i className="fa fa-check" aria-hidden="true"></i> Apply</span>
+      voucherActionButton = <button onClick={this.validateVoucher} disabled={this.state.voucherLoading} className="btn btn-primary btn-cons voucher-btn">
+          <span><i className="fa fa-gift" aria-hidden="true"></i> Redeem</span>
       </button>
     }
 
     const FullView = (
-        <div className="row network-config-selector ">
-            <div className="col-md-12">
-              <div className="form-group-attached">
-                <div className="row clearfix">
-                    <div className="col-md-4">
-                        {dropDown}
-                    </div>
-                    <div className="col-md-8">
-                        <div className="form-group form-group-default input-group">
-                            <div className="form-input-group">
-                                <label>Voucher Code {
-                                  this.state.voucher && this.state.voucher.status === 'error' ? <span className="error-message">{this.state.voucher.error}</span> : this.state.voucher.status === 'success' ? <span className="success-message">Voucher Applied</span> : undefined
-                                }</label>
-                                <input type="text" className="form-control" name="projectName" ref={(input) => this.voucher = input} />
+        <div className="network-config-selector ">
+            <div className="row">
+                <div className="col-md-12">
+                  <div className="form-group-attached">
+                    <div className="row clearfix">
+                        <div className="col-md-12">
+                            {dropDown}
+                        </div>
+                        <div className="col-md-4">
+                            <div className="form-group form-group-default required">
+                                <label>CPU (vCPUs)</label>
+                                <input type="text" className="form-control" name="projectName" value={this.state.networkConfig.cpu} disabled />
                             </div>
-                            {voucherActionButton}
                         </div>
-                    </div>
-                </div>
-                <div className="row clearfix">
-                    <div className="col-md-4">
-                        <div className="form-group form-group-default required">
-                            <label>CPU (vCPUs)</label>
-                            <input type="text" className="form-control" name="projectName" value={this.state.networkConfig.cpu} disabled />
+                        <div className="col-md-4">
+                            <div className="form-group form-group-default ">
+                                <label>RAM (GB)</label>
+                                <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.ram} disabled  />
+                            </div>
                         </div>
-                    </div>
-                    <div className="col-md-4">
-                        <div className="form-group form-group-default ">
-                            <label>RAM (GB)</label>
-                            <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.ram} disabled  />
-                        </div>
-                    </div>
 
-                    <div className="col-md-4">
-                        <div className="form-group form-group-default ">
-                            <label>Disk Space (GB)</label>
-                            <input type="number" className="form-control" name="firstName" required ref={(input) => this.diskSpace = input} disabled={!this.state.networkConfig.isDiskChangeable} onChange={this.onConfigChange.bind(this, true)} />
+                        <div className="col-md-4">
+                            <div className="form-group form-group-default ">
+                                <label>Disk Space (GB)</label>
+                                <input type="number" className="form-control" name="firstName" required ref={(input) => this.diskSpace = input} disabled={!this.state.networkConfig.isDiskChangeable} onChange={this.onConfigChange.bind(this, true)} />
+                            </div>
                         </div>
                     </div>
+                    <div className="row clearfix">
+                        <div className="col-md-12">
+                            <div className="form-group form-group-default input-group">
+                                <div className="form-input-group">
+                                    <label>Voucher Code {
+                                      this.state.voucher && this.state.voucher.status === 'error' ? <span className="error-message">{this.state.voucher.error}</span> : this.state.voucher.status === 'success' ? <span className="success-message">Voucher Applied</span> : undefined
+                                    }</label>
+                                    <input type="text" className="form-control" name="projectName" ref={(input) => this.voucher = input} />
+                                </div>
+                                {voucherActionButton}
+                            </div>
+                        </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-
             </div>
         </div>
+
     );
 
     return FullView;
