@@ -1,9 +1,10 @@
 import Invoice from '../../collections/payments/invoice';
 import RazorPay from '../../api/payments/payment-gateways/razorpay';
 import Payment from '../../api/payments/';
+import Payments from '../payments';
 import { RZPlan, RZSubscription, RZAddOn } from '../../collections/razorpay';
 import moment from 'moment';
-const debug = require('debug')('api:invoice')
+const debug = require('debug')('api:invoice');
 
 const InvoiceObj = {};
 
@@ -30,38 +31,36 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
     totalAmount,
   };
 
-  if(rzSubscription){
+  if (rzSubscription) {
     invoiceObject.rzSubscriptionId = rzSubscription.id;
   }
 
-
-  if(rzSubscription) {
+  if (rzSubscription) {
     const existingInvoice = Invoice.find({
       billingPeriodLabel: invoiceObject.billingPeriodLabel,
-      rzSubscriptionId: invoiceObject.rzSubscriptionId
+      rzSubscriptionId: invoiceObject.rzSubscriptionId,
     }).fetch()[0];
-    if(existingInvoice) {
+    if (existingInvoice) {
       console.log(`Bill already exists for ${invoiceObject.rzSubscriptionId} for ${invoiceObject.billingPeriodLabel}`);
       return true;
     }
   } else {
     const existingInvoice = Invoice.find({
       billingPeriodLabel: invoiceObject.billingPeriodLabel,
-      userId
+      userId,
     }).fetch()[0];
-    if(existingInvoice) {
+    if (existingInvoice) {
       console.log(`Bill already exists for ${invoiceObject.userId} for ${invoiceObject.billingPeriodLabel}`);
       return true;
     }
   }
-
 
   const items = bill.networks;
 
   invoiceObject.items = items;
 
   const conversion = await Payment.getConversionToINRRate({});
-  invoiceObject.totalAmountINR = Math.max(Math.floor(Number(totalAmount) * 100 * conversion - 100), 0 );
+  invoiceObject.totalAmountINR = Math.max(Math.floor(Number(totalAmount) * 100 * conversion - 100), 0);
 
   if (!user.demoUser && Math.round(invoiceObject.totalAmountINR) > 100 && !user.byPassOnlinePayment && rzSubscription) {
     const rzAddOn = await RazorPay.createAddOn({
@@ -69,7 +68,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
       addOn: {
         name: `Bill for ${moment(billingMonth).format('MMM-YYYY')}`,
         description: `Node usage charges `,
-        amount: Math.floor(Number(totalAmount) * 100 * conversion - 100),  // Since we are already charging Rs 1 for subscription so deduct Rs 1 from final here
+        amount: Math.floor(Number(totalAmount) * 100 * conversion - 100), // Since we are already charging Rs 1 for subscription so deduct Rs 1 from final here
         currency: 'INR',
       },
       userId,
@@ -77,45 +76,69 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
     invoiceObject.rzAddOnId = rzAddOn._id;
   }
 
-
   invoiceObject.conversionRate = conversion;
-
 
   const invoiceId = Invoice.insert(invoiceObject);
 
   return invoiceId;
 };
 
-InvoiceObj.settleInvoice = async ({rzSubscriptionId, rzCustomerId, billingMonth, rzPayment}) => {
+InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth, rzPayment }) => {
   const billingMonthLabel = moment(billingMonth).format('MMM-YYYY');
-  console.log("Billing month", billingMonthLabel);
-  debug("Fetching invoice", {
+  console.log('Billing month', billingMonthLabel);
+  debug('Fetching invoice', {
     paymentStatus: Invoice.PaymentStatusMapping.Pending,
     rzCustomerId,
-    rzSubscriptionId
+    rzSubscriptionId,
   });
 
-  const invoice = Invoice.find({
+  const selector = {
     paymentStatus: Invoice.PaymentStatusMapping.Pending,
-    rzCustomerId,
-    rzSubscriptionId
-  }).fetch()[0];
+  };
+  if (rzSubscriptionId) {
+    selector.rzSubscriptionId = rzSubscriptionId;
+  }
+  if (rzCustomerId) {
+    selector.rzCustomerId = rzCustomerId;
+  }
 
-  console.log("Settling invoice", invoice);
+  const invoice = Invoice.find(selector).fetch()[0];
 
-  Invoice.update({
-    paymentStatus: Invoice.PaymentStatusMapping.Pending,
-    rzCustomerId,
-    rzSubscriptionId
-  }, {
-    $set: {
-      paymentStatus: Invoice.PaymentStatusMapping.Settled,
-      paymentId: rzPayment.id,
-      padiAmount: rzPayment.amount
+  if (!invoice) {
+    RavenLogger.log(`Error settling invoice: Does not exists`, { ...selector, userId: Meteor && typeof Meteor.userId === 'function' && Meteor.userId(), at: new Date() });
+    throw new Meteor.Error(`Error settling invoice: Does not exists ${JSON.stringify(selector)}`)
+  }
+
+  console.log('Settling invoice', invoice);
+
+  Invoice.update(
+    {
+      paymentStatus: Invoice.PaymentStatusMapping.Pending,
+      rzCustomerId,
+      rzSubscriptionId,
+    },
+    {
+      $set: {
+        paymentStatus: Invoice.PaymentStatusMapping.Settled,
+        paymentId: rzPayment.id,
+        paidAmount: rzPayment.amount,
+      },
     }
-  });
+  );
 
   return invoice._id;
-}
+};
+
+InvoiceObj.createInvoicePayment = async ({ invoiceId }) => {
+  const invoice = Invoice.find({
+    _id: invoiceId,
+  }).fetch()[0];
+
+  const paymentRequest = Payments.createRequest({
+    paymentGateway: 'razorpay',
+    reason: `Bill for the month of ${invoice.billingPeriodLabel}`,
+    amount: invoice.bill,
+  });
+};
 
 export default InvoiceObj;

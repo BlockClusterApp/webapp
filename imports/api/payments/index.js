@@ -6,7 +6,7 @@ const debug = require('debug')('api:payments')
 
 const Payments = {};
 
-Payments.createRequest = async ({ paymentGateway, reason, amount, mode }) => {
+Payments.createRequest = async ({ paymentGateway, reason, amount, mode, userId }) => {
   let insertResult;
   let subscription;
   const conversionFactor = await Payments.getConversionToINRRate({ currencyCode: 'usd' });
@@ -43,6 +43,15 @@ Payments.createRequest = async ({ paymentGateway, reason, amount, mode }) => {
     const returnValue = {paymentRequestId: insertResult, amount: Math.round(amount * 100), display_amount: 1, display_currency: 'USD' };
     debug('Payment create request | Debit RZP Options', returnValue);
     return returnValue;
+  } else {
+    const request = PaymentRequest.insert({
+      userId: userId || Meteor.userId(),
+      paymentGateway: 'razorpay',
+      reason,
+      amount: Math.round(amount * 100),
+    });
+
+    return {paymentRequestId: request};
   }
 
 
