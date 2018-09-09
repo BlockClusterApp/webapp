@@ -14,7 +14,9 @@ class CardsAndNewPayment extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {};
+    this.state = {
+        paymentMethod: 'credit'
+    };
   }
 
   preTriggerPaymentListener = () => {
@@ -61,8 +63,30 @@ class CardsAndNewPayment extends Component {
         currentRow = [];
       }
       currentRow.push(
-        <div className="col-md-4" key={`card_col_${index}`}>
-          <Card last4={card.last4} name={card.name} network={card.network} key={`card_${index}`} />
+        /**/
+        <div className="row row-same-height" key={`card_col_${index}`}>
+          <div className="col-md-5 b-r b-dashed b-grey ">
+            <div className="padding-30 sm-padding-5 sm-m-t-15">
+                <i className="fa fa-credit-card fa-2x hint-text"></i>
+                <h2>Your card is verified</h2>
+
+                {card.type === "credit" &&
+                   <p>You will recieve invoice on 1st of every month and bill amount will be auto deducted from your card on 5th of every month.</p>
+                }
+
+                {card.type === "debit" &&
+                   <p>Your bill will be generated on 1st of every month and sent to you via email. The invoice would have to be cleared by you before 10th of the month to prevent deletion of your nodes.</p>
+                }
+                <p className="small">To change the card associated with your account please raise a support ticket.</p>
+            </div>
+          </div>
+          <div className="col-md-7">
+            <div className="padding-30 sm-padding-5">
+                <div key={`card_col_${index}`}>
+                  <Card last4={card.last4} name={card.name} network={card.network} key={`card_${index}`} />
+                </div>
+            </div>
+          </div>
         </div>
       );
       if (index % CARDS_IN_ROW === CARDS_IN_ROW - 1) {
@@ -94,49 +118,90 @@ class CardsAndNewPayment extends Component {
 
     const savedCardsView = (
       <div>
-        <h4>Hey {user.profile.firstName}</h4>
-        You have verified the following cards for payment
         {cardsView}
       </div>
     );
 
     const paymentVerificationView = (
       <div>
-        <h4>Hey {user.profile.firstName}, Just one more thing... </h4>
-        <p>We would need you to verify your payment method</p>
-        <div className="row">
-          <div className="col-md-6">
-            <div className={`card-custom ${this.state.paymentMethod === 'credit' ? 'selected' : ''}`} onClick={e => this.setState({ paymentMethod: 'credit' })}>
-              <h4>Credit Card</h4>
-              <p>The hassle free way. Your bill amount will be auto deducted from your card on 5th of every month.</p>
-              {this.state.paymentMethod === 'credit' && (
-                <p><small>Your card will be charged an initial amount of INR 5 which would be refunded with 5 working days</small></p>
-              )}
+          <div className="tab-pane padding-20 sm-no-padding active slide-left" id="tab1">
+            <div className="row row-same-height">
+              <div className="col-md-5 b-r b-dashed b-grey sm-b-b">
+                <div className="padding-30 sm-padding-5 sm-m-t-15">
+                  <i className="fa fa-cc-mastercard fa-2x hint-text"></i>&nbsp;
+                  <i className="fa fa-cc-visa fa-2x hint-text"></i>&nbsp;
+                  <i className="fa fa-cc-amex fa-2x hint-text"></i>
+                  <h2>Hey {user.profile.firstName}, Just one more thing...</h2>
+                  <p>We would need you to verify your payment method. Your card will be charged an initial amount of ~$1 which would be refunded with 5 working days</p>
+                  <p className="small hint-text">If you are facing issues while adding your card then please raise a support ticket.</p>
+                </div>
+              </div>
+              <div className="col-md-7">
+                <div className="padding-30 sm-padding-5">
+                  <h5>Select Card Type</h5>
+                  <div className="row">
+                    <div className="col-lg-7 col-md-6">
+                      <p className="no-margin">Select a type of card you would like to add. </p>
+                      <p className="small hint-text">
+                        We support all major card brands for both credit and debit cards.
+                      </p>
+                    </div>
+                    <div className="col-lg-5 col-md-6">
+                      <div className="btn-group" data-toggle="buttons">
+                        <label className="btn btn-default active" onClick={e => this.setState({ paymentMethod: 'credit' })}>
+                          <input type="radio" name="options" id="option1" selected /> <span className="fs-16">Credit Card</span>
+                        </label>
+                        <label className="btn btn-default" onClick={e => this.setState({ paymentMethod: 'debit' })}>
+                          <input type="radio" name="options" id="option2"  /> <span className="fs-16">Debit Card</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div className="col-md-12">
+                        {this.state.paymentMethod === 'debit' && (
+                            <div className="card card-default bg-warning">
+                                <div className="card-header  separator">
+                                  <div className="card-title">Note
+                                  </div>
+                                </div>
+                                <div className="card-block">
+                                  <h3>
+                                      Invoice <span className="semi-bold">Clearance</span> </h3>
+                                  <p className="hint-text">If you are adding debit card then bill will be generated on 1st of every month which would have to be cleared by you before 10th of the month. The invoice will be sent to you via email.</p>
+                                </div>
+                              </div>
+
+                        )}
+
+                        {/*(this.state.paymentMethod === 'credit' || this.state.paymentMethod === undefined) && (
+                            <div className="card card-default bg-success">
+                                <div className="card-header  separator">
+                                  <div className="card-title">Note
+                                  </div>
+                                </div>
+                                <div className="card-block">
+                                  <h3>
+                                      <span className="semi-bold">Auto</span> Debit </h3>
+                                      <p className="hint-text">You will recieve invoice on 1st of every month and bill amount will be auto deducted from your card on 5th of every month.</p>
+                                </div>
+                              </div>
+
+                        )*/}
+                    </div>
+                    <div className="col-md-12">
+                        <RazorPay
+                          buttonText="Add Card"
+                          buttonIcon="fa-plus"
+                          loading={this.state.loading}
+                          preTriggerPaymentListener={this.preTriggerPaymentListener}
+                          paymentHandler={this.rzPaymentHandler}
+                          modalDismissListener={this.modalDismissListener}
+                        />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="col-md-6">
-            <div className={`card-custom ${this.state.paymentMethod === 'debit' ? 'selected' : ''}`} onClick={e => this.setState({ paymentMethod: 'debit' })}>
-              <h4>Debit Card</h4>
-              <p>Bill will be generated on 1st of every month which would have to be cleared by you before 10th of the month</p>
-              {this.state.paymentMethod === 'debit' && (
-                <p><small>Your card will be charged an initial amount of $1 which would be refunded with 5 working days</small></p>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="row" style={{marginTop: '10px'}}>
-          <div className="col-md-12">
-            {this.state.paymentMethod && (
-              <RazorPay
-                buttonText="Verify"
-                loading={this.state.loading}
-                preTriggerPaymentListener={this.preTriggerPaymentListener}
-                paymentHandler={this.rzPaymentHandler}
-                modalDismissListener={this.modalDismissListener}
-              />
-            )}
-          </div>
-        </div>
       </div>
     );
 

@@ -110,7 +110,7 @@ class BillingDashboard extends Component {
                   <div className="table-responsive">
                     <div className="row">
                       <div className="col-md-5">
-                        <p>
+                        <p style={{"line-height": "45px"}}>
                           Free micro node usage:&nbsp;
                           {this.state.bill && this.state.bill.totalFreeMicroHours
                             ? `${this.state.bill.totalFreeMicroHours.hours}:${this.state.bill.totalFreeMicroHours.minutes % 60} `
@@ -120,7 +120,9 @@ class BillingDashboard extends Component {
                       </div>
                       <div className="col-md-7">
                         <div className="row">
-                          <div className="col-md-2">Bill for:</div>
+                          <div className="col-md-2">
+
+                          </div>
                           <div className="col-md-4">
                             <div className="form-group ">
                               <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onMonthChange}>
@@ -148,7 +150,7 @@ class BillingDashboard extends Component {
                           </div>
                           <div className="col-md-3">
                             <LaddaButton data-size={S} data-style={SLIDE_UP} data-spinner-size={30} data-spinner-lines={12} className="btn btn-success m-t-10" onClick={this.showBill} style={{marginTop: 0}}>
-                              &nbsp;&nbsp;Select
+                                <i class="fa fa-check"></i> &nbsp;Select
                             </LaddaButton>
                           </div>
                         </div>
