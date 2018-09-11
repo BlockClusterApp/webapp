@@ -138,6 +138,7 @@ InvoiceObj.createInvoicePayment = async ({ invoiceId }) => {
     paymentGateway: 'razorpay',
     reason: `Bill for the month of ${invoice.billingPeriodLabel}`,
     amount: invoice.bill,
+    userId: invoice.userId
   });
 };
 

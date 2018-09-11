@@ -28,7 +28,7 @@ class BillingDashboard extends Component {
   };
 
   componentDidMount() {
-    // Meteor.call("getClusterLocations", (err, res) => {
+  // Meteor.call("getClusterLocations", (err, res) => {
     //   this.setState({
     //     locations: res
     //   });
@@ -78,6 +78,20 @@ class BillingDashboard extends Component {
     });
   }
 
+  getInvoicePaidStatus = (paymentStatus) => {
+    switch (Number(paymentStatus)) {
+      case 2:
+        return <span className="label label-success">Paid</span>;
+      case 3:
+        return <span className="label label-info">Demo User</span>;
+      case 1:
+      case 4:
+        return <span className="label label-danger">Pending</span>;
+      default:
+        return null;
+    }
+  }
+
   render() {
     let billView = undefined;
 
@@ -110,7 +124,7 @@ class BillingDashboard extends Component {
                   <div className="table-responsive">
                     <div className="row">
                       <div className="col-md-5">
-                        <p style={{"line-height": "45px"}}>
+                        <p style={{"lineHeight": "45px"}}>
                           Free micro node usage:&nbsp;
                           {this.state.bill && this.state.bill.totalFreeMicroHours
                             ? `${this.state.bill.totalFreeMicroHours.hours}:${this.state.bill.totalFreeMicroHours.minutes % 60} `
@@ -120,8 +134,8 @@ class BillingDashboard extends Component {
                       </div>
                       <div className="col-md-7">
                         <div className="row">
-                          <div className="col-md-2">
-
+                          <div className="col-md-2" style={{textAlign: 'right'}}>
+                            {this.getInvoicePaidStatus(this.state.bill && this.state.bill.invoiceStatus)}
                           </div>
                           <div className="col-md-4">
                             <div className="form-group ">
@@ -150,7 +164,7 @@ class BillingDashboard extends Component {
                           </div>
                           <div className="col-md-3">
                             <LaddaButton data-size={S} data-style={SLIDE_UP} data-spinner-size={30} data-spinner-lines={12} className="btn btn-success m-t-10" onClick={this.showBill} style={{marginTop: 0}}>
-                                <i class="fa fa-check"></i> &nbsp;Select
+                                <i className="fa fa-check"></i> &nbsp;Select
                             </LaddaButton>
                           </div>
                         </div>
@@ -172,7 +186,7 @@ class BillingDashboard extends Component {
                           <td colSpan="4" style={{ textAlign: 'right' }}>
                             Total Amount
                           </td>
-                          <td>{this.state.bill && this.state.bill.totalAmount ? `$ ${Number(this.state.bill.totalAmount).toFixed(2)}` : '0'}</td>
+                          <td>{this.state.bill && this.state.bill.totalAmount ? `$ ${Number(this.state.bill.totalAmount).toFixed(2)}` : '0'} {this.getInvoicePaidStatus(this.state.bill && this.state.bill.invoiceStatus)}</td>
                         </tr>
                         <tr>
                           <td colSpan="4" style={{ textAlign: 'right' }}>

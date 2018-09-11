@@ -228,7 +228,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         label = label || 'light';
       } else {
         if (network.networkConfig.disk > 200) {
-          extraDiskStorage = network.networkConfig.disk - POWER_NODE_INCLUDED_STORAGE;
+          extraDiskStorage = Math.max(network.networkConfig.disk - POWER_NODE_INCLUDED_STORAGE, 0);
           extraDiskAmount = Price.extraDisk * extraDiskStorage;
           cost = cost + extraDiskAmount;
         }
@@ -276,6 +276,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
     } else {
       result.networks = prevMonthInvoice.items;
       result.totalAmount = prevMonthInvoice.totalAmount;
+      result.invoiceStatus = prevMonthInvoice.paymentStatus;
     }
   }
 
