@@ -216,60 +216,57 @@ class Invites extends Component {
   getStatus = (int, inviteId, resendCount) => {
     switch (int) {
       case 2:
-        return <span className="label label-success">Accepted<span className="badge badge-dummy">{resendCount || 0}</span></span>;
+        return <span className="label label-success">Accepted</span>;
       case 3:
-        return <span className="label label-danger">Rejected<span className="badge badge-dummy">{resendCount || 0}</span></span>;
+        return <span className="label label-danger">Rejected</span>;
       case 4:
+        return <span className="label label-warning">Cancelled</span>;
+      default:
+        return <span className="label label-info">Pending</span>;
+    }
+  };
+
+  getActions = (int, inviteId, resendCount) => {
+    switch (int) {
+        case 2:
+          return <span></span>;
+        case 3:
+          return <span></span>;
+        case 4:
         return (
-          <div className="row">
-            <span className="label label-danger">Cancelled<span className="badge badge-dummy">{resendCount || 0}</span></span>&nbsp;
-            <span
-              className="label label-info"
-              onClick={this.resendInvite.bind(this, inviteId)}
-              disabled={this.state.loading[inviteId] === true}
-              style={{ cursor: "pointer" }}
-            >
-              {this.state.loading[inviteId] === true ? (
-                <i className="fa fa-spinner fa-spin" />
-              ) : (
-                <i className="fa fa-mail-forward" />
-              )}&nbsp;Resend<span className="badge badge-dummy">{resendCount || 0}</span>
-            </span>
-          </div>
+            <div className="btn-group btn-group-xs">
+              <button className="btn btn-complete" onClick={this.resendInvite.bind(this, inviteId)}
+              disabled={this.state.loading[inviteId] === true}>
+                  {this.state.loading[inviteId] === true ? (
+                    <i className="fa fa-spinner fa-spin" />
+                  ) : (
+                    <i className="fa fa-mail-forward" />
+                  )}&nbsp;Resend&nbsp;
+                  <span className="badge badge-inverse">{resendCount || 0}</span>
+              </button>
+            </div>
         );
       default:
         return (
-          <div>
-            {/* <div className="row">
-            <span className="label label-info">Pending</span>
-          </div> */}
-            <div className="row">
-              <span
-                className="label label-warning"
-                onClick={this.cancelInvite.bind(this, inviteId)}
-                disabled={this.state.loading[inviteId] === true}
-                style={{ cursor: "pointer" }}
-              >
+          <div className="btn-group btn-group-xs">
+            <button className="btn btn-warning" onClick={this.cancelInvite.bind(this, inviteId)}
+            disabled={this.state.loading[inviteId] === true}>
                 {this.state.loading[inviteId] === true ? (
                   <i className="fa fa-spinner fa-spin" />
                 ) : (
                   <i className="fa fa-warning" />
-                )}&nbsp;Cancel<span className="badge badge-dummy">{resendCount || 0}</span>
-              </span>
-              &nbsp;
-              <span
-                className="label label-info"
-                onClick={this.resendInvite.bind(this, inviteId)}
-                disabled={this.state.loading[inviteId] === true}
-                style={{ cursor: "pointer" }}
-              >
+                )}&nbsp;Cancel
+            </button>
+
+            <button className="btn btn-complete" onClick={this.resendInvite.bind(this, inviteId)}
+            disabled={this.state.loading[inviteId] === true}>
                 {this.state.loading[inviteId] === true ? (
                   <i className="fa fa-spinner fa-spin" />
                 ) : (
                   <i className="fa fa-mail-forward" />
-                )}&nbsp;Resend&nbsp;<span className="badge">{resendCount || 0}</span>
-              </span>
-            </div>
+                )}&nbsp;Resend&nbsp;
+                <span className="badge badge-inverse">{resendCount || 0}</span>
+            </button>
           </div>
         );
     }
@@ -301,11 +298,6 @@ class Invites extends Component {
                       <div className="container-md-height full-height">
                           <div className="row-md-height">
                               <div className="modal-body col-md-height col-middle">
-                                  <h5 className="text-primary ">Accept Invitation</h5>
-                                  <br />
-
-                                  <p>Sent by:&nbsp;<b>{this.state.modalInvite.metadata.inviteFrom.name}</b></p>
-                                  <p>Network Name:&nbsp;<b>{this.state.modalInvite.metadata.network.name}</b></p>
                                   <form role="form" className="modal-assetInfo">
                                     <p>Select Location to deploy</p>
                                     <LocationSelector locationChangeListener={this.locationChangeListener.bind(this, this.state.modalInviteId)} />
@@ -468,8 +460,9 @@ class Invites extends Component {
                           <th style={{ width: "5%" }}>S.No</th>
                           <th style={{ width: "32%" }}>Invite Sent to</th>
                           <th style={{ width: "23%" }}>Invited On </th>
-                          <th style={{ width: "20%" }}>Network</th>
-                          <th style={{ width: "25%" }}>Status</th>
+                          <th style={{ width: "10%" }}>Network</th>
+                          <th style={{ width: "10%" }}>Status</th>
+                          <th style={{ width: "20%" }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -499,6 +492,13 @@ class Invites extends Component {
                               <td>{data.network.name}</td>
                               <td>
                                 {this.getStatus(
+                                  item.invitationStatus,
+                                  item._id,
+                                  item.resendCount
+                                )}
+                              </td>
+                              <td>
+                                {this.getActions(
                                   item.invitationStatus,
                                   item._id,
                                   item.resendCount

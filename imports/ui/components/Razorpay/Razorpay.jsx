@@ -146,10 +146,11 @@ class RazorPay extends React.Component {
     }
 
     return (<div className="razorpay-holder">
-      <button className="btn btn-primary razorpay-payment-button"
+      <button className="btn btn-primary razorpay-payment-button "
         onClick={this.triggerPayment}
         disabled={this.props.loading || this.state.loading}>
-        { (this.props.loading || this.state.loading) && <i className="fa fa-spin fa-spinner">&nbsp;</i> }{this.props.buttonText || `Pay Now`}
+        {(this.props.loading || this.state.loading) === true ? <i className="fa fa-spinner fa-spin">&nbsp;</i>: <i className="fa fa-plus"></i>}
+        &nbsp;&nbsp;{this.props.buttonText || `Pay Now`}
       </button>
     </div>
     );
@@ -165,7 +166,8 @@ RazorPay.propTypes = {
   preTriggerPaymentListener: PropTypes.func,
   amount: PropTypes.number,
   buttonText: PropTypes.string,
-  buttonLayout: PropTypes.object
+  buttonLayout: PropTypes.object,
+  buttonIcon: PropTypes.string
 }
 
 export default RazorPay;
