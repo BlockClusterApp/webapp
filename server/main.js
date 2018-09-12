@@ -966,6 +966,9 @@ spec:
           limits:
             memory: "${resourceConfig.dynamo.ram + 0.2}Gi"
             cpu: "${resourceConfig.dynamo.cpu}m"
+        volumeMounts:
+        - name: dynamo-dir
+          mountPath: /dynamo/bcData
       volumes:
         - name: dynamo-dir
           persistentVolumeClaim:
@@ -1048,6 +1051,9 @@ spec:
           limits:
             memory: "${resourceConfig.dynamo.ram + 0.2}Gi"
             cpu: "${resourceConfig.dynamo.cpu}m"
+        volumeMounts:
+        - name: dynamo-dir
+          mountPath: /dynamo/bcData
       volumes:
         - name: dynamo-dir
           persistentVolumeClaim:
