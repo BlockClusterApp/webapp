@@ -1373,7 +1373,7 @@ spec:
             "content": JSON.stringify({
                 assetName: assetName,
                 assetType: assetType,
-                assetIssuer: assetIssuer,
+                fromAccount: assetIssuer,
                 reissuable: reissuable,
                 parts: parts,
                 description: ""
@@ -1756,7 +1756,7 @@ spec:
                 toAssetName: toId,
                 toAssetUnits: toUnits,
                 toAssetUniqueIdentifier: toUniqueIdentifier,
-                fromAddress: fromAddress,
+                fromAccount: fromAddress,
                 toAddress: toAddress
             }),
             "headers": {
