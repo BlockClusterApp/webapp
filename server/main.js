@@ -2127,7 +2127,7 @@ spec:
             instanceId: instanceId
         }).fetch()[0];
 
-        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/assets/createStream`, {
+        HTTP.call("POST", `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/streams/create`, {
             "content": JSON.stringify({
                 streamName: name,
                 fromAccount: issuer
