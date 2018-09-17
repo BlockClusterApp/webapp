@@ -118,6 +118,7 @@ class ViewEditImpulse extends Component {
 	}
 
 	render(){
+		console.log(this.props.network[0])
 		return (
 			<div className="content ">
                 <div className="m-t-20 container-fluid container-fixed-lg bg-white">
@@ -129,7 +130,7 @@ class ViewEditImpulse extends Component {
 									{
 										(() => {
 											if (this.props.network.length === 1) {
-												if(this.props.network[0].impulseURL) {
+												if(this.props.network[0].impulseStatus) {
 													return (
 														<div className="form-group row">
 															<label className="col-md-3 control-label">Status</label>
