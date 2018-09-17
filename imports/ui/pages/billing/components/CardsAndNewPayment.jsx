@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import UserCards from '../../../../collections/payments/user-cards';
 import Card from './Card.jsx';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
+import moment from 'moment';
 import RazorPay from '../../../components/Razorpay/Razorpay';
 
 import { withTracker } from 'meteor/react-meteor-data';
@@ -19,6 +20,10 @@ class CardsAndNewPayment extends Component {
     };
   }
 
+  componentDidMount() {
+    this.updateBilling();
+  }
+
   preTriggerPaymentListener = () => {
     this.setState({
       loading: true,
@@ -34,6 +39,28 @@ class CardsAndNewPayment extends Component {
       });
     });
   };
+
+  updateBilling() {
+    Meteor.call(
+      'fetchBilling',
+      {
+        userId: Meteor.userId(),
+        month: moment()
+          .subtract(1, 'month')
+          .get('month'),
+        year: moment()
+          .subtract(1, 'month')
+          .get('year'),
+        isFromFrontend: true,
+      },
+      (err, reply) => {
+        this.setState({
+          bill: reply,
+          loading: false,
+        });
+      }
+    );
+  }
 
   rzPaymentHandler = pgResponse => {
     Meteor.call('applyRZCardVerification', pgResponse, (err, res) => {
@@ -57,6 +84,24 @@ class CardsAndNewPayment extends Component {
 
     const cardsView = [];
     let currentRow = [];
+
+    let paymentDisplay = null;
+    if (this.state.bill && this.state.bill.invoiceStatus !== 2) {
+      paymentDisplay = (
+        <div className="alert alert-danger col-md-12">
+          <div className="col-md-12 b-r b-dashed b-grey sm-b-b">
+            <i className="fa fa-warning" /> Your bill for the month of{' '}
+            {moment()
+              .subtract(1, 'month')
+              .format('MMM YYYY')}{' '}
+            is pending. Kindly pay it before 10
+            <sup>th</sup> of this month to avoid node deletions.
+          </div>
+        </div>
+      );
+    }
+
+
     cards.forEach((card, index) => {
       if (index % CARDS_IN_ROW === 0) {
         currentRow = [];
@@ -72,12 +117,9 @@ class CardsAndNewPayment extends Component {
               {card.type === 'credit' && <p>You will recieve invoice on 1st of every month and bill amount will be auto deducted from your card on 5th of every month.</p>}
 
               {card.type === 'debit' && (
-                <p>
-                  Your bill will be generated on 1st of every month and sent to you via email. The invoice would have to be cleared before 10th of the month to prevent deletion of
-                  nodes.
-                </p>
+                <p>Bill will be generated on 1st of every month and sent via email. The invoice would have to be cleared before 10th of the month to prevent deletion of nodes.</p>
               )}
-              <p className="small">To change the card associated with your account please raise a support ticket.</p>
+              <p className="small">To change the card associated with your account kindly raise a support ticket.</p>
             </div>
           </div>
           <div className="col-md-7">
@@ -99,6 +141,7 @@ class CardsAndNewPayment extends Component {
       }
     });
 
+
     if (currentRow.length > 0) {
       cardsView.push(
         <div className="row card-row" key={`card_row_end`}>
@@ -116,7 +159,12 @@ class CardsAndNewPayment extends Component {
       );
     }
 
-    const savedCardsView = <div>{cardsView}</div>;
+    const savedCardsView = (
+    <div>{cardsView}
+      <div className="row">
+        {paymentDisplay}
+      </div>
+    </div>);
 
     const paymentVerificationView = (
       <div>
@@ -135,7 +183,7 @@ class CardsAndNewPayment extends Component {
                 {this.state.waitingForCards &&
                   cards.length === 0 && (
                     <div className="alert alert-info" style={{ textAlign: 'center', marginTop: '15px' }}>
-                      <i className="fa fa-spin fa-spinner"></i> Fetching your card details. Hold on a minute...
+                      <i className="fa fa-spin fa-spinner" /> Fetching your card details. Hold on a minute...
                     </div>
                   )}
               </div>
@@ -204,6 +252,7 @@ class CardsAndNewPayment extends Component {
               </div>
             </div>
           </div>
+          {paymentDisplay}
         </div>
       </div>
     );
