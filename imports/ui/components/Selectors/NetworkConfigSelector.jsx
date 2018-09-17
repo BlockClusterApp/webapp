@@ -11,6 +11,7 @@ class NetworkConfigSelector extends Component {
       voucher: {
         status: undefined
       },
+      isDiskChangeable:true,
       networkConfig: {
         name: 'Light',
         cpu: 0.5,
@@ -42,7 +43,8 @@ class NetworkConfigSelector extends Component {
     }
 
     this.setState({
-      networkConfig: config
+      networkConfig: config,
+      isDiskChangeable:config.isDiskChangeable,
     });
     if (this.props && this.props.configChangeListener) {
       this.props.configChangeListener({config, diskSpace: Number(this.diskSpace.value)});
@@ -75,6 +77,7 @@ class NetworkConfigSelector extends Component {
           status: 'success',
           networkConfig: reply.networkConfig
         },
+        isDiskChangeable:reply.isDiskChangeable,
         networkConfig: reply.networkConfig
       });
       this.diskSpace.value = reply.networkConfig.disk;
@@ -159,7 +162,7 @@ class NetworkConfigSelector extends Component {
                         <div className="col-md-4">
                             <div className="form-group form-group-default ">
                                 <label>Disk Space (GB)</label>
-                                <input type="number" className="form-control" name="firstName" required ref={(input) => this.diskSpace = input} disabled={!this.state.networkConfig.isDiskChangeable} onChange={this.onConfigChange.bind(this, true)} />
+                                <input type="number" className="form-control" name="firstName" required ref={(input) => this.diskSpace = input} disabled={!this.state.isDiskChangeable} onChange={this.onConfigChange.bind(this, true)} />
                             </div>
                         </div>
                     </div>
