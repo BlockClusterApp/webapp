@@ -15,41 +15,40 @@ class CardsAndNewPayment extends Component {
     super(props);
 
     this.state = {
-        paymentMethod: 'credit'
+      paymentMethod: 'credit',
     };
   }
 
   preTriggerPaymentListener = () => {
     this.setState({
-      loading: true
+      loading: true,
     });
-    return new Promise((resolve) => {
-      Meteor.call('createPaymentRequest', {amount: 500, reason: 'verification', paymentGateway: 'razorpay', mode: this.state.paymentMethod}, (err, res) => {
-        if(err) {
+    return new Promise(resolve => {
+      Meteor.call('createPaymentRequest', { amount: 500, reason: 'verification', paymentGateway: 'razorpay', mode: this.state.paymentMethod }, (err, res) => {
+        if (err) {
           return this.setState({
-            loading: false
+            loading: false,
           });
         }
         resolve(res);
       });
     });
-  }
+  };
 
-
-  rzPaymentHandler = (pgResponse) => {
-    Meteor.call("applyRZCardVerification", pgResponse, (err, res) => {
-      console.log("Applied Card Verification", res);
+  rzPaymentHandler = pgResponse => {
+    Meteor.call('applyRZCardVerification', pgResponse, (err, res) => {
       this.setState({
-        loading: false
+        loading: false,
+        waitingForCards: true,
       });
     });
   };
 
   modalDismissListener = () => {
     this.setState({
-      loading: false
+      loading: false,
     });
-  }
+  };
 
   render() {
     const { user } = this.props;
@@ -67,24 +66,25 @@ class CardsAndNewPayment extends Component {
         <div className="row row-same-height" key={`card_col_${index}`}>
           <div className="col-md-5 b-r b-dashed b-grey ">
             <div className="padding-30 sm-padding-5 sm-m-t-15">
-                <i className="fa fa-credit-card fa-2x hint-text"></i>
-                <h2>Your card is verified</h2>
+              <i className="fa fa-credit-card fa-2x hint-text" />
+              <h2>Your card is verified</h2>
 
-                {card.type === "credit" &&
-                   <p>You will recieve invoice on 1st of every month and bill amount will be auto deducted from your card on 5th of every month.</p>
-                }
+              {card.type === 'credit' && <p>You will recieve invoice on 1st of every month and bill amount will be auto deducted from your card on 5th of every month.</p>}
 
-                {card.type === "debit" &&
-                   <p>Your bill will be generated on 1st of every month and sent to you via email. The invoice would have to be cleared by you before 10th of the month to prevent deletion of your nodes.</p>
-                }
-                <p className="small">To change the card associated with your account please raise a support ticket.</p>
+              {card.type === 'debit' && (
+                <p>
+                  Your bill will be generated on 1st of every month and sent to you via email. The invoice would have to be cleared before 10th of the month to prevent deletion of
+                  nodes.
+                </p>
+              )}
+              <p className="small">To change the card associated with your account please raise a support ticket.</p>
             </div>
           </div>
           <div className="col-md-7">
             <div className="padding-30 sm-padding-5">
-                <div key={`card_col_${index}`}>
-                  <Card last4={card.last4} name={card.name} network={card.network} key={`card_${index}`} />
-                </div>
+              <div key={`card_col_${index}`}>
+                <Card last4={card.last4} name={card.name} network={card.network} key={`card_${index}`} />
+              </div>
             </div>
           </div>
         </div>
@@ -116,63 +116,66 @@ class CardsAndNewPayment extends Component {
       );
     }
 
-    const savedCardsView = (
-      <div>
-        {cardsView}
-      </div>
-    );
+    const savedCardsView = <div>{cardsView}</div>;
 
     const paymentVerificationView = (
       <div>
-          <div className="tab-pane padding-20 sm-no-padding active slide-left" id="tab1">
-            <div className="row row-same-height">
-              <div className="col-md-5 b-r b-dashed b-grey sm-b-b">
-                <div className="padding-30 sm-padding-5 sm-m-t-15">
-                  <i className="fa fa-cc-mastercard fa-2x hint-text"></i>&nbsp;
-                  <i className="fa fa-cc-visa fa-2x hint-text"></i>&nbsp;
-                  <i className="fa fa-cc-amex fa-2x hint-text"></i>
-                  <h2>Hey {user.profile.firstName}, Just one more thing...</h2>
-                  <p>We would need you to verify your payment method. Your card will be charged an initial amount of ~$1 which would be refunded with 5 working days</p>
-                  <p className="small hint-text">If you are facing issues while adding your card then please raise a support ticket.</p>
-                </div>
+        <div className="tab-pane padding-20 sm-no-padding active slide-left" id="tab1">
+          <div className="row row-same-height">
+            <div className="col-md-5 b-r b-dashed b-grey sm-b-b">
+              <div className="padding-30 sm-padding-5 sm-m-t-15">
+                <i className="fa fa-cc-mastercard fa-2x hint-text" />
+                &nbsp;
+                <i className="fa fa-cc-visa fa-2x hint-text" />
+                &nbsp;
+                <i className="fa fa-cc-amex fa-2x hint-text" />
+                <h2>Hey {user.profile.firstName}, Just one more thing...</h2>
+                <p>We would need you to verify your payment method. Your card will be charged an initial amount of ~$1 which would be refunded with 5 working days</p>
+                <p className="small hint-text">If you are facing issues while adding your card then please raise a support ticket.</p>
+                {this.state.waitingForCards &&
+                  cards.length === 0 && (
+                    <div className="alert alert-info" style={{ textAlign: 'center', marginTop: '15px' }}>
+                      <i className="fa fa-spin fa-spinner"></i> Fetching your card details. Hold on a minute...
+                    </div>
+                  )}
               </div>
-              <div className="col-md-7">
-                <div className="padding-30 sm-padding-5">
-                  <h5>Select Card Type</h5>
-                  <div className="row">
-                    <div className="col-lg-7 col-md-6">
-                      <p className="no-margin">Select a type of card you would like to add. </p>
-                      <p className="small hint-text">
-                        We support all major card brands for both credit and debit cards.
-                      </p>
+            </div>
+            <div className="col-md-7">
+              <div className="padding-30 sm-padding-5">
+                <h5>Select Card Type</h5>
+                <div className="row">
+                  <div className="col-lg-7 col-md-6">
+                    <p className="no-margin">Select a type of card you would like to add. </p>
+                    <p className="small hint-text">We support all major card brands for both credit and debit cards.</p>
+                  </div>
+                  <div className="col-lg-5 col-md-6">
+                    <div className="btn-group" data-toggle="buttons">
+                      <label className="btn btn-default active" onClick={e => this.setState({ paymentMethod: 'credit' })}>
+                        <input type="radio" name="options" id="option1" selected /> <span className="fs-16">Credit Card</span>
+                      </label>
+                      <label className="btn btn-default" onClick={e => this.setState({ paymentMethod: 'debit' })}>
+                        <input type="radio" name="options" id="option2" /> <span className="fs-16">Debit Card</span>
+                      </label>
                     </div>
-                    <div className="col-lg-5 col-md-6">
-                      <div className="btn-group" data-toggle="buttons">
-                        <label className="btn btn-default active" onClick={e => this.setState({ paymentMethod: 'credit' })}>
-                          <input type="radio" name="options" id="option1" selected /> <span className="fs-16">Credit Card</span>
-                        </label>
-                        <label className="btn btn-default" onClick={e => this.setState({ paymentMethod: 'debit' })}>
-                          <input type="radio" name="options" id="option2"  /> <span className="fs-16">Debit Card</span>
-                        </label>
+                  </div>
+                  <div className="col-md-12">
+                    {this.state.paymentMethod === 'debit' && (
+                      <div className="card card-default bg-warning">
+                        <div className="card-header  separator">
+                          <div className="card-title">Note</div>
+                        </div>
+                        <div className="card-block">
+                          <h3>
+                            Invoice <span className="semi-bold">Clearance</span>{' '}
+                          </h3>
+                          <p className="hint-text">
+                            Bill will be generated on 1st of every month which would have to be cleared before 10th of the month. The invoice will be sent to you via email.
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="col-md-12">
-                        {this.state.paymentMethod === 'debit' && (
-                            <div className="card card-default bg-warning">
-                                <div className="card-header  separator">
-                                  <div className="card-title">Note
-                                  </div>
-                                </div>
-                                <div className="card-block">
-                                  <h3>
-                                      Invoice <span className="semi-bold">Clearance</span> </h3>
-                                  <p className="hint-text">If you are adding debit card then bill will be generated on 1st of every month which would have to be cleared by you before 10th of the month. The invoice will be sent to you via email.</p>
-                                </div>
-                              </div>
+                    )}
 
-                        )}
-
-                        {/*(this.state.paymentMethod === 'credit' || this.state.paymentMethod === undefined) && (
+                    {/*(this.state.paymentMethod === 'credit' || this.state.paymentMethod === undefined) && (
                             <div className="card card-default bg-success">
                                 <div className="card-header  separator">
                                   <div className="card-title">Note
@@ -186,35 +189,33 @@ class CardsAndNewPayment extends Component {
                               </div>
 
                         )*/}
-                    </div>
-                    <div className="col-md-12">
-                        <RazorPay
-                          buttonText="Add Card"
-                          buttonIcon="fa-plus"
-                          loading={this.state.loading}
-                          preTriggerPaymentListener={this.preTriggerPaymentListener}
-                          paymentHandler={this.rzPaymentHandler}
-                          modalDismissListener={this.modalDismissListener}
-                        />
-                    </div>
+                  </div>
+                  <div className="col-md-12">
+                    <RazorPay
+                      buttonText="Add Card"
+                      buttonIcon="fa-plus"
+                      loading={this.state.loading || (this.state.waitingForCards && cards.length === 0)}
+                      preTriggerPaymentListener={this.preTriggerPaymentListener}
+                      paymentHandler={this.rzPaymentHandler}
+                      modalDismissListener={this.modalDismissListener}
+                    />
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
       </div>
     );
 
     let displayView = paymentVerificationView;
-    if(cards.length > 0) {
+    if (cards.length > 0) {
       displayView = savedCardsView;
     }
 
     return (
       <div className="row padding-25 saved-cards">
-        <div className="card card-transparent">
-          {displayView}
-        </div>
+        <div className="card card-transparent">{displayView}</div>
       </div>
     );
   }
