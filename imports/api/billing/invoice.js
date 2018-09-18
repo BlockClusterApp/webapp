@@ -168,7 +168,7 @@ InvoiceObj.generateHTML = async (invoiceId) => {
       _id: invoice._id,
       date: moment(invoice.createdAt).format('DD-MMM-YYYYY'),
       totalAmount: `$ ${invoice.totalAmount}`,
-      totalAmountInWords: `${writtenNumber(invoice.totalAmount)} dollars only`
+      totalAmountInWords: `${writtenNumber(Math.round(invoice.totalAmount))} dollars and ${writtenNumber(Number(String(invoice.totalAmount).split('.')[1]))} cents only`
     },
     user: {
       name: `${user.profile.firstName} ${user.profile.lastName}`,

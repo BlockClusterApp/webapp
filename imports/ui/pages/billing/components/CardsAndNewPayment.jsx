@@ -106,7 +106,7 @@ class CardsAndNewPayment extends Component {
 
     let paymentDisplay = null;
     if (this.props.invoice && this.props.invoice.paymentStatus !== 2 && !this.props.rzSubscription) {
-      paymentDisplay = (
+      paymentDisplay = Number(this.props.invoice.totalAmount) !== 0 && (
         <div className="alert alert-warning col-md-12">
           <div className="col-md-12 b-r b-dashed b-grey sm-b-b">
             <i className="fa fa-warning" /> Your bill for the month of&nbsp;
