@@ -10,6 +10,8 @@ import RazorPay from '../../../components/Razorpay/Razorpay';
 import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
 
+const html2pdf = require("html2pdf.js")
+
 import './CardsAndNewPayment.scss';
 
 const CARDS_IN_ROW = 3;
@@ -79,6 +81,21 @@ class CardsAndNewPayment extends Component {
     });
   };
 
+  downloadInvoice = () => {
+    Meteor.call('generateInvoiceHTML', this.props.invoice._id, (err, res) => {
+      if(err){
+        console.log(err);
+        RavenLogger.log('Generate Invoice HTML err', {
+          invoice: this.props.invoice._id,
+          res
+        });
+        alert('Error downloading', err.reason);
+        return false;
+      }
+      html2pdf().from(res).set({jsPDF:{ unit: 'in', format: 'a4', orientation: 'landscape' }, margin: [0.5, 1]}).save();
+    });
+  }
+
   render() {
     const { user } = this.props;
 
@@ -98,7 +115,7 @@ class CardsAndNewPayment extends Component {
             <sup>th</sup> of this month to avoid node deletions.
             <br />
             <div className="row">
-                <button className="btn btn-primary">Download Invoice</button>&nbsp;&nbsp;
+                <button className="btn btn-primary" onClick={this.downloadInvoice}>Download Invoice</button>&nbsp;&nbsp;
                 <RazorPay
                   buttonText={`Pay $${this.props.invoice.totalAmount}`}
                   buttonIcon="fa-open"

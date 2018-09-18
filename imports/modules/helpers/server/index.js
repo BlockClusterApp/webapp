@@ -11,6 +11,7 @@ const InviteUserTemplate = require('../../template/invite-user');
 const CreditCardLink48hrs = require('../../template/credit-card-link-reminder');
 const InitialSupportTicket = require('../../template/new-support-ticket');
 const UpdatedSupportTicket = require('../../template/updated-support-ticket');
+const InvoiceTemplate = require('../../template/invoice');
 
 const EJSMapping = {
   'email-verification.ejs': EmailVerificationTemplate,
@@ -18,7 +19,8 @@ const EJSMapping = {
   'invite-user.ejs': InviteUserTemplate,
   'credit-card-link-reminder.ejs': CreditCardLink48hrs,
   'new-support-ticket.ejs': InitialSupportTicket,
-  'updated-support-ticket.ejs': UpdatedSupportTicket
+  'updated-support-ticket.ejs': UpdatedSupportTicket,
+  'invoice.ejs': InvoiceTemplate
 };
 
 function generateRandomString(placeholder, salt = "I<3BlockCluster") {

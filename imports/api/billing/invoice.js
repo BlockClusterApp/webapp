@@ -5,6 +5,10 @@ import Payments from '../payments';
 import { RZPlan, RZSubscription, RZAddOn } from '../../collections/razorpay';
 import moment from 'moment';
 const debug = require('debug')('api:invoice');
+import {
+  getEJSTemplate
+} from "../../modules/helpers/server";
+import writtenNumber from 'written-number'
 
 const InvoiceObj = {};
 
@@ -136,5 +140,48 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
 
   return invoice._id;
 };
+
+InvoiceObj.generateHTML = async (invoiceId) => {
+  const invoice = Invoice.find({
+    _id: invoiceId
+  }).fetch()[0];
+  if(!invoice) {
+    RavenLogger.log(`Tried to generate html of non existent invoice ${invoiceId}`, {
+      user: Meteor.user()
+    });
+    throw new Meteor.Error('bad-request', 'Invalid invoice id');
+  }
+
+  const items = invoice.items.map(item => {
+    if(item.networkConfig) {
+      // is a node
+      return { ...item, uom: 'Time (Hours)', discount: '$ 0.00', cost: `$ ${item.cost}`, duration: `${item.runtime.split('|')[0].trim()}${item.runtime.split('|')[1].trim() === '0 GB extra' ? '' : ' | ' + item.runtime.split('|')[1].trim()}`}
+    }
+    return item;
+  });
+
+  const user = Meteor.user();
+
+  const ejsTemplate = await getEJSTemplate({fileName: "invoice.ejs"})
+  const finalHTML = ejsTemplate({
+    invoice: {
+      _id: invoice._id,
+      date: moment(invoice.createdAt).format('DD-MMM-YYYYY'),
+      totalAmount: `$ ${invoice.totalAmount}`,
+      totalAmountInWords: `${writtenNumber(invoice.totalAmount)} dollars only`
+    },
+    user: {
+      name: `${user.profile.firstName} ${user.profile.lastName}`,
+      profile: user.profile
+    },
+    items
+  });
+
+  return finalHTML;
+}
+
+Meteor.methods({
+  generateInvoiceHTML: InvoiceObj.generateHTML
+});
 
 export default InvoiceObj;
