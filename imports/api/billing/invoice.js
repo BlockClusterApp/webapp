@@ -83,9 +83,8 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   return invoiceId;
 };
 
-InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth, rzPayment }) => {
-  const billingMonthLabel = moment(billingMonth).format('MMM-YYYY');
-  console.log('Billing month', billingMonthLabel);
+InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth, billingMonthLabel, invoiceId, rzPayment }) => {
+  billingMonthLabel = billingMonthLabel || moment(billingMonth).format('MMM-YYYY');
   debug('Fetching invoice', {
     paymentStatus: Invoice.PaymentStatusMapping.Pending,
     rzCustomerId,
@@ -100,6 +99,15 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   }
   if (rzCustomerId) {
     selector.rzCustomerId = rzCustomerId;
+  }
+
+  if(invoiceId) {
+    selector._id = invoiceId;
+  }
+
+  if(!selector._id && !selector.rzSubscriptionId && !selector.rzCustomerId) {
+    RavenLogger.log('Trying to settle unspecific', {...selector});
+    throw new Meteor.Error('bad-request', 'No valid selector');
   }
 
   const invoice = Invoice.find(selector).fetch()[0];
@@ -127,19 +135,6 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   );
 
   return invoice._id;
-};
-
-InvoiceObj.createInvoicePayment = async ({ invoiceId }) => {
-  const invoice = Invoice.find({
-    _id: invoiceId,
-  }).fetch()[0];
-
-  const paymentRequest = Payments.createRequest({
-    paymentGateway: 'razorpay',
-    reason: `Bill for the month of ${invoice.billingPeriodLabel}`,
-    amount: invoice.bill,
-    userId: invoice.userId
-  });
 };
 
 export default InvoiceObj;

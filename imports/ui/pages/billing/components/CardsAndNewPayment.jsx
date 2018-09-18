@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import UserCards from '../../../../collections/payments/user-cards';
+import RZSubscription from '../../../../collections/razorpay/subscription'
+import Invoice from '../../../../collections/payments/invoice';
 import Card from './Card.jsx';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import moment from 'moment';
@@ -11,6 +13,10 @@ import { withRouter } from 'react-router-dom';
 import './CardsAndNewPayment.scss';
 
 const CARDS_IN_ROW = 3;
+
+const billingLabel = `${moment()
+  .subtract(1, 'month')
+  .format('MMM-YYYY')}`;
 class CardsAndNewPayment extends Component {
   constructor(props) {
     super(props);
@@ -18,10 +24,6 @@ class CardsAndNewPayment extends Component {
     this.state = {
       paymentMethod: 'credit',
     };
-  }
-
-  componentDidMount() {
-    this.updateBilling();
   }
 
   preTriggerPaymentListener = () => {
@@ -40,28 +42,6 @@ class CardsAndNewPayment extends Component {
     });
   };
 
-  updateBilling() {
-    Meteor.call(
-      'fetchBilling',
-      {
-        userId: Meteor.userId(),
-        month: moment()
-          .subtract(1, 'month')
-          .get('month'),
-        year: moment()
-          .subtract(1, 'month')
-          .get('year'),
-        isFromFrontend: true,
-      },
-      (err, reply) => {
-        this.setState({
-          bill: reply,
-          loading: false,
-        });
-      }
-    );
-  }
-
   rzPaymentHandler = pgResponse => {
     Meteor.call('applyRZCardVerification', pgResponse, (err, res) => {
       this.setState({
@@ -77,6 +57,28 @@ class CardsAndNewPayment extends Component {
     });
   };
 
+  invoicePrePaymentTrigger = () => {
+    return new Promise(resolve => {
+      Meteor.call('createRequestForInvoice', { invoiceId: this.props.invoice._id }, (err, res) => {
+        if (err) {
+          return this.setState({
+            loading: false,
+          });
+        }
+        resolve(res);
+      });
+    });
+  };
+
+  invoicePaymentHandler = pgResponse => {
+    Meteor.call('captureInvoicePayment', pgResponse, (err, res) => {
+      this.setState({
+        loading: false,
+        waitingForCards: true,
+      });
+    });
+  };
+
   render() {
     const { user } = this.props;
 
@@ -86,21 +88,30 @@ class CardsAndNewPayment extends Component {
     let currentRow = [];
 
     let paymentDisplay = null;
-    if (this.state.bill && this.state.bill.invoiceStatus !== 2) {
+    if (this.props.invoice && this.props.invoice.paymentStatus !== 2 && !this.props.rzSubscription) {
       paymentDisplay = (
-        <div className="alert alert-danger col-md-12">
+        <div className="alert alert-warning col-md-12">
           <div className="col-md-12 b-r b-dashed b-grey sm-b-b">
-            <i className="fa fa-warning" /> Your bill for the month of{' '}
-            {moment()
-              .subtract(1, 'month')
-              .format('MMM YYYY')}{' '}
-            is pending. Kindly pay it before 10
+            <i className="fa fa-warning" /> Your bill for the month of&nbsp;
+            {billingLabel}
+            &nbsp; is pending. Kindly pay it before 10
             <sup>th</sup> of this month to avoid node deletions.
+            <br />
+            <div className="row">
+                <button className="btn btn-primary">Download Invoice</button>&nbsp;&nbsp;
+                <RazorPay
+                  buttonText={`Pay $${this.props.invoice.totalAmount}`}
+                  buttonIcon="fa-open"
+                  loading={this.state.loading || (this.state.waitingForCards && cards.length === 0)}
+                  preTriggerPaymentListener={this.invoicePrePaymentTrigger}
+                  paymentHandler={this.invoicePaymentHandler}
+                  modalDismissListener={this.modalDismissListener}
+                />
+            </div>
           </div>
         </div>
       );
     }
-
 
     cards.forEach((card, index) => {
       if (index % CARDS_IN_ROW === 0) {
@@ -114,9 +125,9 @@ class CardsAndNewPayment extends Component {
               <i className="fa fa-credit-card fa-2x hint-text" />
               <h2>Your card is verified</h2>
 
-              {card.type === 'credit' && <p>You will recieve invoice on 1st of every month and bill amount will be auto deducted from your card on 5th of every month.</p>}
+              {this.props.rzSubscription && <p>You will recieve invoice on 1st of every month and bill amount will be auto deducted from your card on 5th of every month.</p>}
 
-              {card.type === 'debit' && (
+              {!this.props.rzSubscription && (
                 <p>Bill will be generated on 1st of every month and sent via email. The invoice would have to be cleared before 10th of the month to prevent deletion of nodes.</p>
               )}
               <p className="small">To change the card associated with your account kindly raise a support ticket.</p>
@@ -141,7 +152,6 @@ class CardsAndNewPayment extends Component {
       }
     });
 
-
     if (currentRow.length > 0) {
       cardsView.push(
         <div className="row card-row" key={`card_row_end`}>
@@ -160,11 +170,11 @@ class CardsAndNewPayment extends Component {
     }
 
     const savedCardsView = (
-    <div>{cardsView}
-      <div className="row">
-        {paymentDisplay}
+      <div>
+        {cardsView}
+        <div className="row">{paymentDisplay}</div>
       </div>
-    </div>);
+    );
 
     const paymentVerificationView = (
       <div>
@@ -274,6 +284,8 @@ export default withTracker(() => {
   return {
     userCard: UserCards.find({ userId: Meteor.userId() }).fetch()[0],
     user: Meteor.user(),
-    subscriptions: [Meteor.subscribe('userCards')],
+    invoice: Invoice.find({ userId: Meteor.userId(), billingPeriodLabel: billingLabel, paymentStatus: 1 }).fetch()[0],
+    rzSubscription: RZSubscription.find({userId: Meteor.userId()}).fetch()[0],
+    subscriptions: [Meteor.subscribe('userCards'), Meteor.subscribe('pending-invoice', billingLabel), Meteor.subscribe('rzp-subscription')],
   };
 })(withRouter(CardsAndNewPayment));

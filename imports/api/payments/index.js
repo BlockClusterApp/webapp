@@ -1,14 +1,17 @@
 import RazorPay from './payment-gateways/razorpay';
 import Forex from '../../collections/payments/forex';
+import Invoice from '../../collections/payments/invoice';
+import InvoiceFunctions from '../../api/billing/invoice';
 import PaymentRequests from '../../collections/payments/payment-requests';
 import { RZSubscription, RZPlan } from '../../collections/razorpay';
 const debug = require('debug')('api:payments')
 
 const Payments = {};
 
-Payments.createRequest = async ({ paymentGateway, reason, amount, mode, userId }) => {
+Payments.createRequest = async ({ paymentGateway, reason, amount, mode, userId, metadata, display_amount, display_currency }) => {
   let insertResult;
   let subscription;
+  paymentGateway = paymentGateway || 'razorpay';
   const conversionFactor = await Payments.getConversionToINRRate({ currencyCode: 'usd' });
   if (mode === 'credit') {
     amount = 5;
@@ -44,18 +47,20 @@ Payments.createRequest = async ({ paymentGateway, reason, amount, mode, userId }
     debug('Payment create request | Debit RZP Options', returnValue);
     return returnValue;
   } else {
-    const request = PaymentRequest.insert({
+    const request = PaymentRequests.insert({
       userId: userId || Meteor.userId(),
       paymentGateway: 'razorpay',
       reason,
+      metadata,
       amount: Math.round(amount * 100),
+      conversionFactor: metadata.conversionFactor
     });
 
-    return {paymentRequestId: request};
+    return {paymentRequestId: request, amount, display_amount, display_currency: 'USD'};
   }
 
 
-  const display_amount = Number(amount / conversionFactor).toFixed(2);
+  display_amount = Number(amount / conversionFactor).toFixed(2);
 
   const returnValue = { paymentRequestId: insertResult, rzSubscriptionId: subscription.id, amount: amount * 100, display_amount, display_currency: 'USD' };
   debug('Payment create request | Credit RZP Options', returnValue);
@@ -96,11 +101,75 @@ Payments.refundAmount = async ({paymentRequestId, options}) => {
   return true;
 }
 
+Payments.createRequestForInvoice = async ({invoiceId, userId}) => {
+  const invoice = Invoice.find({
+    userId: userId || Meteor.userId(),
+    _id: invoiceId
+  }).fetch()[0];
+
+  if(!invoice){
+    RavenLogger.log(`Creating payment request for invoice without valid invoice`, {invoiceId, userId: userId || Meteor.userId()});
+    throw new Meteor.Error('bad-request', 'Invalid invoice');
+  }
+
+  const rzPlan = RZPlan.find({ identifier: 'verification' }).fetch()[0];
+  const subscription = RZSubscription.find({
+    userId: userId || Meteor.userId(),
+    plan_id: rzPlan.id,
+  }).fetch()[0];
+
+  if(subscription) {
+    RavenLogger.log(`Creating Request for Invoice with Subscription`, {invoiceId, userId: invoice.userId, subscription: subscription._id});
+    throw new Meteor.Error(`bad-request`, 'Already have subscription enabled. Money will be auto debited');
+  }
+
+  const amount = Number(Number(invoice.totalAmount) * Number(invoice.conversionRate));
+  return Payments.createRequest({
+    reason: `Bill payment for ${invoice.billingPeriodLabel}`,
+    amount: Math.floor(amount * 100),
+    display_currency: 'USD',
+    display_amount: Number(invoice.totalAmount).toFixed(2),
+    userId: userId || Meteor.userId(),
+    metadata: {
+      invoiceId,
+      conversionFactor: invoice.conversionFactor
+    }
+  });
+};
+
+Payments.captureInvoicePayment = async pgResponse => {
+  const rzPayment = await RazorPay.capturePayment(pgResponse);
+
+  const paymentRequest = PaymentRequest.find({
+    _id: rzPayment.notes.paymentRequestId
+  }).fetch()[0];
+
+
+  if(!paymentRequest) {
+    RavenLogger.log(`Capturing Invoice payment without payment request`, {pgResponse});
+    throw new Meteor.Error('bad-request', 'Invalid payment request to capture');
+  }
+  const invoice = Invoice.find({
+    _id: paymentRequest.metadata.invoiceId
+  }).fetch()[0];
+
+  console.log("Setting invoice");
+
+  const setlleResult = await InvoiceFunctions.settleInvoice({
+    billingMonthLabel: invoice.billingPeriodLabel,
+    rzPayment
+  });
+
+  return true;
+}
+
 Meteor.methods({
   capturePaymentRazorPay: RazorPay.capturePayment,
   applyRZCardVerification: RazorPay.applyCardVerification,
   createPaymentRequest: Payments.createRequest,
-  refundPayment: Payments.refundAmount
+  refundPayment: Payments.refundAmount,
+  createRequestForInvoice: Payments.createRequestForInvoice,
+  captureInvoicePayment: Payments.captureInvoicePayment
 });
 
 export default Payments;

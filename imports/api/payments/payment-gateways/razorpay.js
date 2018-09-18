@@ -206,7 +206,7 @@ RazorPay.capturePayment = async paymentResponse => {
           },
         }
       );
-      console.log(`Payment ${paymentResponse.razorpay_payment_id} already ${rzpayment.status}`);
+      console.log(`Payment ${paymentResponse.razorpay_payment_id} already ${rzpayment.status}. Can't capture it again`);
       return false;
     }
     const paymentRequest = PaymentRequests.find({
@@ -246,6 +246,8 @@ RazorPay.capturePayment = async paymentResponse => {
         },
       }
     );
+
+    return rzpayment;
   } catch (err) {
     // rollback
     RavenLogger.log(err);
