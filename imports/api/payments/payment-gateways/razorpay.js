@@ -191,7 +191,7 @@ RazorPay.capturePayment = async paymentResponse => {
     if (!rzpayment) {
       throw new Error('Invalid razorpay payment id');
     }
-    if (rzpayment.status !== 'authorized') {
+    if (rzpayment.status === 'refunded') {
       PaymentRequests.update(
         {
           _id: rzpayment.notes.paymentRequestId,
@@ -206,8 +206,12 @@ RazorPay.capturePayment = async paymentResponse => {
           },
         }
       );
-      console.log(`Payment ${paymentResponse.razorpay_payment_id} already ${rzpayment.status}`);
+      console.log(`Payment ${paymentResponse.razorpay_payment_id} already ${rzpayment.status}. Can't refund it again`);
       return false;
+    }
+    if (rzpayment.status === 'captured') {
+      console.log(`Payment ${paymentResponse.razorpay_payment_id} already ${rzpayment.status}. Can't capture it again`);
+      return rzpayment;
     }
     const paymentRequest = PaymentRequests.find({
       _id: rzpayment.notes.paymentRequestId,
@@ -246,6 +250,8 @@ RazorPay.capturePayment = async paymentResponse => {
         },
       }
     );
+
+    return rzpayment;
   } catch (err) {
     // rollback
     RavenLogger.log(err);

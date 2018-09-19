@@ -140,7 +140,7 @@ class RazorPay extends React.Component {
     if(this.props.buttonLayout) {
       return (
         <div className="razorpay-holder" onClick={this.triggerPayment}>
-          {this.props.buttonLayour}
+          {this.props.buttonLayout}
         </div>
       )
     }
@@ -149,7 +149,7 @@ class RazorPay extends React.Component {
       <button className="btn btn-primary razorpay-payment-button "
         onClick={this.triggerPayment}
         disabled={this.props.loading || this.state.loading}>
-        {(this.props.loading || this.state.loading) === true ? <i className="fa fa-spinner fa-spin">&nbsp;</i>: <i className="fa fa-plus"></i>}
+        {(this.props.loading || this.state.loading) === true ? <i className="fa fa-spinner fa-spin">&nbsp;</i>: <i className={`fa ${this.props.buttonIcon || fa-plus}`}></i>}
         &nbsp;&nbsp;{this.props.buttonText || `Pay Now`}
       </button>
     </div>
