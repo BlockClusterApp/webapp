@@ -56,7 +56,7 @@ Payments.createRequest = async ({ paymentGateway, reason, amount, mode, userId, 
       conversionFactor: metadata.conversionFactor
     });
 
-    return {paymentRequestId: request, amount, display_amount, display_currency: 'USD'};
+    return {paymentRequestId: request, amount: Math.round(amount * 100), display_amount, display_currency: 'USD'};
   }
 
 
@@ -126,7 +126,7 @@ Payments.createRequestForInvoice = async ({invoiceId, userId}) => {
   const amount = Number(Number(invoice.totalAmount) * Number(invoice.conversionRate));
   return Payments.createRequest({
     reason: `Bill payment for ${invoice.billingPeriodLabel}`,
-    amount: Math.floor(amount * 100),
+    amount,
     display_currency: 'USD',
     display_amount: Number(invoice.totalAmount).toFixed(2),
     userId: userId || Meteor.userId(),
@@ -140,7 +140,7 @@ Payments.createRequestForInvoice = async ({invoiceId, userId}) => {
 Payments.captureInvoicePayment = async pgResponse => {
   const rzPayment = await RazorPay.capturePayment(pgResponse);
 
-  const paymentRequest = PaymentRequest.find({
+  const paymentRequest = PaymentRequests.find({
     _id: rzPayment.notes.paymentRequestId
   }).fetch()[0];
 
@@ -155,10 +155,13 @@ Payments.captureInvoicePayment = async pgResponse => {
 
   console.log("Setting invoice");
 
-  const setlleResult = await InvoiceFunctions.settleInvoice({
+  const settleResult = await InvoiceFunctions.settleInvoice({
     billingMonthLabel: invoice.billingPeriodLabel,
+    invoiceId: invoice._id,
     rzPayment
   });
+
+  debug("Capture Invoice Payment | Settle Result", settleResult);
 
   return true;
 }

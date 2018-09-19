@@ -89,11 +89,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
 
 InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth, billingMonthLabel, invoiceId, rzPayment }) => {
   billingMonthLabel = billingMonthLabel || moment(billingMonth).format('MMM-YYYY');
-  debug('Fetching invoice', {
-    paymentStatus: Invoice.PaymentStatusMapping.Pending,
-    rzCustomerId,
-    rzSubscriptionId,
-  });
+
 
   const selector = {
     paymentStatus: Invoice.PaymentStatusMapping.Pending,
@@ -108,6 +104,8 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   if(invoiceId) {
     selector._id = invoiceId;
   }
+
+  debug('Fetching invoice', selector);
 
   if(!selector._id && !selector.rzSubscriptionId && !selector.rzCustomerId) {
     RavenLogger.log('Trying to settle unspecific', {...selector});
@@ -124,11 +122,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   console.log('Settling invoice', invoice);
 
   Invoice.update(
-    {
-      paymentStatus: Invoice.PaymentStatusMapping.Pending,
-      rzCustomerId,
-      rzSubscriptionId,
-    },
+    selector,
     {
       $set: {
         paymentStatus: Invoice.PaymentStatusMapping.Settled,

@@ -3,6 +3,7 @@ import { withTracker } from 'meteor/react-meteor-data';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import { withRouter } from 'react-router-dom';
 import moment from 'moment';
+const html2pdf = require("html2pdf.js")
 
 import './Dashboard.scss';
 
@@ -28,7 +29,7 @@ class BillingDashboard extends Component {
   };
 
   componentDidMount() {
-  // Meteor.call("getClusterLocations", (err, res) => {
+    // Meteor.call("getClusterLocations", (err, res) => {
     //   this.setState({
     //     locations: res
     //   });
@@ -61,11 +62,11 @@ class BillingDashboard extends Component {
     return <span className="label label-info">{label}</span>;
   };
 
-  onYearChange = (e) => {
+  onYearChange = e => {
     this.selectedYear = e.target.value;
   };
 
-  onMonthChange = (e) => {
+  onMonthChange = e => {
     this.selectedMonth = e.target.value;
   };
 
@@ -76,9 +77,33 @@ class BillingDashboard extends Component {
         loading: false,
       });
     });
+  };
+
+  downloadInvoice = () => {
+    this.setState({
+      downloading: true
+    });
+    Meteor.call('generateInvoiceHTML', this.state.bill.invoiceId, (err, res) => {
+      if(err){
+        console.log(err);
+        RavenLogger.log('Generate Invoice HTML err', {
+          invoice: this.props.invoice._id,
+          res
+        });
+        alert('Error downloading', err.reason);
+        this.setState({
+          downloading: false
+        })
+        return false;
+      }
+      html2pdf().from(res).set({jsPDF:{ unit: 'in', format: 'a4', orientation: 'landscape' }, margin: [0.5, 1]}).save();
+      this.setState({
+        downloading: false
+      });
+    });
   }
 
-  getInvoicePaidStatus = (paymentStatus) => {
+  getInvoicePaidStatus = paymentStatus => {
     switch (Number(paymentStatus)) {
       case 2:
         return <span className="label label-success">Paid</span>;
@@ -86,11 +111,11 @@ class BillingDashboard extends Component {
         return <span className="label label-info">Demo User</span>;
       case 1:
       case 4:
-        return <span className="label label-danger">Pending</span>;
+        return <span className="label label-danger">Unpaid</span>;
       default:
         return null;
     }
-  }
+  };
 
   render() {
     let billView = undefined;
@@ -124,7 +149,7 @@ class BillingDashboard extends Component {
                   <div className="table-responsive">
                     <div className="row">
                       <div className="col-md-5">
-                        <p style={{"lineHeight": "45px"}}>
+                        <p style={{ lineHeight: '45px' }}>
                           Free micro node usage:&nbsp;
                           {this.state.bill && this.state.bill.totalFreeMicroHours
                             ? `${this.state.bill.totalFreeMicroHours.hours}:${this.state.bill.totalFreeMicroHours.minutes % 60} `
@@ -132,42 +157,79 @@ class BillingDashboard extends Component {
                           / {1490 * 2} hrs
                         </p>
                       </div>
-                      <div className="col-md-7">
-                        <div className="row">
-                          <div className="col-md-2" style={{textAlign: 'right'}}>
-                            {this.getInvoicePaidStatus(this.state.bill && this.state.bill.invoiceStatus)}
-                          </div>
-                          <div className="col-md-4">
-                            <div className="form-group ">
-                              <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onMonthChange}>
-                                <option value="0" selected={moment().month() === 0}>January</option>
-                                <option value="1" selected={moment().month() === 1}>February</option>
-                                <option value="2" selected={moment().month() === 2}>March</option>
-                                <option value="3" selected={moment().month() === 3}>April</option>
-                                <option value="4" selected={moment().month() === 4}>May</option>
-                                <option value="5" selected={moment().month() === 5}>June</option>
-                                <option value="6" selected={moment().month() === 6}>July</option>
-                                <option value="7" selected={moment().month() === 7}>August</option>
-                                <option value="8" selected={moment().month() === 8}>September</option>
-                                <option value="9" selected={moment().month() === 9}>October</option>
-                                <option value="10" selected={moment().month() === 10}>November</option>
-                                <option value="11" selected={moment().month() === 11}>December</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div className="col-md-3">
-                            <div className="form-group ">
-                              <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onYearChange}>
-                                <option value="2018" selected={moment().year() === 2018}>2018</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div className="col-md-3">
-                            <LaddaButton data-size={S} data-style={SLIDE_UP} data-spinner-size={30} data-spinner-lines={12} className="btn btn-success m-t-10" onClick={this.showBill} style={{marginTop: 0}}>
-                                <i className="fa fa-check"></i> &nbsp;Select
-                            </LaddaButton>
-                          </div>
+                    </div>
+                    <div className="row">
+                      <div className="col-md-3">
+                        <div className="form-group ">
+                          <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onMonthChange}>
+                            <option value="0" selected={moment().month() === 0}>
+                              January
+                            </option>
+                            <option value="1" selected={moment().month() === 1}>
+                              February
+                            </option>
+                            <option value="2" selected={moment().month() === 2}>
+                              March
+                            </option>
+                            <option value="3" selected={moment().month() === 3}>
+                              April
+                            </option>
+                            <option value="4" selected={moment().month() === 4}>
+                              May
+                            </option>
+                            <option value="5" selected={moment().month() === 5}>
+                              June
+                            </option>
+                            <option value="6" selected={moment().month() === 6}>
+                              July
+                            </option>
+                            <option value="7" selected={moment().month() === 7}>
+                              August
+                            </option>
+                            <option value="8" selected={moment().month() === 8}>
+                              September
+                            </option>
+                            <option value="9" selected={moment().month() === 9}>
+                              October
+                            </option>
+                            <option value="10" selected={moment().month() === 10}>
+                              November
+                            </option>
+                            <option value="11" selected={moment().month() === 11}>
+                              December
+                            </option>
+                          </select>
                         </div>
+                      </div>
+                      <div className="col-md-2">
+                        <div className="form-group ">
+                          <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onYearChange}>
+                            <option value="2018" selected={moment().year() === 2018}>
+                              2018
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="col-md-7">
+                        <LaddaButton
+                          data-size={S}
+                          data-style={SLIDE_UP}
+                          data-spinner-size={30}
+                          data-spinner-lines={12}
+                          className="btn btn-success m-t-10"
+                          onClick={this.showBill}
+                          style={{ marginTop: 0 }}
+                        >
+                          <i className="fa fa-check" /> &nbsp;Select
+                        </LaddaButton>
+                      {this.state.bill &&
+                        this.state.bill.invoiceStatus && (
+                            <span>
+                              &nbsp;&nbsp;
+                              <button className="btn btn-primary" disabled={this.state.downloading} onClick={this.downloadInvoice}>{this.state.downloading && <i className="fa fa-spinner fa-spin" />}Download Invoice</button>
+                              &nbsp;{this.state.bill && this.state.bill.invoiceStatus === 1 && <button className="btn btn-success" onClick={() => {this.props.history.push('/app/payments')}}>Pay Now</button>}
+                            </span>
+                        )}
                       </div>
                     </div>
                     <table className="table table-hover" id="basicTable">
@@ -186,7 +248,10 @@ class BillingDashboard extends Component {
                           <td colSpan="4" style={{ textAlign: 'right' }}>
                             Total Amount
                           </td>
-                          <td>{this.state.bill && this.state.bill.totalAmount ? `$ ${Number(this.state.bill.totalAmount).toFixed(2)}` : '0'} {this.getInvoicePaidStatus(this.state.bill && this.state.bill.invoiceStatus)}</td>
+                          <td>
+                            {this.state.bill && this.state.bill.totalAmount ? `$ ${Number(this.state.bill.totalAmount).toFixed(2)}` : '0'}{' '}
+                            {this.getInvoicePaidStatus(this.state.bill && this.state.bill.invoiceStatus)}
+                          </td>
                         </tr>
                         <tr>
                           <td colSpan="4" style={{ textAlign: 'right' }}>

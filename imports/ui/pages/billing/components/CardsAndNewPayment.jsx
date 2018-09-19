@@ -114,7 +114,7 @@ class CardsAndNewPayment extends Component {
             &nbsp; is pending. Kindly pay it before 10
             <sup>th</sup> of this month to avoid node deletions.
             <br />
-            <div className="row">
+            <div className="row" style={{padding: '15px'}}>
                 <button className="btn btn-primary" onClick={this.downloadInvoice}>Download Invoice</button>&nbsp;&nbsp;
                 <RazorPay
                   buttonText={`Pay $${this.props.invoice.totalAmount}`}

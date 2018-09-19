@@ -277,6 +277,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       result.networks = prevMonthInvoice.items;
       result.totalAmount = prevMonthInvoice.totalAmount;
       result.invoiceStatus = prevMonthInvoice.paymentStatus;
+      result.invoiceId = prevMonthInvoice._id;
     }
   }
 
