@@ -1,12 +1,25 @@
 const defaults = require("../local.config.js");
+const request = require('request-promise');
 const fs = require("fs");
 const path = require("path");
 var url = require('url');
 
-const RemoteConfig = require('../kube-config.json');
+async function fetchNewConfig (){
+  const response = await request.get('http://blockcluster.default.svc.cluster.local/config');
+  global.RemoteConfig = JSON.parse(response);
+}
+
+setInterval(async () => {
+  await fetchNewConfig();
+}, 1* 60 * 1000);
+
+const { RemoteConfig } = global;
 // let locationMapping = {};
 
 function getAPIHost() {
+  if(RemoteConfig.apiHost) {
+    return RemoteConfig.apiHost;
+  }
   if (process.env.ROOT_URL) {
     return process.env.ROOT_URL;
   }
@@ -44,6 +57,12 @@ function getHyperionConnectionDetails(locationCode) {
 
 
 function getDynamoWokerDomainName(locationCode) {
+  if(RemoteConfig.dynamoWorkerDomainName) {
+    if(RemoteConfig.dynamoWorkerDomainName[locationCode]) {
+      return RemoteConfig.dynamoWorkerDomainName[locationCode];
+    }
+    return RemoteConfig.dynamoWorkerDomainName;
+  }
   let prefix = '';
   if(locationCode !== "us-west-2"){
     prefix = `-${locationCode}`;
@@ -58,15 +77,17 @@ function getDynamoWokerDomainName(locationCode) {
       return `test${prefix}.blockcluster.io`;
     default:
       return `dev${prefix}.blockcluster.io`;
-
   }
 }
 
 function getNamespace() {
-  return process.env.NAMESPACE || defaults.namespace || "dev";
+  return RemoteConfig.namespace || process.env.NAMESPACE || defaults.namespace || "dev";
 };
 
 function getEnv() {
+  if(RemoteConfig.env) {
+    return RemoteConfig.env || "default";
+  }
   if(['production', 'staging', 'test', 'dev'].includes(process.env.NODE_ENV)){
     return process.env.NODE_ENV;
   }
@@ -94,7 +115,7 @@ function getMongoConnectionString() {
 
     return process.env.MONGO_URL;
 
-    if(['production'].includes(process.env.NODE_ENV)){
+    if(['production'].includes(process.env.NODE_ENV) || process.env.ENTERPRISE){
       return process.env.MONGO_URL;
     }
 
