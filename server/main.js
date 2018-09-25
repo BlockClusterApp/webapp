@@ -233,8 +233,11 @@ Meteor.methods({
 
         // const hostedPage = await fetchZohoStatus({myFuture, nodeConfig, hostedPageId});
         const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(userId);
-        if(!isPaymentMethodVerified) {
-          throw new Meteor.Error('unauthorized', 'Credit card not verified');
+        const need_VerifiedPaymnt = (nodeConfig.voucher && !nodeConfig.voucher.availability.card_vfctn_needed) ? nodeConfig.voucher.availability.card_vfctn_needed : true;
+        if(need_VerifiedPaymnt){
+          if(!isPaymentMethodVerified) {
+            throw new Meteor.Error('unauthorized', 'Credit card not verified');
+          }
         }
 
         // const microNodes = Networks.find({
