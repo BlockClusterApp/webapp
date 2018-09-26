@@ -156,6 +156,14 @@ InvoiceObj.generateHTML = async (invoiceId) => {
 
   const user = Meteor.user();
 
+  if(!user.profile.mobiles) {
+    user.profile.mobiles = [
+      {
+        number: ''
+      }
+    ]
+  }
+
   const ejsTemplate = await getEJSTemplate({fileName: "invoice.ejs"})
   const finalHTML = ejsTemplate({
     invoice: {
