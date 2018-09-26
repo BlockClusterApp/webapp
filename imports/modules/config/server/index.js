@@ -4,16 +4,25 @@ const fs = require("fs");
 const path = require("path");
 var url = require('url');
 
+global.RemoteConfig = {};
+global.remoteConfigChangeListener = (cb) => {cb && cb()};
+
+const CONFIG_URL = process.env.NODE_ENV === 'development' ? process.env.CONFIG_URL || `http://blockcluster.default.svc.cluster.local` : `http://blockcluster.default.svc.cluster.local`;
+
 async function fetchNewConfig (){
-  const response = await request.get('http://blockcluster.default.svc.cluster.local/config');
+  const response = await request.get(`${CONFIG_URL}/config`);
+  console.log("Config response", response);
   global.RemoteConfig = JSON.parse(response);
+  process.emit('RemoteConfigChanged');
 }
+
+fetchNewConfig();
 
 setInterval(async () => {
   await fetchNewConfig();
 }, 1* 60 * 1000);
 
-const { RemoteConfig } = global;
+// const { RemoteConfig } = global;
 // let locationMapping = {};
 
 function getAPIHost() {

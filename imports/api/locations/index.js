@@ -1,11 +1,19 @@
 import Config from "../../modules/config/server";
-const RemoteConfig = Config.RemoteConfig();
+let LocationConfigs;
 
-const LocationConfigs = RemoteConfig.clusters[Config.env];
-
+process.on('RemoteConfigChanged', () => {
+  console.log("RemoteConfigChanged");
+  if(RemoteConfig.clusters) {
+    LocationConfigs = RemoteConfig.clusters[Config.namespace];
+  }
+});
+if(RemoteConfig.clusters) {
+  LocationConfigs = RemoteConfig.clusters[Config.namespace];
+}
 const LocationApi = {};
 
 LocationApi.getLocations = function() {
+  console.log("Get Locations", LocationConfigs);
   return Object.values(LocationConfigs).reduce((list, locationConfig) => {
     list.push({
       locationCode: locationConfig.locationCode,

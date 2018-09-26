@@ -3,7 +3,7 @@ services:
   server:
     build:
       context: .
-      dockerfile: docker/test-server.Dockerfile
+      dockerfile: docker/local.Dockerfile
     volumes:
       - ./imports:/blockcluster/imports
       - ./client:/blockcluster/client
@@ -14,5 +14,16 @@ services:
       - ./.meteor:/blockcluster/.meteor
     ports:
       - '3000:3000'
+
+    depends_on:
+      - configserver
     environment:
       NODE_ENV: development
+      CONFIG_URL: http://configserver
+      MONGO_URL: mongodb://35.161.9.16:32153
+
+  configserver:
+    image: 402432300121.dkr.ecr.ap-south-1.amazonaws.com/blockcluster-daemon:latest
+    ports:
+      - '3005:3005'
+
