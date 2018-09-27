@@ -1,8 +1,5 @@
 const defaults = require("../local.config.js");
 const request = require('request-promise');
-const fs = require("fs");
-const path = require("path");
-var url = require('url');
 
 global.RemoteConfig = {};
 global.remoteConfigChangeListener = (cb) => {cb && cb()};
@@ -11,7 +8,6 @@ const CONFIG_URL = process.env.NODE_ENV === 'development' ? process.env.CONFIG_U
 
 async function fetchNewConfig (){
   const response = await request.get(`${CONFIG_URL}/config`);
-  console.log("Config response", response);
   global.RemoteConfig = JSON.parse(response);
   process.emit('RemoteConfigChanged');
 }
@@ -21,9 +17,6 @@ fetchNewConfig();
 setInterval(async () => {
   await fetchNewConfig();
 }, 1* 60 * 1000);
-
-// const { RemoteConfig } = global;
-// let locationMapping = {};
 
 function getAPIHost() {
   if(RemoteConfig.apiHost) {
@@ -90,6 +83,7 @@ function getDynamoWokerDomainName(locationCode) {
 }
 
 function getNamespace() {
+  // n
   return RemoteConfig.namespace || process.env.NAMESPACE || defaults.namespace || "dev";
 };
 

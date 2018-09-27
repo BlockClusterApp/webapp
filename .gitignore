@@ -5,6 +5,7 @@ node_modules/
 .npm
 ./**/local.config.js
 imports/modules/config/local.config.js
+.meteor/this-does-not-exists/
 
 .DS_Store
 
