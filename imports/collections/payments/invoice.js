@@ -7,7 +7,8 @@ AttachBaseHooks(Invoice);
 
 Invoice.PaymentStatusMapping = {
   Pending: 1,
-  Success: 2
+  Settled: 2,
+  DemoUser: 3
 };
 
 Invoice.schema = new SimpleSchema({
@@ -31,6 +32,9 @@ Invoice.schema = new SimpleSchema({
   "rzCustomerId.$": {
     type: String
   },
+  rzSubscriptionId: {
+    type: String
+  },
   totalAmount: {
     type: Number
   },
@@ -47,5 +51,16 @@ Invoice.schema = new SimpleSchema({
     type: String
   }
 });
+
+if(!Meteor.isClient) {
+  Invoice._ensureIndex({
+    billingPeriodLabel: 1,
+    rzSubscriptionId: 1
+  });
+  Invoice._ensureIndex({
+    rzCustomerId: 1,
+    billingPeriodLabel: 1
+  });
+}
 
 export default Invoice;
