@@ -1336,6 +1336,18 @@ spec:
     );
     return myFuture.wait();
   },
+  changeNodeName: function(instanceId, newName) {
+    Networks.update(
+      {
+        instanceId: instanceId,
+      },
+      {
+        $set: {
+          'name': newName,
+        },
+      }
+    );
+  },
   vote: function(networkId, toVote) {
     var myFuture = new Future();
     var network = Networks.find({

@@ -1,0 +1,17 @@
+.editableTextDefaultView {
+  text-decoration: underline;
+  text-underline-position: under;
+  text-decoration-style: dotted;
+}
+
+.editableTextDefaultView:hover {
+  cursor: pointer;
+}
+
+.editableTextEditView button {
+  margin-right: 5px;
+}
+
+.editableTextEditView .col-md-4 {
+  padding-right: 0px;
+}

@@ -8,6 +8,7 @@ import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import {Link} from "react-router-dom";
 import Config from "../../../modules/config/client";
+import EditableText from "../../components/EditableText/EditableText.jsx";
 
 import "./ViewEditNetwork.scss"
 
@@ -166,6 +167,16 @@ class ViewEditNetwork extends Component {
 		return locationConfig.locationName
 	}
 
+	nodeNameChange = (newName) => {
+		Meteor.call("changeNodeName", this.props.network[0].instanceId, newName, (error, result) => {
+			if(!error) {
+				notifications.success("Node name changed")
+			} else {
+				notifications.error("An error occured")
+			}
+		})
+	}
+
 	render(){
     if(this.props.network[0]){
       this.locationConfig = this.state.locations.find(i => i && i.locationCode === this.props.network[0].locationCode);
@@ -186,6 +197,16 @@ class ViewEditNetwork extends Component {
 			                            <label htmlFor="fname" className="col-md-3 control-label">Instance ID</label>
 			                            <div className="col-md-9">
 			                                <span className="value-valign-middle">{this.props.network.length === 1 ? this.props.network[0].instanceId : ""}</span>
+			                            </div>
+			                        </div>
+															<div className="form-group row">
+			                            <label htmlFor="fname" className="col-md-3 control-label">Node Name</label>
+			                            <div className="col-md-9">
+			                                <span className="value-valign-middle">
+																				{this.props.network.length === 1 &&
+																					<EditableText value={this.props.network[0].name} valueChanged={this.nodeNameChange} />
+																				}
+																			</span>
 			                            </div>
 			                        </div>
 			                        <div className="form-group row">
