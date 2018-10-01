@@ -69,10 +69,10 @@ class VoucherDetails extends Component {
 
   render() {
     return (
-      <div className="page-content-wrapper ">
+       <div className="page-content-wrapper">
         <div className="content sm-gutter">
           <div data-pages="parallax">
-            <div className="container-fluid p-l-25 p-r-25 sm-p-l-0 sm-p-r-0">
+            {/* <div className="container-fluid p-l-25 p-r-25 sm-p-l-0 sm-p-r-0"> */}
               <div className="inner">
                 <ol className="breadcrumb sm-p-b-5">
                   <li className="breadcrumb-item">
@@ -83,10 +83,13 @@ class VoucherDetails extends Component {
                   </li>
                   <li className="breadcrumb-item active">{this.state.voucherId}</li>
                 </ol>
-              </div>
+              {/* </div> */}
             </div>
-          </div>
-          <div className="container-fluid p-l-25 p-r-25 p-t-0 p-b-25 sm-padding-10">
+          </div></div>
+          <div className="content voucherDetails">
+           <div
+          className="m-t-20 container-fluid container-fixed-lg bg-white"
+        >
             <div className="card-block">
               <div className="table-responsive">
                 <table className="table table-hover table-condensed" id="condensedTable">
@@ -102,8 +105,8 @@ class VoucherDetails extends Component {
                       let Value = element[Key];
                       return (
                         <tr key={index + 1}>
-                          <td class="v-align-middle semi-bold">{Key}</td>
-                          <td class="v-align-middle">{Value}</td>
+                          <td className="v-align-middle semi-bold">{Key}</td>
+                          <td className="v-align-middle">{Value}</td>
                         </tr>
                       );
                     })}
@@ -112,8 +115,7 @@ class VoucherDetails extends Component {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </div></div>
     );
   }
 }
