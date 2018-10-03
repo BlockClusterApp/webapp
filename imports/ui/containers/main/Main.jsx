@@ -87,7 +87,7 @@ export default class Main extends Component {
             <Route exact path="/app/admin/networks" component={NetworkList} />
             <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
             <Route exact path="/app/admin/vouchers" component={VoucherList} />
-            <Route exact path="/app/admin/vouchers/:id" component={VoucherDetails} />
+            <Route exact path="/app/admin/vouchers/details/:id" component={VoucherDetails} />
             <Route exact path="/app/admin/vouchers/create" component={VoucherCreate} />
             <Route exact path="/app/admin/support" component={AdminSupport} />
             <Route exact path="/app/admin/support/:id" component={AdminSupportDetails} />

@@ -374,6 +374,7 @@ class VoucherCreate extends Component {
                 </div>
               </div>
               <LaddaButton
+                disabled={(this.state.cpu >0 && this.state.ram>0 && this.state.disk>0 && this.state.noOfVouchers>0) ? false : true}
                 loading={this.state.createVoucher_formloading ? this.state.createVoucher_formloading : false}
                 data-size={S}
                 data-style={SLIDE_UP}
