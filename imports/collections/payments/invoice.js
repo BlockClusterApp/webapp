@@ -12,6 +12,13 @@ Invoice.PaymentStatusMapping = {
   Failed: 4
 };
 
+Invoice.EmailMapping = {
+  Created: 1,
+  Reminder1: 2,
+  Reminder: 3,
+  NodeDeletion: 4
+}
+
 Invoice.schema = new SimpleSchema({
   user: {
     type: {
@@ -50,6 +57,12 @@ Invoice.schema = new SimpleSchema({
   },
   billingPeriodLabel: {
     type: String
+  },
+  emailsSent: {
+    type: Array
+  },
+  "emailsSent.$": {
+    type: Number
   }
 });
 

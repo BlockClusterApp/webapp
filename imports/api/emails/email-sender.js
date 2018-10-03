@@ -20,7 +20,7 @@ const toEmail = process.env.EMAIL || "jibin.mathews@blockcluster.io";
 const sendEmail = function(emailOptions) {
   return new Promise( (resolve, reject) => {
     process.nextTick(async () => {
-      if(!['production','staging'].includes(process.env.NODE_ENV)){
+      if(!['production'].includes(process.env.NODE_ENV)){
         if(!emailOptions.to.includes('@blockcluster.io')){
           emailOptions.subject = `${emailOptions.subject} | To: ${emailOptions.to}`
           emailOptions.to = toEmail;

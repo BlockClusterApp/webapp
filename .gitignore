@@ -7,3 +7,5 @@ node_modules/
 imports/modules/config/local.config.js
 
 .DS_Store
+
+.meteor/this-does-not-exists/
