@@ -54,6 +54,7 @@ module.exports = `<!DOCTYPE html>
 
     </p>
     <h3 style="margin-bottom: 5px;">Kindly pay your bill before 10th of this month to avoid deletion of nodes</h3>
+    <p style="margin-bottom: 5px;">Incase you have chose auto-debit option, the amount will be auto debited on 5th of this month and you can ignore this email.</p>
       <br />
       <br />
     </p>
