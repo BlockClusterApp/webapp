@@ -5,5 +5,6 @@ require('./2018-08-vouchers-prod-2');
 require('./2018-08-10-create-admins');
 require('./2018-08-09-light-nodes-email');
 require('./2018-08-13-delete-unverified-networks.js');
+require('./2018-10-invoice-mail')
 require('./razorpay');
 // require('./zoho');
