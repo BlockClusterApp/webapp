@@ -1,8 +1,7 @@
 import Invoice from '../../collections/payments/invoice';
 import RazorPay from '../../api/payments/payment-gateways/razorpay';
 import Payment from '../../api/payments/';
-import Payments from '../payments';
-import { RZPlan, RZSubscription, RZAddOn } from '../../collections/razorpay';
+import Email from '../emails/email-sender';
 import moment from 'moment';
 const debug = require('debug')('api:invoice');
 import {
@@ -180,6 +179,32 @@ InvoiceObj.generateHTML = async (invoiceId) => {
   });
 
   return finalHTML;
+}
+
+InvoiceObj.sendInvoiceCreatedEmail = async (invoice) => {
+  const ejsTemplate = await getEJSTemplate({fileName: "invoice-created.ejs"});
+  const finalHTML = ejsTemplate({
+    invoice
+  });
+
+  const emailProps = {
+    from: {email: "no-reply@blockcluster.io", name: "Blockcluster"},
+    to: invoice.user.email,
+    subject: `Your invoice for ${invoice.billingPeriodLabel}`,
+    text: `Visit the following link to pay your bill https://app.blockcluster.io/app/payments`,
+    html: finalHTML
+  };
+
+  await Email.sendEmail(emailProps);
+  Invoice.update({
+    _id: invoice._id
+  }, {
+    $push: {
+      emailsSent: Invoice.EmailMapping.Created
+    }
+  });
+
+  return true;
 }
 
 Meteor.methods({
