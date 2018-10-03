@@ -38,6 +38,9 @@ var base64 = require('base-64');
 var utf8 = require('utf8');
 var BigNumber = require('bignumber.js');
 
+var geoip = require('../node_modules/geoip-lite/lib/geoip');
+
+
 Accounts.validateLoginAttempt(function(options) {
   if (!options.allowed) {
     return false;
@@ -1336,6 +1339,19 @@ spec:
     );
     return myFuture.wait();
   },
+  convertIP_Location: function(ips) {
+      let result = [];
+
+      ips.forEach((ip, index) => {
+        let geo = geoip.lookup(ip);
+        if(geo) {
+            geo.ip = ip;
+            result.push(geo)
+        }
+      })
+
+      return result;
+  },
   changeNodeName: function(instanceId, newName) {
     Networks.update(
       {
@@ -2345,6 +2361,74 @@ spec:
 
     return myFuture.wait();
   },
+  whitelistPeer: function(instanceId, eNodeURL) {
+    var network = Networks.find({
+      instanceId: instanceId,
+    }).fetch()[0];
+
+    var myFuture = new Future();
+
+    HTTP.call(
+      'POST',
+      `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/utility/whitelistPeer`,
+      {
+        content: JSON.stringify({
+          url: eNodeURL,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+      function(error, response) {
+        if (error) {
+          myFuture.throw(error);
+        } else {
+          let responseBody = JSON.parse(response.content);
+          if (responseBody.error) {
+            myFuture.throw(responseBody.error);
+          } else {
+            myFuture.return();
+          }
+        }
+      }
+    );
+
+    return myFuture.wait();
+  },
+  blacklistPeer: function(instanceId, eNodeURL) {
+    var network = Networks.find({
+      instanceId: instanceId,
+    }).fetch()[0];
+
+    var myFuture = new Future();
+
+    HTTP.call(
+      'POST',
+      `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/utility/removeWhitelistedPeer`,
+      {
+        content: JSON.stringify({
+          url: eNodeURL,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+      function(error, response) {
+        if (error) {
+          myFuture.throw(error);
+        } else {
+          let responseBody = JSON.parse(response.content);
+          if (responseBody.error) {
+            myFuture.throw(responseBody.error);
+          } else {
+            myFuture.return();
+          }
+        }
+      }
+    );
+
+    return myFuture.wait();
+  },
   addPeer: function(instanceId, eNodeURL) {
     var network = Networks.find({
       instanceId: instanceId,
@@ -2355,6 +2439,40 @@ spec:
     HTTP.call(
       'POST',
       `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/utility/addPeer`,
+      {
+        content: JSON.stringify({
+          url: eNodeURL,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+      function(error, response) {
+        if (error) {
+          myFuture.throw(error);
+        } else {
+          let responseBody = JSON.parse(response.content);
+          if (responseBody.error) {
+            myFuture.throw(responseBody.error);
+          } else {
+            myFuture.return();
+          }
+        }
+      }
+    );
+
+    return myFuture.wait();
+  },
+  removePeer: function(instanceId, eNodeURL) {
+    var network = Networks.find({
+      instanceId: instanceId,
+    }).fetch()[0];
+
+    var myFuture = new Future();
+
+    HTTP.call(
+      'POST',
+      `http://${Config.workerNodeIP(network.locationCode)}:${network.apisPort}/utility/removePeer`,
       {
         content: JSON.stringify({
           url: eNodeURL,
