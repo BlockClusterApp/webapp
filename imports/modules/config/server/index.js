@@ -24,6 +24,25 @@ function getAPIHost() {
   }
 }
 
+function getHyperionConnectionDetails(locationCode) {
+  if (process.env.HYPERION_URL) {
+    return process.env.HYPERION_URL;
+  }
+  switch (process.env.NODE_ENV) {
+    case "production":
+      return [RemoteConfig.clusters['production'][locationCode].hyperion.ip, RemoteConfig.clusters['production'][locationCode].hyperion.port];
+    case "staging":
+      return [RemoteConfig.clusters['staging'][locationCode].hyperion.ip, RemoteConfig.clusters['staging'][locationCode].hyperion.port];
+    case "test":
+      return [RemoteConfig.clusters['test'][locationCode].hyperion.ip, RemoteConfig.clusters['test'][locationCode].hyperion.port];
+    case "dev":
+      return [RemoteConfig.clusters['dev'][locationCode].hyperion.ip, RemoteConfig.clusters['dev'][locationCode].hyperion.port];
+    default:
+      return [RemoteConfig.clusters['dev'][locationCode].hyperion.ip, RemoteConfig.clusters['dev'][locationCode].hyperion.port];
+  }
+}
+
+
 function getDynamoWokerDomainName(locationCode) {
   let prefix = '';
   if(locationCode !== "us-west-2"){
@@ -106,6 +125,7 @@ module.exports = {
   apiHost: getAPIHost(),
   database: getDatabase(),
   mongoConnectionString: getMongoConnectionString(),
+  getHyperionConnectionDetails: getHyperionConnectionDetails,
   workerNodeDomainName: (locationCode = "us-west-2") => {
     return getDynamoWokerDomainName(locationCode);
   },
