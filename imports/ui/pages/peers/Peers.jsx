@@ -181,13 +181,13 @@ class Peers extends Component {
                         staticPeers: (res.data.staticPeers ? res.data.staticPeers : []),
                         whitelistedNodes: (res.data.whitelistedNodes ? res.data.whitelistedNodes : [])
                     }, () => {
-                        let connectedPeers = res.data.connectedPeers || [];
+                        let staticPeers = res.data.staticPeers || [];
                         let ips = [];
-                        if(this.locationConfig.workerNodeIP) {
+                        /*if(this.locationConfig.workerNodeIP) {
                             ips.push(this.locationConfig.workerNodeIP)
-                        }
-                        connectedPeers.forEach((url, index) => {
-                            ips.push(url.network.remoteAddress.split(":")[0])
+                        }*/
+                        staticPeers.forEach((url, index) => {
+                            ips.push(url.split('@')[1].split(':')[0])
                         });
 
                         Meteor.call("convertIP_Location", ips, (error, result) => {
@@ -357,7 +357,10 @@ class Peers extends Component {
                                                                         <a href="#" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide2"}><span>Connected Peers</span></a>
                                                                     </li>
                                                                     <li className="nav-item">
-                                                                        <a href="#" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide3"}><span>Remove or Blacklist peers</span></a>
+                                                                        <a href="#" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide3"}><span>Static Peers</span></a>
+                                                                    </li>
+                                                                    <li className="nav-item">
+                                                                        <a href="#" data-toggle="tab" data-target={"#" + this.props.network[0].instanceId + "_slide4"}><span>Whitelisted Peers</span></a>
                                                                     </li>
                                                                 </ul>
                                                                 <div className="tab-content p-l-0 p-r-0">
@@ -456,14 +459,12 @@ class Peers extends Component {
                                                                                         </tbody>
                                                                                     </table>
                                                                                 </div>
-                                                                                <br />
-                                                                                <SimpleMarkers markers={this.state.markers} />
                                                                             </div>
                                                                         </div>
                                                                     </div>
                                                                     <div className="tab-pane slide-left" id={this.props.network[0].instanceId + "_slide3"}>
                                                                         <div className="row">
-                                                                            <div className="col-lg-6">
+                                                                            <div className="col-lg-12">
                                                                                 <h4>Static Peers</h4>
                                                                                 <div className="table-responsive">
                                                                                     <table className="table table-hover" id="basicTable">
@@ -493,8 +494,14 @@ class Peers extends Component {
                                                                                         </tbody>
                                                                                     </table>
                                                                                 </div>
+                                                                                <br />
+                                                                                <SimpleMarkers markers={this.state.markers} />
                                                                             </div>
-                                                                            <div className="col-lg-6">
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="tab-pane slide-left" id={this.props.network[0].instanceId + "_slide4"}>
+                                                                        <div className="row">
+                                                                            <div className="col-lg-12">
                                                                                 <h4>Whitelisted Peers</h4>
                                                                                 <div className="table-responsive">
                                                                                     <table className="table table-hover" id="basicTable">
