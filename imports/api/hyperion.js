@@ -20,7 +20,7 @@ const jwt = new RedisJwt({
   multiple: true
 })
 
-JsonRoutes.add("post", "/api/hyperion/login", function(req, res, next) {
+JsonRoutes.add("post", "/api/hyperion/login", (req, res, next) => {
   function authenticationFailed() {
     JsonRoutes.sendResult(res, {
       code: 401,
@@ -101,7 +101,7 @@ JsonRoutes.Middleware.use("/api/hyperion/upload", authMiddleware);
 JsonRoutes.Middleware.use("/api/hyperion/logout", authMiddleware);
 JsonRoutes.Middleware.use('/api/hyperion/upload', upload.single('file'));
 
-JsonRoutes.add("post", "/api/hyperion/upload", Meteor.bindEnvironment(function(req, res, next) {
+JsonRoutes.add("post", "/api/hyperion/upload", Meteor.bindEnvironment((req, res, next) => {
   let ipfs_connection = Config.getHyperionConnectionDetails(req.body.location);
   const ipfs = ipfsAPI(ipfs_connection[0], ipfs_connection[1], {protocol: 'http'})
   var ipfsCluster = ipfsClusterAPI(ipfs_connection[0], ipfs_connection[2], {protocol: 'http'})
@@ -114,7 +114,7 @@ JsonRoutes.add("post", "/api/hyperion/upload", Meteor.bindEnvironment(function(r
         }
       })
     } else {
-      ipfsCluster.pin.add(file[0].hash, {"replication-min": 2, "replication-max": 3}, Meteor.bindEnvironment(function (err) {
+      ipfsCluster.pin.add(file[0].hash, {"replication-min": 2, "replication-max": 3}, Meteor.bindEnvironment((err) => {
         if(!err) {
           Files.upsert({
             userId: req.userId,
@@ -156,7 +156,7 @@ JsonRoutes.add("get", "/api/hyperion/download", function(req, res, next) {
   let ipfs_connection = Config.getHyperionConnectionDetails(req.query.location);
   const ipfs = ipfsAPI(ipfs_connection[0], ipfs_connection[1], {protocol: 'http'})
   var ipfsCluster = ipfsClusterAPI(ipfs_connection[0], ipfs_connection[2], {protocol: 'http'})
-  ipfs.files.get(hash, function(err, files) {
+  ipfs.files.get(hash, (err, files) => {
     files.forEach((file) => {
       if(file) {
         res.end(file.content)
@@ -166,7 +166,7 @@ JsonRoutes.add("get", "/api/hyperion/download", function(req, res, next) {
 });
 
 //while removing check if any other person has the same file uploaded or not. If not then only delete.
-JsonRoutes.add("delete", "/api/hyperion/delete", function(req, res, next) {
+JsonRoutes.add("delete", "/api/hyperion/delete", (req, res, next) => {
   let hash = req.query.hash;
   let ipfs_connection = Config.getHyperionConnectionDetails(req.query.location);
   const ipfs = ipfsAPI(ipfs_connection[0], ipfs_connection[1], {protocol: 'http'})
@@ -198,7 +198,7 @@ JsonRoutes.add("delete", "/api/hyperion/delete", function(req, res, next) {
   })
 });
 
-JsonRoutes.add("post", "/api/hyperion/logout", function(req, res, next) {
+JsonRoutes.add("post", "/api/hyperion/logout", (req, res, next) => {
   const call = jwt.call();
   call.destroy(req.rjwt).then(() => {
     res.end(JSON.stringify({
