@@ -1,6 +1,9 @@
 import {
   Hyperion
 } from "../collections/hyperion/hyperion.js"
+import {
+  Files
+} from "../collections/files/files.js"
 import RedisJwt from "redis-jwt";
 import helpers from "../modules/helpers"
 import Config from '../modules/config/server';
@@ -8,7 +11,7 @@ const ipfsAPI = require('ipfs-api');
 const fs = require('fs');
 var ipfsClusterAPI = require('ipfs-cluster-api')
 var multer=require("multer")
-var upload=multer()
+var upload=multer() //in case of scalibility issue use multer file storage. By default it uses memory.
 
 const jwt = new RedisJwt({
   host: Config.redisHost,
@@ -34,7 +37,7 @@ JsonRoutes.add("post", "/api/hyperion/login", function(req, res, next) {
   if (result.error) {
     authenticationFailed()
   } else {
-    jwt.sign(req.body.email, {
+    jwt.sign(user._id, {
       ttl: "1 year"
     }).then(token => {
       JsonRoutes.sendResult(res, {
@@ -80,7 +83,7 @@ function authMiddleware(req, res, next) {
         }
       })
     } else {
-      req.email = decode.id;
+      req.userId = decode.id;
       req.rjwt = decode.rjwt;
       next();
     }
@@ -98,12 +101,11 @@ JsonRoutes.Middleware.use("/api/hyperion/upload", authMiddleware);
 JsonRoutes.Middleware.use("/api/hyperion/logout", authMiddleware);
 JsonRoutes.Middleware.use('/api/hyperion/upload', upload.single('file'));
 
-JsonRoutes.add("post", "/api/hyperion/upload", function(req, res, next) {
+JsonRoutes.add("post", "/api/hyperion/upload", Meteor.bindEnvironment(function(req, res, next) {
   let ipfs_connection = Config.getHyperionConnectionDetails(req.body.location);
   const ipfs = ipfsAPI(ipfs_connection[0], ipfs_connection[1], {protocol: 'http'})
   var ipfsCluster = ipfsClusterAPI(ipfs_connection[0], ipfs_connection[2], {protocol: 'http'})
-
-  ipfs.files.add(req.file.buffer, (err, file) => {
+  ipfs.files.add(req.file.buffer, Meteor.bindEnvironment((err, file) => {
     if (err) {
       JsonRoutes.sendResult(res, {
         code: 401,
@@ -112,8 +114,27 @@ JsonRoutes.add("post", "/api/hyperion/upload", function(req, res, next) {
         }
       })
     } else {
-      ipfsCluster.pin.add(file[0].hash, {"replication-min": 2, "replication-max": 3}, (err) => {
+      ipfsCluster.pin.add(file[0].hash, {"replication-min": 2, "replication-max": 3}, Meteor.bindEnvironment(function (err) {
         if(!err) {
+          Files.upsert({
+            userId: req.userId,
+            hash: file[0].hash
+          }, {
+            $set: {
+              fileName: req.file.originalName,
+              mimetype: req.file.mimetype,
+              size: req.file.size
+            }
+          })
+
+          Hyperion.upsert({
+            userId: req.userId
+          }, {
+            $inc: {
+              size: req.file.size
+            }
+          })
+
           res.end(JSON.stringify({
             "message": `${file[0].hash}`
           }))
@@ -125,21 +146,55 @@ JsonRoutes.add("post", "/api/hyperion/upload", function(req, res, next) {
             }
           })
         }
-      })
+      }))
     }
-  })
-})
+  }))
+}))
 
 JsonRoutes.add("get", "/api/hyperion/download", function(req, res, next) {
   let hash = req.query.hash;
   let ipfs_connection = Config.getHyperionConnectionDetails(req.query.location);
   const ipfs = ipfsAPI(ipfs_connection[0], ipfs_connection[1], {protocol: 'http'})
+  var ipfsCluster = ipfsClusterAPI(ipfs_connection[0], ipfs_connection[2], {protocol: 'http'})
   ipfs.files.get(hash, function(err, files) {
     files.forEach((file) => {
       if(file) {
         res.end(file.content)
       }
     })
+  })
+});
+
+//while removing check if any other person has the same file uploaded or not. If not then only delete.
+JsonRoutes.add("delete", "/api/hyperion/delete", function(req, res, next) {
+  let hash = req.query.hash;
+  let ipfs_connection = Config.getHyperionConnectionDetails(req.query.location);
+  const ipfs = ipfsAPI(ipfs_connection[0], ipfs_connection[1], {protocol: 'http'})
+  var ipfsCluster = ipfsClusterAPI(ipfs_connection[0], ipfs_connection[2], {protocol: 'http'})
+  ipfs.pin.rm(hash, {}, (err, x) => {
+    if(!err) {
+      ipfsCluster.pin.rm(hash, {}, (err, x) => {
+        if(err) {
+          JsonRoutes.sendResult(res, {
+            code: 401,
+            data: {
+              "error": "An unknown error occured"
+            }
+          })
+        } else {
+          res.end(JSON.stringify({
+            "message": "File removed successfully"
+          }))
+        }
+      })
+    } else {
+      JsonRoutes.sendResult(res, {
+        code: 401,
+        data: {
+          "error": "An unknown error occured"
+        }
+      })
+    }
   })
 });
 
