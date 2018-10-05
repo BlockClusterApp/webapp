@@ -12,7 +12,8 @@
         },
         "hyperion": {
           "ip": "35.161.9.16",
-          "port": "31640"
+          "ipfsPort": "31640",
+          "ipfsClusterPort": "30990"
         }
       }
     },

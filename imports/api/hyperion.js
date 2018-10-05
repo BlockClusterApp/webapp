@@ -4,9 +4,11 @@ import {
 import RedisJwt from "redis-jwt";
 import helpers from "../modules/helpers"
 import Config from '../modules/config/server';
-var Busboy = require('busboy');
 const ipfsAPI = require('ipfs-api');
 const fs = require('fs');
+var ipfsClusterAPI = require('ipfs-cluster-api')
+var multer=require("multer")
+var upload=multer()
 
 const jwt = new RedisJwt({
   host: Config.redisHost,
@@ -94,64 +96,49 @@ function authMiddleware(req, res, next) {
 
 JsonRoutes.Middleware.use("/api/hyperion/upload", authMiddleware);
 JsonRoutes.Middleware.use("/api/hyperion/logout", authMiddleware);
-
-JsonRoutes.Middleware.use('/api/hyperion/upload', (req, res, next) => {
-  const nameSuffix = helpers.instanceIDGenerate();
-  const base = process.env.PWD;
-  const busboy = new Busboy({ headers: req.headers });
-  req.thisFile = {};
-  req.body.url = 'not set';
-  req.thisFile.size = 0;
-
-  busboy.on('field', (fieldname, value) => {
-    req.body[fieldname] = value;
-  });
-
-  busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
-    // console.log('busboy on file: ', filename);
-    file.on('data', (data) => {
-      req.thisFile.size += data.length;
-    });
-    req.body.mime = mimetype;
-    req.file = file;
-    req.thisFile.name = filename;
-    req.thisFile.mime = mimetype;
-    // Default value wasn't assigned?
-    req.thisFile.type = 1;
-    req.body.mime = mimetype;
-    req.path = `${base}/temp/${nameSuffix}${filename}`;
-    file.pipe(fs.createWriteStream(req.path));
-  });
-  // busboy.on('finish', () => { });
-  req.pipe(busboy);
-  next();
-});
+JsonRoutes.Middleware.use('/api/hyperion/upload', upload.single('file'));
 
 JsonRoutes.add("post", "/api/hyperion/upload", function(req, res, next) {
-  const body = fs.createReadStream(req.path);
-
   let ipfs_connection = Config.getHyperionConnectionDetails(req.body.location);
   const ipfs = ipfsAPI(ipfs_connection[0], ipfs_connection[1], {protocol: 'http'})
+  var ipfsCluster = ipfsClusterAPI(ipfs_connection[0], ipfs_connection[2], {protocol: 'http'})
 
-  ipfs.files.add(body, (err, file) => {
+  ipfs.files.add(req.file.buffer, (err, file) => {
     if (err) {
-      console.log(err);
+      JsonRoutes.sendResult(res, {
+        code: 401,
+        data: {
+          "error": "An unknown error occured"
+        }
+      })
     } else {
-      console.log(file)
+      ipfsCluster.pin.add(file[0].hash, {"replication-min": 2, "replication-max": 3}, (err) => {
+        if(!err) {
+          res.end(JSON.stringify({
+            "message": `${file[0].hash}`
+          }))
+        } else {
+          JsonRoutes.sendResult(res, {
+            code: 401,
+            data: {
+              "error": "An unknown error occured"
+            }
+          })
+        }
+      })
     }
   })
 })
 
-JsonRoutes.add("get", "/api/hyperion/getFile", function(req, res, next) {
+JsonRoutes.add("get", "/api/hyperion/download", function(req, res, next) {
   let hash = req.query.hash;
   let ipfs_connection = Config.getHyperionConnectionDetails(req.query.location);
   const ipfs = ipfsAPI(ipfs_connection[0], ipfs_connection[1], {protocol: 'http'})
   ipfs.files.get(hash, function(err, files) {
     files.forEach((file) => {
-      JsonRoutes.sendResult(res, {
-        code: 200,
-        data: file.content.toString('utf8')
-      });
+      if(file) {
+        res.end(file.content)
+      }
     })
   })
 });
@@ -163,7 +150,6 @@ JsonRoutes.add("post", "/api/hyperion/logout", function(req, res, next) {
       "message": "Logout successful"
     }))
   }).catch((e) => {
-    console.log(e)
     JsonRoutes.sendResult(res, {
       code: 401,
       data: {
