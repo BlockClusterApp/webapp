@@ -89,7 +89,6 @@ function authMiddleware(req, res, next) {
   }
 
   var token = getToken(req);
-
   jwt.verify(token).then(decode => {
     if (decode == false) {
       JsonRoutes.sendResult(res, {
@@ -114,6 +113,7 @@ function authMiddleware(req, res, next) {
 }
 
 JsonRoutes.Middleware.use("/api/hyperion/upload", authMiddleware);
+JsonRoutes.Middleware.use("/api/hyperion/delete", authMiddleware);
 JsonRoutes.Middleware.use("/api/hyperion/logout", authMiddleware);
 JsonRoutes.Middleware.use('/api/hyperion/upload', upload.single('file'));
 
@@ -204,31 +204,90 @@ JsonRoutes.add("delete", "/api/hyperion/delete", (req, res, next) => {
   let ipfs_connection = Config.getHyperionConnectionDetails(req.query.location);
   const ipfs = ipfsAPI(ipfs_connection[0], ipfs_connection[1], {protocol: 'http'})
   var ipfsCluster = ipfsClusterAPI(ipfs_connection[0], ipfs_connection[2], {protocol: 'http'})
-  ipfs.pin.rm(hash, {}, (err, x) => {
-    if(!err) {
-      ipfsCluster.pin.rm(hash, {}, (err, x) => {
-        if(err) {
-          JsonRoutes.sendResult(res, {
-            code: 401,
-            data: {
-              "error": "An unknown error occured"
-            }
-          })
-        } else {
-          res.end(JSON.stringify({
-            "message": "File removed successfully"
-          }))
-        }
-      })
-    } else {
-      JsonRoutes.sendResult(res, {
-        code: 401,
-        data: {
-          "error": "An unknown error occured"
-        }
-      })
-    }
-  })
+
+  let file = Files.find({
+    userId: req.userId,
+    hash: hash,
+    region: req.query.location
+  }).fetch();
+
+  let total1 = file.length;
+
+  let total2 = Files.find({
+    hash: hash,
+    region: req.query.location
+  }).fetch().length;
+
+  if(total1 == 0) {
+    JsonRoutes.sendResult(res, {
+      code: 401,
+      data: {
+        "error": "File doesn't exist"
+      }
+    })
+  } else if (total1 == 1 && total2 == 1) {
+    //remove from collection and ipfs
+
+    ipfs.pin.rm(hash, {}, Meteor.bindEnvironment((err, x) => {
+      if(!err) {
+        ipfsCluster.pin.rm(hash, {}, Meteor.bindEnvironment((err, x) => {
+          if(err) {
+            JsonRoutes.sendResult(res, {
+              code: 401,
+              data: {
+                "error": "An unknown error occured"
+              }
+            })
+          } else {
+
+            Files.remove({
+              userId: req.userId,
+              hash: hash,
+              region: req.query.location
+            });
+
+            Hyperion.upsert({
+              userId: req.userId
+            }, {
+              $inc: {
+                size: parseInt("-" + file[0].size)
+              }
+            })
+
+            res.end(JSON.stringify({
+              "message": "File removed successfully"
+            }))
+          }
+        }))
+      } else {
+        JsonRoutes.sendResult(res, {
+          code: 401,
+          data: {
+            "error": "An unknown error occured"
+          }
+        })
+      }
+    }))
+  } else if (total2 > 1) {
+    //remove from collection only
+    Files.remove({
+      userId: req.userId,
+      hash: hash,
+      region: req.query.location
+    })
+
+    Hyperion.upsert({
+      userId: req.userId
+    }, {
+      $inc: {
+        size: parseInt("-" + file[0].size)
+      }
+    })
+
+    res.end(JSON.stringify({
+      "message": "File removed successfully"
+    }))
+  }
 });
 
 JsonRoutes.add("post", "/api/hyperion/logout", (req, res, next) => {

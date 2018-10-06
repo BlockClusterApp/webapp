@@ -78,37 +78,23 @@ class Hyperion extends Component {
     })
   }
 
-  onRPCUpdateSubmit = e => {
+  deleteFile = (e, item) => {
     e.preventDefault();
 
-    this.setState({
-      updateRPCFormSubmitError: "",
-      rpcLoading: true
-    });
-
-    Meteor.call(
-      "rpcPasswordUpdate",
-      this.networkNameRPCUpdate.value,
-      this.rpcPassword.value,
-      this.state.locationCode,
-      error => {
-        if (!error) {
-          this.setState({
-            updateRPCFormSubmitError: "",
-            updateRPCFormSubmitSuccess: "Password updated successfully",
-            rpcLoading: false
-          });
-        } else {
-          this.setState({
-            updateRPCFormSubmitError:
-              "An error occured while updating password",
-            updateRPCFormSubmitSuccess: "",
-            rpcLoading: false
-          });
-        }
+    Meteor.call("getHyperionToken", item, (err, token) => {
+      if(!err) {
+        HTTP.call('DELETE', `${window.location.origin}/api/hyperion/delete?location=${item.region}&hash=${item.hash}&token=${token}`, {}, (error, result) => {
+          if (!error) {
+            notifications.success("File deleted successfully")
+          } else {
+            notifications.error("An error occured")
+          }
+        });
+      } else {
+        notifications.error("An error occured")
       }
-    );
-  };
+    })
+  }
 
   render() {
     return (
@@ -184,7 +170,7 @@ class Hyperion extends Component {
                                   <th style={{ width: "18%" }}>Size</th>
                                   <th style={{ width: "17%" }}>Region</th>
                                   <th style={{ width: "15%" }}>Uploaded on</th>
-                                  <th style={{ width: "20%" }}>Download</th>
+                                  <th style={{ width: "20%" }}>Actions</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -210,6 +196,8 @@ class Hyperion extends Component {
                                       </td>
                                       <td className="v-align-middle">
                                         <i className="fa fa-download download" onClick={(e) => this.downloadFile(e, item)}></i>
+                                        &nbsp;&nbsp;&nbsp;
+                                        <i className="fa fa-trash delete" onClick={(e) => this.deleteFile(e, item)}></i>
                                       </td>
                                     </tr>
                                   );
