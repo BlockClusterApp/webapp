@@ -5,17 +5,119 @@ import { withRouter } from "react-router-dom";
 import notifications from "../../../modules/notifications";
 import { Link } from "react-router-dom";
 import Config from "../../../modules/config/client";
-import {Files} from "../../../collections/files/files.js"
-import helpers from "../../../modules/helpers"
-import FineUploaderTraditional from 'fine-uploader-wrappers'
-import Gallery from 'react-fine-uploader'
-import LocationSelector from '../../components/Selectors/LocationSelector.jsx';
+import { Files } from "../../../collections/files/files.js";
+import { Hyperion } from "../../../collections/hyperion/hyperion.js";
+import helpers from "../../../modules/helpers";
+import FineUploaderTraditional from "fine-uploader-wrappers";
+import Gallery from "react-fine-uploader";
+import LocationSelector from "../../components/Selectors/LocationSelector.jsx";
+import {
+  ComposableMap,
+  ZoomableGroup,
+  Geographies,
+  Geography,
+  Markers,
+  Marker,
+} from "react-simple-maps"
 
 // ...or load this specific CSS file using a <link> tag in your document
-import 'react-fine-uploader/gallery/gallery.css'
+import "react-fine-uploader/gallery/gallery.css";
 import "./Hyperion.scss";
 
-class Hyperion extends Component {
+const wrapperStyles = {
+  width: "100%",
+  maxWidth: 2500,
+  marginTop: "20px",
+}
+
+
+class SimpleMarkers extends Component {
+  render() {
+    return (
+      <div style={wrapperStyles}>
+        <ComposableMap
+            projectionConfig={{
+              scale: 205,
+              rotation: [-11,0,0],
+            }}
+            width={980}
+            height={551}
+            style={{
+              width: "100%",
+              height: "auto",
+            }}
+          >
+          <ZoomableGroup enter={[0,20]} disablePanning>
+              <Geographies geography="/assets/json/world-50m.json">
+                {(geographies, projection) => geographies.map((geography, i) => geography.id !== "ATA" && (
+                  <Geography
+                    key={i}
+                    geography={geography}
+                    projection={projection}
+                    style={{
+                      default: {
+                        fill: "#ECEFF1",
+                        stroke: "#607D8B",
+                        strokeWidth: 0.75,
+                        outline: "none",
+                      },
+                      hover: {
+                        fill: "#607D8B",
+                        stroke: "#607D8B",
+                        strokeWidth: 0.75,
+                        outline: "none",
+                      },
+                      pressed: {
+                        fill: "#FF5722",
+                        stroke: "#607D8B",
+                        strokeWidth: 0.75,
+                        outline: "none",
+                      },
+                    }}
+                  />
+                ))}
+              </Geographies>
+            <Markers>
+              {this.props.markers.map((marker, i) => (
+                  <Marker
+                    key={i}
+                    marker={marker}
+                    style={{
+                      default: { fill: "#FF5722" },
+                      hover: { fill: "#FF5722" },
+                      pressed: { fill: "#FF5722" },
+                    }}
+                    >
+                    <circle
+                      cx={0}
+                      cy={0}
+                      r={10}
+                      style={{
+                        stroke: "#FF5722",
+                        strokeWidth: 3
+                      }}
+                    />
+                  <text
+                    textAnchor="middle"
+                    y={marker.markerOffset}
+                    style={{
+                      fontFamily: "Roboto, sans-serif",
+                      fill: "white",
+                    }}
+                    >
+                    {marker.name}
+                  </text>
+                </Marker>
+              ))}
+            </Markers>
+          </ZoomableGroup>
+        </ComposableMap>
+      </div>
+    )
+  }
+}
+
+class HyperionComponent extends Component {
   constructor() {
     super();
 
@@ -26,10 +128,11 @@ class Hyperion extends Component {
       updateRESTFormSubmitSuccess: "",
       rpcLoading: false,
       restLoading: false,
-      locationCode: "us-west-2"
+      locationCode: "us-west-2",
+      markers: []
     };
 
-    this.downloadFile = this.downloadFile.bind(this)
+    this.downloadFile = this.downloadFile.bind(this);
 
     this.uploader = new FineUploaderTraditional({
       options: {
@@ -47,16 +150,25 @@ class Hyperion extends Component {
         },
         callbacks: {
           onSubmit: (id, fileName) => {
-            Meteor.call("getHyperionToken", {userId: Meteor.userId()}, (err, token) => {
-              if(!err) {
-                this.token = token;
-                this.uploader.methods._endpointStore.set(`${window.location.origin}/api/hyperion/upload?location=${this.locationCode}&token=${this.token}`, id);
+            Meteor.call(
+              "getHyperionToken",
+              { userId: Meteor.userId() },
+              (err, token) => {
+                if (!err) {
+                  this.token = token;
+                  this.uploader.methods._endpointStore.set(
+                    `${window.location.origin}/api/hyperion/upload?location=${
+                      this.locationCode
+                    }&token=${this.token}`,
+                    id
+                  );
+                }
               }
-            })
+            );
           }
         }
       }
-    })
+    });
   }
 
   componentWillUnmount() {
@@ -69,32 +181,44 @@ class Hyperion extends Component {
     e.preventDefault();
 
     Meteor.call("getHyperionToken", item, (err, token) => {
-      if(!err) {
-        window.open(`${window.location.origin}/api/hyperion/download?location=${item.region}&hash=${item.hash}&token=${token}`, '_blank');
-        notifications.success("File download started")
+      if (!err) {
+        window.open(
+          `${window.location.origin}/api/hyperion/download?location=${
+            item.region
+          }&hash=${item.hash}&token=${token}`,
+          "_blank"
+        );
+        notifications.success("File download started");
       } else {
-        notifications.error("An error occured")
+        notifications.error("An error occured");
       }
-    })
-  }
+    });
+  };
 
   deleteFile = (e, item) => {
     e.preventDefault();
 
     Meteor.call("getHyperionToken", item, (err, token) => {
-      if(!err) {
-        HTTP.call('DELETE', `${window.location.origin}/api/hyperion/delete?location=${item.region}&hash=${item.hash}&token=${token}`, {}, (error, result) => {
-          if (!error) {
-            notifications.success("File deleted successfully")
-          } else {
-            notifications.error("An error occured")
+      if (!err) {
+        HTTP.call(
+          "DELETE",
+          `${window.location.origin}/api/hyperion/delete?location=${
+            item.region
+          }&hash=${item.hash}&token=${token}`,
+          {},
+          (error, result) => {
+            if (!error) {
+              notifications.success("File deleted successfully");
+            } else {
+              notifications.error("An error occured");
+            }
           }
-        });
+        );
       } else {
-        notifications.error("An error occured")
+        notifications.error("An error occured");
       }
-    })
-  }
+    });
+  };
 
   render() {
     return (
@@ -107,17 +231,17 @@ class Hyperion extends Component {
                 role="tablist"
                 data-init-reponsive-tabs="dropdownfx"
               >
-              <li className="nav-item">
-                <a
-                  className="active"
-                  href="#"
-                  data-toggle="tab"
-                  role="tab"
-                  data-target="#upload"
-                >
-                  Upload
-                </a>
-              </li>
+                <li className="nav-item">
+                  <a
+                    className="active"
+                    href="#"
+                    data-toggle="tab"
+                    role="tab"
+                    data-target="#upload"
+                  >
+                    Upload
+                  </a>
+                </li>
                 <li className="nav-item">
                   <a
                     className=""
@@ -140,12 +264,19 @@ class Hyperion extends Component {
                   <div className="row">
                     <div className="col-lg-12">
                       <div className="card card-transparent">
-                        <div className="card-block" style={{paddingBottom: '0px'}}>
+                        <div
+                          className="card-block"
+                          style={{ paddingBottom: "0px" }}
+                        >
                           <div className="form-group-attached">
                             <form role="form">
-                              <LocationSelector locationChangeListener={locationCode => (this.locationCode = locationCode)} />
+                              <LocationSelector
+                                locationChangeListener={locationCode =>
+                                  (this.locationCode = locationCode)
+                                }
+                              />
                               <br />
-                              <Gallery uploader={ this.uploader } />
+                              <Gallery uploader={this.uploader} />
                             </form>
                           </div>
                         </div>
@@ -176,9 +307,7 @@ class Hyperion extends Component {
                               <tbody>
                                 {this.props.files.map((item, index) => {
                                   return (
-                                    <tr
-                                      key={item._id}
-                                    >
+                                    <tr key={item._id}>
                                       <td className="v-align-middle ">
                                         {item.fileName}
                                       </td>
@@ -192,12 +321,24 @@ class Hyperion extends Component {
                                         {item.region}
                                       </td>
                                       <td className="v-align-middle">
-                                        {helpers.timeConverter(item.uploaded / 1000)}
+                                        {helpers.timeConverter(
+                                          item.uploaded / 1000
+                                        )}
                                       </td>
                                       <td className="v-align-middle">
-                                        <i className="fa fa-download download" onClick={(e) => this.downloadFile(e, item)}></i>
+                                        <i
+                                          className="fa fa-download download"
+                                          onClick={e =>
+                                            this.downloadFile(e, item)
+                                          }
+                                        />
                                         &nbsp;&nbsp;&nbsp;
-                                        <i className="fa fa-trash delete" onClick={(e) => this.deleteFile(e, item)}></i>
+                                        <i
+                                          className="fa fa-trash delete"
+                                          onClick={e =>
+                                            this.deleteFile(e, item)
+                                          }
+                                        />
                                       </td>
                                     </tr>
                                   );
@@ -212,103 +353,164 @@ class Hyperion extends Component {
                 </div>
                 <div className="tab-pane" id="stats">
                   <div className="row">
-                    <div className="col-lg-5">
-                      <div className="card card-transparent">
-                        <div className="card-header ">
-                          <div className="card-title">
-                            <h5>Update Password of APIs</h5>
-                          </div>
-                        </div>
-                        <div className="card-block" />
-                      </div>
-                    </div>
-                    <div className="col-lg-7">
+                    <div className="col-lg-12">
                       <div className="card card-transparent">
                         <div className="card-block">
-                          <form
-                            id="form-project"
-                            role="form"
-                            onSubmit={this.onRPCUpdateSubmit}
-                            autoComplete="off"
-                          >
-                            <p>Set new password</p>
-                            <div className="form-group-attached">
-                              <div className="row clearfix">
-                                <div className="col-md-12">
-                                  <div className="form-group form-group-default required">
-                                    <label>Username</label>
-                                    <input
-                                      type="text"
-                                      className="form-control readOnly-Value"
-                                      readOnly
-                                    />
+                          <div className="row">
+                            <div className="col-lg-3">
+                              <div className="widget-9 card no-border bg-success no-margin widget-loader-bar">
+                                <div className="full-height d-flex flex-column">
+                                  <div className="card-header ">
+                                    <div className="card-title text-black">
+                                      <span className="font-montserrat fs-11 all-caps text-white">
+                                        Disk Space Consumed{" "}
+                                        <i className="fa fa-chevron-right" />
+                                      </span>
+                                    </div>
+                                    <div className="card-controls">
+                                      <ul>
+                                        <li>
+                                          <a
+                                            href="#"
+                                            className="card-refresh "
+                                            style={{ color: "white" }}
+                                            data-toggle="refresh"
+                                          >
+                                            <i className="fa fa-cloud text-white" />
+                                          </a>
+                                        </li>
+                                      </ul>
+                                    </div>
                                   </div>
-                                </div>
-                              </div>
-                              <div className="row clearfix">
-                                <div className="col-md-12">
-                                  <div className="form-group form-group-default required">
-                                    <label>Password</label>
-                                    <input
-                                      ref={input => {
-                                        this.rpcPassword = input;
-                                      }}
-                                      type="password"
-                                      className="form-control"
-                                      name="password"
-                                    />
+                                  <div className="p-l-20">
+                                    <h3 className="no-margin p-b-30 text-white ">
+                                      {this.props.hyperion.length === 1 &&
+                                        <span>{helpers.bytesToSize(this.props.hyperion[0].size)}</span>
+                                      }
+
+                                      {this.props.hyperion.length === 0 &&
+                                        <span>0</span>
+                                      }
+                                    </h3>
                                   </div>
                                 </div>
                               </div>
                             </div>
-                            <br />
-                            {this.state.updateRPCFormSubmitError != "" && (
-                              <div className="row">
-                                <div className="col-md-12">
-                                  <div
-                                    className="m-b-20 alert alert-danger m-b-0"
-                                    role="alert"
-                                  >
-                                    <button
-                                      className="close"
-                                      data-dismiss="alert"
-                                    />
-                                    {this.state.updateRPCFormSubmitError}
+                            <div className="col-lg-3">
+                              <div className="widget-9 card no-border bg-primary no-margin widget-loader-bar">
+                                <div className="full-height d-flex flex-column">
+                                  <div className="card-header ">
+                                    <div className="card-title text-black">
+                                      <span className="font-montserrat fs-11 all-caps text-white">
+                                        Cost Per GB{" "}
+                                        <i className="fa fa-chevron-right" />
+                                      </span>
+                                    </div>
+                                    <div className="card-controls">
+                                      <ul>
+                                        <li>
+                                          <a
+                                            href="#"
+                                            className="card-refresh "
+                                            style={{ color: "white" }}
+                                            data-toggle="refresh"
+                                          >
+                                            <i className="fa fa-archive text-white" />
+                                          </a>
+                                        </li>
+                                      </ul>
+                                    </div>
+                                  </div>
+                                  <div className="p-l-20">
+                                    <h3 className="no-margin p-b-30 text-white ">
+                                      $0.0273
+                                    </h3>
                                   </div>
                                 </div>
                               </div>
-                            )}
+                            </div>
+                            <div className="col-lg-3">
+                              <div className="widget-9 card no-border bg-warning no-margin widget-loader-bar">
+                                <div className="full-height d-flex flex-column">
+                                  <div className="card-header ">
+                                    <div className="card-title text-black">
+                                      <span className="font-montserrat fs-11 all-caps text-white">
+                                        Monthly Cost{" "}
+                                        <i className="fa fa-chevron-right" />
+                                      </span>
+                                    </div>
+                                    <div className="card-controls">
+                                      <ul>
+                                        <li>
+                                          <a
+                                            href="#"
+                                            className="card-refresh "
+                                            style={{ color: "white" }}
+                                            data-toggle="refresh"
+                                          >
+                                            <i className="fa fa-calendar text-white" />
+                                          </a>
+                                        </li>
+                                      </ul>
+                                    </div>
+                                  </div>
+                                  <div className="p-l-20">
+                                    <h3 className="no-margin p-b-30 text-white ">
+                                      {this.props.hyperion.length === 1 &&
+                                        <span>${(((this.props.hyperion[0].size / 1024) / 1024) * (0.0273 / 1024)).toPrecision(2)}</span>
+                                      }
 
-                            {this.state.updateRPCFormSubmitSuccess != "" && (
-                              <div className="row">
-                                <div className="col-md-12">
-                                  <div
-                                    className="m-b-20 alert alert-success m-b-0"
-                                    role="alert"
-                                  >
-                                    <button
-                                      className="close"
-                                      data-dismiss="alert"
-                                    />
-                                    {this.state.updateRPCFormSubmitSuccess}
+                                      {this.props.hyperion.length === 0 &&
+                                        <span>$0</span>
+                                      }
+                                    </h3>
                                   </div>
                                 </div>
                               </div>
-                            )}
+                            </div>
+                            <div className="col-lg-3">
+                              <div className="widget-9 card no-border bg-complete no-margin widget-loader-bar">
+                                <div className="full-height d-flex flex-column">
+                                  <div className="card-header ">
+                                    <div className="card-title text-black">
+                                      <span className="font-montserrat fs-11 all-caps text-white">
+                                        This Month Invoice{" "}
+                                        <i className="fa fa-chevron-right" />
+                                      </span>
+                                    </div>
+                                    <div className="card-controls">
+                                      <ul>
+                                        <li>
+                                          <a
+                                            href="#"
+                                            className="card-refresh "
+                                            style={{ color: "white" }}
+                                            data-toggle="refresh"
+                                          >
+                                            <i className="fa fa-file-o text-white" />
+                                          </a>
+                                        </li>
+                                      </ul>
+                                    </div>
+                                  </div>
+                                  <div className="p-l-20">
+                                    <h3 className="no-margin p-b-30 text-white ">
+                                      {this.props.hyperion.length === 1 &&
+                                        <span>${(((this.props.hyperion[0].size / 1024) / 1024) * (0.0273 / 1024)).toPrecision(2)}</span>
+                                      }
 
-                            <LaddaButton
-                              loading={this.state.rpcLoading}
-                              data-size={S}
-                              data-style={SLIDE_UP}
-                              data-spinner-size={30}
-                              data-spinner-lines={12}
-                              className="btn btn-success"
-                              type="submit"
-                            >
-                              <i className="fa fa-wrench" aria-hidden="true" />
-                              &nbsp;&nbsp;Update
-                            </LaddaButton>
-                          </form>
+                                      {this.props.hyperion.length === 0 &&
+                                        <span>$0</span>
+                                      }
+                                    </h3>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="col-lg-12">
+                              <SimpleMarkers markers={this.state.markers} />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -326,12 +528,11 @@ class Hyperion extends Component {
 export default withTracker(props => {
   return {
     files: Files.find({}).fetch(),
+    hyperion: Hyperion.find({}).fetch(),
     workerNodeIP: Config.workerNodeIP,
     workerNodeDomainName: Config.workerNodeDomainName,
     subscriptions: [
-      Meteor.subscribe("files", {
-        onReady: function() {}
-      })
+      Meteor.subscribe("files"), Meteor.subscribe("hyperion")
     ]
   };
-})(withRouter(Hyperion));
+})(withRouter(HyperionComponent));

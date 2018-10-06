@@ -1,5 +1,5 @@
 import {Hyperion} from "../hyperion.js"
 
 Meteor.publish("hyperion", function () {
-	return Hyperion.find({user: this.userId});
+	return Hyperion.find({userId: this.userId});
 });
