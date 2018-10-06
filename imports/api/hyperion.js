@@ -12,6 +12,7 @@ const fs = require('fs');
 var ipfsClusterAPI = require('ipfs-cluster-api')
 var multer=require("multer")
 var upload=multer() //in case of scalibility issue use multer file storage. By default it uses memory.
+var Future = Npm.require('fibers/future');
 
 const jwt = new RedisJwt({
   host: Config.redisHost,
@@ -38,7 +39,7 @@ JsonRoutes.add("post", "/api/hyperion/login", (req, res, next) => {
     authenticationFailed()
   } else {
     jwt.sign(user._id, {
-      ttl: "1 year"
+      ttl: "5 minutes"
     }).then(token => {
       JsonRoutes.sendResult(res, {
         data: {
@@ -51,6 +52,21 @@ JsonRoutes.add("post", "/api/hyperion/login", (req, res, next) => {
     }).catch(err => {
       authenticationFailed()
     })
+  }
+})
+
+Meteor.methods({
+  getHyperionToken: async file => {
+    var myFuture = new Future();
+    jwt.sign(file.userId, {
+      ttl: "1 year"
+    }).then(token => {
+      myFuture.return(token);
+    }).catch(err => {
+      myFuture.throw();
+    })
+
+    return myFuture.wait();
   }
 })
 
@@ -102,7 +118,7 @@ JsonRoutes.Middleware.use("/api/hyperion/logout", authMiddleware);
 JsonRoutes.Middleware.use('/api/hyperion/upload', upload.single('file'));
 
 JsonRoutes.add("post", "/api/hyperion/upload", Meteor.bindEnvironment((req, res, next) => {
-  let ipfs_connection = Config.getHyperionConnectionDetails(req.body.location);
+  let ipfs_connection = Config.getHyperionConnectionDetails(req.body.location || req.query.location);
   const ipfs = ipfsAPI(ipfs_connection[0], ipfs_connection[1], {protocol: 'http'})
   var ipfsCluster = ipfsClusterAPI(ipfs_connection[0], ipfs_connection[2], {protocol: 'http'})
   ipfs.files.add(req.file.buffer, Meteor.bindEnvironment((err, file) => {
@@ -116,28 +132,45 @@ JsonRoutes.add("post", "/api/hyperion/upload", Meteor.bindEnvironment((req, res,
     } else {
       ipfsCluster.pin.add(file[0].hash, {"replication-min": 2, "replication-max": 3}, Meteor.bindEnvironment((err) => {
         if(!err) {
-          Files.upsert({
+
+          if(Files.find({
             userId: req.userId,
-            hash: file[0].hash
-          }, {
-            $set: {
-              fileName: req.file.originalName,
-              mimetype: req.file.mimetype,
-              size: req.file.size
-            }
-          })
+            hash: file[0].hash,
+            region: req.body.location || req.query.location
+          }).fetch().length == 0) {
+            Files.upsert({
+              userId: req.userId,
+              hash: file[0].hash
+            }, {
+              $set: {
+                uploaded: Date.now(),
+                fileName: req.file.originalname,
+                mimetype: req.file.mimetype,
+                size: req.file.size,
+                region: req.body.location || req.query.location
+              }
+            })
 
-          Hyperion.upsert({
-            userId: req.userId
-          }, {
-            $inc: {
-              size: req.file.size
-            }
-          })
+            Hyperion.upsert({
+              userId: req.userId
+            }, {
+              $inc: {
+                size: req.file.size
+              }
+            })
 
-          res.end(JSON.stringify({
-            "message": `${file[0].hash}`
-          }))
+            res.end(JSON.stringify({
+              "message": `${file[0].hash}`,
+              "success": true
+            }))
+          } else {
+            JsonRoutes.sendResult(res, {
+              code: 401,
+              data: {
+                "error": "File already exists"
+              }
+            })
+          }
         } else {
           JsonRoutes.sendResult(res, {
             code: 401,

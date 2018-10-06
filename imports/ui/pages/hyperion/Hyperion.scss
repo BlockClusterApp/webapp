@@ -1,10 +1,21 @@
 .hyperion {
-    .readOnly-Value {
-        color: #2c2c2c
+    .download {
+      cursor: pointer;
     }
 
-    pre {
-        word-break: break-all;
-        white-space: pre-wrap;
+    .react-fine-uploader-gallery-file-input-container {
+      width: 130px;
+    }
+
+    .react-fine-uploader-gallery-file {
+      width: 150px;
+    }
+
+    .react-fine-uploader-gallery-progress-bar, .react-fine-uploader-gallery-total-progress-bar {
+      display: none;
+    }
+
+    .react-fine-uploader-gallery-total-progress-bar-container {
+      display: none;
     }
 }
