@@ -39,7 +39,7 @@ JsonRoutes.add("post", "/api/hyperion/login", (req, res, next) => {
     authenticationFailed()
   } else {
     jwt.sign(user._id, {
-      ttl: "5 minutes"
+      ttl: "1 year"
     }).then(token => {
       JsonRoutes.sendResult(res, {
         data: {
@@ -59,7 +59,7 @@ Meteor.methods({
   getHyperionToken: async file => {
     var myFuture = new Future();
     jwt.sign(file.userId, {
-      ttl: "1 year"
+      ttl: "5 minutes"
     }).then(token => {
       myFuture.return(token);
     }).catch(err => {
