@@ -8,12 +8,14 @@ function fetchFormat(message, tags) {
       message,
       ...tags,
       timestamp: new Date(),
+      env: process.env.NODE_ENV,
     };
   } else {
     return {
       message,
       tags,
       timestamp: new Date(),
+      env: process.env.NODE_ENV,
     };
   }
 }
@@ -29,14 +31,12 @@ function initialize(settings) {
       const loggerOpts = {
         filename: logFile.filename,
       };
-      if(logFile.level) {
+      if (logFile.level) {
         loggerOpts.level = logFile.level;
       } else {
         loggerOpts.level = 'info';
       }
-      finalOpts.transports.push(
-        new winston.transports.File(loggerOpts)
-      );
+      finalOpts.transports.push(new winston.transports.File(loggerOpts));
     });
     logger = winston.createLogger(finalOpts);
   } else {
