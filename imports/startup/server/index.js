@@ -9,28 +9,14 @@ RavenLogger.initialize({
   autoBreadcrumbs: true
 });
 
-class RavenError extends Error {
-  constructor(err, errorMessage, reason, details) {
-    if (typeof err === 'string') {
-      details = reason;
-      reason = errorMessage;
-      errorMessage = err;
-      err = null;
+ElasticLogger.initialize({
+  logFiles: [
+    {
+      filename: '/logs/webapp-logs.log'
     }
-    // console.log("Throwing error", err, errorMessage, reason, details);
-    // if(err) {
-    //   RavenLogger.log(err, {
-    //     errorMessage,
-    //     reason,
-    //     details
-    //   });
-    // } else {
-    //   RavenLogger.log(errorMessage, reason, details);
-    // }
+  ]
+});
 
-    super(err, errorMessage, reason, details);
-  }
-}
 
 // Meteor.Error = RavenError;
 
