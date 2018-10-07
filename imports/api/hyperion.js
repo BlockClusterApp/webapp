@@ -213,11 +213,21 @@ JsonRoutes.add("get", "/api/hyperion/download", function(req, res, next) {
   const ipfs = ipfsAPI(ipfs_connection[0], ipfs_connection[1], {protocol: 'http'})
   var ipfsCluster = ipfsClusterAPI(ipfs_connection[0], ipfs_connection[2], {protocol: 'http'})
   ipfs.files.get(hash, (err, files) => {
-    files.forEach((file) => {
-      if(file) {
-        res.end(file.content)
-      }
-    })
+    if(files) {
+      files.forEach((file) => {
+        if(file) {
+          res.end(file.content)
+          return;
+        }
+      })
+    } else {
+      JsonRoutes.sendResult(res, {
+        code: 401,
+        data: {
+          "error": "File not found"
+        }
+      })
+    }
   })
 });
 

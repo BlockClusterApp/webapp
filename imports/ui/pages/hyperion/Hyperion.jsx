@@ -29,16 +29,6 @@ const wrapperStyles = {
   maxWidth: 2500,
   marginTop: "20px",
 }
-/*
-Meteor.call("getClusterLocations", (err, res) => {
-  this.setState({
-    locations: res
-  });
-  if (this.props && this.props.locationChangeListener) {
-    this.props.locationChangeListener(res[0] ? res[0].locationCode : 'ap-south-1a');
-  }
-});
-*/
 
 class SimpleMarkers extends Component {
   render() {
@@ -142,6 +132,7 @@ class HyperionComponent extends Component {
     };
 
     this.downloadFile = this.downloadFile.bind(this);
+    this.searchFile = this.searchFile.bind(this);
 
     this.uploader = new FineUploaderTraditional({
       options: {
@@ -229,6 +220,24 @@ class HyperionComponent extends Component {
     });
   };
 
+  searchFile = (e) => {
+    e.preventDefault();
+
+    Meteor.call("getHyperionToken", {userId: Meteor.userId()}, (err, token) => {
+      if (!err) {
+        window.open(
+          `${window.location.origin}/api/hyperion/download?location=${
+            this.locationCode
+          }&hash=${this.refs.searchBox.value}&token=${token}`,
+          "_blank"
+        );
+        notifications.success("File download started");
+      } else {
+        notifications.error("An error occured");
+      }
+    });
+  }
+
   deleteFile = (e, item) => {
     e.preventDefault();
 
@@ -255,7 +264,6 @@ class HyperionComponent extends Component {
   };
 
   render() {
-    console.log(Hyperion.find({}).fetch())
     return (
       <div className="content hyperion">
         <div className="m-t-20 container-fluid container-fixed-lg">
@@ -291,6 +299,11 @@ class HyperionComponent extends Component {
                 <li className="nav-item">
                   <a href="#" data-toggle="tab" role="tab" data-target="#stats">
                     Stats & Billing
+                  </a>
+                </li>
+                <li className="nav-item">
+                  <a href="#" data-toggle="tab" role="tab" data-target="#search">
+                    Search
                   </a>
                 </li>
               </ul>
@@ -545,6 +558,32 @@ class HyperionComponent extends Component {
                             <div className="col-lg-12">
                               <SimpleMarkers markers={this.state.markers} />
                             </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="tab-pane" id="search">
+                  <div className="row">
+                    <div className="col-lg-12">
+                      <div className="card card-transparent m-b-0">
+                        <div className="card-block">
+                          <div className="form-group-attached">
+                            <form role="form" onSubmit={e =>
+                                this.searchFile(e)
+                              }>
+                              <LocationSelector
+                                locationChangeListener={locationCode =>
+                                  (this.locationCode = locationCode)
+                                }
+                              />
+                              <div className="form-group form-group-default m-t-10">
+                                <label>Enter File Hash</label>
+                                <input type="text" placeholder="QmcoEsT1y1jJjGKv5jXLtVrkyuV9mz2hukPic5UnjS4JEw" className="form-control" ref="searchBox" style={{height: "calc(2.25rem + 2px)"}} />
+                              </div>
+                              <button className="btn btn-complete btn-cons m-t-10"><i className="fa fa-search" /> Search</button>
+                            </form>
                           </div>
                         </div>
                       </div>
