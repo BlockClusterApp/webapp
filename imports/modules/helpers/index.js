@@ -157,5 +157,15 @@ export default {
         } else {
             return bytes + ' B';
         }
-    }
+    },
+    daysInThisMonth() {
+      var now = new Date();
+      return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    },
+    hyperionGBCostPerDay() {
+      return 0.00091;
+    },
+    hyperionGBCostPerMonth() {
+      return 0.00091 * 30;
+    },
 }

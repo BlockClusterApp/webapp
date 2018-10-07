@@ -2,6 +2,8 @@ import Billing from '../../../../api/billing';
 import Invoice from '../../../../api/billing/invoice';
 import moment from 'moment';
 import { RZPlan, RZSubscription } from '../../../../collections/razorpay';
+import { Hyperion } from '../../../../collections/hyperion/hyperion.js';
+import helpers from "../../../../modules/helpers"
 
 const debug = require('debug')('scheduler:bull:bill');
 
@@ -31,6 +33,32 @@ module.exports = (bullSystem) => {
         year: prevYear
       });
       debug('Bill', bill);
+
+
+      /*Calculate Hyperion Usage Bill*/
+      //start
+      let total_hyperion_cost = 0; //add this value to invoice amount
+      let hyperion_stats = Hyperion.find({
+        userId: userId
+      }).fetch();
+
+      if(hyperion_stats.length === 1) {
+        let totalDaysThisMonth = helpers.daysInThisMonth();
+        let costPerGBPerDay = helpers.hyperionGBCostPerDay();
+        let fileSizeInGB = ((hyperion_stats[0].size / 1024) / 1024) / 1024;
+        let fileCostPerDay = costPerGBPerDay * fileSizeInGB;
+        total_hyperion_cost = totalDaysThisMonth * fileCostPerDay;
+        total_hyperion_cost = (total_hyperion_cost - hyperion_stats[0].discout).toPrecision(2);
+
+        Hyperion.update({
+          userId: userId
+        }, {
+          $set: {
+            discount: 0 //reset discount
+          }
+        })
+      }
+      //end
 
       const rzSubscription = RZSubscription.find({
         userId,

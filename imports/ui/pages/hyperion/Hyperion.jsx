@@ -29,7 +29,16 @@ const wrapperStyles = {
   maxWidth: 2500,
   marginTop: "20px",
 }
-
+/*
+Meteor.call("getClusterLocations", (err, res) => {
+  this.setState({
+    locations: res
+  });
+  if (this.props && this.props.locationChangeListener) {
+    this.props.locationChangeListener(res[0] ? res[0].locationCode : 'ap-south-1a');
+  }
+});
+*/
 
 class SimpleMarkers extends Component {
   render() {
@@ -171,6 +180,31 @@ class HyperionComponent extends Component {
     });
   }
 
+  componentDidMount() {
+    Meteor.call("getClusterLocations", (err, res) => {
+      let ips = []
+      res.forEach(item => {
+        ips.push(item.workerNodeIP);
+      })
+
+      Meteor.call("convertIP_Location", ips, (error, result) => {
+        if (!error && result) {
+          let markers = [];
+          result.forEach(location => {
+            markers.push({
+              markerOffset: 4,
+              coordinates: location.ll.reverse()
+            });
+          });
+
+          this.setState({
+            markers: markers
+          });
+        }
+      });
+    });
+  }
+
   componentWillUnmount() {
     this.props.subscriptions.forEach(s => {
       s.stop();
@@ -221,6 +255,7 @@ class HyperionComponent extends Component {
   };
 
   render() {
+    console.log(Hyperion.find({}).fetch())
     return (
       <div className="content hyperion">
         <div className="m-t-20 container-fluid container-fixed-lg">
@@ -423,7 +458,7 @@ class HyperionComponent extends Component {
                                   </div>
                                   <div className="p-l-20">
                                     <h3 className="no-margin p-b-30 text-white ">
-                                      $0.0273
+                                      <span>${helpers.hyperionGBCostPerMonth()}</span>
                                     </h3>
                                   </div>
                                 </div>
@@ -457,7 +492,7 @@ class HyperionComponent extends Component {
                                   <div className="p-l-20">
                                     <h3 className="no-margin p-b-30 text-white ">
                                       {this.props.hyperion.length === 1 &&
-                                        <span>${(((this.props.hyperion[0].size / 1024) / 1024) * (0.0273 / 1024)).toPrecision(2)}</span>
+                                        <span>${((((this.props.hyperion[0].size / 1024) / 1024) / 1024) * (helpers.hyperionGBCostPerDay() * helpers.daysInThisMonth())).toPrecision(2)}</span>
                                       }
 
                                       {this.props.hyperion.length === 0 &&
@@ -496,7 +531,7 @@ class HyperionComponent extends Component {
                                   <div className="p-l-20">
                                     <h3 className="no-margin p-b-30 text-white ">
                                       {this.props.hyperion.length === 1 &&
-                                        <span>${(((this.props.hyperion[0].size / 1024) / 1024) * (0.0273 / 1024)).toPrecision(2)}</span>
+                                        <span>${((((((this.props.hyperion[0].size / 1024) / 1024) / 1024) * (helpers.hyperionGBCostPerDay() * helpers.daysInThisMonth())).toPrecision(2)) - this.props.hyperion[0].discount).toPrecision(2)}</span>
                                       }
 
                                       {this.props.hyperion.length === 0 &&

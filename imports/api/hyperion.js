@@ -13,6 +13,7 @@ var ipfsClusterAPI = require('ipfs-cluster-api')
 var multer=require("multer")
 var upload=multer() //in case of scalibility issue use multer file storage. By default it uses memory.
 var Future = Npm.require('fibers/future');
+import Billing from './billing';
 
 const jwt = new RedisJwt({
   host: Config.redisHost,
@@ -89,7 +90,7 @@ function authMiddleware(req, res, next) {
   }
 
   var token = getToken(req);
-  jwt.verify(token).then(decode => {
+  jwt.verify(token).then(async decode => {
     if (decode == false) {
       JsonRoutes.sendResult(res, {
         code: 401,
@@ -98,9 +99,20 @@ function authMiddleware(req, res, next) {
         }
       })
     } else {
-      req.userId = decode.id;
-      req.rjwt = decode.rjwt;
-      next();
+      const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(decode.id);
+
+      if(isPaymentMethodVerified) {
+        req.userId = decode.id;
+        req.rjwt = decode.rjwt;
+        next();
+      } else {
+        JsonRoutes.sendResult(res, {
+          code: 401,
+          data: {
+            "error": "Please verify your payment method"
+          }
+        })
+      }
     }
   }).catch(err => {
     JsonRoutes.sendResult(res, {
@@ -151,11 +163,22 @@ JsonRoutes.add("post", "/api/hyperion/upload", Meteor.bindEnvironment((req, res,
               }
             })
 
+            let totalDaysThisMonth = helpers.daysInThisMonth();
+            let todayDay = (new Date()).getUTCDate();
+            let daysRemaining = totalDaysThisMonth - (todayDay - 1);
+            let daysIgnored = todayDay - 1;
+
+            let costPerGBPerDay = helpers.hyperionGBCostPerDay();
+            let fileSizeInGB = ((req.file.size / 1024) / 1024) / 1024;
+            let fileCostPerDay = costPerGBPerDay * fileSizeInGB;
+            let costIgnored = daysIgnored * fileCostPerDay;
+
             Hyperion.upsert({
               userId: req.userId
             }, {
               $inc: {
-                size: req.file.size
+                size: req.file.size,
+                discount: costIgnored //deduct this amount in monthly billing and reset to 0.
               }
             })
 
@@ -240,6 +263,27 @@ JsonRoutes.add("delete", "/api/hyperion/delete", (req, res, next) => {
             })
           } else {
 
+            let newDiscount = 0;
+            let thisMonth = (new Date()).getMonth();
+            let thisYear = (new Date()).getFullYear();
+            let fileAddedMonth = (new Date(file[0].uploaded)).getMonth();
+            let fileAddedYear = (new Date(file[0].uploaded)).getFullYear();
+            let fileAddedDay = (new Date(file[0].uploaded)).getUTCDate();
+
+            if(thisMonth === fileAddedMonth && thisYear === fileAddedYear) {
+              let totalDaysThisMonth = helpers.daysInThisMonth();
+              let todayDay = (new Date()).getUTCDate();
+              let daysRemaining = totalDaysThisMonth - (todayDay - 1);
+              let daysIgnored = todayDay - 1;
+
+              let costPerGBPerDay = helpers.hyperionGBCostPerDay();
+              let fileSizeInGB = ((file[0].size / 1024) / 1024) / 1024;
+              let fileCostPerDay = costPerGBPerDay * fileSizeInGB;
+              let costIgnored = daysIgnored * fileCostPerDay; //total discount that was given
+
+              newDisount = (totalDaysThisMonth - todayDay) * fileCostPerDay;
+            }
+
             Files.remove({
               userId: req.userId,
               hash: hash,
@@ -250,7 +294,8 @@ JsonRoutes.add("delete", "/api/hyperion/delete", (req, res, next) => {
               userId: req.userId
             }, {
               $inc: {
-                size: parseInt("-" + file[0].size)
+                size: parseInt("-" + file[0].size),
+                discount: parseFloat(parseFloat("-" + newDisount.toString()).toPrecision(2))
               }
             })
 
@@ -276,11 +321,33 @@ JsonRoutes.add("delete", "/api/hyperion/delete", (req, res, next) => {
       region: req.query.location
     })
 
+    let newDiscount = 0;
+    let thisMonth = (new Date()).getMonth();
+    let thisYear = (new Date()).getFullYear();
+    let fileAddedMonth = (new Date(file[0].uploaded)).getMonth();
+    let fileAddedYear = (new Date(file[0].uploaded)).getFullYear();
+    let fileAddedDay = (new Date(file[0].uploaded)).getUTCDate();
+
+    if(thisMonth === fileAddedMonth && thisYear === fileAddedYear) {
+      let totalDaysThisMonth = helpers.daysInThisMonth();
+      let todayDay = (new Date()).getUTCDate();
+      let daysRemaining = totalDaysThisMonth - (todayDay - 1);
+      let daysIgnored = todayDay - 1;
+
+      let costPerGBPerDay = helpers.hyperionGBCostPerDay();
+      let fileSizeInGB = ((file[0].size / 1024) / 1024) / 1024;
+      let fileCostPerDay = costPerGBPerDay * fileSizeInGB;
+      let costIgnored = daysIgnored * fileCostPerDay; //total discount that was given
+
+      newDisount = (totalDaysThisMonth - todayDay) * fileCostPerDay;
+    }
+
     Hyperion.upsert({
       userId: req.userId
     }, {
       $inc: {
-        size: parseInt("-" + file[0].size)
+        size: parseInt("-" + file[0].size),
+        discount: parseFloat(parseFloat("-" + newDisount.toString()).toPrecision(2))
       }
     })
 
@@ -305,3 +372,6 @@ JsonRoutes.add("post", "/api/hyperion/logout", (req, res, next) => {
     })
   })
 })
+
+//Hyperion.remove({});
+//Files.remove({})
