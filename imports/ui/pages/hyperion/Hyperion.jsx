@@ -207,12 +207,9 @@ class HyperionComponent extends Component {
 
     Meteor.call("getHyperionToken", item, (err, token) => {
       if (!err) {
-        window.open(
-          `${window.location.origin}/api/hyperion/download?location=${
-            item.region
-          }&hash=${item.hash}&token=${token}`,
-          "_blank"
-        );
+        helpers.downloadFile(`${window.location.origin}/api/hyperion/download?location=${
+          item.region
+        }&hash=${item.hash}&token=${token}`, item.fileName.substr(item.fileName.lastIndexOf('.') + 1))
         notifications.success("File download started");
       } else {
         notifications.error("An error occured");
@@ -225,12 +222,9 @@ class HyperionComponent extends Component {
 
     Meteor.call("getHyperionToken", {userId: Meteor.userId()}, (err, token) => {
       if (!err) {
-        window.open(
-          `${window.location.origin}/api/hyperion/download?location=${
-            this.locationCode
-          }&hash=${this.refs.searchBox.value}&token=${token}`,
-          "_blank"
-        );
+        helpers.downloadFile(`${window.location.origin}/api/hyperion/download?location=${
+          this.locationCode
+        }&hash=${this.refs.searchBox.value}&token=${token}`)
         notifications.success("File download started");
       } else {
         notifications.error("An error occured");
