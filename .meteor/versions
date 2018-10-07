@@ -13,6 +13,7 @@ blockcluster:http@1.4.1
 blockcluster:jquery@0.0.1
 blockcluster:jquery-scrollbar@0.0.1
 blockcluster:ladda@0.0.1
+blockcluster:logs@0.1.0
 blockcluster:modernizr@0.0.1
 blockcluster:pages@0.0.1
 blockcluster:raven@0.3.0
