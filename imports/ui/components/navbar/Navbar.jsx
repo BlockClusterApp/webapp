@@ -89,10 +89,19 @@ class Navbar extends Component {
                         <li className="m-t-30 ">
                             <Link to={"/app/networks"} className="detailed">
                                 <span className="title">Networks</span>
-                                <span className="details">List of Nodes</span>
+                                <span className="details">Dynamo Management</span>
                             </Link>
                             <span className="icon-thumbnail">
                                 <i className="fa fa-list" />
+                            </span>
+                        </li>
+                        <li>
+                            <Link to={"/app/hyperion"} className="detailed">
+                                <span className="title">Files</span>
+                                <span className="details">Upload on Hyperion</span>
+                            </Link>
+                            <span className="icon-thumbnail">
+                                <i className="fa fa-file" />
                             </span>
                         </li>
                         {/* {(this.props.kuberREST_IP[0] !== undefined) &&

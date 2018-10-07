@@ -24,6 +24,25 @@ function getAPIHost() {
   }
 }
 
+function getHyperionConnectionDetails(locationCode) {
+  if (process.env.HYPERION_URL) {
+    return process.env.HYPERION_URL;
+  }
+  switch (process.env.NODE_ENV) {
+    case "production":
+      return [RemoteConfig.clusters['production'][locationCode].hyperion.ip, RemoteConfig.clusters['production'][locationCode].hyperion.ipfsPort, RemoteConfig.clusters['production'][locationCode].hyperion.ipfsClusterPort];
+    case "staging":
+      return [RemoteConfig.clusters['staging'][locationCode].hyperion.ip, RemoteConfig.clusters['staging'][locationCode].hyperion.ipfsPort, RemoteConfig.clusters['staging'][locationCode].hyperion.ipfsClusterPort];
+    case "test":
+      return [RemoteConfig.clusters['test'][locationCode].hyperion.ip, RemoteConfig.clusters['test'][locationCode].hyperion.ipfsPort, RemoteConfig.clusters['test'][locationCode].hyperion.ipfsClusterPort];
+    case "dev":
+      return [RemoteConfig.clusters['dev'][locationCode].hyperion.ip, RemoteConfig.clusters['dev'][locationCode].hyperion.ipfsPort, RemoteConfig.clusters['dev'][locationCode].hyperion.ipfsClusterPort];
+    default:
+      return [RemoteConfig.clusters['dev'][locationCode].hyperion.ip, RemoteConfig.clusters['dev'][locationCode].hyperion.ipfsPort, RemoteConfig.clusters['dev'][locationCode].hyperion.ipfsClusterPort];
+  }
+}
+
+
 function getDynamoWokerDomainName(locationCode) {
   let prefix = '';
   if(locationCode !== "us-west-2"){
@@ -106,6 +125,7 @@ module.exports = {
   apiHost: getAPIHost(),
   database: getDatabase(),
   mongoConnectionString: getMongoConnectionString(),
+  getHyperionConnectionDetails: getHyperionConnectionDetails,
   workerNodeDomainName: (locationCode = "us-west-2") => {
     return getDynamoWokerDomainName(locationCode);
   },

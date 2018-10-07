@@ -1,0 +1,31 @@
+.hyperion {
+    .download {
+      cursor: pointer;
+    }
+
+    .react-fine-uploader-gallery-file-input-container {
+      width: 130px;
+    }
+
+    .react-fine-uploader-gallery-file {
+      width: 150px;
+    }
+
+    .react-fine-uploader-gallery-progress-bar, .react-fine-uploader-gallery-total-progress-bar {
+      display: none;
+    }
+
+    .react-fine-uploader-gallery-total-progress-bar-container {
+      display: none;
+    }
+
+    .delete {
+      cursor: pointer;
+      position: relative;
+      top: -1px;
+    }
+
+    .widget-9 {
+        height: auto !important;
+    }
+}
