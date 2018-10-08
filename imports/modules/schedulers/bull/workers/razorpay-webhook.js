@@ -522,6 +522,7 @@ module.exports = function(bullSystem) {
   const processFunction = function(job) {
     return new Promise(async resolve => {
       const data = job.data;
+      ElasticLogger.log("Processing razorpay webhook", {...data});
       if (typeof HandlerFunctions[data.event] === 'function') {
         await HandlerFunctions[data.event]({ data }, bullSystem);
       } else {

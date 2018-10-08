@@ -4,6 +4,7 @@ import Payment from '../../api/payments/';
 import Email from '../emails/email-sender';
 import moment from 'moment';
 
+const uuidv4 = require('uuid/v4');
 
 const debug = require('debug')('api:invoice');
 import {
@@ -94,6 +95,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
 };
 
 InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth, billingMonthLabel, invoiceId, rzPayment }) => {
+  const spanId = uuidv4();
   billingMonthLabel = billingMonthLabel || moment(billingMonth).format('MMM-YYYY');
 
 
@@ -110,6 +112,8 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   if(invoiceId) {
     selector._id = invoiceId;
   }
+
+  ElasticLogger.log('Trying to settle invoice', {selector, billingMonth, billingMonthLabel, rzPayment, id: spanId},);
 
   if(!selector._id && !selector.rzSubscriptionId && !selector.rzCustomerId) {
     RavenLogger.log('Trying to settle unspecific', {...selector});
@@ -133,6 +137,8 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
       },
     }
   );
+
+  ElasticLogger.log('Settled invoice', {invoice, id: spanId});
 
   return invoice._id;
 };

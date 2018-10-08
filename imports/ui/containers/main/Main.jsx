@@ -23,6 +23,7 @@ import AssetsExchange from '../../pages/assetsExchange/AssetsExchange.jsx';
 import AssetsSearch from '../../pages/assetsSearch/AssetsSearch.jsx';
 import Explorer from '../../pages/explorer/Explorer.jsx';
 import APIsCreds from '../../pages/apisCreds/APIsCreds.jsx';
+import Hyperion from '../../pages/hyperion/Hyperion.jsx';
 import Peers from '../../pages/peers/Peers.jsx';
 import CreateStream from '../../pages/createStream/CreateStream.jsx';
 import PublishStream from '../../pages/publishStream/PublishStream.jsx';
@@ -44,6 +45,7 @@ import VoucherCreate from '../../pages/admin/vouchers/VoucherCreate.jsx';
 import VoucherDetails from '../../pages/admin/vouchers/VoucherDetails';
 import AdminSupport from '../../pages/admin/support/TicketList.jsx';
 import AdminSupportDetails from '../../pages/admin/support/Details.jsx';
+import AdminInvoiceDetails from '../../pages/admin/invoice/Details.jsx';
 
 export default class Main extends Component {
   render() {
@@ -80,6 +82,7 @@ export default class Main extends Component {
             <Route exact path="/app/payments" component={Payments} />
             <Route exact path="/app/support" component={SupportContainer} />
             <Route exact path="/app/support/:id" component={SupportDetails} />
+            <Route exact path="/app/hyperion" component={Hyperion} />
 
             <Route exact path="/app/admin" render={() => <Redirect to="/app/admin/users" />} />
             <Route exact path="/app/admin/users" component={UserList} />
@@ -91,6 +94,7 @@ export default class Main extends Component {
             <Route exact path="/app/admin/vouchers/create" component={VoucherCreate} />
             <Route exact path="/app/admin/support" component={AdminSupport} />
             <Route exact path="/app/admin/support/:id" component={AdminSupportDetails} />
+            <Route exact path="/app/admin/invoices/:id" component={AdminInvoiceDetails} />
           </div>
         </div>
         <Footer />

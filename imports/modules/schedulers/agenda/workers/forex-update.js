@@ -15,12 +15,12 @@ module.exports = function(agenda) {
       });
 
       if(!result){
-        console.log("Unable to fetch exchange rates", result);
+        ElasticLogger.log("Unable to fetch exchange rates", {result});
         return false;
       }
 
       if(!result.rates) {
-        console.log("Unable to fetch exchange rates", result);
+        ElasticLogger.log("Unable to fetch exchange rates", {result});
         return false;
       }
 

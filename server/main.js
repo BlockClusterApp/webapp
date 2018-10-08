@@ -40,7 +40,6 @@ var BigNumber = require('bignumber.js');
 
 var geoip = require('../node_modules/geoip-lite/lib/geoip');
 
-
 Accounts.validateLoginAttempt(function(options) {
   if (!options.allowed) {
     return false;
@@ -770,7 +769,11 @@ Meteor.methods({
     return myFuture.wait();
   },
   deleteNetwork: function(id) {
-    debug('deleteNetwork | ', id);
+    try{
+    ElasticLogger.log(`DeleteNetwork`, {id: id, userId: Meteor.user()});
+    }catch(err){
+      RavenLogger.log(err);
+    }
 
     function kubeCallback(err, res) {
       if (err) {

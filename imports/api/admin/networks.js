@@ -10,12 +10,16 @@ const Network = {};
 const SUPER_ADMIN_LEVEL = 2;
 
 Network.fetchNetworkForAdmin = async (networkId) => {
-  const network = Networks.find({_id: networkId}).fetch()[0];
   if(Meteor.user().admin <= 0) {
     return new Meteor.Error("Unauthorized");
   }
+
+  let network = Networks.find({_id: networkId}).fetch()[0];
   if(!network) {
-    return {network};
+    network = Networks.find({instanceId: networkId}).fetch()[0];
+    if(!network) {
+      return { network }
+    }
   }
   const user = Meteor.users.find({_id: network.user}, {
     fields: {
