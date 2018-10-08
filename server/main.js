@@ -40,7 +40,6 @@ var BigNumber = require('bignumber.js');
 
 var geoip = require('../node_modules/geoip-lite/lib/geoip');
 
-
 Accounts.validateLoginAttempt(function(options) {
   if (!options.allowed) {
     return false;

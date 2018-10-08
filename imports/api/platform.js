@@ -17,7 +17,7 @@ const jwt = new RedisJwt({
 JsonRoutes.add("get", "/ping", function(req, res, next) {
     JsonRoutes.sendResult(res, {
         code: 200,
-        data: "pong"
+        data: "ping"
     });
 });
 

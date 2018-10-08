@@ -31,6 +31,8 @@ ElasticLogger.initialize({
 // Meteor.Error = RavenError;
 
 require("../../collections/networks/server/publications.js")
+require("../../collections/hyperion/server/publications.js")
+require("../../collections/files/server/publications.js")
 require('../../collections/user-invitation/server/publications.js');
 require("../../collections/utilities/server/publications.js")
 require("../../collections/payments/server/publications.js")

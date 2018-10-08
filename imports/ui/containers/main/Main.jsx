@@ -23,6 +23,7 @@ import AssetsExchange from '../../pages/assetsExchange/AssetsExchange.jsx';
 import AssetsSearch from '../../pages/assetsSearch/AssetsSearch.jsx';
 import Explorer from '../../pages/explorer/Explorer.jsx';
 import APIsCreds from '../../pages/apisCreds/APIsCreds.jsx';
+import Hyperion from '../../pages/hyperion/Hyperion.jsx';
 import Peers from '../../pages/peers/Peers.jsx';
 import CreateStream from '../../pages/createStream/CreateStream.jsx';
 import PublishStream from '../../pages/publishStream/PublishStream.jsx';
@@ -81,6 +82,7 @@ export default class Main extends Component {
             <Route exact path="/app/payments" component={Payments} />
             <Route exact path="/app/support" component={SupportContainer} />
             <Route exact path="/app/support/:id" component={SupportDetails} />
+            <Route exact path="/app/hyperion" component={Hyperion} />
 
             <Route exact path="/app/admin" render={() => <Redirect to="/app/admin/users" />} />
             <Route exact path="/app/admin/users" component={UserList} />
