@@ -11,6 +11,7 @@ import {
   getEJSTemplate
 } from "../../modules/helpers/server";
 import writtenNumber from 'written-number'
+import BullSystem from '../../modules/schedulers/bull';
 
 const InvoiceObj = {};
 
@@ -85,6 +86,10 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   invoiceObject.conversionRate = conversion;
 
   const invoiceId = Invoice.insert(invoiceObject);
+
+  BullSystem.addJob('invoice-created-email', {
+    invoiceId
+  });
 
   return invoiceId;
 };
@@ -205,6 +210,36 @@ InvoiceObj.sendInvoiceCreatedEmail = async (invoice) => {
   }, {
     $push: {
       emailsSent: Invoice.EmailMapping.Created
+    }
+  });
+
+  return true;
+}
+
+
+InvoiceObj.sendInvoicePending = async (invoice, reminderCode) => {
+
+  ElasticLogger.log("Sending reminder invoice", {invoiceId: invoice._id, user: invoice.user.email, reminderCode});
+
+  const ejsTemplate = await getEJSTemplate({fileName: "invoice-pending.ejs"});
+  const finalHTML = ejsTemplate({
+    invoice
+  });
+
+  const emailProps = {
+    from: {email: "no-reply@blockcluster.io", name: "Blockcluster"},
+    to: invoice.user.email,
+    subject: `IMP: Your invoice for ${invoice.billingPeriodLabel} is Pending`,
+    text: `Visit the following link to pay your bill https://app.blockcluster.io/app/payments`,
+    html: finalHTML
+  };
+
+  await Email.sendEmail(emailProps);
+  Invoice.update({
+    _id: invoice._id
+  }, {
+    $push: {
+      emailsSent: reminderCode
     }
   });
 

@@ -3,6 +3,13 @@ import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter, Link } from 'react-router-dom';
 import Invoice from '../../../../collections/payments/invoice';
 
+const EmailsMapping = {
+  1: 'Invoice Created',
+  2: 'Reminder on 4th',
+  3: 'Reminder on 9th',
+  4: 'Node Deletion warning'
+}
+
 class InvoiceDetails extends Component {
   constructor(props) {
     super(props);
@@ -51,13 +58,16 @@ class InvoiceDetails extends Component {
   render() {
     let billView = null;
 
-    const {invoice} = this.props;
+    const { invoice } = this.props;
+    const { user } = invoice;
 
     if (invoice && invoice.items) {
       billView = invoice.items.map((network, index) => {
         return (
           <tr title={network.timeperiod} key={index + 1}>
-            <td><Link to={`/app/admin/networks/${network.instanceId}`}>{network.name}</Link></td>
+            <td>
+              <Link to={`/app/admin/networks/${network.instanceId}`}>{network.name}</Link>
+            </td>
             <td>{network.instanceId}</td>
             <td>{network.rate}</td>
             <td>{network.runtime}</td>
@@ -71,11 +81,75 @@ class InvoiceDetails extends Component {
 
     return (
       <div className="content invoice-details">
-      <div className="m-t-20 m-l-10 m-r-10 p-t-10 container-fluid container-fixed-lg bg-white">
-        <div className="row">
-          Invoice for {invoice.billingPeriodLabel} | {invoice.user && invoice.user.email}
-        </div>
-          <div className="row"></div>
+        <div className="m-t-20 m-l-10 m-r-10 p-t-10 container-fluid container-fixed-lg">
+          <div className="row">
+            <div className="col-lg-3 col-sm-6  d-flex flex-column">
+              <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
+                <div className="card-header ">
+                  <h5 className="text-primary pull-left fs-12">
+                    User <i className="fa fa-circle text-complete fs-11" />
+                  </h5>
+                  <div className="pull-right small hint-text">
+                    <Link to={`/app/admin/users/${invoice.userId}`}>
+                      Details <i className="fa fa-comment-o" />
+                    </Link>
+                  </div>
+                  <div className="clearfix" />
+                </div>
+                <div className="card-description">
+                  <p>
+                    <Link to={`/app/admin/users/${user._id}`}>{invoice.user.email}</Link>
+                  </p>
+                </div>
+              </div>
+              <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
+                <div className="card-header clearfix">
+                  <h5 className="text-info pull-left fs-12">Payment Method</h5>
+                  <div className="clearfix" />
+                </div>
+                <div className="card-description">
+                  { invoice.rzSubscriptionId ? `Subscription ${invoice.rzSubscriptionId}` : 'Debit card' }
+                </div>
+                <div className="clearfix" />
+              </div>
+            </div>
+            <div className="col-lg-3 col-sm-6  d-flex flex-column">
+              <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
+                <div className="card-header ">
+                  <h5 className="text-success pull-left fs-12">Total Amount | {invoice.billingPeriodLabel}</h5>
+                  <div className="clearfix" />
+                </div>
+                <div className="card-description">
+                  <p>
+                    $ {invoice.totalAmount} <small>@ INR
+                    {invoice.conversionRate}</small>
+                  </p>
+                  <p>
+                    <b>Total:</b> INR {(Number(invoice.totalAmountINR)/100).toFixed(2)}
+                  </p>
+                  <p>
+                    {this.getInvoicePaidStatus(invoice && invoice.paymentStatus)}
+                  </p>
+                </div>
+              </div>
+
+            </div>
+            <div className="col-lg-5 col-sm-6 d-flex flex-column">
+              <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
+                <div className="card-header clearfix">
+                  <h5 className="text-info pull-left fs-12">Emails Sent</h5>
+                  <div className="clearfix" />
+                </div>
+                <div className="card-description">
+                  <ol>
+                    {invoice.emailsSent && invoice.emailsSent.map(es => <li>{EmailsMapping[es]}</li>)}
+                  </ol>
+                </div>
+                <div className="clearfix" />
+              </div>
+            </div>
+          </div>
+          <div className="row bg-white">
           <table className="table table-hover" id="basicTable">
             <thead>
               <tr>
@@ -93,8 +167,7 @@ class InvoiceDetails extends Component {
                   Total Amount
                 </td>
                 <td>
-                  {invoice && invoice.totalAmount ? `$ ${Number(invoice.totalAmount).toFixed(2)}` : '0'}{' '}
-                  {this.getInvoicePaidStatus(invoice && invoice.paymentStatus)}
+                  {invoice && invoice.totalAmount ? `$ ${Number(invoice.totalAmount).toFixed(2)}` : '0'} {this.getInvoicePaidStatus(invoice && invoice.paymentStatus)}
                 </td>
               </tr>
               <tr>
@@ -105,13 +178,14 @@ class InvoiceDetails extends Component {
               </tr>
             </tfoot>
           </table>
+          </div>
         </div>
       </div>
     );
   }
 }
 
-export default withTracker((props) => {
+export default withTracker(props => {
   return {
     invoice: Invoice.find({ _id: props.match.params.id, active: true }).fetch()[0],
     subscriptions: [Meteor.subscribe('invoice.admin.id', props.match.params.id)],
