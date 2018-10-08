@@ -15,6 +15,11 @@ ElasticLogger.initialize({
       filename: '/logs/webapp-logs.log'
     }
   ]
+}, {
+  tags: {
+    release: process.env.COMMIT_HASH,
+    env: process.env.NODE_ENV
+  }
 });
 
 

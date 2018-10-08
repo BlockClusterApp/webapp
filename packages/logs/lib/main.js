@@ -1,6 +1,7 @@
 const winston = Npm.require('winston');
 
-var logger = console.log;
+let logger = console.log;
+let _tags = {}
 
 function fetchFormat(message, tags) {
   if (typeof tags === 'object') {
@@ -8,19 +9,19 @@ function fetchFormat(message, tags) {
       message,
       ...tags,
       timestamp: new Date(),
-      env: process.env.NODE_ENV,
+      ..._tags
     };
   } else {
     return {
       message,
       tags,
       timestamp: new Date(),
-      env: process.env.NODE_ENV,
+      ..._tags
     };
   }
 }
 
-function initialize(settings) {
+function initialize(settings, opts) {
   const finalOpts = {};
   if (Meteor.isServer) {
     finalOpts.level = 'info';
@@ -38,6 +39,9 @@ function initialize(settings) {
       }
       finalOpts.transports.push(new winston.transports.File(loggerOpts));
     });
+    if(opts && opts.tags) {
+      _tags = {..._tags, ...opts.tags}
+    }
     logger = winston.createLogger(finalOpts);
   } else {
     logger = console.log;
