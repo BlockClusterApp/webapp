@@ -2,6 +2,7 @@ import { Networks } from '../../../collections/networks/networks';
 import UserCards from '../../../collections/payments/user-cards';
 import {UserInvitation} from '../../../collections/user-invitation';
 import PaymentRequests from '../../../collections/payments/payment-requests';
+import Invoice from '../../../collections/payments/invoice';
 import Voucher from '../../../collections/vouchers/voucher';
 
 Meteor.publish(null, function() {
@@ -55,6 +56,7 @@ Meteor.publish("users.details", function({userId}) {
     UserInvitation.find({inviteFrom: userId}),
     UserCards.find({userId}),
     PaymentRequests.find({userId}),
-    Voucher.find({claimedBy: userId})
+    Voucher.find({claimedBy: userId}),
+    Invoice.find({userId: userId})
   ]
 });

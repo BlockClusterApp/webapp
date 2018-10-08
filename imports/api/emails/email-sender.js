@@ -4,6 +4,8 @@ import Config from '../../modules/config/server';
 
 import sg from "@sendgrid/mail";
 
+sg.setApiKey(Config.sendgridAPIKey);
+
 /*
 emailOptions
 {
@@ -26,8 +28,8 @@ const sendEmail = function(emailOptions) {
           emailOptions.to = toEmail;
         }
       }
-      sg.setApiKey(Config.sendgridAPIKey);
       const res = await sg.send(emailOptions);
+      ElasticLogger.log("Email sent", emailOptions);
       const insertResult = Email.insert(emailOptions);
       resolve();
     });
