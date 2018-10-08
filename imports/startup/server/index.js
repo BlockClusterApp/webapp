@@ -1,4 +1,5 @@
 import Config from '../../modules/config/server';
+import fs from 'fs';
 
 const ErrorHandler = Meteor.Error;
 
@@ -9,10 +10,14 @@ RavenLogger.initialize({
   autoBreadcrumbs: true
 });
 
+if(!fs.existsSync(`/tmp/logs`)) {
+  fs.mkdirSync(`/tmp/logs`);
+}
+
 ElasticLogger.initialize({
   logFiles: [
     {
-      filename: '/logs/webapp-logs.log'
+      filename: `/tmp/logs/webapp-logs.log`
     }
   ]
 }, {
