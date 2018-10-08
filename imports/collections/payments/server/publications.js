@@ -32,3 +32,7 @@ Meteor.publish("rzp-subscription", function () {
     plan_id: rzPlan.id,
   })];
 });
+
+Meteor.publish("invoice.admin.id", (id) => {
+  return Invoice.find({_id: id})
+});

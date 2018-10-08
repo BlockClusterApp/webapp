@@ -3,6 +3,9 @@ import RazorPay from '../../api/payments/payment-gateways/razorpay';
 import Payment from '../../api/payments/';
 import Email from '../emails/email-sender';
 import moment from 'moment';
+
+const uuidv4 = require('uuid/v4');
+
 const debug = require('debug')('api:invoice');
 import {
   getEJSTemplate
@@ -87,6 +90,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
 };
 
 InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth, billingMonthLabel, invoiceId, rzPayment }) => {
+  const spanId = uuidv4();
   billingMonthLabel = billingMonthLabel || moment(billingMonth).format('MMM-YYYY');
 
 
@@ -104,7 +108,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     selector._id = invoiceId;
   }
 
-  debug('Fetching invoice', selector);
+  ElasticLogger.log('Trying to settle invoice', {selector, billingMonth, billingMonthLabel, rzPayment, id: spanId},);
 
   if(!selector._id && !selector.rzSubscriptionId && !selector.rzCustomerId) {
     RavenLogger.log('Trying to settle unspecific', {...selector});
@@ -118,8 +122,6 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     throw new Meteor.Error(`Error settling invoice: Does not exists ${JSON.stringify(selector)}`)
   }
 
-  console.log('Settling invoice', invoice);
-
   Invoice.update(
     selector,
     {
@@ -130,6 +132,8 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
       },
     }
   );
+
+  ElasticLogger.log('Settled invoice', {invoice, id: spanId});
 
   return invoice._id;
 };
