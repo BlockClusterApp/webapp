@@ -4,7 +4,7 @@ const debug = require('debug')('scheduler:agenda:generateMonthlyBill');
 module.exports = function(bullSystem) {
 
   const processFunction = Meteor.bindEnvironment(function(job) {
-    return new Promise(resolve => {
+    return new Promise(async resolve => {
       const invoices = Invoice.find({
         _id: job.data.invoiceId,
         billingPeriodLabel: moment().subtract(1, 'month').format('MMM-YYYY'),
