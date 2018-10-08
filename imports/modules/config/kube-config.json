@@ -11,7 +11,6 @@
           "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
         },
         "hyperion": {
-          "ip": "35.161.9.16",
           "ipfsPort": "31640",
           "ipfsClusterPort": "30990"
         }
@@ -28,7 +27,6 @@
           "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
         },
         "hyperion": {
-          "ip": "35.161.9.16",
           "ipfsPort": "31640",
           "ipfsClusterPort": "30990"
         }
@@ -45,7 +43,6 @@
           "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
         },
         "hyperion": {
-          "ip": "35.161.9.16",
           "ipfsPort": "30185",
           "ipfsClusterPort": "31624"
         }
@@ -60,6 +57,10 @@
         "auth": {
           "user": "admin",
           "pass": "jv9c0533CvxSwi3VhnuPoAPQMSko6Xgc"
+        },
+        "hyperion": {
+          "ipfsPort": "32366",
+          "ipfsClusterPort": "31486"
         }
       }
     }
