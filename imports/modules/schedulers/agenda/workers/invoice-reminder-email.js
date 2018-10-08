@@ -17,6 +17,9 @@ module.exports = function(agenda) {
       const reminderCode = moment().get('date') <= 5 ? Invoice.PaymentStatusMapping.Reminder1 : Invoice.PaymentStatusMapping.Reminder2;
       const pendingInvoices = Invoice.find({
         billingMonthLabel,
+        totalAmount: {
+          $gt: 0
+        },
         paymentStatus: {
           $inq: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed],
         },
@@ -29,6 +32,8 @@ module.exports = function(agenda) {
         userInvoiceMapping[i.userId] = i._id;
       });
       let users = [];
+
+      ElasticLogger.log("Invoice reminder", {mapping: userInvoiceMapping});
       if (moment().get('date') <= 5) {
         const verificationPlan = RZPlan.find({
           identifier: 'verification',

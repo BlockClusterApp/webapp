@@ -218,6 +218,9 @@ InvoiceObj.sendInvoiceCreatedEmail = async (invoice) => {
 
 
 InvoiceObj.sendInvoicePending = async (invoice, reminderCode) => {
+
+  ElasticLogger.log("Sending reminder invoice", {invoiceId: invoice._id, user: invoice.user.email, reminderCode});
+
   const ejsTemplate = await getEJSTemplate({fileName: "invoice-pending.ejs"});
   const finalHTML = ejsTemplate({
     invoice
