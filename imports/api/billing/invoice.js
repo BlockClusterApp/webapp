@@ -3,11 +3,14 @@ import RazorPay from '../../api/payments/payment-gateways/razorpay';
 import Payment from '../../api/payments/';
 import Email from '../emails/email-sender';
 import moment from 'moment';
+
+
 const debug = require('debug')('api:invoice');
 import {
   getEJSTemplate
 } from "../../modules/helpers/server";
 import writtenNumber from 'written-number'
+import BullSystem from '../../modules/schedulers/bull';
 
 const InvoiceObj = {};
 
@@ -83,6 +86,10 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
 
   const invoiceId = Invoice.insert(invoiceObject);
 
+  BullSystem.addJob('invoice-created-email', {
+    invoiceId
+  });
+
   return invoiceId;
 };
 
@@ -104,8 +111,6 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     selector._id = invoiceId;
   }
 
-  debug('Fetching invoice', selector);
-
   if(!selector._id && !selector.rzSubscriptionId && !selector.rzCustomerId) {
     RavenLogger.log('Trying to settle unspecific', {...selector});
     throw new Meteor.Error('bad-request', 'No valid selector');
@@ -117,8 +122,6 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     RavenLogger.log(`Error settling invoice: Does not exists`, { ...selector, userId: Meteor && typeof Meteor.userId === 'function' && Meteor.userId(), at: new Date() });
     throw new Meteor.Error(`Error settling invoice: Does not exists ${JSON.stringify(selector)}`)
   }
-
-  console.log('Settling invoice', invoice);
 
   Invoice.update(
     selector,
@@ -201,6 +204,33 @@ InvoiceObj.sendInvoiceCreatedEmail = async (invoice) => {
   }, {
     $push: {
       emailsSent: Invoice.EmailMapping.Created
+    }
+  });
+
+  return true;
+}
+
+
+InvoiceObj.sendInvoicePending = async (invoice, reminderCode) => {
+  const ejsTemplate = await getEJSTemplate({fileName: "invoice-pending.ejs"});
+  const finalHTML = ejsTemplate({
+    invoice
+  });
+
+  const emailProps = {
+    from: {email: "no-reply@blockcluster.io", name: "Blockcluster"},
+    to: invoice.user.email,
+    subject: `IMP: Your invoice for ${invoice.billingPeriodLabel} is Pending`,
+    text: `Visit the following link to pay your bill https://app.blockcluster.io/app/payments`,
+    html: finalHTML
+  };
+
+  await Email.sendEmail(emailProps);
+  Invoice.update({
+    _id: invoice._id
+  }, {
+    $push: {
+      emailsSent: reminderCode
     }
   });
 

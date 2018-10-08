@@ -15,7 +15,7 @@ Invoice.PaymentStatusMapping = {
 Invoice.EmailMapping = {
   Created: 1,
   Reminder1: 2,
-  Reminder: 3,
+  Reminder2: 3,
   NodeDeletion: 4
 }
 
