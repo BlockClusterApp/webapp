@@ -225,7 +225,7 @@ class UserDetails extends Component {
                         <div className="card-header  top-left top-right">
                           <div className="card-title">
                             <span className="font-montserrat fs-11 all-caps">
-                              Email <i className="fa fa-chevron-right" />
+                              Contact <i className="fa fa-chevron-right" />
                             </span>
                           </div>
                           <div className="card-controls">
@@ -248,16 +248,29 @@ class UserDetails extends Component {
                         </div>
                       </div>
                     </div>
-                    <div className="row-xs-height">
-                      <div className="col-xs-height col-bottom">
-                        <div className="progress progress-small m-b-0">
-                          <div
-                            className="progress-bar progress-bar-primary"
-                            style={{
-                              width: user.emails[0].verified ? '100%' : '0%',
-                            }}
-                          />
+
+                    {user.profile &&
+                      user.profile.mobiles &&
+                      user.profile.mobiles[0] && (
+                        <div className="row-xs-height">
+                          <div className="col-xs-height col-top">
+                            <div className="p-l-20 p-b-40 p-r-20">
+                              <p className="no-margin p-b-5">{user.profile.mobiles[0].number}}</p>
+                              <span className="small hint-text pull-left">{this.getEmailVerificationLabel(user.profile.mobiles[0].number)}</span>
+                            </div>
+                          </div>
                         </div>
+                      )}
+                  </div>
+                  <div className="row-xs-height">
+                    <div className="col-xs-height col-bottom">
+                      <div className="progress progress-small m-b-0">
+                        <div
+                          className="progress-bar progress-bar-primary"
+                          style={{
+                            width: user.emails[0].verified ? '100%' : '0%',
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -466,7 +479,7 @@ class UserDetails extends Component {
                   <div className="padding-25">
                     <div className="pull-left">
                       <h2 className="text-success no-margin">Invoices</h2>
-                      <p className="no-margin">Customer business: $ {invoices && invoices.reduce((p, i) => p + Number(i.totalAmount) , 0)}</p>
+                      <p className="no-margin">Customer business: $ {invoices && invoices.reduce((p, i) => p + Number(i.totalAmount), 0)}</p>
                     </div>
                     <h3 className="pull-right semi-bold">{invoices && invoices.length}</h3>
                     <div className="clearfix" />
@@ -495,7 +508,7 @@ class UserDetails extends Component {
               </div>
             </div>
             <div className="row">
-              <div className="col-lg-7 m-b-10 d-flex">
+              <div className="col-lg-12 m-b-10 d-flex">
                 <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
                   <div className="card-header top-right">
                     <div className="card-controls">

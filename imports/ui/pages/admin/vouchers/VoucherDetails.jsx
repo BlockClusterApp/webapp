@@ -70,7 +70,7 @@ class VoucherDetails extends Component {
   render() {
     return (
        <div className="page-content-wrapper">
-        <div className="content sm-gutter">
+        <div className="content sm-gutter" style={{paddingBottom: '0'}}>
           <div data-pages="parallax">
             {/* <div className="container-fluid p-l-25 p-r-25 sm-p-l-0 sm-p-r-0"> */}
               <div className="inner">
@@ -86,7 +86,7 @@ class VoucherDetails extends Component {
               {/* </div> */}
             </div>
           </div></div>
-          <div className="content voucherDetails">
+          <div className="content voucherDetails" style={{paddingTop: '0'}}>
            <div
           className="m-t-20 container-fluid container-fixed-lg bg-white"
         >
