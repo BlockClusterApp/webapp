@@ -60,6 +60,11 @@
         "auth": {
           "user": "admin",
           "pass": "jv9c0533CvxSwi3VhnuPoAPQMSko6Xgc"
+        },
+        "hyperion": {
+          "ip": "13.232.213.158",
+          "ipfsPort": "32366",
+          "ipfsClusterPort": "31486"
         }
       }
     }
