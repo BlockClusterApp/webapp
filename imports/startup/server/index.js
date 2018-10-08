@@ -1,4 +1,5 @@
 import Config from '../../modules/config/server';
+import fs from 'fs';
 
 const ErrorHandler = Meteor.Error;
 
@@ -9,28 +10,23 @@ RavenLogger.initialize({
   autoBreadcrumbs: true
 });
 
-class RavenError extends Error {
-  constructor(err, errorMessage, reason, details) {
-    if (typeof err === 'string') {
-      details = reason;
-      reason = errorMessage;
-      errorMessage = err;
-      err = null;
-    }
-    // console.log("Throwing error", err, errorMessage, reason, details);
-    // if(err) {
-    //   RavenLogger.log(err, {
-    //     errorMessage,
-    //     reason,
-    //     details
-    //   });
-    // } else {
-    //   RavenLogger.log(errorMessage, reason, details);
-    // }
-
-    super(err, errorMessage, reason, details);
-  }
+if(!fs.existsSync(`/tmp/logs`)) {
+  fs.mkdirSync(`/tmp/logs`);
 }
+
+ElasticLogger.initialize({
+  logFiles: [
+    {
+      filename: `/tmp/logs/webapp-logs.log`
+    }
+  ]
+}, {
+  tags: {
+    release: process.env.COMMIT_HASH,
+    env: process.env.NODE_ENV
+  }
+});
+
 
 // Meteor.Error = RavenError;
 

@@ -10,7 +10,7 @@ import { sendEmail } from "../emails/email-sender";
 import { Networks } from "../../collections/networks/networks";
 import Config from "../../../imports/modules/config/server";
 import agenda from '../../modules/schedulers/agenda';
-import Billing from '../../api/billing'; 
+import Billing from '../../api/billing';
 
 async function sendEmails(users) {
   const ejsTemplate = await getEJSTemplate({
@@ -20,7 +20,6 @@ async function sendEmails(users) {
   users.forEach(user => {
     const name = `${user.profile.firstName} ${user.profile.lastName}`;
     const email = user.emails[0].address;
-    console.log("Sending email to ", email);
     const finalHTML = ejsTemplate({
       user: {
         email,
@@ -89,7 +88,7 @@ agenda.define(
   Meteor.bindEnvironment(async job => {
     const network_id = job.attrs.data.network_id;
     const userId = job.attrs.data.userId;
-    
+
     const found_notworks = Networks.find({
       _id:network_id,
       "deletedAt": {
