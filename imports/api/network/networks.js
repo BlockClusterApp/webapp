@@ -82,6 +82,10 @@ NetworkObj.adminDeleteNetwork = (instanceId) => {
     if(Meteor.user().admin < MIN_ADMIN_LEVEL) {
       throw new Meteor.Error("unauthorized", "Unauthorized for this action");
     }
+    ElasticLogger.log("Admin delete network", {
+      instanceId,
+      user: Meteor.user()
+    });
     Meteor.call("deleteNetwork", instanceId, (err, res) => {
       if(err){
         RavenLogger.log(err);

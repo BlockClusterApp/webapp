@@ -421,7 +421,7 @@ RazorPay.applyCardVerification = async pgResponse => {
 };
 
 RazorPay.processWebHook = async function(req, res) {
-  console.log("Razorpay payload", req.body);
+  // console.log("Razorpay payload", req.body);
   bullSystem.addJob('razorpay-webhook', req.body);
   res.end('OK');
 }

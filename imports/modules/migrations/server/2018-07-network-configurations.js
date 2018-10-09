@@ -5,7 +5,7 @@ Migrations.add({
   version: 2,
   up: function() {
     data.forEach(config => {
-      console.log("Creating network config ", config.name);
+      ElasticLogger.log("Creating network config ", {name: config.name, config});
       NetworkConfiguration.insert(config);
     });
   },

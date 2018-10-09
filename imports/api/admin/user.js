@@ -32,7 +32,7 @@ User.updateAdmin = async (userId, updateQuery) => {
   if(updateQuery.demo !== undefined) {
     update.demoUser = updateQuery.demo;
   }
-  console.log("Updating admin for", userId, updateQuery);
+  ElasticLogger.log("Updating admin", {userId, updateQuery});
   Meteor.users.update({
     _id: userId
   }, {

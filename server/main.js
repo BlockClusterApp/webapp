@@ -769,7 +769,11 @@ Meteor.methods({
     return myFuture.wait();
   },
   deleteNetwork: function(id) {
-    debug('deleteNetwork | ', id);
+    try{
+    ElasticLogger.log(`DeleteNetwork`, {id: id, userId: Meteor.userId()});
+    }catch(err){
+      RavenLogger.log(err);
+    }
 
     function kubeCallback(err, res) {
       if (err) {

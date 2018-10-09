@@ -42,8 +42,6 @@ Support.createTicket = async details => {
     ],
   });
 
-  console.log('Support create result', createResult);
-
   const support = SupportTicket.find({
     _id: createResult,
   }).fetch()[0];
