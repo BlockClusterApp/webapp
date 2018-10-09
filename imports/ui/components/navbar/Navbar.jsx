@@ -196,6 +196,12 @@ class Navbar extends Component {
                                                 <i className="fa fa-ticket" />
                                             </span>
                                         </li>
+                                        <li>
+                                            <Link to="/app/admin/clients">Clients</Link>
+                                            <span className="icon-thumbnail">
+                                                <i className="fa fa-users" />
+                                            </span>
+                                        </li>
                                     </ul>
                                 </li>
                             )

@@ -46,7 +46,8 @@ import VoucherDetails from '../../pages/admin/vouchers/VoucherDetails';
 import AdminSupport from '../../pages/admin/support/TicketList.jsx';
 import AdminSupportDetails from '../../pages/admin/support/Details.jsx';
 import AdminInvoiceDetails from '../../pages/admin/invoice/Details.jsx';
-
+import ClientList from '../../pages/admin/clients/ClientList.jsx';
+import ClientDetails from '../../pages/admin/clients/ClientDetails.jsx'
 export default class Main extends Component {
   render() {
     return (
@@ -95,6 +96,8 @@ export default class Main extends Component {
             <Route exact path="/app/admin/support" component={AdminSupport} />
             <Route exact path="/app/admin/support/:id" component={AdminSupportDetails} />
             <Route exact path="/app/admin/invoices/:id" component={AdminInvoiceDetails} />
+            <Route exact path="/app/admin/clients" component={ClientList} />
+            <Route exact path="/app/admin/clients/details/:id" component={ClientDetails} />
           </div>
         </div>
         <Footer />
