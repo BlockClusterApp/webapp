@@ -144,27 +144,37 @@ class HyperionComponent extends Component {
           inputName: "file"
         },
         retry: {
-          enableAuto: true,
-          autoAttemptDelay: 1,
-          maxAutoAttempts: 1
+          enableAuto: false
         },
         callbacks: {
-          onSubmit: (id, fileName) => {
-            Meteor.call(
-              "getHyperionToken",
-              { userId: Meteor.userId() },
-              (err, token) => {
-                if (!err) {
-                  this.token = token;
-                  this.uploader.methods._endpointStore.set(
-                    `${window.location.origin}/api/hyperion/upload?location=${
-                      this.locationCode
-                    }&token=${this.token}`,
-                    id
-                  );
-                }
-              }
-            );
+          onSubmit: async (id, fileName) => {
+            function setUploaderURL(userId, locationCode, uploader) {
+              return new Promise((resolve, reject) => {
+                Meteor.call(
+                  "getHyperionToken",
+                  { userId: userId },
+                  (err, token) => {
+                    if (!err) {
+                      uploader.methods._endpointStore.set(
+                        `${window.location.origin}/api/hyperion/upload?location=${
+                          locationCode
+                        }&token=${token}`,
+                        id
+                      );
+
+                      resolve()
+                    } else {
+                      reject()
+                    }
+                  }
+                );
+              })
+            }
+
+            await setUploaderURL(Meteor.userId(), this.locationCode, this.uploader)
+          },
+          onError: (id, fileName, reason, d) => {
+            notifications.error(reason)
           }
         }
       }

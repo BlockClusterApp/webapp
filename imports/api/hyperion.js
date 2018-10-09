@@ -109,7 +109,7 @@ function authMiddleware(req, res, next) {
         JsonRoutes.sendResult(res, {
           code: 401,
           data: {
-            "error": "Please verify your payment method"
+            "error": "Verify your payment method"
           }
         })
       }
