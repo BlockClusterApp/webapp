@@ -19,6 +19,20 @@ function getAPIHost() {
       return `http://localhost:${process.env.PORT || "3000"}`;
   }
 }
+function getMicroServiceBase(){
+  switch (process.env.NODE_ENV) {
+    case "production":
+      return "https://enterprise-api-app.blockcluster.io";
+    case "staging":
+      return "https://enterprise-api-staging.blockcluster.io";
+    case "test":
+      return "https://enterprise-api-dev.blockcluster.io";
+    case "dev":
+      return "https://enterprise-api-dev.blockcluster.io";
+    default:
+      return 'http://localhost:4000';
+    }
+  }
 
 function getDynamoWokerDomainName(locationCode) {
   let prefix = '';
@@ -47,5 +61,6 @@ module.exports = {
       }
       return false;
     }
-  }
+  },
+  licensingMicroserviceBase: getMicroServiceBase()
 };
