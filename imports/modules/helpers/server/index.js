@@ -13,6 +13,7 @@ const InitialSupportTicket = require('../../template/new-support-ticket');
 const UpdatedSupportTicket = require('../../template/updated-support-ticket');
 const InvoiceTemplate = require('../../template/invoice');
 const InvoiceGeneratedTemplate = require('../../template/invoice-created');
+const InvoicePendingTemplate = require('../../template/invoice-pending');
 
 const EJSMapping = {
   'email-verification.ejs': EmailVerificationTemplate,
@@ -22,7 +23,8 @@ const EJSMapping = {
   'new-support-ticket.ejs': InitialSupportTicket,
   'updated-support-ticket.ejs': UpdatedSupportTicket,
   'invoice.ejs': InvoiceTemplate,
-  'invoice-created.ejs': InvoiceGeneratedTemplate
+  'invoice-created.ejs': InvoiceGeneratedTemplate,
+  'invoice-pending.ejs': InvoicePendingTemplate
 };
 
 function generateRandomString(placeholder, salt = "I<3BlockCluster") {

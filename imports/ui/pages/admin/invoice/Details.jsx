@@ -2,13 +2,15 @@ import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter, Link } from 'react-router-dom';
 import Invoice from '../../../../collections/payments/invoice';
+import ConfirmationButton from '../../../components/Buttons/ConfirmationButton';
+import notifications from "../../../../modules/notifications";
 
 const EmailsMapping = {
   1: 'Invoice Created',
   2: 'Reminder on 4th',
   3: 'Reminder on 9th',
-  4: 'Node Deletion warning'
-}
+  4: 'Node Deletion warning',
+};
 
 class InvoiceDetails extends Component {
   constructor(props) {
@@ -20,6 +22,8 @@ class InvoiceDetails extends Component {
       networkId: null,
       network: {},
       deleteConfirmAsked: false,
+      disableReminder: false,
+      loading: false
     };
   }
 
@@ -54,6 +58,26 @@ class InvoiceDetails extends Component {
         return null;
     }
   };
+
+  sendInvoiceReminder = (invoiceId) => {
+    this.setState({
+      loading: true
+    });
+    Meteor.call('sendInvoiceReminder', invoiceId, (err, res) => {
+      if(!err) {
+        notifications.success("Reminder sent");
+        return this.setState({
+          disableReminder: true,
+          loading: false
+        });
+      } else {
+        this.setState({
+          loading: false
+        });
+        notifications.error(err.reason);
+      }
+    })
+  }
 
   render() {
     let billView = null;
@@ -107,9 +131,7 @@ class InvoiceDetails extends Component {
                   <h5 className="text-info pull-left fs-12">Payment Method</h5>
                   <div className="clearfix" />
                 </div>
-                <div className="card-description">
-                  { invoice.rzSubscriptionId ? `Subscription ${invoice.rzSubscriptionId}` : 'Debit card' }
-                </div>
+                <div className="card-description">{invoice.rzSubscriptionId ? `Subscription ${invoice.rzSubscriptionId}` : 'Debit card'}</div>
                 <div className="clearfix" />
               </div>
             </div>
@@ -121,18 +143,18 @@ class InvoiceDetails extends Component {
                 </div>
                 <div className="card-description">
                   <p>
-                    $ {invoice.totalAmount} <small>@ INR
-                    {invoice.conversionRate}</small>
+                    $ {invoice.totalAmount}{' '}
+                    <small>
+                      @ INR
+                      {invoice.conversionRate}
+                    </small>
                   </p>
                   <p>
-                    <b>Total:</b> INR {(Number(invoice.totalAmountINR)/100).toFixed(2)}
+                    <b>Total:</b> INR {(Number(invoice.totalAmountINR) / 100).toFixed(2)}
                   </p>
-                  <p>
-                    {this.getInvoicePaidStatus(invoice && invoice.paymentStatus)}
-                  </p>
+                  <p>{this.getInvoicePaidStatus(invoice && invoice.paymentStatus)}</p>
                 </div>
               </div>
-
             </div>
             <div className="col-lg-5 col-sm-6 d-flex flex-column">
               <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
@@ -141,43 +163,58 @@ class InvoiceDetails extends Component {
                   <div className="clearfix" />
                 </div>
                 <div className="card-description">
-                  <ol>
-                    {invoice.emailsSent && invoice.emailsSent.map(es => <li>{EmailsMapping[es]}</li>)}
-                  </ol>
+                  <ol>{invoice.emailsSent && invoice.emailsSent.map(es => <li>{EmailsMapping[es]}</li>)}</ol>
+                </div>
+                <div className="clearfix" />
+              </div>
+              <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
+                <div className="card-header clearfix">
+                  <h5 className="text-info pull-left fs-12">Actions</h5>
+                  <div className="clearfix" />
+                </div>
+                <div className="card-description">
+                  <ConfirmationButton
+                    loading={this.state.loading}
+                    completed={!(invoice && invoice.emailsSent && invoice.emailsSent.includes(1)) || this.state.disableReminder || [2].includes(invoice.paymentStatus)}
+                    onConfirm={this.sendInvoiceReminder.bind(this, invoice._id)}
+                    loadingText="Sending email"
+                    completedText={invoice.paymentStatus !== 2 ? this.state.disableReminder ? "Reminder sent" : "Created mail not sent yet" : "Invoice already paid"}
+                    actionText="Send Invoice Reminder"
+                  />
                 </div>
                 <div className="clearfix" />
               </div>
             </div>
           </div>
           <div className="row bg-white">
-          <table className="table table-hover" id="basicTable">
-            <thead>
-              <tr>
-                <th style={{ width: '18%' }}>Network Name</th>
-                <th style={{ width: '15%' }}>Instance ID</th>
-                <th style={{ width: '15%' }}>Rate</th>
-                <th style={{ width: '18%' }}>Runtime</th>
-                <th style={{ width: '19%' }}>Cost</th>
-              </tr>
-            </thead>
-            <tbody>{billView}</tbody>
-            <tfoot>
-              <tr>
-                <td colSpan="4" style={{ textAlign: 'right' }}>
-                  Total Amount
-                </td>
-                <td>
-                  {invoice && invoice.totalAmount ? `$ ${Number(invoice.totalAmount).toFixed(2)}` : '0'} {this.getInvoicePaidStatus(invoice && invoice.paymentStatus)}
-                </td>
-              </tr>
-              <tr>
-                <td colSpan="4" style={{ textAlign: 'right' }}>
-                  &nbsp;
-                </td>
-                <td>{/* <RazorPay amountDisplay={`$ ${}`} /> */}</td>
-              </tr>
-            </tfoot>
-          </table>
+            <table className="table table-hover" id="basicTable">
+              <thead>
+                <tr>
+                  <th style={{ width: '18%' }}>Network Name</th>
+                  <th style={{ width: '15%' }}>Instance ID</th>
+                  <th style={{ width: '15%' }}>Rate</th>
+                  <th style={{ width: '18%' }}>Runtime</th>
+                  <th style={{ width: '19%' }}>Cost</th>
+                </tr>
+              </thead>
+              <tbody>{billView}</tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan="4" style={{ textAlign: 'right' }}>
+                    Total Amount
+                  </td>
+                  <td>
+                    {invoice && invoice.totalAmount ? `$ ${Number(invoice.totalAmount).toFixed(2)}` : '0'} {this.getInvoicePaidStatus(invoice && invoice.paymentStatus)}
+                  </td>
+                </tr>
+                <tr>
+                  <td colSpan="4" style={{ textAlign: 'right' }}>
+                    &nbsp;
+                  </td>
+                  <td>{/* <RazorPay amountDisplay={`$ ${}`} /> */}</td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
         </div>
       </div>
