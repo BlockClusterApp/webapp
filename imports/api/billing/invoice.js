@@ -246,8 +246,27 @@ InvoiceObj.sendInvoicePending = async (invoice, reminderCode) => {
   return true;
 }
 
+InvoiceObj.adminSendInvoiceReminder = async (invoiceId) => {
+  if(Meteor.user().admin < 2) {
+    throw new Meteor.Error('bad-request', "Unauthorized");
+  }
+  const invoice = Invoice.find({_id: invoiceId}).fetch()[0];
+
+  if(!invoice) {
+    throw new Meteor.Error('bad-request', "Invoice not found"+invoiceId);
+  }
+
+  if(invoice.paymentStatus === 2) {
+    throw new Meteor.Error('bad-request', 'Invoice already paid');
+  }
+
+  ElasticLogger.log("Admin sending invoice reminder", {invoiceId, user: Meteor.userId()});
+  return InvoiceObj.sendInvoicePending(invoice, Invoice.EmailMapping.Reminder2);
+}
+
 Meteor.methods({
-  generateInvoiceHTML: InvoiceObj.generateHTML
+  generateInvoiceHTML: InvoiceObj.generateHTML,
+  sendInvoiceReminder: InvoiceObj.adminSendInvoiceReminder
 });
 
 export default InvoiceObj;
