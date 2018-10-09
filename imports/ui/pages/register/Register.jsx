@@ -111,7 +111,7 @@ export default class Register extends Component {
 		                        <div className="col-md-12">
 		                            <div className="form-group form-group-default">
 		                                <label>Email</label>
-		                                <input type="email" name="email" placeholder="We will send loging details to you" className="form-control" required ref={(input) => {this.email = input;}} />
+		                                <input type="email" name="email" placeholder="Your email id" className="form-control" required ref={(input) => {this.email = input;}} />
 		                            </div>
 		                        </div>
 		                    </div>
@@ -149,7 +149,7 @@ export default class Register extends Component {
 								data-style={SLIDE_UP}
 								data-spinner-size={30}
 								data-spinner-lines={12}
-								className="btn btn-complete btn-cons m-t-10" 
+								className="btn btn-complete btn-cons m-t-10"
 								type="sumbit"
 							>
 								<i className="fa fa-user-plus" aria-hidden="true" />

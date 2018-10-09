@@ -20,8 +20,6 @@ PasswordResetter.resetLinkEmail = async function(email) {
   const uniqueString = generateRandomString(`${email}-${new Date().toString()}`);
   const link = generateCompleteURLForPasswordReset(uniqueString);
 
-  console.log("Reset link", link);
-
   const ejsTemplate = await getEJSTemplate({fileName: "forgot-password.ejs"});
   const finalHTML = ejsTemplate({
     user: {

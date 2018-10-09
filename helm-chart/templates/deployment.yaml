@@ -23,8 +23,16 @@ spec:
     spec:
 {{- include "server.nodeAffinities" . | indent 6 }}
       restartPolicy: Always
+      volumes:
+      - hostPath:
+          path: /webapp-logs/
+          type: ""
+        name: webapp-logs
       containers:
       - name: {{ template "server.name" . }}
+        volumeMounts:
+          - mountPath: /tmp/logs/
+            name: webapp-logs
         image: {{ .Values.image }}:{{ template "server.image-tag" . }}
         imagePullPolicy: IfNotPresent
         workingDir: /blockcluster

@@ -3,11 +3,15 @@ import RazorPay from '../../api/payments/payment-gateways/razorpay';
 import Payment from '../../api/payments/';
 import Email from '../emails/email-sender';
 import moment from 'moment';
+
+const uuidv4 = require('uuid/v4');
+
 const debug = require('debug')('api:invoice');
 import {
   getEJSTemplate
 } from "../../modules/helpers/server";
 import writtenNumber from 'written-number'
+import BullSystem from '../../modules/schedulers/bull';
 
 const InvoiceObj = {};
 
@@ -83,10 +87,15 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
 
   const invoiceId = Invoice.insert(invoiceObject);
 
+  BullSystem.addJob('invoice-created-email', {
+    invoiceId
+  });
+
   return invoiceId;
 };
 
 InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth, billingMonthLabel, invoiceId, rzPayment }) => {
+  const spanId = uuidv4();
   billingMonthLabel = billingMonthLabel || moment(billingMonth).format('MMM-YYYY');
 
 
@@ -104,7 +113,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     selector._id = invoiceId;
   }
 
-  debug('Fetching invoice', selector);
+  ElasticLogger.log('Trying to settle invoice', {selector, billingMonth, billingMonthLabel, rzPayment, id: spanId},);
 
   if(!selector._id && !selector.rzSubscriptionId && !selector.rzCustomerId) {
     RavenLogger.log('Trying to settle unspecific', {...selector});
@@ -118,8 +127,6 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     throw new Meteor.Error(`Error settling invoice: Does not exists ${JSON.stringify(selector)}`)
   }
 
-  console.log('Settling invoice', invoice);
-
   Invoice.update(
     selector,
     {
@@ -130,6 +137,8 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
       },
     }
   );
+
+  ElasticLogger.log('Settled invoice', {invoice, id: spanId});
 
   return invoice._id;
 };
@@ -207,8 +216,57 @@ InvoiceObj.sendInvoiceCreatedEmail = async (invoice) => {
   return true;
 }
 
+
+InvoiceObj.sendInvoicePending = async (invoice, reminderCode) => {
+
+  ElasticLogger.log("Sending reminder invoice", {invoiceId: invoice._id, user: invoice.user.email, reminderCode});
+
+  const ejsTemplate = await getEJSTemplate({fileName: "invoice-pending.ejs"});
+  const finalHTML = ejsTemplate({
+    invoice
+  });
+
+  const emailProps = {
+    from: {email: "no-reply@blockcluster.io", name: "Blockcluster"},
+    to: invoice.user.email,
+    subject: `IMP: Your invoice for ${invoice.billingPeriodLabel} is Pending`,
+    text: `Visit the following link to pay your bill https://app.blockcluster.io/app/payments`,
+    html: finalHTML
+  };
+
+  await Email.sendEmail(emailProps);
+  Invoice.update({
+    _id: invoice._id
+  }, {
+    $push: {
+      emailsSent: reminderCode
+    }
+  });
+
+  return true;
+}
+
+InvoiceObj.adminSendInvoiceReminder = async (invoiceId) => {
+  if(Meteor.user().admin < 2) {
+    throw new Meteor.Error('bad-request', "Unauthorized");
+  }
+  const invoice = Invoice.find({_id: invoiceId}).fetch()[0];
+
+  if(!invoice) {
+    throw new Meteor.Error('bad-request', "Invoice not found"+invoiceId);
+  }
+
+  if(invoice.paymentStatus === 2) {
+    throw new Meteor.Error('bad-request', 'Invoice already paid');
+  }
+
+  ElasticLogger.log("Admin sending invoice reminder", {invoiceId, user: Meteor.userId()});
+  return InvoiceObj.sendInvoicePending(invoice, Invoice.EmailMapping.Reminder2);
+}
+
 Meteor.methods({
-  generateInvoiceHTML: InvoiceObj.generateHTML
+  generateInvoiceHTML: InvoiceObj.generateHTML,
+  sendInvoiceReminder: InvoiceObj.adminSendInvoiceReminder
 });
 
 export default InvoiceObj;
