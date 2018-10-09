@@ -770,7 +770,7 @@ Meteor.methods({
   },
   deleteNetwork: function(id) {
     try{
-    ElasticLogger.log(`DeleteNetwork`, {id: id, userId: Meteor.user()});
+    ElasticLogger.log(`DeleteNetwork`, {id: id, userId: Meteor.userId()});
     }catch(err){
       RavenLogger.log(err);
     }

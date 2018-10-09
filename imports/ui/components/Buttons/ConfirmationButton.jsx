@@ -13,7 +13,7 @@ export default class ConfirmationButton extends Component {
     if (!this.state.confirmationAsked) {
       this.setState({
         confirmationAsked: true,
-        cooldown: true
+        cooldown: true,
       });
       this.timer = setTimeout(() => {
         this.setState({
@@ -22,8 +22,8 @@ export default class ConfirmationButton extends Component {
         this.timer = setTimeout(() => {
           this.setState({
             confirmationAsked: false,
-            cooldown: false
-          })
+            cooldown: false,
+          });
         }, this.timeout * 2);
       }, this.cooldown);
       return;
@@ -44,13 +44,21 @@ export default class ConfirmationButton extends Component {
   render() {
     const className = this.props.className || 'btn-danger';
     return (
-      <button className={`btn ${className}`} style={this.props.style} onClick={this.buttonTrigger} disabled={this.state.cooldown || this.props.disabled || this.props.completed}>
-        { this.props.loading && <i className="fa fa-spin fa-spinner">&nbsp;</i> }
-        {this.props.completed
-          ? this.props.completedText
-          : this.state.confirmationAsked
-            ? this.props.confirmationText || 'Are you sure? This is irreversible'
-            : this.props.actionText || 'Delete Node'}
+      <button
+        className={`btn ${className}`}
+        style={this.props.style}
+        onClick={this.buttonTrigger}
+        disabled={this.state.cooldown || this.props.disabled || this.props.completed || this.props.loading}
+      >
+        {this.props.loading && <i className="fa fa-spin fa-spinner">&nbsp;</i>}
+        &nbsp;
+        {this.props.loading
+          ? this.props.loadingText || 'Processing'
+          : this.props.completed
+            ? this.props.completedText
+            : this.state.confirmationAsked
+              ? this.props.confirmationText || 'Are you sure? This is irreversible'
+              : this.props.actionText || 'Delete Node'}
       </button>
     );
   }

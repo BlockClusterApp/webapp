@@ -27,7 +27,7 @@ spec:
       - hostPath:
           path: /webapp-logs/
           type: ""
-        name: node-logs
+        name: webapp-logs
       containers:
       - name: {{ template "server.name" . }}
         volumeMounts:
