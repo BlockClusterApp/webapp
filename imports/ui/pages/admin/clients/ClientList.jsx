@@ -1,6 +1,8 @@
 import React, {Component} from "react";
+import notifications from '../../../../modules/notifications';
 import {withTracker} from "meteor/react-meteor-data";
-import {withRouter} from 'react-router-dom'
+import {withRouter,Link} from 'react-router-dom';
+import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import moment from 'moment';
 import axios from 'axios';
 import config from '../../../../modules/config/client'
@@ -45,6 +47,7 @@ class ClientList extends Component {
         return;
       });
     }).catch(error=>{
+      notifications.error('problem reaching server!');
       console.log(error)
     });
   }
@@ -81,6 +84,7 @@ class ClientList extends Component {
         page
       });
     }).catch(error=>{
+      notifications.error('problem reaching server!')
       console.log(error)
     })
   }
@@ -118,6 +122,20 @@ getExpiryBadge = (client) => {
                                       <input type="text" placeholder="Client name, email or License Key" className="form-control" onChange={this.onSearch} />
                                     </div>
                                     </div>
+                                    <div className="col-md-3" align="right">
+                      <Link to={"/app/admin/clients/create"}>
+                        <LaddaButton
+                          data-size={S}
+                          data-style={SLIDE_UP}
+                          data-spinner-size={30}
+                          data-spinner-lines={12}
+                          className="btn btn-success "
+                        >
+                          <i className="fa fa-plus-circle" aria-hidden="true" />
+                          &nbsp;&nbsp;Create
+                        </LaddaButton>
+                      </Link>
+                    </div>
                                     {/* can put some select bx here may be */}
                                   </div>
                                 </div>
