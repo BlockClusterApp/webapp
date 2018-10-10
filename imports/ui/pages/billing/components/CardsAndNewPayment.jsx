@@ -105,7 +105,7 @@ class CardsAndNewPayment extends Component {
     let currentRow = [];
 
     let paymentDisplay = null;
-    if (this.props.invoice && this.props.invoice.paymentStatus !== 2 && !this.props.rzSubscription && (this.props.user && !this.props.user.demoUser)) {
+    if (this.props.invoice && this.props.invoice.paymentStatus !== 2 && !(this.props.rzSubscription && this.props.rzSubscription.bc_status === 'active') && (this.props.user && !this.props.user.demoUser)) {
       paymentDisplay = Number(this.props.invoice.totalAmount) !== 0 && (
         <div className="alert alert-warning col-md-12">
           <div className="col-md-12 b-r b-dashed b-grey sm-b-b">
@@ -142,9 +142,9 @@ class CardsAndNewPayment extends Component {
               <i className="fa fa-credit-card fa-2x hint-text" />
               <h2>Your card is verified</h2>
 
-              {this.props.rzSubscription && <p>You will recieve invoice on 1st of every month and bill amount will be auto deducted from your card on 5th of every month.</p>}
+              {!(this.props.rzSubscription && this.props.rzSubscription.bc_status === 'active') && <p>You will receive invoice on 1st of every month and bill amount will be auto deducted from your card on 5th of every month.</p>}
 
-              {!this.props.rzSubscription && (
+              {!!(this.props.rzSubscription && this.props.rzSubscription.bc_status === 'active') && (
                 <p>Bill will be generated on 1st of every month and sent via email. The invoice would have to be cleared before 10th of the month to prevent deletion of nodes.</p>
               )}
               <p className="small">To change the card associated with your account kindly raise a support ticket.</p>
