@@ -11,6 +11,8 @@ import helpers from "../../../modules/helpers";
 import FineUploaderTraditional from "fine-uploader-wrappers";
 import Gallery from "react-fine-uploader";
 import LocationSelector from "../../components/Selectors/LocationSelector.jsx";
+import LoadingIcon from "../../components/LoadingIcon/LoadingIcon.jsx";
+
 import {
   ComposableMap,
   ZoomableGroup,
@@ -128,7 +130,10 @@ class HyperionComponent extends Component {
       rpcLoading: false,
       restLoading: false,
       locationCode: "us-west-2",
-      markers: []
+      markers: [],
+      deletingFiles: [],
+      downloadingFiles: [],
+      searchLoading: false
     };
 
     this.downloadFile = this.downloadFile.bind(this);
@@ -143,28 +148,44 @@ class HyperionComponent extends Component {
           endpoint: ``,
           inputName: "file"
         },
+        deleteFile: {
+         enabled: false
+       },
         retry: {
-          enableAuto: true,
-          autoAttemptDelay: 1,
-          maxAutoAttempts: 1
+          enableAuto: false
         },
         callbacks: {
-          onSubmit: (id, fileName) => {
-            Meteor.call(
-              "getHyperionToken",
-              { userId: Meteor.userId() },
-              (err, token) => {
-                if (!err) {
-                  this.token = token;
-                  this.uploader.methods._endpointStore.set(
-                    `${window.location.origin}/api/hyperion/upload?location=${
-                      this.locationCode
-                    }&token=${this.token}`,
-                    id
-                  );
-                }
-              }
-            );
+          onSubmit: async (id, fileName) => {
+            function setUploaderURL(userId, locationCode, uploader) {
+              return new Promise((resolve, reject) => {
+                Meteor.call(
+                  "getHyperionToken",
+                  { userId: userId },
+                  (err, token) => {
+                    if (!err) {
+                      uploader.methods._endpointStore.set(
+                        `${window.location.origin}/api/hyperion/upload?location=${
+                          locationCode
+                        }&token=${token}`,
+                        id
+                      );
+
+                      resolve()
+                    } else {
+                      reject()
+                    }
+                  }
+                );
+              })
+            }
+
+            await setUploaderURL(Meteor.userId(), this.locationCode, this.uploader)
+          },
+          onError: (id, fileName, reason, d) => {
+            notifications.error(reason)
+          },
+          onTotalProgress: (a, b) => {
+            console.log(a, b)
           }
         }
       }
@@ -205,6 +226,13 @@ class HyperionComponent extends Component {
   downloadFile = (e, item) => {
     e.preventDefault();
 
+    let downloadingFiles = this.state.downloadingFiles;
+    downloadingFiles.push(item.hash);
+
+    this.setState({
+      downloadingFiles: downloadingFiles
+    })
+
     Meteor.call("getHyperionToken", item, (err, token) => {
       if (!err) {
         helpers.downloadFile(`${window.location.origin}/api/hyperion/download?location=${
@@ -214,26 +242,67 @@ class HyperionComponent extends Component {
       } else {
         notifications.error("An error occured");
       }
+
+      let downloadingFiles = this.state.downloadingFiles;
+      let index = downloadingFiles.indexOf(item.hash);
+
+      if (index > -1) {
+        downloadingFiles.splice(index, 1);
+        this.setState({
+          downloadingFiles: downloadingFiles
+        })
+      }
     });
   };
 
   searchFile = (e) => {
     e.preventDefault();
 
+    this.setState({
+      searchLoading: true
+    })
+
     Meteor.call("getHyperionToken", {userId: Meteor.userId()}, (err, token) => {
       if (!err) {
-        helpers.downloadFile(`${window.location.origin}/api/hyperion/download?location=${
-          this.locationCode
-        }&hash=${this.refs.searchBox.value}&token=${token}`)
-        notifications.success("File download started");
+        HTTP.call(
+          "GET",
+          `${window.location.origin}/api/hyperion/fileStats?location=${
+            this.locationCode
+          }&hash=${this.refs.searchBox.value}&token=${token}`,
+          {},
+          (error, result) => {
+            if (!error) {
+              helpers.downloadFile(`${window.location.origin}/api/hyperion/download?location=${
+                this.locationCode
+              }&hash=${this.refs.searchBox.value}&token=${token}`)
+              notifications.success("File download started");
+            } else {
+              notifications.error("File not found");
+            }
+
+            this.setState({
+              searchLoading: false
+            })
+          }
+        );
       } else {
         notifications.error("An error occured");
+        this.setState({
+          searchLoading: false
+        })
       }
     });
   }
 
   deleteFile = (e, item) => {
     e.preventDefault();
+
+    let deletingFiles = this.state.deletingFiles;
+    deletingFiles.push(item.hash);
+
+    this.setState({
+      deletingFiles: deletingFiles
+    })
 
     Meteor.call("getHyperionToken", item, (err, token) => {
       if (!err) {
@@ -249,10 +318,30 @@ class HyperionComponent extends Component {
             } else {
               notifications.error("An error occured");
             }
+
+            let deletingFiles = this.state.deletingFiles;
+            let index = deletingFiles.indexOf(item.hash);
+
+            if (index > -1) {
+              deletingFiles.splice(index, 1);
+              this.setState({
+                deletingFiles: deletingFiles
+              })
+            }
           }
         );
       } else {
         notifications.error("An error occured");
+
+        let deletingFiles = this.state.deletingFiles;
+        let index = deletingFiles.indexOf(item.hash);
+
+        if (index > -1) {
+          deletingFiles.splice(index, 1);
+          this.setState({
+            deletingFiles: deletingFiles
+          })
+        }
       }
     });
   };
@@ -368,19 +457,31 @@ class HyperionComponent extends Component {
                                         )}
                                       </td>
                                       <td className="v-align-middle">
-                                        <i
-                                          className="fa fa-download download"
-                                          onClick={e =>
-                                            this.downloadFile(e, item)
-                                          }
-                                        />
+                                        {this.state.downloadingFiles.includes(item.hash) &&
+                                          <LoadingIcon />
+                                        }
+
+                                        {!this.state.downloadingFiles.includes(item.hash) &&
+                                          <i
+                                            className="fa fa-download download"
+                                            onClick={e =>
+                                              this.downloadFile(e, item)
+                                            }
+                                          />
+                                        }
+
                                         &nbsp;&nbsp;&nbsp;
-                                        <i
-                                          className="fa fa-trash delete"
-                                          onClick={e =>
-                                            this.deleteFile(e, item)
-                                          }
-                                        />
+                                        {this.state.deletingFiles.includes(item.hash) &&
+                                          <LoadingIcon />
+                                        }
+                                        {!this.state.deletingFiles.includes(item.hash) &&
+                                          <i
+                                            className="fa fa-trash delete"
+                                            onClick={e =>
+                                              this.deleteFile(e, item)
+                                            }
+                                          />
+                                        }
                                       </td>
                                     </tr>
                                   );
@@ -576,7 +677,18 @@ class HyperionComponent extends Component {
                                 <label>Enter File Hash</label>
                                 <input type="text" placeholder="QmcoEsT1y1jJjGKv5jXLtVrkyuV9mz2hukPic5UnjS4JEw" className="form-control" ref="searchBox" style={{height: "calc(2.25rem + 2px)"}} />
                               </div>
-                              <button className="btn btn-complete btn-cons m-t-10"><i className="fa fa-search" /> Search</button>
+                              <LaddaButton
+                                loading={this.state.searchLoading}
+                                data-size={S}
+                                data-style={SLIDE_UP}
+                                data-spinner-size={30}
+                                data-spinner-lines={12}
+                                className="btn btn-complete btn-cons m-t-10"
+                                type="submit"
+                              >
+                                <i className="fa fa-search" aria-hidden="true" />
+                                &nbsp;&nbsp;Search
+                              </LaddaButton>
                             </form>
                           </div>
                         </div>
