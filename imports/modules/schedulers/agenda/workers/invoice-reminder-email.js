@@ -10,6 +10,7 @@ module.exports = function(agenda) {
     'invoice-reminder-email',
     { priority: 'highest' },
     Meteor.bindEnvironment(job => {
+
       const billingMonthLabel = moment()
         .subtract(1, 'month')
         .format('MMM-YYYY');

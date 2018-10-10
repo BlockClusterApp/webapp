@@ -19,6 +19,7 @@ module.exports = function(bullSystem) {
         ElasticLogger.log(`Invoice email ${job.data.reminderCode} already sent`);
         return true;
       }
+      ElasticLogger.log('Sending invoice pending', { invoice, reminderCode: job.data.reminderCode });
       await InvoiceObj.sendInvoicePending(invoice, job.data.reminderCode);
 
       return resolve();

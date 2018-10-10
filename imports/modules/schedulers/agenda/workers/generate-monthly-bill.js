@@ -5,9 +5,10 @@ module.exports = function(agenda) {
   agenda.define(
     'generate-monthly-bill',
     { priority: 'highest' },
-    Meteor.bindEnvironment((job) => {
+    Meteor.bindEnvironment(job => {
       const users = Meteor.users.find({ 'emails.verified': true }).fetch();
       debug('Generating bills for', users);
+      ElasticLogger.log('Starting bill generation', { users });
       users.forEach(user => {
         bull.addJob(
           'generate-bill-user',

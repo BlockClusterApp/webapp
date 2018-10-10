@@ -73,6 +73,13 @@ module.exports = (bullSystem) => {
         rzSubscription
       });
 
+      ElasticLogger.log("Invoice generated", {
+        billingMonth: billingMonth.format('MMM-YYYY'),
+        userId,
+        rzSubscription: rzSubscription && rzSubscription._id,
+        invoiceId
+      });
+
 
       // if(!rzSubscription) {
       //   console.log("Subscription not found", userId, plan.id);

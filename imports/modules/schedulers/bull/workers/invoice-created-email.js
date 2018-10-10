@@ -10,7 +10,7 @@ module.exports = function(bullSystem) {
         billingPeriodLabel: moment().subtract(1, 'month').format('MMM-YYYY'),
       }).fetch();
       await Bluebird.map(invoices, async invoice => {
-        console.log(`Sending invoice to ${invoice.user.email}`)
+        ElasticLogger.log(`Sending invoice to ${invoice.user.email}`)
         await InvoiceFunctions.sendInvoiceCreatedEmail(invoice);
         return true;
       }, {
