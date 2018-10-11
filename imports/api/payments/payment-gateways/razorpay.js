@@ -69,7 +69,7 @@ RazorPay.createPlan = async ({ plan, identifier }) => {
 };
 
 RazorPay.deletePlan = async ({ identifier }) => {
-  ElasticLogger.log("RZPlan delete", {identifier, userId: Meteor.userId()})
+  ElasticLogger.log('RZPlan delete', { identifier, userId: Meteor.userId() });
   const rzPlan = RZPlan.find({ identifier }).fetch()[0];
   if (!rzPlan) {
     RavenLogger.log('RazorPay.deletePlan: Plan does not exists', { identifier });
@@ -142,9 +142,9 @@ RazorPay.cancelSubscription = async ({ rzSubscription }) => {
   try {
     const cancelResponse = await RazorPayInstance.subscriptions.cancel(rzSubscription.id, true);
     debug('Cancel Subscription | Response', cancelResponse);
-    ElasticLogger.log("RZSubscription cancel", {
+    ElasticLogger.log('RZSubscription cancel', {
       rzSubscription: rzSubscription._id,
-      userId: Meteor.userId()
+      userId: Meteor.userId(),
     });
     RZSubscription.update(
       {
@@ -437,16 +437,15 @@ RazorPay.createPaymentLink = async ({ amount, description, user, paymentRequest 
   }
 
   if (String(amount).includes('.')) {
-    RavenLogger.log('Amount not in paisa', { userId, amount, description });
+    RavenLogger.log('Amount not in paisa', { userId: user._id, amount, description });
     throw new Meteor.Error('Amount not in paisa');
   }
 
-
-  if(!(paymentRequest && paymentRequest._id)) {
+  if (!(paymentRequest && paymentRequest._id)) {
     const conversionFactor = await Payments.getConversionToINRRate({ currencyCode: 'usd' });
     paymentRequest = await Payments.createRequest({
       reason: description,
-      amoountInPaisa: amount,
+      amountInPaisa: amount,
       metadata: {
         conversionFactor,
       },
@@ -454,16 +453,13 @@ RazorPay.createPaymentLink = async ({ amount, description, user, paymentRequest 
     });
   }
 
-
-
   try {
-    const rzpLink = await RazorPayInstance.create({
+    const rzpLink = await RazorPayInstance.invoices.create({
       customer: customerDetails,
       type: 'link',
-      view_less: '0',
       amount,
       currency: 'INR',
-      description: '',
+      description,
       expire_by: Math.floor(
         moment()
           .add(20, 'days')
@@ -472,12 +468,12 @@ RazorPay.createPaymentLink = async ({ amount, description, user, paymentRequest 
       ),
       notes: {
         paymentRequestId: paymentRequest._id,
-        conversionFactor: paymentRequest.conversionFactor
+        conversionFactor: paymentRequest.conversionFactor,
       },
-      sms_notify: "0",
-      email_notify: "0"
+      sms_notify: '0',
+      email_notify: '0',
     });
-    const rzLink = RZPaymentLink.insert(rzpLink);
+    const rzLink = RZPaymentLink.insert({...rzpLink, userId: user._id});
     debug('Create Payment Link | Success', rzpLink);
     return rzLink;
   } catch (err) {
@@ -485,8 +481,6 @@ RazorPay.createPaymentLink = async ({ amount, description, user, paymentRequest 
     debug('Create Payment Link | Error', err);
     return false;
   }
-
-
 };
 
 RazorPay.processWebHook = async function(req, res) {
@@ -501,6 +495,8 @@ Meteor.methods({
   getRazorPayId: async () => {
     return Config.RazorPay.id;
   },
+  capturePaymentRazorPay: RazorPay.capturePayment,
+  applyRZCardVerification: RazorPay.applyCardVerification,
 });
 
 export default RazorPay;

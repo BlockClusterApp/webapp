@@ -1,4 +1,7 @@
 import moment from 'moment';
+import Bluebird from 'bluebird';
+import Invoice from '../../../../collections/payments/invoice';
+import InvoiceFunctions from '../../../../api/billing/invoice';
 const debug = require('debug')('scheduler:agenda:generateMonthlyBill');
 
 module.exports = function(bullSystem) {

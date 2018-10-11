@@ -8,7 +8,7 @@ const debug = require('debug')('api:payments');
 
 const Payments = {};
 
-Payments.createRequest = async ({ paymentGateway, reason, amount, amoountInPaisa, mode, userId, metadata, display_amount, display_currency }) => {
+Payments.createRequest = async ({ paymentGateway, reason, amount, amountInPaisa, mode, userId, metadata, display_amount, display_currency }) => {
   let insertResult;
   let subscription;
   paymentGateway = paymentGateway || 'razorpay';
@@ -168,8 +168,6 @@ Payments.captureInvoicePayment = async pgResponse => {
 };
 
 Meteor.methods({
-  capturePaymentRazorPay: RazorPay.capturePayment,
-  applyRZCardVerification: RazorPay.applyCardVerification,
   createPaymentRequest: Payments.createRequest,
   refundPayment: Payments.refundAmount,
   createRequestForInvoice: Payments.createRequestForInvoice,

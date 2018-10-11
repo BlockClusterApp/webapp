@@ -7,10 +7,10 @@ const RazorPayPaymentLink = new Mongo.Collection("razorpayPaymentLink");
 AttachBaseHooks(RazorPayPaymentLink);
 
 if(!Meteor.isClient) {
-  RazorPaySubscription._ensureIndex({
+  RazorPayPaymentLink._ensureIndex({
     id: 1
   });
-  RazorPaySubscription._ensureIndex({
+  RazorPayPaymentLink._ensureIndex({
     userId: 1
   });
 }

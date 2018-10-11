@@ -1,4 +1,4 @@
-import { RZSubscription, RZPayment } from '../../../../collections/razorpay';
+import { RZSubscription, RZPayment, RZPaymentLink } from '../../../../collections/razorpay';
 import UserCards from '../../../../collections/payments/user-cards';
 import PaymentRequest from '../../../../collections/payments/payment-requests';
 import Invoice from '../../../../api/billing/invoice';
@@ -401,6 +401,22 @@ async function updateFailedInvoice({ payment }) {
 }
 
 async function handleInvoicePaid({ invoice, payment }) {
+
+  const rzPaymentLink = RZPaymentLink.find({
+    id: invoice.id,
+  }).fetch()[0];
+
+  if(rzPaymentLink) {
+    const invoice = InvoiceModel.find({
+      "paymentLink.id": rzPaymentLink._id
+    }).fetch()[0];
+    return Invoice.settleInvoice({
+      invoiceId: invoice._id,
+      rzPayment: payment
+    });
+  }
+
+
   // we only want the halted subscriptions to trigger this as others will be processed by subscription.charged
   const rzSubscription = RZSubscription.find({
     id: invoice.subscription_id,
@@ -510,7 +526,7 @@ const HandlerFunctions = {
     return true;
   },
   'invoice.paid': async ({ data }, bullSystem) => {
-    let { invoice, payment } = data;
+    let { invoice, payment } = data.payload;
     invoice = invoice.entity;
     payment = payment.entity;
 

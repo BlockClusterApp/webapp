@@ -12,6 +12,7 @@ import {
 } from "../../modules/helpers/server";
 import writtenNumber from 'written-number'
 import BullSystem from '../../modules/schedulers/bull';
+import { RZPaymentLink } from '../../collections/razorpay';
 
 const InvoiceObj = {};
 
@@ -87,6 +88,27 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
 
   const invoiceId = Invoice.insert(invoiceObject);
 
+  const linkId = await RazorPay.createPaymentLink({
+    amount: invoiceObject.totalAmountINR,
+    description: `Bill for ${invoiceObject.billingPeriodLabel}`,
+    user
+  });
+
+  const rzPaymentLink = RZPaymentLink.find({
+    _id: linkId
+  }).fetch()[0];
+
+  debug('RZPaymentLink', rzPaymentLink);
+
+  Invoice.update({_id: invoiceId}, {
+    $set: {
+      paymentLink: {
+        id: rzPaymentLink._id,
+        link: rzPaymentLink.short_url
+      }
+    }
+  });
+
   BullSystem.addJob('invoice-created-email', {
     invoiceId
   });
@@ -115,7 +137,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
 
   ElasticLogger.log('Trying to settle invoice', {selector, billingMonth, billingMonthLabel, rzPayment, id: spanId},);
 
-  if(!selector._id && !selector.rzSubscriptionId && !selector.rzCustomerId) {
+  if(!selector._id && !selector.rzSubscriptionId && !selector.rzCustomerId && !selector._id) {
     RavenLogger.log('Trying to settle unspecific', {...selector});
     throw new Meteor.Error('bad-request', 'No valid selector');
   }
@@ -138,7 +160,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     }
   );
 
-  ElasticLogger.log('Settled invoice', {invoice, id: spanId});
+  ElasticLogger.log('Settled invoice', {invoiceId: invoice._id, id: spanId});
 
   return invoice._id;
 };
@@ -191,9 +213,14 @@ InvoiceObj.generateHTML = async (invoiceId) => {
 }
 
 InvoiceObj.sendInvoiceCreatedEmail = async (invoice) => {
+
+  const user = Meteor.users.find({_id: invoice.userId}).fetch()[0];
+
+
   const ejsTemplate = await getEJSTemplate({fileName: "invoice-created.ejs"});
   const finalHTML = ejsTemplate({
-    invoice
+    invoice,
+    paymentLink: invoice.paymentLink.link
   });
 
   const emailProps = {
@@ -223,7 +250,8 @@ InvoiceObj.sendInvoicePending = async (invoice, reminderCode) => {
 
   const ejsTemplate = await getEJSTemplate({fileName: "invoice-pending.ejs"});
   const finalHTML = ejsTemplate({
-    invoice
+    invoice,
+    paymentLink: invoice.paymentLink.link
   });
 
   const emailProps = {
