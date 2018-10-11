@@ -35,64 +35,97 @@ class ClientDetails extends Component {
 
   genLicense = e => {
     const data = {
-      clientId:this.state.rawData._id,
-      expire: this.state.expire
+      clientId: this.state.rawData._id,
+      expire: this.state.expire,
     };
-    axios.post('/client/license-generate',data).then(data=>{
-      this.setState({
-        rawData : Object.assign(this.state.rawData,data.data)
-      },()=>{
-        console.log(this.state.rawData)
-        this.letsFormatdata();
+    axios
+      .post('/client/license-generate', data)
+      .then(data => {
+        this.setState(
+          {
+            rawData: Object.assign(this.state.rawData, data.data),
+          },
+          () => {
+            console.log(this.state.rawData);
+            this.letsFormatdata();
+          }
+        );
       })
-    }).catch(error=>{
-      console.log(error);
-      notifications.error('cant reach server');
-    });
-
+      .catch(error => {
+        console.log(error);
+        notifications.error('cant reach server');
+      });
   };
-letsFormatdata = (e)=>{
-  const i = this.state.rawData;
-  const formattedData = {
-    Name: i.clientDetails.clientName,
-    Email: i.clientDetails.emailId,
-    Phone: i.clientDetails.phone,
-    'Licence Key': i.licenseDetails ? i.licenseDetails.licenseKey : '-',
-    'Licence Created': i.licenseDetails
-      ? new Date(i.licenseDetails.licenseCreated).toLocaleDateString() + ' ' + new Date(i.licenseDetails.licenseCreated).toLocaleTimeString()
-      : '-',
-    'License Expiry': i.licenseDetails
-      ? new Date(i.licenseDetails.licenseExpiry).toLocaleDateString() + ' ' + new Date(i.licenseDetails.licenseExpiry).toLocaleTimeString()
-      : '-',
-  };
-  const updatedData = Object.keys(formattedData).map(i => {
-    return { [i]: formattedData[i] };
-  });
-  this.setState(
-    {
-      rawData: i,
-      formattedData: updatedData,
-    },
-    () => {
-      console.log(this.state.formattedData);
-    }
-  );
-};
-  getClientDetails() {
-    return axios.get('/client/filter?query=' + JSON.stringify(this.query)).then(data => {
-      const i = data.data[0];
-      this.setState(
-        {
-          rawData: i
-        },()=>{
-          this.letsFormatdata();
-        }
-      );
-    }).catch(error=>{
-      console.log(error);
-      notifications.error('cant reach server')
+  letsFormatdata = e => {
+    const i = this.state.rawData;
+    const formattedData = {
+      Name: i.clientDetails.clientName,
+      Email: i.clientDetails.emailId,
+      Phone: i.clientDetails.phone,
+      'Licence Key': i.licenseDetails ? i.licenseDetails.licenseKey : '-',
+      'Licence Created': i.licenseDetails
+        ? new Date(i.licenseDetails.licenseCreated).toLocaleDateString() + ' ' + new Date(i.licenseDetails.licenseCreated).toLocaleTimeString()
+        : '-',
+      'License Expiry': i.licenseDetails
+        ? new Date(i.licenseDetails.licenseExpiry).toLocaleDateString() + ' ' + new Date(i.licenseDetails.licenseExpiry).toLocaleTimeString()
+        : '-',
+    };
+    const updatedData = Object.keys(formattedData).map(i => {
+      return { [i]: formattedData[i] };
     });
-  }
+    this.setState(
+      {
+        rawData: i,
+        formattedData: updatedData,
+      },
+      () => {
+        console.log(this.state.formattedData);
+      }
+    );
+  };
+  getClientDetails = () => {
+    return axios
+      .get('/client/filter?query=' + JSON.stringify(this.query))
+      .then(data => {
+        const i = data.data[0];
+        this.setState(
+          {
+            rawData: i,
+          },
+          () => {
+            this.letsFormatdata();
+          }
+        );
+      })
+      .catch(error => {
+        console.log(error);
+        notifications.error('cant reach server');
+      });
+  };
+  genSecret = () => {
+    this.setState({
+      genSecret_formloading: true,
+    });
+    const data_post = {
+      clientId: this.state.rawData._id,
+    };
+    return axios
+      .post('/client/reset-secret', data_post)
+      .then(data => {
+        const i = data.data[0];
+        this.setState({
+          genSecret_formloading: false,
+        });
+        notifications.success('Reset Success.');
+      })
+      .catch(error => {
+        this.setState({
+          genSecret_formloading: false,
+        });
+        console.log(error);
+        notifications.error('Unknown Error');
+      });
+  };
 
   render() {
     return (
@@ -116,7 +149,7 @@ letsFormatdata = (e)=>{
               (!this.state.rawData.licenseDetails || !this.state.rawData.licenseDetails.licenseKey) && (
                 <div>
                   <label className="semi-bold">&nbsp;&nbsp; Generate License</label>
-                  <p className="hint-text">&nbsp;&nbsp;  number in months </p>
+                  <p className="hint-text">&nbsp;&nbsp; number in months </p>
                   <div className="row">
                     &nbsp;&nbsp;
                     <input
@@ -130,8 +163,6 @@ letsFormatdata = (e)=>{
                     />
                     &nbsp;&nbsp;
                     <LaddaButton
-                      // disabled={(this.state.clientName.length > 0  && this.state.emailId.length>0 && this.state.phone.length>0) ? false : true}
-                      // loading={this.state.createClient_formloading ? this.state.createClient_formloading : false}
                       data-size={S}
                       data-style={SLIDE_UP}
                       data-spinner-size={30}
@@ -174,6 +205,26 @@ letsFormatdata = (e)=>{
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+          <br/>
+          <div className="row justify-content-center">
+            <div>
+              &nbsp;&nbsp; &nbsp;&nbsp;
+              <LaddaButton
+                loading={this.state.genSecret_formloading ? this.state.genSecret_formloading : false}
+                data-size={S}
+                data-style={SLIDE_UP}
+                data-spinner-size={30}
+                data-spinner-lines={12}
+                className="btn btn-danger"
+                onClick={this.genSecret.bind(this)}
+              >
+                <i className="pg-form" aria-hidden="true" />
+                Generate New Secret
+              </LaddaButton>
+              <p className="hint-text m-t-10">&nbsp;&nbsp; mail will be sent to user with secret key. </p>
+              <br />
             </div>
           </div>
         </div>
