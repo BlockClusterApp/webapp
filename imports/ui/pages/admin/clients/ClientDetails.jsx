@@ -220,8 +220,8 @@ class ClientDetails extends Component {
                 className="btn btn-danger"
                 onClick={this.genSecret.bind(this)}
               >
-                <i className="pg-form" aria-hidden="true" />
-                Generate New Secret
+                <i className="fa fa-user-secret" aria-hidden="true" />
+                &nbsp;Generate New Secret
               </LaddaButton>
               <p className="hint-text m-t-10">&nbsp;&nbsp; mail will be sent to user with secret key. </p>
               <br />
