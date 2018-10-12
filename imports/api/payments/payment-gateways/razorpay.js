@@ -9,6 +9,7 @@ import crypto from 'crypto';
 import Bull from '../../../modules/schedulers/bull';
 import Payments from '../';
 import bullSystem from '../../../modules/schedulers/bull';
+import Invoice from '../../../collections/payments/invoice';
 import Forex from '../../../collections/payments/forex';
 
 const debug = require('debug')('api:razorpay');
@@ -499,12 +500,19 @@ RazorPay.cancelPaymentLink = async ({ paymentLinkId, reason, userId }) => {
   try{
     const cancelResponse =  await RazorPayInstance.invoices.cancel(rzPaymentLink.id);
     debug('Cancel Payment Link | Success', cancelResponse);
+    Invoice.update({
+      "paymentLink.id": paymentLinkId
+    }, {
+      $set: {
+        "paymentLink.expired": true
+      }
+    });
     RZPaymentLink.update({
       _id: rzPaymentLink._id
     }, {
       $set: {
-        status: 'canceled',
-        canceledBy: userId
+        status: 'cancelled',
+        cancelledBy: userId
       }
     });
     return true;
@@ -529,6 +537,7 @@ Meteor.methods({
   },
   capturePaymentRazorPay: RazorPay.capturePayment,
   applyRZCardVerification: RazorPay.applyCardVerification,
+  cancelPaymentLink: RazorPay.cancelPaymentLink
 });
 
 export default RazorPay;

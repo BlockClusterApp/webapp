@@ -200,7 +200,7 @@ Payments.createPaymentLink = async ({reason, amount, amountInPaisa, amountInUSD,
     }).fetch()[0];
   }
 
-  const paymentLinkId = await RazorPay.createPaymentLink({amount: amountInPaisa, user, reason });
+  const paymentLinkId = await RazorPay.createPaymentLink({amount: amountInPaisa, user, description: reason });
 
   return RZPaymentLink.find({
     _id: paymentLinkId
@@ -212,6 +212,7 @@ Meteor.methods({
   refundPayment: Payments.refundAmount,
   createRequestForInvoice: Payments.createRequestForInvoice,
   captureInvoicePayment: Payments.captureInvoicePayment,
+  createPaymentLink: Payments.createPaymentLink
 });
 
 export default Payments;

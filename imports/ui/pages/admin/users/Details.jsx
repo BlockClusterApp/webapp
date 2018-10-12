@@ -4,6 +4,7 @@ import helpers from '../../../../modules/helpers';
 import { withRouter } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
+import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import PaymentModal from './components/PaymentModal';
 
 import { Networks } from '../../../../collections/networks/networks';
@@ -12,6 +13,7 @@ import { UserInvitation } from '../../../../collections/user-invitation';
 import PaymentRequests from '../../../../collections/payments/payment-requests';
 import Voucher from '../../../../collections/vouchers/voucher';
 import Invoice from '../../../../collections/payments/invoice';
+import notifications from '../../../../modules/notifications';
 
 class UserDetails extends Component {
   constructor(props) {
@@ -32,7 +34,7 @@ class UserDetails extends Component {
     });
   }
 
-  componentDidMount(){
+  componentDidMount() {
     this.setState({
       userId: this.props.match.params.id,
     });
@@ -125,6 +127,51 @@ class UserDetails extends Component {
   refundListener = () => {
     this.setState({
       showPaymentModal: false,
+    });
+  };
+
+  createPaymentLink = () => {
+    this.setState({
+      paymentLinkLoading: true,
+    });
+
+    const params = {
+      reason: this.paymentLinkReason.value,
+      amountInUSD: Number(this.paymentLinkAmount.value),
+      userId: this.props.match.params.id,
+    };
+
+    Meteor.call('createPaymentLink', params, (err, res) => {
+      this.setState({
+        paymentLinkLoading: false,
+      });
+      if (err) {
+        notifications.error(err.reason);
+        return false;
+      }
+      this.setState({
+        generatedLink: res,
+      });
+      notifications.success('Payment Link created');
+    });
+  };
+
+  cancelPaymentLink = paymentLinkId => {
+    this.setState({
+      paymentLinkLoading: true,
+    });
+    Meteor.call('cancelPaymentLink', { paymentLinkId, userId: Meteor.userId(), reason: `Deleted by ${Meteor.user().emails[0].address}` }, (err, res) => {
+      this.setState({
+        paymentLinkLoading: false,
+      });
+      if (err) {
+        return notifications.error(err.reason);
+      }
+      this.setState({
+        generatedLink: {},
+      });
+      notifications.success('Link deleted successfully');
+      return true;
     });
   };
 
@@ -507,6 +554,93 @@ class UserDetails extends Component {
                           })}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="row">
+              <div className="col-lg-12 m-b-10 d-flex">
+                <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+                  <div className="padding-25">
+                    <div className="pull-left">
+                      <h2 className="text-success no-margin">Actions</h2>
+                    </div>
+                  </div>
+                  <div className="row p-b-25">
+                    <div className="p-l-25 p-r-25 col-md-12">
+                      <h5 className="no-margin p-b-10">Create Payment Link</h5>
+                      <div className="row">
+                        <div className="col-md-7">
+                          <div className="form-group form-group-default required">
+                            <label>Reason</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="paymentReason"
+                              required
+                              ref={input => {
+                                this.paymentLinkReason = input;
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-3">
+                          <div className="form-group form-group-default required">
+                            <label>Amount (IN USD)</label>
+                            <input
+                              type="number"
+                              className="form-control"
+                              name="paymentAmount"
+                              placeholder="$"
+                              required
+                              ref={input => {
+                                this.paymentLinkAmount = input;
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-2">
+                          <LaddaButton
+                            disabled={this.state.paymentLinkCreationDisabled}
+                            loading={this.state.paymentLinkLoading}
+                            data-size={S}
+                            data-style={SLIDE_UP}
+                            data-spinner-size={30}
+                            data-spinner-lines={12}
+                            onClick={this.createPaymentLink}
+                            className="btn btn-success"
+                          >
+                            <i className="fa fa-plus-circle" aria-hidden="true" />
+                            &nbsp;&nbsp;Create
+                          </LaddaButton>
+                        </div>
+                      </div>
+                      {this.state.generatedLink && (
+                        <div className="row">
+                          <div className="col-md-7">
+                            <div className="form-group form-group-default required">
+                              <label>Link</label>
+                              <input type="text" className="form-control" name="paymentReason" disabled value={this.state.generatedLink.short_url} />
+                            </div>
+                          </div>
+                          <div className="col-md-4">
+                            <LaddaButton
+                              disabled={this.state.paymentLinkDeletionDisabled}
+                              loading={this.state.paymentLinkLoading}
+                              data-size={S}
+                              data-style={SLIDE_UP}
+                              data-spinner-size={30}
+                              data-spinner-lines={12}
+                              onClick={this.cancelPaymentLink.bind(this, this.state.generatedLink._id)}
+                              className="btn btn-danger"
+                            >
+                              <i className="fa fa-minus-circle" aria-hidden="true" />
+                              &nbsp;&nbsp;Delete
+                            </LaddaButton>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
