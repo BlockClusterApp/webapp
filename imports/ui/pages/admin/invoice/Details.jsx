@@ -175,7 +175,7 @@ class InvoiceDetails extends Component {
                 <div className="card-description">
                   <ConfirmationButton
                     loading={this.state.loading}
-                    completed={!(invoice && invoice.emailsSent && invoice.emailsSent.includes(1)) || this.state.disableReminder || [2].includes(invoice.paymentStatus)}
+                    completed={!(invoice && invoice.emailsSent && invoice.emailsSent.includes(1)) || this.state.disableReminder || [2, 5].includes(invoice.paymentStatus)}
                     onConfirm={this.sendInvoiceReminder.bind(this, invoice._id)}
                     loadingText="Sending email"
                     completedText={invoice.paymentStatus !== 2 ? this.state.disableReminder ? "Reminder sent" : "Created mail not sent yet" : "Invoice already paid"}

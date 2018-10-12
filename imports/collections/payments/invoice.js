@@ -10,6 +10,7 @@ Invoice.PaymentStatusMapping = {
   Settled: 2,
   DemoUser: 3,
   Failed: 4,
+  WaivedOff: 5
 };
 
 Invoice.EmailMapping = {

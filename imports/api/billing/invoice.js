@@ -88,6 +88,16 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
 
   const invoiceId = Invoice.insert(invoiceObject);
 
+  if(Number(invoiceObject.totalAmountINR) <= 0) {
+    Invoice.update({
+      _id: invoiceId
+    }, {
+      $set: {
+        paymentStatus: Invoice.PaymentStatusMapping.Settled
+      }
+    });
+    return true;
+  }
   const linkId = await RazorPay.createPaymentLink({
     amount: invoiceObject.totalAmountINR,
     description: `Bill for ${invoiceObject.billingPeriodLabel}`,
@@ -217,7 +227,10 @@ InvoiceObj.generateHTML = async (invoiceId) => {
 
 InvoiceObj.sendInvoiceCreatedEmail = async (invoice) => {
 
-  const user = Meteor.users.find({_id: invoice.userId}).fetch()[0];
+  if(invoice.totalAmountINR <= 0) {
+    ElasticLogger.log("Zero amount invoice. Not sending created email", {invoice});
+    return true;
+  }
 
 
   const ejsTemplate = await getEJSTemplate({fileName: "invoice-created.ejs"});

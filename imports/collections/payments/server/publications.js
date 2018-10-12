@@ -21,7 +21,9 @@ Meteor.publish("pending-invoice", function (billingLabel) {
   return Invoice.find({
     userId: Meteor.userId(),
     billingPeriodLabel: billingLabel,
-    paymentStatus: 1
+    paymentStatus: {
+      $inq: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed]
+    }
   });
 });
 
