@@ -96,6 +96,7 @@ async function safeUpdateUser(userId, updateObject) {
   delete updateObject.services;
   delete updateObject.createdAt;
   delete updateObject.admin;
+  delete updateObject._id;
 
   ElasticLogger.log('Safeupdate user', { userId, updateObject });
 
@@ -193,7 +194,9 @@ async function attachPaymentToRequest(payment) {
         $push: {
           pgResponse: payment,
         },
-        paymentStatus: PaymentRequestReverseMap[payment.status],
+        $set: {
+          paymentStatus: PaymentRequestReverseMap[payment.status],
+        }
       }
     );
   }
@@ -211,6 +214,7 @@ async function insertOrUpdatePayment(user, payment) {
 
   const rzPayment = RZPayment.find({ id: payment.id }).fetch()[0];
   if (rzPayment) {
+    delete rzPayment.history;
     RZPayment.update(
       {
         _id: rzPayment._id,
@@ -348,7 +352,7 @@ async function handleSubscriptionHalted({ subscription }, bullSystem) {
   }).fetch()[0];
 
   if (!invoice) {
-    console.log('No invoice to be halted', subscription.id);
+    ElasticLogger.log('No invoice to be halted', {subscriptionId: subscription.id});
   }
 
   InvoiceModel.update(
@@ -410,10 +414,25 @@ async function handleInvoicePaid({ invoice, payment }) {
     const invoice = InvoiceModel.find({
       "paymentLink.id": rzPaymentLink._id
     }).fetch()[0];
-    return Invoice.settleInvoice({
-      invoiceId: invoice._id,
-      rzPayment: payment
-    });
+
+    if(!payment.notes) {
+      payment.notes = {
+        paymentRequestId: rzPaymentLink.paymentRequestId
+      }
+    }
+
+    if(!payment.notes.paymentRequestId) {
+      payment.notes.paymentRequestId = rzPaymentLink.paymentRequestId;
+    }
+
+    await attachPaymentToRequest(payment);
+    if(invoice) {
+      return Invoice.settleInvoice({
+        invoiceId: invoice._id,
+        rzPayment: payment
+      });
+    }
+    return true;
   }
 
 
@@ -529,7 +548,9 @@ const HandlerFunctions = {
     let { invoice, payment } = data.payload;
     invoice = invoice.entity;
     payment = payment.entity;
-
+    const user = await getUserFromPayment(payment);
+    await updateRZPaymentToUser(user, data.payload.payment.entity);
+    await insertOrUpdatePayment(user, payment);
     await handleInvoicePaid({ payment, invoice }, bullSystem);
 
     return true;

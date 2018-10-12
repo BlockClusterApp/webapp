@@ -121,7 +121,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   billingMonthLabel = billingMonthLabel || moment(billingMonth).format('MMM-YYYY');
 
 
-  const selector = {
+  let selector = {
     paymentStatus: Invoice.PaymentStatusMapping.Pending,
   };
   if (rzSubscriptionId) {
@@ -132,8 +132,11 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   }
 
   if(invoiceId) {
-    selector._id = invoiceId;
+    selector = {
+      _id : invoiceId
+    }
   }
+
 
   ElasticLogger.log('Trying to settle invoice', {selector, billingMonth, billingMonthLabel, rzPayment, id: spanId},);
 
@@ -145,7 +148,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   const invoice = Invoice.find(selector).fetch()[0];
 
   if (!invoice) {
-    RavenLogger.log(`Error settling invoice: Does not exists`, { ...selector, userId: Meteor && typeof Meteor.userId === 'function' && Meteor.userId(), at: new Date() });
+    RavenLogger.log(`Error settling invoice: Does not exists`, { ...selector, at: new Date() });
     throw new Meteor.Error(`Error settling invoice: Does not exists ${JSON.stringify(selector)}`)
   }
 

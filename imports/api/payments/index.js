@@ -3,7 +3,7 @@ import Forex from '../../collections/payments/forex';
 import Invoice from '../../collections/payments/invoice';
 import InvoiceFunctions from '../../api/billing/invoice';
 import PaymentRequests from '../../collections/payments/payment-requests';
-import { RZSubscription, RZPlan } from '../../collections/razorpay';
+import { RZSubscription, RZPlan, RZPaymentLink } from '../../collections/razorpay';
 const debug = require('debug')('api:payments');
 
 const Payments = {};
@@ -57,7 +57,7 @@ Payments.createRequest = async ({ paymentGateway, reason, amount, amountInPaisa,
       conversionFactor: metadata.conversionFactor,
     });
 
-    return { paymentRequestId: request, amount: amountInPaisa || Math.round(amount * 100), display_amount, display_currency: 'USD' };
+    return { paymentRequestId: request, amount: amountInPaisa || Math.round(amount * 100), display_amount, display_currency: 'USD', conversionFactor };
   }
 
   display_amount = Number(amount / conversionFactor).toFixed(2);
@@ -166,6 +166,46 @@ Payments.captureInvoicePayment = async pgResponse => {
 
   return true;
 };
+
+Payments.createPaymentLink = async ({reason, amount, amountInPaisa, amountInUSD, userId, invoiceId}) => {
+  if(Meteor.user().admin < 2) {
+    throw new Meteor.Error("unauthorized", "Unauthorized to perform this");
+  }
+
+  let user;
+
+  if(invoiceId) {
+    const invoice = Invoice.find({id: _id}).fetch()[0];
+    if(invoice.paymentLink && invoice.paymentLink.link && !invoice.paymentLink.expired) {
+      return invoice.paymentLink;
+    }
+    amountInPaisa = invoice.totalAmountINR;
+    reason = reason || `Bill for ${invoice.billingPeriodLabel}`
+    user = Meteor.users.find({_id: invoice.userId}).fetch()[0];
+  }
+
+  if(!(reason && reason.length > 10)){
+    throw new Meteor.Error("bad-request", "Cannot create payment link without a valid reason. This reason would be sent in mail. Minimum of 10 characters needed")
+  }
+
+  if(!amountInPaisa && amountInUSD) {
+    const conversionFactor = await Payments.getConversionToINRRate({currencyCode: 'usd'});
+    amount = amountInUSD * conversionFactor;
+    amountInPaisa = Math.round(amount * 100);
+  }
+
+  if(!user) {
+    user = Meteor.users.find({
+      _id: userId
+    }).fetch()[0];
+  }
+
+  const paymentLinkId = await RazorPay.createPaymentLink({amount: amountInPaisa, user, reason });
+
+  return RZPaymentLink.find({
+    _id: paymentLinkId
+  }).fetch()[0];
+}
 
 Meteor.methods({
   createPaymentRequest: Payments.createRequest,

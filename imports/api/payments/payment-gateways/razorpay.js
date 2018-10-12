@@ -467,18 +467,50 @@ RazorPay.createPaymentLink = async ({ amount, description, user, paymentRequest 
           .getTime() / 1000
       ),
       notes: {
-        paymentRequestId: paymentRequest._id,
+        paymentRequestId: paymentRequest.paymentRequestId,
         conversionFactor: paymentRequest.conversionFactor,
       },
       sms_notify: '0',
       email_notify: '0',
     });
-    const rzLink = RZPaymentLink.insert({...rzpLink, userId: user._id});
+    const rzLink = RZPaymentLink.insert({ ...rzpLink, userId: user._id, paymentRequestId: paymentRequest.paymentRequestId });
     debug('Create Payment Link | Success', rzpLink);
     return rzLink;
   } catch (err) {
     RavenLogger.log(err);
     debug('Create Payment Link | Error', err);
+    return false;
+  }
+};
+
+RazorPay.cancelPaymentLink = async ({ paymentLinkId, reason, userId }) => {
+  if(!reason) {
+    throw new Meteor.Error("bad-request", "Cannot cancel link without reason");
+  }
+  const rzPaymentLink = RZPaymentLink.find({
+    _id: paymentLinkId,
+  }).fetch()[0];
+
+  if (!rzPaymentLink) {
+    RavenLogger.log('Payment link id not valid', { paymentLinkId });
+    throw new Meteor.Error('bad-request', 'Payment link not valid');
+  }
+
+  try{
+    const cancelResponse =  await RazorPayInstance.invoices.cancel(rzPaymentLink.id);
+    debug('Cancel Payment Link | Success', cancelResponse);
+    RZPaymentLink.update({
+      _id: rzPaymentLink._id
+    }, {
+      $set: {
+        status: 'canceled',
+        canceledBy: userId
+      }
+    });
+    return true;
+  }catch(err){
+    RavenLogger.log(err);
+    debug('Cancel Payment Link | Error', err);
     return false;
   }
 };
