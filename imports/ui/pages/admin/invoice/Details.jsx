@@ -54,6 +54,8 @@ class InvoiceDetails extends Component {
         return <span className="label label-danger">Unpaid</span>;
       case 4:
         return <span className="label label-danger">Failed</span>;
+      case 5:
+        return <span className="label label-danger">Waived Off</span>;
       default:
         return null;
     }
@@ -122,7 +124,7 @@ class InvoiceDetails extends Component {
                 </div>
                 <div className="card-description">
                   <p>
-                    <Link to={`/app/admin/users/${user._id}`}>{invoice.user.email}</Link>
+                    <Link to={`/app/admin/users/${invoice.userId}`}>{invoice.user.email}</Link>
                   </p>
                 </div>
               </div>
@@ -153,6 +155,10 @@ class InvoiceDetails extends Component {
                     <b>Total:</b> INR {(Number(invoice.totalAmountINR) / 100).toFixed(2)}
                   </p>
                   <p>{this.getInvoicePaidStatus(invoice && invoice.paymentStatus)}</p>
+                  <p>
+                    <b>Payment Link</b><br />
+                    {invoice.paymentLink && invoice.paymentLink.link}
+                  </p>
                 </div>
               </div>
             </div>

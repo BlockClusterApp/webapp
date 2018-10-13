@@ -411,6 +411,13 @@ async function handleInvoicePaid({ invoice, payment }) {
   }).fetch()[0];
 
   if(rzPaymentLink) {
+    RZPaymentLink.update({
+      _id: rzPaymentLink._id
+    }, {
+      $set: {
+        status: 'paid'
+      }
+    });
     const invoice = InvoiceModel.find({
       "paymentLink.id": rzPaymentLink._id
     }).fetch()[0];
