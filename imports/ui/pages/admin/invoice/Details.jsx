@@ -3,7 +3,7 @@ import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter, Link } from 'react-router-dom';
 import Invoice from '../../../../collections/payments/invoice';
 import ConfirmationButton from '../../../components/Buttons/ConfirmationButton';
-import notifications from "../../../../modules/notifications";
+import notifications from '../../../../modules/notifications';
 
 const EmailsMapping = {
   1: 'Invoice Created',
@@ -23,7 +23,7 @@ class InvoiceDetails extends Component {
       network: {},
       deleteConfirmAsked: false,
       disableReminder: false,
-      loading: false
+      loading: false,
     };
   }
 
@@ -61,25 +61,52 @@ class InvoiceDetails extends Component {
     }
   };
 
-  sendInvoiceReminder = (invoiceId) => {
+  sendInvoiceReminder = invoiceId => {
     this.setState({
-      loading: true
+      loading: true,
     });
     Meteor.call('sendInvoiceReminder', invoiceId, (err, res) => {
-      if(!err) {
-        notifications.success("Reminder sent");
+      if (!err) {
+        notifications.success('Reminder sent');
         return this.setState({
           disableReminder: true,
-          loading: false
+          loading: false,
         });
       } else {
         this.setState({
-          loading: false
+          loading: false,
         });
         notifications.error(err.reason);
       }
-    })
-  }
+    });
+  };
+
+  waiveOffReasonAction = invoiceId => {
+    this.setState({
+      loading: true,
+    });
+    Meteor.call(
+      'waiveOffInvoice',
+      {
+        invoiceId,
+        reason: this.waiveOffReason.value,
+      },
+      (err, call) => {
+        if (!err) {
+          notifications.success('Invoice Waived off');
+          return this.setState({
+            disableWaiveOff: true,
+            loading: false,
+          });
+        } else {
+          this.setState({
+            loading: false,
+          });
+          notifications.error(err.reason);
+        }
+      }
+    );
+  };
 
   render() {
     let billView = null;
@@ -156,7 +183,8 @@ class InvoiceDetails extends Component {
                   </p>
                   <p>{this.getInvoicePaidStatus(invoice && invoice.paymentStatus)}</p>
                   <p>
-                    <b>Payment Link</b><br />
+                    <b>Payment Link</b>
+                    <br />
                     {invoice.paymentLink && invoice.paymentLink.link}
                   </p>
                 </div>
@@ -173,23 +201,77 @@ class InvoiceDetails extends Component {
                 </div>
                 <div className="clearfix" />
               </div>
-              <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
-                <div className="card-header clearfix">
-                  <h5 className="text-info pull-left fs-12">Actions</h5>
-                  <div className="clearfix" />
-                </div>
-                <div className="card-description">
-                  <ConfirmationButton
-                    loading={this.state.loading}
-                    completed={!(invoice && invoice.emailsSent && invoice.emailsSent.includes(1)) || this.state.disableReminder || [2, 5].includes(invoice.paymentStatus)}
-                    onConfirm={this.sendInvoiceReminder.bind(this, invoice._id)}
-                    loadingText="Sending email"
-                    completedText={invoice.paymentStatus !== 2 ? this.state.disableReminder ? "Reminder sent" : "Created mail not sent yet" : "Invoice already paid"}
-                    actionText="Send Invoice Reminder"
-                  />
-                </div>
+            </div>
+          </div>
+
+          <div className="row">
+            <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
+              <div className="card-header clearfix">
+                <h5 className="text-info pull-left fs-12">Actions</h5>
                 <div className="clearfix" />
               </div>
+              <div className="card-description">
+                <h5>Emails</h5>
+                <ConfirmationButton
+                  loading={this.state.loading}
+                  completed={!(invoice && invoice.emailsSent && invoice.emailsSent.includes(1)) || this.state.disableReminder || [2, 5].includes(invoice.paymentStatus)}
+                  onConfirm={this.sendInvoiceReminder.bind(this, invoice._id)}
+                  loadingText="Sending email"
+                  completedText={
+                    invoice.paymentStatus !== 2
+                      ? this.state.disableReminder
+                        ? 'Reminder sent'
+                        : invoice.paymentStatus !== 5
+                          ? 'Send Invoice: Created mail not sent yet'
+                          : 'Send Invoice: Invoice waived off'
+                      : 'Send Invoice: Invoice already paid'
+                  }
+                  actionText="Send Invoice Reminder"
+                />
+                <br />
+                {invoice.paymentStatus !== 2 && (
+                  <div>
+                    <h5>Waive Off </h5>
+                    <div className="row">
+                      <div className="col-md-7">
+                        <div className="form-group form-group-default required">
+                          <label>Reason</label>
+                          {![5].includes(invoice.paymentStatus) ? (
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="waiveOffReason"
+                              required
+                              ref={input => {
+                                this.waiveOffReason = input;
+                              }}
+                            />
+                          ) : (
+                            <input type="text" className="form-control" name="waiveOffReason" disabled value={`${invoice.waiveOff.reason} | by: ${invoice.waiveOff.byEmail}`} />
+                          )}
+                        </div>
+                      </div>
+                      <div className="col-md-5">
+                        <ConfirmationButton
+                          loading={this.state.loading}
+                          completed={[2, 3, 5].includes(invoice.paymentStatus) || this.state.disableWaiveOff}
+                          onConfirm={this.waiveOffReasonAction.bind(this, invoice._id)}
+                          loadingText="Waiving off invoice"
+                          completedText={
+                            invoice.paymentStatus !== 2
+                              ? invoice.paymentStatus === 5
+                                ? 'Already waived off'
+                                : this.state.disableWaiveOff && 'WaiveOff: Disabled'
+                              : 'WaiveOff: Already Paid.'
+                          }
+                          actionText="Waive off Invoice"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="clearfix" />
             </div>
           </div>
           <div className="row bg-white">

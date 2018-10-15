@@ -39,7 +39,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
     totalAmount,
   };
 
-  if (rzSubscription) {
+  if (rzSubscription && rzSubscription.bc_status === 'active') {
     invoiceObject.rzSubscriptionId = rzSubscription.id;
   }
 
@@ -70,7 +70,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   const conversion = await Payment.getConversionToINRRate({});
   invoiceObject.totalAmountINR = Math.max(Math.floor(Number(totalAmount) * 100 * conversion - 100), 0);
 
-  if (!user.demoUser && Math.round(invoiceObject.totalAmountINR) > 100 && !user.byPassOnlinePayment && rzSubscription) {
+  if (!user.demoUser && Math.round(invoiceObject.totalAmountINR) > 100 && !user.byPassOnlinePayment && rzSubscription && rzSubscription.bc_status === 'active') {
     const rzAddOn = await RazorPay.createAddOn({
       subscriptionId: rzSubscription.id,
       addOn: {
@@ -308,13 +308,53 @@ InvoiceObj.adminSendInvoiceReminder = async (invoiceId) => {
   return InvoiceObj.sendInvoicePending(invoice, Invoice.EmailMapping.Reminder2);
 }
 
-InvoiceObj.waiveOffInvoice = async ({invoiceId, reason, userId}) => {
+InvoiceObj.waiveOffInvoice = async ({invoiceId, reason, userId, user}) => {
+  user = user || Meteor.user();
+  if(!(user && user.admin >= 2)) {
+    throw new Meteor.Error("Unauthorized", "Unauthorized");
+  }
+
+  if(!(reason && reason.length > 5)) {
+    throw new Meteor.Error('bad-request', 'Reason should be atleast 5 characters');
+  }
+
+  if(!(invoiceId && reason && user)) {
+    throw new Meteor.Error("bad-request", "Cannot waive off with incomplete details")
+  }
+
+  const invoice = Invoice.find({_id: invoiceId}).fetch()[0];
+
+  if(!invoice) {
+    throw new Meteor.Error("Invalid invoice id");
+  }
+
+  ElasticLogger.log("Invoice waive off", {invoice, reason, userId});
+
+  Invoice.update({
+    _id: invoiceId,
+  }, {
+    $set: {
+      paymentStatus: Invoice.PaymentStatusMapping.WaivedOff,
+      waiveOff: {
+        reason,
+        by: user._id,
+        byEmail: user.emails[0].address
+      }
+    }
+  });
+
+  if(invoice.paymentLink.link) {
+    await RazorPay.cancelPaymentLink({paymentLinkId: invoice.paymentLink.id, reason: `Invoice ${invoice._id} waived off`, userId});
+  }
+
+  return true;
 
 }
 
 Meteor.methods({
   generateInvoiceHTML: InvoiceObj.generateHTML,
-  sendInvoiceReminder: InvoiceObj.adminSendInvoiceReminder
+  sendInvoiceReminder: InvoiceObj.adminSendInvoiceReminder,
+  waiveOffInvoice: InvoiceObj.waiveOffInvoice
 });
 
 export default InvoiceObj;

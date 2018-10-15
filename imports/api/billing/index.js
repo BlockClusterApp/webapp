@@ -305,7 +305,6 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             .subtract(1, 'month')
             .startOf('month')
             .toDate(),
-      label: `Discount: $ ${Number(hyperion_stats[0].discount).toFixed(5)}`,
       rate: `$ ${helpers.hyperionGBCostPerDay()} / GB-month `,
       runtime: `${Number(fileSizeInGB).toFixed(5)} GB`,
       cost: total_hyperion_cost,
