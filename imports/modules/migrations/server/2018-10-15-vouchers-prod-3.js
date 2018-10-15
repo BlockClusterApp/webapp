@@ -24,6 +24,6 @@ Migrations.add({
     Promise.all([deleteDummyVouchers(data), updateGivenDetails(voucherToUpdate)]);
   },
   down: function() {
-    Vouchers.remove({ code: { $in: data } });
+    Vouchers.remove({});
   },
 });
