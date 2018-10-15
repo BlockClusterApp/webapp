@@ -26,3 +26,5 @@ fi
 
 export IMAGE_NAME='402432300121.dkr.ecr.us-west-2.amazonaws.com/webapp'
 export IMAGE_TAG="${NODE_ENV}-${COMMIT_HASH}"
+
+. ./.circleci/check-duplicate-build.sh
