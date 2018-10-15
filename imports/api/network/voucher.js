@@ -70,7 +70,7 @@ Voucher.create = async function(payload) {
       },
       discount: {
         value: payload.discount.value || 0,
-        percent: payload.discount.value
+        percent: payload.discount.percent 
       },
       code: voucher,
       voucher_status: payload.active,
