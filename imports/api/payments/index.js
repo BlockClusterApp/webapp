@@ -19,6 +19,7 @@ Payments.createRequest = async ({ paymentGateway, reason, amount, mode, userId, 
     subscription = RZSubscription.find({
       userId: Meteor.userId(),
       plan_id: rzPlan.id,
+      bc_status: 'active'
     }).fetch()[0];
     if (!subscription) {
       subscription = await RazorPay.createSubscription({
@@ -115,6 +116,7 @@ Payments.createRequestForInvoice = async ({invoiceId, userId}) => {
   const rzPlan = RZPlan.find({ identifier: 'verification' }).fetch()[0];
   const subscription = RZSubscription.find({
     userId: userId || Meteor.userId(),
+    bc_status: 'active',
     plan_id: rzPlan.id,
   }).fetch()[0];
 

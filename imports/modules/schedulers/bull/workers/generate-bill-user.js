@@ -62,7 +62,8 @@ module.exports = (bullSystem) => {
 
       const rzSubscription = RZSubscription.find({
         userId,
-        plan_id: plan.id
+        plan_id: plan.id,
+        bc_status: 'active'
       }).fetch()[0];
 
       const invoiceId = await Invoice.generateInvoice({
