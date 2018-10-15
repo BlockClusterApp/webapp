@@ -31,6 +31,6 @@ Migrations.add({
     Promise.all(promises);
   },
   down: function() {
-    Vouchers.remove({ code: { $in: data } });
+    Vouchers.remove({});
   },
 });
