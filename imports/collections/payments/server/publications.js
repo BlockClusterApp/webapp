@@ -24,7 +24,7 @@ Meteor.publish("pending-invoice", function (billingLabel) {
     userId: Meteor.userId(),
     billingPeriodLabel: billingLabel,
     paymentStatus: {
-      $inq: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed]
+      $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed]
     }
   });
 });
@@ -64,7 +64,6 @@ Meteor.publish("invoice.search", function({query, limit, page}) {
   }
   limit = limit || pageSize;
   page = page || 0;
-  console.log("Pulication", query);
   return Invoice.find(query, {
     limit: pageSize,
     skip: page * pageSize,

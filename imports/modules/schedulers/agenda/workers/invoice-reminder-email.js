@@ -22,10 +22,10 @@ module.exports = function(agenda) {
           $gt: 0
         },
         paymentStatus: {
-          $inq: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed],
+          $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed],
         },
         emailsSend: {
-          $inq: [Invoice.EmailMapping.Created],
+          $in: [Invoice.EmailMapping.Created],
         },
       }).fetch();
       const userInvoiceMapping = {};
@@ -48,7 +48,7 @@ module.exports = function(agenda) {
         users = Meteor.users
           .find({
             _id: {
-              $inq: pendingInvoices.map(i => i.userId),
+              $in: pendingInvoices.map(i => i.userId),
               $nin: subscriptions,
             },
           })
@@ -57,7 +57,7 @@ module.exports = function(agenda) {
         users = Meteor.users
           .find({
             _id: {
-              $inq: pendingInvoices.map(i => i.userId),
+              $in: pendingInvoices.map(i => i.userId),
             },
           })
           .fetch();

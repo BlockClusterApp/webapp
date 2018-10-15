@@ -308,6 +308,10 @@ InvoiceObj.adminSendInvoiceReminder = async (invoiceId) => {
   return InvoiceObj.sendInvoicePending(invoice, Invoice.EmailMapping.Reminder2);
 }
 
+InvoiceObj.waiveOffInvoice = async ({invoiceId, reason, userId}) => {
+
+}
+
 Meteor.methods({
   generateInvoiceHTML: InvoiceObj.generateHTML,
   sendInvoiceReminder: InvoiceObj.adminSendInvoiceReminder

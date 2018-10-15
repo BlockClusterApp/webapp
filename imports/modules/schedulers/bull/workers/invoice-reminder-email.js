@@ -9,7 +9,7 @@ module.exports = function(bullSystem) {
       const invoice = Invoice.find({
         _id: job.data.invoiceId,
         paymentStatus: {
-          $inq: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed],
+          $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed],
         },
         emailsSent: {
           $nin: [job.data.reminderCode],
