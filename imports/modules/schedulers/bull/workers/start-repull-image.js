@@ -3,12 +3,12 @@ import { Networks } from "../../../../collections/networks/networks";
 module.exports = function(bullSystem) {
   const processFunction = Meteor.bindEnvironment(function(job) {
     return new Promise(resolve => {
-      console.log("Starting image pull", job.data);
+      ElasticLogger.log("Starting image pull", job.data);
       const networks = Networks.find({
         active: true,
         deletedAt: null
       }).fetch();
-      console.log("Netwoks to restart ", networks.map(i => i.instanceId));
+      ElasticLogger.log("Netwoks to restart ", {networks: networks.map(i => i.instanceId)});
       networks.forEach(network => {
         bullSystem.addJob("repull-image", {
           instanceId: network.instanceId,

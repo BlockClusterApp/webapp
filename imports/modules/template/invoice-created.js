@@ -39,7 +39,7 @@ module.exports = `<!DOCTYPE html>
         Your bill for the period <%= invoice.billingPeriodLabel %> has been generated. Your total amount due is $ <%= invoice.totalAmount %> payable by 10th of this month.
         <br />
         <br />
-        <a href="https://app.blockcluster.io/app/payments" target="_blank" style="background: #48b0f7;
+        <a href="<%- paymentLink %>" target="_blank" style="background: #48b0f7;
           border-color: #48b0f7;
           color: #fff;
           line-height: 21px;

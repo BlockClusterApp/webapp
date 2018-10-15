@@ -8,7 +8,7 @@ module.exports = function(bullSystem) {
 
   const processFunction = Meteor.bindEnvironment(function(job) {
     return new Promise(resolve => {
-      console.log("Pulling image", job.data);
+      ElasticLogger.log("Pulling image", job.data);
       const network = Networks.find({
         instanceId: job.data.instanceId
       }).fetch()[0];

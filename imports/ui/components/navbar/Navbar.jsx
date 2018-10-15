@@ -179,6 +179,12 @@ class Navbar extends Component {
                                             </span>
                                         </li>
                                         <li>
+                                            <Link to="/app/admin/invoices">Invoices</Link>
+                                            <span className="icon-thumbnail">
+                                                <i className="fa fa-list-alt" />
+                                            </span>
+                                        </li>
+                                        <li>
                                             <Link to="/app/admin/networks">Networks</Link>
                                             <span className="icon-thumbnail">
                                                 <i className="fa fa-desktop" />

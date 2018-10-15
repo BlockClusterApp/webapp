@@ -3,11 +3,14 @@ import Config from '../../../modules/config/server';
 import UserCards from '../../../collections/payments/user-cards';
 import PaymentRequests from '../../../collections/payments/payment-requests';
 import request from 'request';
-import { RZPlan, RZSubscription, RZAddOn } from '../../../collections/razorpay';
+import { RZPlan, RZSubscription, RZAddOn, RZPaymentLink } from '../../../collections/razorpay';
 import moment from 'moment';
 import crypto from 'crypto';
 import Bull from '../../../modules/schedulers/bull';
+import Payments from '../';
 import bullSystem from '../../../modules/schedulers/bull';
+import Invoice from '../../../collections/payments/invoice';
+import Forex from '../../../collections/payments/forex';
 
 const debug = require('debug')('api:razorpay');
 
@@ -67,9 +70,10 @@ RazorPay.createPlan = async ({ plan, identifier }) => {
 };
 
 RazorPay.deletePlan = async ({ identifier }) => {
+  ElasticLogger.log('RZPlan delete', { identifier, userId: Meteor.userId() });
   const rzPlan = RZPlan.find({ identifier }).fetch()[0];
   if (!rzPlan) {
-    RavenLogger.log('RazorPay.deletePlan: Plan does not exists', {identifier});
+    RavenLogger.log('RazorPay.deletePlan: Plan does not exists', { identifier });
     throw new Meteor.Error('bad-request', `Invalid RZPlan identifier ${identifier}`);
   }
   RZPlan.update(
@@ -86,24 +90,24 @@ RazorPay.deletePlan = async ({ identifier }) => {
   return true;
 };
 
-RazorPay.fetchInvoices = async({paymentId, customerId}) => {
+RazorPay.fetchInvoices = async ({ paymentId, customerId }) => {
   const query = {
     payment_id: paymentId,
-    customer_id: customerId
+    customer_id: customerId,
   };
-  try{
+  try {
     const rzInvoice = await RazorPayInstance.invoices.all(query);
     debug('Fetch Invoice | response', rzInvoice);
-    if(rzInvoice.items) {
+    if (rzInvoice.items) {
       return rzInvoice.items[0];
     }
     return undefined;
-  }catch(err) {
+  } catch (err) {
     RavenLogger.log(err);
     debug('Fetch Invoices | err razorpay', err);
     return false;
   }
-}
+};
 
 RazorPay.createSubscription = async ({ rzPlan, type }) => {
   type = type || 'Node Monthly';
@@ -139,9 +143,13 @@ RazorPay.cancelSubscription = async ({ rzSubscription }) => {
   try {
     const cancelResponse = await RazorPayInstance.subscriptions.cancel(rzSubscription.id, true);
     debug('Cancel Subscription | Response', cancelResponse);
+    ElasticLogger.log('RZSubscription cancel', {
+      rzSubscription: rzSubscription._id,
+      userId: Meteor.userId(),
+    });
     RZSubscription.update(
       {
-        _id: rzSubscription._d,
+        _id: rzSubscription._id,
       },
       {
         $set: {
@@ -168,7 +176,7 @@ RazorPay.createAddOn = async ({ subscriptionId, addOn, userId }) => {
         amount: addOn.amount,
         currency: addOn.currency || 'INR',
       },
-      quantity: addOn.quantity || 1
+      quantity: addOn.quantity || 1,
     });
     debug('Create AddOn | Response', addOnResponse);
     const addOnId = RZAddOn.insert({ ...addOnResponse, userId, subscriptionId });
@@ -279,7 +287,6 @@ RazorPay.capturePayment = async paymentResponse => {
  * @property {object} options.notes
  */
 RazorPay.refundPayment = async (paymentId, options) => {
-
   const paymentRequest = PaymentRequests.find({
     pgReference: paymentId,
     'pgResponse.status': 'captured',
@@ -420,11 +427,107 @@ RazorPay.applyCardVerification = async pgResponse => {
   }
 };
 
+RazorPay.createPaymentLink = async ({ amount, description, user, paymentRequest }) => {
+  const customerDetails = {
+    name: `${user.profile.firstName} ${user.profile.lastName}`,
+    email: user.emails[0].address,
+  };
+
+  if (user.profile.mobiles && user.profile.mobiles[0]) {
+    customerDetails.contact = user.profile.mobiles[0].number;
+  }
+
+  if (String(amount).includes('.')) {
+    RavenLogger.log('Amount not in paisa', { userId: user._id, amount, description });
+    throw new Meteor.Error('Amount not in paisa');
+  }
+
+  if (!(paymentRequest && paymentRequest._id)) {
+    const conversionFactor = await Payments.getConversionToINRRate({ currencyCode: 'usd' });
+    paymentRequest = await Payments.createRequest({
+      reason: description,
+      amountInPaisa: amount,
+      metadata: {
+        conversionFactor,
+      },
+      userId: user._id,
+    });
+  }
+
+  try {
+    const rzpLink = await RazorPayInstance.invoices.create({
+      customer: customerDetails,
+      type: 'link',
+      amount,
+      currency: 'INR',
+      description,
+      expire_by: Math.floor(
+        moment()
+          .add(20, 'days')
+          .toDate()
+          .getTime() / 1000
+      ),
+      notes: {
+        paymentRequestId: paymentRequest.paymentRequestId,
+        conversionFactor: paymentRequest.conversionFactor,
+      },
+      sms_notify: '0',
+      email_notify: '0',
+    });
+    const rzLink = RZPaymentLink.insert({ ...rzpLink, userId: user._id, paymentRequestId: paymentRequest.paymentRequestId });
+    debug('Create Payment Link | Success', rzpLink);
+    return rzLink;
+  } catch (err) {
+    RavenLogger.log(err);
+    debug('Create Payment Link | Error', err);
+    return false;
+  }
+};
+
+RazorPay.cancelPaymentLink = async ({ paymentLinkId, reason, userId }) => {
+  if(!reason) {
+    throw new Meteor.Error("bad-request", "Cannot cancel link without reason");
+  }
+  const rzPaymentLink = RZPaymentLink.find({
+    _id: paymentLinkId,
+  }).fetch()[0];
+
+  if (!rzPaymentLink) {
+    RavenLogger.log('Payment link id not valid', { paymentLinkId });
+    throw new Meteor.Error('bad-request', 'Payment link not valid');
+  }
+
+  try{
+    const cancelResponse =  await RazorPayInstance.invoices.cancel(rzPaymentLink.id);
+    debug('Cancel Payment Link | Success', cancelResponse);
+    Invoice.update({
+      "paymentLink.id": paymentLinkId
+    }, {
+      $set: {
+        "paymentLink.expired": true
+      }
+    });
+    RZPaymentLink.update({
+      _id: rzPaymentLink._id
+    }, {
+      $set: {
+        status: 'cancelled',
+        cancelledBy: userId
+      }
+    });
+    return true;
+  }catch(err){
+    RavenLogger.log(err);
+    debug('Cancel Payment Link | Error', err);
+    return false;
+  }
+};
+
 RazorPay.processWebHook = async function(req, res) {
   // console.log("Razorpay payload", req.body);
   bullSystem.addJob('razorpay-webhook', req.body);
   res.end('OK');
-}
+};
 
 JsonRoutes.add('post', '/api/payments/razorpay/webhook', RazorPay.processWebHook);
 
@@ -432,6 +535,9 @@ Meteor.methods({
   getRazorPayId: async () => {
     return Config.RazorPay.id;
   },
+  capturePaymentRazorPay: RazorPay.capturePayment,
+  applyRZCardVerification: RazorPay.applyCardVerification,
+  cancelPaymentLink: RazorPay.cancelPaymentLink
 });
 
 export default RazorPay;
