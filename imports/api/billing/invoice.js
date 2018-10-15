@@ -12,6 +12,7 @@ import {
 } from "../../modules/helpers/server";
 import writtenNumber from 'written-number'
 import BullSystem from '../../modules/schedulers/bull';
+import { RZPaymentLink } from '../../collections/razorpay';
 
 const InvoiceObj = {};
 
@@ -38,7 +39,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
     totalAmount,
   };
 
-  if (rzSubscription) {
+  if (rzSubscription && rzSubscription.bc_status === 'active') {
     invoiceObject.rzSubscriptionId = rzSubscription.id;
   }
 
@@ -69,7 +70,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   const conversion = await Payment.getConversionToINRRate({});
   invoiceObject.totalAmountINR = Math.max(Math.floor(Number(totalAmount) * 100 * conversion - 100), 0);
 
-  if (!user.demoUser && Math.round(invoiceObject.totalAmountINR) > 100 && !user.byPassOnlinePayment && rzSubscription) {
+  if (!user.demoUser && Math.round(invoiceObject.totalAmountINR) > 100 && !user.byPassOnlinePayment && rzSubscription && rzSubscription.bc_status === 'active') {
     const rzAddOn = await RazorPay.createAddOn({
       subscriptionId: rzSubscription.id,
       addOn: {
@@ -87,6 +88,37 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
 
   const invoiceId = Invoice.insert(invoiceObject);
 
+  if(Number(invoiceObject.totalAmountINR) <= 0) {
+    Invoice.update({
+      _id: invoiceId
+    }, {
+      $set: {
+        paymentStatus: Invoice.PaymentStatusMapping.Settled
+      }
+    });
+    return true;
+  }
+  const linkId = await RazorPay.createPaymentLink({
+    amount: invoiceObject.totalAmountINR,
+    description: `Bill for ${invoiceObject.billingPeriodLabel}`,
+    user
+  });
+
+  const rzPaymentLink = RZPaymentLink.find({
+    _id: linkId
+  }).fetch()[0];
+
+  debug('RZPaymentLink', rzPaymentLink);
+
+  Invoice.update({_id: invoiceId}, {
+    $set: {
+      paymentLink: {
+        id: rzPaymentLink._id,
+        link: rzPaymentLink.short_url
+      }
+    }
+  });
+
   BullSystem.addJob('invoice-created-email', {
     invoiceId
   });
@@ -99,7 +131,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   billingMonthLabel = billingMonthLabel || moment(billingMonth).format('MMM-YYYY');
 
 
-  const selector = {
+  let selector = {
     paymentStatus: Invoice.PaymentStatusMapping.Pending,
   };
   if (rzSubscriptionId) {
@@ -110,12 +142,15 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   }
 
   if(invoiceId) {
-    selector._id = invoiceId;
+    selector = {
+      _id : invoiceId
+    }
   }
+
 
   ElasticLogger.log('Trying to settle invoice', {selector, billingMonth, billingMonthLabel, rzPayment, id: spanId},);
 
-  if(!selector._id && !selector.rzSubscriptionId && !selector.rzCustomerId) {
+  if(!selector._id && !selector.rzSubscriptionId && !selector.rzCustomerId && !selector._id) {
     RavenLogger.log('Trying to settle unspecific', {...selector});
     throw new Meteor.Error('bad-request', 'No valid selector');
   }
@@ -123,7 +158,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   const invoice = Invoice.find(selector).fetch()[0];
 
   if (!invoice) {
-    RavenLogger.log(`Error settling invoice: Does not exists`, { ...selector, userId: Meteor && typeof Meteor.userId === 'function' && Meteor.userId(), at: new Date() });
+    RavenLogger.log(`Error settling invoice: Does not exists`, { ...selector, at: new Date() });
     throw new Meteor.Error(`Error settling invoice: Does not exists ${JSON.stringify(selector)}`)
   }
 
@@ -138,7 +173,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     }
   );
 
-  ElasticLogger.log('Settled invoice', {invoice, id: spanId});
+  ElasticLogger.log('Settled invoice', {invoiceId: invoice._id, id: spanId});
 
   return invoice._id;
 };
@@ -191,9 +226,17 @@ InvoiceObj.generateHTML = async (invoiceId) => {
 }
 
 InvoiceObj.sendInvoiceCreatedEmail = async (invoice) => {
+
+  if(invoice.totalAmountINR <= 0) {
+    ElasticLogger.log("Zero amount invoice. Not sending created email", {invoice});
+    return true;
+  }
+
+
   const ejsTemplate = await getEJSTemplate({fileName: "invoice-created.ejs"});
   const finalHTML = ejsTemplate({
-    invoice
+    invoice,
+    paymentLink: invoice.paymentLink.link
   });
 
   const emailProps = {
@@ -223,7 +266,8 @@ InvoiceObj.sendInvoicePending = async (invoice, reminderCode) => {
 
   const ejsTemplate = await getEJSTemplate({fileName: "invoice-pending.ejs"});
   const finalHTML = ejsTemplate({
-    invoice
+    invoice,
+    paymentLink: invoice.paymentLink.link
   });
 
   const emailProps = {
@@ -264,9 +308,53 @@ InvoiceObj.adminSendInvoiceReminder = async (invoiceId) => {
   return InvoiceObj.sendInvoicePending(invoice, Invoice.EmailMapping.Reminder2);
 }
 
+InvoiceObj.waiveOffInvoice = async ({invoiceId, reason, userId, user}) => {
+  user = user || Meteor.user();
+  if(!(user && user.admin >= 2)) {
+    throw new Meteor.Error("Unauthorized", "Unauthorized");
+  }
+
+  if(!(reason && reason.length > 5)) {
+    throw new Meteor.Error('bad-request', 'Reason should be atleast 5 characters');
+  }
+
+  if(!(invoiceId && reason && user)) {
+    throw new Meteor.Error("bad-request", "Cannot waive off with incomplete details")
+  }
+
+  const invoice = Invoice.find({_id: invoiceId}).fetch()[0];
+
+  if(!invoice) {
+    throw new Meteor.Error("Invalid invoice id");
+  }
+
+  ElasticLogger.log("Invoice waive off", {invoice, reason, userId});
+
+  Invoice.update({
+    _id: invoiceId,
+  }, {
+    $set: {
+      paymentStatus: Invoice.PaymentStatusMapping.WaivedOff,
+      waiveOff: {
+        reason,
+        by: user._id,
+        byEmail: user.emails[0].address
+      }
+    }
+  });
+
+  if(invoice.paymentLink.link) {
+    await RazorPay.cancelPaymentLink({paymentLinkId: invoice.paymentLink.id, reason: `Invoice ${invoice._id} waived off`, userId});
+  }
+
+  return true;
+
+}
+
 Meteor.methods({
   generateInvoiceHTML: InvoiceObj.generateHTML,
-  sendInvoiceReminder: InvoiceObj.adminSendInvoiceReminder
+  sendInvoiceReminder: InvoiceObj.adminSendInvoiceReminder,
+  waiveOffInvoice: InvoiceObj.waiveOffInvoice
 });
 
 export default InvoiceObj;

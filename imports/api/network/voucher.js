@@ -1,5 +1,5 @@
 import Vouchers from "../../collections/vouchers/voucher";
-import Billing from '../../api/billing'; 
+import Billing from '../../api/billing';
 import moment from "moment";
 import { Meteor } from 'meteor/meteor';
 
@@ -24,7 +24,7 @@ Voucher.validate = async function(voucherCode) {
   }
   const email_matching = voucher.availability.email_ids.indexOf(Meteor.user().emails[0].address);
   const claimed_status = voucher.voucher_claim_status ? (voucher.voucher_claim_status.filter((i)=>{return i["claimedBy"] == Meteor.userId()})) :0
-  
+
   if(!voucher.availability.for_all && email_matching <= -1){
     throw new Meteor.Error("Voucher is not valid");
   }
@@ -45,8 +45,15 @@ const insertVoucher = async savable_doc => {
  * @param { cpu: Number, ram: Number, disk: Number } payload.networkConfig
  */
 Voucher.create = async function(payload) {
-  
+
+
   let voucher_codes = await generateVouchers(payload.noOfVouchers, Number(payload.voucher_code_size)!= NaN ? Number(payload.voucher_code_size) :6 ); //lets keep it by default 6 for now
+
+  ElasticLogger.log("Voucher created", {
+    payload,
+    userId: Meteor.userId(),
+    voucherCodes: voucher_codes
+  });
   let savabl_doc = [];
   voucher_codes.forEach(voucher => {
     savabl_doc.push({
@@ -117,7 +124,7 @@ async function generateVouchers(items, size) {
           });
         }
       }
-      
+
     }
   return voucherArray;
 }
