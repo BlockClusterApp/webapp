@@ -365,7 +365,7 @@ Meteor.methods({
                     storage: `${nodeConfig.disk}Gi`,
                   },
                 },
-                storageClassName: 'gp2-storage-class',
+                storageClassName: 'gp2-storage-class-delete',
               },
             }),
             headers: {
@@ -1172,7 +1172,7 @@ spec:
                     storage: `${nodeConfig.disk}Gi`,
                   },
                 },
-                storageClassName: 'gp2-storage-class',
+                storageClassName: 'gp2-storage-class-delete',
               },
             }),
             headers: {

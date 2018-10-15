@@ -2,6 +2,9 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
   name: {{ template "server.name" . }}-ing
   namespace: {{ template "server.namespace" . }}
 spec:
