@@ -28,7 +28,7 @@ function getMicroServiceBase(){
     case "test":
       return "https://enterprise-api-dev.blockcluster.io";
     case "dev":
-      return "https://enterprise-api-dev.blockcluster.io";
+      return "https://enterprise-api.blockcluster.io";
     default:
       return 'http://localhost:4000';
     }
