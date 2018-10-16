@@ -24,6 +24,8 @@ module.exports = function(agenda) {
         return false;
       }
 
+      ElasticLogger.log("Forex update", {rates: result.rates});
+
       const { INR, USD, EUR } = result.rates;
 
       const usdInINR = (EUR / USD) * INR;

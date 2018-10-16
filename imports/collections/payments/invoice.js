@@ -1,23 +1,24 @@
-import { Mongo } from "meteor/mongo";
+import { Mongo } from 'meteor/mongo';
 
 import AttachBaseHooks from '../../modules/helpers/model-helpers';
 
-const Invoice = new Mongo.Collection("invoice");
+const Invoice = new Mongo.Collection('invoice');
 AttachBaseHooks(Invoice);
 
 Invoice.PaymentStatusMapping = {
   Pending: 1,
   Settled: 2,
   DemoUser: 3,
-  Failed: 4
+  Failed: 4,
+  WaivedOff: 5
 };
 
 Invoice.EmailMapping = {
   Created: 1,
   Reminder1: 2,
   Reminder2: 3,
-  NodeDeletion: 4
-}
+  NodeDeletion: 4,
+};
 
 Invoice.schema = new SimpleSchema({
   user: {
@@ -26,54 +27,67 @@ Invoice.schema = new SimpleSchema({
       mobile: String,
       name: String,
       billingAddress: String,
-    }
+    },
   },
   items: {
-    type: Array
+    type: Array,
   },
-  "items.$": {
-    type: Object
+  'items.$': {
+    type: Object,
   },
   rzCustomerId: {
-    type: Array
+    type: Array,
   },
-  "rzCustomerId.$": {
-    type: String
+  'rzCustomerId.$': {
+    type: String,
   },
   rzSubscriptionId: {
-    type: String
+    type: String,
   },
   totalAmount: {
-    type: Number
+    type: Number,
   },
   rzAddOnId: {
-    type: String
+    type: String,
   },
   paymentStatus: {
-    type: Number
+    type: Number,
   },
   billingPeriod: {
-    type: Date
+    type: Date,
   },
   billingPeriodLabel: {
-    type: String
+    type: String,
   },
   emailsSent: {
-    type: Array
+    type: Array,
   },
-  "emailsSent.$": {
-    type: Number
-  }
+  'emailsSent.$': {
+    type: Number,
+  },
+  paymentLink: {
+    type: {
+      id: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
+      expired: {
+        type: Boolean
+      }
+    },
+  },
 });
 
-if(!Meteor.isClient) {
+if (!Meteor.isClient) {
   Invoice._ensureIndex({
     billingPeriodLabel: 1,
-    rzSubscriptionId: 1
+    rzSubscriptionId: 1,
   });
   Invoice._ensureIndex({
     rzCustomerId: 1,
-    billingPeriodLabel: 1
+    billingPeriodLabel: 1,
   });
 }
 

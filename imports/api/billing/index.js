@@ -3,6 +3,8 @@ import UserCards from '../../collections/payments/user-cards';
 import { RZPlan, RZSubscription, RZAddOn } from '../../collections/razorpay';
 import moment, { invalid } from 'moment';
 import Invoice from '../../collections/payments/invoice';
+import helpers from '../../modules/helpers';
+import { Hyperion } from '../../collections/hyperion/hyperion';
 
 const Billing = {};
 
@@ -54,7 +56,10 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       { deletedAt: null },
       {
         deletedAt: {
-          $gte: selectedMonth.startOf('month').toDate().getDate(),
+          $gte: selectedMonth
+            .startOf('month')
+            .toDate()
+            .getDate(),
         },
       },
     ],
@@ -69,7 +74,6 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
   const nodeUsageCountMinutes = {
     Micro: 0,
   };
-
 
   result.networks = userNetworks
     .map(network => {
@@ -127,7 +131,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         }
         if (!voucher.availability) {
           voucher.availability = {
-            card_vfctn_needed:true,
+            card_vfctn_needed: true,
             for_all: false,
             email_ids: [],
           };
@@ -234,13 +238,10 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         }
       }
 
-
       // if(isMicroNode && nodeTypeCount.Micro > FreeNodesPerUser.Micro) {
       //   cost = Number(time.hours * ratePerHour + ((time.minutes) % 60) * ratePerMinute).toFixed(2);
       //   label = undefined;
       // }
-
-
 
       if (network.deletedAt && moment(network.deletedAt).isBefore(selectedMonth.startOf('month'))) {
         return undefined;
@@ -264,6 +265,54 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       };
     })
     .filter(n => !!n);
+
+  /*Calculate Hyperion Usage Bill*/
+  //start
+  let total_hyperion_cost = 0; //add this value to invoice amount
+  const hyperion_stats = Hyperion.find({
+    userId: userId,
+  }).fetch();
+
+  if (hyperion_stats.length === 1) {
+    const totalDaysThisMonth = helpers.daysInThisMonth();
+    const costPerGBPerDay = helpers.hyperionGBCostPerDay();
+    const fileSizeInGB = hyperion_stats[0].size / 1024 / 1024 / 1024;
+    const fileCostPerDay = costPerGBPerDay * fileSizeInGB;
+    total_hyperion_cost = totalDaysThisMonth * fileCostPerDay;
+    total_hyperion_cost = (total_hyperion_cost - hyperion_stats[0].discount).toPrecision(2);
+
+    if (!isFromFrontend) {
+      Hyperion.update(
+        {
+          userId: userId,
+        },
+        {
+          $set: {
+            discount: 0, //reset discount
+          },
+        }
+      );
+    }
+    result.networks = result.networks || [];
+    result.networks.push({
+      name: 'Hyperion Cost',
+      instanceId: '',
+      createdOn: isFromFrontend
+        ? moment()
+            .startOf('month')
+            .toDate()
+        : moment()
+            .subtract(1, 'month')
+            .startOf('month')
+            .toDate(),
+      rate: `$ ${helpers.hyperionGBCostPerDay()} / GB-month `,
+      runtime: `${Number(fileSizeInGB).toFixed(5)} GB`,
+      cost: total_hyperion_cost,
+    });
+
+    result.totalAmount += Number(total_hyperion_cost);
+  }
+  //end
 
   if (!(selectedMonth.month() === moment().month() && selectedMonth.year() === moment().year()) && isFromFrontend) {
     const prevMonthInvoice = Invoice.find({
@@ -289,20 +338,19 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
 Billing.isPaymentMethodVerified = async function(userId) {
   userId = userId || Meteor.userId();
 
-
   if (!userId) {
     return false;
   }
 
-  let userCards = UserCards.find({userId: userId}).fetch()[0];
-  if(userCards) {
+  let userCards = UserCards.find({ userId: userId }).fetch()[0];
+  if (userCards) {
     userCards = userCards.cards && userCards.cards[0];
   }
   const verificationPlan = RZPlan.find({ identifier: 'verification' }).fetch()[0];
   const userRZSubscription = RZSubscription.find({ userId: userId, plan_id: verificationPlan.id, bc_status: 'active' }).fetch()[0];
 
   // debit card
-  if(userCards && !userRZSubscription) {
+  if (userCards && !userRZSubscription) {
     return true;
   }
 

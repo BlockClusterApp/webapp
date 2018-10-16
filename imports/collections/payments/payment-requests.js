@@ -33,7 +33,9 @@ PaymentRequests.before.insert((userId, doc) => {
         throw new Error(`${doc.paymentGateway} is not a valid payment gateway.`)
     }
 
-    doc.paymentStatus = PaymentRequests.StatusMapping.Pending;
+    if(!doc.paymentStatus) {
+      doc.paymentStatus = PaymentRequests.StatusMapping.Pending;
+    }
 });
 
 PaymentRequests.schema = new SimpleSchema({

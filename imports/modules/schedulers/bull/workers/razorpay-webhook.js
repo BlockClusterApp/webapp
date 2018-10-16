@@ -1,4 +1,4 @@
-import { RZSubscription, RZPayment } from '../../../../collections/razorpay';
+import { RZSubscription, RZPayment, RZPaymentLink } from '../../../../collections/razorpay';
 import UserCards from '../../../../collections/payments/user-cards';
 import PaymentRequest from '../../../../collections/payments/payment-requests';
 import Invoice from '../../../../api/billing/invoice';
@@ -96,6 +96,9 @@ async function safeUpdateUser(userId, updateObject) {
   delete updateObject.services;
   delete updateObject.createdAt;
   delete updateObject.admin;
+  delete updateObject._id;
+
+  ElasticLogger.log('Safeupdate user', { userId, updateObject });
 
   const updateResult = Meteor.users.update(
     {
@@ -191,7 +194,9 @@ async function attachPaymentToRequest(payment) {
         $push: {
           pgResponse: payment,
         },
-        paymentStatus: PaymentRequestReverseMap[payment.status],
+        $set: {
+          paymentStatus: PaymentRequestReverseMap[payment.status],
+        }
       }
     );
   }
@@ -209,6 +214,7 @@ async function insertOrUpdatePayment(user, payment) {
 
   const rzPayment = RZPayment.find({ id: payment.id }).fetch()[0];
   if (rzPayment) {
+    delete rzPayment.history;
     RZPayment.update(
       {
         _id: rzPayment._id,
@@ -346,7 +352,7 @@ async function handleSubscriptionHalted({ subscription }, bullSystem) {
   }).fetch()[0];
 
   if (!invoice) {
-    console.log('No invoice to be halted', subscription.id);
+    ElasticLogger.log('No invoice to be halted', {subscriptionId: subscription.id});
   }
 
   InvoiceModel.update(
@@ -399,6 +405,44 @@ async function updateFailedInvoice({ payment }) {
 }
 
 async function handleInvoicePaid({ invoice, payment }) {
+
+  const rzPaymentLink = RZPaymentLink.find({
+    id: invoice.id,
+  }).fetch()[0];
+
+  if(rzPaymentLink) {
+    RZPaymentLink.update({
+      _id: rzPaymentLink._id
+    }, {
+      $set: {
+        status: 'paid'
+      }
+    });
+    const invoice = InvoiceModel.find({
+      "paymentLink.id": rzPaymentLink._id
+    }).fetch()[0];
+
+    if(!payment.notes) {
+      payment.notes = {
+        paymentRequestId: rzPaymentLink.paymentRequestId
+      }
+    }
+
+    if(!payment.notes.paymentRequestId) {
+      payment.notes.paymentRequestId = rzPaymentLink.paymentRequestId;
+    }
+
+    await attachPaymentToRequest(payment);
+    if(invoice) {
+      return Invoice.settleInvoice({
+        invoiceId: invoice._id,
+        rzPayment: payment
+      });
+    }
+    return true;
+  }
+
+
   // we only want the halted subscriptions to trigger this as others will be processed by subscription.charged
   const rzSubscription = RZSubscription.find({
     id: invoice.subscription_id,
@@ -508,10 +552,12 @@ const HandlerFunctions = {
     return true;
   },
   'invoice.paid': async ({ data }, bullSystem) => {
-    let { invoice, payment } = data;
+    let { invoice, payment } = data.payload;
     invoice = invoice.entity;
     payment = payment.entity;
-
+    const user = await getUserFromPayment(payment);
+    await updateRZPaymentToUser(user, data.payload.payment.entity);
+    await insertOrUpdatePayment(user, payment);
     await handleInvoicePaid({ payment, invoice }, bullSystem);
 
     return true;
@@ -522,7 +568,7 @@ module.exports = function(bullSystem) {
   const processFunction = function(job) {
     return new Promise(async resolve => {
       const data = job.data;
-      ElasticLogger.log("Processing razorpay webhook", {...data});
+      ElasticLogger.log('Processing razorpay webhook', { ...data });
       if (typeof HandlerFunctions[data.event] === 'function') {
         await HandlerFunctions[data.event]({ data }, bullSystem);
       } else {
