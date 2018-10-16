@@ -3,6 +3,8 @@ import {RZPayment, RZPlan, RZSubscription } from '../../razorpay';
 import UserCards from '../user-cards';
 import Invoice from '../invoice';
 
+const pageSize = 20;
+const MIN_ADMIN_LEVEL = 1;
 Meteor.publish("userPayments", function () {
 	return [PaymentRequests.find({userId: Meteor.userId()}, {
     fields: {
@@ -21,7 +23,9 @@ Meteor.publish("pending-invoice", function (billingLabel) {
   return Invoice.find({
     userId: Meteor.userId(),
     billingPeriodLabel: billingLabel,
-    paymentStatus: 1
+    paymentStatus: {
+      $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed]
+    }
   });
 });
 
@@ -34,5 +38,37 @@ Meteor.publish("rzp-subscription", function () {
 });
 
 Meteor.publish("invoice.admin.id", (id) => {
+  if(Meteor.user() && Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
   return Invoice.find({_id: id})
+});
+
+Meteor.publish("invoice.all", function({page}) {
+  if(Meteor.user() && Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
+  return Invoice.find({}, {
+    limit: pageSize,
+    skip: page * pageSize,
+    fields: {
+      items: 0
+    }
+  });
+});
+
+
+Meteor.publish("invoice.search", function({query, limit, page}) {
+  if(Meteor.user() && Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
+  limit = limit || pageSize;
+  page = page || 0;
+  return Invoice.find(query, {
+    limit: pageSize,
+    skip: page * pageSize,
+    fields: {
+      items: 0
+    }
+  });
 });

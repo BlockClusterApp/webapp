@@ -68,6 +68,9 @@ export default class PaymentModal extends Component {
                       <b>Payment Request:</b> {payment._id}
                     </p>
                     <p>
+                      <b>Payment Link:</b> {this.props.paymentLink && this.props.paymentLink.short_url}
+                    </p>
+                    <p>
                       <b>Amount:</b>
                       &nbsp; ₹{payment.amount / 100}
                     </p>

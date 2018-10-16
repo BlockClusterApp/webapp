@@ -57,7 +57,7 @@ JsonRoutes.add("post", "/api/hyperion/login", (req, res, next) => {
 })
 
 Meteor.methods({
-  getHyperionToken: async file => {
+  getHyperionToken: file => {
     var myFuture = new Future();
     jwt.sign(file.userId, {
       ttl: "5 minutes"
@@ -72,7 +72,6 @@ Meteor.methods({
 })
 
 function authMiddleware(req, res, next) {
-
   function getToken(req) {
     if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') { // Authorization: Bearer g1jipjgi1ifjioj
       // Handle token presented as a Bearer token in the Authorization header
@@ -109,7 +108,7 @@ function authMiddleware(req, res, next) {
         JsonRoutes.sendResult(res, {
           code: 401,
           data: {
-            "error": "Please verify your payment method"
+            "error": "Verify your payment method"
           }
         })
       }
@@ -220,6 +219,28 @@ JsonRoutes.add("get", "/api/hyperion/download", function(req, res, next) {
           return;
         }
       })
+    } else {
+      JsonRoutes.sendResult(res, {
+        code: 401,
+        data: {
+          "error": "File not found"
+        }
+      })
+    }
+  })
+});
+
+
+JsonRoutes.add("get", "/api/hyperion/fileStats", function(req, res, next) {
+  let hash = req.query.hash;
+  let ipfs_connection = Config.getHyperionConnectionDetails(req.query.location);
+  const ipfs = ipfsAPI(ipfs_connection[0], ipfs_connection[1], {protocol: 'http'})
+  var ipfsCluster = ipfsClusterAPI(ipfs_connection[0], ipfs_connection[2], {protocol: 'http'})
+  ipfs.object.stat(hash, {}, (err, stats) => {
+    if(!err && stats) {
+      res.end(JSON.stringify({
+        "message": stats.DataSize
+      }))
     } else {
       JsonRoutes.sendResult(res, {
         code: 401,

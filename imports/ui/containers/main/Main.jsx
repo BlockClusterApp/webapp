@@ -46,6 +46,7 @@ import VoucherDetails from '../../pages/admin/vouchers/VoucherDetails';
 import AdminSupport from '../../pages/admin/support/TicketList.jsx';
 import AdminSupportDetails from '../../pages/admin/support/Details.jsx';
 import AdminInvoiceDetails from '../../pages/admin/invoice/Details.jsx';
+import AdminInvoiceList from '../../pages/admin/invoice/List.jsx'
 import ClientList from '../../pages/admin/clients/ClientList.jsx';
 import ClientDetails from '../../pages/admin/clients/ClientDetails.jsx'
 import ClientCreate from '../../pages/admin/clients/ClientCreate';
@@ -97,6 +98,7 @@ export default class Main extends Component {
             <Route exact path="/app/admin/vouchers/create" component={VoucherCreate} />
             <Route exact path="/app/admin/support" component={AdminSupport} />
             <Route exact path="/app/admin/support/:id" component={AdminSupportDetails} />
+            <Route exact path="/app/admin/invoices" component={AdminInvoiceList} />
             <Route exact path="/app/admin/invoices/:id" component={AdminInvoiceDetails} />
             <Route exact path="/app/admin/clients" component={ClientList} />
             <Route exact path="/app/admin/clients/details/:id" component={ClientDetails} />
