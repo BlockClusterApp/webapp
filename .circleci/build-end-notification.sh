@@ -34,4 +34,15 @@ curl $CLIENT_URL \
   -H 'Content-Type: application/json' \
   -d "${DATA}"
 
+curl -X POST \
+  "${API_HOST}/version/takeIn" \
+  -H "x-access-key: abcd" \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d "{
+        app:webapp,
+        version=${NODE_ENV}-${COMMIT_HASH}
+      }"
+
 exit 0;
+
