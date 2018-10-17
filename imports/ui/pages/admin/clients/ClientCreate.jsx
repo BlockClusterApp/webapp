@@ -7,11 +7,6 @@ import Toggle from 'react-toggle';
 import 'react-toggle/style.css';
 import Axios from 'axios';
 import CopyToClipboard from 'react-copy-to-clipboard'
-import config from '../../../../modules/config/client';
-
-Axios.defaults.baseURL = config.licensingMicroserviceBase;
-
-Axios.defaults.headers.common['x-access-key'] = 0 + new Date().setHours(new Date().getHours(), 0, 0, 0).toString() + 1 + Date.now() + 000;
 
 class ClientCreate extends Component {
   constructor(props) {
@@ -180,7 +175,7 @@ class ClientCreate extends Component {
                         onChange={this.handleChanges.bind(this)}
                         value={this.state.clientLogo}
                         required/>
-                      </div><div className='m-t-30'><CopyToClipboard text={this.state.clientLogo}><button className='btn btn-default'><i className='fa fa-copy'/></button></CopyToClipboard></div> 
+                      </div><div className='m-t-30'><CopyToClipboard text={this.state.clientLogo}><button className='btn btn-default'><i className='fa fa-copy'/></button></CopyToClipboard></div>
                 </div>
               </div>
               <LaddaButton

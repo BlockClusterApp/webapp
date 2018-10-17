@@ -20,15 +20,15 @@ function getAPIHost() {
   }
 }
 function getMicroServiceBase(){
-  switch (process.env.NODE_ENV) {
-    case "production":
-      return process.env.API_HOST || "https://enterprise-api.blockcluster.io";
-    case "staging":
-      return process.env.API_HOST || "https://enterprise-api-staging.blockcluster.io";
-    case "test":
-      return process.env.API_HOST || "https://enterprise-api-dev.blockcluster.io";
-    case "dev":
-      return process.env.API_HOST || "https://enterprise-api-dev.blockcluster.io";
+  switch (window.location.host) {
+    case "app.blockcluster.io":
+      return "https://enterprise-api.blockcluster.io";
+    case "staging.blockcluster.io":
+      return "https://enterprise-api-staging.blockcluster.io";
+    case "test.blockcluster.io":
+      return "https://enterprise-api-dev.blockcluster.io";
+    case "dev.blockcluster.io":
+      return "https://enterprise-api-dev.blockcluster.io";
     default:
       return 'http://localhost:4000';
     }

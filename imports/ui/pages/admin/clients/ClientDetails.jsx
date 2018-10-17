@@ -4,10 +4,7 @@ import { withRouter, Link } from 'react-router-dom';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import axios from 'axios';
 import notifications from '../../../../modules/notifications';
-import config from '../../../../modules/config/client';
 
-axios.defaults.baseURL = config.licensingMicroserviceBase;
-axios.defaults.headers.common['x-access-key'] = 0 + new Date().setHours(new Date().getHours(), 0, 0, 0).toString() + 1 + Date.now() + 000;
 class ClientDetails extends Component {
   constructor(props) {
     super(props);
