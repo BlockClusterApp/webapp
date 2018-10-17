@@ -5,11 +5,6 @@ import {withRouter,Link} from 'react-router-dom';
 import LaddaButton, { S, SLIDE_UP } from "react-ladda";
 import moment from 'moment';
 import axios from 'axios';
-import config from '../../../../modules/config/client'
-
-axios.defaults.baseURL = config.licensingMicroserviceBase;
-
-axios.defaults.headers.common['x-access-key']=0+new Date().setHours(new Date().getHours(), 0,0,0).toString()+1+Date.now()+000;
 
 const PAGE_LIMIT = 10;
 class ClientList extends Component {
