@@ -11,8 +11,20 @@ import EmailVerify from '../../pages/email-verify/EmailVerification.jsx';
 import RequestPasswordReset from '../../pages/reset-password/RequestLink.jsx';
 import ResetPassword from '../../pages/reset-password/ResetPassword.jsx';
 import AcceptInvitation from '../../pages/userInvitation/AcceptInvitation.jsx'
+import config from '../../../modules/config/client';
 
 import "./App.css"
+
+import axios from 'axios';
+
+axios.defaults.baseURL = config.licensingMicroserviceBase;
+
+axios.interceptors.request.use(config => {
+  const newConfig = Object.assign({}, config);
+
+  newConfig.headers['x-access-key'] = 0 + new Date().setHours(new Date().getHours(), 0, 0, 0).toString() + 1 + Date.now() + 000;
+  return newConfig;
+});
 
 class App extends Component {
 	requireAuth = (RouteComponent) => {
