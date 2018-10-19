@@ -134,6 +134,7 @@ JsonRoutes.add("post", "/api/hyperion/upload", Meteor.bindEnvironment((req, res,
   var ipfsCluster = ipfsClusterAPI(ipfs_connection[0], ipfs_connection[2], {protocol: 'http'})
   ipfs.files.add(req.file.buffer, Meteor.bindEnvironment((err, file) => {
     if (err) {
+      console.log(err)
       JsonRoutes.sendResult(res, {
         code: 401,
         data: {
@@ -194,6 +195,7 @@ JsonRoutes.add("post", "/api/hyperion/upload", Meteor.bindEnvironment((req, res,
             })
           }
         } else {
+          console.log(err)
           JsonRoutes.sendResult(res, {
             code: 401,
             data: {
