@@ -11,8 +11,8 @@
           "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
         },
         "hyperion": {
-          "ipfsPort": "31640",
-          "ipfsClusterPort": "30990"
+          "ipfsPort": "31975",
+          "ipfsClusterPort": "31115"
         }
       }
     },
@@ -27,8 +27,8 @@
           "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
         },
         "hyperion": {
-          "ipfsPort": "31640",
-          "ipfsClusterPort": "30990"
+          "ipfsPort": "31975",
+          "ipfsClusterPort": "31115"
         }
       }
     },
@@ -43,8 +43,8 @@
           "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
         },
         "hyperion": {
-          "ipfsPort": "30185",
-          "ipfsClusterPort": "31624"
+          "ipfsPort": "31433",
+          "ipfsClusterPort": "30877"
         }
       }
     },
@@ -59,8 +59,8 @@
           "pass": "jv9c0533CvxSwi3VhnuPoAPQMSko6Xgc"
         },
         "hyperion": {
-          "ipfsPort": "32366",
-          "ipfsClusterPort": "31486"
+          "ipfsPort": "30602",
+          "ipfsClusterPort": "32763"
         }
       }
     }
