@@ -202,7 +202,7 @@ class ViewNetwork extends Component {
                                                     <div className="clickable" onClick={() => {
 															this.props.network.length === 1 ? this.props.history.push("/app/networks/" + this.props.network[0].instanceId + "/events") : ""
 														}}>
-                                                        <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Integrate Webbooks</p>
+                                                        <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Integrate Webhooks</p>
                                                         <p className="no-margin fs-12">Events Notification</p>
                                                     </div>
 													<div className="clickable" onClick={() => {
