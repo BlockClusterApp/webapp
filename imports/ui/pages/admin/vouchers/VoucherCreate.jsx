@@ -15,6 +15,9 @@ class VoucherCreate extends Component {
     super(props);
 
     this.state = {
+      exist:null,
+      code:'',
+      customCode:false,
       noOfVouchers: 1,
       cpu: '',
       disk: '',
@@ -41,6 +44,8 @@ class VoucherCreate extends Component {
   resetForm = () => {
     this.setState(
       {
+        code:'',
+        customCode:false,
         noOfVouchers: 1,
         cpu: '',
         disk: '',
@@ -76,6 +81,7 @@ class VoucherCreate extends Component {
       () => {
         payload = this.state;
         const _doc_voucher = {
+          code:this.state.customCode ? payload.code : null,
           noOfVouchers: payload.noOfVouchers,
           voucher_code_size: payload.voucher_code_size,
           usablity: {
@@ -178,6 +184,34 @@ class VoucherCreate extends Component {
       );
     });
   };
+  checkExisting = e =>{
+    this.setState({
+      [e.target.name]: e.target.value,
+    },()=>{
+      this.voucherSubscription = Meteor.subscribe(
+        "vouchers.search",
+        {
+          query: {code:this.state.code}
+        },
+        {
+          onReady: () => {
+              voucher = Vouchers.find({code:this.state.code}).fetch()[0];
+              if(voucher){
+                this.setState({
+                  exist:true
+                });
+              }else{
+                this.setState({
+                  exist:false
+                })
+              }
+          }
+        }
+      );
+    });
+      
+  };
+
   handleChanges = e => {
     this.setState({
       [e.target.name]: e.target.value,
@@ -197,6 +231,15 @@ class VoucherCreate extends Component {
             <div className="card-block">
               <div className="form-group">
                 <div className="row">
+                <div className="col-md-4 form-input-group">
+                <label>Customized Voucher Code</label>
+                <span className='help'> e.g WORLDSUMMITB </span>
+                    <Toggle name="customCode" className="form-control" icons={false} checked={this.state.customCode} onChange={this.handleChangesToggle.bind(this)} />
+                </div>
+                </div>
+                <br />
+                {!this.state.customCode && (
+                  <div className="row">
                   <div className="col-md-4 form-input-group">
                     <label>No of Vouchers</label>
                     <input
@@ -223,7 +266,27 @@ class VoucherCreate extends Component {
                       // value={this.state.networkConfig.cpu}
                     />
                   </div>
+                  </div>
+                )}
+                {this.state.customCode &&(
+                <div className="row">
+                <div className="col-md-6 form-input-group">
+                    <label>Voucher Code</label>
+                    <span className="help"> e.g. "WORLDSUMMIT"  &nbsp;&nbsp;</span>
+                    { this.state.code.length>0 ? (this.state.exist ? <span className='text-center text-danger no-margin'> Not Available</span> : <span className='text-center text-success no-margin'> Available</span> ) :''} 
+                    <input
+                      name='code'
+                      type="text"
+                      placeholder="e.g ABCD785"
+                      className="form-control"
+                      onChange={this.checkExisting.bind(this)}
+                      value={this.state.code}
+                      required
+                      // value={this.state.networkConfig.cpu}
+                    />
+                  </div>
                 </div>
+                )}
                 <br />
                 <label>Network Configuration </label>
                 <div className="row">
@@ -374,7 +437,7 @@ class VoucherCreate extends Component {
                 </div>
               </div>
               <LaddaButton
-                disabled={(this.state.cpu >0 && this.state.ram>0 && this.state.disk>0 && this.state.noOfVouchers>0) ? false : true}
+                disabled={(this.state.cpu >0 && this.state.ram>0 && this.state.disk>0 && this.state.noOfVouchers>0 && (this.state.code.length>0 ? !this.state.exist : true )) ? false : true}
                 loading={this.state.createVoucher_formloading ? this.state.createVoucher_formloading : false}
                 data-size={S}
                 data-style={SLIDE_UP}
