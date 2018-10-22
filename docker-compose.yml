@@ -18,13 +18,13 @@ services:
 
     depends_on:
       - configserver
+      - licenceservice
       - redis
     environment:
       NODE_ENV: development
       CONFIG_URL: http://configserver:3005
+      LICENCE_SERVICE_HOST: http://licenceservice:4000
       MONGO_URL: mongodb://35.161.9.16:32153
-      METEOR_PROFILE: 1
-      METEOR_OFFLINE_CATALOG: 1
       REDIS_HOST: redis
       REDIS_PORT: 6379
     deploy:
@@ -40,6 +40,8 @@ services:
     image: 402432300121.dkr.ecr.ap-south-1.amazonaws.com/blockcluster-daemon:latest
     ports:
       - '3005:3005'
+    volumes:
+    - ./volumes/conf.d:/conf.d:cached
     deploy:
       resources:
         limits:
@@ -48,6 +50,22 @@ services:
         reservations:
           memory: 50M
           cpus: '0.1'
+
+  licenceservice:
+    build:
+      context: ../licensing-microservice
+      dockerfile: ../licensing-microservice/Dockerfile
+    ports:
+      - '4000:4000'
+    volumes:
+      - ../licensing-microservice/Templates:/src/Templates
+      - ../licensing-microservice/config:/src/config
+      - ../licensing-microservice/index.js:/src/config/index.js
+      - ../licensing-microservice/apis:/src/apis
+      - ../licensing-microservice/schema:/src/schema
+    environment:
+      MONGO_URL: mongodb://35.161.9.16:32153
+      NODE_ENV: development
 
   redis:
     image: redis

@@ -20,6 +20,9 @@ function getAPIHost() {
   }
 }
 function getMicroServiceBase(){
+  if(process.env.LICENCE_SERVICE_HOST) {
+    return process.env.LICENCE_SERVICE_HOST;
+  }
   switch (window.location.host) {
     case "app.blockcluster.io":
       return "https://enterprise-api.blockcluster.io";
