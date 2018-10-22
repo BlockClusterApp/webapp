@@ -64,7 +64,7 @@
     "react-render-html": "0.6.0",
     "react-router": "4.2.0",
     "react-router-dom": "4.2.2",
-    "react-simple-maps": "~0.12.0",
+    "react-simple-maps": "^0.12.1",
     "react-toggle": "^4.0.2",
     "redis-fast-driver": "^2.1.2",
     "redis-jwt": "1.4.0",

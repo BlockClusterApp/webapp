@@ -15,7 +15,6 @@ services:
       - ./.meteor/this-does-not-exists:/blockcluster/.meteor/local:cached
     ports:
       - '3000:3000'
-
     depends_on:
       - configserver
       - licenceservice
@@ -27,42 +26,28 @@ services:
       MONGO_URL: mongodb://35.161.9.16:32153
       REDIS_HOST: redis
       REDIS_PORT: 6379
-    deploy:
-      resources:
-        limits:
-          memory: 3G
-          cpus: '3'
-        reservations:
-          memory: 1G
-          cpus: '1'
 
   configserver:
-    image: 402432300121.dkr.ecr.ap-south-1.amazonaws.com/blockcluster-daemon:latest
+    image: blockcluster/blockcluster-daemon:latest
     ports:
       - '3005:3005'
+    environment:
+      KUBE_API_SERVER_URL: 'https://k8s-dev-us-west-2-api.blockcluster.io'
+      KUBE_API_USER: 'admin'
+      KUBE_API_PASS: 'v8qYNAwGkHOWBghtu1GywXbAno5aX3bH'
     volumes:
-    - ./volumes/conf.d:/conf.d:cached
-    deploy:
-      resources:
-        limits:
-          memory: 200M
-          cpus: '0.1'
-        reservations:
-          memory: 50M
-          cpus: '0.1'
+    - ./volumes/conf.d:/conf.d/:cached
 
   licenceservice:
     build:
       context: ../licensing-microservice
-      dockerfile: ../licensing-microservice/Dockerfile
+      dockerfile: ../licensing-microservice/docker/local.Dockerfile
+    depends_on:
+      - configserver
     ports:
       - '4000:4000'
     volumes:
-      - ../licensing-microservice/Templates:/src/Templates
-      - ../licensing-microservice/config:/src/config
-      - ../licensing-microservice/index.js:/src/config/index.js
-      - ../licensing-microservice/apis:/src/apis
-      - ../licensing-microservice/schema:/src/schema
+      - ../licensing-microservice/:/src
     environment:
       MONGO_URL: mongodb://35.161.9.16:32153
       NODE_ENV: development
@@ -71,13 +56,5 @@ services:
     image: redis
     ports:
       - '6379:6379'
-    deploy:
-      resources:
-        limits:
-          memory: 400M
-          cpus: '0.1'
-        reservations:
-          memory: 100M
-          cpus: '0.1'
 
 

@@ -10,4 +10,4 @@ RUN cd /blockcluster && npm install
 # bull razorpay request moment debug request-promise web3 redis-jwt bignumber.js \
 # bluebird multer jsonminify apache-md5 base-64 utf8
 
-CMD ["meteor", "--allow-superuser", "--verbose"]
+CMD ["meteor", "--allow-superuser"]
