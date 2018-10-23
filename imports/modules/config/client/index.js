@@ -1,69 +1,74 @@
-const defaults = require("../local.config.js");
-function getAPIHost() {
-  if (process.env.ROOT_URL) {
-    if(process.env.ROOT_URL === 'https://test.blockcluster.io') {
-      return "https://dev.blockcluster.io";
-    }
-    return process.env.ROOT_URL;
+window.RemoteConfig = {};
+
+const CONFIG_URL = `${window.location.origin}/api/client-config`;
+async function fetchNewConfig() {
+  const response = await fetch(CONFIG_URL);
+  const res = await response.json();
+  if (res.errorCode && res.errorCode === 404) {
+    window.RemoteConfig = {};
+  } else {
+    window.RemoteConfig = res;
   }
-  switch (process.env.NODE_ENV) {
-    case "production":
-      return "https://app.blockcluster.io";
-    case "staging":
-      return "https://staging.blockcluster.io";
-    case "test":
-      return "https://dev.blockcluster.io";
-    case "dev":
-      return "https://dev.blockcluster.io";
-    default:
-      return `http://localhost:${process.env.PORT || "3000"}`;
-  }
+  const event = new Event('RemoteConfigChanged');
+  window.dispatchEvent(event);
 }
-function getMicroServiceBase(){
-  if(process.env.LICENCE_SERVICE_HOST) {
+
+setTimeout(async () => {
+  await fetchNewConfig();
+}, 1000);
+
+setInterval(async () => {
+  await fetchNewConfig();
+}, 1 * 60 * 1000);
+
+
+function getMicroServiceBase() {
+  if (process.env.LICENCE_SERVICE_HOST) {
     return process.env.LICENCE_SERVICE_HOST;
   }
   switch (window.location.host) {
-    case "app.blockcluster.io":
-      return "https://enterprise-api.blockcluster.io";
-    case "staging.blockcluster.io":
-      return "https://enterprise-api-staging.blockcluster.io";
-    case "test.blockcluster.io":
-      return "https://enterprise-api-dev.blockcluster.io";
-    case "dev.blockcluster.io":
-      return "https://enterprise-api-dev.blockcluster.io";
+    case 'app.blockcluster.io':
+      return 'https://enterprise-api.blockcluster.io';
+    case 'staging.blockcluster.io':
+      return 'https://enterprise-api-staging.blockcluster.io';
+    case 'test.blockcluster.io':
+      return 'https://enterprise-api-dev.blockcluster.io';
+    case 'dev.blockcluster.io':
+      return 'https://enterprise-api-dev.blockcluster.io';
     default:
       return 'http://localhost:4000';
-    }
   }
+}
 
 function getDynamoWokerDomainName(locationCode) {
-  let prefix = '';
-    if(locationCode !== "us-west-2"){
-      prefix = `-${locationCode}`
+  if (window.location.origin.includes('blockcluster.io')) {
+    let prefix = '';
+    if (locationCode !== 'us-west-2') {
+      prefix = `-${locationCode}`;
     }
-  const host = window.location.origin.includes("localhost") || window.location.origin.includes("test.blockcluster.io") ? 'https://dev.blockcluster.io' : window.location.origin;
-  const url = `${host.split("://")[1].replace(".blockcluster.io", '')}${prefix}.blockcluster.io`;
-  return url;
+    const host = window.location.origin.includes('localhost') || window.location.origin.includes('test.blockcluster.io') ? 'https://dev.blockcluster.io' : window.location.origin;
+    const url = `${host.split('://')[1].replace('.blockcluster.io', '')}${prefix}.blockcluster.io`;
+    return url;
+  }
+  return RemoteConfig.workerDomainName[locationCode];
 }
 
 module.exports = {
-  apiHost: getAPIHost(),
-  workerNodeDomainName: (locationCode = "us-west-2") => {
-    return getDynamoWokerDomainName(locationCode)
+  workerNodeDomainName: (locationCode = 'default-1') => {
+    return getDynamoWokerDomainName(locationCode);
   },
-  namespace: process.env.NAMESPACE || defaults.namespace,
+  namespace: RemoteConfig.NAMESPACE || process.env.NAMESPACE || 'default',
   Raven: {
     dsn: () => {
-      if(process.env.NODE_ENV === 'production' || (window && window.location && window.location.origin.includes('https://app.blockcluster.io'))) {
-        return 'https://778581990f3e46daaac3995e1e756de5@sentry.io/1274848'
+      if (process.env.NODE_ENV === 'production' || (window && window.location && window.location.origin.includes('https://app.blockcluster.io'))) {
+        return 'https://778581990f3e46daaac3995e1e756de5@sentry.io/1274848';
       } else if (process.env.NODE_ENV === 'staging' || (window && window.location && window.location.origin.includes('https://staging.blockcluster.io'))) {
-        return 'https://05bdf7f60e944515b1f4a59a79116063@sentry.io/1275121'
+        return 'https://05bdf7f60e944515b1f4a59a79116063@sentry.io/1275121';
       } else if (window && window.location && window.location.origin.includes('https://dev.blockcluster.io')) {
-        return 'https://52847e2f5c05463e91789eb2c1b75bcb@sentry.io/1275122'
+        return 'https://52847e2f5c05463e91789eb2c1b75bcb@sentry.io/1275122';
       }
       return false;
-    }
+    },
   },
-  licensingMicroserviceBase: getMicroServiceBase()
+  licensingMicroserviceBase: getMicroServiceBase(),
 };

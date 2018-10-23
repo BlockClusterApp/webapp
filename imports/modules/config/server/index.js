@@ -2,13 +2,17 @@ const defaults = require("../local.config.js");
 const request = require('request-promise');
 
 global.RemoteConfig = {};
-global.remoteConfigChangeListener = (cb) => {cb && cb()};
 
-const CONFIG_URL = process.env.NODE_ENV === 'development' ? process.env.CONFIG_URL || `http://blockcluster.default.svc.cluster.local` : `http://blockcluster.default.svc.cluster.local`;
+const CONFIG_URL = process.env.NODE_ENV === 'development' ? process.env.CONFIG_URL || `http://blockcluster-agent.blockcluster.svc.cluster.local` : `http://blockcluster-agent.blockcluster.svc.cluster.local`;
 
 async function fetchNewConfig (){
   const response = await request.get(`${CONFIG_URL}/config`);
-  global.RemoteConfig = JSON.parse(response);
+  const res = JSON.parse(response);
+  if(res.errorCode && res.errorCode === 404) {
+    global.RemoteConfig = {};
+  } else {
+    global.RemoteConfig = res;
+  }
   process.emit('RemoteConfigChanged');
 }
 
@@ -20,7 +24,7 @@ setInterval(async () => {
 
 function getAPIHost() {
   if(RemoteConfig.apiHost) {
-    return RemoteConfig.apiHost;
+    return RemoteConfig.apiHost[getNamespace()];
   }
   if (process.env.ROOT_URL) {
     return process.env.ROOT_URL;
@@ -59,11 +63,13 @@ function getHyperionConnectionDetails(locationCode) {
 
 
 function getDynamoWokerDomainName(locationCode) {
-  if(RemoteConfig.dynamoWorkerDomainName) {
-    if(RemoteConfig.dynamoWorkerDomainName[locationCode]) {
-      return RemoteConfig.dynamoWorkerDomainName[locationCode];
+  if(RemoteConfig.clusters) {
+    const locationConfig = RemoteConfig.clusters[getNamespace()][locationCode];
+    console.log("Location Config", locationConfig, RemoteConfig.clusters);
+    if(locationConfig) {
+      return locationConfig.dynamoDomainName;
     }
-    return RemoteConfig.dynamoWorkerDomainName;
+    return RemoteConfig.apiHost[locationCode];
   }
   let prefix = '';
   if(locationCode !== "us-west-2"){
@@ -144,13 +150,14 @@ module.exports = {
     }
     return locationConfig.workerNodeIP;
   },
-  redisHost: process.env.REDIS_HOST || defaults.redisHost,
-  redisPort: process.env.REDIS_PORT || defaults.redisPort,
+  redisHost: RemoteConfig.REDIS_HOST || process.env.REDIS_HOST || defaults.redisHost,
+  redisPort: RemoteConfig.REDIS_PORT || process.env.REDIS_PORT || defaults.redisPort,
   apiHost: getAPIHost(),
   database: getDatabase(),
   mongoConnectionString: getMongoConnectionString(),
   getHyperionConnectionDetails: getHyperionConnectionDetails,
   workerNodeDomainName: (locationCode = "us-west-2") => {
+    console.log("Dynamo domain", locationCode, getDynamoWokerDomainName(locationCode));
     return getDynamoWokerDomainName(locationCode);
   },
   kubeRestApiHost: (locationCode = "us-west-2") => {

@@ -6,9 +6,15 @@
         "workerNodeIP": "35.161.9.16",
         "locationCode": "us-west-2",
         "locationName": "US West (Oregon)",
+        "dynamoDomainName": "dev.blockcluster.io",
+        "apiHost": "https://dev.blockcluster.io",
         "auth": {
           "user": "admin",
           "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
+        },
+        "hyperion": {
+          "ipfsPort": "31975",
+          "ipfsClusterPort": "31115"
         }
       }
     },
@@ -18,9 +24,15 @@
         "workerNodeIP": "35.161.9.16",
         "locationCode": "us-west-2",
         "locationName": "US West (Oregon)",
+        "dynamoDomainName": "test.blockcluster.io",
+        "apiHost": "https://test.blockcluster.io",
         "auth": {
           "user": "admin",
           "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
+        },
+        "hyperion": {
+          "ipfsPort": "31975",
+          "ipfsClusterPort": "31115"
         }
       }
     },
@@ -30,9 +42,15 @@
         "workerNodeIP": "35.161.9.16",
         "locationCode": "us-west-2",
         "locationName": "US West (Oregon)",
+        "dynamoDomainName": "staging.blockcluster.io",
+        "apiHost": "https://staging.blockcluster.io",
         "auth": {
           "user": "admin",
           "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
+        },
+        "hyperion": {
+          "ipfsPort": "31433",
+          "ipfsClusterPort": "30877"
         }
       }
     }
