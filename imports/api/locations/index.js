@@ -29,7 +29,9 @@ JsonRoutes.add('get', '/api/config-client', function(req, res, next) {
     config.workerDomainName[locationCode] = RemoteConfig.clusters[Config.namespace][locationCode].dynamoDomainName
   });
   config.NAMESPACE = Config.namespace;
-  res.end(config)
+  JsonRoutes.sendResult(res, {
+    data: config
+  });
 });
 
 Meteor.methods({
