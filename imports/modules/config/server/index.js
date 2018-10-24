@@ -13,6 +13,7 @@ async function fetchNewConfig (){
   } else {
     global.RemoteConfig = res;
   }
+
   process.emit('RemoteConfigChanged');
 }
 
@@ -157,15 +158,14 @@ module.exports = {
   mongoConnectionString: getMongoConnectionString(),
   getHyperionConnectionDetails: getHyperionConnectionDetails,
   workerNodeDomainName: (locationCode = "us-west-2") => {
-    console.log("Dynamo domain", locationCode, getDynamoWokerDomainName(locationCode));
     return getDynamoWokerDomainName(locationCode);
   },
   kubeRestApiHost: (locationCode = "us-west-2") => {
-    const locationConfig = RemoteConfig.clusters[getEnv()][locationCode];
+    const locationConfig = RemoteConfig.clusters[getNamespace()][locationCode];
     if(!locationConfig){
-      return RemoteConfig.clusters[getEnv()]["ap-south-1b"].masterApiHost;
+      return RemoteConfig.clusters[getNamespace()]["ap-south-1b"].masterAPIHost;
     }
-    return locationConfig.masterApiHost;
+    return locationConfig.masterAPIHost;
   },
   clusterApiAuth: (locationCode = "us-west-2") => {
     const locationConfig = RemoteConfig.clusters[getEnv()][locationCode];

@@ -2,7 +2,7 @@
   "clusters": {
     "dev": {
       "us-west-2": {
-        "masterApiHost": "https://k8s-dev-us-west-2-api.blockcluster.io",
+        "masterAPIHost": "https://k8s-dev-us-west-2-api.blockcluster.io",
         "workerNodeIP": "35.161.9.16",
         "locationCode": "us-west-2",
         "locationName": "US West (Oregon)",
@@ -20,7 +20,7 @@
     },
     "test": {
       "us-west-2": {
-        "masterApiHost": "https://k8s-dev-us-west-2-api.blockcluster.io",
+        "masterAPIHost": "https://k8s-dev-us-west-2-api.blockcluster.io",
         "workerNodeIP": "35.161.9.16",
         "locationCode": "us-west-2",
         "locationName": "US West (Oregon)",
@@ -38,7 +38,7 @@
     },
     "staging": {
       "us-west-2": {
-        "masterApiHost": "https://k8s-dev-us-west-2-api.blockcluster.io",
+        "masterAPIHost": "https://k8s-dev-us-west-2-api.blockcluster.io",
         "workerNodeIP": "35.161.9.16",
         "locationCode": "us-west-2",
         "locationName": "US West (Oregon)",
@@ -56,7 +56,7 @@
     },
     "production": {
       "ap-south-1b": {
-        "masterApiHost": "https://k8s-production-ap-south-1b-api.blockcluster.io",
+        "masterAPIHost": "https://k8s-production-ap-south-1b-api.blockcluster.io",
         "workerNodeIP": "13.232.213.158",
         "locationCode": "ap-south-1b",
         "locationName": "Asia Pacific South (Mumbai) - 1",

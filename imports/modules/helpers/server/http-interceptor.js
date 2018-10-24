@@ -5,22 +5,22 @@ let kubeURLs;
 
 if(RemoteConfig.clusters) {
   locationConfigs = Object.values(RemoteConfig.clusters[Config.namespace]);
-  kubeURLs = locationConfigs.map(lc => lc.masterApiHost);
+  kubeURLs = locationConfigs.map(lc => lc.masterAPIHost);
 }
 
 process.on('RemoteConfigChanged', () => {
   if(RemoteConfig.clusters) {
     locationConfigs = Object.values(RemoteConfig.clusters[Config.namespace]);
-    kubeURLs = locationConfigs.map(lc => lc.masterApiHost);
+    kubeURLs = locationConfigs.map(lc => lc.masterAPIHost);
   }
 })
 
 function getLocationConfigURL(url) {
   if(!kubeURLs){
-    kubeURLs = locationConfigs.map(lc => lc.masterApiHost);
+    kubeURLs = locationConfigs.map(lc => lc.masterAPIHost);
   }
   for (let locationConfig of locationConfigs) {
-    if (url.indexOf(locationConfig.masterApiHost) === 0) {
+    if (url.indexOf(locationConfig.masterAPIHost) === 0) {
       return locationConfig;
     }
   }
