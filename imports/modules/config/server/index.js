@@ -66,7 +66,6 @@ function getHyperionConnectionDetails(locationCode) {
 function getDynamoWokerDomainName(locationCode) {
   if(RemoteConfig.clusters) {
     const locationConfig = RemoteConfig.clusters[getNamespace()][locationCode];
-    console.log("Location Config", locationConfig, RemoteConfig.clusters);
     if(locationConfig) {
       return locationConfig.dynamoDomainName;
     }

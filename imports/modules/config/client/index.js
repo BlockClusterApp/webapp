@@ -1,6 +1,6 @@
 window.RemoteConfig = {};
 
-const CONFIG_URL = `${window.location.origin}/api/client-config`;
+const CONFIG_URL = `${window.location.origin}/api/config-client`;
 async function fetchNewConfig() {
   const response = await fetch(CONFIG_URL);
   const res = await response.json();
@@ -39,22 +39,11 @@ function getMicroServiceBase() {
       return 'http://localhost:4000';
   }
 }
-function getMicroServiceBase(){
-  switch (window.location.host) {
-    case "app.blockcluster.io":
-      return "https://enterprise-api.blockcluster.io";
-    case "staging.blockcluster.io":
-      return "https://enterprise-api-staging.blockcluster.io";
-    case "test.blockcluster.io":
-      return "https://enterprise-api-dev.blockcluster.io";
-    case "dev.blockcluster.io":
-      return "https://enterprise-api-dev.blockcluster.io";
-    default:
-      return 'http://localhost:4000';
-    }
-  }
 
 function getDynamoWokerDomainName(locationCode) {
+  if(RemoteConfig.workerDomainName && RemoteConfig.workerDomainName[locationCode]) {
+    return RemoteConfig.workerDomainName[locationCode];
+  }
   if (window.location.origin.includes('blockcluster.io')) {
     let prefix = '';
     if (locationCode !== 'us-west-2') {
@@ -64,7 +53,7 @@ function getDynamoWokerDomainName(locationCode) {
     const url = `${host.split('://')[1].replace('.blockcluster.io', '')}${prefix}.blockcluster.io`;
     return url;
   }
-  return RemoteConfig.workerDomainName[locationCode];
+  return "";
 }
 
 module.exports = {
