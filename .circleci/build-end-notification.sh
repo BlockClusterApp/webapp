@@ -41,7 +41,7 @@ curl -X POST \
   -H 'content-type: application/json' \
   -d "{
         app:webapp,
-        version=${NODE_ENV}-${COMMIT_HASH}
+        version:${NODE_ENV}-${COMMIT_HASH}
       }"
 
 exit 0;
