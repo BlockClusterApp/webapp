@@ -7,6 +7,8 @@ node_modules/
 imports/modules/config/local.config.js
 .meteor/this-does-not-exists/
 
+logs/
+
 .DS_Store
 
 .meteor/this-does-not-exists/
