@@ -63,9 +63,12 @@ function getDynamoWokerDomainName(locationCode) {
     if (locationCode !== 'us-west-2') {
       prefix = `-${locationCode}`;
     }
-  const host = window.location.origin;
-  const url = `${host.split("://")[1].replace(".blockcluster.io", '')}${prefix}.blockcluster.io`;
-  return url;
+    const host = window.location.origin;
+    const url = `${host.split("://")[1].replace(".blockcluster.io", '')}${prefix}.blockcluster.io`;
+    return url;
+  }
+
+  return '';
 }
 
 module.exports = {

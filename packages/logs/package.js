@@ -6,7 +6,7 @@ Package.describe({
 
 Npm.depends({
   winston: '3.0.1',
-  'winston-daily-rotate-file': '^3.4.0',
+  'winston-daily-rotate-file': '3.4.0',
 });
 
 Package.onUse(function(api, where) {
