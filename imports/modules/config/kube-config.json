@@ -17,60 +17,6 @@
           "ipfsClusterPort": "32498"
         }
       }
-    },
-    "test": {
-      "us-west-2": {
-        "masterAPIHost": "https://k8s-dev-us-west-2-api.blockcluster.io",
-        "workerNodeIP": "35.161.9.16",
-        "locationCode": "us-west-2",
-        "locationName": "US West (Oregon)",
-        "dynamoDomainName": "test.blockcluster.io",
-        "apiHost": "https://test.blockcluster.io",
-        "auth": {
-          "user": "admin",
-          "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
-        },
-        "hyperion": {
-          "ipfsPort": "32679",
-          "ipfsClusterPort": "32498"
-        }
-      }
-    },
-    "staging": {
-      "us-west-2": {
-        "masterAPIHost": "https://k8s-dev-us-west-2-api.blockcluster.io",
-        "workerNodeIP": "35.161.9.16",
-        "locationCode": "us-west-2",
-        "locationName": "US West (Oregon)",
-        "dynamoDomainName": "staging.blockcluster.io",
-        "apiHost": "https://staging.blockcluster.io",
-        "auth": {
-          "user": "admin",
-          "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
-        },
-        "hyperion": {
-          "ipfsPort": "31433",
-          "ipfsClusterPort": "30877"
-        }
-      }
-    },
-    "production": {
-      "ap-south-1b": {
-        "masterAPIHost": "https://k8s-production-ap-south-1b-api.blockcluster.io",
-        "workerNodeIP": "13.232.213.158",
-        "locationCode": "ap-south-1b",
-        "locationName": "Asia Pacific South (Mumbai) - 1",
-        "dynamoDomainName": "app-ap-south-1b.blockcluster.io",
-        "apiHost": "https://app.blockcluster.io",
-        "auth": {
-          "user": "admin",
-          "pass": "jv9c0533CvxSwi3VhnuPoAPQMSko6Xgc"
-        },
-        "hyperion": {
-          "ipfsPort": "30602",
-          "ipfsClusterPort": "32763"
-        }
-      }
     }
   }
 }
