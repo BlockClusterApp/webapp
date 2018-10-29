@@ -12,19 +12,19 @@ then
   export NODE_ENV=staging
   export CLUSTER_PREFIX="dev";
   export ROOT_URL="staging.blockcluster.io";
-  export API_HOST ="enterprise-api-staging.blockcluster.io";
+  export API_HOST ="https://enterprise-api-staging.blockcluster.io";
 elif [ "$CIRCLE_TAG" = "test" ] || [ "$CIRCLE_BRANCH" = "test" ] || [ "$IS_TEST" = "1" ];
 then
   export NODE_ENV=test
   export CLUSTER_PREFIX="dev";
   export ROOT_URL="test.blockcluster.io";
-  export API_HOST="enterprise-api-dev.blockcluster.io";
+  export API_HOST="https://enterprise-api-dev.blockcluster.io";
 elif [ "$CIRCLE_TAG" = "dev" ] ||  [ "$CIRCLE_BRANCH" = "dev" ];
 then
   export NODE_ENV=dev
   export CLUSTER_PREFIX="dev";
   export ROOT_URL="dev.blockcluster.io";
-  export API_HOST="enterprise-api-dev.blockcluster.io";
+  export API_HOST="https://enterprise-api-dev.blockcluster.io";
 fi
 
 

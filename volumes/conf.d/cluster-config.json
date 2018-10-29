@@ -53,24 +53,6 @@
           "ipfsClusterPort": "30877"
         }
       }
-    },
-    "production": {
-      "ap-south-1b": {
-        "masterAPIHost": "https://k8s-production-ap-south-1b-api.blockcluster.io",
-        "workerNodeIP": "13.232.213.158",
-        "locationCode": "ap-south-1b",
-        "locationName": "Asia Pacific South (Mumbai) - 1",
-        "dynamoDomainName": "app-ap-south-1b.blockcluster.io",
-        "apiHost": "https://app.blockcluster.io",
-        "auth": {
-          "user": "admin",
-          "pass": "jv9c0533CvxSwi3VhnuPoAPQMSko6Xgc"
-        },
-        "hyperion": {
-          "ipfsPort": "30602",
-          "ipfsClusterPort": "32763"
-        }
-      }
     }
   }
 }

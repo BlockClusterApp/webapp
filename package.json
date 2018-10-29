@@ -2,7 +2,7 @@
   "name": "blockcluster",
   "private": true,
   "scripts": {
-    "start": "meteor run",
+    "start": "./shell-scripts/docker-login.sh && docker-compose up",
     "test": "MONGO_URL=mongodb://localhost:27017/admin meteor test --once --driver-package meteortesting:mocha",
     "ui-test": "jest"
   },
@@ -64,7 +64,7 @@
     "react-render-html": "0.6.0",
     "react-router": "4.2.0",
     "react-router-dom": "4.2.2",
-    "react-simple-maps": "~0.12.0",
+    "react-simple-maps": "^0.12.1",
     "react-toggle": "^4.0.2",
     "redis-fast-driver": "^2.1.2",
     "redis-jwt": "1.4.0",
@@ -76,6 +76,7 @@
     "utf8": "*",
     "uuid": "^3.3.2",
     "web3": "0.20.6",
+    "winston-daily-rotate-file": "^3.4.0",
     "written-number": "^0.8.1"
   },
   "devDependencies": {

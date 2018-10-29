@@ -1,4 +1,5 @@
 const winston = Npm.require('winston');
+Npm.require('winston-daily-rotate-file');
 
 let logger = console.log;
 let _tags = {}
@@ -30,14 +31,18 @@ function initialize(settings, opts) {
     settings.logFiles = settings.logFiles || [];
     settings.logFiles.forEach(logFile => {
       const loggerOpts = {
-        filename: logFile.filename,
+        filename: `${logFile.filename.replace(".log", "-%DATE%.log")}`,
+        datePattern: 'YYYY-MM-DD-HH',
+        zippedArchive: false,
+        maxFiles: '2d',
+        maxSize: '2g',
       };
       if (logFile.level) {
         loggerOpts.level = logFile.level;
       } else {
         loggerOpts.level = 'info';
       }
-      finalOpts.transports.push(new winston.transports.File(loggerOpts));
+      finalOpts.transports.push(new winston.transports.DailyRotateFile(loggerOpts));
     });
     if(opts && opts.tags) {
       _tags = {..._tags, ...opts.tags}

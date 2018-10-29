@@ -22,7 +22,7 @@ axios.defaults.baseURL = config.licensingMicroserviceBase;
 axios.interceptors.request.use(config => {
   const newConfig = Object.assign({}, config);
 
-  newConfig.headers['x-access-key'] = 0 + new Date().setHours(new Date().getHours(), 0, 0, 0).toString() + 1 + Date.now() + 000;
+  newConfig.headers['x-access-key'] = 0 + new Date().setUTCHours(new Date().getUTCHours(), 0, 0, 0).toString() + 1 + Date.now() + 000;
   return newConfig;
 });
 

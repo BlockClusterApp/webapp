@@ -70,6 +70,8 @@ class ClientDetails extends Component {
       'License Expiry': i.licenseDetails
         ? new Date(i.licenseDetails.licenseExpiry).toLocaleDateString() + ' ' + new Date(i.licenseDetails.licenseExpiry).toLocaleTimeString()
         : '-',
+        "Client Note":i.clientMeta ? i.clientMeta : '-',
+        "Client Logo URI": i.clientLogo ? i.clientLogo : '-'
     };
     if(i.awsMetaData && i.awsMetaData.policies) {
       i.awsMetaData.policies.forEach(policy => {
