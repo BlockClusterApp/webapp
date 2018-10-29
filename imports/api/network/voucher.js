@@ -45,10 +45,12 @@ const insertVoucher = async savable_doc => {
  * @param { cpu: Number, ram: Number, disk: Number } payload.networkConfig
  */
 Voucher.create = async function(payload) {
-
-
-  let voucher_codes = await generateVouchers(payload.noOfVouchers, Number(payload.voucher_code_size)!= NaN ? Number(payload.voucher_code_size) :6 ); //lets keep it by default 6 for now
-
+  let voucher_codes;
+  if(payload.code){
+    voucher_codes = [payload.code];
+  }else{
+  voucher_codes = await generateVouchers(payload.noOfVouchers, Number(payload.voucher_code_size)!= NaN ? Number(payload.voucher_code_size) :6 ); //lets keep it by default 6 for now
+  }
   ElasticLogger.log("Voucher created", {
     payload,
     userId: Meteor.userId(),

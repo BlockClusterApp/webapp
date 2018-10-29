@@ -19,13 +19,27 @@ function getAPIHost() {
       return `http://localhost:${process.env.PORT || "3000"}`;
   }
 }
+function getMicroServiceBase(){
+  switch (window.location.host) {
+    case "app.blockcluster.io":
+      return "https://enterprise-api.blockcluster.io";
+    case "staging.blockcluster.io":
+      return "https://enterprise-api-staging.blockcluster.io";
+    case "test.blockcluster.io":
+      return "https://enterprise-api-dev.blockcluster.io";
+    case "dev.blockcluster.io":
+      return "https://enterprise-api-dev.blockcluster.io";
+    default:
+      return 'http://localhost:4000';
+    }
+  }
 
 function getDynamoWokerDomainName(locationCode) {
   let prefix = '';
     if(locationCode !== "us-west-2"){
       prefix = `-${locationCode}`
     }
-  const host = window.location.origin.includes("localhost") || window.location.origin.includes("test.blockcluster.io") ? 'https://dev.blockcluster.io' : window.location.origin;
+  const host = window.location.origin;
   const url = `${host.split("://")[1].replace(".blockcluster.io", '')}${prefix}.blockcluster.io`;
   return url;
 }
@@ -47,5 +61,6 @@ module.exports = {
       }
       return false;
     }
-  }
+  },
+  licensingMicroserviceBase: getMicroServiceBase()
 };
