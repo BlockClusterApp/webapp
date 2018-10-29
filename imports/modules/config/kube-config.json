@@ -13,8 +13,8 @@
           "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
         },
         "hyperion": {
-          "ipfsPort": "31975",
-          "ipfsClusterPort": "31115"
+          "ipfsPort": "32679",
+          "ipfsClusterPort": "32498"
         }
       }
     },
@@ -31,8 +31,8 @@
           "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
         },
         "hyperion": {
-          "ipfsPort": "31975",
-          "ipfsClusterPort": "31115"
+          "ipfsPort": "32679",
+          "ipfsClusterPort": "32498"
         }
       }
     },
