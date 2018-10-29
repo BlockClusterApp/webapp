@@ -76,6 +76,7 @@
     "utf8": "*",
     "uuid": "^3.3.2",
     "web3": "0.20.6",
+    "winston-daily-rotate-file": "^3.4.0",
     "written-number": "^0.8.1"
   },
   "devDependencies": {
