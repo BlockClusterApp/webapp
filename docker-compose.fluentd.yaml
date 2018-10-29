@@ -1,0 +1,24 @@
+version: '3'
+services:
+  configserver:
+    image: blockcluster/blockcluster-daemon:latest
+    depends_on:
+      - fluentd
+    ports:
+      - '3005:3005'
+    environment:
+      KUBE_API_SERVER_URL: 'https://k8s-dev-us-west-2-api.blockcluster.io'
+      KUBE_API_USER: 'admin'
+      KUBE_API_PASS: 'v8qYNAwGkHOWBghtu1GywXbAno5aX3bH'
+    volumes:
+    - ./volumes/conf.d:/conf.d/:cached
+    - ./logs:/tmp/
+
+  fluentd:
+    image: fluent/fluent-bit:latest
+    volumes:
+    - ./logs:/logs
+    - ./docker/fluentd:/fluent-bit/etc/
+
+
+

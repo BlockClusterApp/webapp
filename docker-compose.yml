@@ -3,16 +3,58 @@ services:
   server:
     build:
       context: .
-      dockerfile: docker/test-server.Dockerfile
+      dockerfile: docker/local.Dockerfile
     volumes:
-      - ./imports:/blockcluster/imports
-      - ./client:/blockcluster/client
-      - ./server:/blockcluster/server
-      - ./public:/blockcluster/public
-      - ./private:/blockcluster/private
-      - ./packages:/blockcluster/packages
-      - ./.meteor:/blockcluster/.meteor
+      - ./imports:/blockcluster/imports:cached
+      - ./client:/blockcluster/client:cached
+      - ./server:/blockcluster/server:cached
+      - ./public:/blockcluster/public:cached
+      - ./private:/blockcluster/private:cached
+      - ./packages:/blockcluster/packages:cached
+      - ./.meteor:/blockcluster/.meteor:cached
+      - ./.meteor/this-does-not-exists:/blockcluster/.meteor/local:cached
     ports:
       - '3000:3000'
+    depends_on:
+      - configserver
+      - licenceservice
+      - redis
     environment:
       NODE_ENV: development
+      CONFIG_URL: http://configserver:3005
+      LICENCE_SERVICE_HOST: http://licenceservice:4000
+      MONGO_URL: mongodb://35.161.9.16:32153
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+  configserver:
+    image: blockcluster/blockcluster-daemon:latest
+    ports:
+      - '3005:3005'
+    environment:
+      KUBE_API_SERVER_URL: 'https://k8s-dev-us-west-2-api.blockcluster.io'
+      KUBE_API_USER: 'admin'
+      KUBE_API_PASS: 'v8qYNAwGkHOWBghtu1GywXbAno5aX3bH'
+    volumes:
+    - ./volumes/conf.d:/conf.d/:cached
+
+  licenceservice:
+    build:
+      context: ../licensing-microservice
+      dockerfile: ../licensing-microservice/docker/local.Dockerfile
+    depends_on:
+      - configserver
+    ports:
+      - '4000:4000'
+    volumes:
+      - ../licensing-microservice/:/src
+    environment:
+      MONGO_URL: mongodb://35.161.9.16:32153
+      NODE_ENV: development
+
+  redis:
+    image: redis
+    ports:
+      - '6379:6379'
+
+

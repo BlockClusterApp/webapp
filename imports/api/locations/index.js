@@ -1,8 +1,14 @@
-import Config from "../../modules/config/server";
-const RemoteConfig = Config.RemoteConfig();
+import Config from '../../modules/config/server';
+let LocationConfigs;
 
-const LocationConfigs = RemoteConfig.clusters[Config.env];
-
+process.on('RemoteConfigChanged', () => {
+  if (RemoteConfig.clusters) {
+    LocationConfigs = RemoteConfig.clusters[Config.namespace];
+  }
+});
+if (RemoteConfig.clusters) {
+  LocationConfigs = RemoteConfig.clusters[Config.namespace];
+}
 const LocationApi = {};
 
 LocationApi.getLocations = function() {
@@ -10,14 +16,26 @@ LocationApi.getLocations = function() {
     list.push({
       locationCode: locationConfig.locationCode,
       locationName: locationConfig.locationName,
-      workerNodeIP: locationConfig.workerNodeIP
+      workerNodeIP: locationConfig.workerNodeIP,
     });
     return list;
   }, []);
 };
 
+JsonRoutes.add('get', '/api/config-client', function(req, res, next) {
+  const config = {};
+  config.workerDomainName = {}
+  Object.keys(RemoteConfig.clusters[Config.namespace]).forEach(locationCode => {
+    config.workerDomainName[locationCode] = RemoteConfig.clusters[Config.namespace][locationCode].dynamoDomainName
+  });
+  config.NAMESPACE = Config.namespace;
+  JsonRoutes.sendResult(res, {
+    data: config
+  });
+});
+
 Meteor.methods({
-  getClusterLocations: LocationApi.getLocations
+  getClusterLocations: LocationApi.getLocations,
 });
 
 export default LocationApi;

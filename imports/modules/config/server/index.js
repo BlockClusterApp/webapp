@@ -1,12 +1,32 @@
 const defaults = require("../local.config.js");
-const fs = require("fs");
-const path = require("path");
-var url = require('url');
+const request = require('request-promise');
 
-const RemoteConfig = require('../kube-config.json');
-// let locationMapping = {};
+global.RemoteConfig = {};
+
+const CONFIG_URL = process.env.NODE_ENV === 'development' ? process.env.CONFIG_URL || `http://blockcluster-agent.blockcluster.svc.cluster.local` : `http://blockcluster-agent.blockcluster.svc.cluster.local`;
+
+async function fetchNewConfig (){
+  const response = await request.get(`${CONFIG_URL}/config`);
+  const res = JSON.parse(response);
+  if(res.errorCode && res.errorCode === 404) {
+    global.RemoteConfig = {};
+  } else {
+    global.RemoteConfig = res;
+  }
+
+  process.emit('RemoteConfigChanged');
+}
+
+fetchNewConfig();
+
+setInterval(async () => {
+  await fetchNewConfig();
+}, 1* 60 * 1000);
 
 function getAPIHost() {
+  if(RemoteConfig.apiHost) {
+    return RemoteConfig.apiHost[getNamespace()];
+  }
   if (process.env.ROOT_URL) {
     return process.env.ROOT_URL;
   }
@@ -44,6 +64,13 @@ function getHyperionConnectionDetails(locationCode) {
 
 
 function getDynamoWokerDomainName(locationCode) {
+  if(RemoteConfig.clusters) {
+    const locationConfig = RemoteConfig.clusters[getNamespace()][locationCode];
+    if(locationConfig) {
+      return locationConfig.dynamoDomainName;
+    }
+    return RemoteConfig.apiHost[locationCode];
+  }
   let prefix = '';
   if(locationCode !== "us-west-2"){
     prefix = `-${locationCode}`;
@@ -58,15 +85,18 @@ function getDynamoWokerDomainName(locationCode) {
       return `test${prefix}.blockcluster.io`;
     default:
       return `dev${prefix}.blockcluster.io`;
-
   }
 }
 
 function getNamespace() {
-  return process.env.NAMESPACE || defaults.namespace || "dev";
+  // n
+  return RemoteConfig.namespace || process.env.NAMESPACE || defaults.namespace || "dev";
 };
 
 function getEnv() {
+  if(RemoteConfig.env) {
+    return RemoteConfig.env || "default";
+  }
   if(['production', 'staging', 'test', 'dev'].includes(process.env.NODE_ENV)){
     return process.env.NODE_ENV;
   }
@@ -94,7 +124,7 @@ function getMongoConnectionString() {
 
     return process.env.MONGO_URL;
 
-    if(['production'].includes(process.env.NODE_ENV)){
+    if(['production'].includes(process.env.NODE_ENV) || process.env.ENTERPRISE){
       return process.env.MONGO_URL;
     }
 
@@ -120,8 +150,8 @@ module.exports = {
     }
     return locationConfig.workerNodeIP;
   },
-  redisHost: process.env.REDIS_HOST || defaults.redisHost,
-  redisPort: process.env.REDIS_PORT || defaults.redisPort,
+  redisHost: RemoteConfig.REDIS_HOST || process.env.REDIS_HOST || defaults.redisHost,
+  redisPort: RemoteConfig.REDIS_PORT || process.env.REDIS_PORT || defaults.redisPort,
   apiHost: getAPIHost(),
   database: getDatabase(),
   mongoConnectionString: getMongoConnectionString(),
@@ -130,11 +160,11 @@ module.exports = {
     return getDynamoWokerDomainName(locationCode);
   },
   kubeRestApiHost: (locationCode = "us-west-2") => {
-    const locationConfig = RemoteConfig.clusters[getEnv()][locationCode];
+    const locationConfig = RemoteConfig.clusters[getNamespace()][locationCode];
     if(!locationConfig){
-      return RemoteConfig.clusters[getEnv()]["ap-south-1b"].masterApiHost;
+      return RemoteConfig.clusters[getNamespace()]["ap-south-1b"].masterAPIHost;
     }
-    return locationConfig.masterApiHost;
+    return locationConfig.masterAPIHost;
   },
   clusterApiAuth: (locationCode = "us-west-2") => {
     const locationConfig = RemoteConfig.clusters[getEnv()][locationCode];

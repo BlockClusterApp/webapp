@@ -28,11 +28,15 @@ class NetworksList extends Component {
     }
 
 
-	componentDidMount(){
+	componentWillMount(){
 		Meteor.call("getClusterLocations", (err, res) => {
+            if(err){
+               console.log(err);
+            }else{
 			this.setState({
-			  locations: res
-			});
+			  locations: res 
+            });
+        }
     });
 
     Meteor.call('nodeCount', (err, res) => {

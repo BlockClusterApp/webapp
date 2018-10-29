@@ -54,6 +54,8 @@ class ClientCreate extends Component {
       createClient_formloading: true,
     });
     const data = {
+      clientMeta: this.state.clientMeta,
+      clientLogo:this.state.clientLogo,
       clientDetails: {
         clientName: this.state.clientName,
         emailId: this.state.emailId,

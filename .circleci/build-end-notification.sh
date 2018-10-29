@@ -39,10 +39,10 @@ curl -X POST \
   -H "x-access-key: abcd" \
   -H 'cache-control: no-cache' \
   -H 'content-type: application/json' \
-  -d "{
+  -d """{
         app:webapp,
-        version=${NODE_ENV}-${COMMIT_HASH}
-      }"
+        version="${NODE_ENV}-${COMMIT_HASH}"
+      }"""
 
 exit 0;
 
