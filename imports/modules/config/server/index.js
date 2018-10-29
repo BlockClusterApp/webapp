@@ -1,5 +1,6 @@
 const defaults = require("../local.config.js");
 const request = require('request-promise');
+const debug = require('debug')('RemoteConfig');
 
 global.RemoteConfig = {};
 
@@ -13,7 +14,7 @@ async function fetchNewConfig (){
   } else {
     global.RemoteConfig = res;
   }
-  console.log("Remote config", RemoteConfig);
+  debug("Remote config", RemoteConfig);
 
   process.emit('RemoteConfigChanged');
 }
