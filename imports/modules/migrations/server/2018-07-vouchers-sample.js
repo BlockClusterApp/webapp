@@ -16,9 +16,10 @@ const insertVoucher = async (voucher) => {
       discountedDays: 60,
       claimed: false
     });
-
   return true;
 }
+
+
 
 Migrations.add({
   version: 3,
@@ -29,7 +30,7 @@ Migrations.add({
     });
     Promise.all(promises);
   },
-  down: function(){
+  down: function() {
     Vouchers.remove({});
-  }
+  },
 });

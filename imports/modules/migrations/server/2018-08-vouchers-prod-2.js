@@ -23,13 +23,12 @@ const insertVoucher = async (voucher) => {
 Migrations.add({
   version: 4,
   up: function() {
-    const promises = [];
     data.forEach(voucher => {
       promises.push(insertVoucher(voucher));
     });
     Promise.all(promises);
   },
-  down: function(){
+  down: function() {
     Vouchers.remove({});
-  }
+  },
 });
