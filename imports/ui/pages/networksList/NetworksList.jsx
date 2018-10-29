@@ -2,6 +2,7 @@ import React, {Component} from "react";
 import {withTracker} from "meteor/react-meteor-data";
 import {Networks} from "../../../collections/networks/networks.js"
 import helpers from "../../../modules/helpers"
+import moment from 'moment';
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
 import {withRouter} from 'react-router-dom'
 
@@ -34,7 +35,7 @@ class NetworksList extends Component {
                console.log(err);
             }else{
 			this.setState({
-			  locations: res 
+			  locations: res
             });
         }
     });
@@ -101,7 +102,7 @@ class NetworksList extends Component {
                                                                 {ReactHtmlParser(helpers.convertStatusToTag(helpers.calculateNodeStatus(item.status, item.lastPinged), helpers.firstLetterCapital(helpers.calculateNodeStatus(item.status, item.lastPinged))))}
                                                             </td>
                                                             <td className="v-align-middle">
-                                                                {helpers.timeConverter(item.createdOn / 1000)}
+                                                                {moment(item.createdOn).format('DD-MMM-YYYY HH:mm')}
                                                             </td>
                                                         </tr>
                                                     )

@@ -1,5 +1,6 @@
 const defaults = require("../local.config.js");
 const request = require('request-promise');
+const debug = require('debug')('RemoteConfig');
 
 global.RemoteConfig = {};
 
@@ -13,6 +14,7 @@ async function fetchNewConfig (){
   } else {
     global.RemoteConfig = res;
   }
+  debug("Remote config", RemoteConfig);
 
   process.emit('RemoteConfigChanged');
 }
@@ -94,9 +96,6 @@ function getNamespace() {
 };
 
 function getEnv() {
-  if(RemoteConfig.env) {
-    return RemoteConfig.env || "default";
-  }
   if(['production', 'staging', 'test', 'dev'].includes(process.env.NODE_ENV)){
     return process.env.NODE_ENV;
   }
@@ -136,17 +135,12 @@ function getMongoConnectionString() {
     return `mongodb://${q.host}/admin`;
 }
 
-// const locationConfigs = RemoteConfig.clusters[getEnv()];
-// locationConfigs.forEach(lc => {
-//   locationMapping[lc.locationCode] = lc.locationName;
-// });
-
 module.exports = {
   sendgridAPIKey: process.env.SENDGRID_API_KEY || defaults.sendgridApi,
   workerNodeIP: (locationCode = "us-west-2") => {
-    const locationConfig = RemoteConfig.clusters[getEnv()][locationCode];
+    const locationConfig = RemoteConfig.clusters[getNamespace()][locationCode];
     if(!locationConfig){
-      return RemoteConfig.clusters[getEnv()]["ap-south-1b"].workerNodeIP;
+      return RemoteConfig.clusters[getNamespace()]["ap-south-1b"].workerNodeIP;
     }
     return locationConfig.workerNodeIP;
   },
@@ -167,9 +161,9 @@ module.exports = {
     return locationConfig.masterAPIHost;
   },
   clusterApiAuth: (locationCode = "us-west-2") => {
-    const locationConfig = RemoteConfig.clusters[getEnv()][locationCode];
+    const locationConfig = RemoteConfig.clusters[getNamespace()][locationCode];
     if(!locationConfig){
-      return RemoteConfig.clusters[getEnv()]["ap-south-1b"].auth;
+      return RemoteConfig.clusters[getNamespace()]["ap-south-1b"].auth;
     }
     return locationConfig.auth;
   },
