@@ -190,7 +190,7 @@ class VoucherList extends Component {
                           data-style={SLIDE_UP}
                           data-spinner-size={30}
                           data-spinner-lines={12}
-                          className="btn btn-success m-t-10"
+                          className="btn btn-success "
                         >
                           <i className="fa fa-plus-circle" aria-hidden="true" />
                           &nbsp;&nbsp;Create
