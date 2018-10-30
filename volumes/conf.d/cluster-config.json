@@ -54,5 +54,30 @@
         }
       }
     }
+  },
+  "repositories": {
+    "dynamo": {
+      "url": "402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo",
+      "tags": {
+        "dev": "dev",
+        "test": "dev",
+        "staging": "staging",
+        "default": "latest"
+      }
+    },
+    "impulse": {
+      "url": "402432300121.dkr.ecr.us-west-2.amazonaws.com/impulse",
+      "tags": {
+        "dev": "dev",
+        "test": "dev",
+        "staging": "staging",
+        "default": "latest"
+      }
+    }
+  },
+  "features": {
+    "payments": true,
+    "vouchers": false,
+    "support": true
   }
 }

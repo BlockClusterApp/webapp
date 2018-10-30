@@ -183,6 +183,13 @@ module.exports = {
         return 'https://4d3e7232bb49468da0eb16c4cb370b5f@sentry.io/1275120'
       }
     })()
+  },
+  getImageRepository(imageType = 'dynamo') {
+    if(!RemoteConfig.repositories) {
+      return ''
+    }
+
+    return `${RemoteConfig.repositories[imageType].url}:${RemoteConfig.repositories[imageType].tags[getNamespace()]}`
   }
   // locationMapping
 };
