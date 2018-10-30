@@ -4,8 +4,18 @@ import { withRouter, Link } from 'react-router-dom';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import axios from 'axios';
 import notifications from '../../../../modules/notifications';
+import EditableText from '../../../components/EditableText/EditableText';
 
 import './ClientDetails.scss';
+
+const FeaturesList = {
+  Payments: true,
+  SupportTicket: true,
+  Vouchers: true,
+  Invoice: true,
+  CardToCreateNetwork: true,
+  Hyperion: true,
+};
 
 class ClientDetails extends Component {
   constructor(props) {
@@ -15,6 +25,7 @@ class ClientDetails extends Component {
       expire: 1,
       rawData: {},
       formattedData: [],
+      featureList: FeaturesList,
     };
     this.query = {};
 
@@ -59,9 +70,6 @@ class ClientDetails extends Component {
   letsFormatdata = e => {
     const i = this.state.rawData;
     const formattedData = {
-      Name: i.clientDetails.clientName,
-      Email: i.clientDetails.emailId,
-      Phone: i.clientDetails.phone,
       'Licence Key': i.licenseDetails ? i.licenseDetails.licenseKey : '-',
       'Licence Created': i.licenseDetails
         ? new Date(i.licenseDetails.licenseCreated).toLocaleDateString() + ' ' + new Date(i.licenseDetails.licenseCreated).toLocaleTimeString()
@@ -69,8 +77,6 @@ class ClientDetails extends Component {
       'License Expiry': i.licenseDetails
         ? new Date(i.licenseDetails.licenseExpiry).toLocaleDateString() + ' ' + new Date(i.licenseDetails.licenseExpiry).toLocaleTimeString()
         : '-',
-      'Client Note': i.clientMeta ? i.clientMeta : '-',
-      'Client Logo URI': i.clientLogo ? i.clientLogo : '-',
     };
     if (i.awsMetaData && i.awsMetaData.policies) {
       i.awsMetaData.policies.forEach(policy => {
@@ -83,6 +89,7 @@ class ClientDetails extends Component {
     this.setState({
       rawData: i,
       formattedData: updatedData,
+      featureList: { ...this.state.featureList, ...i.servicesIncluded },
     });
   };
   getClientDetails = () => {
@@ -129,8 +136,39 @@ class ClientDetails extends Component {
       });
   };
 
+  textChanged = (property, value) => {
+    if (!this.newClient) {
+      this.newClient = {};
+    }
+
+    if (property.includes('.')) {
+      const parts = property.split('.');
+      if (parts.length === 2) {
+        this.newClient[parts[0]] = this.newClient[parts[0]] || {};
+        this.newClient[parts[0]][parts[1]] = value;
+      } else if (parts.length === 3) {
+        this.newClient[parts[0]] = this.newClient[parts[0]] || {};
+        this.newClient[parts[0]][parts[1]] = this.newClient[parts[0]][parts[1]] || {};
+        this.newClient[parts[0]][parts[1]][parts[2]] = value;
+      } else {
+        throw new Error('Property contains more than 3 parts');
+      }
+    }
+
+    this.newClient[property] = value;
+  };
+
   render() {
     const { awsMetaData } = this.state.rawData;
+    let client = this.state.rawData;
+    if (!client) {
+      client = {};
+    }
+    let { clientDetails } = client;
+
+    if (!clientDetails) {
+      clientDetails = {};
+    }
     return (
       <div className="page-content-wrapper">
         <div className="content sm-gutter" style={{ paddingBottom: '0' }}>
@@ -201,6 +239,22 @@ class ClientDetails extends Component {
                         </tr>
                       </thead>
                       <tbody>
+                        <tr>
+                          <td className="v-align-middle semi-bold">Name</td>
+                          <td className="v-align-middle">
+                            <EditableText value={clientDetails.clientName} valueChanged={this.textChanged.bind(this, 'clientDetails.clientName')} />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="v-align-middle semi-bold">Email</td>
+                          <td className="v-align-middle">{clientDetails.emailId}</td>
+                        </tr>
+                        <tr>
+                          <td className="v-align-middle semi-bold">Contact</td>
+                          <td className="v-align-middle">
+                            <EditableText value={clientDetails.phone} valueChanged={this.textChanged.bind(this, 'clientDetails.phone')} />
+                          </td>
+                        </tr>
                         {this.state.formattedData.map((element, index) => {
                           let Key = Object.keys(element)[0];
                           let Value = element[Key];
@@ -211,8 +265,88 @@ class ClientDetails extends Component {
                             </tr>
                           );
                         })}
+                        <tr>
+                          <td className="v-align-middle semi-bold">Client Note</td>
+                          <td className="v-align-middle">
+                            <EditableText value={client.clientMeta} valueChanged={this.textChanged.bind(this, 'clientMeta')} />
+                          </td>
+                        </tr>
+
+                        <tr>
+                          <td className="v-align-middle semi-bold">Client Logo</td>
+                          <td className="v-align-middle">
+                            <EditableText value={client.clientLogo} valueChanged={this.textChanged.bind(this, 'clientLogo')} />
+                          </td>
+                        </tr>
                       </tbody>
                     </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="row">
+            <div className="m-t-20 m-l-20 m-r-20 container-fluid client-aws-table container-fixed-lg bg-white">
+              <div className="row">
+                <div className="col-md-12">
+                  <div className="m-t-20">
+                    <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
+                      <h4 className="text-info pull-left">Configurations</h4>
+                      <div className="clearfix" />
+                    </div>
+                    <div className="card-block">
+                      <div className="row">
+                        <div className="col-md-6">
+                          <div className="table-responsive">
+                            <table className="table table-hover table-condensed" id="condensedTable">
+                              <thead>
+                                <tr>
+                                  <th style={{ width: '50%' }}>Feature</th>
+                                  <th style={{ width: '50%' }}>Activated</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {Object.keys(this.state.featureList).map(feature => {
+                                  return (
+                                    <tr key={feature}>
+                                      <td className="v-align-middle semi-bold">{feature}</td>
+                                      <td className="v-align-middle">
+                                        <input
+                                          type="checkbox"
+                                          value={feature}
+                                          defaultChecked={this.state.featureList[feature] ? 'checked' : ''}
+                                          onClick={e => {
+                                            if (e.target.checked) {
+                                              // this.query.deletedAt = null;
+                                            } else {
+                                              // delete this.query.deletedAt
+                                            }
+                                            // this.search()
+                                          }}
+                                        />
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          {this.state.formattedData.map((element, index) => {
+                            let Key = Object.keys(element)[0];
+                            let Value = element[Key];
+                            return (
+                              <tr key={index + 1}>
+                                <td className="v-align-middle semi-bold">{Key}</td>
+                                <td className="v-align-middle">{Value}</td>
+                              </tr>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -311,44 +445,6 @@ class ClientDetails extends Component {
                                   </tr>
                                 );
                               })}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="row">
-            <div className="m-t-20 m-l-20 m-r-20 container-fluid client-aws-table container-fixed-lg bg-white">
-              <div className="row">
-                <div className="col-md-12">
-                  <div className="m-t-20 container-fluid container-fixed-lg bg-white">
-                    <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
-                      <h4 className="text-info pull-left">Configurations</h4>
-                      <div className="clearfix" />
-                    </div>
-                    <div className="card-block">
-                      <div className="table-responsive">
-                        <table className="table table-hover table-condensed" id="condensedTable">
-                          <thead>
-                            <tr>
-                              <th style={{ width: '30%' }}>Options</th>
-                              <th style={{ width: '70%' }}>Description</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {this.state.formattedData.map((element, index) => {
-                              let Key = Object.keys(element)[0];
-                              let Value = element[Key];
-                              return (
-                                <tr key={index + 1}>
-                                  <td className="v-align-middle semi-bold">{Key}</td>
-                                  <td className="v-align-middle">{Value}</td>
-                                </tr>
-                              );
-                            })}
                           </tbody>
                         </table>
                       </div>
