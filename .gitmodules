@@ -1,0 +1,3 @@
+[submodule "packages/logs"]
+	path = packages/logs
+	url = git@github.com:BlockClusterApp/meteor-logger.git
