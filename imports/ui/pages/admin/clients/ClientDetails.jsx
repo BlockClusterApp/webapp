@@ -47,7 +47,6 @@ class ClientDetails extends Component {
             rawData: Object.assign(this.state.rawData, data.data),
           },
           () => {
-            console.log(this.state.rawData);
             this.letsFormatdata();
           }
         );
@@ -70,23 +69,21 @@ class ClientDetails extends Component {
       'License Expiry': i.licenseDetails
         ? new Date(i.licenseDetails.licenseExpiry).toLocaleDateString() + ' ' + new Date(i.licenseDetails.licenseExpiry).toLocaleTimeString()
         : '-',
-        "Client Note":i.clientMeta ? i.clientMeta : '-',
-        "Client Logo URI": i.clientLogo ? i.clientLogo : '-'
+      'Client Note': i.clientMeta ? i.clientMeta : '-',
+      'Client Logo URI': i.clientLogo ? i.clientLogo : '-',
     };
-    if(i.awsMetaData && i.awsMetaData.policies) {
+    if (i.awsMetaData && i.awsMetaData.policies) {
       i.awsMetaData.policies.forEach(policy => {
-        this.policyIdArnMapping[policy.PolicyId] = policy.Arn
+        this.policyIdArnMapping[policy.PolicyId] = policy.Arn;
       });
     }
     const updatedData = Object.keys(formattedData).map(i => {
       return { [i]: formattedData[i] };
     });
-    this.setState(
-      {
-        rawData: i,
-        formattedData: updatedData,
-      }
-    );
+    this.setState({
+      rawData: i,
+      formattedData: updatedData,
+    });
   };
   getClientDetails = () => {
     return axios
@@ -190,6 +187,10 @@ class ClientDetails extends Component {
           <div className="row">
             <div className="col-md-12">
               <div className="m-t-20 container-fluid container-fixed-lg bg-white">
+                <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
+                  <h4 className="text-info pull-left">Client Details</h4>
+                  <div className="clearfix" />
+                </div>
                 <div className="card-block">
                   <div className="table-responsive">
                     <table className="table table-hover table-condensed" id="condensedTable">
@@ -219,13 +220,12 @@ class ClientDetails extends Component {
           </div>
           <div className="row">
             <div className="m-t-20 m-l-20 m-r-20 container-fluid client-aws-table container-fixed-lg bg-white">
-
-            <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
-              <h4 className="text-info pull-left">AWS Data</h4>
-              <div className="clearfix" />
-            </div>
+              <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
+                <h4 className="text-info pull-left">AWS Data</h4>
+                <div className="clearfix" />
+              </div>
               <div className="card-block row p-b-20">
-                <div className="col-md-4">
+                <div className="col-md-6">
                   <h4 className="text-info pull-left fs-12">AWS User</h4>
                   <div className="table-responsive">
                     <table className="table table-hover table-condensed" id="condensedTable">
@@ -259,54 +259,100 @@ class ClientDetails extends Component {
                     </table>
                   </div>
                 </div>
-                <div className="col-md-4">
-                  <h4 className="text-info pull-left fs-12">Policies and Access Keys</h4>
-                  <div className="table-responsive">
-                    <table className="table table-hover table-condensed" id="condensedTable">
-                      <thead>
-                        <tr>
-                          <th style={{ width: '40%' }}>Policy</th>
-                          <th style={{ width: '60%' }}>Access Token</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {awsMetaData &&
-                          awsMetaData.accessKeys &&
-                          awsMetaData.accessKeys.map(key => {
-                            return (
-                              <tr>
-                                <td className="v-align-middle semi-bold">{this.policyIdArnMapping[key.PolicyId]}</td>
-                                <td className="v-align-middle">{key.AccessKeyId} | {key.SecretAccessKey}</td>
-                              </tr>
-                            );
-                          })}
-                      </tbody>
-                    </table>
+                <div className="col-md-6">
+                  <div className="row">
+                    <div className="col-md-12">
+                      <h4 className="text-info pull-left fs-12">Policies and Access Keys</h4>
+                      <div className="table-responsive">
+                        <table className="table table-hover table-condensed" id="condensedTable">
+                          <thead>
+                            <tr>
+                              <th style={{ width: '40%' }}>Policy</th>
+                              <th style={{ width: '60%' }}>Access Token</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {awsMetaData &&
+                              awsMetaData.accessKeys &&
+                              awsMetaData.accessKeys.map(key => {
+                                return (
+                                  <tr>
+                                    <td className="v-align-middle semi-bold">{this.policyIdArnMapping[key.PolicyId]}</td>
+                                    <td className="v-align-middle">
+                                      {key.AccessKeyId} | {key.SecretAccessKey}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="col-md-12">
+                      <h4 className="text-info pull-left fs-12">Repository</h4>
+                      <div className="table-responsive">
+                        <table className="table table-hover table-condensed" id="condensedTable">
+                          <thead>
+                            <tr>
+                              <th style={{ width: '30%' }}>Property</th>
+                              <th style={{ width: '70%' }}>Value</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {awsMetaData &&
+                              awsMetaData.ecrRepositories &&
+                              awsMetaData.ecrRepositories.map(r => {
+                                return (
+                                  <tr>
+                                    <td className="v-align-middle semi-bold">{r.RepoType}</td>
+                                    <td className="v-align-middle">{r.Arn}</td>
+                                  </tr>
+                                );
+                              })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="col-md-4">
-                  <h4 className="text-info pull-left fs-12">Repository</h4>
-                  <div className="table-responsive">
-                    <table className="table table-hover table-condensed" id="condensedTable">
-                      <thead>
-                        <tr>
-                          <th style={{ width: '30%' }}>Property</th>
-                          <th style={{ width: '70%' }}>Value</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {awsMetaData &&
-                          awsMetaData.ecrRepositories &&
-                          awsMetaData.ecrRepositories.map(r => {
-                            return (
-                              <tr>
-                                <td className="v-align-middle semi-bold">{r.RepoType}</td>
-                                <td className="v-align-middle">{r.Arn}</td>
-                              </tr>
-                            );
-                          })}
-                      </tbody>
-                    </table>
+              </div>
+            </div>
+          </div>
+          <div className="row">
+            <div className="m-t-20 m-l-20 m-r-20 container-fluid client-aws-table container-fixed-lg bg-white">
+              <div className="row">
+                <div className="col-md-12">
+                  <div className="m-t-20 container-fluid container-fixed-lg bg-white">
+                    <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
+                      <h4 className="text-info pull-left">Configurations</h4>
+                      <div className="clearfix" />
+                    </div>
+                    <div className="card-block">
+                      <div className="table-responsive">
+                        <table className="table table-hover table-condensed" id="condensedTable">
+                          <thead>
+                            <tr>
+                              <th style={{ width: '30%' }}>Options</th>
+                              <th style={{ width: '70%' }}>Description</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {this.state.formattedData.map((element, index) => {
+                              let Key = Object.keys(element)[0];
+                              let Value = element[Key];
+                              return (
+                                <tr key={index + 1}>
+                                  <td className="v-align-middle semi-bold">{Key}</td>
+                                  <td className="v-align-middle">{Value}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
