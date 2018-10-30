@@ -17,6 +17,8 @@ The repository uses circleci for CI/CD pipeline.
 
 Once a PR is created, CircleCI will run all the tests and the blockcluster bot will finally merge the PR. If some error occurs then the bot comments the error on the PR.
 
+If merging to master then always let the bot merge to master as once the code is merged to master, the bot will automatically merge the same code to ` dev `, ` staging ` and ` hot-fix ` branch without triggering a build.
+
 #### Note
 You can manually trigger merge by commenting ` /merge ` irrespective of the base branch. Only this command will work on all branches.
 
@@ -42,6 +44,18 @@ Once you go to the URL, it might redirect you to ` hostname/dash?... `  instead 
 kubectl create secret tls blockcluster-ssl --key _.blockcluster.io_private_key.key --cert tls.cert
 
 ```
+
+## Running webapp [after enterprise branch]
+1.  The issue with webapp was that the ` kube-config.json ` was tightly coupled with the code. So with enterprise builds, we had to build webapp just by changing the ` kube-config.json ` file. With the new architecture,  the config has been decoupled from the webapp.
+2. None of the configs (which used to be in kube-config.json) are in any repository. So none of the ` cluster-config.json ` files are used from any repository. (Atleast the production one is not there)
+3. The configs are now stored in a configmap which is used by the ` blockcluster-daemon `.  You can find those here https://github.com/BlockClusterApp/configs/tree/master/cluster-configs . If you need to update it, then just change it here and apply the yaml file. It will reflect in the webapp within a minute.
+4. For added support, even if the ports of hyperion changes, the config will auto update itself within a minute.
+5. To start the webapp in local, you would now need to run ` npm start `. Running ` meteor ` won't  work (yet). What ` npm start ` does is that it creates a docker network of the ` daemon `, ` licensing-module ` and ` webapp ` as webapp depends on the others. This network will use the config in ` /volumes/conf.d `
+
+
+#### Critical things to note:
+1. Do not delete ` blockcluster ` namespace in any of the clusters running webapp.
+2. Do not delete the ` blockcluster-daemon ` deployment in blockcluster namespace as it stuffs like supplying the configs to the webapp. Incase of invalid licence key, it will stop sending the configs. The daemon also allows us with the ability to remotely update the webapp image  to the latest version (you can't change the repository though). Plus it sends us with node and pod metrics for billing purposes.
 
 ## Running dynamo
 docker run -p 8545:8545  -i -t  quorum /bin/bash
