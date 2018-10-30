@@ -14,7 +14,7 @@ async function fetchNewConfig (){
   } else {
     global.RemoteConfig = res;
   }
-  debug("Remote config", RemoteConfig);
+  debug("Remote config", JSON.stringify(RemoteConfig));
 
   process.emit('RemoteConfigChanged');
 }
@@ -50,18 +50,7 @@ function getHyperionConnectionDetails(locationCode) {
   if (process.env.HYPERION_URL) {
     return process.env.HYPERION_URL;
   }
-  switch (process.env.NODE_ENV) {
-    case "production":
-      return [RemoteConfig.clusters['production'][locationCode].workerNodeIP, RemoteConfig.clusters['production'][locationCode].hyperion.ipfsPort, RemoteConfig.clusters['production'][locationCode].hyperion.ipfsClusterPort];
-    case "staging":
-      return [RemoteConfig.clusters['staging'][locationCode].workerNodeIP, RemoteConfig.clusters['staging'][locationCode].hyperion.ipfsPort, RemoteConfig.clusters['staging'][locationCode].hyperion.ipfsClusterPort];
-    case "test":
-      return [RemoteConfig.clusters['test'][locationCode].workerNodeIP, RemoteConfig.clusters['test'][locationCode].hyperion.ipfsPort, RemoteConfig.clusters['test'][locationCode].hyperion.ipfsClusterPort];
-    case "dev":
-      return [RemoteConfig.clusters['dev'][locationCode].workerNodeIP, RemoteConfig.clusters['dev'][locationCode].hyperion.ipfsPort, RemoteConfig.clusters['dev'][locationCode].hyperion.ipfsClusterPort];
-    default:
-      return [RemoteConfig.clusters['dev'][locationCode].workerNodeIP, RemoteConfig.clusters['dev'][locationCode].hyperion.ipfsPort, RemoteConfig.clusters['dev'][locationCode].hyperion.ipfsClusterPort];
-  }
+  return [RemoteConfig.clusters[getNamespace()][locationCode].workerNodeIP, RemoteConfig.clusters[getNamespace()][locationCode].hyperion.ipfsPort, RemoteConfig.clusters[getNamespace()][locationCode].hyperion.ipfsClusterPort];
 }
 
 
