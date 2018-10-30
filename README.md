@@ -1,4 +1,11 @@
 # Blockcluster webapp
+## Starting this app
+* ` git clone git@github.com:BlockClusterApp/webapp.git `
+* ` git submodule init `
+* ` git submodule update `
+* ` npm install `
+* ` npm start `
+
 ## Builds and Deployments
 The repository uses circleci for CI/CD pipeline.
 1. Pushing to ` dev ` brach will push the code to ` dev.blockcluster.io `
@@ -8,7 +15,7 @@ The repository uses circleci for CI/CD pipeline.
 ## CI/CD Pipeline
 [ONLY MASTER branch] Once a pull request is opened, everything is taken care by itself. If you want the PR to be automatically merged after all tests, then add the label ' Ready for merge ' to the PR.
 
-Once a PR is created, CircleCI will run all the tests and the blockcluster bot will finally merge the PR. If some error occurs then the bot comments the error on the PR. 
+Once a PR is created, CircleCI will run all the tests and the blockcluster bot will finally merge the PR. If some error occurs then the bot comments the error on the PR.
 
 #### Note
 You can manually trigger merge by commenting ` /merge ` irrespective of the base branch. Only this command will work on all branches.
@@ -24,9 +31,9 @@ You can manually trigger merge by commenting ` /merge ` irrespective of the base
 ## Agenda Dashboards
 Here are the links to access the agenda dashboard:
 
-Dev & Local:  `https://7oi0hnco3l.execute-api.ap-south-1.amazonaws.com/dev/dash?access_id=BlockCluster&access_key=JamesBond007` 
+Dev & Local:  `https://7oi0hnco3l.execute-api.ap-south-1.amazonaws.com/dev/dash?access_id=BlockCluster&access_key=JamesBond007`
 
-Staging:  `https://h1w85m5208.execute-api.ap-south-1.amazonaws.com/staging/dash?access_id=BlockCluster&access_key=0c9d3170f6275a4d2` 
+Staging:  `https://h1w85m5208.execute-api.ap-south-1.amazonaws.com/staging/dash?access_id=BlockCluster&access_key=0c9d3170f6275a4d2`
 
 Once you go to the URL, it might redirect you to ` hostname/dash?... `  instead of ` hostname/{env}/dash?... `. So just add the env in between. Basically double check the URL from above once redirected
 
@@ -46,5 +53,5 @@ docker rmi -f $(docker images -a -q)
 
 ### Note
 ```
-You can simply require() or import npm packages on client. Meteor will compile them to work with browser. It does what browserify, webpack and so on module loaders do. Some npm packages are not compatiable so convert them manually and put in packages. 
+You can simply require() or import npm packages on client. Meteor will compile them to work with browser. It does what browserify, webpack and so on module loaders do. Some npm packages are not compatiable so convert them manually and put in packages.
 ```
