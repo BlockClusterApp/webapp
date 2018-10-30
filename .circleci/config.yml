@@ -61,6 +61,12 @@ jobs:
     steps:
       - *restore_repo
       - checkout
+      - run:
+          name: "Init submodules"
+          command: git submodule init
+      - run:
+          name: "Checkout submodules"
+          command: git submodule update
       - *save_repo
 
   docker_push:
