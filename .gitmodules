@@ -1,0 +1,6 @@
+[submodule "packages/logs"]
+	path = packages/logs
+	url = git@github.com:BlockClusterApp/meteor-logger.git
+[submodule "packages/meteor-raven"]
+	path = packages/meteor-raven
+	url = git@github.com:BlockClusterApp/meteor-raven.git

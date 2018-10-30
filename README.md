@@ -1,4 +1,11 @@
 # Blockcluster webapp
+## Starting this app
+* ` git clone git@github.com:BlockClusterApp/webapp.git `
+* ` git submodule init `
+* ` git submodule update `
+* ` npm install `
+* ` npm start `
+
 ## Builds and Deployments
 The repository uses circleci for CI/CD pipeline.
 1. Pushing to ` dev ` brach will push the code to ` dev.blockcluster.io `
