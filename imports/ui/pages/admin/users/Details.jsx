@@ -53,11 +53,31 @@ class UserDetails extends Component {
     });
   }
 
-  getEmailVerificationLabel = verification => {
-    if (verification) {
-      return <span className="label label-success">Verified</span>;
+  verifyEmail = (verified, email) => {
+    Meteor.call('adminVerifyEmail', { userId: this.props.match.params.id, verified, email }, (err, res) => {});
+  };
+
+  getEmailVerificationLabel = (verification, email) => {
+    if (email) {
+      if (verification) {
+        return (
+          <button className="btn btn-success" onClick={this.verifyEmail.bind(this, false, email)}>
+            Verified
+          </button>
+        );
+      } else {
+        return (
+          <button className="btn btn-important" onClick={this.verifyEmail.bind(this, true, email)}>
+            Not Verified
+          </button>
+        );
+      }
     } else {
-      return <span className="label label-important">Not Verified</span>;
+      if (verification) {
+        return <span className="label label-success">Verified</span>;
+      } else {
+        return <span className="label label-danger">Not Verified</span>;
+      }
     }
   };
 
@@ -87,7 +107,7 @@ class UserDetails extends Component {
     el.select();
     document.execCommand('copy');
     document.body.removeChild(el);
-    notifications.success("Link copied")
+    notifications.success('Link copied');
   };
 
   getNetworkTypeName = network => {
@@ -219,7 +239,12 @@ class UserDetails extends Component {
 
     return (
       <div className="page-content-wrapper ">
-        <PaymentModal payment={this.state.selectedPayment} paymentLink={paymentLinks && this.state.selectedPayment && paymentLinks.find(link => link.paymentRequestId === this.state.selectedPayment._id)}  refundListener={this.refundListener} showModal={this.state.showPaymentModal} />
+        <PaymentModal
+          payment={this.state.selectedPayment}
+          paymentLink={paymentLinks && this.state.selectedPayment && paymentLinks.find(link => link.paymentRequestId === this.state.selectedPayment._id)}
+          refundListener={this.refundListener}
+          showModal={this.state.showPaymentModal}
+        />
         <div className="content sm-gutter">
           <div data-pages="parallax">
             <div className="container-fluid p-l-25 p-r-25 sm-p-l-0 sm-p-r-0">
@@ -321,7 +346,7 @@ class UserDetails extends Component {
                       <div className="col-xs-height col-top">
                         <div className="p-l-20 p-t-50 p-b-40 p-r-20">
                           <p className="no-margin p-b-5">{user.emails[0].address}</p>
-                          <span className="small hint-text pull-left">{this.getEmailVerificationLabel(user.emails[0].verified)}</span>
+                          <span className="small hint-text pull-left">{this.getEmailVerificationLabel(user.emails[0].verified, user.emails[0].address)}</span>
                         </div>
                       </div>
                     </div>
