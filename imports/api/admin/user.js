@@ -44,9 +44,25 @@ User.updateAdmin = async (userId, updateQuery) => {
   return true;
 };
 
+User.verifyEmail = async ({userId, email, verified}) => {
+  if ((Meteor.userId() === userId && updateQuery.admin !== undefined) || Meteor.user().admin <= ADMIN_LEVEL) {
+    return false;
+  }
+  const result = Meteor.users.update({
+    _id: userId,
+    "emails.address": email
+  }, {
+    $set: {
+      "emails.$.verified": verified
+    }
+  });
+  return true;
+}
+
 Meteor.methods({
   fetchAdminDashboardDetails: User.fetchAdminDashboardDetails,
   updateUserAdmin: User.updateAdmin,
+  adminVerifyEmail: User.verifyEmail
 });
 
 export default User;
