@@ -16,8 +16,8 @@ services:
     ports:
       - '3000:3000'
     depends_on:
-      - configserver
       - licenceservice
+      - configserver
       - redis
     environment:
       NODE_ENV: development
@@ -31,20 +31,22 @@ services:
     image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/blockcluster-daemon:latest
     ports:
       - '3005:3005'
+    depends_on:
+      - licenceservice
     environment:
       KUBE_API_SERVER_URL: 'https://k8s-dev-us-west-2-api.blockcluster.io'
       KUBE_API_USER: 'admin'
       KUBE_API_PASS: 'v8qYNAwGkHOWBghtu1GywXbAno5aX3bH'
       GO_ENV: development
+      ENTERPRISE_API_URL: http://licenceservice:4000/daemon
     volumes:
     - ./volumes/conf.d:/conf.d/:cached
+    restart: on-failure
 
   licenceservice:
     build:
       context: ../licensing-microservice
       dockerfile: ../licensing-microservice/docker/local.Dockerfile
-    depends_on:
-      - configserver
     ports:
       - '4000:4000'
     volumes:
@@ -52,10 +54,19 @@ services:
     environment:
       MONGO_URL: mongodb://35.161.9.16:32153
       NODE_ENV: development
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:4000/ping"]
+        interval: 5s
+        timeout: 1s
+        retries: 5
 
   redis:
     image: redis
     ports:
       - '6379:6379'
 
-
+  start_dependencies:
+     image: dadarek/wait-for-dependencies
+     depends_on:
+       - licenceservice
+     command: licenceservice:4000

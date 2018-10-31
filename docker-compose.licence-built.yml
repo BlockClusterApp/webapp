@@ -40,7 +40,7 @@ services:
     - ./volumes/conf.d:/conf.d/:cached
 
   licenceservice:
-    image: arn:aws:ecr:us-west-2:402432300121:repository/licensing-micro:dev
+    image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/licensing-micro:dev
     depends_on:
       - configserver
     ports:

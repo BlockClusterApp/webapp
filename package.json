@@ -2,7 +2,7 @@
   "name": "blockcluster",
   "private": true,
   "scripts": {
-    "start": "./shell-scripts/docker-login.sh && docker-compose up",
+    "start": "./shell-scripts/docker-login.sh && ./shell-scripts/docker-start.sh",
     "test": "MONGO_URL=mongodb://localhost:27017/admin meteor test --once --driver-package meteortesting:mocha",
     "ui-test": "jest"
   },
