@@ -8,15 +8,6 @@ import EditableText from '../../../components/EditableText/EditableText';
 
 import './ClientDetails.scss';
 
-const FeaturesList = {
-  Payments: true,
-  SupportTicket: true,
-  Vouchers: true,
-  Invoice: true,
-  CardToCreateNetwork: true,
-  Hyperion: true,
-};
-
 class ClientDetails extends Component {
   constructor(props) {
     super(props);
@@ -25,9 +16,11 @@ class ClientDetails extends Component {
       expire: 1,
       rawData: {},
       formattedData: [],
-      featureList: FeaturesList,
+      featureList: {},
     };
     this.query = {};
+
+    this.newClient = {};
 
     this.policyIdArnMapping = {};
   }
@@ -156,13 +149,20 @@ class ClientDetails extends Component {
     }
 
     this.newClient[property] = value;
+    this.setState({});
   };
 
   render() {
     const { awsMetaData } = this.state.rawData;
     let client = this.state.rawData;
     if (!client) {
-      client = {};
+      client = {
+        agentMeta: {}
+      };
+    }
+
+    if (!client.agentMeta) {
+      client.agentMeta = {};
     }
     let { clientDetails } = client;
 
@@ -242,7 +242,10 @@ class ClientDetails extends Component {
                         <tr>
                           <td className="v-align-middle semi-bold">Name</td>
                           <td className="v-align-middle">
-                            <EditableText value={clientDetails.clientName} valueChanged={this.textChanged.bind(this, 'clientDetails.clientName')} />
+                            <EditableText
+                              value={this.newClient.clientDetails && this.newClient.clientDetails.clientName ? this.newClient.clientDetails.clientName : clientDetails.clientName}
+                              valueChanged={this.textChanged.bind(this, 'clientDetails.clientName')}
+                            />
                           </td>
                         </tr>
                         <tr>
@@ -252,7 +255,10 @@ class ClientDetails extends Component {
                         <tr>
                           <td className="v-align-middle semi-bold">Contact</td>
                           <td className="v-align-middle">
-                            <EditableText value={clientDetails.phone} valueChanged={this.textChanged.bind(this, 'clientDetails.phone')} />
+                            <EditableText
+                              value={this.newClient.phone && this.newClient.clientDetails.phone ? this.newClient.clientDetails.phone : clientDetails.phone}
+                              valueChanged={this.textChanged.bind(this, 'clientDetails.phone')}
+                            />
                           </td>
                         </tr>
                         {this.state.formattedData.map((element, index) => {
@@ -268,14 +274,14 @@ class ClientDetails extends Component {
                         <tr>
                           <td className="v-align-middle semi-bold">Client Note</td>
                           <td className="v-align-middle">
-                            <EditableText value={client.clientMeta} valueChanged={this.textChanged.bind(this, 'clientMeta')} />
+                            <EditableText value={this.newClient.clientMeta || client.clientMeta} valueChanged={this.textChanged.bind(this, 'clientMeta')} />
                           </td>
                         </tr>
 
                         <tr>
                           <td className="v-align-middle semi-bold">Client Logo</td>
                           <td className="v-align-middle">
-                            <EditableText value={client.clientLogo} valueChanged={this.textChanged.bind(this, 'clientLogo')} />
+                            <EditableText value={this.newClient.clientLogo || client.clientLogo} valueChanged={this.textChanged.bind(this, 'clientLogo')} />
                           </td>
                         </tr>
                       </tbody>
@@ -298,6 +304,10 @@ class ClientDetails extends Component {
                     <div className="card-block">
                       <div className="row">
                         <div className="col-md-6">
+                          <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
+                            <h5 className="text-info pull-left">Feature gates</h5>
+                            <div className="clearfix" />
+                          </div>
                           <div className="table-responsive">
                             <table className="table table-hover table-condensed" id="condensedTable">
                               <thead>
@@ -334,16 +344,42 @@ class ClientDetails extends Component {
                           </div>
                         </div>
                         <div className="col-md-6">
-                          {this.state.formattedData.map((element, index) => {
-                            let Key = Object.keys(element)[0];
-                            let Value = element[Key];
-                            return (
-                              <tr key={index + 1}>
-                                <td className="v-align-middle semi-bold">{Key}</td>
-                                <td className="v-align-middle">{Value}</td>
-                              </tr>
-                            );
-                          })}
+                          <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
+                            <h5 className="text-info pull-left">Info</h5>
+                            <div className="clearfix" />
+                          </div>
+                          <div className="table-responsive">
+                            <table className="table table-hover table-condensed" id="condensedTable">
+                              <tbody>
+                                <tr>
+                                  <td className="v-align-middle semi-bold"  style={{ width: '30%' }}>Daemon Version</td>
+                                  <td className="v-align-middle" style={{ width: '70%' }}>{client.agentMeta.daemonVersion}</td>
+                                </tr>
+                                <tr>
+                                  <td className="v-align-middle semi-bold">WebApp Version</td>
+                                  <td className="v-align-middle">{client.agentMeta.webAppVersion}</td>
+                                </tr>
+                                <tr>
+                                  <td className="v-align-middle semi-bold">Daemon Deploy</td>
+                                  <td className="v-align-middle">
+                                    <input
+                                      type="checkbox"
+                                      value="1"
+                                      defaultChecked={client.agentMeta.shouldDaemonDeploy ? 'checked' : ''}
+                                      onClick={e => {
+                                        if (e.target.checked) {
+                                          // this.query.deletedAt = null;
+                                        } else {
+                                          // delete this.query.deletedAt
+                                        }
+                                        // this.search()
+                                      }}
+                                    />
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
                       </div>
                     </div>
