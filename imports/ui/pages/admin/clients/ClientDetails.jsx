@@ -223,10 +223,9 @@ class ClientDetails extends Component {
 
         <div className="m-l-10 m-r-10 content ClientDetails" style={{ paddingTop: '0' }}>
           <div className="row">
-            <div className="col-md-12">
-              <div className="m-t-20 container-fluid container-fixed-lg bg-white">
+              <div className="m-l-20 m-r-20 container-fluid container-fixed-lg bg-white">
                 <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
-                  <h4 className="text-info pull-left">Client Details</h4>
+                  <h4 className="text-primary pull-left">Client Details</h4>
                   <div className="clearfix" />
                 </div>
                 <div className="card-block">
@@ -289,7 +288,6 @@ class ClientDetails extends Component {
                   </div>
                 </div>
               </div>
-            </div>
           </div>
 
           <div className="row">
@@ -298,7 +296,7 @@ class ClientDetails extends Component {
                 <div className="col-md-12">
                   <div className="m-t-20">
                     <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
-                      <h4 className="text-info pull-left">Configurations</h4>
+                      <h4 className="text-primary pull-left">Configurations</h4>
                       <div className="clearfix" />
                     </div>
                     <div className="card-block">
@@ -391,7 +389,7 @@ class ClientDetails extends Component {
           <div className="row">
             <div className="m-t-20 m-l-20 m-r-20 container-fluid client-aws-table container-fixed-lg bg-white">
               <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
-                <h4 className="text-info pull-left">AWS Data</h4>
+                <h4 className="text-primary pull-left">AWS Data</h4>
                 <div className="clearfix" />
               </div>
               <div className="card-block row p-b-20">

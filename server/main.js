@@ -394,6 +394,7 @@ Meteor.methods({
                       metadata: {
                         labels: {
                           app: 'dynamo-node-' + instanceId,
+                          appType: 'dynamo'
                         },
                       },
                       spec: {
@@ -999,6 +1000,7 @@ spec:
     metadata:
       labels:
         app: dynamo-node-${instanceId}
+        appType: dynamo
     spec:
       affinity:
         nodeAffinity:
@@ -1084,6 +1086,7 @@ spec:
     metadata:
       labels:
         app: dynamo-node-${instanceId}
+        appType: dynamo
     spec:
       affinity:
         nodeAffinity:
@@ -1111,7 +1114,7 @@ spec:
         - name: dynamo-dir
           mountPath: /data/db
       - name: dynamo
-        image: ${Config.getImageRepository('impulse')}
+        image: ${Config.getImageRepository('dynamo')}
         command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalENodes} '${genesisFileContent}'" ]
         lifecycle:
           postStart:
