@@ -5,6 +5,7 @@ import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import axios from 'axios';
 import notifications from '../../../../modules/notifications';
 import EditableText from '../../../components/EditableText/EditableText';
+import moment from 'moment';
 
 import './ClientDetails.scss';
 
@@ -80,6 +81,7 @@ class ClientDetails extends Component {
     const updatedData = Object.keys(formattedData).map(i => {
       return { [i]: formattedData[i] };
     });
+    this.featureList = { ...this.state.featureList, ...i.servicesIncluded };
     this.setState({
       rawData: i,
       formattedData: updatedData,
@@ -134,21 +136,48 @@ class ClientDetails extends Component {
     this.setState({
       clientDetailsSaving: true,
     });
-    axios.patch('/client', {
-      client: {...this.updateClient, _id: this.props.match.params.id},
-      updatedBy: this.props.userId
-    })
-    .then(res => {
-      this.setState({
-        clientDetailsChanged: false,
-        clientDetailsSaving: false,
-        rawData: res.data[0],
-      }, () => {
-        this.letsFormatdata();
+    axios
+      .patch('/client', {
+        client: { ...this.updateClient, _id: this.props.match.params.id },
+        updatedBy: this.props.userId,
+      })
+      .then(res => {
+        notifications.success('Updated Successfully');
+        this.setState(
+          {
+            clientDetailsChanged: false,
+            clientDetailsSaving: false,
+            rawData: res.data[0],
+          },
+          () => {
+            this.letsFormatdata();
+          }
+        );
+      })
+      .catch(err => {
+        notifications.error(err);
       });
-    })
+  };
 
-  }
+  saveAgentMeta = () => {
+    this.setState({
+      clientDetailsSaving: true,
+    });
+    axios
+      .patch('/client', {
+        client: { servicesIncluded: this.featureList, 'agentMeta.shouldDaemonDeployWebApp': this.shouldDaemonDeploy, _id:this.props.match.params.id  },
+        updatedBy: this.props.userId,
+      })
+      .then(res => {
+        notifications.success('Updated Successfully');
+        this.setState({
+          clientDetailsSaving: false,
+        });
+      })
+      .catch(err => {
+        notifications.error(err);
+      });
+  };
 
   textChanged = (property, value) => {
     if (!this.newClient) {
@@ -167,14 +196,14 @@ class ClientDetails extends Component {
       } else {
         throw new Error('Property contains more than 3 parts');
       }
-    }else {
+    } else {
       this.newClient[property] = value;
     }
 
     this.updateClient[property] = value;
 
     this.setState({
-      clientDetailsChanged: true
+      clientDetailsChanged: true,
     });
   };
 
@@ -183,7 +212,7 @@ class ClientDetails extends Component {
     let client = this.state.rawData;
     if (!client) {
       client = {
-        agentMeta: {}
+        agentMeta: {},
       };
     }
 
@@ -249,88 +278,89 @@ class ClientDetails extends Component {
 
         <div className="m-l-10 m-r-10 content ClientDetails" style={{ paddingTop: '0' }}>
           <div className="row">
-              <div className="m-l-20 m-r-20 container-fluid container-fixed-lg bg-white">
-                <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
-                  <h4 className="text-primary pull-left">Client Details</h4>
-                  <LaddaButton
-                      disabled={!this.state.clientDetailsChanged}
-                      data-size={S}
-                      data-style={SLIDE_UP}
-                      data-spinner-size={30}
-                      data-spinner-lines={12}
-                      className="btn btn-success pull-right "
-                      onClick={this.saveClientInfo.bind(this)}
-                      loading={this.state.clientDetailsSaving}
-                      style={{marginTop: '10px'}}
-                    >
-                      <i className="fa fa-save"/>}
-                      &nbsp;&nbsp;Save Changes
-                    </LaddaButton>
-                  <div className="clearfix" />
-                </div>
-                <div className="card-block">
-                  <div className="table-responsive">
-                    <table className="table table-hover table-condensed" id="condensedTable">
-                      <thead>
-                        <tr>
-                          <th style={{ width: '30%' }}>Options</th>
-                          <th style={{ width: '70%' }}>Description</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td className="v-align-middle semi-bold">Name</td>
-                          <td className="v-align-middle">
-                            <EditableText
-                              value={this.newClient.clientDetails && this.newClient.clientDetails.clientName ? this.newClient.clientDetails.clientName : clientDetails.clientName}
-                              valueChanged={this.textChanged.bind(this, 'clientDetails.clientName')}
-                            />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="v-align-middle semi-bold">Email</td>
-                          <td className="v-align-middle"><EditableText
-                              value={this.newClient.clientDetails && this.newClient.clientDetails.emailId ? this.newClient.clientDetails.emailId : clientDetails.emailId}
-                              valueChanged={this.textChanged.bind(this, 'clientDetails.emailId')}
-                            /></td>
-                        </tr>
-                        <tr>
-                          <td className="v-align-middle semi-bold">Contact</td>
-                          <td className="v-align-middle">
-                            <EditableText
-                              value={this.newClient.clientDetails && this.newClient.clientDetails.phone ? this.newClient.clientDetails.phone : clientDetails.phone}
-                              valueChanged={this.textChanged.bind(this, 'clientDetails.phone')}
-                            />
-                          </td>
-                        </tr>
-                        {this.state.formattedData.map((element, index) => {
-                          let Key = Object.keys(element)[0];
-                          let Value = element[Key];
-                          return (
-                            <tr key={index + 1}>
-                              <td className="v-align-middle semi-bold">{Key}</td>
-                              <td className="v-align-middle">{Value}</td>
-                            </tr>
-                          );
-                        })}
-                        <tr>
-                          <td className="v-align-middle semi-bold">Client Note</td>
-                          <td className="v-align-middle">
-                            <EditableText value={this.newClient.clientMeta || client.clientMeta} valueChanged={this.textChanged.bind(this, 'clientMeta')} />
-                          </td>
-                        </tr>
+            <div className="m-l-20 m-r-20 container-fluid container-fixed-lg bg-white">
+              <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
+                <h4 className="text-primary pull-left">Client Details</h4>
+                <LaddaButton
+                  disabled={!this.state.clientDetailsChanged}
+                  data-size={S}
+                  data-style={SLIDE_UP}
+                  data-spinner-size={30}
+                  data-spinner-lines={12}
+                  className="btn btn-success pull-right "
+                  onClick={this.saveClientInfo.bind(this)}
+                  loading={this.state.clientDetailsSaving}
+                  style={{ marginTop: '10px' }}
+                >
+                  <i className="fa fa-save" /> &nbsp;&nbsp;Save Changes
+                </LaddaButton>
+                <div className="clearfix" />
+              </div>
+              <div className="card-block">
+                <div className="table-responsive">
+                  <table className="table table-hover table-condensed" id="condensedTable">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '30%' }}>Options</th>
+                        <th style={{ width: '70%' }}>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="v-align-middle semi-bold">Name</td>
+                        <td className="v-align-middle">
+                          <EditableText
+                            value={this.newClient.clientDetails && this.newClient.clientDetails.clientName ? this.newClient.clientDetails.clientName : clientDetails.clientName}
+                            valueChanged={this.textChanged.bind(this, 'clientDetails.clientName')}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="v-align-middle semi-bold">Email</td>
+                        <td className="v-align-middle">
+                          <EditableText
+                            value={this.newClient.clientDetails && this.newClient.clientDetails.emailId ? this.newClient.clientDetails.emailId : clientDetails.emailId}
+                            valueChanged={this.textChanged.bind(this, 'clientDetails.emailId')}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="v-align-middle semi-bold">Contact</td>
+                        <td className="v-align-middle">
+                          <EditableText
+                            value={this.newClient.clientDetails && this.newClient.clientDetails.phone ? this.newClient.clientDetails.phone : clientDetails.phone}
+                            valueChanged={this.textChanged.bind(this, 'clientDetails.phone')}
+                          />
+                        </td>
+                      </tr>
+                      {this.state.formattedData.map((element, index) => {
+                        let Key = Object.keys(element)[0];
+                        let Value = element[Key];
+                        return (
+                          <tr key={index + 1}>
+                            <td className="v-align-middle semi-bold">{Key}</td>
+                            <td className="v-align-middle">{Value}</td>
+                          </tr>
+                        );
+                      })}
+                      <tr>
+                        <td className="v-align-middle semi-bold">Client Note</td>
+                        <td className="v-align-middle">
+                          <EditableText value={this.newClient.clientMeta || client.clientMeta} valueChanged={this.textChanged.bind(this, 'clientMeta')} />
+                        </td>
+                      </tr>
 
-                        <tr>
-                          <td className="v-align-middle semi-bold">Client Logo</td>
-                          <td className="v-align-middle">
-                            <EditableText value={this.newClient.clientLogo || client.clientLogo} valueChanged={this.textChanged.bind(this, 'clientLogo')} />
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                      <tr>
+                        <td className="v-align-middle semi-bold">Client Logo</td>
+                        <td className="v-align-middle">
+                          <EditableText value={this.newClient.clientLogo || client.clientLogo} valueChanged={this.textChanged.bind(this, 'clientLogo')} />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
+            </div>
           </div>
 
           <div className="row">
@@ -340,6 +370,18 @@ class ClientDetails extends Component {
                   <div className="m-t-20">
                     <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
                       <h4 className="text-primary pull-left">Configurations</h4>
+                      <LaddaButton
+                        data-size={S}
+                        data-style={SLIDE_UP}
+                        data-spinner-size={30}
+                        data-spinner-lines={12}
+                        className="btn btn-success pull-right "
+                        onClick={this.saveAgentMeta.bind(this)}
+                        loading={this.state.clientDetailsSaving}
+                        style={{ marginTop: '10px' }}
+                      >
+                        <i className="fa fa-save" /> &nbsp;&nbsp;Save Changes
+                      </LaddaButton>
                       <div className="clearfix" />
                     </div>
                     <div className="card-block">
@@ -366,14 +408,26 @@ class ClientDetails extends Component {
                                         <input
                                           type="checkbox"
                                           value={feature}
+                                          id={feature}
                                           defaultChecked={this.state.featureList[feature] ? 'checked' : ''}
                                           onClick={e => {
-                                            if (e.target.checked) {
-                                              // this.query.deletedAt = null;
-                                            } else {
-                                              // delete this.query.deletedAt
+                                            const features = this.state.featureList;
+                                            features[feature] = e.target.checked;
+                                            if (feature === 'CardToCreateNetwork' && e.target.checked) {
+                                              features[feature] = features['Payments']
+                                              const el = document.querySelector(`#CardToCreateNetwork`);
+                                              el.checked = features[feature];
                                             }
-                                            // this.search()
+                                            if(feature === 'Payments' && !e.target.checked) {
+                                              const el = document.querySelector(`#CardToCreateNetwork`);
+                                              el.checked = false;
+                                              el.disabled = true;
+                                              features['CardToCreateNetwork'] = e.target.checked;
+                                            } else if (feature === 'Payments' && e.target.checked) {
+                                              const el = document.querySelector(`#CardToCreateNetwork`);
+                                              el.disabled = false;
+                                            }
+                                            this.featureList = features;
                                           }}
                                         />
                                       </td>
@@ -393,27 +447,29 @@ class ClientDetails extends Component {
                             <table className="table table-hover table-condensed" id="condensedTable">
                               <tbody>
                                 <tr>
-                                  <td className="v-align-middle semi-bold"  style={{ width: '30%' }}>Daemon Version</td>
-                                  <td className="v-align-middle" style={{ width: '70%' }}>{client.agentMeta.daemonVersion}</td>
+                                  <td className="v-align-middle semi-bold" style={{ width: '30%' }}>
+                                    Daemon Version
+                                  </td>
+                                  <td className="v-align-middle" style={{ width: '70%' }}>
+                                    {client.agentMeta.daemonVersion}
+                                  </td>
                                 </tr>
                                 <tr>
                                   <td className="v-align-middle semi-bold">WebApp Version</td>
                                   <td className="v-align-middle">{client.agentMeta.webAppVersion}</td>
                                 </tr>
                                 <tr>
-                                  <td className="v-align-middle semi-bold">Daemon Webapp Deploy</td>
+                                  <td className="v-align-middle semi-bold">Daemon WebApp Deploy</td>
                                   <td className="v-align-middle">
                                     <input
                                       type="checkbox"
-                                      value="1"
-                                      defaultChecked={client.agentMeta.shouldDaemonDeploy ? 'checked' : ''}
+                                      value={"shouldDaemonDeployWebApp"}
+                                      id={"shouldDaemonDeployWebApp"}
+                                      checked={client.agentMeta.shouldDaemonDeployWebApp}
                                       onClick={e => {
-                                        if (e.target.checked) {
-                                          // this.query.deletedAt = null;
-                                        } else {
-                                          // delete this.query.deletedAt
-                                        }
-                                        // this.search()
+                                        console.log(client.agentMeta.shouldDaemonDeployWebApp);
+                                        this.shouldDaemonDeploy = e.target.checked;
+                                        document.querySelector("#shouldDaemonDeployWebApp").checked = e.target.checked;
                                       }}
                                     />
                                   </td>
@@ -454,7 +510,7 @@ class ClientDetails extends Component {
 
                         <tr>
                           <td className="v-align-middle semi-bold">Created At</td>
-                          <td className="v-align-middle">{awsMetaData && awsMetaData.user && awsMetaData.user.CreateDate}</td>
+                          <td className="v-align-middle">{awsMetaData && awsMetaData.user && moment(awsMetaData.user.CreateDate).format('DD-MMM-YYYY HH:mm:SS')}</td>
                         </tr>
 
                         <tr>
@@ -559,6 +615,6 @@ class ClientDetails extends Component {
 
 export default withTracker(() => {
   return {
-    userId: Meteor.userId()
+    userId: Meteor.userId(),
   };
 })(withRouter(ClientDetails));
