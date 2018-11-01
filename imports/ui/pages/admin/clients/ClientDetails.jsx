@@ -21,13 +21,14 @@ class ClientDetails extends Component {
     this.query = {};
 
     this.newClient = {};
+    this.updateClient = {};
 
     this.policyIdArnMapping = {};
   }
 
   componentWillMount() {
     this.setState({
-      voucherId: this.props.match.params.id,
+      clientId: this.props.match.params.id,
     });
     this.query = { _id: this.props.match.params.id };
     this.getClientDetails();
@@ -129,6 +130,26 @@ class ClientDetails extends Component {
       });
   };
 
+  saveClientInfo = () => {
+    this.setState({
+      clientDetailsSaving: true,
+    });
+    axios.patch('/client', {
+      client: {...this.updateClient, _id: this.props.match.params.id},
+      updatedBy: this.props.userId
+    })
+    .then(res => {
+      this.setState({
+        clientDetailsChanged: false,
+        clientDetailsSaving: false,
+        rawData: res.data[0],
+      }, () => {
+        this.letsFormatdata();
+      });
+    })
+
+  }
+
   textChanged = (property, value) => {
     if (!this.newClient) {
       this.newClient = {};
@@ -146,10 +167,15 @@ class ClientDetails extends Component {
       } else {
         throw new Error('Property contains more than 3 parts');
       }
+    }else {
+      this.newClient[property] = value;
     }
 
-    this.newClient[property] = value;
-    this.setState({});
+    this.updateClient[property] = value;
+
+    this.setState({
+      clientDetailsChanged: true
+    });
   };
 
   render() {
@@ -182,7 +208,7 @@ class ClientDetails extends Component {
                 <li className="breadcrumb-item">
                   <Link to="/app/admin/clients">Clients</Link>
                 </li>
-                <li className="breadcrumb-item active">{this.state.voucherId}</li>
+                <li className="breadcrumb-item active">{this.state.clientId}</li>
               </ol>
               {/* </div> */}
             </div>
@@ -226,6 +252,20 @@ class ClientDetails extends Component {
               <div className="m-l-20 m-r-20 container-fluid container-fixed-lg bg-white">
                 <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
                   <h4 className="text-primary pull-left">Client Details</h4>
+                  <LaddaButton
+                      disabled={!this.state.clientDetailsChanged}
+                      data-size={S}
+                      data-style={SLIDE_UP}
+                      data-spinner-size={30}
+                      data-spinner-lines={12}
+                      className="btn btn-success pull-right "
+                      onClick={this.saveClientInfo.bind(this)}
+                      loading={this.state.clientDetailsSaving}
+                      style={{marginTop: '10px'}}
+                    >
+                      <i className="fa fa-save"/>}
+                      &nbsp;&nbsp;Save Changes
+                    </LaddaButton>
                   <div className="clearfix" />
                 </div>
                 <div className="card-block">
@@ -249,13 +289,16 @@ class ClientDetails extends Component {
                         </tr>
                         <tr>
                           <td className="v-align-middle semi-bold">Email</td>
-                          <td className="v-align-middle">{clientDetails.emailId}</td>
+                          <td className="v-align-middle"><EditableText
+                              value={this.newClient.clientDetails && this.newClient.clientDetails.emailId ? this.newClient.clientDetails.emailId : clientDetails.emailId}
+                              valueChanged={this.textChanged.bind(this, 'clientDetails.emailId')}
+                            /></td>
                         </tr>
                         <tr>
                           <td className="v-align-middle semi-bold">Contact</td>
                           <td className="v-align-middle">
                             <EditableText
-                              value={this.newClient.phone && this.newClient.clientDetails.phone ? this.newClient.clientDetails.phone : clientDetails.phone}
+                              value={this.newClient.clientDetails && this.newClient.clientDetails.phone ? this.newClient.clientDetails.phone : clientDetails.phone}
                               valueChanged={this.textChanged.bind(this, 'clientDetails.phone')}
                             />
                           </td>
@@ -358,7 +401,7 @@ class ClientDetails extends Component {
                                   <td className="v-align-middle">{client.agentMeta.webAppVersion}</td>
                                 </tr>
                                 <tr>
-                                  <td className="v-align-middle semi-bold">Daemon Deploy</td>
+                                  <td className="v-align-middle semi-bold">Daemon Webapp Deploy</td>
                                   <td className="v-align-middle">
                                     <input
                                       type="checkbox"
@@ -515,5 +558,7 @@ class ClientDetails extends Component {
 }
 
 export default withTracker(() => {
-  return {};
+  return {
+    userId: Meteor.userId()
+  };
 })(withRouter(ClientDetails));
