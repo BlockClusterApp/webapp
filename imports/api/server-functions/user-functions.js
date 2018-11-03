@@ -341,6 +341,7 @@ NetworkInvitation.acceptInvitation = function(
       network.assetsContractAddress,
       network.atomicSwapContractAddress,
       network.streamsContractAddress,
+      network.impulseContractAddress,
       locationCode,
       networkConfig,
       invitation.inviteTo,
