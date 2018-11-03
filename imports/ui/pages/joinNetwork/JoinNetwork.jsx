@@ -108,7 +108,7 @@ class JoinNetwork extends Component {
                 joinLoading: true
             });
 
-            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.impulseURL, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, this.locationCode,  {...this.config}, (error) => {
+            Meteor.call("joinNetwork", this.networkName.value, this.nodeType.value, fileContent, this.state.totalENodes, this.state.impulseURL, this.assetsContractAddress.value, this.atomicSwapContractAddress.value, this.streamsContractAddress.value, this.impulseContractAddress, this.locationCode,  {...this.config}, (error) => {
                 if(!error) {
                     this.setState({
                         joinFormSubmitError: '',
@@ -248,22 +248,30 @@ class JoinNetwork extends Component {
                                                         <p className="m-t-10">Advanced Information</p>
                                                         <div className="form-group-attached">
                                                             <div className="row clearfix">
-                                                                <div className="col-md-4">
+                                                                <div className="col-md-6">
                                                                     <div className="form-group form-group-default ">
                                                                         <label>Assets Contract Address</label>
                                                                         <input type="text" className="form-control" name="assetsContractAddress" required ref={(input) => {this.assetsContractAddress = input;}} placeholder="0x...." />
                                                                     </div>
                                                                 </div>
-                                                                <div className="col-md-4">
+                                                                <div className="col-md-6">
                                                                     <div className="form-group form-group-default ">
                                                                         <label>Atomic Swap Contract Address</label>
                                                                         <input type="text" className="form-control" name="atomicSwapContractAddress" required ref={(input) => {this.atomicSwapContractAddress = input;}} placeholder="0x...." />
                                                                     </div>
                                                                 </div>
-                                                                <div className="col-md-4">
+                                                            </div>
+                                                            <div className="row clearfix">
+                                                                <div className="col-md-6">
                                                                     <div className="form-group form-group-default ">
                                                                         <label>Streams Contract Address</label>
                                                                         <input type="text" className="form-control" name="streamsContractAddress" required ref={(input) => {this.streamsContractAddress = input;}} placeholder="0x...." />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="col-md-6">
+                                                                    <div className="form-group form-group-default ">
+                                                                        <label>Impulse Contract Address</label>
+                                                                        <input type="text" className="form-control" name="impulseContractAddress" required ref={(input) => {this.impulseContractAddress = input;}} placeholder="0x...." />
                                                                     </div>
                                                                 </div>
                                                             </div>
