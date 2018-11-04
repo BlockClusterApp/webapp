@@ -13,8 +13,8 @@
           "pass": "v8qYNAwGkHOWBghtu1GywXbAno5aX3bH"
         },
         "hyperion": {
-          "ipfsPort": "32679",
-          "ipfsClusterPort": "32498"
+          "ipfsPort": "30340",
+          "ipfsClusterPort": "31459"
         }
       }
     }
