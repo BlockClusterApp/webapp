@@ -50,8 +50,16 @@ import AdminInvoiceList from '../../pages/admin/invoice/List.jsx'
 import ClientList from '../../pages/admin/clients/ClientList.jsx';
 import ClientDetails from '../../pages/admin/clients/ClientDetails.jsx'
 import ClientCreate from '../../pages/admin/clients/ClientCreate';
+import ClientMetrics from '../../pages/admin/clients/ClientMetrics';
 
 export default class Main extends Component {
+
+  componentDidMount(){
+    if (this.props.user && !localStorage.getItem('admin')) {
+      locationStorage.setItem('admin', this.props.user.admin);
+   }
+  }
+
   render() {
     return (
       <div>
@@ -102,6 +110,7 @@ export default class Main extends Component {
             <Route exact path="/app/admin/invoices/:id" component={AdminInvoiceDetails} />
             <Route exact path="/app/admin/clients" component={ClientList} />
             <Route exact path="/app/admin/clients/details/:id" component={ClientDetails} />
+            <Route exact path="/app/admin/clients/details/:id/metrics" component={ClientMetrics} />
             <Route exact path="/app/admin/clients/create" component={ClientCreate} />
           </div>
         </div>

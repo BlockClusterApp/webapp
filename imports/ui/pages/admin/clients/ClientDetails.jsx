@@ -165,7 +165,7 @@ class ClientDetails extends Component {
     });
     axios
       .patch('/client', {
-        client: { servicesIncluded: this.featureList, 'agentMeta.shouldDaemonDeployWebApp': this.shouldDaemonDeploy, _id:this.props.match.params.id  },
+        client: { servicesIncluded: this.featureList, 'agentMeta.shouldDaemonDeployWebApp': this.shouldDaemonDeploy, _id: this.props.match.params.id },
         updatedBy: this.props.userId,
       })
       .then(res => {
@@ -414,11 +414,11 @@ class ClientDetails extends Component {
                                             const features = this.state.featureList;
                                             features[feature] = e.target.checked;
                                             if (feature === 'CardToCreateNetwork' && e.target.checked) {
-                                              features[feature] = features['Payments']
+                                              features[feature] = features['Payments'];
                                               const el = document.querySelector(`#CardToCreateNetwork`);
                                               el.checked = features[feature];
                                             }
-                                            if(feature === 'Payments' && !e.target.checked) {
+                                            if (feature === 'Payments' && !e.target.checked) {
                                               const el = document.querySelector(`#CardToCreateNetwork`);
                                               el.checked = false;
                                               el.disabled = true;
@@ -463,15 +463,20 @@ class ClientDetails extends Component {
                                   <td className="v-align-middle">
                                     <input
                                       type="checkbox"
-                                      value={"shouldDaemonDeployWebApp"}
-                                      id={"shouldDaemonDeployWebApp"}
+                                      value={'shouldDaemonDeployWebApp'}
+                                      id={'shouldDaemonDeployWebApp'}
                                       checked={client.agentMeta.shouldDaemonDeployWebApp}
                                       onClick={e => {
                                         console.log(client.agentMeta.shouldDaemonDeployWebApp);
                                         this.shouldDaemonDeploy = e.target.checked;
-                                        document.querySelector("#shouldDaemonDeployWebApp").checked = e.target.checked;
+                                        document.querySelector('#shouldDaemonDeployWebApp').checked = e.target.checked;
                                       }}
                                     />
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td className="v-align-middle semi-bold" colspan="2">
+                                    <Link to={`/app/admin/clients/details/${this.props.match.params.id}/metrics`}>Show cluster metrics</Link>
                                   </td>
                                 </tr>
                               </tbody>
