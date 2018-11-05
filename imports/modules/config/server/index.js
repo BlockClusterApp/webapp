@@ -4,7 +4,16 @@ const debug = require('debug')('RemoteConfig');
 
 global.RemoteConfig = {};
 
-const CONFIG_URL = process.env.NODE_ENV === 'development' ? process.env.CONFIG_URL || `http://blockcluster-agent.blockcluster.svc.cluster.local` : `http://blockcluster-agent.blockcluster.svc.cluster.local`;
+const CONFIG_URL = (function () {
+  if(process.env.NODE_ENV === "development") {
+    if (process.env.CONFIG_URL) {
+      return process.env.CONFIG_URL;
+    }
+    return `http://35.161.9.16:32344`
+  } else {
+    return `http://blockcluster-agent.blockcluster.svc.cluster.local`
+  }
+})();
 
 async function fetchNewConfig (){
   const response = await request.get(`${CONFIG_URL}/config`);

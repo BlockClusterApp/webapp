@@ -863,6 +863,7 @@ Meteor.methods({
     assetsContractAddress,
     atomicSwapContractAddress,
     streamsContractAddress,
+    impulseContractAddress,
     locationCode,
     networkConfig,
     userId
@@ -1056,6 +1057,8 @@ spec:
           value: ${atomicSwapContractAddress}
         - name: streamsContractAddress
           value: ${streamsContractAddress}
+        - name: impulseContractAddress
+          value: ${impulseContractAddress}
         - name: IMPULSE_URL
           value: ${impulseURL}
         resources:
@@ -1142,6 +1145,8 @@ spec:
           value: ${atomicSwapContractAddress}
         - name: streamsContractAddress
           value: ${streamsContractAddress}
+        - name: impulseContractAddress
+          value: ${impulseContractAddress}
         - name: IMPULSE_URL
           value: ${impulseURL}
         resources:
