@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
-import { withRouter } from 'react-router-dom';
+import { withRouter, Link } from 'react-router-dom';
 import axios from 'axios';
 
 import moment from 'moment';
-import { LineChart, Line, AreaChart, Area, Brush, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import GraphSet from './components/CpuRamGraphSet';
 
 class ClientMetrics extends Component {
   constructor(props) {
@@ -41,6 +41,11 @@ class ClientMetrics extends Component {
           });
         });
         tableData.nodes.push(graph);
+      });
+      this.setState({
+        nodes,
+        pods,
+        tableData,
       });
       Object.keys(pods).forEach(pod => {
         const graph = {
@@ -88,6 +93,20 @@ class ClientMetrics extends Component {
     return (
       <div className="content">
         <div className="m-t-20 container-fluid container-fixed-lg">
+          <div className="row">
+          <div className="inner">
+              <ol className="breadcrumb sm-p-b-5">
+                <li className="breadcrumb-item">
+                  <Link to="/app/admin">Admin</Link>
+                </li>
+                <li className="breadcrumb-item">
+                  <Link to="/app/admin/clients">Clients</Link>
+                </li>
+                <li className="breadcrumb-item"><Link to={`/app/admin/clients/details/${this.props.match.params.id}`}>{this.props.match.params.id}</Link></li>
+                <li className="breadcrumb-item active">metrics</li>
+              </ol>
+            </div>
+          </div>
           <div className="row payments-container">
             <div className="card card-borderless card-transparent">
               <ul className="nav nav-tabs nav-tabs-linetriangle" role="tablist" data-init-reponsive-tabs="dropdownfx">
@@ -107,42 +126,7 @@ class ClientMetrics extends Component {
                   <div className="m-t-20 m-l-20 container-fluid container-fixed-lg bg-white">
                     {this.state.tableData &&
                       this.state.tableData.nodes.map(data => {
-                        return (
-                          <div className="row" style={{ borderBottom: '1px solid rgba(0,0,0,0.5)', paddingBottom: '80px' }}>
-                            <div className="col-md-6">
-                              <h5 className="text-primary pull-left">{data.label}</h5>
-                              <AreaChart width={500} height={300} data={data.coordinates} syncId={data.label} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                <defs>
-                                  <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                                    <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-                                  </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
-                                <Area type="monotone" dataKey="cpu" stroke="#8884d8" fill="url(#colorUv)" />
-                              </AreaChart>
-                            </div>
-                            <div className="col-md-6">
-                              <h5 className="text-primary pull-left">&nbsp;</h5>
-                              <AreaChart width={500} height={300} data={data.coordinates} syncId={data.label} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                <defs>
-                                  <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-                                    <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
-                                  </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
-                                <Area type="monotone" dataKey="memory" stroke="#82ca9d" fill="url(#colorPv)" />
-                              </AreaChart>
-                            </div>
-                          </div>
-                        );
+                        return <GraphSet data={data} />
                       })}
                   </div>
                 </div>
@@ -150,42 +134,7 @@ class ClientMetrics extends Component {
                   <div className="m-t-20 m-l-20 container-fluid container-fixed-lg bg-white">
                     {this.state.tableData &&
                       this.state.tableData.pods.map(data => {
-                        return (
-                          <div className="row" style={{ borderBottom: '1px solid rgba(0,0,0,0.5)', paddingBottom: '80px' }}>
-                            <div className="col-md-6">
-                              <h5 className="text-primary pull-left">{data.label}</h5>
-                              <AreaChart width={500} height={300} data={data.coordinates} syncId={data.label} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                <defs>
-                                  <linearGradient id="colorPodUv" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                                    <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-                                  </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
-                                <Area type="monotone" dataKey="cpu" stroke="#8884d8" fill="url(#colorPodUv)" />
-                              </AreaChart>
-                            </div>
-                            <div className="col-md-6">
-                              <h5 className="text-primary pull-left">&nbsp;</h5>
-                              <AreaChart width={500} height={300} data={data.coordinates} syncId={data.label} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                <defs>
-                                  <linearGradient id="colorPodPv" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-                                    <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
-                                  </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
-                                <Area type="monotone" dataKey="memory" stroke="#82ca9d" fill="url(#colorPodPv)" />
-                              </AreaChart>
-                            </div>
-                          </div>
-                        );
+                        return <GraphSet data={data} />
                       })}
                   </div>
                 </div>
