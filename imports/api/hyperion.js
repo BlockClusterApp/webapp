@@ -72,6 +72,16 @@ Meteor.methods({
 })
 
 function authMiddleware(req, res, next) {
+
+  if (!(RemoteConfig.features && RemoteConfig.features.Hyperion)) {
+    return JsonRoutes.sendResult(res, {
+      code: 401,
+      data: {
+        "error": "Not available in this licence"
+      }
+    });
+  }
+
   function getToken(req) {
     if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') { // Authorization: Bearer g1jipjgi1ifjioj
       // Handle token presented as a Bearer token in the Authorization header
