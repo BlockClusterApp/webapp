@@ -9,6 +9,10 @@ async function fetchNewConfig() {
   } else {
     window.RemoteConfig = res;
   }
+
+  if (!window.RemoteConfig.features) {
+    window.RemoteConfig.features = {};
+  }
   const event = new Event('RemoteConfigChanged');
   window.dispatchEvent(event);
 }
@@ -88,5 +92,6 @@ module.exports = {
       return false;
     },
   },
-  licensingMicroserviceBase: getMicroServiceBase()
+  licensingMicroserviceBase: getMicroServiceBase(),
+  activatedFeatures: RemoteConfig.features
 }

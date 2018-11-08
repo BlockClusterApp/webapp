@@ -394,6 +394,7 @@ Meteor.methods({
                       metadata: {
                         labels: {
                           app: 'dynamo-node-' + instanceId,
+                          appType: 'dynamo'
                         },
                       },
                       spec: {
@@ -443,7 +444,7 @@ Meteor.methods({
                           },
                           {
                             name: 'dynamo',
-                            image: `402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || 'dev'}`,
+                            image: Config.getImageRepository('dynamo'),
                             command: ['/bin/bash', '-i', '-c', './setup.sh'],
                             env: [
                               {
@@ -505,7 +506,7 @@ Meteor.methods({
                           },
                           {
                             name: 'impulse',
-                            image: `402432300121.dkr.ecr.us-west-2.amazonaws.com/impulse:${process.env.NODE_ENV || 'dev'}`,
+                            image: Config.getImageRepository('impulse'),
                             env: [
                               {
                                 name: 'instanceId',
@@ -1000,6 +1001,7 @@ spec:
     metadata:
       labels:
         app: dynamo-node-${instanceId}
+        appType: dynamo
     spec:
       affinity:
         nodeAffinity:
@@ -1027,7 +1029,7 @@ spec:
         - name: dynamo-dir
           mountPath: /data/db
       - name: dynamo
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || 'dev'}
+        image: ${Config.getImageRepository('dynamo')}
         command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalENodes} '${genesisFileContent}'  mine" ]
         lifecycle:
           postStart:
@@ -1087,6 +1089,7 @@ spec:
     metadata:
       labels:
         app: dynamo-node-${instanceId}
+        appType: dynamo
     spec:
       affinity:
         nodeAffinity:
@@ -1114,7 +1117,7 @@ spec:
         - name: dynamo-dir
           mountPath: /data/db
       - name: dynamo
-        image: 402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:${process.env.NODE_ENV || 'dev'}
+        image: ${Config.getImageRepository('dynamo')}
         command: [ "/bin/bash", "-i", "-c", "./setup.sh ${totalENodes} '${genesisFileContent}'" ]
         lifecycle:
           postStart:
