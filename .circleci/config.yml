@@ -81,6 +81,7 @@ jobs:
       - run:
           name: "Docker build"
           command: ./.circleci/docker-build.sh
+          no_output_timeout: "20m"
       - run:
           name: "Docker push"
           command: ./.circleci/docker-push.sh
@@ -100,6 +101,7 @@ jobs:
       - run:
           name: "Docker build"
           command: "IS_TEST=1 ./.circleci/docker-build.sh"
+          no_output_timeout: "20m"
       - run:
           name: "Docker push"
           command: "IS_TEST=1 ./.circleci/docker-push.sh"
