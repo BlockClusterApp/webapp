@@ -336,6 +336,9 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
 };
 
 Billing.isPaymentMethodVerified = async function(userId) {
+  if(!RemoteConfig.features.CardToCreateNetwork) {
+    return true;
+  }
   userId = userId || Meteor.userId();
 
   if (!userId) {

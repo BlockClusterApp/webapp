@@ -38,11 +38,10 @@ class ClientList extends Component {
       this.setState({
         clients: data.data,
       },()=>{
-        console.log(data)
         return;
       });
     }).catch(error=>{
-      notifications.error('problem reaching server!');
+      notifications.error('Problem reaching server!');
       console.log(error)
     });
   }

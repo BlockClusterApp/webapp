@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-# eval $(aws ecr get-login --no-include-email --region us-west-2)
+eval $(aws ecr get-login --no-include-email --region us-west-2)
 
-docker pull blockcluster/blockcluster-daemon:latest
+docker pull 402432300121.dkr.ecr.us-west-2.amazonaws.com/blockcluster-daemon:latest

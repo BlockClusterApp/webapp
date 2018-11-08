@@ -46,13 +46,37 @@ import VoucherDetails from '../../pages/admin/vouchers/VoucherDetails';
 import AdminSupport from '../../pages/admin/support/TicketList.jsx';
 import AdminSupportDetails from '../../pages/admin/support/Details.jsx';
 import AdminInvoiceDetails from '../../pages/admin/invoice/Details.jsx';
-import AdminInvoiceList from '../../pages/admin/invoice/List.jsx'
+import AdminInvoiceList from '../../pages/admin/invoice/List.jsx';
 import ClientList from '../../pages/admin/clients/ClientList.jsx';
-import ClientDetails from '../../pages/admin/clients/ClientDetails.jsx'
+import ClientDetails from '../../pages/admin/clients/ClientDetails.jsx';
 import ClientCreate from '../../pages/admin/clients/ClientCreate';
+import ClientMetrics from '../../pages/admin/clients/ClientMetrics';
 
 export default class Main extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      remoteConfig: window.RemoteConfig,
+    };
+  }
+
+  componentDidMount() {
+    if (this.props.user && !localStorage.getItem('admin')) {
+      locationStorage.setItem('admin', this.props.user.admin);
+    }
+    window.addEventListener('RemoteConfigChanged', () => {
+      this.setState({
+        remoteConfig: window.RemoteConfig,
+      });
+    });
+  }
+
   render() {
+    const { remoteConfig } = this.state;
+    let { features } = remoteConfig;
+    if (!features) {
+      features = {};
+    }
     return (
       <div>
         <Navbar />
@@ -82,27 +106,32 @@ export default class Main extends Component {
             <Route exact path="/app/networks/:id/bc-accounts" component={BCAccountsView} />
             <Route exact path="/app/networks/:id/security/apis" component={APIsCreds} />
             <Route exact path="/app/networks/:id/sc/management" component={SmartContractsManagement} />
-            <Route exact path="/app/billing" component={BillingDashboard} />
-            <Route exact path="/app/payments" component={Payments} />
-            <Route exact path="/app/support" component={SupportContainer} />
-            <Route exact path="/app/support/:id" component={SupportDetails} />
-            <Route exact path="/app/hyperion" component={Hyperion} />
 
-            <Route exact path="/app/admin" render={() => <Redirect to="/app/admin/users" />} />
-            <Route exact path="/app/admin/users" component={UserList} />
-            <Route exact path="/app/admin/users/:id" component={UserDetails} />
-            <Route exact path="/app/admin/networks" component={NetworkList} />
-            <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
-            <Route exact path="/app/admin/vouchers" component={VoucherList} />
-            <Route exact path="/app/admin/vouchers/details/:id" component={VoucherDetails} />
-            <Route exact path="/app/admin/vouchers/create" component={VoucherCreate} />
-            <Route exact path="/app/admin/support" component={AdminSupport} />
-            <Route exact path="/app/admin/support/:id" component={AdminSupportDetails} />
-            <Route exact path="/app/admin/invoices" component={AdminInvoiceList} />
-            <Route exact path="/app/admin/invoices/:id" component={AdminInvoiceDetails} />
-            <Route exact path="/app/admin/clients" component={ClientList} />
-            <Route exact path="/app/admin/clients/details/:id" component={ClientDetails} />
-            <Route exact path="/app/admin/clients/create" component={ClientCreate} />
+            {features.Payments && <Route exact path="/app/payments" component={Payments} />}
+            {features.Invoice && <Route exact path="/app/billing" component={BillingDashboard} />}
+            {features.SupportTicket && <Route exact path="/app/support" component={SupportContainer} />}
+            {features.SupportTicket && <Route exact path="/app/support/:id" component={SupportDetails} />}
+            {features.Hyperion && <Route exact path="/app/hyperion" component={Hyperion} />}
+            {features.Admin && (
+              <div>
+                <Route exact path="/app/admin" render={() => <Redirect to="/app/admin/users" />} />
+                <Route exact path="/app/admin/users" component={UserList} />
+                <Route exact path="/app/admin/users/:id" component={UserDetails} />
+                <Route exact path="/app/admin/networks" component={NetworkList} />
+                <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
+                <Route exact path="/app/admin/vouchers" component={VoucherList} />
+                <Route exact path="/app/admin/vouchers/details/:id" component={VoucherDetails} />
+                <Route exact path="/app/admin/vouchers/create" component={VoucherCreate} />
+                <Route exact path="/app/admin/support" component={AdminSupport} />
+                <Route exact path="/app/admin/support/:id" component={AdminSupportDetails} />
+                <Route exact path="/app/admin/invoices" component={AdminInvoiceList} />
+                <Route exact path="/app/admin/invoices/:id" component={AdminInvoiceDetails} />
+                <Route exact path="/app/admin/clients" component={ClientList} />
+                <Route exact path="/app/admin/clients/details/:id" component={ClientDetails} />
+                <Route exact path="/app/admin/clients/details/:id/metrics" component={ClientMetrics} />
+                <Route exact path="/app/admin/clients/create" component={ClientCreate} />
+              </div>
+            )}
           </div>
         </div>
         <Footer />
