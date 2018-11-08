@@ -198,7 +198,7 @@ module.exports = {
       return ''
     }
 
-    return `${RemoteConfig.repositories[imageType].url}:${RemoteConfig.repositories[imageType].tags[getNamespace()]}`
+    return `${RemoteConfig.repositories[imageType].url[getNamespace()]}`
   }
   // locationMapping
 };

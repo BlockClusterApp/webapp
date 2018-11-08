@@ -475,7 +475,7 @@ class ClientDetails extends Component {
                                   </td>
                                 </tr>
                                 <tr>
-                                  <td className="v-align-middle semi-bold" colspan="2">
+                                  <td className="v-align-middle semi-bold" colSpan="2">
                                     <Link to={`/app/admin/clients/details/${this.props.match.params.id}/metrics`}>Show cluster metrics</Link>
                                   </td>
                                 </tr>

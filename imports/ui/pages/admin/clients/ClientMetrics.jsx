@@ -123,7 +123,7 @@ class ClientMetrics extends Component {
                 <li className="breadcrumb-item">
                   <Link to={`/app/admin/clients/details/${this.props.match.params.id}`}>{this.props.match.params.id}</Link>
                 </li>
-                <li className="breadcrumb-item active">metrics&nbsp;<i class="fa fa-spinner fa-pulse"></i> </li>
+                <li className="breadcrumb-item active">metrics&nbsp;<i className="fa fa-spinner fa-pulse"></i> </li>
               </ol>
             </div>
           </div>
