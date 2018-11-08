@@ -146,8 +146,9 @@ class InvoiceList extends Component {
                           <option value="all">States: All</option>
                           <option value="1">Pending</option>
                           <option value="2">Paid</option>
-                          <option value="3">Failed</option>
-                          <option value="4">Waived Off</option>
+                          <option value="3">Demo User</option>
+                          <option value="4">Failed</option>
+                          <option value="5">Waived Off</option>
                         </select>
                       </div>
                     </div>
