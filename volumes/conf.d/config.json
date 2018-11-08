@@ -1,0 +1,44 @@
+{
+  "dynamo": {
+    "dev": "402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:dev",
+    "test": "402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:dev",
+    "staging": "402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:staging",
+    "default": "402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:latest"
+  },
+  "impulse": {
+    "dev": "402432300121.dkr.ecr.us-west-2.amazonaws.com/impulse:dev",
+    "test": "402432300121.dkr.ecr.us-west-2.amazonaws.com/impulse:dev",
+    "staging": "402432300121.dkr.ecr.us-west-2.amazonaws.com/impulse:staging",
+    "default": "402432300121.dkr.ecr.us-west-2.amazonaws.com/impulse:latest"
+  },
+  "mongoURL": {
+    "dev": "",
+    "test": "",
+    "staging": "",
+    "default": ""
+  },
+  "redis": {
+    "dev": {
+      "host": "",
+      "port": "6379"
+    },
+    "test": {
+      "host": "",
+      "port": "6379"
+    },
+    "staging": {
+      "host": "",
+      "port": "6379"
+    },
+    "default": {
+      "host": "",
+      "port": "6379"
+    }
+  },
+  "webapp": {
+    "dev": "",
+    "test": "",
+    "staging": "",
+    "default": ""
+  }
+}

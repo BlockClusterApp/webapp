@@ -1,5 +1,6 @@
 # Blockcluster webapp
 ## Starting this app
+* ` aws configure ` (Use Access Key ID: ` AKIAJLYYTSUZTEMJ6ZGA ` and Secret Access Key: ` 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 ` )
 * ` git clone git@github.com:BlockClusterApp/webapp.git `
 * ` git submodule init `
 * ` git submodule update `

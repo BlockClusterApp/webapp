@@ -54,5 +54,28 @@
         }
       }
     }
+  },
+  "repositories": {
+    "dynamo": {
+      "url": {
+        "dev": "402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:dev",
+        "test": "402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:dev",
+        "staging": "402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:staging",
+        "default": "402432300121.dkr.ecr.us-west-2.amazonaws.com/dynamo:latest"
+      }
+    },
+    "impulse": {
+      "url": {
+        "dev": "402432300121.dkr.ecr.us-west-2.amazonaws.com/impulse:dev",
+        "test": "402432300121.dkr.ecr.us-west-2.amazonaws.com/impulse:dev",
+        "staging": "402432300121.dkr.ecr.us-west-2.amazonaws.com/impulse:staging",
+        "default": "402432300121.dkr.ecr.us-west-2.amazonaws.com/impulse:latest"
+      }
+    }
+  },
+  "features": {
+    "Payments": true,
+    "Vouchers": false,
+    "Support": true
   }
 }

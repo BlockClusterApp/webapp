@@ -24,6 +24,7 @@ LocationApi.getLocations = function() {
 
 JsonRoutes.add('get', '/api/config-client', function(req, res, next) {
   const config = {};
+  config.features = RemoteConfig.features;
   config.workerDomainName = {}
   Object.keys(RemoteConfig.clusters[Config.namespace]).forEach(locationCode => {
     config.workerDomainName[locationCode] = RemoteConfig.clusters[Config.namespace][locationCode].dynamoDomainName
