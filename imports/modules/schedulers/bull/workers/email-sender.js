@@ -50,7 +50,7 @@ module.exports = function(bullSystem) {
       const { data } = job;
       const { email } = data;
 
-      if (RemoteConfig.smtpServer) {
+      if (RemoteConfig.smtpServer && RemoteConfig.smtpServer.host) {
         await sendViaSMTP(email);
       } else {
         await sendViaSendgrid(email);
