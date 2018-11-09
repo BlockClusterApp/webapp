@@ -400,7 +400,7 @@ Meteor.methods({
                       spec: {
                         affinity: {
                           nodeAffinity: {
-                            requiredDuringSchedulingIgnoredDuringExecution: {
+                            preferredDuringSchedulingIgnoredDuringExecution: {
                               nodeSelectorTerms: [
                                 {
                                   matchExpressions: [
@@ -1005,13 +1005,13 @@ spec:
     spec:
       affinity:
         nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: optimizedFor
-              operator: In
-              values:
-              - memory
+          preferredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: optimizedFor
+                operator: In
+                values:
+                - memory
       containers:
       - name: mongo
         image: mongo
@@ -1093,13 +1093,13 @@ spec:
     spec:
       affinity:
         nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: optimizedFor
-              operator: In
-              values:
-              - memory
+          preferredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: optimizedFor
+                operator: In
+                values:
+                - memory
       containers:
       - name: mongo
         image: mongo
