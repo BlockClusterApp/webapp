@@ -1,10 +1,5 @@
 import { Email } from "../../collections/emails";
-import Config from '../../modules/config/server';
-// import nodemailer from "nodemailer";
-
-import sg from "@sendgrid/mail";
-
-sg.setApiKey(Config.sendgridAPIKey);
+import Bull from '../../modules/schedulers/bull';
 
 /*
 emailOptions
@@ -28,9 +23,9 @@ const sendEmail = function(emailOptions) {
           emailOptions.to = toEmail;
         }
       }
-      const res = await sg.send(emailOptions);
-      ElasticLogger.log("Email sent", emailOptions);
-      const insertResult = Email.insert(emailOptions);
+      Bull.addJob('send-email', {
+        email: emailOptions
+      })
       resolve();
     });
   });
