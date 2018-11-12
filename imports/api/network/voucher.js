@@ -20,13 +20,13 @@ Voucher.validate = async function(voucherCode) {
   }
   const card_validated= await Billing.isPaymentMethodVerified(Meteor.userId());
   if(voucher.availability.card_vfctn_needed && !card_validated){
-    throw new Meteor.Error("Not Eligible");
+    throw new Meteor.Error("Please verify card in billing>payments");
   }
   const email_matching = voucher.availability.email_ids.indexOf(Meteor.user().emails[0].address);
   const claimed_status = voucher.voucher_claim_status ? (voucher.voucher_claim_status.filter((i)=>{return i["claimedBy"] == Meteor.userId()})) :0
 
   if(!voucher.availability.for_all && email_matching <= -1){
-    throw new Meteor.Error("Voucher is not valid");
+    throw new Meteor.Error("Voucher is not eligible for your Email.");
   }
   if(voucher.usability.once_per_user && claimed_status.length){
     throw new Meteor.Error("already claimed");
@@ -72,7 +72,7 @@ Voucher.create = async function(payload) {
       },
       discount: {
         value: payload.discount.value || 0,
-        percent: payload.discount.percent 
+        percent: payload.discount.percent
       },
       code: voucher,
       voucher_status: payload.active,
