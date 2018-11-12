@@ -119,17 +119,20 @@ export default class Main extends Component {
                 <Route exact path="/app/admin/users/:id" component={UserDetails} />
                 <Route exact path="/app/admin/networks" component={NetworkList} />
                 <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
-                <Route exact path="/app/admin/vouchers" component={VoucherList} />
-                <Route exact path="/app/admin/vouchers/details/:id" component={VoucherDetails} />
-                <Route exact path="/app/admin/vouchers/create" component={VoucherCreate} />
-                <Route exact path="/app/admin/support" component={AdminSupport} />
-                <Route exact path="/app/admin/support/:id" component={AdminSupportDetails} />
-                <Route exact path="/app/admin/invoices" component={AdminInvoiceList} />
-                <Route exact path="/app/admin/invoices/:id" component={AdminInvoiceDetails} />
-                <Route exact path="/app/admin/clients" component={ClientList} />
-                <Route exact path="/app/admin/clients/details/:id" component={ClientDetails} />
-                <Route exact path="/app/admin/clients/details/:id/metrics" component={ClientMetrics} />
-                <Route exact path="/app/admin/clients/create" component={ClientCreate} />
+                {features.Vouchers && <Route exact path="/app/admin/vouchers" component={VoucherList} />}
+                {features.Vouchers && <Route exact path="/app/admin/vouchers/details/:id" component={VoucherDetails} />}
+                {features.Vouchers && <Route exact path="/app/admin/vouchers/create" component={VoucherCreate} />}
+
+                {features.SupportTicket && <Route exact path="/app/admin/support" component={AdminSupport} />}
+                {features.SupportTicket && <Route exact path="/app/admin/support/:id" component={AdminSupportDetails} />}
+
+                {features.Invoice && <Route exact path="/app/admin/invoices" component={AdminInvoiceList} />}
+                {features.Invoice && <Route exact path="/app/admin/invoices/:id" component={AdminInvoiceDetails} />}
+
+                {features.ClientDashboard && <Route exact path="/app/admin/clients" component={ClientList} />}
+                {features.ClientDashboard && <Route exact path="/app/admin/clients/details/:id" component={ClientDetails} />}
+                {features.ClientDashboard && <Route exact path="/app/admin/clients/details/:id/metrics" component={ClientMetrics} />}
+                {features.ClientDashboard && <Route exact path="/app/admin/clients/create" component={ClientCreate} />}
               </div>
             )}
           </div>

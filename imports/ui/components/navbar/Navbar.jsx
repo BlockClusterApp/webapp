@@ -86,15 +86,17 @@ class Navbar extends Component {
                 <i className="fa fa-list" />
               </span>
             </li>
-            {features.Hyperion && <li>
-              <Link to={'/app/hyperion'} className="detailed">
-                <span className="title">Files</span>
-                <span className="details">Upload on Hyperion</span>
-              </Link>
-              <span className="icon-thumbnail">
-                <i className="fa fa-file" />
-              </span>
-            </li>}
+            {features.Hyperion && (
+              <li>
+                <Link to={'/app/hyperion'} className="detailed">
+                  <span className="title">Files</span>
+                  <span className="details">Upload on Hyperion</span>
+                </Link>
+                <span className="icon-thumbnail">
+                  <i className="fa fa-file" />
+                </span>
+              </li>
+            )}
             {/* {(this.props.kuberREST_IP[0] !== undefined) &&
 							<li className="">
 			                    <Link to={this.props.kuberREST_IP.split("://")[1].split(":")[0] + ":5001/ipfs/QmPhnvn747LqwPYMJmQVorMaGbMSgA7mRRoyyZYz3DoZRQ/#/home"} target="_blank" className="detailed">
@@ -121,85 +123,100 @@ class Navbar extends Component {
                 </li>
               </ul>
             </li>
-            {(features.Payments || features.SupportTicket || features.Invoice) && <li>
-              <a href="javascript:;">
-                <span className="title">Billing</span>
-                <span className="arrow" />
-              </a>
-              <span className="icon-thumbnail">
-                <i className="fa fa-credit-card" />
-              </span>
-              <ul className="sub-menu">
-                {features.Payments && <li>
-                  <Link to="/app/payments">Payments</Link>
-                  <span className="icon-thumbnail">
-                    <i className="fa fa-money" />
-                  </span>
-                </li>}
-                {features.Invoice && <li>
-                  <Link to="/app/billing">Bills</Link>
-                  <span className="icon-thumbnail">
-                    <i className="fa fa-list-alt" />
-                  </span>
-                </li>}
-                {features.SupportTicket && <li>
-                  <Link to="/app/support">Support</Link>
-                  <span className="icon-thumbnail">
-                    <i className="fa fa-ticket" />
-                  </span>
-                </li>}
-              </ul>
-            </li>}
-            {features.Admin && this.props.user &&
-              this.props.user.admin >= 1 && (
-                <li>
-                  <a href="javascript:;">
-                    <span className="title">Admin</span>
-                    <span className="arrow" />
-                  </a>
-                  <span className="icon-thumbnail">
-                    <i className="fa fa-user-md" />
-                  </span>
-                  <ul className="sub-menu">
+            {(features.Payments || features.SupportTicket || features.Invoice) && (
+              <li>
+                <a href="javascript:;">
+                  <span className="title">Billing</span>
+                  <span className="arrow" />
+                </a>
+                <span className="icon-thumbnail">
+                  <i className="fa fa-credit-card" />
+                </span>
+                <ul className="sub-menu">
+                  {features.Payments && (
                     <li>
-                      <Link to="/app/admin/users">Users</Link>
+                      <Link to="/app/payments">Payments</Link>
                       <span className="icon-thumbnail">
-                        <i className="fa fa-users" />
+                        <i className="fa fa-money" />
                       </span>
                     </li>
+                  )}
+                  {features.Invoice && (
+                    <li>
+                      <Link to="/app/billing">Bills</Link>
+                      <span className="icon-thumbnail">
+                        <i className="fa fa-list-alt" />
+                      </span>
+                    </li>
+                  )}
+                  {features.SupportTicket && (
+                    <li>
+                      <Link to="/app/support">Support</Link>
+                      <span className="icon-thumbnail">
+                        <i className="fa fa-ticket" />
+                      </span>
+                    </li>
+                  )}
+                </ul>
+              </li>
+            )}
+            {features.Admin && this.props.user && this.props.user.admin >= 1 && (
+              <li>
+                <a href="javascript:;">
+                  <span className="title">Admin</span>
+                  <span className="arrow" />
+                </a>
+                <span className="icon-thumbnail">
+                  <i className="fa fa-user-md" />
+                </span>
+                <ul className="sub-menu">
+                  <li>
+                    <Link to="/app/admin/users">Users</Link>
+                    <span className="icon-thumbnail">
+                      <i className="fa fa-users" />
+                    </span>
+                  </li>
+                  {features.Invoice && (
                     <li>
                       <Link to="/app/admin/invoices">Invoices</Link>
                       <span className="icon-thumbnail">
                         <i className="fa fa-list-alt" />
                       </span>
                     </li>
-                    <li>
-                      <Link to="/app/admin/networks">Networks</Link>
-                      <span className="icon-thumbnail">
-                        <i className="fa fa-desktop" />
-                      </span>
-                    </li>
+                  )}
+                  <li>
+                    <Link to="/app/admin/networks">Networks</Link>
+                    <span className="icon-thumbnail">
+                      <i className="fa fa-desktop" />
+                    </span>
+                  </li>
+                  {features.Vouchers && (
                     <li>
                       <Link to="/app/admin/vouchers">Vouchers</Link>
                       <span className="icon-thumbnail">
                         <i className="fa fa-tags" />
                       </span>
                     </li>
+                  )}
+                  {features.SupportTicket && (
                     <li>
                       <Link to="/app/admin/support">Support</Link>
                       <span className="icon-thumbnail">
                         <i className="fa fa-ticket" />
                       </span>
                     </li>
+                  )}
+                  {features.ClientDashboard && (
                     <li>
                       <Link to="/app/admin/clients">Clients</Link>
                       <span className="icon-thumbnail">
                         <i className="fa fa-users" />
                       </span>
                     </li>
-                  </ul>
-                </li>
-              )}
+                  )}
+                </ul>
+              </li>
+            )}
 
             {/* (this.props.kuberREST_IP[0] !== undefined) &&
 	                    	<li className="">

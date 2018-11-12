@@ -26,6 +26,7 @@ class UserDetails extends Component {
       userId: null,
       user: {},
       payment: {},
+      remoteConfig: window.RemoteConfig,
     };
   }
 
@@ -33,9 +34,16 @@ class UserDetails extends Component {
     this.props.subscriptions.forEach(s => {
       s.stop();
     });
+    window.removeEventListener('RemoteConfigChanged', this.RemoteConfigListener);
   }
 
   componentDidMount() {
+    this.RemoteConfigListener = () => {
+      this.setState({
+        remoteConfig: window.RemoteConfig,
+      });
+    };
+    window.addEventListener('RemoteConfigChanged', this.RemoteConfigListener);
     this.setState({
       userId: this.props.match.params.id,
     });
@@ -237,6 +245,12 @@ class UserDetails extends Component {
 
     const { bill } = this.state.user;
 
+    const { remoteConfig } = this.state;
+    let { features } = remoteConfig;
+    if (!features) {
+      features = {};
+    }
+
     return (
       <div className="page-content-wrapper ">
         <PaymentModal
@@ -351,18 +365,16 @@ class UserDetails extends Component {
                       </div>
                     </div>
 
-                    {user.profile &&
-                      user.profile.mobiles &&
-                      user.profile.mobiles[0] && (
-                        <div className="row-xs-height">
-                          <div className="col-xs-height col-top">
-                            <div className="p-l-20 p-b-40 p-r-20">
-                              <p className="no-margin p-b-5">{user.profile.mobiles[0].number}</p>
-                              <span className="small hint-text pull-left">{this.getEmailVerificationLabel(user.profile.mobiles[0].number)}</span>
-                            </div>
+                    {user.profile && user.profile.mobiles && user.profile.mobiles[0] && (
+                      <div className="row-xs-height">
+                        <div className="col-xs-height col-top">
+                          <div className="p-l-20 p-b-40 p-r-20">
+                            <p className="no-margin p-b-5">{user.profile.mobiles[0].number}</p>
+                            <span className="small hint-text pull-left">{this.getEmailVerificationLabel(user.profile.mobiles[0].number)}</span>
                           </div>
                         </div>
-                      )}
+                      </div>
+                    )}
                   </div>
                   <div className="row-xs-height">
                     <div className="col-xs-height col-bottom">
@@ -410,18 +422,20 @@ class UserDetails extends Component {
                         </div>
                       </div>
                     </div>
-                    <div className="row-xs-height">
-                      <div className="col-xs-height col-bottom">
-                        <div className="progress progress-small m-b-0">
-                          <div
-                            className="progress-bar progress-bar-danger"
-                            style={{
-                              width: `${bill && (bill.totalFreeMicroHours.hours * 100) / (1490 * 2)}%`,
-                            }}
-                          />
+                    {features.Invoice && (
+                      <div className="row-xs-height">
+                        <div className="col-xs-height col-bottom">
+                          <div className="progress progress-small m-b-0">
+                            <div
+                              className="progress-bar progress-bar-danger"
+                              style={{
+                                width: `${bill && (bill.totalFreeMicroHours.hours * 100) / (1490 * 2)}%`,
+                              }}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -487,21 +501,23 @@ class UserDetails extends Component {
                     <table className="table table-condensed table-hover">
                       <tbody>
                         {networks &&
-                          networks.sort((a, b) => b.createdOn - a.createdOn).map((network, index) => {
-                            return (
-                              <tr key={index + 1}>
-                                <td className="font-montserrat all-caps fs-12 w-40">
-                                  <Link to={`/app/admin/networks/${network._id}`}>{network.name}</Link>
-                                </td>
-                                <td className="text-right b-r b-dashed b-grey w-35">
-                                  <span className="hint-text small">{this.getNetworkType(network)}</span>
-                                </td>
-                                <td className="w-25">
-                                  <span className="font-montserrat fs-18">{this.getNetworkTypeName(network)}</span>
-                                </td>
-                              </tr>
-                            );
-                          })}
+                          networks
+                            .sort((a, b) => b.createdOn - a.createdOn)
+                            .map((network, index) => {
+                              return (
+                                <tr key={index + 1}>
+                                  <td className="font-montserrat all-caps fs-12 w-40">
+                                    <Link to={`/app/admin/networks/${network._id}`}>{network.name}</Link>
+                                  </td>
+                                  <td className="text-right b-r b-dashed b-grey w-35">
+                                    <span className="hint-text small">{this.getNetworkType(network)}</span>
+                                  </td>
+                                  <td className="w-25">
+                                    <span className="font-montserrat fs-18">{this.getNetworkTypeName(network)}</span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                       </tbody>
                       <tfoot>
                         <tr>
@@ -515,101 +531,109 @@ class UserDetails extends Component {
             </div>
           </div>
           <div className="container-fluid p-l-25 p-r-25 p-t-0 p-b-25 sm-padding-10">
-            <div className="row">
-              <div className="col-lg-6 m-b-10 d-flex">
-                <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
-                  <div className="card-header top-right">
-                    <div className="card-controls">
-                      <ul>
-                        <li>
-                          <a data-toggle="refresh" className="portlet-refresh text-black" href="#">
-                            <i className="portlet-icon portlet-icon-refresh" />
-                          </a>
-                        </li>
-                      </ul>
+            {(features.Payments || features.Invoice) && (
+              <div className="row">
+                {features.Payments && (
+                  <div className="col-lg-6 m-b-10 d-flex">
+                    <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+                      <div className="card-header top-right">
+                        <div className="card-controls">
+                          <ul>
+                            <li>
+                              <a data-toggle="refresh" className="portlet-refresh text-black" href="#">
+                                <i className="portlet-icon portlet-icon-refresh" />
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                      <div className="padding-25">
+                        <div className="pull-left">
+                          <h2 className="text-success no-margin">Payments</h2>
+                          <p className="no-margin">Previous Payments</p>
+                        </div>
+                        <h3 className="pull-right semi-bold">{payments && payments.length}</h3>
+                        <div className="clearfix" />
+                      </div>
+                      <div className="auto-overflow widget-11-2-table" style={{ height: '275px' }}>
+                        <table className="table table-condensed table-hover">
+                          <tbody>
+                            {payments &&
+                              payments
+                                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                                .map((payment, index) => {
+                                  return (
+                                    <tr
+                                      key={index + 1}
+                                      onClick={() => {
+                                        this.setState({
+                                          selectedPayment: payment,
+                                          showPaymentModal: true,
+                                        });
+                                      }}
+                                    >
+                                      <td className="font-montserrat all-caps fs-12 w-40">{payment.reason}</td>
+                                      <td className="text-right b-r b-dashed b-grey w-25">₹{payment.amount / 100}</td>
+                                      <td className="w-25">
+                                        <span className="font-montserrat fs-18">{this.convertStatusToTag(payment.paymentStatus)}</span>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
-                  <div className="padding-25">
-                    <div className="pull-left">
-                      <h2 className="text-success no-margin">Payments</h2>
-                      <p className="no-margin">Previous Payments</p>
+                )}
+                {features.Invoice && (
+                  <div className="col-lg-6 m-b-10 d-flex">
+                    <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+                      <div className="card-header top-right">
+                        <div className="card-controls">
+                          <ul>
+                            <li>
+                              <a data-toggle="refresh" className="portlet-refresh text-black" href="#">
+                                <i className="portlet-icon portlet-icon-refresh" />
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                      <div className="padding-25">
+                        <div className="pull-left">
+                          <h2 className="text-success no-margin">Invoices</h2>
+                          <p className="no-margin">Customer business: $ {invoices && invoices.reduce((p, i) => p + Number(i.totalAmount), 0)}</p>
+                        </div>
+                        <h3 className="pull-right semi-bold">{invoices && invoices.length}</h3>
+                        <div className="clearfix" />
+                      </div>
+                      <div className="auto-overflow widget-11-2-table" style={{ height: '275px' }}>
+                        <table className="table table-condensed table-hover">
+                          <tbody>
+                            {invoices &&
+                              invoices.map((invoice, index) => {
+                                return (
+                                  <tr key={index + 1}>
+                                    <td className="font-montserrat fs-12 w-40">
+                                      <Link to={`/app/admin/invoices/${invoice._id}`}>{invoice.billingPeriodLabel}</Link>
+                                    </td>
+                                    <td className="text-right b-r b-dashed b-grey w-40">${invoice.totalAmount}</td>
+                                    <td className="w-20">
+                                      <span className="font-montserrat fs-12">{this.convertInvoiceStatusToTag(invoice.paymentStatus)}</span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                    <h3 className="pull-right semi-bold">{payments && payments.length}</h3>
-                    <div className="clearfix" />
                   </div>
-                  <div className="auto-overflow widget-11-2-table" style={{ height: '275px' }}>
-                    <table className="table table-condensed table-hover">
-                      <tbody>
-                        {payments &&
-                          payments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((payment, index) => {
-                            return (
-                              <tr
-                                key={index + 1}
-                                onClick={() => {
-                                  this.setState({
-                                    selectedPayment: payment,
-                                    showPaymentModal: true,
-                                  });
-                                }}
-                              >
-                                <td className="font-montserrat all-caps fs-12 w-40">{payment.reason}</td>
-                                <td className="text-right b-r b-dashed b-grey w-25">₹{payment.amount / 100}</td>
-                                <td className="w-25">
-                                  <span className="font-montserrat fs-18">{this.convertStatusToTag(payment.paymentStatus)}</span>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                )}
               </div>
-              <div className="col-lg-6 m-b-10 d-flex">
-                <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
-                  <div className="card-header top-right">
-                    <div className="card-controls">
-                      <ul>
-                        <li>
-                          <a data-toggle="refresh" className="portlet-refresh text-black" href="#">
-                            <i className="portlet-icon portlet-icon-refresh" />
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                  <div className="padding-25">
-                    <div className="pull-left">
-                      <h2 className="text-success no-margin">Invoices</h2>
-                      <p className="no-margin">Customer business: $ {invoices && invoices.reduce((p, i) => p + Number(i.totalAmount), 0)}</p>
-                    </div>
-                    <h3 className="pull-right semi-bold">{invoices && invoices.length}</h3>
-                    <div className="clearfix" />
-                  </div>
-                  <div className="auto-overflow widget-11-2-table" style={{ height: '275px' }}>
-                    <table className="table table-condensed table-hover">
-                      <tbody>
-                        {invoices &&
-                          invoices.map((invoice, index) => {
-                            return (
-                              <tr key={index + 1}>
-                                <td className="font-montserrat fs-12 w-40">
-                                  <Link to={`/app/admin/invoices/${invoice._id}`}>{invoice.billingPeriodLabel}</Link>
-                                </td>
-                                <td className="text-right b-r b-dashed b-grey w-40">${invoice.totalAmount}</td>
-                                <td className="w-20">
-                                  <span className="font-montserrat fs-12">{this.convertInvoiceStatusToTag(invoice.paymentStatus)}</span>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="row">
+            )}
+            {features.Payments && <div className="row">
               <div className="col-lg-12 m-b-10 d-flex">
                 <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
                   <div className="padding-25">
@@ -695,56 +719,55 @@ class UserDetails extends Component {
                   </div>
                 </div>
               </div>
-            </div>
+            </div>}
             <div className="row">
-              {this.props.paymentLinks &&
-                this.props.paymentLinks.length > 0 && (
-                  <div className="col-lg-6 m-b-10 d-flex">
-                    <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
-                      <div className="padding-25">
-                        <div className="pull-left">
-                          <h2 className="text-success no-margin">Payment Links</h2>
-                          <p className="no-margin">All Payment Links</p>
-                        </div>
-                        <h3 className="pull-right semi-bold">{paymentLinks && paymentLinks.length}</h3>
-                        <div className="clearfix" />
+              {this.props.paymentLinks && this.props.paymentLinks.length > 0 && features.Payments && (
+                <div className="col-lg-6 m-b-10 d-flex">
+                  <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+                    <div className="padding-25">
+                      <div className="pull-left">
+                        <h2 className="text-success no-margin">Payment Links</h2>
+                        <p className="no-margin">All Payment Links</p>
                       </div>
-                      <div className="auto-overflow widget-11-2-table" style={{ height: '275px' }}>
-                        <table className="table table-condensed table-hover">
-                          <tbody>
-                            {paymentLinks &&
-                              paymentLinks.map((paymentLink, index) => {
-                                return (
-                                  <tr key={index + 1}>
-                                    <td className="font-montserrat fs-12 w-40" title={paymentLink.link}>
-                                      <a href={paymentLink.short_url} target="_blank">
-                                        {paymentLink.short_url}
-                                      </a>
-                                    </td>
-                                    <td className="text-right b-r b-dashed b-grey w-30" title={paymentLink.reason}>
-                                      {paymentLink.description}
-                                    </td>
-                                    <td className="w-15">{this.convertPaymentLinkStatusToTag(paymentLink.status)}</td>
-                                    <td className="w-10">
-                                      <div className="btn-group">
-                                        <button className="btn btn-default" onClick={this.copyText.bind(this, paymentLink.short_url)} title="copy">
-                                          <i className="fa fa-copy" />
-                                        </button>
-                                        <button className="btn btn-default" onClick={this.cancelPaymentLink.bind(this, paymentLink._id)} title="delete">
-                                          <i className="fa fa-trash" />
-                                        </button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                          </tbody>
-                        </table>
-                      </div>
+                      <h3 className="pull-right semi-bold">{paymentLinks && paymentLinks.length}</h3>
+                      <div className="clearfix" />
+                    </div>
+                    <div className="auto-overflow widget-11-2-table" style={{ height: '275px' }}>
+                      <table className="table table-condensed table-hover">
+                        <tbody>
+                          {paymentLinks &&
+                            paymentLinks.map((paymentLink, index) => {
+                              return (
+                                <tr key={index + 1}>
+                                  <td className="font-montserrat fs-12 w-40" title={paymentLink.link}>
+                                    <a href={paymentLink.short_url} target="_blank">
+                                      {paymentLink.short_url}
+                                    </a>
+                                  </td>
+                                  <td className="text-right b-r b-dashed b-grey w-30" title={paymentLink.reason}>
+                                    {paymentLink.description}
+                                  </td>
+                                  <td className="w-15">{this.convertPaymentLinkStatusToTag(paymentLink.status)}</td>
+                                  <td className="w-10">
+                                    <div className="btn-group">
+                                      <button className="btn btn-default" onClick={this.copyText.bind(this, paymentLink.short_url)} title="copy">
+                                        <i className="fa fa-copy" />
+                                      </button>
+                                      <button className="btn btn-default" onClick={this.cancelPaymentLink.bind(this, paymentLink._id)} title="delete">
+                                        <i className="fa fa-trash" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
-                )}
-              <div className={`${this.props.paymentLinks && this.props.paymentLinks.length > 0 ? 'col-lg-6' : 'col-lg-12'} m-b-10 d-flex`}>
+                </div>
+              )}
+              <div className={`${this.props.paymentLinks && this.props.paymentLinks.length > 0 && features.Payments? 'col-lg-6' : 'col-lg-12'} m-b-10 d-flex`}>
                 <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
                   <div className="padding-25">
                     <div className="pull-left">

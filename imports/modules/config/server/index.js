@@ -21,8 +21,8 @@ const CONFIG_URL = (function () {
 })();
 
 async function fetchNewConfig (){
-  // const migration = Migrations._collection.find().fetch()[0];
-  const response = await request.get(`${CONFIG_URL}/config?webAppVersion=${WEB_APP_VERSION}&migrationVersion=${MIGRATION_VERSION}&migrationStatus=${''}`);
+  const migrationDBVersion = Migrations.getVersion();
+  const response = await request.get(`${CONFIG_URL}/config?webAppVersion=${WEB_APP_VERSION}&migrationVersion=${MIGRATION_VERSION}&migrationStatus=${migrationDBVersion === MIGRATION_VERSION ? 'unlocked' : 'locked'}`);
   const res = JSON.parse(response);
   if(res.errorCode && res.errorCode === 404) {
     global.RemoteConfig = {};
