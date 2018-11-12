@@ -1,6 +1,5 @@
 import Vouchers from "../../collections/vouchers/voucher";
 import Billing from '../../api/billing';
-import notifications from '../../modules/notifications';
 import moment from "moment";
 import { Meteor } from 'meteor/meteor';
 
@@ -21,15 +20,13 @@ Voucher.validate = async function(voucherCode) {
   }
   const card_validated= await Billing.isPaymentMethodVerified(Meteor.userId());
   if(voucher.availability.card_vfctn_needed && !card_validated){
-    notifications.error("Your Card is not verified.");
-    throw new Meteor.Error("Not Eligible");
+    throw new Meteor.Error("Please verify card in billing>payments");
   }
   const email_matching = voucher.availability.email_ids.indexOf(Meteor.user().emails[0].address);
   const claimed_status = voucher.voucher_claim_status ? (voucher.voucher_claim_status.filter((i)=>{return i["claimedBy"] == Meteor.userId()})) :0
 
   if(!voucher.availability.for_all && email_matching <= -1){
-    notifications.error("Voucher is not eligible for your Email.");
-    throw new Meteor.Error("Voucher is not valid");
+    throw new Meteor.Error("Voucher is not eligible for your Email.");
   }
   if(voucher.usability.once_per_user && claimed_status.length){
     throw new Meteor.Error("already claimed");
