@@ -1014,7 +1014,7 @@ spec:
               - memory
       containers:
       - name: mongo
-        image: mongo
+        image: mongo:3.4.18
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 27017
@@ -1102,7 +1102,7 @@ spec:
               - memory
       containers:
       - name: mongo
-        image: mongo
+        image: mongo:3.4.18
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 27017
