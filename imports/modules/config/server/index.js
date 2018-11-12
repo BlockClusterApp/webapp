@@ -1,6 +1,11 @@
+import { Mongo } from "meteor/mongo";
+
 const defaults = require("../local.config.js");
 const request = require('request-promise');
 const debug = require('debug')('RemoteConfig');
+
+const WEB_APP_VERSION = '1.0';
+const MIGRATION_VERSION = 9;
 
 global.RemoteConfig = {};
 
@@ -16,7 +21,8 @@ const CONFIG_URL = (function () {
 })();
 
 async function fetchNewConfig (){
-  const response = await request.get(`${CONFIG_URL}/config`);
+  // const migration = Migrations._collection.find().fetch()[0];
+  const response = await request.get(`${CONFIG_URL}/config?webAppVersion=${WEB_APP_VERSION}&migrationVersion=${MIGRATION_VERSION}&migrationStatus=${''}`);
   const res = JSON.parse(response);
   if(res.errorCode && res.errorCode === 404) {
     global.RemoteConfig = {};
@@ -199,6 +205,7 @@ module.exports = {
     }
 
     return `${RemoteConfig.repositories[imageType].url[getNamespace()]}`
-  }
+  },
+  migrationVersion: MIGRATION_VERSION,
   // locationMapping
 };

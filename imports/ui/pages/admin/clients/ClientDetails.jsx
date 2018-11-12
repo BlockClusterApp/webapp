@@ -467,9 +467,23 @@ class ClientDetails extends Component {
                                       id={'shouldDaemonDeployWebApp'}
                                       checked={client.agentMeta.shouldDaemonDeployWebApp}
                                       onClick={e => {
-                                        console.log(client.agentMeta.shouldDaemonDeployWebApp);
                                         this.shouldDaemonDeploy = e.target.checked;
                                         document.querySelector('#shouldDaemonDeployWebApp').checked = e.target.checked;
+                                      }}
+                                    />
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td className="v-align-middle semi-bold">Should WebApp Refresh AWS Image Auth</td>
+                                  <td className="v-align-middle">
+                                    <input
+                                      type="checkbox"
+                                      value={'shouldWebAppRefreshAWSImageAuth'}
+                                      id={'shouldWebAppRefreshAWSImageAuth'}
+                                      checked={client.agentMeta.shouldWebAppRefreshAWSImageAuth}
+                                      onClick={e => {
+                                        this.shouldWebAppRefreshAWSImageAuth = e.target.checked;
+                                        document.querySelector('#shouldWebAppRefreshAWSImageAuth').checked = e.target.checked;
                                       }}
                                     />
                                   </td>

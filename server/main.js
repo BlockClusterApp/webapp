@@ -2812,7 +2812,7 @@ Meteor.startup(() => {
 
 const LOCK_FILE_PATH = '/tmp/webapp.lock';
 function serverStartup() {
-  Migrations.migrateTo(10);
+  Migrations.migrateTo(Config.migrationVersion);
   fs.writeFileSync(LOCK_FILE_PATH, `Server started at  ${new Date()}`);
 }
 

@@ -1,20 +1,33 @@
+const emails = ['admin@blockcluster.io'];
+
 Migrations.add({
   version: 6,
   up: function() {
-    const emails = ['jibin.mathews@blockcluster.io', 'arsenal.narayan@gmail.com'];
+
     emails.forEach(email => {
       console.log("Creating admin ", email);
-      Meteor.users.update({
-        "emails.address": email
-      }, {
-        $set: {
-          admin: 2
-        }
+      Meteor.users.insert({
+        createdAt: new Date(),
+        emails: [
+          {
+            address: email,
+            verified: true
+          }
+        ],
+        profile: {
+          firstName: "Admin",
+          lastName: "Blockcluster"
+        },
+        admin: 2
       });
     });
     console.log("Finished");
   },
   down: function(){
-    Vouchers.remove({});
+    emails.forEach(email => {
+      Meteor.users.remove({
+        "emails.address":  email
+      })
+    });
   }
 });
