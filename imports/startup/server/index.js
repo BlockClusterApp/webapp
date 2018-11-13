@@ -94,6 +94,7 @@ require('../../api/platform');
 require('../../collections/users/server/publications');
 require('../../collections/vouchers/server/publications');
 require('../../collections/support-ticket/server/publications');
+require('../../collections/network-configuration/server/publications');
 require('../../api/payments');
 require('../../api/billing');
 

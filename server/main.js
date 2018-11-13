@@ -91,7 +91,7 @@ function getNodeConfig(networkConfig, userId) {
       nodeConfig.voucher = _voucher;
       finalNetworkConfig = _voucher.networkConfig;
       if (_voucher.isDiskChangeable) {
-        finalNetworkConfig = diskSpace || _voucher.diskSpace;
+        finalNetworkConfig.disk = diskSpace || _voucher.diskSpace;
       }
     }
   }
@@ -157,48 +157,6 @@ function getContainerResourceLimits({ cpu, ram, isJoining }) {
   debug('Container limits', config);
 
   return config;
-}
-
-async function fetchZohoStatus({ myFuture, nodeConfig, hostedPageId }) {
-  let hostedPage = {};
-  if (!nodeConfig.voucher && !hostedPageId) {
-    let plan;
-    if (nodeConfig.cpu === 500 && nodeConfig.ram === 1 && nodeConfig.disk === 5) {
-      plan = ZohoPlan.find({ plan_code: 'light-node' }).fetch()[0];
-    } else if (nodeConfig.cpu === 2 && nodeConfig.ram === 7.5 && nodeConfig.disk === 200) {
-      plan = ZohoPlan.find({ plan_code: 'power-node' }).fetch()[0];
-    } else {
-      return myFuture.throw('Invalid plan');
-    }
-
-    const newHostedPage = await Zoho.createHostedPage({
-      userId: Meteor.userId(),
-      plan,
-    });
-
-    if (!newHostedPage) {
-      return myFuture.throw('Error creating payment link');
-    }
-
-    PendingNetwork.insert({
-      hostedPageId: newHostedPage.hostedpage_id,
-      networkMetadata: {
-        networkName,
-        locationCode,
-        networkConfig,
-        userId,
-      },
-    });
-    return myFuture.return({
-      type: 'payment-link',
-      value: newHostedPage.url,
-    });
-  } else if (!nodeConfig.voucher) {
-    hostedPage = ZohoHostedPage.find({ hostedpage_id: hostedPageId }).fetch()[0];
-    if (!hostedPage) {
-      return myFuture.throw('Invalid hosted page id');
-    }
-  }
 }
 
 process.on('unhandledRejection', (reason, p) => {
@@ -400,9 +358,10 @@ Meteor.methods({
                       spec: {
                         affinity: {
                           nodeAffinity: {
-                            preferredDuringSchedulingIgnoredDuringExecution: {
-                              nodeSelectorTerms: [
-                                {
+                            preferredDuringSchedulingIgnoredDuringExecution: [
+                              {
+                                weight: 1,
+                                preference: {
                                   matchExpressions: [
                                     {
                                       key: 'optimizedFor',
@@ -410,9 +369,9 @@ Meteor.methods({
                                       values: ['memory'],
                                     },
                                   ],
-                                },
-                              ],
-                            },
+                                }
+                              }
+                            ],
                           },
                         },
                         containers: [
@@ -1006,12 +965,13 @@ spec:
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: optimizedFor
-                operator: In
-                values:
-                - memory
+            - weight: 1
+              preference:
+                matchExpressions:
+                - key: optimizedFor
+                  operator: In
+                  values:
+                  - memory
       containers:
       - name: mongo
         image: mongo
@@ -1094,8 +1054,9 @@ spec:
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
+          - weight: 1
+            preference:
+              matchExpressions:
               - key: optimizedFor
                 operator: In
                 values:

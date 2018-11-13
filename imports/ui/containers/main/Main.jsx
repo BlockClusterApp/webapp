@@ -51,6 +51,7 @@ import ClientList from '../../pages/admin/clients/ClientList.jsx';
 import ClientDetails from '../../pages/admin/clients/ClientDetails.jsx';
 import ClientCreate from '../../pages/admin/clients/ClientCreate';
 import ClientMetrics from '../../pages/admin/clients/ClientMetrics';
+import ConfigList from '../../pages/admin/network-config/List';
 
 export default class Main extends Component {
   constructor(props) {
@@ -119,6 +120,7 @@ export default class Main extends Component {
                 <Route exact path="/app/admin/users/:id" component={UserDetails} />
                 <Route exact path="/app/admin/networks" component={NetworkList} />
                 <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
+                <Route exact path="/app/admin/network-configs" component={ConfigList} />
                 {features.Vouchers && <Route exact path="/app/admin/vouchers" component={VoucherList} />}
                 {features.Vouchers && <Route exact path="/app/admin/vouchers/details/:id" component={VoucherDetails} />}
                 {features.Vouchers && <Route exact path="/app/admin/vouchers/create" component={VoucherCreate} />}

@@ -38,7 +38,7 @@ fetchNewConfig();
 
 setInterval(async () => {
   await fetchNewConfig();
-}, 1* 60 * 1000);
+}, process.env.NODE_ENV === "development" ? 10 * 1000 : 1* 60 * 1000);
 
 function getAPIHost() {
   if(RemoteConfig.apiHost) {

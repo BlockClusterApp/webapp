@@ -72,17 +72,20 @@ Voucher.create = async function(payload) {
       },
       discount: {
         value: payload.discount.value || 0,
-        percent: payload.discount.percent 
+        percent: payload.discount.percent
       },
       code: voucher,
       voucher_status: payload.active,
-      networkConfig: payload.networkConfig,
+      metadata: {
+        networkConfig: payload.networkConfig
+      },
+      networkConfig: {cpu: payload.networkConfig.cpu, ram: payload.networkConfig.ram, disk: payload.networkConfig.disk},
       expiryDate: payload.expiryDate
         ? new Date(payload.expiryDate)
         : moment()
             .add(30, "days")
             .toDate(), //lets take by default 30days
-      isDiskChangeable: payload.isDiskChangeable ,
+      isDiskChangeable: payload.networkConfig.isDiskChangeable,
       discountedDays: payload.discountedDays || 0,
       voucher_claim_status:[]
     });
