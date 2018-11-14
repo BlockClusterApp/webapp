@@ -10,6 +10,9 @@ import "./Header.scss";
 class Header extends Component {
   logout = () => {
     Meteor.logout();
+    localStorage.clear();
+    sessionStorage.clear();
+    this.props.history.push("/app/login");
   };
 
   render() {
