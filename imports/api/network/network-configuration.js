@@ -3,7 +3,7 @@ import NetworkConfiguration from '../../collections/network-configuration/networ
 const NetworkConfig = {};
 
 NetworkConfig.getConfigs = function(){
-  const configs = NetworkConfiguration.find({});
+  const configs = NetworkConfiguration.find({active: true, showInNetworkSelection: true});
 
   const result = {};
   configs.forEach(config => {
