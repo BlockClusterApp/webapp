@@ -84,12 +84,12 @@ async function sendEmails(users){
 Migrations.add({
   version: 5,
   up: function() {
-    fetchUsersWithVouchers()
-    .then(fetchUsers)
-    .then(sendEmails)
-    .then(() => {
-      console.log("Finished");
-    })
+    // fetchUsersWithVouchers()
+    // .then(fetchUsers)
+    // .then(sendEmails)
+    // .then(() => {
+    //   console.log("Finished");
+    // })
   },
   down: function(){}
 });
