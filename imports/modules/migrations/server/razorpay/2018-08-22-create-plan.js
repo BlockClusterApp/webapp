@@ -19,12 +19,12 @@ const plans = [
 Migrations.add({
   version: 8,
   up: async () => {
-    await Bluebird.map(plans, async plan => {
-      const rzPlan = await RazorPay.createPlan({...plan});
-      console.log("Created razorpay plan", rzPlan);
-    }, {
-      concurrency: 10
-    });
+    // await Bluebird.map(plans, async plan => {
+    //   const rzPlan = await RazorPay.createPlan({...plan});
+    //   console.log("Created razorpay plan", rzPlan);
+    // }, {
+    //   concurrency: 10
+    // });
   },
   down: async () => {
     await Bluebird.map(plans, async plan => {

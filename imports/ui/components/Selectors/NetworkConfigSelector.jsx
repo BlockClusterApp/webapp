@@ -27,7 +27,8 @@ class NetworkConfigSelector extends Component {
       this.setState({
         configs: res,
       });
-      if (this.config) this.config.value = 'Light';
+      this.defaultConfig = Object.values(res)[0];
+      if (this.config) this.config.value = this.defaultConfig.name;
       this.onConfigChange();
     });
   }
@@ -42,10 +43,12 @@ class NetworkConfigSelector extends Component {
       this.diskSpace.value = config.disk;
     }
 
-    this.setState({
-      networkConfig: config,
-      isDiskChangeable: config.isDiskChangeable,
-    });
+    if (!this.voucherDetails) {
+      this.setState({
+        networkConfig: config,
+        isDiskChangeable: config.isDiskChangeable,
+      });
+    }
     if (this.props && this.props.configChangeListener) {
       this.props.configChangeListener({ config, diskSpace: Number(this.diskSpace.value) });
     }
@@ -93,12 +96,7 @@ class NetworkConfigSelector extends Component {
       voucher: {
         status: undefined,
       },
-      networkConfig: {
-        name: 'Light',
-        cpu: 0.5,
-        ram: 500,
-        disk: 5,
-      },
+      networkConfig: this.defaultConfig,
     });
     this.voucher.value = '';
     this.diskSpace.value = 5;
@@ -120,7 +118,7 @@ class NetworkConfigSelector extends Component {
           name="location"
           ref={input => (this.config = input)}
           onChange={this.onConfigChange.bind(this, false)}
-          selected="Select node type"
+          selected={Object.values(this.state.configs)[0]}
           disabled={this.state.voucher.status === 'success'}
         >
           {configList}
@@ -182,26 +180,28 @@ class NetworkConfigSelector extends Component {
                   </div>
                 </div>
               </div>
-              {window.RemoteConfig && window.RemoteConfig.features && window.RemoteConfig.features.Vouchers && <div className="row clearfix">
-                <div className="col-md-12">
-                  <div className="form-group form-group-default input-group">
-                    <div className="form-input-group">
-                      <label>
-                        Voucher Code{' '}
-                        {this.state.voucher && this.state.voucher.status === 'error' ? (
-                          <span className="error-message">{this.state.voucher.error}</span>
-                        ) : this.state.voucher.status === 'success' ? (
-                          <span className="success-message">Voucher Applied</span>
-                        ) : (
-                          undefined
-                        )}
-                      </label>
-                      <input type="text" className="form-control" name="projectName" ref={input => (this.voucher = input)} />
+              {window.RemoteConfig && window.RemoteConfig.features && window.RemoteConfig.features.Vouchers && (
+                <div className="row clearfix">
+                  <div className="col-md-12">
+                    <div className="form-group form-group-default input-group">
+                      <div className="form-input-group">
+                        <label>
+                          Voucher Code&nbsp;
+                          {this.state.voucher && this.state.voucher.status === 'error' ? (
+                            <span className="error-message">{this.state.voucher.error}</span>
+                          ) : this.state.voucher.status === 'success' ? (
+                            <span className="success-message">Voucher Applied</span>
+                          ) : (
+                            undefined
+                          )}
+                        </label>
+                        <input type="text" className="form-control" name="projectName" ref={input => (this.voucher = input)} />
+                      </div>
+                      {voucherActionButton}
                     </div>
-                    {voucherActionButton}
                   </div>
                 </div>
-              </div>}
+              )}
             </div>
           </div>
         </div>

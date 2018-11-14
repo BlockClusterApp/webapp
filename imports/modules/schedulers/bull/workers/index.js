@@ -5,4 +5,5 @@ module.exports = (bullSystem) => {
   require('./generate-bill-user')(bullSystem);
   require('./invoice-created-email')(bullSystem);
   require('./invoice-reminder-email')(bullSystem);
+  require('./email-sender')(bullSystem);
 }

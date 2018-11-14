@@ -21,9 +21,9 @@ const updateGivenDetails = async(voucherToUpdate)=>{
 Migrations.add({
   version: 10,
   up: function() {
-    Promise.all([deleteDummyVouchers(data), updateGivenDetails(voucherToUpdate)]);
+    // Promise.all([deleteDummyVouchers(data), updateGivenDetails(voucherToUpdate)]);
   },
   down: function() {
-    Vouchers.remove({});
+    // Vouchers.remove({});
   },
 });

@@ -4,34 +4,43 @@ import SimpleSchema from 'simpl-schema';
 
 import AttachBaseHooks from '../../modules/helpers/model-helpers';
 
-const NetworkConfiguration = new Mongo.Collection(
-  "networkConfig"
-);
+const NetworkConfiguration = new Mongo.Collection('networkConfig');
 
 AttachBaseHooks(NetworkConfiguration);
 
 NetworkConfiguration.schema = new SimpleSchema({
   createdAt: {
-    type: Date
+    type: Date,
   },
   updatedAt: {
-    type: Date
+    type: Date,
   },
   name: {
-    type: String
+    type: String,
   },
   cpu: {
-    type: Number
+    type: Number,
   },
   ram: {
-    type: Number
+    type: Number,
   },
   disk: {
-    type: Number
+    type: Number,
   },
   isDiskChangeable: {
-    type: Boolean
-  }
+    type: Boolean,
+  },
+  showInNetworkSelection: {
+    type: Boolean,
+  },
+  cost: {
+    type: {
+      monthly: {
+        type: String,
+      },
+      hourly: String,
+    },
+  },
 });
 
 export default NetworkConfiguration;
