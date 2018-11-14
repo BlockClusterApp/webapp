@@ -58,7 +58,7 @@ Accounts.validateLoginAttempt(function(options) {
   if (options.user.emails[0].verified === true) {
     return true;
   } else {
-    throw new Meteor.Error('email-not-verified', 'Your email is not approved by the administrator.');
+    throw new Meteor.Error('email-not-verified', 'Your email is not verified. Kindly check your mail.');
   }
 });
 
@@ -377,7 +377,7 @@ Meteor.methods({
                         containers: [
                           {
                             name: 'mongo',
-                            image: `mongo`,
+                            image: `mongo:3.4.18`,
                             imagePullPolicy: 'IfNotPresent',
                             ports: [
                               {
@@ -974,7 +974,7 @@ spec:
                   - memory
       containers:
       - name: mongo
-        image: mongo
+        image: mongo:3.4.18
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 27017
@@ -1063,7 +1063,7 @@ spec:
                 - memory
       containers:
       - name: mongo
-        image: mongo
+        image: mongo:3.4.18
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 27017
