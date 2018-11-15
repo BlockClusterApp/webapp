@@ -8,35 +8,26 @@ const debug = require('debug')('server:main');
 import { Meteor } from 'meteor/meteor';
 import UserFunctions from '../imports/api/server-functions/user-functions';
 import { Networks } from '../imports/collections/networks/networks.js';
-import PendingNetwork from '../imports/collections/networks/pending-networks.js';
-import { ZohoHostedPage, ZohoPlan } from '../imports/collections/zoho';
-import Zoho from '../imports/api/payments/zoho';
 import NetworkFunctions from '../imports/api/network/networks';
 import Vouchers from '../imports/collections/vouchers/voucher';
 import UserCards from '../imports/collections/payments/user-cards';
 import Billing from '../imports/api/billing';
-import { Secrets } from '../imports/collections/secrets/secrets.js';
-import { AcceptedOrders } from '../imports/collections/acceptedOrders/acceptedOrders.js';
 import NetworkConfiguration from '../imports/collections/network-configuration/network-configuration';
 import Verifier from '../imports/api/emails/email-validator';
 import Config from '../imports/modules/config/server';
+import Bull from '../imports/modules/schedulers/bull';
 
 var Future = Npm.require('fibers/future');
-var lightwallet = Npm.require('eth-lightwallet');
 import Web3 from 'web3';
 var jsonminify = require('jsonminify');
 import helpers from '../imports/modules/helpers';
-import server_helpers from '../imports/modules/helpers/server';
 import smartContracts from '../imports/modules/smart-contracts';
 import moment from 'moment';
-import { scanBlocksOfNode, authoritiesListCronJob } from '../imports/collections/networks/server/cron.js';
 import fs from 'fs';
-import { RZSubscription } from '../imports/collections/razorpay';
 import agenda from '../imports/modules/schedulers/agenda';
 var md5 = require('apache-md5');
 var base64 = require('base-64');
 var utf8 = require('utf8');
-var BigNumber = require('bignumber.js');
 
 var geoip = require('../node_modules/geoip-lite/lib/geoip');
 
@@ -728,7 +719,10 @@ Meteor.methods({
 
     return myFuture.wait();
   },
-  deleteNetwork: function(id) {
+  deleteNetwork: function(id, userId) {
+    if(!userId) {
+      userId = Meteor.userId();
+    }
     try{
     ElasticLogger.log(`DeleteNetwork`, {id: id, userId: Meteor.userId()});
     }catch(err){
@@ -744,8 +738,12 @@ Meteor.methods({
     var myFuture = new Future();
     var network = Networks.find({
       instanceId: id,
+      userId
     }).fetch()[0];
-    const locationCode = network.locationCode;
+
+    if(!network) {
+      throw new Meteor.Error("Invalid instance id")
+    }
 
     Networks.update(
       {
@@ -761,53 +759,16 @@ Meteor.methods({
 
     NetworkFunctions.cleanNetworkDependencies(id);
 
-    try {
-      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + id, kubeCallback);
-      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + id, kubeCallback);
-      HTTP.call(
-        'GET',
-        `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent('dynamo-node-' + id),
-        function(err, response) {
-          if (err) return console.log(err);
-          HTTP.call(
-            'DELETE',
-            `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name,
-            () => {
-              HTTP.call(
-                'GET',
-                `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent('dynamo-node-' + id),
-                function(err, response) {
-                  if (err) return console.log(err);
-                  HTTP.call(
-                    'DELETE',
-                    `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name,
-                    function(err, res) {
-                      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${id}-pvc`, function(
-                        error,
-                        response
-                      ) {});
-                    }
-                  );
-                }
-              );
-            }
-          );
-        }
-      );
+    const locationCode = network.locationCode;
 
-      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + 'basic-auth-' + id, kubeCallback);
-      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + 'ingress-' + id, kubeCallback);
+    try {
+      Bull.addJob('delete-network', {
+        instanceId: network.instanceId,
+        locationCode
+      })
     } catch (err) {
       console.log('Kube delete error ', err);
     }
-
-    Secrets.remove({
-      instanceId: id,
-    });
-
-    AcceptedOrders.remove({
-      instanceId: id,
-    });
 
     myFuture.return();
 

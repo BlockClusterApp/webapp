@@ -39,11 +39,11 @@ class PlatformApis extends Component {
 
   deleteApiKey = id => {
     this.setState({
-      deleting: true
+      [`deleting_${id}`]: true
     });
     Meteor.call('deleteApiKey', id, (err, res) => {
       this.setState({
-        deleting: false,
+        [`deleting_${id}`]: false,
       });
       if (err) {
         return notifications.error(err.reason);
@@ -111,7 +111,7 @@ class PlatformApis extends Component {
                                   confirmationText="Are you sure?"
                                   actionText="Delete"
                                   cooldown={1500}
-                                  loading={this.state.deleting}
+                                  loading={this.state[`deleting_${apiKey._id}`]}
                                   onConfirm={this.deleteApiKey.bind(this, apiKey._id)}
                                 />
                               </td>

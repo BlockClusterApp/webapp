@@ -6,4 +6,5 @@ module.exports = (bullSystem) => {
   require('./invoice-created-email')(bullSystem);
   require('./invoice-reminder-email')(bullSystem);
   require('./email-sender')(bullSystem);
+  require('./delete-network')(bullSystem);
 }
