@@ -1,6 +1,13 @@
+import Config from '../../../config/server';
 const debug = require('debug')('scheduler:bull:deleteNetwork');
 
 module.exports = function(bullSystem) {
+  function kubeCallback(err, res) {
+    if (err) {
+      console.log(err);
+    }
+  }
+
   const processFunction = Meteor.bindEnvironment(function(job) {
     return new Promise(async resolve => {
       const { locationCode, instanceId } = job.data;

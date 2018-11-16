@@ -96,7 +96,7 @@ function getNodeConfig(networkConfig, userId) {
       nodeConfig.networkConfig = _config;
       finalNetworkConfig = _config;
       if (_config.isDiskChangeable) {
-        finalNetworkConfig.disk = diskSpace || _config.diskSpace;
+        finalNetworkConfig.disk = diskSpace || _config.disk;
       }
     }
   }
@@ -343,7 +343,7 @@ Meteor.methods({
                       metadata: {
                         labels: {
                           app: 'dynamo-node-' + instanceId,
-                          appType: 'dynamo'
+                          appType: 'dynamo',
                         },
                       },
                       spec: {
@@ -360,8 +360,8 @@ Meteor.methods({
                                       values: ['memory'],
                                     },
                                   ],
-                                }
-                              }
+                                },
+                              },
                             ],
                           },
                         },
@@ -719,30 +719,24 @@ Meteor.methods({
 
     return myFuture.wait();
   },
-  deleteNetwork: function(id, userId) {
-    if(!userId) {
+  deleteNetwork: async function(id, userId) {
+    if (!userId) {
       userId = Meteor.userId();
     }
-    try{
-    ElasticLogger.log(`DeleteNetwork`, {id: id, userId: Meteor.userId()});
-    }catch(err){
+    try {
+      ElasticLogger.log(`DeleteNetwork`, { id: id, userId });
+    } catch (err) {
       RavenLogger.log(err);
     }
 
-    function kubeCallback(err, res) {
-      if (err) {
-        console.log(err);
-      }
-    }
-
-    var myFuture = new Future();
     var network = Networks.find({
       instanceId: id,
-      userId
+      user: userId,
+      deletedAt: null
     }).fetch()[0];
 
-    if(!network) {
-      throw new Meteor.Error("Invalid instance id")
+    if (!network) {
+      throw new Meteor.Error('bad-request', 'Invalid instance id');
     }
 
     Networks.update(
@@ -764,15 +758,13 @@ Meteor.methods({
     try {
       Bull.addJob('delete-network', {
         instanceId: network.instanceId,
-        locationCode
-      })
+        locationCode,
+      });
     } catch (err) {
       console.log('Kube delete error ', err);
     }
 
-    myFuture.return();
-
-    return myFuture.wait();
+    return id;
   },
   joinNetwork: function(
     networkName,
@@ -1273,17 +1265,17 @@ spec:
     return myFuture.wait();
   },
   convertIP_Location: function(ips) {
-      let result = [];
+    let result = [];
 
-      ips.forEach((ip, index) => {
-        let geo = geoip.lookup(ip);
-        if(geo) {
-            geo.ip = ip;
-            result.push(geo)
-        }
-      })
+    ips.forEach((ip, index) => {
+      let geo = geoip.lookup(ip);
+      if (geo) {
+        geo.ip = ip;
+        result.push(geo);
+      }
+    });
 
-      return result;
+    return result;
   },
   changeNodeName: function(instanceId, newName) {
     Networks.update(
@@ -1292,7 +1284,7 @@ spec:
       },
       {
         $set: {
-          'name': newName,
+          name: newName,
         },
       }
     );

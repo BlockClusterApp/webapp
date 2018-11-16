@@ -2,6 +2,7 @@ import Config from '../modules/config/server';
 import ApiKeys from '../collections/api-keys';
 import Fiber from 'fibers';
 import NetworkConfig from '../api/network/network-configuration';
+import NetworkConfiguration from '../collections/network-configuration/network-configuration';
 import Redis from 'redis-fast-driver';
 import LocationApi from './locations';
 import { Networks } from '../collections/networks/networks';
@@ -47,9 +48,8 @@ JsonRoutes.add('get', '/ping', function(req, res, next) {
 
 JsonRoutes.Middleware.use('/api/platform', authMiddleware);
 
-
 // Fetch Network Types for this user
-JsonRoutes.add('/get', '/api/platform/network/types', async function(req, res) {
+JsonRoutes.add('get', '/api/platform/networks/types', async function(req, res) {
   const configs = await NetworkConfig.getConfigs();
   return JsonRoutes.sendResult(res, {
     code: 200,
@@ -57,10 +57,12 @@ JsonRoutes.add('/get', '/api/platform/network/types', async function(req, res) {
   });
 });
 
-
 // Fetch All locations for this user
-JsonRoutes.add('/get', '/api/platform/networks/locations', async function(req, res) {
+JsonRoutes.add('get', '/api/platform/networks/locations', async function(req, res) {
   const locations = LocationApi.getLocations();
+  locations.forEach(loc => {
+    delete loc.workerNodeIP;
+  });
   return JsonRoutes.sendResult(res, {
     code: 200,
     data: locations,
@@ -68,10 +70,10 @@ JsonRoutes.add('/get', '/api/platform/networks/locations', async function(req, r
 });
 
 // Creates a network
-JsonRoutes.add('post', '/api/platform/networks/create', function(req, res, next) {
+JsonRoutes.add('post', '/api/platform/networks', function(req, res, next) {
   const { networkConfigId, locationCode, networkName, diskSpace } = req.body;
 
-  const _networkConfig = NetworkConfig.find({
+  const _networkConfig = NetworkConfiguration.find({
     _id: networkConfigId,
   }).fetch()[0];
 
@@ -107,7 +109,7 @@ JsonRoutes.add('post', '/api/platform/networks/create', function(req, res, next)
   }
 
   const networkConfig = {
-    ..._networkConfig,
+    config: { ..._networkConfig },
   };
 
   if (networkConfig.isDiskChangeable && diskSpace) {
@@ -127,7 +129,7 @@ JsonRoutes.add('post', '/api/platform/networks/create', function(req, res, next)
     if (error) {
       JsonRoutes.sendResult(res, {
         code: 400,
-        error: err.reason,
+        error: error.message,
       });
     } else {
       JsonRoutes.sendResult(res, {
@@ -142,14 +144,14 @@ JsonRoutes.add('post', '/api/platform/networks/create', function(req, res, next)
 });
 
 // Deletes a network
-JsonRoutes.add('delete', '/api/platform/networks', function(req, res) {
-  const { instanceId } = req.body;
+JsonRoutes.add('delete', '/api/platform/networks/:instanceId', function(req, res) {
+  const { instanceId } = req.params;
 
   Meteor.call('deleteNetwork', instanceId, req.userId, (err, data) => {
-    if (error) {
+    if (err) {
       JsonRoutes.sendResult(res, {
         code: 400,
-        error: err.reason,
+        error: err.message,
       });
     } else {
       JsonRoutes.sendResult(res, {
@@ -161,12 +163,6 @@ JsonRoutes.add('delete', '/api/platform/networks', function(req, res) {
     }
   });
 });
-
-
-
-
-
-
 
 JsonRoutes.add('post', '/api/platform/networks/invite', function(req, res, next) {
   let user = Accounts.findUserByEmail(req.email);
@@ -188,43 +184,4 @@ JsonRoutes.add('post', '/api/platform/networks/invite', function(req, res, next)
       );
     }
   });
-});
-
-JsonRoutes.add('post', '/api/platform/networks/delete', function(req, res, next) {
-  let user = Accounts.findUserByEmail(req.email);
-  let networkId = req.body.networkId;
-
-  Meteor.call('deleteNetwork', networkId, (error, instanceId) => {
-    if (error) {
-      JsonRoutes.sendResult(res, {
-        code: 401,
-        data: { error: 'An unknown error occured' },
-      });
-    } else {
-      res.end(
-        JSON.stringify({
-          message: 'Successfully Deleted',
-        })
-      );
-    }
-  });
-});
-
-JsonRoutes.add('post', '/api/platform/logout', function(req, res, next) {
-  const call = jwt.call();
-  call
-    .destroy(req.rjwt)
-    .then(() => {
-      res.end(
-        JSON.stringify({
-          message: 'Logout successful',
-        })
-      );
-    })
-    .catch(() => {
-      JsonRoutes.sendResult(res, {
-        code: 401,
-        data: { error: 'An unknown error occured' },
-      });
-    });
 });

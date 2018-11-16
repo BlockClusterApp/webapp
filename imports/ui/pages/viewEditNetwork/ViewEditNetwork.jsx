@@ -92,7 +92,7 @@ class ViewEditNetwork extends Component {
 
     	Meteor.call("deleteNetwork", this.props.network[0].instanceId, (error) => {
     		if(error) {
-    			notifications.error("An error occured")
+    			notifications.error(error.reason);
     		} else {
     			this.props.history.push("/app/networks");
     			notifications.success("Network deleted successful")
