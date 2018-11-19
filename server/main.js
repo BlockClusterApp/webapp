@@ -1425,26 +1425,7 @@ spec:
     return myFuture.wait();
   },
   inviteUserToNetwork: async function(networkId, nodeType, email, userId) {
-    return UserFunctions.inviteUserToNetwork(networkId, nodeType, email, userId || this.userId);
-    // let user = Accounts.findUserByEmail(email);
-    // var network = Networks.find({
-    //     instanceId: networkId
-    // }).fetch()[0];
-    // if (user) {
-    //     Meteor.call(
-    //         "joinNetwork",
-    //         network.name,
-    //         nodeType,
-    //         network.genesisBlock.toString(), ["enode://" + network.nodeId + "@" + network.clusterIP + ":" + network.realEthNodePort].concat(network.totalENodes), [network.clusterIP + ":" + network.realConstellationNodePort].concat(network.totalConstellationNodes),
-    //         network.assetsContractAddress,
-    //         network.atomicSwapContractAddress,
-    //         network.streamsContractAddress,
-    //         (userId ? userId : user._id),
-    //         network.locationCode
-    //     )
-    // } else {
-    //     throw new Meteor.Error(500, 'Unknown error occured');
-    // }
+    return UserFunctions.inviteUserToNetwork(networkId, nodeType, email, userId || Meteor.userId());
   },
   createAssetType: function(instanceId, assetName, assetType, assetIssuer, reissuable, parts) {
     this.unblock();

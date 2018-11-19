@@ -8,17 +8,18 @@ const debug = require('debug')('api:communication:webhook');
 
 const WebHookApis = {};
 
-WebHookApis.generatePayload = (data) => {
+WebHookApis.generatePayload = data => {
   const { event } = data;
   const result = {
     timestamp: new Date().getTime(),
     event,
     keys: [],
-    data: {}
+    data: {},
   };
+  delete data.event;
 
-  if(data.networkId) {
-    const network = Networks.find({instanceId: data.networkId}).fetch()[0];
+  if (data.networkId) {
+    const network = Networks.find({ instanceId: data.networkId }).fetch()[0];
     result.keys.push('network');
     result.data.network = {
       instanceId: network.instanceId,
@@ -31,22 +32,34 @@ WebHookApis.generatePayload = (data) => {
         disk: Number(network.networkConfig.disk),
       },
       status: network.status,
-      impulseStatus: network.impulseStatus
-    }
+      impulseStatus: network.impulseStatus,
+    };
+    delete data.networkId;
   }
 
   if (data.userId) {
-    const user = Meteor.users.find({_id: data.userId}).fetch()[0];
+    const user = Meteor.users.find({ _id: data.userId }).fetch()[0];
     result.keys.push('user');
     result.data.user = {
       email: user.emails[0].address,
-      name: `${user.profile.firstName} ${user.profile.lastName}`
-    }
+      name: `${user.profile.firstName} ${user.profile.lastName}`,
+    };
+    delete data.userId;
   }
+
+  if (data.inviteId) {
+    result.keys.push('invite');
+    result.data.invite = {
+      id: data.inviteId
+    };
+    delete data.inviteId;
+  }
+
+  result.data = { ...result.data, ...data };
 
   debug('Webhook payload ', JSON.stringify(result));
   return result;
-}
+};
 
 WebHookApis.queue = async ({ payload, userId, id, delay }) => {
   let url;
