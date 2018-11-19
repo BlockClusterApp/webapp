@@ -6,7 +6,8 @@ const WebHook = new Mongo.Collection('webhooks');
 WebHook.StatusMapping = {
   Pending: 1,
   Sent: 2,
-  Failed: 3
+  Failed: 3,
+  Error: 4
 }
 
 WebHook.Schema = new SimpleSchema({
@@ -32,6 +33,9 @@ WebHook.Schema = new SimpleSchema({
     type: Date
   },
   status: {
+    type: Number
+  },
+  retries: {
     type: Number
   }
 });

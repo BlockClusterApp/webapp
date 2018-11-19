@@ -25,6 +25,7 @@ import smartContracts from '../imports/modules/smart-contracts';
 import moment from 'moment';
 import fs from 'fs';
 import agenda from '../imports/modules/schedulers/agenda';
+import Webhook from '../imports/api/communication/webhook';
 var md5 = require('apache-md5');
 var base64 = require('base-64');
 var utf8 = require('utf8');
@@ -161,13 +162,12 @@ process.on('uncaughtException', (reason, p) => {
 });
 
 Meteor.methods({
-  createNetwork: async function({ networkName, locationCode, networkConfig, userId, hostedPageId }) {
+  createNetwork: async function({ networkName, locationCode, networkConfig, userId }) {
     debug('CreateNetwork | Arguments', networkName, locationCode, networkConfig, userId);
     userId = userId || Meteor.userId();
     var myFuture = new Future();
     const nodeConfig = getNodeConfig(networkConfig);
 
-    // const hostedPage = await fetchZohoStatus({myFuture, nodeConfig, hostedPageId});
     const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(userId);
     const need_VerifiedPaymnt = nodeConfig.voucher && !nodeConfig.voucher.availability.card_vfctn_needed ? nodeConfig.voucher.availability.card_vfctn_needed : true;
     if (need_VerifiedPaymnt) {
@@ -175,17 +175,6 @@ Meteor.methods({
         throw new Meteor.Error('unauthorized', 'Credit card not verified');
       }
     }
-
-    // const microNodes = Networks.find({
-    //   user: Meteor.userId(),
-    //   active: true,
-    //   "networkConfig.cpu": 500
-    // }).fetch();
-
-    const isMicro = networkConfig && ((networkConfig.config && networkConfig.config.cpu === 0.5) || (networkConfig.voucher && networkConfig.voucher.cpu === 0.5));
-    // if(microNodes.length > 2 && isMicro) {
-    //   throw new Meteor.Error('Can have maximum of 2 micro nodes only');
-    // }
 
     var instanceId = helpers.instanceIDGenerate();
 
@@ -670,6 +659,26 @@ Meteor.methods({
                                     }
                                   );
 
+                                  if (nodeConfig.voucherId) {
+                                    Vouchers.update(
+                                      { _id: nodeConfig.voucherId },
+                                      {
+                                        $push: {
+                                          voucher_claim_status: {
+                                            claimedBy: userId,
+                                            claimedOn: new Date(),
+                                            claimed: true,
+                                          },
+                                        },
+                                      }
+                                    );
+                                  }
+
+                                  Webhook.queue({
+                                    payload: Webhook.generatePayload({event: 'create-network', networkId: instanceId, userId}),
+                                    userId
+                                  });
+
                                   myFuture.return(instanceId);
                                 }
                               }
@@ -686,20 +695,6 @@ Meteor.methods({
         );
       }
       //mark the voucher as claimed
-      if (nodeConfig.voucherId) {
-        Vouchers.update(
-          { _id: nodeConfig.voucherId },
-          {
-            $push: {
-              voucher_claim_status: {
-                claimedBy: Meteor.userId(),
-                claimedOn: new Date(),
-                claimed: true,
-              },
-            },
-          }
-        );
-      }
       let userCard = UserCards.find({ userId: Meteor.userId(), active: true }, { fields: { _id: 1 } }).fetch();
       //check wheather the user has verified cards or not. and also for active payment methods.
 
@@ -732,7 +727,7 @@ Meteor.methods({
     var network = Networks.find({
       instanceId: id,
       user: userId,
-      deletedAt: null
+      deletedAt: null,
     }).fetch()[0];
 
     if (!network) {
@@ -754,6 +749,11 @@ Meteor.methods({
     NetworkFunctions.cleanNetworkDependencies(id);
 
     const locationCode = network.locationCode;
+
+    Webhook.queue({
+      userId,
+      payload: Webhook.generatePayload({event: 'delete-network', networkId: id, userId})
+    });
 
     try {
       Bull.addJob('delete-network', {

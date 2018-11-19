@@ -74,6 +74,8 @@ module.exports = function(bullSystem) {
       } catch (err) {
         console.log(err);
       }
+
+      resolve();
     });
   });
 
