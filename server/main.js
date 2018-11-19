@@ -675,8 +675,8 @@ Meteor.methods({
                                   }
 
                                   Webhook.queue({
-                                    payload: Webhook.generatePayload({event: 'create-network', networkId: instanceId, userId}),
-                                    userId
+                                    payload: Webhook.generatePayload({ event: 'create-network', networkId: instanceId, userId }),
+                                    userId,
                                   });
 
                                   myFuture.return(instanceId);
@@ -752,7 +752,7 @@ Meteor.methods({
 
     Webhook.queue({
       userId,
-      payload: Webhook.generatePayload({event: 'delete-network', networkId: id, userId})
+      payload: Webhook.generatePayload({ event: 'delete-network', networkId: id, userId }),
     });
 
     try {
@@ -766,7 +766,7 @@ Meteor.methods({
 
     return id;
   },
-  joinNetwork: function(
+  joinNetwork: async function(
     networkName,
     nodeType,
     genesisFileContent,
@@ -780,20 +780,18 @@ Meteor.methods({
     networkConfig,
     userId
   ) {
+    const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(userId);
+    const nodeConfig = getNodeConfig(networkConfig);
+    const need_VerifiedPaymnt = nodeConfig.voucher && !nodeConfig.voucher.availability.card_vfctn_needed ? nodeConfig.voucher.availability.card_vfctn_needed : true;
+    if (need_VerifiedPaymnt) {
+      if (!isPaymentMethodVerified) {
+        throw new Meteor.Error('unauthorized', 'Credit card not verified');
+      }
+    }
+
     debug('joinNetwork | Arguments', arguments);
     var myFuture = new Future();
     var instanceId = helpers.instanceIDGenerate();
-
-    // const microNodes = Networks.find({
-    //   user: Meteor.userId(),
-    //   active: true,
-    //   "networkConfig.cpu": 500
-    // }).fetch();
-
-    // const isMicro = networkConfig && ((networkConfig.config && networkConfig.config.cpu === 0.5) || (networkConfig.voucher && networkConfig.voucher.cpu === 0.5));
-    // if(microNodes.length > 2 && isMicro) {
-    //   throw new Meteor.Error('Can have maximum of 2 micro nodes only');
-    // }
 
     locationCode = locationCode || 'us-west-2';
 
@@ -860,7 +858,6 @@ Meteor.methods({
         }
       );
     }
-    const nodeConfig = getNodeConfig(networkConfig);
 
     if (!nodeConfig.cpu) {
       RavenLogger.log('JoinNetwork : Invalid network config', { nodeConfig, networkConfig });
@@ -869,6 +866,7 @@ Meteor.methods({
 
     const resourceConfig = getContainerResourceLimits({ cpu: nodeConfig.cpu, ram: nodeConfig.ram, isJoining: true });
 
+    userId = userId || Meteor.userId();
     Networks.insert(
       {
         instanceId: instanceId,
@@ -876,7 +874,7 @@ Meteor.methods({
         type: 'join',
         peerType: nodeType,
         workerNodeIP: Config.workerNodeIP(locationCode),
-        user: userId ? userId : this.userId,
+        user: userId,
         createdOn: Date.now(),
         totalENodes: totalENodes,
         genesisBlock: genesisFileContent,
@@ -1247,6 +1245,14 @@ spec:
                                     },
                                   }
                                 );
+                                Webhook.queue({
+                                  userId,
+                                  payload: Webhook.generatePayload({
+                                    event: 'network-joined',
+                                    networkId: instanceId,
+                                    userId,
+                                  }),
+                                });
                                 myFuture.return(id);
                               }
                             }

@@ -165,23 +165,22 @@ JsonRoutes.add('delete', '/api/platform/networks/:instanceId', function(req, res
 });
 
 JsonRoutes.add('post', '/api/platform/networks/invite', function(req, res, next) {
-  let user = Accounts.findUserByEmail(req.email);
-  let inviteUserEmail = req.body.inviteEmail;
-  let networkId = req.body.networkId;
-  let memberType = req.body.memberType;
+  let user = req.user;
+  let { inviteToEmail, networkId, networkType } = req.body;
 
-  Meteor.call('inviteUserToNetwork', networkId, memberType, inviteUserEmail, user._id, (error, instanceId) => {
+  Meteor.call('inviteUserToNetwork', networkId, networkType, inviteToEmail, user._id, (error, instanceId) => {
     if (error) {
       JsonRoutes.sendResult(res, {
         code: 401,
         data: { error: 'An unknown error occured' },
       });
     } else {
-      res.end(
-        JSON.stringify({
-          message: 'Successfully Invited',
-        })
-      );
+      JsonRoutes.sendResult(res, {
+        code: 200,
+        data: {
+          success: true
+        }
+      });
     }
   });
 });

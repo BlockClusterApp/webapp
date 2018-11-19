@@ -180,11 +180,11 @@ NetworkInvitation.inviteUserToNetwork = async function(networkId, nodeType, emai
   }
   const network = Networks.find({
     instanceId: networkId,
-    userId,
+    user: userId,
     active: true,
   }).fetch()[0];
   if (!network) {
-    throw new Error('Invalid network');
+    throw new Meteor.Error('Invalid network');
   }
 
   const invitingUser = Meteor.users
@@ -329,9 +329,9 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
     WebHookApis.queue({
       userId: invitation.inviteFrom,
       payload: WebHookApis.generatePayload({
-        event: 'invitation-accepted',
+        event: 'invite-accepted',
         inviteId: invitation._id,
-        networkId: invitation.networkId,
+        networkId: network.instanceId,
       }),
     });
 
@@ -340,7 +340,7 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
       payload: WebHookApis.generatePayload({
         event: 'invite-accepted',
         inviteId: invitation._id,
-        networkId: invitation.networkId,
+        networkId: network.instanceId,
       }),
     });
 
@@ -393,7 +393,7 @@ NetworkInvitation.rejectInvitation = async function(invitationId) {
   WebHookApis.queue({
     userId: invitation.inviteFrom,
     payload: WebHookApis.generatePayload({
-      event: 'invitation-rejected',
+      event: 'invite-rejected',
       inviteId: invitation._id
     }),
   });
@@ -420,7 +420,7 @@ NetworkInvitation.rejectInvitation = async function(invitationId) {
 };
 
 NetworkInvitation.cancelInvitation = async function(inviteId, userId) {
-  const invitation = UserInvitation.find({ _id: invitationId, inviteFrom: userId }).fetch()[0];
+  const invitation = UserInvitation.find({ _id: inviteId, inviteFrom: userId }).fetch()[0];
   if (!invitation) {
     return false;
   }
@@ -428,7 +428,7 @@ NetworkInvitation.cancelInvitation = async function(inviteId, userId) {
   WebHookApis.queue({
     userId: invitation.inviteFrom,
     payload: WebHookApis.generatePayload({
-      event: 'invitation-cancelled',
+      event: 'invite-cancelled',
       inviteId: invitation._id
     }),
   });
