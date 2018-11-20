@@ -367,7 +367,7 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
       networkConfig,
       invitation.inviteTo,
       (err, res) => {
-        console.log(err, res);
+        debug(err, res);
         if (err) return reject(err);
         UserInvitation.update(
           {
