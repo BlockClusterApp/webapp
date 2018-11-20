@@ -1,20 +1,19 @@
-import { Meteor } from "meteor/meteor";
-import {
-  generateRandomString,
-  generateCompleteURLForUserInvite,
-  getEJSTemplate
-} from "../../modules/helpers/server";
-import { UserInvitation } from "../../collections/user-invitation";
-import { UserCards } from "../../collections/payments/user-cards";
-import { sendEmail } from "../emails/email-sender";
-import { Networks } from "../../collections/networks/networks";
-import Config from "../../../imports/modules/config/server";
+import { Meteor } from 'meteor/meteor';
+import { generateRandomString, generateCompleteURLForUserInvite, getEJSTemplate } from '../../modules/helpers/server';
+import { UserInvitation } from '../../collections/user-invitation';
+import { UserCards } from '../../collections/payments/user-cards';
+import { sendEmail } from '../emails/email-sender';
+import { Networks } from '../../collections/networks/networks';
+import Config from '../../../imports/modules/config/server';
 import agenda from '../../modules/schedulers/agenda';
 import Billing from '../../api/billing';
+import WebHookApis from '../communication/webhook';
+
+const debug = require('debug')('api:user-functions')
 
 async function sendEmails(users) {
   const ejsTemplate = await getEJSTemplate({
-    fileName: "credit-card-link-reminder.ejs"
+    fileName: 'credit-card-link-reminder.ejs',
   });
   const promises = [];
   users.forEach(user => {
@@ -23,15 +22,15 @@ async function sendEmails(users) {
     const finalHTML = ejsTemplate({
       user: {
         email,
-        name
-      }
+        name,
+      },
     });
     const emailProps = {
-      from: { email: "no-reply@blockcluster.io", name: "Blockcluster" },
+      from: { email: 'no-reply@blockcluster.io', name: 'Blockcluster' },
       to: email,
       subject: `Action Required | BlockCluster`,
       text: `Kindly verify your credit card to continue using your nodes`,
-      html: finalHTML
+      html: finalHTML,
     };
     promises.push(Email.sendEmail(emailProps));
   });
@@ -41,127 +40,125 @@ async function sendEmails(users) {
 }
 
 agenda.define(
-  "warning email step 1",
-  Meteor.bindEnvironment((job,done) => {
+  'warning email step 1',
+  Meteor.bindEnvironment((job, done) => {
     const network_id = job.attrs.data.network_id;
     const userId = job.attrs.data.userId;
     const userData = Meteor.users.find({
-      userId: userId
+      userId: userId,
     });
     const found_notworks = Networks.find({
-      _id:network_id,
-      "deletedAt": {
-       "$exists": false
-      }
-     })[0];
-     if(!found_notworks){
+      _id: network_id,
+      deletedAt: {
+        $exists: false,
+      },
+    })[0];
+    if (!found_notworks) {
       job.remove(err => {
         if (!err) {
           console.log('Successfully removed job from collection');
-        }else{
+        } else {
           console.log(err);
         }
       });
-     }else{
-    sendEmails(userData, { fields: { profile: 1, emails: 1 } })
-      .then(sent_mails => {
-        //now schedule job after 48 hours,that checks and deletes node if needed.
-        agenda.schedule(
-          moment().add(48, 'hours').toDate(),
-          "card verification action step 2",
-          {
-            network_id: network_id,
-            userId: userId
-          }
-        );
-        console.log(sent_mails)
-      })
-      .catch(error_sending_mail => {
-        console.log(error_sending_mail)
-      });
+    } else {
+      sendEmails(userData, { fields: { profile: 1, emails: 1 } })
+        .then(sent_mails => {
+          //now schedule job after 48 hours,that checks and deletes node if needed.
+          agenda.schedule(
+            moment()
+              .add(48, 'hours')
+              .toDate(),
+            'card verification action step 2',
+            {
+              network_id: network_id,
+              userId: userId,
+            }
+          );
+          console.log(sent_mails);
+        })
+        .catch(error_sending_mail => {
+          console.log(error_sending_mail);
+        });
     }
   })
 );
 
 agenda.define(
-  "card verification action step 2",
+  'card verification action step 2',
   Meteor.bindEnvironment(async job => {
     const network_id = job.attrs.data.network_id;
     const userId = job.attrs.data.userId;
 
     const found_notworks = Networks.find({
-      _id:network_id,
-      "deletedAt": {
-       "$exists": false
-      }
-     })[0];
-     const usercard = await Billing.isPaymentMethodVerified(userId);
-     if(!found_notworks){
-       //remove the job , dont send email if user deleted before 3days.
+      _id: network_id,
+      deletedAt: {
+        $exists: false,
+      },
+    })[0];
+    const usercard = await Billing.isPaymentMethodVerified(userId);
+    if (!found_notworks) {
+      //remove the job , dont send email if user deleted before 3days.
       job.remove(err => {
         if (!err) {
           console.log('Successfully removed job from collection');
-        }else{
-          console.log("Job removed!")
+        } else {
+          console.log('Job removed!');
         }
       });
-     }else if(!usercard){
-       // false! not verified!
-      Meteor.call("deleteNetwork",network_id,(error,done)=>{
-        if(error){
+    } else if (!usercard) {
+      // false! not verified!
+      Meteor.call('deleteNetwork', network_id, (error, done) => {
+        if (error) {
           //Some issue detected during deletion of node.
           console.log(error);
-        }else{
+        } else {
           //successfully deleted node
           console.log(done);
         }
       });
-    }else{
+    } else {
       //user credit card verified.
-      console.log("User card found!")
+      console.log('User card found!');
     }
   })
 );
 
 agenda.define(
-  "whitelist nodes",
+  'whitelist nodes',
   Meteor.bindEnvironment(job => {
     let newNode_id = job.attrs.data.newNode_id;
     let node_id = job.attrs.data.node_id;
 
     const network_one = Networks.find({
       _id: node_id,
-      active: true
+      active: true,
     }).fetch()[0];
 
     const network_two = Networks.find({
       _id: newNode_id,
-      active: true
+      active: true,
     }).fetch()[0];
 
     function reSchedule() {
-      agenda.schedule(new Date(Date.now() + 5000), "whitelist nodes", {
+      agenda.schedule(new Date(Date.now() + 5000), 'whitelist nodes', {
         newNode_id: newNode_id,
-        node_id: node_id
+        node_id: node_id,
       });
     }
 
     if (network_one && network_two) {
       if (network_two.nodeId && network_two.ethNodePort) {
         HTTP.call(
-          "POST",
-          `http://${Config.workerNodeIP(network_one.locationCode)}:${
-            network_one.apisPort
-          }/utility/whitelistPeer`,
+          'POST',
+          `http://${Config.workerNodeIP(network_one.locationCode)}:${network_one.apisPort}/utility/whitelistPeer`,
           {
             content: JSON.stringify({
-              url: `enode://${network_two.nodeId}@[::]:${
-                network_two.ethNodePort
-              }?discport=0`
+              url: `enode://${network_two.nodeId}@[::]:${network_two.ethNodePort}?discport=0`,
             }),
             headers: {
-              "Content-Type": "application/json"
-            }
+              'Content-Type': 'application/json',
+            },
           },
           (error, response) => {
             console.log(error, response);
@@ -179,23 +176,22 @@ agenda.define(
 
 const NetworkInvitation = {};
 
-NetworkInvitation.inviteUserToNetwork = async function(
-  networkId,
-  nodeType,
-  email,
-  userId
-) {
+NetworkInvitation.inviteUserToNetwork = async function(networkId, nodeType, email, userId) {
+  if (!userId) {
+    userId = Meteor.userId();
+  }
   const network = Networks.find({
     instanceId: networkId,
-    active: true
+    user: userId,
+    active: true,
   }).fetch()[0];
   if (!network) {
-    throw new Error("Invalid network");
+    throw new Meteor.Error('Invalid network');
   }
 
   const invitingUser = Meteor.users
     .find({
-      _id: network.user
+      _id: network.user,
     })
     .fetch()[0];
 
@@ -205,7 +201,7 @@ NetworkInvitation.inviteUserToNetwork = async function(
 
   let invitedUser = Meteor.users
     .find({
-      "emails.address": email
+      'emails.address': email,
     })
     .fetch()[0];
 
@@ -214,43 +210,39 @@ NetworkInvitation.inviteUserToNetwork = async function(
       email,
       password: `a-${new Date().getTime()}`,
       toBeCreated: true,
-      profile: {}
+      profile: {},
     });
     invitedUser = Meteor.users
       .find({
-        _id: createdId
+        _id: createdId,
       })
       .fetch()[0];
   }
 
-  const uniqueString = generateRandomString(
-    `${email}-${networkId}-${new Date().toString()}`
-  );
+  const uniqueString = generateRandomString(`${email}-${networkId}-${new Date().toString()}`);
   const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
 
   const Template = await getEJSTemplate({
-    fileName: "invite-user.ejs"
+    fileName: 'invite-user.ejs',
   });
   const emailHtml = Template({
     network,
     invitingUser,
-    networkJoinLink: joinNetworkLink
+    networkJoinLink: joinNetworkLink,
   });
 
   await sendEmail({
     from: {
-      name: "Blockcluster",
-      email: "no-reply@blockcluster.io"
+      name: 'Blockcluster',
+      email: 'no-reply@blockcluster.io',
     },
     to: email,
     subject: `Invite to join ${network.name} network on blockcluster.io`,
-    text: `Visit the following link to join ${
-      network.name
-    } network on blockcluster.io - ${joinNetworkLink}`,
-    html: emailHtml
+    text: `Visit the following link to join ${network.name} network on blockcluster.io - ${joinNetworkLink}`,
+    html: emailHtml,
   });
 
-  UserInvitation.insert({
+  const result = UserInvitation.insert({
     inviteFrom: invitingUser._id,
     inviteTo: invitedUser._id,
     uniqueToken: uniqueString,
@@ -258,31 +250,47 @@ NetworkInvitation.inviteUserToNetwork = async function(
     nodeType,
     metadata: {
       inviteFrom: {
-        name: `${invitingUser.profile.firstName} ${
-          invitingUser.profile.lastName
-        }`,
-        email: invitingUser.emails[0].address
+        name: `${invitingUser.profile.firstName} ${invitingUser.profile.lastName}`,
+        email: invitingUser.emails[0].address,
       },
       inviteTo: {
         email,
-        name: invitedUser.profile.firstName
-          ? `${invitedUser.profile.firstName} ${invitedUser.profile.lastName}`
-          : undefined
+        name: invitedUser.profile.firstName ? `${invitedUser.profile.firstName} ${invitedUser.profile.lastName}` : undefined,
       },
       network: {
         name: network.name,
-        locationCode: network.locationCode
-      }
-    }
+        locationCode: network.locationCode,
+      },
+    },
   });
 
-  return true;
+  WebHookApis.queue({
+    userId,
+    payload: WebHookApis.generatePayload({
+      event: 'invite-sent',
+      networkId: network.instanceId,
+      userId: invitedUser._id,
+      inviteId: result,
+    }),
+  });
+
+  WebHookApis.queue({
+    userId: invitedUser._id,
+    payload: WebHookApis.generatePayload({
+      event: 'invite-received',
+      networkId: network.instanceId,
+      userId: invitingUser._id,
+      inviteId: result,
+    }),
+  });
+
+  return result;
 };
 
 NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
   const invitation = UserInvitation.find({
     uniqueToken: invitationKey,
-    active: true
+    active: true,
   }).fetch()[0];
 
   if (!invitation) {
@@ -291,52 +299,65 @@ NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
 
   const invitingUser = Meteor.users
     .find({
-      _id: invitation.inviteFrom
+      _id: invitation.inviteFrom,
     })
     .fetch()[0];
   const invitedUser = Meteor.users
     .find({
-      _id: invitation.inviteTo
+      _id: invitation.inviteTo,
     })
     .fetch()[0];
   const network = Networks.find({
-    _id: invitation.networkId
+    _id: invitation.networkId,
   }).fetch()[0];
   return {
     invitation,
     invitedUser,
     invitingUser,
-    network
+    network,
   };
 };
 
-NetworkInvitation.acceptInvitation = function(
-  invitationId,
-  locationCode,
-  networkConfig
-) {
+NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networkConfig, userId) {
   return new Promise((resolve, reject) => {
+    userId = userId || Meteor.userId;
     const invitation = UserInvitation.find({
-      _id: invitationId
+      _id: invitationId,
+      inviteTo: userId
     }).fetch()[0];
+
+    if(!invitation) {
+      reject("Invalid invitation id");
+    }
 
     const network = Networks.find({
-      _id: invitation.networkId
+      _id: invitation.networkId,
     }).fetch()[0];
 
+    WebHookApis.queue({
+      userId: invitation.inviteFrom,
+      payload: WebHookApis.generatePayload({
+        event: 'invite-accepted',
+        inviteId: invitation._id,
+        networkId: network.instanceId,
+      }),
+    });
+
+    WebHookApis.queue({
+      userId: invitation.inviteTo,
+      payload: WebHookApis.generatePayload({
+        event: 'invite-accepted',
+        inviteId: invitation._id,
+        networkId: network.instanceId,
+      }),
+    });
+
     Meteor.call(
-      "joinNetwork",
+      'joinNetwork',
       network.name,
-      invitation.nodeType || "authority",
+      invitation.nodeType || 'authority',
       network.genesisBlock.toString(),
-      [
-        "enode://" +
-          network.nodeId +
-          "@" +
-          network.workerNodeIP +
-          ":" +
-          network.ethNodePort
-      ].concat(network.totalENodes),
+      ['enode://' + network.nodeId + '@' + network.workerNodeIP + ':' + network.ethNodePort].concat(network.totalENodes),
       network.impulseURL,
       network.assetsContractAddress,
       network.atomicSwapContractAddress,
@@ -349,54 +370,97 @@ NetworkInvitation.acceptInvitation = function(
         if (err) return reject(err);
         UserInvitation.update(
           {
-            _id: invitationId
+            _id: invitationId,
           },
           {
             $set: {
               joinedNetwork: res,
               joinedLocation: locationCode,
               invitationStatus: UserInvitation.StatusMapping.Accepted,
-              inviteStatusUpdatedAt: new Date()
-            }
+              inviteStatusUpdatedAt: new Date(),
+            },
           }
         );
 
-        agenda.schedule(new Date(Date.now() + 30000), "whitelist nodes", {
+        agenda.schedule(new Date(Date.now() + 30000), 'whitelist nodes', {
           newNode_id: res,
-          node_id: network._id
+          node_id: network._id,
         });
 
-        resolve(invitationId);
+        debug("Accepted invitation", res);
+        const network = Networks.find({_id: res}).fetch()[0];
+
+        resolve(network.instanceId);
       }
     );
   });
 };
 
 NetworkInvitation.rejectInvitation = async function(invitationId) {
+  const invitation = UserInvitation.find({ _id: invitationId }).fetch()[0];
+  if (!invitation) {
+    return false;
+  }
+  WebHookApis.queue({
+    userId: invitation.inviteFrom,
+    payload: WebHookApis.generatePayload({
+      event: 'invite-rejected',
+      inviteId: invitation._id
+    }),
+  });
+
+  WebHookApis.queue({
+    userId: invitation.inviteTo,
+    payload: WebHookApis.generatePayload({
+      event: 'invite-rejected',
+      inviteId: invitation._id
+    }),
+  });
+
   return UserInvitation.update(
     {
-      _id: invitationId
+      _id: invitationId,
     },
     {
       $set: {
         invitationStatus: UserInvitation.StatusMapping.Rejected,
-        inviteStatusUpdatedAt: new Date()
-      }
+        inviteStatusUpdatedAt: new Date(),
+      },
     }
   );
 };
 
 NetworkInvitation.cancelInvitation = async function(inviteId, userId) {
+  const invitation = UserInvitation.find({ _id: inviteId, inviteFrom: userId }).fetch()[0];
+  if (!invitation) {
+    return false;
+  }
+
+  WebHookApis.queue({
+    userId: invitation.inviteFrom,
+    payload: WebHookApis.generatePayload({
+      event: 'invite-cancelled',
+      inviteId: invitation._id
+    }),
+  });
+
+  WebHookApis.queue({
+    userId: invitation.inviteTo,
+    payload: WebHookApis.generatePayload({
+      event: 'invite-cancelled',
+      inviteId: invitation._id
+    }),
+  });
+
   return UserInvitation.update(
     {
-      _id: inviteId,
-      inviteFrom: userId
+      _id: invitation._id,
     },
     {
       $set: {
         inviteStatusUpdatedAt: new Date(),
-        invitationStatus: UserInvitation.StatusMapping.Cancelled
-      }
+        invitationStatus: UserInvitation.StatusMapping.Cancelled,
+      },
     }
   );
 };
@@ -404,55 +468,53 @@ NetworkInvitation.cancelInvitation = async function(inviteId, userId) {
 NetworkInvitation.resendInvitation = async function(inviteId, userId) {
   const invite = UserInvitation.find({
     _id: inviteId,
-    inviteFrom: userId
+    inviteFrom: userId,
   }).fetch()[0];
   if (!invite) {
     return false;
   }
   const invitingUser = Meteor.users
     .find({
-      _id: invite.inviteFrom
+      _id: invite.inviteFrom,
     })
     .fetch()[0];
   const network = Networks.find({
-    _id: invite.networkId
+    _id: invite.networkId,
   }).fetch()[0];
   const uniqueString = invite.uniqueString;
   const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
 
   const Template = await getEJSTemplate({
-    fileName: "invite-user.ejs"
+    fileName: 'invite-user.ejs',
   });
   const emailHtml = Template({
     network,
     invitingUser,
-    networkJoinLink: joinNetworkLink
+    networkJoinLink: joinNetworkLink,
   });
 
   await sendEmail({
     from: {
-      name: "Blockcluster",
-      email: "no-reply@blockcluster.io"
+      name: 'Blockcluster',
+      email: 'no-reply@blockcluster.io',
     },
     to: invite.metadata.inviteTo.email,
     subject: `Invite to join ${network.name} network on blockcluster.io`,
-    text: `Visit the following link to join ${
-      network.name
-    } network on blockcluster.io - ${joinNetworkLink}`,
-    html: emailHtml
+    text: `Visit the following link to join ${network.name} network on blockcluster.io - ${joinNetworkLink}`,
+    html: emailHtml,
   });
 
   UserInvitation.update(
     {
-      _id: inviteId
+      _id: inviteId,
     },
     {
       $set: {
-        invitationStatus: UserInvitation.StatusMapping.Pending
+        invitationStatus: UserInvitation.StatusMapping.Pending,
       },
       $inc: {
-        resendCount: 1
-      }
+        resendCount: 1,
+      },
     }
   );
 
@@ -466,34 +528,34 @@ Meteor.methods({
   updatePasswordAndInfo: (id, password, profile) => {
     Meteor.users.update(
       {
-        _id: id
+        _id: id,
       },
       {
         $set: {
-          profile
-        }
+          profile,
+        },
       }
     );
     const user = Meteor.users
       .find({
-        _id: id
+        _id: id,
       })
       .fetch()[0];
     const updateResult = Meteor.users.update(
       {
         _id: id,
-        "emails.address": user.emails[0].address
+        'emails.address': user.emails[0].address,
       },
       {
         $set: {
-          "emails.$.verified": true
-        }
+          'emails.$.verified': true,
+        },
       }
     );
     return Accounts.setPassword(id, password);
   },
   cancelInvitation: NetworkInvitation.cancelInvitation,
-  resendInvitation: NetworkInvitation.resendInvitation
+  resendInvitation: NetworkInvitation.resendInvitation,
 });
 
 export default NetworkInvitation;

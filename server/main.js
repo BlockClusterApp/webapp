@@ -8,35 +8,27 @@ const debug = require('debug')('server:main');
 import { Meteor } from 'meteor/meteor';
 import UserFunctions from '../imports/api/server-functions/user-functions';
 import { Networks } from '../imports/collections/networks/networks.js';
-import PendingNetwork from '../imports/collections/networks/pending-networks.js';
-import { ZohoHostedPage, ZohoPlan } from '../imports/collections/zoho';
-import Zoho from '../imports/api/payments/zoho';
 import NetworkFunctions from '../imports/api/network/networks';
 import Vouchers from '../imports/collections/vouchers/voucher';
 import UserCards from '../imports/collections/payments/user-cards';
 import Billing from '../imports/api/billing';
-import { Secrets } from '../imports/collections/secrets/secrets.js';
-import { AcceptedOrders } from '../imports/collections/acceptedOrders/acceptedOrders.js';
 import NetworkConfiguration from '../imports/collections/network-configuration/network-configuration';
 import Verifier from '../imports/api/emails/email-validator';
 import Config from '../imports/modules/config/server';
+import Bull from '../imports/modules/schedulers/bull';
 
 var Future = Npm.require('fibers/future');
-var lightwallet = Npm.require('eth-lightwallet');
 import Web3 from 'web3';
 var jsonminify = require('jsonminify');
 import helpers from '../imports/modules/helpers';
-import server_helpers from '../imports/modules/helpers/server';
 import smartContracts from '../imports/modules/smart-contracts';
 import moment from 'moment';
-import { scanBlocksOfNode, authoritiesListCronJob } from '../imports/collections/networks/server/cron.js';
 import fs from 'fs';
-import { RZSubscription } from '../imports/collections/razorpay';
 import agenda from '../imports/modules/schedulers/agenda';
+import Webhook from '../imports/api/communication/webhook';
 var md5 = require('apache-md5');
 var base64 = require('base-64');
 var utf8 = require('utf8');
-var BigNumber = require('bignumber.js');
 
 var geoip = require('../node_modules/geoip-lite/lib/geoip');
 
@@ -105,7 +97,7 @@ function getNodeConfig(networkConfig, userId) {
       nodeConfig.networkConfig = _config;
       finalNetworkConfig = _config;
       if (_config.isDiskChangeable) {
-        finalNetworkConfig.disk = diskSpace || _config.diskSpace;
+        finalNetworkConfig.disk = diskSpace || _config.disk;
       }
     }
   }
@@ -170,13 +162,12 @@ process.on('uncaughtException', (reason, p) => {
 });
 
 Meteor.methods({
-  createNetwork: async function({ networkName, locationCode, networkConfig, userId, hostedPageId }) {
+  createNetwork: async function({ networkName, locationCode, networkConfig, userId }) {
     debug('CreateNetwork | Arguments', networkName, locationCode, networkConfig, userId);
     userId = userId || Meteor.userId();
     var myFuture = new Future();
     const nodeConfig = getNodeConfig(networkConfig);
 
-    // const hostedPage = await fetchZohoStatus({myFuture, nodeConfig, hostedPageId});
     const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(userId);
     const need_VerifiedPaymnt = nodeConfig.voucher && !nodeConfig.voucher.availability.card_vfctn_needed ? nodeConfig.voucher.availability.card_vfctn_needed : true;
     if (need_VerifiedPaymnt) {
@@ -184,17 +175,6 @@ Meteor.methods({
         throw new Meteor.Error('unauthorized', 'Credit card not verified');
       }
     }
-
-    // const microNodes = Networks.find({
-    //   user: Meteor.userId(),
-    //   active: true,
-    //   "networkConfig.cpu": 500
-    // }).fetch();
-
-    const isMicro = networkConfig && ((networkConfig.config && networkConfig.config.cpu === 0.5) || (networkConfig.voucher && networkConfig.voucher.cpu === 0.5));
-    // if(microNodes.length > 2 && isMicro) {
-    //   throw new Meteor.Error('Can have maximum of 2 micro nodes only');
-    // }
 
     var instanceId = helpers.instanceIDGenerate();
 
@@ -352,7 +332,7 @@ Meteor.methods({
                       metadata: {
                         labels: {
                           app: 'dynamo-node-' + instanceId,
-                          appType: 'dynamo'
+                          appType: 'dynamo',
                         },
                       },
                       spec: {
@@ -369,8 +349,8 @@ Meteor.methods({
                                       values: ['memory'],
                                     },
                                   ],
-                                }
-                              }
+                                },
+                              },
                             ],
                           },
                         },
@@ -679,6 +659,26 @@ Meteor.methods({
                                     }
                                   );
 
+                                  if (nodeConfig.voucherId) {
+                                    Vouchers.update(
+                                      { _id: nodeConfig.voucherId },
+                                      {
+                                        $push: {
+                                          voucher_claim_status: {
+                                            claimedBy: userId,
+                                            claimedOn: new Date(),
+                                            claimed: true,
+                                          },
+                                        },
+                                      }
+                                    );
+                                  }
+
+                                  Webhook.queue({
+                                    payload: Webhook.generatePayload({ event: 'create-network', networkId: instanceId, userId }),
+                                    userId,
+                                  });
+
                                   myFuture.return(instanceId);
                                 }
                               }
@@ -695,20 +695,6 @@ Meteor.methods({
         );
       }
       //mark the voucher as claimed
-      if (nodeConfig.voucherId) {
-        Vouchers.update(
-          { _id: nodeConfig.voucherId },
-          {
-            $push: {
-              voucher_claim_status: {
-                claimedBy: Meteor.userId(),
-                claimedOn: new Date(),
-                claimed: true,
-              },
-            },
-          }
-        );
-      }
       let userCard = UserCards.find({ userId: Meteor.userId(), active: true }, { fields: { _id: 1 } }).fetch();
       //check wheather the user has verified cards or not. and also for active payment methods.
 
@@ -728,24 +714,25 @@ Meteor.methods({
 
     return myFuture.wait();
   },
-  deleteNetwork: function(id) {
-    try{
-    ElasticLogger.log(`DeleteNetwork`, {id: id, userId: Meteor.userId()});
-    }catch(err){
+  deleteNetwork: async function(id, userId) {
+    if (!userId) {
+      userId = Meteor.userId();
+    }
+    try {
+      ElasticLogger.log(`DeleteNetwork`, { id: id, userId });
+    } catch (err) {
       RavenLogger.log(err);
     }
 
-    function kubeCallback(err, res) {
-      if (err) {
-        console.log(err);
-      }
-    }
-
-    var myFuture = new Future();
     var network = Networks.find({
       instanceId: id,
+      user: userId,
+      deletedAt: null,
     }).fetch()[0];
-    const locationCode = network.locationCode;
+
+    if (!network) {
+      throw new Meteor.Error('bad-request', 'Invalid instance id');
+    }
 
     Networks.update(
       {
@@ -761,59 +748,25 @@ Meteor.methods({
 
     NetworkFunctions.cleanNetworkDependencies(id);
 
-    try {
-      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + id, kubeCallback);
-      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + id, kubeCallback);
-      HTTP.call(
-        'GET',
-        `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent('dynamo-node-' + id),
-        function(err, response) {
-          if (err) return console.log(err);
-          HTTP.call(
-            'DELETE',
-            `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name,
-            () => {
-              HTTP.call(
-                'GET',
-                `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent('dynamo-node-' + id),
-                function(err, response) {
-                  if (err) return console.log(err);
-                  HTTP.call(
-                    'DELETE',
-                    `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name,
-                    function(err, res) {
-                      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${id}-pvc`, function(
-                        error,
-                        response
-                      ) {});
-                    }
-                  );
-                }
-              );
-            }
-          );
-        }
-      );
+    const locationCode = network.locationCode;
 
-      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + 'basic-auth-' + id, kubeCallback);
-      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + 'ingress-' + id, kubeCallback);
+    Webhook.queue({
+      userId,
+      payload: Webhook.generatePayload({ event: 'delete-network', networkId: id, userId }),
+    });
+
+    try {
+      Bull.addJob('delete-network', {
+        instanceId: network.instanceId,
+        locationCode,
+      });
     } catch (err) {
       console.log('Kube delete error ', err);
     }
 
-    Secrets.remove({
-      instanceId: id,
-    });
-
-    AcceptedOrders.remove({
-      instanceId: id,
-    });
-
-    myFuture.return();
-
-    return myFuture.wait();
+    return id;
   },
-  joinNetwork: function(
+  joinNetwork: async function(
     networkName,
     nodeType,
     genesisFileContent,
@@ -827,20 +780,18 @@ Meteor.methods({
     networkConfig,
     userId
   ) {
+    const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(userId);
+    const nodeConfig = getNodeConfig(networkConfig);
+    const need_VerifiedPaymnt = nodeConfig.voucher && !nodeConfig.voucher.availability.card_vfctn_needed ? nodeConfig.voucher.availability.card_vfctn_needed : true;
+    if (need_VerifiedPaymnt) {
+      if (!isPaymentMethodVerified) {
+        throw new Meteor.Error('unauthorized', 'Credit card not verified');
+      }
+    }
+
     debug('joinNetwork | Arguments', arguments);
     var myFuture = new Future();
     var instanceId = helpers.instanceIDGenerate();
-
-    // const microNodes = Networks.find({
-    //   user: Meteor.userId(),
-    //   active: true,
-    //   "networkConfig.cpu": 500
-    // }).fetch();
-
-    // const isMicro = networkConfig && ((networkConfig.config && networkConfig.config.cpu === 0.5) || (networkConfig.voucher && networkConfig.voucher.cpu === 0.5));
-    // if(microNodes.length > 2 && isMicro) {
-    //   throw new Meteor.Error('Can have maximum of 2 micro nodes only');
-    // }
 
     locationCode = locationCode || 'us-west-2';
 
@@ -907,7 +858,6 @@ Meteor.methods({
         }
       );
     }
-    const nodeConfig = getNodeConfig(networkConfig);
 
     if (!nodeConfig.cpu) {
       RavenLogger.log('JoinNetwork : Invalid network config', { nodeConfig, networkConfig });
@@ -916,6 +866,7 @@ Meteor.methods({
 
     const resourceConfig = getContainerResourceLimits({ cpu: nodeConfig.cpu, ram: nodeConfig.ram, isJoining: true });
 
+    userId = userId || Meteor.userId();
     Networks.insert(
       {
         instanceId: instanceId,
@@ -923,7 +874,7 @@ Meteor.methods({
         type: 'join',
         peerType: nodeType,
         workerNodeIP: Config.workerNodeIP(locationCode),
-        user: userId ? userId : this.userId,
+        user: userId,
         createdOn: Date.now(),
         totalENodes: totalENodes,
         genesisBlock: genesisFileContent,
@@ -1294,6 +1245,14 @@ spec:
                                     },
                                   }
                                 );
+                                Webhook.queue({
+                                  userId,
+                                  payload: Webhook.generatePayload({
+                                    event: 'network-joined',
+                                    networkId: instanceId,
+                                    userId,
+                                  }),
+                                });
                                 myFuture.return(id);
                               }
                             }
@@ -1312,17 +1271,17 @@ spec:
     return myFuture.wait();
   },
   convertIP_Location: function(ips) {
-      let result = [];
+    let result = [];
 
-      ips.forEach((ip, index) => {
-        let geo = geoip.lookup(ip);
-        if(geo) {
-            geo.ip = ip;
-            result.push(geo)
-        }
-      })
+    ips.forEach((ip, index) => {
+      let geo = geoip.lookup(ip);
+      if (geo) {
+        geo.ip = ip;
+        result.push(geo);
+      }
+    });
 
-      return result;
+    return result;
   },
   changeNodeName: function(instanceId, newName) {
     Networks.update(
@@ -1331,7 +1290,7 @@ spec:
       },
       {
         $set: {
-          'name': newName,
+          name: newName,
         },
       }
     );
@@ -1472,26 +1431,7 @@ spec:
     return myFuture.wait();
   },
   inviteUserToNetwork: async function(networkId, nodeType, email, userId) {
-    return UserFunctions.inviteUserToNetwork(networkId, nodeType, email, userId || this.userId);
-    // let user = Accounts.findUserByEmail(email);
-    // var network = Networks.find({
-    //     instanceId: networkId
-    // }).fetch()[0];
-    // if (user) {
-    //     Meteor.call(
-    //         "joinNetwork",
-    //         network.name,
-    //         nodeType,
-    //         network.genesisBlock.toString(), ["enode://" + network.nodeId + "@" + network.clusterIP + ":" + network.realEthNodePort].concat(network.totalENodes), [network.clusterIP + ":" + network.realConstellationNodePort].concat(network.totalConstellationNodes),
-    //         network.assetsContractAddress,
-    //         network.atomicSwapContractAddress,
-    //         network.streamsContractAddress,
-    //         (userId ? userId : user._id),
-    //         network.locationCode
-    //     )
-    // } else {
-    //     throw new Meteor.Error(500, 'Unknown error occured');
-    // }
+    return UserFunctions.inviteUserToNetwork(networkId, nodeType, email, userId || Meteor.userId());
   },
   createAssetType: function(instanceId, assetName, assetType, assetIssuer, reissuable, parts) {
     this.unblock();

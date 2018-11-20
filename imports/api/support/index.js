@@ -1,6 +1,6 @@
 import SupportTicket from '../../collections/support-ticket';
 import { sendEmail } from '../emails/email-sender';
-import Slack from '../slack';
+import Slack from '../communication/slack';
 import { getEJSTemplate } from '../../modules/helpers/server';
 import multer from 'multer';
 const Parser = require('bc-sendgrid/packages/inbound-mail-parser');

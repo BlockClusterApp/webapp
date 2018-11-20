@@ -121,6 +121,12 @@ class Navbar extends Component {
                     <i className="fa fa-bell" />
                   </span>
                 </li>
+                <li>
+                  <Link to={'/app/platform-apis'}>Platform API</Link>
+                  <span className="icon-thumbnail">
+                    <i className="fa fa-key" />
+                  </span>
+                </li>
               </ul>
             </li>
             {(features.Payments || features.SupportTicket || features.Invoice) && (

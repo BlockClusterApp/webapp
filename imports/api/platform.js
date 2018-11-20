@@ -1,172 +1,371 @@
-import {Networks} from "../collections/networks/networks.js"
-import smartContracts from "../modules/smart-contracts"
-import Web3 from "web3";
-import RedisJwt from "redis-jwt";
-import helpers from "../modules/helpers"
-import Config from '../modules/config/server';
+import ApiKeys from '../collections/api-keys';
+import NetworkConfig from '../api/network/network-configuration';
+import NetworkConfiguration from '../collections/network-configuration/network-configuration';
+import LocationApi from './locations';
 
-var BigNumber = require('bignumber.js');
+async function validateToken(token) {
+  const key = ApiKeys.find({
+    key: token,
+  }).fetch()[0];
 
-const jwt = new RedisJwt({
-    host: Config.redisHost,
-    port: Config.redisPort,
-    secret: 'rch4nuct90i3t9ik#%$^&u3jrmv29r239cr2',
-    multiple: true
-})
-
-JsonRoutes.add("get", "/ping", function(req, res, next) {
-    JsonRoutes.sendResult(res, {
-        code: 200,
-        data: "ping"
-    });
-});
-
-JsonRoutes.add("post", "/api/platform/login", function(req, res, next) {
-    function authenticationFailed() {
-        JsonRoutes.sendResult(res, {
-            code: 401,
-            data: {"error": "Wrong username or password"}
-        })
-    }
-
-    let password = req.body.password;
-    let user = Accounts.findUserByEmail(req.body.email)
-
-    let result = Accounts._checkPassword(user, password)
-
-    if(result.error) {
-        authenticationFailed()
-    } else {
-        jwt.sign(req.body.email, {
-            ttl: "1 year"
-        }).then(token => {
-            JsonRoutes.sendResult(res, {
-                data: {
-                        access_token: token
-                    }
-            })
-            // res.end(JSON.stringify({
-            //     access_token: token
-            // }))
-        }).catch(err => {
-            authenticationFailed()
-        })
-    }
-})
-
-function authMiddleware(req, res, next) {
-
-    function getToken(req) {
-        if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') { // Authorization: Bearer g1jipjgi1ifjioj
-            // Handle token presented as a Bearer token in the Authorization header
-            return req.headers.authorization.split(' ')[1];
-        } else if (req.query && req.query.token) {
-            // Handle token presented as URI param
-            return req.query.token;
-        } else if (req.cookies && req.cookies.token) {
-            // Handle token presented as a cookie parameter
-            return req.cookies.token;
-        }
-        // If we return null, we couldn't find a token.
-        // In this case, the JWT middleware will return a 401 (unauthorized) to the client for this request
-        return null;
-    }
-
-    var token = getToken(req);
-
-    jwt.verify(token).then(decode => {
-        if(decode == false) {
-            JsonRoutes.sendResult(res, {
-                code: 401,
-                data: {"error": "Invalid JWT token"}
-            })
-        } else {
-            req.email = decode.id;
-            req.rjwt = decode.rjwt;
-            next();
-        }
-    }).catch(err => {
-        JsonRoutes.sendResult(res, {
-            code: 401,
-            data: {"error": "Invalid JWT token"}
-        })
-    })
+  if (!key) {
+    return false;
+  }
+  return key.userId;
 }
 
-JsonRoutes.Middleware.use("/api/platform/networks", authMiddleware);
-JsonRoutes.Middleware.use("/api/platform/logout", authMiddleware);
+async function authMiddleware(req, res, next) {
+  const auth = req.headers.authorization;
+  const token = auth.split(' ')[1];
 
-JsonRoutes.add("post", "/api/platform/networks/create", function(req, res, next) {
-    let { name, locationCode } = req.body;
+  const userId = await validateToken(token);
+  if (!userId) {
+    JsonRoutes.sendResult(res, {
+      code: 401,
+      data: {
+        success: false,
+        error: 'Unauthorized',
+      },
+    });
+  }
 
-    if(!locationCode){
-        locationCode = "us-west-2";
+  req.userId = userId;
+  req.user = Meteor.users.find({ _id: userId }).fetch()[0];
+  next();
+  return true;
+}
+
+JsonRoutes.add('get', '/ping', function(req, res, next) {
+  JsonRoutes.sendResult(res, {
+    code: 200,
+    data: 'ping',
+  });
+});
+
+JsonRoutes.Middleware.use('/api/platform', authMiddleware);
+
+// Fetch Network Types for this user
+JsonRoutes.add('get', '/api/platform/networks/types', async function(req, res) {
+  const configs = await NetworkConfig.getConfigs();
+  return JsonRoutes.sendResult(res, {
+    code: 200,
+    data: Object.values(configs),
+  });
+});
+
+// Fetch All locations for this user
+JsonRoutes.add('get', '/api/platform/networks/locations', async function(req, res) {
+  const locations = LocationApi.getLocations();
+  locations.forEach(loc => {
+    delete loc.workerNodeIP;
+  });
+  return JsonRoutes.sendResult(res, {
+    code: 200,
+    data: locations,
+  });
+});
+
+// Creates a network
+JsonRoutes.add('post', '/api/platform/networks', function(req, res, next) {
+  const { networkConfigId, locationCode, networkName, diskSpace } = req.body;
+
+  const _networkConfig = NetworkConfiguration.find({
+    _id: networkConfigId,
+  }).fetch()[0];
+
+  if (!_networkConfig) {
+    return JsonRoutes.sendResult(res, {
+      code: 400,
+      data: {
+        success: false,
+        error: 'Invalid network configuration id',
+      },
+    });
+  }
+
+  const locations = LocationApi.getLocations();
+  if (!locations.map(i => i.locationCode).includes(locationCode)) {
+    return JsonRoutes.sendResult(res, {
+      code: 400,
+      data: {
+        success: false,
+        error: 'Invalid location code',
+      },
+    });
+  }
+
+  if (!networkName) {
+    return JsonRoutes.sendResult(res, {
+      code: 400,
+      data: {
+        success: false,
+        error: 'networkName is a required parameter',
+      },
+    });
+  }
+
+  const networkConfig = {
+    config: { ..._networkConfig },
+  };
+
+  if (networkConfig.isDiskChangeable && diskSpace) {
+    if (isNaN(Number(diskSpace))) {
+      return JsonRoutes.sendResult(res, {
+        code: 400,
+        data: {
+          success: false,
+          error: 'Invalid disk space. Should be a number',
+        },
+      });
     }
+    networkConfig.diskSpace = Math.floor(Number(diskSpace));
+  }
 
-    let user = Accounts.findUserByEmail(req.email)
+  Meteor.call('createNetwork', { networkName, locationCode, networkConfig, userId: req.userId }, (error, instanceId) => {
+    if (error) {
+      JsonRoutes.sendResult(res, {
+        code: 400,
+        error: error.message,
+      });
+    } else {
+      JsonRoutes.sendResult(res, {
+        code: 400,
+        data: {
+          success: true,
+          data: { instanceId },
+        },
+      });
+    }
+  });
+});
 
-    Meteor.call("createNetwork", {networkName: name, locationCode, userId: user._id}, (error, instanceId) => {
-        if(error) {
-            JsonRoutes.sendResult(res, {
-                code: 401,
-                data: {"error": "An unknown error occured"}
-            })
-        } else {
-            res.end(JSON.stringify({
-                "instanceId": instanceId
-            }))
-        }
-    })
-})
+// Deletes a network
+JsonRoutes.add('delete', '/api/platform/networks/:instanceId', function(req, res) {
+  const { instanceId } = req.params;
 
-JsonRoutes.add("post", "/api/platform/networks/invite", function(req, res, next) {
-    let user = Accounts.findUserByEmail(req.email)
-    let inviteUserEmail = req.body.inviteEmail;
-    let networkId = req.body.networkId;
-    let memberType = req.body.memberType;
+  Meteor.call('deleteNetwork', instanceId, req.userId, (err, data) => {
+    if (err) {
+      JsonRoutes.sendResult(res, {
+        code: 400,
+        error: err.message,
+      });
+    } else {
+      JsonRoutes.sendResult(res, {
+        code: 400,
+        data: {
+          success: true,
+        },
+      });
+    }
+  });
+});
 
-    Meteor.call("inviteUserToNetwork", networkId, memberType, inviteUserEmail, user._id, (error, instanceId) => {
-        if(error) {
-            JsonRoutes.sendResult(res, {
-                code: 401,
-                data: {"error": "An unknown error occured"}
-            })
-        } else {
-            res.end(JSON.stringify({
-                "message": "Successfully Invited"
-            }))
-        }
-    })
-})
+// Sends an invite to email id
+JsonRoutes.add('post', '/api/platform/networks/invite', function(req, res, next) {
+  let user = req.user;
+  let { inviteToEmail, networkId, networkType } = req.body;
 
-JsonRoutes.add("post", "/api/platform/networks/delete", function(req, res, next) {
-    let user = Accounts.findUserByEmail(req.email)
-    let networkId = req.body.networkId;
+  Meteor.call('inviteUserToNetwork', networkId, networkType, inviteToEmail, user._id, (error, inviteId) => {
+    if (error) {
+      JsonRoutes.sendResult(res, {
+        code: 401,
+        data: { error: error.message || error.reason, success: false },
+      });
+    } else {
+      JsonRoutes.sendResult(res, {
+        code: 200,
+        data: {
+          success: true,
+          inviteId,
+        },
+      });
+    }
+  });
+});
 
-    Meteor.call("deleteNetwork", networkId, (error, instanceId) => {
-        if(error) {
-            JsonRoutes.sendResult(res, {
-                code: 401,
-                data: {"error": "An unknown error occured"}
-            })
-        } else {
-            res.end(JSON.stringify({
-                "message": "Successfully Deleted"
-            }))
-        }
-    })
-})
+// Joins a network with custom params
+JsonRoutes.add('post', '/api/platform/networks/join', function(req, res) {
+  const {
+    networkName,
+    nodeType,
+    genesisFileContent,
+    totalENodes,
+    impulseURL,
+    assetsContractAddress,
+    atomicSwapContractAddress,
+    streamsContractAddress,
+    impulseContractAddress,
+    locationCode,
+    networkConfigId,
+  } = req.body;
 
-JsonRoutes.add("post", "/api/platform/logout", function(req, res, next) {
-    const call = jwt.call();
-    call.destroy(req.rjwt).then(() => {
-        res.end(JSON.stringify({
-            "message": "Logout successful"
-        }))
-    }).catch(() => {
+  const data = {
+    networkName,
+    nodeType,
+    genesisFileContent,
+    totalENodes,
+    impulseURL,
+    assetsContractAddress,
+    atomicSwapContractAddress,
+    streamsContractAddress,
+    impulseContractAddress,
+    locationCode,
+    networkConfigId,
+  };
+
+  const returned = false;
+  Object.keys(data).forEach(key => {
+    if (!data[key] && !returned) {
+      returned = true;
+      return JsonRoutes.sendResult(res, {
+        code: 400,
+        data: {
+          success: false,
+          error: `${key} is required`,
+        },
+      });
+    }
+  });
+
+  if (returned) {
+    return;
+  }
+
+  const locations = LocationApi.getLocations();
+  if (!locations.map(i => i.locationCode).includes(locationCode)) {
+    return JsonRoutes.sendResult(res, {
+      code: 400,
+      data: {
+        success: false,
+        error: 'Invalid location code',
+      },
+    });
+  }
+
+  const _networkConfig = NetworkConfiguration.find({
+    _id: networkConfigId,
+  }).fetch()[0];
+  if (!_networkConfig) {
+    return JsonRoutes.sendResult(res, {
+      code: 400,
+      data: {
+        success: false,
+        error: 'Invalid network configuration id',
+      },
+    });
+  }
+  const networkConfig = {
+    config: { ..._networkConfig },
+  };
+
+  if (networkConfig.isDiskChangeable && diskSpace) {
+    if (isNaN(Number(diskSpace))) {
+      return JsonRoutes.sendResult(res, {
+        code: 400,
+        data: {
+          success: false,
+          error: 'Invalid disk space. Should be a number',
+        },
+      });
+    }
+    networkConfig.diskSpace = Math.floor(Number(diskSpace));
+  }
+
+  if (!Array.isArray(totalENodes)) {
+    return JsonRoutes.sendResult(res, {
+      code: 400,
+      data: {
+        success: false,
+        error: 'totalENodes should be a valid json array',
+      },
+    });
+  }
+
+  Meteor.call(
+    'joinNetwork',
+    networkName,
+    nodeType,
+    genesisFileContent,
+    totalENodes,
+    impulseURL,
+    assetsContractAddress,
+    atomicSwapContractAddress,
+    streamsContractAddress,
+    impulseContractAddress,
+    locationCode,
+    networkConfig,
+    req.user._id,
+    (err, instanceId) => {
+      if (error) {
         JsonRoutes.sendResult(res, {
-            code: 401,
-            data: {"error": "An unknown error occured"}
-        })
-    })
-})
+          code: 401,
+          data: { error: error.message || error.reason, success: false },
+        });
+      } else {
+        JsonRoutes.sendResult(res, {
+          code: 200,
+          data: {
+            success: true,
+            data: {
+              instanceId,
+            },
+          },
+        });
+      }
+    }
+  );
+});
+
+JsonRoutes.add('post', '/api/platform/networks/invite/accept', function(req, res) {
+  const { inviteId, locationCode, networkConfigId } = req.body;
+
+  const _networkConfig = NetworkConfiguration.find({
+    _id: networkConfigId,
+  }).fetch()[0];
+
+  if (!_networkConfig) {
+    return JsonRoutes.sendResult(res, {
+      code: 400,
+      data: {
+        success: false,
+        error: 'Invalid network configuration id',
+      },
+    });
+  }
+
+  const networkConfig = {
+    config: { ..._networkConfig },
+  };
+
+  if (networkConfig.isDiskChangeable && diskSpace) {
+    if (isNaN(Number(diskSpace))) {
+      return JsonRoutes.sendResult(res, {
+        code: 400,
+        data: {
+          success: false,
+          error: 'Invalid disk space. Should be a number',
+        },
+      });
+    }
+    networkConfig.diskSpace = Math.floor(Number(diskSpace));
+  }
+
+  Meteor.call('acceptInvitation', inviteId, locationCode, networkConfig, req.user._id, (error, instanceId) => {
+    if (error) {
+      JsonRoutes.sendResult(res, {
+        code: 401,
+        data: { error: error.message || error.reason, success: false },
+      });
+    } else {
+      JsonRoutes.sendResult(res, {
+        code: 200,
+        data: {
+          success: true,
+          data: {
+            instanceId,
+          },
+        },
+      });
+    }
+  });
+});
