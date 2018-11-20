@@ -334,6 +334,11 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
       _id: invitation.networkId,
     }).fetch()[0];
 
+    debug("Network to join", network);
+    if(!network) {
+      throw new Meteor.Error("No network to join");
+    }
+
     WebHookApis.queue({
       userId: invitation.inviteFrom,
       payload: WebHookApis.generatePayload({
@@ -383,7 +388,6 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
           }
         );
 
-        const network = Networks.find({_id: res}).fetch()[0];
         agenda.schedule(new Date(Date.now() + 30000), 'whitelist nodes', {
           newNode_id: res,
           node_id: network._id,
@@ -391,7 +395,7 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
 
         debug("Accepted invitation", res);
 
-        resolve(network.instanceId);
+        resolve(res);
       }
     );
   });
