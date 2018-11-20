@@ -334,7 +334,7 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
       _id: invitation.networkId,
     }).fetch()[0];
 
-    console.log("Network to join", network);
+    debug("Network to join", network);
     if(!network) {
       throw new Meteor.Error("No network to join");
     }
