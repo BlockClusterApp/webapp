@@ -6,7 +6,7 @@ const RazorPayPaymentLink = new Mongo.Collection("razorpayPaymentLink");
 
 AttachBaseHooks(RazorPayPaymentLink);
 
-if(!Meteor.isClient) {
+if(Meteor.isServer) {
   RazorPayPaymentLink._ensureIndex({
     id: 1
   });
