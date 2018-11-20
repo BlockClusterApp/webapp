@@ -9,6 +9,8 @@ import agenda from '../../modules/schedulers/agenda';
 import Billing from '../../api/billing';
 import WebHookApis from '../communication/webhook';
 
+const debug = require('debug')('api:user-functions')
+
 async function sendEmails(users) {
   const ejsTemplate = await getEJSTemplate({
     fileName: 'credit-card-link-reminder.ejs',
@@ -282,7 +284,7 @@ NetworkInvitation.inviteUserToNetwork = async function(networkId, nodeType, emai
     }),
   });
 
-  return true;
+  return result;
 };
 
 NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
@@ -316,11 +318,17 @@ NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
   };
 };
 
-NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networkConfig) {
+NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networkConfig, userId) {
   return new Promise((resolve, reject) => {
+    userId = userId || Meteor.userId;
     const invitation = UserInvitation.find({
       _id: invitationId,
+      inviteTo: userId
     }).fetch()[0];
+
+    if(!invitation) {
+      reject("Invalid invitation id");
+    }
 
     const network = Networks.find({
       _id: invitation.networkId,
@@ -379,7 +387,10 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
           node_id: network._id,
         });
 
-        resolve(invitationId);
+        debug("Accepted invitation", res);
+        const network = Networks.find({_id: res}).fetch()[0];
+
+        resolve(network.instanceId);
       }
     );
   });
