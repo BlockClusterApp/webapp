@@ -92,6 +92,10 @@ WebHookApis.queue = async ({ payload, userId, id, delay }) => {
     url = user.profile.notifyURL;
   }
 
+  if(!url) {
+    return;
+  }
+
   id = id || uuid();
   WebHook.insert({
     id,
@@ -109,6 +113,7 @@ WebHookApis.queue = async ({ payload, userId, id, delay }) => {
       delay,
     }
   );
+  return;
 };
 
 WebHookApis.send = async ({ id }) => {
