@@ -367,6 +367,7 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
       networkConfig,
       invitation.inviteTo,
       (err, res) => {
+        console.log(err, res);
         if (err) return reject(err);
         UserInvitation.update(
           {
@@ -382,13 +383,13 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
           }
         );
 
+        const network = Networks.find({_id: res}).fetch()[0];
         agenda.schedule(new Date(Date.now() + 30000), 'whitelist nodes', {
           newNode_id: res,
           node_id: network._id,
         });
 
         debug("Accepted invitation", res);
-        const network = Networks.find({_id: res}).fetch()[0];
 
         resolve(network.instanceId);
       }
