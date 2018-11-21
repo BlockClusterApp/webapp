@@ -39,7 +39,7 @@ module.exports = function(agenda) {
       console.log('Razorpay addons will be generated in 30 seconds');
       agenda.schedule('in 30 seconds', `attach-razorpay-addons${uuid}`);
     } else {
-      agenda.every('0 23 4 * *', 'attach-razorpay-addons');
+      agenda.every('0 17 4 * *', 'attach-razorpay-addons');
     }
   })();
 
