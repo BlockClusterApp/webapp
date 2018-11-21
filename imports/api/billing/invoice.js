@@ -69,7 +69,6 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   const conversion = await Payment.getConversionToINRRate({});
   invoiceObject.totalAmountINR = Math.max(Math.floor(Number(totalAmount) * 100 * conversion), 0);
 
-
   invoiceObject.conversionRate = conversion;
 
   const invoiceId = Invoice.insert(invoiceObject);
@@ -88,7 +87,6 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
       billingPeriodLabel: invoiceObject.billingPeriodLabel,
     });
   }
-
 
   if (Number(invoiceObject.totalAmountINR) <= 0) {
     Invoice.update(
@@ -144,9 +142,6 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   if (rzSubscriptionId) {
     selector.rzSubscriptionId = rzSubscriptionId;
   }
-  if (rzCustomerId) {
-    selector.rzCustomerId = rzCustomerId;
-  }
 
   if (invoiceId) {
     selector = {
@@ -164,8 +159,24 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   const invoice = Invoice.find(selector).fetch()[0];
 
   if (!invoice) {
+    await RazorPay.refundPayment(rzPayment.id, { noPaymentRequest: true, amount: rzPayment.amount });
+    ElasticLogger.log('Refunded not existing invoice', {
+      invoiceId,
+      rzPaymentId: rzPayment.id,
+      id: spanId,
+    });
     RavenLogger.log(`Error settling invoice: Does not exists`, { ...selector, at: new Date() });
-    throw new Meteor.Error(`Error settling invoice: Does not exists ${JSON.stringify(selector)}`);
+    return true;
+  }
+
+  if ([Invoice.PaymentStatusMapping.WaivedOff].includes(invoice.paymentStatus) || invoice.totalAmount <= 0) {
+    await RazorPay.refundPayment(rzPayment.id, { noPaymentRequest: true, amount: rzPayment.amount });
+    ElasticLogger.log('Refunded waived off invoice', {
+      invoiceId,
+      rzPaymentId: rzPayment.id,
+      id: spanId,
+    });
+    return invoice._id;
   }
 
   Invoice.update(selector, {
@@ -357,7 +368,7 @@ InvoiceObj.waiveOffInvoice = async ({ invoiceId, reason, userId, user }) => {
     }
   );
 
-  if (invoice.paymentLink.link) {
+  if (invoice.paymentLink && invoice.paymentLink.link) {
     await RazorPay.cancelPaymentLink({ paymentLinkId: invoice.paymentLink.id, reason: `Invoice ${invoice._id} waived off`, userId });
   }
 

@@ -18,6 +18,7 @@ module.exports = bullSystem => {
           $in: [Invoice.PaymentStatusMapping.Pending],
         },
       }).fetch()[0];
+      debug("Attaching addon to ", invoiceId);
       if (!invoice) {
         ElasticLogger.log(`Invoice already has razorpay addon attached. Cannot attach again`, {
           invoiceId,
@@ -33,7 +34,7 @@ module.exports = bullSystem => {
       });
 
       const addons = RZPTAddon.find({ invoiceId: invoice._id, subscriptionId: invoice.rzSubscriptionId }).fetch();
-      if (addons && adons.length <= 0) {
+      if (addons && addons.length <= 0) {
         ElasticLogger.log('No transient razorpay addons', {
           invoiceId: invoice._id,
           subscriptionId: invoice.rzSubscriptionId,
@@ -52,7 +53,7 @@ module.exports = bullSystem => {
           { _id: invoice._id },
           {
             $set: {
-              paymentStatus: Invoice.PaymentStatusMapping.Paid,
+              paymentStatus: Invoice.PaymentStatusMapping.Settled,
             },
           }
         );
@@ -64,7 +65,7 @@ module.exports = bullSystem => {
         addOn: {
           name: `Bill for ${invoice.billingPeriodLabel}`,
           description: `Platform usage charges`,
-          amount: totalAmount, // Since we are already charging Rs 1 for subscription so deduct Rs 1 from final here
+          amount: totalAmount, //  Since we are already charging Rs 1 for subscription so deduct Rs 1 from final here
           currency: 'INR',
         },
         userId: invoice.userId,
