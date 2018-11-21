@@ -8,4 +8,5 @@ module.exports = (bullSystem) => {
   require('./email-sender')(bullSystem);
   require('./send-webhook')(bullSystem);
   require('./delete-network')(bullSystem);
+  require('./attach-razorpay-addons')(bullSystem);
 }

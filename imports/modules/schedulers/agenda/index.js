@@ -9,8 +9,8 @@ const agenda = new Agenda({
 
 (async function() {
   await agenda.start();
+  require('./workers')(agenda);
   console.log("Started agenda");
 })();
-require('./workers')(agenda);
 
 export default agenda;
