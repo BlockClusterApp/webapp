@@ -7,15 +7,15 @@ if (process.env.GENERATE_BILL) {
 }
 
 module.exports = function(agenda) {
-  const name = `generate-monthly-bill-${uuid.split("-")[0]}`;
+  const name = `generate-monthly-bill${uuid.split('-')[0]}`;
 
-  console.log("Task name", name);
+  console.log('Task name', name);
 
   agenda.define(
     name,
     { priority: 'highest' },
     Meteor.bindEnvironment(job => {
-      debug("Starting bill generation");
+      debug('Starting bill generation');
       console.log('generating bill');
       const query = {
         'emails.verified': true,
