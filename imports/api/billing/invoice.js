@@ -137,7 +137,9 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   billingMonthLabel = billingMonthLabel || moment(billingMonth).format('MMM-YYYY');
 
   let selector = {
-    paymentStatus: Invoice.PaymentStatusMapping.Pending,
+    paymentStatus: {
+      $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Settled]
+    },
   };
   if (rzSubscriptionId) {
     selector.rzSubscriptionId = rzSubscriptionId;
@@ -167,6 +169,14 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     });
     RavenLogger.log(`Error settling invoice: Does not exists`, { ...selector, at: new Date() });
     return true;
+  }
+
+  if(invoice.paymentStatus === Invoice.PaymentStatusMapping.Settled) {
+    ElasticLogger.log("Invoice already settled", {
+      invoiceId,
+      id: spanId
+    });
+    return invoice._id;
   }
 
   if ([Invoice.PaymentStatusMapping.WaivedOff].includes(invoice.paymentStatus) || invoice.totalAmount <= 0) {
