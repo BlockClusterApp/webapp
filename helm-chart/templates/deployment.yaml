@@ -51,6 +51,8 @@ spec:
           value: {{ template "envs.redisPort" . }}
         - name: NAMESPACE
           value: {{ template "server.namespace" . }}
+        - name: IS_BLOCKCLUSTER_CLOUD
+          value: "1"
         - name: NETWORK_UPDATE_ID
           value: {{ .Values.NETWORK_UPDATE_ID }}
         - name: NETWORK_UPDATE_KEY
