@@ -19,10 +19,10 @@ module.exports = (bullSystem) => {
       const { userId } = job.data;
       debug("Generating invoice for ", userId);
 
-      let billingMonth = moment().subtract('1', 'month');
-      // if(process.env.GENERATE_BILL) {
-      //   billingMonth = moment().;
-      // }
+      let billingMonth = moment().subtract(1, 'month');
+      if(process.env.GENERATE_BILL) {
+        // billingMonth = moment().subtract(1, 'month');
+      }
       const prevMonth = billingMonth.get('month');
       const prevYear = billingMonth.get('year');
       const bill = await Billing.generateBill({
@@ -31,9 +31,6 @@ module.exports = (bullSystem) => {
         year: prevYear
       });
       debug('Bill', bill);
-
-
-
 
       const rzSubscription = RZSubscription.find({
         userId,
