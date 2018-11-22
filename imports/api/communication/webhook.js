@@ -50,7 +50,7 @@ WebHookApis.generatePayload = data => {
   if (data.inviteId) {
     result.keys.push('invite');
     result.data.invite = {
-      id: data.inviteId
+      id: data.inviteId,
     };
     delete data.inviteId;
   }
@@ -92,7 +92,7 @@ WebHookApis.queue = async ({ payload, userId, id, delay }) => {
     url = user.profile.notifyURL;
   }
 
-  if(!url) {
+  if (!url) {
     return;
   }
 
@@ -192,9 +192,6 @@ WebHookApis.send = async ({ id }) => {
       {
         $set: {
           status: WebHook.StatusMapping.Error,
-          response: {
-            code: response.statusCode,
-          },
         },
       }
     );
