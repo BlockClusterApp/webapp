@@ -249,7 +249,7 @@ async function insertOrUpdateSubscription(event, { user, subscription, payment }
       subscription,
       payment,
     });
-    throw new Error(`RZ Subscription ${subscription.id} does not exists`);
+    return;
   }
   if (!(rzSubscription.payments && rzSubscription.payments.map(p => p.id).includes(payment.id))) {
     RZSubscription.update(
@@ -304,13 +304,13 @@ async function insertOrUpdateSubscription(event, { user, subscription, payment }
         .toDate(),
       rzPayment: payment,
     });
-    bullSystem.addJob('payment-made-email', {
-      invoiceId: rzInvoiceId,
-      user,
-      subscription,
-      payment,
-      event,
-    });
+    // bullSystem.addJob('payment-made-email', {
+    //   invoiceId: rzInvoiceId,
+    //   user,
+    //   subscription,
+    //   payment,
+    //   event,
+    // });
   }
 
   return true;
@@ -325,7 +325,7 @@ async function handleSubscriptionHalted({ subscription }, bullSystem) {
     RavenLogger.log('RazorPayWebhook | HandleSubscriptionHalted: RZSubscription does not exists', {
       subscription,
     });
-    throw new Error(`RZSubscription does not exists for ${subscription.id}`);
+    return;
   }
 
   RZSubscription.update(
@@ -378,7 +378,7 @@ async function updateFailedInvoice({ payment }) {
   const rzInvoice = await Razorpay.fetchInvoices({ paymentId: payment.id, customerId: payment.customer_id });
   if (!rzInvoice) {
     RavenLogger.log('RazorpayWebhook | updateFailedInvoice : Error handling invoice', { payment });
-    throw new Error(`Error handling failed invoice | ${payment.id}`);
+    return;
   }
 
   const rzSubscription = RZSubscription.find({
@@ -450,7 +450,7 @@ async function handleInvoicePaid({ invoice, payment }) {
   }).fetch()[0];
   if (!rzSubscription) {
     RavenLogger.log('RazorPayWebhook | handleInvoicePaid : Invoice paid for unknown subscription', { invoice, payment });
-    throw new Error(`Invoice paid for unknown subscription ${invoice.subscription_id}`);
+    return;
   }
   RZSubscription.update(
     {
