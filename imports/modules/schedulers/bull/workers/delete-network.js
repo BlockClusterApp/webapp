@@ -12,6 +12,12 @@ module.exports = function(bullSystem) {
     return new Promise(async resolve => {
       const { locationCode, instanceId } = job.data;
       const id = instanceId;
+      bullSystem.addJob('clean-pods', {
+        locationCode,
+        instanceId,
+      }, {
+        delay: 5 * 60 * 1000
+      });
       try {
         HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + id, kubeCallback);
       } catch (err) {
