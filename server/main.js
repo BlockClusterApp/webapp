@@ -674,7 +674,7 @@ Meteor.methods({
                                     );
                                   }
 
-                                  Bull.addJob(
+                                  Bull.addVolumeJob(
                                     'fix-volume',
                                     {
                                       locationCode,
@@ -1257,7 +1257,7 @@ spec:
                                   }
                                 );
 
-                                Bull.addJob(
+                                Bull.addVolumeJob(
                                   'fix-volume',
                                   {
                                     locationCode,
