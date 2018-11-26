@@ -674,6 +674,19 @@ Meteor.methods({
                                     );
                                   }
 
+                                  if (process.env.IS_BLOCKCLUSTER_CLOUD) {
+                                    Bull.addVolumeJob(
+                                      'fix-volume',
+                                      {
+                                        locationCode,
+                                        instanceId,
+                                      },
+                                      {
+                                        delay: 5 * 60 * 1000,
+                                      }
+                                    );
+                                  }
+
                                   Webhook.queue({
                                     payload: Webhook.generatePayload({ event: 'create-network', networkId: instanceId, userId }),
                                     userId,
@@ -1245,6 +1258,20 @@ spec:
                                     },
                                   }
                                 );
+
+                                if (process.env.IS_BLOCKCLUSTER_CLOUD) {
+                                  Bull.addVolumeJob(
+                                    'fix-volume',
+                                    {
+                                      locationCode,
+                                      instanceId,
+                                    },
+                                    {
+                                      delay: 5 * 60 * 1000,
+                                    }
+                                  );
+                                }
+
                                 Webhook.queue({
                                   userId,
                                   payload: Webhook.generatePayload({
