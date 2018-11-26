@@ -674,16 +674,18 @@ Meteor.methods({
                                     );
                                   }
 
-                                  Bull.addVolumeJob(
-                                    'fix-volume',
-                                    {
-                                      locationCode,
-                                      instanceId,
-                                    },
-                                    {
-                                      delay: 5 * 60 * 1000,
-                                    }
-                                  );
+                                  if (process.env.IS_BLOCKCLUSTER_CLOUD) {
+                                    Bull.addVolumeJob(
+                                      'fix-volume',
+                                      {
+                                        locationCode,
+                                        instanceId,
+                                      },
+                                      {
+                                        delay: 5 * 60 * 1000,
+                                      }
+                                    );
+                                  }
 
                                   Webhook.queue({
                                     payload: Webhook.generatePayload({ event: 'create-network', networkId: instanceId, userId }),
@@ -1257,16 +1259,18 @@ spec:
                                   }
                                 );
 
-                                Bull.addVolumeJob(
-                                  'fix-volume',
-                                  {
-                                    locationCode,
-                                    instanceId,
-                                  },
-                                  {
-                                    delay: 5 * 60 * 1000,
-                                  }
-                                );
+                                if (process.env.IS_BLOCKCLUSTER_CLOUD) {
+                                  Bull.addVolumeJob(
+                                    'fix-volume',
+                                    {
+                                      locationCode,
+                                      instanceId,
+                                    },
+                                    {
+                                      delay: 5 * 60 * 1000,
+                                    }
+                                  );
+                                }
 
                                 Webhook.queue({
                                   userId,
