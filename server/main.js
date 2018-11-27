@@ -739,12 +739,15 @@ Meteor.methods({
 
     var network = Networks.find({
       instanceId: id,
-      user: userId,
       deletedAt: null,
     }).fetch()[0];
 
     if (!network) {
       throw new Meteor.Error('bad-request', 'Invalid instance id');
+    }
+
+    if (network.user !== Meteor.userId() && Meteor.user().admin <= 0) {
+      throw new Meteor.Error('bad-request', 'Not the owner of this network');
     }
 
     Networks.update(
