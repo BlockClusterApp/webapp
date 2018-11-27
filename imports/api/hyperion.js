@@ -76,6 +76,16 @@ async function authMiddleware(req, res, next) {
   }
 
   const token = getToken(req);
+
+  if (!token) {
+    JsonRoutes.sendResult(res, {
+      code: 401,
+      data: {
+        error: 'Unauthorized',
+      },
+    });
+  }
+
   if (token.includes('.')) {
     // From platform generated API
     jwt
