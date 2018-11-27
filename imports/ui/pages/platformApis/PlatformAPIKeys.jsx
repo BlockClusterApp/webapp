@@ -39,7 +39,7 @@ class PlatformApis extends Component {
 
   deleteApiKey = id => {
     this.setState({
-      [`deleting_${id}`]: true
+      [`deleting_${id}`]: true,
     });
     Meteor.call('deleteApiKey', id, (err, res) => {
       this.setState({
@@ -69,6 +69,7 @@ class PlatformApis extends Component {
                   <ul>
                     <li>Create or Delete Networks</li>
                     <li>Manage Invitations</li>
+                    <li>Use for all hyperion related functions</li>
                   </ul>
                   <p>P.S. You cannot control the functionality of your blockchain nodes via these API keys.</p>
                   <p>
