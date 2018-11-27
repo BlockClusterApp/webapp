@@ -2,7 +2,7 @@ import ApiKeys from '../../collections/api-keys';
 const Apis = {};
 
 const API_KEY_LENGTH = 28;
-const allowed = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnop:qrstuvwxyz1234567890@#$%&';
+const allowed = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890@#$%&';
 
 async function generateApiKey() {
   let result = [];
@@ -38,20 +38,23 @@ Apis.createNewApiKey = async function() {
 Apis.deleteApiKey = async function(id) {
   const key = ApiKeys.find({
     _id: id,
-    userId: Meteor.userId()
+    userId: Meteor.userId(),
   }).fetch()[0];
 
-  if (!key){
-    throw new Meteor.Error("bad-request", "Invalid api key to be deleted");
+  if (!key) {
+    throw new Meteor.Error('bad-request', 'Invalid api key to be deleted');
   }
 
-  ApiKeys.update({
-    _id: key._id
-  }, {
-    $set: {
-      active: false
+  ApiKeys.update(
+    {
+      _id: key._id,
+    },
+    {
+      $set: {
+        active: false,
+      },
     }
-  });
+  );
 
   return true;
 };
