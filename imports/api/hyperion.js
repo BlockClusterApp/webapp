@@ -75,7 +75,7 @@ async function authMiddleware(req, res, next) {
     return null;
   }
 
-  var token = getToken(req);
+  const token = getToken(req);
   if (token.includes('.')) {
     // From platform generated API
     jwt
