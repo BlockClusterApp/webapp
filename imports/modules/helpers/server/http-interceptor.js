@@ -1,22 +1,22 @@
-import Config from "../../config/server";
+import Config from '../../config/server';
 
 let locationConfigs = undefined;
 let kubeURLs;
 
-if(RemoteConfig.clusters) {
+if (RemoteConfig.clusters) {
   locationConfigs = Object.values(RemoteConfig.clusters[Config.namespace]);
   kubeURLs = locationConfigs.map(lc => lc.masterAPIHost);
 }
 
 process.on('RemoteConfigChanged', () => {
-  if(RemoteConfig.clusters) {
+  if (RemoteConfig.clusters) {
     locationConfigs = Object.values(RemoteConfig.clusters[Config.namespace]);
     kubeURLs = locationConfigs.map(lc => lc.masterAPIHost);
   }
-})
+});
 
 function getLocationConfigURL(url) {
-  if(!kubeURLs){
+  if (!kubeURLs) {
     kubeURLs = locationConfigs.map(lc => lc.masterAPIHost);
   }
   for (let locationConfig of locationConfigs) {
@@ -24,10 +24,8 @@ function getLocationConfigURL(url) {
       return locationConfig;
     }
   }
-  return RemoteConfig.clusters[Config.namespace]["us-west-2"];
+  return RemoteConfig.clusters[Config.namespace]['us-west-2'];
 }
-
-
 
 HTTP.setInterceptorFunction(requestOptions => {
   /*
@@ -51,10 +49,21 @@ HTTP.setInterceptorFunction(requestOptions => {
     return undefined;
   }
 
-  if (requestOptions.hasOwnProperty("auth")) {
+  requestOptions.agentOptions = requestOptions.agentOptions || {};
+
+  requestOptions.agentOptions.rejectUnauthorized = false;
+
+  if (requestOptions.hasOwnProperty('auth')) {
     return undefined;
   }
   const locationConfig = getLocationConfigURL(requestOptions.url);
-  requestOptions.auth = locationConfig.auth;
+
+  if (locationConfig.auth && locationConfig.auth.user) {
+    requestOptions.auth = locationConfig.auth;
+  } else if (locationConfig.auth && locationConfig.auth.token) {
+    requestOptions.headers = requestOptions.headers || {};
+    requestOptions.headers.Authorization = `Bearer ${locationConfig.auth.token} `;
+  }
+
   return undefined;
 });
