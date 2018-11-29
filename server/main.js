@@ -377,6 +377,7 @@ Meteor.methods({
           (err, response) => {
             if (err) {
               console.log(err);
+              deleteNetwork({ id, locationCode, instanceId, myFuture });
               throw new Meteor.Error('Error allocating storage');
             }
             HTTP.call(
