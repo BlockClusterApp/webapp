@@ -35,7 +35,7 @@
     "fibers": "2.0.0",
     "fine-uploader": "^5.16.2",
     "fine-uploader-wrappers": "^1.0.1",
-    "geoip-lite": "^1.3.2",
+    "geoip-lite": "^1.3.5",
     "history": "4.7.2",
     "html2pdf.js": "^0.9.0",
     "i": "^0.3.6",
