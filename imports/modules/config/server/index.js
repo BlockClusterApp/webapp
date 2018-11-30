@@ -43,6 +43,8 @@ async function fetchNewConfig() {
     global.RemoteConfig.Ingress = {};
   }
 
+  global.RemoteConfig.Ingress = global.RemoteConfig.Ingress[getNamespace()] || { Annotations: {} };
+
   if (global.LicenceError > 60) {
     // Can be down for 60 minutes
     global.RemoteConfig = {
