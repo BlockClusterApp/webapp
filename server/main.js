@@ -227,6 +227,9 @@ async function deleteNetwork({ id, locationCode, instanceId, myFuture }) {
 }
 
 function getIngressConfig({ instanceId, locationCode, enableAuth }) {
+  if (!RemoteConfig.Ingress.Annotations) {
+    RemoteConfig.Ingress.Annotations = {};
+  }
   const annotations = {
     ...{
       'nginx.ingress.kubernetes.io/rewrite-target': '/',
