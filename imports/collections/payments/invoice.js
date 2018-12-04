@@ -8,6 +8,7 @@ AttachBaseHooks(Invoice);
 Invoice.PaymentStatusMapping = {
   Pending: 1,
   Settled: 2,
+  Paid: 2,
   DemoUser: 3,
   Failed: 4,
   WaivedOff: 5

@@ -76,8 +76,10 @@ module.exports = function(agenda) {
       });
     })
   );
+  (async () => {
+    if (['staging', 'production'].includes(process.env.NODE_ENV)) {
+      await agenda.every('0 6 4,8 * *', 'invoice-reminder-email');
+    }
+  })();
 
-  if (['staging', 'production'].includes(process.env.NODE_ENV)) {
-    agenda.every('0 6 4,8 * *', 'invoice-reminder-email');
-  }
 };

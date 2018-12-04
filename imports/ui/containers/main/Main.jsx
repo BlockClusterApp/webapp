@@ -52,6 +52,7 @@ import ClientDetails from '../../pages/admin/clients/ClientDetails.jsx';
 import ClientCreate from '../../pages/admin/clients/ClientCreate';
 import ClientMetrics from '../../pages/admin/clients/ClientMetrics';
 import ConfigList from '../../pages/admin/network-config/List';
+import PlatformAPIKeys from '../../pages/platformApis/PlatformAPIKeys.jsx';
 
 export default class Main extends Component {
   constructor(props) {
@@ -107,6 +108,7 @@ export default class Main extends Component {
             <Route exact path="/app/networks/:id/bc-accounts" component={BCAccountsView} />
             <Route exact path="/app/networks/:id/security/apis" component={APIsCreds} />
             <Route exact path="/app/networks/:id/sc/management" component={SmartContractsManagement} />
+            <Route exact path="/app/platform-apis" component={PlatformAPIKeys} />
 
             {features.Payments && <Route exact path="/app/payments" component={Payments} />}
             {features.Invoice && <Route exact path="/app/billing" component={BillingDashboard} />}

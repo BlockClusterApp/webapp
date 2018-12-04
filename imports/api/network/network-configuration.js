@@ -2,7 +2,7 @@ import NetworkConfiguration from '../../collections/network-configuration/networ
 
 const NetworkConfig = {};
 
-NetworkConfig.getConfigs = function(){
+NetworkConfig.getConfigs = async function(){
   const configs = NetworkConfiguration.find({active: true, showInNetworkSelection: true});
 
   const result = {};
@@ -16,3 +16,5 @@ NetworkConfig.getConfigs = function(){
 Meteor.methods({
   getConfigs: NetworkConfig.getConfigs
 });
+
+export default NetworkConfig
