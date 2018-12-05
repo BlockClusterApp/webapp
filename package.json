@@ -81,6 +81,7 @@
     "utf8": "*",
     "uuid": "^3.3.2",
     "web3": "0.20.6",
+    "webshot": "0.16.0",
     "winston": "^3.1.0",
     "winston-daily-rotate-file": "^3.5.1",
     "written-number": "^0.8.1"

@@ -3,6 +3,10 @@ import RazorPay from '../../api/payments/payment-gateways/razorpay';
 import Payment from '../../api/payments/';
 import Email from '../emails/email-sender';
 import moment from 'moment';
+import fs from 'fs';
+import Future from 'fibers/future';
+import atob from 'atob';
+import pdf from 'html-pdf';
 
 const uuidv4 = require('uuid/v4');
 
@@ -251,9 +255,67 @@ InvoiceObj.generateHTML = async invoiceId => {
     },
     items,
   });
+    var fut = new Future();
 
-  return finalHTML;
+  var fileName = "pokemon-report.pdf";
+
+var options = {
+      //renderDelay: 2000,
+      "paperSize": {
+          "format": "Letter",
+          "orientation": "portrait",
+          "margin": "1cm"
+      },
+      siteType: 'html'
+  };
+
+  // Commence Webshot
+  console.log("Commencing webshot...");
+
+  pdf.create(finalHTML, {format: 'Tabloid' ,orientation: "landscape", }).toFile(fileName, function(err, res) {
+    if (err) return console.log(err);
+    console.log(res);
+    fs.readFile(fileName, function (err, data) {
+              if (err) {
+                  return console.log(err);
+              }
+
+              fs.unlinkSync(fileName);
+              fut.return(data);
+  });
+});
+  // webshot(finalHTML, fileName, options, function(error,success) {
+  //   if(error){
+  //     return console.log(error);
+  //   }
+  //   console.log(success);
+  //     fs.readFile(fileName, function (err, data) {
+  //         if (err) {
+  //             return console.log(err);
+  //         }
+
+  //         fs.unlinkSync(fileName);
+  //         fut.return(data);
+
+  //     });
+  // });
+
+  let pdfData = fut.wait();
+  let base64String = new Buffer(pdfData).toString('base64');
+  return base64String;
+  // return base64ToUint8Array(base64String);
+
 };
+
+function base64ToUint8Array(base64) {
+  var raw = atob(base64);
+  var uint8Array = new Uint8Array(raw.length);
+  for (var i = 0; i < raw.length; i++) {
+  uint8Array[i] = raw.charCodeAt(i);
+  }
+  return uint8Array;
+  }
+
 
 InvoiceObj.sendInvoiceCreatedEmail = async invoice => {
   if (invoice.totalAmountINR <= 0) {
@@ -384,6 +446,8 @@ InvoiceObj.waiveOffInvoice = async ({ invoiceId, reason, userId, user }) => {
 
   return true;
 };
+
+
 
 Meteor.methods({
   generateInvoiceHTML: InvoiceObj.generateHTML,

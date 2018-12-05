@@ -37,3 +37,7 @@ maxfi:remote-collection
 blockcluster:raven
 blockcluster:logs
 jspdf:core
+meteorhacks:npm
+
+
+npm-container
