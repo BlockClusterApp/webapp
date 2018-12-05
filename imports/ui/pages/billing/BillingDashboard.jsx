@@ -3,6 +3,7 @@ import { withTracker } from 'meteor/react-meteor-data';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import { withRouter } from 'react-router-dom';
 import moment from 'moment';
+
 const html2pdf = require("html2pdf.js")
 
 import './Dashboard.scss';
@@ -96,7 +97,9 @@ class BillingDashboard extends Component {
         })
         return false;
       }
-      html2pdf().from(res).set({jsPDF:{ unit: 'in', format: 'a4', orientation: 'landscape' }, margin: [0.5, 1]}).save();
+
+      // debugger;
+      html2pdf().from(res).set({jsPDF:{ unit: 'in', format: 'a4', orientation: 'portrait' }, margin: [0, 0]}).save();
       this.setState({
         downloading: false
       });
