@@ -108,7 +108,7 @@ class BillingDashboard extends Component {
 // window.open("data:application/octet-stream;charset=utf-16le;base64,"+encodeURI(res));
 let a = document.createElement("a");
  a.href = "data:application/octet-stream;base64,"+res;
- a.download = "documentName.pdf"
+ a.download = `BlockclusterBill-${this.state.bill.invoiceId}.pdf`
  a.click();
     });
   }
