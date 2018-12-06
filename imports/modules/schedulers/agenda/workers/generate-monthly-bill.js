@@ -1,16 +1,21 @@
 import bull from '../../bull';
 const debug = require('debug')('scheduler:agenda:generateMonthlyBill');
-let uuid = '';
 
+let uuid = '';
 if (process.env.GENERATE_BILL) {
   uuid = require('uuid/v4')();
 }
 
 module.exports = function(agenda) {
+  const name = `generate-monthly-bill${uuid.split('-')[0]}`;
+
+  console.log('Task name', name);
+
   agenda.define(
-    `generate-monthly-bill${uuid}`,
+    name,
     { priority: 'highest' },
     Meteor.bindEnvironment(job => {
+      debug('Starting bill generation');
       console.log('generating bill');
       const query = {
         'emails.verified': true,
@@ -35,12 +40,14 @@ module.exports = function(agenda) {
     })
   );
 
-  if (['staging', 'production'].includes(process.env.NODE_ENV)) {
-    agenda.every('0 6 1 * *', `generate-monthly-bill`);
-  } else if (process.env.GENERATE_BILL) {
-    console.log('Bill will be generated in 20 seconds');
-    agenda.schedule('in 20 seconds', `generate-monthly-bill${uuid}`);
-  } else {
-    agenda.every('0 6 1 * *', 'generate-monthly-bill');
-  }
+  (async () => {
+    if (['staging', 'production'].includes(process.env.NODE_ENV)) {
+      await agenda.every('30 0 1 * *', name);
+    } else if (process.env.GENERATE_BILL) {
+      console.log('Bill will be generated in 20 seconds', name);
+      await agenda.schedule('in 20 seconds', name);
+    } else {
+      await agenda.every('30 0 1 * *', name);
+    }
+  })();
 };

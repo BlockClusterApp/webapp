@@ -9,15 +9,16 @@ import Toggle from 'react-toggle';
 import 'react-toggle/style.css';
 
 import moment from 'moment';
+import NetworkConfiguration from '../../../../collections/network-configuration/network-configuration';
 
 class VoucherCreate extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      exist:null,
-      code:'',
-      customCode:false,
+      exist: null,
+      code: '',
+      customCode: false,
       noOfVouchers: 1,
       cpu: '',
       disk: '',
@@ -44,8 +45,8 @@ class VoucherCreate extends Component {
   resetForm = () => {
     this.setState(
       {
-        code:'',
-        customCode:false,
+        code: '',
+        customCode: false,
         noOfVouchers: 1,
         cpu: '',
         disk: '',
@@ -81,7 +82,7 @@ class VoucherCreate extends Component {
       () => {
         payload = this.state;
         const _doc_voucher = {
-          code:this.state.customCode ? payload.code : null,
+          code: this.state.customCode ? payload.code : null,
           noOfVouchers: payload.noOfVouchers,
           voucher_code_size: payload.voucher_code_size,
           usablity: {
@@ -100,13 +101,12 @@ class VoucherCreate extends Component {
             percent: payload.is_percent,
           },
           active: payload.voucher_status,
-          networkConfig: { cpu: payload.cpu, disk: payload.disk, ram: payload.ram },
+          networkConfig: JSON.parse(this.config.value),
           expiryDate:
             payload.expiry_date ||
             moment()
               .add(30, 'days')
               .toDate(), //lets take by default 30days
-          isDiskChangeable: payload.isDiskChangeable,
           discountedDays: payload.discountedDays || 0,
         };
         this.setState({
@@ -165,11 +165,11 @@ class VoucherCreate extends Component {
         'vouchers.search',
         {
           query: query,
-          limit: Number(this.state.noOfVouchers)
+          limit: Number(this.state.noOfVouchers),
         },
         {
           onReady: () => {
-            const csv_data = Vouchers.find(query, { limit: Number(this.state.noOfVouchers),skip:0 }).fetch();
+            const csv_data = Vouchers.find(query, { limit: Number(this.state.noOfVouchers), skip: 0 }).fetch();
             this.setState(
               {
                 ['csv_data']: this.formatData(csv_data),
@@ -184,32 +184,34 @@ class VoucherCreate extends Component {
       );
     });
   };
-  checkExisting = e =>{
-    this.setState({
-      [e.target.name]: e.target.value,
-    },()=>{
-      this.voucherSubscription = Meteor.subscribe(
-        "vouchers.search",
-        {
-          query: {code:this.state.code}
-        },
-        {
-          onReady: () => {
-              voucher = Vouchers.find({code:this.state.code}).fetch()[0];
-              if(voucher){
+  checkExisting = e => {
+    this.setState(
+      {
+        [e.target.name]: e.target.value,
+      },
+      () => {
+        this.voucherSubscription = Meteor.subscribe(
+          'vouchers.search',
+          {
+            query: { code: this.state.code },
+          },
+          {
+            onReady: () => {
+              voucher = Vouchers.find({ code: this.state.code }).fetch()[0];
+              if (voucher) {
                 this.setState({
-                  exist:true
+                  exist: true,
                 });
-              }else{
+              } else {
                 this.setState({
-                  exist:false
-                })
+                  exist: false,
+                });
               }
+            },
           }
-        }
-      );
-    });
-      
+        );
+      }
+    );
   };
 
   handleChanges = e => {
@@ -224,6 +226,24 @@ class VoucherCreate extends Component {
   };
 
   render() {
+    const configs = this.props.configs;
+    let networks = null;
+    if (configs && configs.length > 0) {
+      const configList = configs.map(config => (
+        <option value={JSON.stringify(config)} key={config._id}>
+          {config.name} - {config.cpu} vCPU | {config.ram} GB RAM | {config.disk} GB Disk | $ {config.cost.monthly} / month
+        </option>
+      ));
+      networks = (
+        <div className="form-group form-group-default ">
+          <label>Node Type</label>
+          <select className="form-control form-group-default" name="location" ref={input => (this.config = input)} selected={Object.values(configs)[0]}>
+            {configList}
+          </select>
+        </div>
+      );
+    }
+
     return (
       <div className="content VoucherCreate">
         <div className="m-t-20 container-fluid container-fixed-lg bg-white">
@@ -231,66 +251,75 @@ class VoucherCreate extends Component {
             <div className="card-block">
               <div className="form-group">
                 <div className="row">
-                <div className="col-md-4 form-input-group">
-                <label>Customized Voucher Code</label>
-                <span className='help'> e.g WORLDSUMMITB </span>
+                  <div className="col-md-4 form-input-group">
+                    <label>Customized Voucher Code</label>
+                    <span className="help"> e.g WORLDSUMMITB </span>
                     <Toggle name="customCode" className="form-control" icons={false} checked={this.state.customCode} onChange={this.handleChangesToggle.bind(this)} />
-                </div>
+                  </div>
                 </div>
                 <br />
                 {!this.state.customCode && (
                   <div className="row">
-                  <div className="col-md-4 form-input-group">
-                    <label>No of Vouchers</label>
-                    <input
-                      name="noOfVouchers"
-                      type="number"
-                      placeholder="e.g 10"
-                      className="form-control"
-                      onChange={this.handleChanges.bind(this)}
-                      required
-                      // value={this.state.networkConfig.cpu}
-                    />
-                  </div>
-                  <div className="col-md-4 form-input-group">
-                    <label>Size Of Voucher Code</label>
-                    <span className="help"> e.g. "HI12JG" Size 6 </span>
-                    <input
-                      name="voucher_code_size"
-                      type="number"
-                      placeholder="e.g 6"
-                      className="form-control"
-                      onChange={this.handleChanges.bind(this)}
-                      value={this.state.voucher_code_size}
-                      required
-                      // value={this.state.networkConfig.cpu}
-                    />
-                  </div>
+                    <div className="col-md-4 form-input-group">
+                      <label>No of Vouchers</label>
+                      <input
+                        name="noOfVouchers"
+                        type="number"
+                        placeholder="e.g 10"
+                        className="form-control"
+                        onChange={this.handleChanges.bind(this)}
+                        required
+                        // value={this.state.networkConfig.cpu}
+                      />
+                    </div>
+                    <div className="col-md-4 form-input-group">
+                      <label>Size Of Voucher Code</label>
+                      <span className="help"> e.g. "HI12JG" Size 6 </span>
+                      <input
+                        name="voucher_code_size"
+                        type="number"
+                        placeholder="e.g 6"
+                        className="form-control"
+                        onChange={this.handleChanges.bind(this)}
+                        value={this.state.voucher_code_size}
+                        required
+                        // value={this.state.networkConfig.cpu}
+                      />
+                    </div>
                   </div>
                 )}
-                {this.state.customCode &&(
-                <div className="row">
-                <div className="col-md-6 form-input-group">
-                    <label>Voucher Code</label>
-                    <span className="help"> e.g. "WORLDSUMMIT"  &nbsp;&nbsp;</span>
-                    { this.state.code.length>0 ? (this.state.exist ? <span className='text-center text-danger no-margin'> Not Available</span> : <span className='text-center text-success no-margin'> Available</span> ) :''} 
-                    <input
-                      name='code'
-                      type="text"
-                      placeholder="e.g ABCD785"
-                      className="form-control"
-                      onChange={this.checkExisting.bind(this)}
-                      value={this.state.code}
-                      required
-                      // value={this.state.networkConfig.cpu}
-                    />
+                {this.state.customCode && (
+                  <div className="row">
+                    <div className="col-md-6 form-input-group">
+                      <label>Voucher Code</label>
+                      <span className="help"> e.g. "WORLDSUMMIT" &nbsp;&nbsp;</span>
+                      {this.state.code.length > 0 ? (
+                        this.state.exist ? (
+                          <span className="text-center text-danger no-margin"> Not Available</span>
+                        ) : (
+                          <span className="text-center text-success no-margin"> Available</span>
+                        )
+                      ) : (
+                        ''
+                      )}
+                      <input
+                        name="code"
+                        type="text"
+                        placeholder="e.g ABCD785"
+                        className="form-control"
+                        onChange={this.checkExisting.bind(this)}
+                        value={this.state.code}
+                        required
+                        // value={this.state.networkConfig.cpu}
+                      />
+                    </div>
                   </div>
-                </div>
                 )}
                 <br />
                 <label>Network Configuration </label>
                 <div className="row">
-                  <div className="col-md-4 form-input-group">
+                  <div className="col-md-12">{networks}</div>
+                  {/* <div className="col-md-4 form-input-group">
                     <label>CPU</label>
                     <input
                       name="cpu"
@@ -325,7 +354,7 @@ class VoucherCreate extends Component {
                       required
                       // value={this.state.networkConfig.disk}
                     />
-                  </div>
+                  </div> */}
                 </div>
                 <br />
                 <label>Usability</label>
@@ -437,7 +466,9 @@ class VoucherCreate extends Component {
                 </div>
               </div>
               <LaddaButton
-                disabled={(this.state.cpu >0 && this.state.ram>0 && this.state.disk>0 && this.state.noOfVouchers>0 && (this.state.code.length>0 ? !this.state.exist : true )) ? false : true}
+                disabled={
+                  !(this.state.noOfVouchers > 0 && (this.state.code.length > 0 ? !this.state.exist : true))
+                }
                 loading={this.state.createVoucher_formloading ? this.state.createVoucher_formloading : false}
                 data-size={S}
                 data-style={SLIDE_UP}
@@ -481,6 +512,7 @@ class VoucherCreate extends Component {
 }
 export default withTracker(() => {
   return {
-    subscriptions: [Meteor.subscribe('vouchers.all', { page: 0 })],
+    configs: NetworkConfiguration.find({ active: true }).fetch(),
+    subscriptions: [Meteor.subscribe('vouchers.all', { page: 0 }), Meteor.subscribe('networkConfig.all')],
   };
 })(withRouter(VoucherCreate));

@@ -52,12 +52,12 @@ async function deleteNetworks(instanceIds) {
 Migrations.add({
   version: 7,
   up: function() {
-    getNonVerifiedUsers()
-      .then(Meteor.bindEnvironment(getToBeDeletedNetworks))
-      .then(Meteor.bindEnvironment(deleteNetworks))
-      .then(() => {
-        console.log("FInished deleting networks");
-      });
+    // getNonVerifiedUsers()
+    //   .then(Meteor.bindEnvironment(getToBeDeletedNetworks))
+    //   .then(Meteor.bindEnvironment(deleteNetworks))
+    //   .then(() => {
+    //     console.log("FInished deleting networks");
+    //   });
   },
   down: function() {
     console.log("Cannot undo network deletion");

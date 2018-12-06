@@ -3,4 +3,5 @@ module.exports = (agenda) => {
   require('./generate-monthly-bill')(agenda);
   require('./forex-update')(agenda);
   require('./invoice-reminder-email')(agenda);
+  require('./attach-razorpay-addons')(agenda);
 }

@@ -286,15 +286,17 @@ RazorPay.capturePayment = async paymentResponse => {
  * @property {number} options.amount
  * @property {object} options.notes
  */
-RazorPay.refundPayment = async (paymentId, options) => {
+RazorPay.refundPayment = async (paymentId, options = {}) => {
   const paymentRequest = PaymentRequests.find({
     pgReference: paymentId,
     'pgResponse.status': 'captured',
   }).fetch()[0];
 
-  if (!paymentRequest) {
+  if (!paymentRequest && !options.noPaymentRequest) {
     throw new Error(`Invalid payment Id ${paymentId}`);
   }
+
+  delete options.noPaymentRequest;
 
   if (!options.amount) {
     options.amount = paymentRequest.amount;

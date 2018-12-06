@@ -111,17 +111,17 @@ describe('Asset Management', () => {
   };
 
   const network = {
-    instanceId: 'nvivepak',
+    instanceId: 'okgskkyq',
   };
 
   const asset = {
     solo: {
-      name: helpers.generateRandomString()
+      name: helpers.generateRandomString(),
     },
     bulk: {
-      name: helpers.generateRandomString()
-    }
-  }
+      name: helpers.generateRandomString(),
+    },
+  };
 
   beforeAll(async () => {
     browser = await puppeteer.launch({
@@ -170,8 +170,8 @@ describe('Asset Management', () => {
       const $ = cheerio.load(body);
       const trs = $('tbody').find('tr');
       let isAssetCreated = false;
-      for(let i = 0 ; i < trs.length ; i++) {
-        if($($(trs[i]).find('td:nth-child(1)')).html() === asset.solo.name) {
+      for (let i = 0; i < trs.length; i++) {
+        if ($($(trs[i]).find('td:nth-child(1)')).html() === asset.solo.name) {
           isAssetCreated = true;
           asset.solo.administrator = $($(trs[i]).find('td:nth-child(4)')).html();
           asset.solo.quantity = Number($($(trs[i]).find('td:nth-child(3)')).html());
@@ -180,7 +180,7 @@ describe('Asset Management', () => {
         }
       }
       expect(isAssetCreated).to.true;
-      expect(asset.solo.type).to.equal("solo");
+      expect(asset.solo.type).to.equal('solo');
       expect(asset.solo.quantity).to.equal(0);
       await sleep(2000);
     },
@@ -206,8 +206,8 @@ describe('Asset Management', () => {
       const $ = cheerio.load(body);
       const trs = $('tbody').find('tr');
       let isAssetCreated = false;
-      for(let i = 0 ; i < trs.length ; i++) {
-        if($($(trs[i]).find('td:nth-child(1)')).html() === asset.bulk.name) {
+      for (let i = 0; i < trs.length; i++) {
+        if ($($(trs[i]).find('td:nth-child(1)')).html() === asset.bulk.name) {
           isAssetCreated = true;
           asset.bulk.administrator = $($(trs[i]).find('td:nth-child(4)')).html();
           asset.bulk.quantity = Number($($(trs[i]).find('td:nth-child(3)')).html());
@@ -216,7 +216,7 @@ describe('Asset Management', () => {
         }
       }
       expect(isAssetCreated).to.true;
-      expect(asset.bulk.type).to.equal("bulk");
+      expect(asset.bulk.type).to.equal('bulk');
       expect(asset.bulk.quantity).to.equal(0);
       await sleep(2000);
     },

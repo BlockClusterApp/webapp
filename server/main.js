@@ -8,35 +8,27 @@ const debug = require('debug')('server:main');
 import { Meteor } from 'meteor/meteor';
 import UserFunctions from '../imports/api/server-functions/user-functions';
 import { Networks } from '../imports/collections/networks/networks.js';
-import PendingNetwork from '../imports/collections/networks/pending-networks.js';
-import { ZohoHostedPage, ZohoPlan } from '../imports/collections/zoho';
-import Zoho from '../imports/api/payments/zoho';
 import NetworkFunctions from '../imports/api/network/networks';
 import Vouchers from '../imports/collections/vouchers/voucher';
 import UserCards from '../imports/collections/payments/user-cards';
 import Billing from '../imports/api/billing';
-import { Secrets } from '../imports/collections/secrets/secrets.js';
-import { AcceptedOrders } from '../imports/collections/acceptedOrders/acceptedOrders.js';
 import NetworkConfiguration from '../imports/collections/network-configuration/network-configuration';
 import Verifier from '../imports/api/emails/email-validator';
 import Config from '../imports/modules/config/server';
+import Bull from '../imports/modules/schedulers/bull';
 
 var Future = Npm.require('fibers/future');
-var lightwallet = Npm.require('eth-lightwallet');
 import Web3 from 'web3';
 var jsonminify = require('jsonminify');
 import helpers from '../imports/modules/helpers';
-import server_helpers from '../imports/modules/helpers/server';
 import smartContracts from '../imports/modules/smart-contracts';
 import moment from 'moment';
-import { scanBlocksOfNode, authoritiesListCronJob } from '../imports/collections/networks/server/cron.js';
 import fs from 'fs';
-import { RZSubscription } from '../imports/collections/razorpay';
 import agenda from '../imports/modules/schedulers/agenda';
+import Webhook from '../imports/api/communication/webhook';
 var md5 = require('apache-md5');
 var base64 = require('base-64');
 var utf8 = require('utf8');
-var BigNumber = require('bignumber.js');
 
 var geoip = require('../node_modules/geoip-lite/lib/geoip');
 
@@ -58,7 +50,7 @@ Accounts.validateLoginAttempt(function(options) {
   if (options.user.emails[0].verified === true) {
     return true;
   } else {
-    throw new Meteor.Error('email-not-verified', 'Your email is not approved by the administrator.');
+    throw new Meteor.Error('email-not-verified', 'Your email is not verified. Kindly check your mail.');
   }
 });
 
@@ -91,7 +83,7 @@ function getNodeConfig(networkConfig, userId) {
       nodeConfig.voucher = _voucher;
       finalNetworkConfig = _voucher.networkConfig;
       if (_voucher.isDiskChangeable) {
-        finalNetworkConfig = diskSpace || _voucher.diskSpace;
+        finalNetworkConfig.disk = diskSpace || _voucher.diskSpace;
       }
     }
   }
@@ -105,7 +97,7 @@ function getNodeConfig(networkConfig, userId) {
       nodeConfig.networkConfig = _config;
       finalNetworkConfig = _config;
       if (_config.isDiskChangeable) {
-        finalNetworkConfig.disk = diskSpace || _config.diskSpace;
+        finalNetworkConfig.disk = diskSpace || _config.disk;
       }
     }
   }
@@ -159,48 +151,6 @@ function getContainerResourceLimits({ cpu, ram, isJoining }) {
   return config;
 }
 
-async function fetchZohoStatus({ myFuture, nodeConfig, hostedPageId }) {
-  let hostedPage = {};
-  if (!nodeConfig.voucher && !hostedPageId) {
-    let plan;
-    if (nodeConfig.cpu === 500 && nodeConfig.ram === 1 && nodeConfig.disk === 5) {
-      plan = ZohoPlan.find({ plan_code: 'light-node' }).fetch()[0];
-    } else if (nodeConfig.cpu === 2 && nodeConfig.ram === 7.5 && nodeConfig.disk === 200) {
-      plan = ZohoPlan.find({ plan_code: 'power-node' }).fetch()[0];
-    } else {
-      return myFuture.throw('Invalid plan');
-    }
-
-    const newHostedPage = await Zoho.createHostedPage({
-      userId: Meteor.userId(),
-      plan,
-    });
-
-    if (!newHostedPage) {
-      return myFuture.throw('Error creating payment link');
-    }
-
-    PendingNetwork.insert({
-      hostedPageId: newHostedPage.hostedpage_id,
-      networkMetadata: {
-        networkName,
-        locationCode,
-        networkConfig,
-        userId,
-      },
-    });
-    return myFuture.return({
-      type: 'payment-link',
-      value: newHostedPage.url,
-    });
-  } else if (!nodeConfig.voucher) {
-    hostedPage = ZohoHostedPage.find({ hostedpage_id: hostedPageId }).fetch()[0];
-    if (!hostedPage) {
-      return myFuture.throw('Invalid hosted page id');
-    }
-  }
-}
-
 process.on('unhandledRejection', (reason, p) => {
   console.log('Unhandled rejection', reason);
   RavenLogger.log(reason);
@@ -211,14 +161,146 @@ process.on('uncaughtException', (reason, p) => {
   RavenLogger.log(reason);
 });
 
+async function deleteNetwork({ id, locationCode, instanceId, myFuture }) {
+  debug('CreateNetwork | Deleting network', id);
+  Networks.update(
+    {
+      _id: id,
+    },
+    {
+      $set: {
+        active: false,
+        deletedAt: new Date().getTime(),
+      },
+    }
+  );
+  NetworkFunctions.cleanNetworkDependencies(id);
+  HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
+  HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, function(error, response) {});
+  HTTP.call(
+    'GET',
+    `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent('dynamo-node-' + instanceId),
+    function(error, response) {
+      if (!error) {
+        if (JSON.parse(response.content).items.length > 0) {
+          HTTP.call(
+            'DELETE',
+            `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name,
+            function(error, response) {
+              HTTP.call(
+                'GET',
+                `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent('dynamo-node-' + instanceId),
+                function(error, response) {
+                  if (!error) {
+                    if (JSON.parse(response.content).items.length > 0) {
+                      HTTP.call(
+                        'DELETE',
+                        `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name,
+                        function(error, response) {
+                          HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + 'basic-auth-' + instanceId, function(
+                            error,
+                            response
+                          ) {});
+                          HTTP.call(
+                            'DELETE',
+                            `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + 'ingress-' + instanceId,
+                            function(error, response) {}
+                          );
+                          HTTP.call(
+                            'DELETE',
+                            `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${instanceId}-pvc`,
+                            function(error, response) {}
+                          );
+                          myFuture.throw('Error creating network');
+                        }
+                      );
+                    }
+                  }
+                }
+              );
+            }
+          );
+        }
+      }
+    }
+  );
+}
+
+function getIngressConfig({ instanceId, locationCode, enableAuth }) {
+  if (!RemoteConfig.Ingress.Annotations) {
+    RemoteConfig.Ingress.Annotations = {};
+  }
+  const annotations = {
+    ...{
+      'nginx.ingress.kubernetes.io/rewrite-target': '/',
+      'nginx.ingress.kubernetes.io/enable-cors': 'true',
+      'nginx.ingress.kubernetes.io/cors-credentials': 'true',
+      'kubernetes.io/ingress.class': 'nginx',
+      'nginx.ingress.kubernetes.io/configuration-snippet': `set $cors \"true\";\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`,
+    },
+    ...RemoteConfig.Ingress.Annotations,
+  };
+
+  if (enableAuth) {
+    annotations = {
+      ...annotations,
+      'nginx.ingress.kubernetes.io/auth-type': 'basic',
+      'nginx.ingress.kubernetes.io/auth-secret': 'basic-auth-' + instanceId,
+      'nginx.ingress.kubernetes.io/auth-realm': 'Authentication Required',
+    };
+  }
+
+  const tlsConfig = {
+    hosts: [Config.workerNodeDomainName(locationCode)],
+  };
+
+  if (RemoteConfig.Ingress.tlsSecret) {
+    tlsConfig.secretName = RemoteConfig.Ingress.tlsSecret;
+  }
+
+  return JSON.stringify({
+    apiVersion: 'extensions/v1beta1',
+    kind: 'Ingress',
+    metadata: {
+      name: `ingress-${instanceId}`,
+      annotations,
+    },
+    spec: {
+      tls: [tlsConfig],
+      rules: [
+        {
+          host: Config.workerNodeDomainName(locationCode),
+          http: {
+            paths: [
+              {
+                path: '/api/node/' + instanceId + '/jsonrpc',
+                backend: {
+                  serviceName: instanceId,
+                  servicePort: 8545,
+                },
+              },
+              {
+                path: '/api/node/' + instanceId,
+                backend: {
+                  serviceName: instanceId,
+                  servicePort: 6382,
+                },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  });
+}
+
 Meteor.methods({
-  createNetwork: async function({ networkName, locationCode, networkConfig, userId, hostedPageId }) {
+  createNetwork: async function({ networkName, locationCode, networkConfig, userId }) {
     debug('CreateNetwork | Arguments', networkName, locationCode, networkConfig, userId);
     userId = userId || Meteor.userId();
     var myFuture = new Future();
     const nodeConfig = getNodeConfig(networkConfig);
 
-    // const hostedPage = await fetchZohoStatus({myFuture, nodeConfig, hostedPageId});
     const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(userId);
     const need_VerifiedPaymnt = nodeConfig.voucher && !nodeConfig.voucher.availability.card_vfctn_needed ? nodeConfig.voucher.availability.card_vfctn_needed : true;
     if (need_VerifiedPaymnt) {
@@ -227,87 +309,10 @@ Meteor.methods({
       }
     }
 
-    // const microNodes = Networks.find({
-    //   user: Meteor.userId(),
-    //   active: true,
-    //   "networkConfig.cpu": 500
-    // }).fetch();
-
-    const isMicro = networkConfig && ((networkConfig.config && networkConfig.config.cpu === 0.5) || (networkConfig.voucher && networkConfig.voucher.cpu === 0.5));
-    // if(microNodes.length > 2 && isMicro) {
-    //   throw new Meteor.Error('Can have maximum of 2 micro nodes only');
-    // }
-
     var instanceId = helpers.instanceIDGenerate();
 
     if (!locationCode) {
       throw new Meteor.Error('bad-request', 'Location code is required');
-    }
-
-    function deleteNetwork(id) {
-      debug('CreateNetwork | Deleting network', id);
-      Networks.update(
-        {
-          _id: id,
-        },
-        {
-          $set: {
-            active: false,
-            deletedAt: new Date().getTime(),
-          },
-        }
-      );
-      NetworkFunctions.cleanNetworkDependencies(id);
-      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
-      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, function(error, response) {});
-      HTTP.call(
-        'GET',
-        `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` +
-          encodeURIComponent('dynamo-node-' + instanceId),
-        function(error, response) {
-          if (!error) {
-            if (JSON.parse(response.content).items.length > 0) {
-              HTTP.call(
-                'DELETE',
-                `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name,
-                function(error, response) {
-                  HTTP.call(
-                    'GET',
-                    `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent('dynamo-node-' + instanceId),
-                    function(error, response) {
-                      if (!error) {
-                        if (JSON.parse(response.content).items.length > 0) {
-                          HTTP.call(
-                            'DELETE',
-                            `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name,
-                            function(error, response) {
-                              HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + 'basic-auth-' + instanceId, function(
-                                error,
-                                response
-                              ) {});
-                              HTTP.call(
-                                'DELETE',
-                                `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + 'ingress-' + instanceId,
-                                function(error, response) {}
-                              );
-                              HTTP.call(
-                                'DELETE',
-                                `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${instanceId}-pvc`,
-                                function(error, response) {}
-                              );
-                              myFuture.throw('Error creating network');
-                            }
-                          );
-                        }
-                      }
-                    }
-                  );
-                }
-              );
-            }
-          }
-        }
-      );
     }
 
     if (!nodeConfig.cpu) {
@@ -375,6 +380,7 @@ Meteor.methods({
           (err, response) => {
             if (err) {
               console.log(err);
+              deleteNetwork({ id, locationCode, instanceId, myFuture });
               throw new Meteor.Error('Error allocating storage');
             }
             HTTP.call(
@@ -394,15 +400,16 @@ Meteor.methods({
                       metadata: {
                         labels: {
                           app: 'dynamo-node-' + instanceId,
-                          appType: 'dynamo'
+                          appType: 'dynamo',
                         },
                       },
                       spec: {
                         affinity: {
                           nodeAffinity: {
-                            requiredDuringSchedulingIgnoredDuringExecution: {
-                              nodeSelectorTerms: [
-                                {
+                            preferredDuringSchedulingIgnoredDuringExecution: [
+                              {
+                                weight: 1,
+                                preference: {
                                   matchExpressions: [
                                     {
                                       key: 'optimizedFor',
@@ -411,8 +418,8 @@ Meteor.methods({
                                     },
                                   ],
                                 },
-                              ],
-                            },
+                              },
+                            ],
                           },
                         },
                         containers: [
@@ -575,7 +582,7 @@ Meteor.methods({
               function(error, response) {
                 if (error) {
                   console.log(error);
-                  deleteNetwork(id);
+                  deleteNetwork({ id, locationCode, instanceId, myFuture });
                 } else {
                   HTTP.call(
                     'POST',
@@ -619,12 +626,12 @@ Meteor.methods({
                     (error, response) => {
                       if (error) {
                         console.log(error);
-                        deleteNetwork(id);
+                        deleteNetwork({ id, locationCode, instanceId, myFuture });
                       } else {
                         HTTP.call('GET', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, {}, (error, response) => {
                           if (error) {
                             console.log(error);
-                            deleteNetwork(id);
+                            deleteNetwork({ id, locationCode, instanceId, myFuture });
                           } else {
                             let rpcNodePort = response.data.spec.ports[0].nodePort;
 
@@ -652,54 +659,7 @@ Meteor.methods({
                               'POST',
                               `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses`,
                               {
-                                content: JSON.stringify({
-                                  apiVersion: 'extensions/v1beta1',
-                                  kind: 'Ingress',
-                                  metadata: {
-                                    name: 'ingress-' + instanceId,
-                                    annotations: {
-                                      'nginx.ingress.kubernetes.io/rewrite-target': '/',
-                                      //"nginx.ingress.kubernetes.io/auth-type": "basic",
-                                      //"nginx.ingress.kubernetes.io/auth-secret": "basic-auth-" + instanceId,
-                                      //"nginx.ingress.kubernetes.io/auth-realm": "Authentication Required",
-                                      'nginx.ingress.kubernetes.io/enable-cors': 'true',
-                                      'nginx.ingress.kubernetes.io/cors-credentials': 'true',
-                                      'kubernetes.io/ingress.class': 'nginx',
-                                      'nginx.ingress.kubernetes.io/configuration-snippet': `set $cors \"true\";\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`,
-                                    },
-                                  },
-                                  spec: {
-                                    tls: [
-                                      {
-                                        hosts: [Config.workerNodeDomainName(locationCode)],
-                                        secretName: 'blockcluster-ssl',
-                                      },
-                                    ],
-                                    rules: [
-                                      {
-                                        host: Config.workerNodeDomainName(locationCode),
-                                        http: {
-                                          paths: [
-                                            {
-                                              path: '/api/node/' + instanceId + '/jsonrpc',
-                                              backend: {
-                                                serviceName: instanceId,
-                                                servicePort: 8545,
-                                              },
-                                            },
-                                            {
-                                              path: '/api/node/' + instanceId,
-                                              backend: {
-                                                serviceName: instanceId,
-                                                servicePort: 6382,
-                                              },
-                                            },
-                                          ],
-                                        },
-                                      },
-                                    ],
-                                  },
-                                }),
+                                content: getIngressConfig({ locationCode, instanceId }),
                                 headers: {
                                   'Content-Type': 'application/json',
                                 },
@@ -707,7 +667,7 @@ Meteor.methods({
                               error => {
                                 if (error) {
                                   console.log(error);
-                                  deleteNetwork(id);
+                                  deleteNetwork({ id, locationCode, instanceId, myFuture });
                                 } else {
                                   Networks.update(
                                     {
@@ -719,6 +679,39 @@ Meteor.methods({
                                       },
                                     }
                                   );
+
+                                  if (nodeConfig.voucherId) {
+                                    Vouchers.update(
+                                      { _id: nodeConfig.voucherId },
+                                      {
+                                        $push: {
+                                          voucher_claim_status: {
+                                            claimedBy: userId,
+                                            claimedOn: new Date(),
+                                            claimed: true,
+                                          },
+                                        },
+                                      }
+                                    );
+                                  }
+
+                                  if (process.env.IS_BLOCKCLUSTER_CLOUD) {
+                                    Bull.addVolumeJob(
+                                      'fix-volume',
+                                      {
+                                        locationCode,
+                                        instanceId,
+                                      },
+                                      {
+                                        delay: 5 * 60 * 1000,
+                                      }
+                                    );
+                                  }
+
+                                  Webhook.queue({
+                                    payload: Webhook.generatePayload({ event: 'create-network', networkId: instanceId, userId }),
+                                    userId,
+                                  });
 
                                   myFuture.return(instanceId);
                                 }
@@ -736,20 +729,6 @@ Meteor.methods({
         );
       }
       //mark the voucher as claimed
-      if (nodeConfig.voucherId) {
-        Vouchers.update(
-          { _id: nodeConfig.voucherId },
-          {
-            $push: {
-              voucher_claim_status: {
-                claimedBy: Meteor.userId(),
-                claimedOn: new Date(),
-                claimed: true,
-              },
-            },
-          }
-        );
-      }
       let userCard = UserCards.find({ userId: Meteor.userId(), active: true }, { fields: { _id: 1 } }).fetch();
       //check wheather the user has verified cards or not. and also for active payment methods.
 
@@ -769,24 +748,25 @@ Meteor.methods({
 
     return myFuture.wait();
   },
-  deleteNetwork: function(id) {
-    try{
-    ElasticLogger.log(`DeleteNetwork`, {id: id, userId: Meteor.userId()});
-    }catch(err){
+  deleteNetwork: async function(id, userId) {
+    if (!userId) {
+      userId = Meteor.userId();
+    }
+    try {
+      ElasticLogger.log(`DeleteNetwork`, { id: id, userId });
+    } catch (err) {
       RavenLogger.log(err);
     }
 
-    function kubeCallback(err, res) {
-      if (err) {
-        console.log(err);
-      }
-    }
-
-    var myFuture = new Future();
     var network = Networks.find({
       instanceId: id,
+      user: userId,
+      deletedAt: null,
     }).fetch()[0];
-    const locationCode = network.locationCode;
+
+    if (!network) {
+      throw new Meteor.Error('bad-request', 'Invalid instance id');
+    }
 
     Networks.update(
       {
@@ -802,59 +782,25 @@ Meteor.methods({
 
     NetworkFunctions.cleanNetworkDependencies(id);
 
-    try {
-      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + id, kubeCallback);
-      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + id, kubeCallback);
-      HTTP.call(
-        'GET',
-        `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent('dynamo-node-' + id),
-        function(err, response) {
-          if (err) return console.log(err);
-          HTTP.call(
-            'DELETE',
-            `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name,
-            () => {
-              HTTP.call(
-                'GET',
-                `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent('dynamo-node-' + id),
-                function(err, response) {
-                  if (err) return console.log(err);
-                  HTTP.call(
-                    'DELETE',
-                    `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name,
-                    function(err, res) {
-                      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${id}-pvc`, function(
-                        error,
-                        response
-                      ) {});
-                    }
-                  );
-                }
-              );
-            }
-          );
-        }
-      );
+    const locationCode = network.locationCode;
 
-      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + 'basic-auth-' + id, kubeCallback);
-      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + 'ingress-' + id, kubeCallback);
+    Webhook.queue({
+      userId,
+      payload: Webhook.generatePayload({ event: 'delete-network', networkId: id, userId }),
+    });
+
+    try {
+      Bull.addJob('delete-network', {
+        instanceId: network.instanceId,
+        locationCode,
+      });
     } catch (err) {
       console.log('Kube delete error ', err);
     }
 
-    Secrets.remove({
-      instanceId: id,
-    });
-
-    AcceptedOrders.remove({
-      instanceId: id,
-    });
-
-    myFuture.return();
-
-    return myFuture.wait();
+    return id;
   },
-  joinNetwork: function(
+  joinNetwork: async function(
     networkName,
     nodeType,
     genesisFileContent,
@@ -868,87 +814,20 @@ Meteor.methods({
     networkConfig,
     userId
   ) {
+    const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(userId);
+    const nodeConfig = getNodeConfig(networkConfig);
+    const need_VerifiedPaymnt = nodeConfig.voucher && !nodeConfig.voucher.availability.card_vfctn_needed ? nodeConfig.voucher.availability.card_vfctn_needed : true;
+    if (need_VerifiedPaymnt) {
+      if (!isPaymentMethodVerified) {
+        throw new Meteor.Error('unauthorized', 'Credit card not verified');
+      }
+    }
+
     debug('joinNetwork | Arguments', arguments);
     var myFuture = new Future();
     var instanceId = helpers.instanceIDGenerate();
 
-    // const microNodes = Networks.find({
-    //   user: Meteor.userId(),
-    //   active: true,
-    //   "networkConfig.cpu": 500
-    // }).fetch();
-
-    // const isMicro = networkConfig && ((networkConfig.config && networkConfig.config.cpu === 0.5) || (networkConfig.voucher && networkConfig.voucher.cpu === 0.5));
-    // if(microNodes.length > 2 && isMicro) {
-    //   throw new Meteor.Error('Can have maximum of 2 micro nodes only');
-    // }
-
     locationCode = locationCode || 'us-west-2';
-
-    function deleteNetwork(id) {
-      Networks.update(
-        {
-          _id: id,
-        },
-        {
-          $set: {
-            active: false,
-            deletedAt: new Date().getTime(),
-          },
-        }
-      );
-      NetworkFunctions.cleanNetworkDependencies(id);
-      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/deployments/` + instanceId, function(error, response) {});
-      HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, function(error, response) {});
-      HTTP.call(
-        'GET',
-        `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets?labelSelector=app%3D` +
-          encodeURIComponent('dynamo-node-' + instanceId),
-        function(error, response) {
-          if (!error) {
-            if (JSON.parse(response.content).items.length > 0) {
-              HTTP.call(
-                'DELETE',
-                `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta2/namespaces/${Config.namespace}/replicasets/` + JSON.parse(response.content).items[0].metadata.name,
-                function(error, response) {
-                  HTTP.call(
-                    'GET',
-                    `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods?labelSelector=app%3D` + encodeURIComponent('dynamo-node-' + instanceId),
-                    function(error, response) {
-                      if (!error) {
-                        if (JSON.parse(response.content).items.length > 0) {
-                          HTTP.call(
-                            'DELETE',
-                            `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/pods/` + JSON.parse(response.content).items[0].metadata.name,
-                            function(error, response) {
-                              HTTP.call(
-                                'DELETE',
-                                `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims/` + `${instanceId}-pvc`,
-                                function(error, response) {}
-                              );
-                              HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/secrets/` + 'basic-auth-' + instanceId, function(
-                                error,
-                                response
-                              ) {});
-                              HTTP.call(
-                                'DELETE',
-                                `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses/` + 'ingress-' + instanceId,
-                                function(error, response) {}
-                              );
-                            }
-                          );
-                        }
-                      }
-                    }
-                  );
-                }
-              );
-            }
-          }
-        }
-      );
-    }
-    const nodeConfig = getNodeConfig(networkConfig);
 
     if (!nodeConfig.cpu) {
       RavenLogger.log('JoinNetwork : Invalid network config', { nodeConfig, networkConfig });
@@ -957,6 +836,7 @@ Meteor.methods({
 
     const resourceConfig = getContainerResourceLimits({ cpu: nodeConfig.cpu, ram: nodeConfig.ram, isJoining: true });
 
+    userId = userId || Meteor.userId();
     Networks.insert(
       {
         instanceId: instanceId,
@@ -964,7 +844,7 @@ Meteor.methods({
         type: 'join',
         peerType: nodeType,
         workerNodeIP: Config.workerNodeIP(locationCode),
-        user: userId ? userId : this.userId,
+        user: userId,
         createdOn: Date.now(),
         totalENodes: totalENodes,
         genesisBlock: genesisFileContent,
@@ -1005,13 +885,14 @@ spec:
     spec:
       affinity:
         nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: optimizedFor
-              operator: In
-              values:
-              - memory
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                - key: optimizedFor
+                  operator: In
+                  values:
+                  - memory
       containers:
       - name: mongo
         image: mongo:3.4.18
@@ -1093,13 +974,14 @@ spec:
     spec:
       affinity:
         nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: optimizedFor
-              operator: In
-              values:
-              - memory
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: optimizedFor
+                operator: In
+                values:
+                - memory
       containers:
       - name: mongo
         image: mongo:3.4.18
@@ -1200,7 +1082,7 @@ spec:
             function(error, response) {
               if (error) {
                 console.log(error);
-                deleteNetwork(id);
+                deleteNetwork({ id, locationCode, instanceId, myFuture });
               } else {
                 HTTP.call(
                   'POST',
@@ -1240,12 +1122,12 @@ spec:
                   function(error, response) {
                     if (error) {
                       console.log(error);
-                      deleteNetwork(id);
+                      deleteNetwork({ id, locationCode, instanceId, myFuture });
                     } else {
                       HTTP.call('GET', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services/` + instanceId, {}, function(error, response) {
                         if (error) {
                           console.log(error);
-                          deleteNetwork(id);
+                          deleteNetwork({ id, locationCode, instanceId, myFuture });
                         } else {
                           let rpcNodePort = response.data.spec.ports[0].nodePort;
                           Networks.update(
@@ -1264,56 +1146,11 @@ spec:
                               },
                             }
                           );
-
                           HTTP.call(
                             'POST',
                             `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses`,
                             {
-                              content: JSON.stringify({
-                                apiVersion: 'extensions/v1beta1',
-                                kind: 'Ingress',
-                                metadata: {
-                                  name: 'ingress-' + instanceId,
-                                  annotations: {
-                                    'nginx.ingress.kubernetes.io/rewrite-target': '/',
-                                    'nginx.ingress.kubernetes.io/enable-cors': 'true',
-                                    'nginx.ingress.kubernetes.io/cors-credentials': 'true',
-                                    'kubernetes.io/ingress.class': 'nginx',
-                                    'nginx.ingress.kubernetes.io/configuration-snippet': `set $cors \"true\";\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`,
-                                  },
-                                },
-                                spec: {
-                                  tls: [
-                                    {
-                                      hosts: [Config.workerNodeDomainName(locationCode)],
-                                      secretName: 'blockcluster-ssl',
-                                    },
-                                  ],
-                                  rules: [
-                                    {
-                                      host: Config.workerNodeDomainName(locationCode),
-                                      http: {
-                                        paths: [
-                                          {
-                                            path: '/api/node/' + instanceId + '/jsonrpc',
-                                            backend: {
-                                              serviceName: instanceId,
-                                              servicePort: 8545,
-                                            },
-                                          },
-                                          {
-                                            path: '/api/node/' + instanceId,
-                                            backend: {
-                                              serviceName: instanceId,
-                                              servicePort: 6382,
-                                            },
-                                          },
-                                        ],
-                                      },
-                                    },
-                                  ],
-                                },
-                              }),
+                              content: getIngressConfig({ locationCode, instanceId }),
                               headers: {
                                 'Content-Type': 'application/json',
                               },
@@ -1321,7 +1158,7 @@ spec:
                             function(error) {
                               if (error) {
                                 console.log(error);
-                                deleteNetwork(id);
+                                deleteNetwork({ id, locationCode, instanceId, myFuture });
                               } else {
                                 Networks.update(
                                   {
@@ -1333,6 +1170,28 @@ spec:
                                     },
                                   }
                                 );
+
+                                if (process.env.IS_BLOCKCLUSTER_CLOUD) {
+                                  Bull.addVolumeJob(
+                                    'fix-volume',
+                                    {
+                                      locationCode,
+                                      instanceId,
+                                    },
+                                    {
+                                      delay: 5 * 60 * 1000,
+                                    }
+                                  );
+                                }
+
+                                Webhook.queue({
+                                  userId,
+                                  payload: Webhook.generatePayload({
+                                    event: 'network-joined',
+                                    networkId: instanceId,
+                                    userId,
+                                  }),
+                                });
                                 myFuture.return(id);
                               }
                             }
@@ -1351,17 +1210,17 @@ spec:
     return myFuture.wait();
   },
   convertIP_Location: function(ips) {
-      let result = [];
+    let result = [];
 
-      ips.forEach((ip, index) => {
-        let geo = geoip.lookup(ip);
-        if(geo) {
-            geo.ip = ip;
-            result.push(geo)
-        }
-      })
+    ips.forEach((ip, index) => {
+      let geo = geoip.lookup(ip);
+      if (geo) {
+        geo.ip = ip;
+        result.push(geo);
+      }
+    });
 
-      return result;
+    return result;
   },
   changeNodeName: function(instanceId, newName) {
     Networks.update(
@@ -1370,7 +1229,7 @@ spec:
       },
       {
         $set: {
-          'name': newName,
+          name: newName,
         },
       }
     );
@@ -1511,26 +1370,7 @@ spec:
     return myFuture.wait();
   },
   inviteUserToNetwork: async function(networkId, nodeType, email, userId) {
-    return UserFunctions.inviteUserToNetwork(networkId, nodeType, email, userId || this.userId);
-    // let user = Accounts.findUserByEmail(email);
-    // var network = Networks.find({
-    //     instanceId: networkId
-    // }).fetch()[0];
-    // if (user) {
-    //     Meteor.call(
-    //         "joinNetwork",
-    //         network.name,
-    //         nodeType,
-    //         network.genesisBlock.toString(), ["enode://" + network.nodeId + "@" + network.clusterIP + ":" + network.realEthNodePort].concat(network.totalENodes), [network.clusterIP + ":" + network.realConstellationNodePort].concat(network.totalConstellationNodes),
-    //         network.assetsContractAddress,
-    //         network.atomicSwapContractAddress,
-    //         network.streamsContractAddress,
-    //         (userId ? userId : user._id),
-    //         network.locationCode
-    //     )
-    // } else {
-    //     throw new Meteor.Error(500, 'Unknown error occured');
-    // }
+    return UserFunctions.inviteUserToNetwork(networkId, nodeType, email, userId || Meteor.userId());
   },
   createAssetType: function(instanceId, assetName, assetType, assetIssuer, reissuable, parts) {
     this.unblock();
@@ -2204,54 +2044,7 @@ spec:
                     'POST',
                     `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses`,
                     {
-                      content: JSON.stringify({
-                        apiVersion: 'extensions/v1beta1',
-                        kind: 'Ingress',
-                        metadata: {
-                          name: 'ingress-' + instanceId,
-                          annotations: {
-                            'nginx.ingress.kubernetes.io/rewrite-target': '/',
-                            'nginx.ingress.kubernetes.io/auth-type': 'basic',
-                            'nginx.ingress.kubernetes.io/auth-secret': 'basic-auth-' + instanceId,
-                            'nginx.ingress.kubernetes.io/auth-realm': 'Authentication Required',
-                            'nginx.ingress.kubernetes.io/enable-cors': 'true',
-                            'nginx.ingress.kubernetes.io/cors-credentials': 'true',
-                            'kubernetes.io/ingress.class': 'nginx',
-                            'nginx.ingress.kubernetes.io/configuration-snippet': `set $cors \"true\";\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`,
-                          },
-                        },
-                        spec: {
-                          tls: [
-                            {
-                              hosts: [Config.workerNodeDomainName(locationCode)],
-                              secretName: 'blockcluster-ssl',
-                            },
-                          ],
-                          rules: [
-                            {
-                              host: Config.workerNodeDomainName(locationCode),
-                              http: {
-                                paths: [
-                                  {
-                                    path: '/api/node/' + instanceId + '/jsonrpc',
-                                    backend: {
-                                      serviceName: instanceId,
-                                      servicePort: 8545,
-                                    },
-                                  },
-                                  {
-                                    path: '/api/node/' + instanceId,
-                                    backend: {
-                                      serviceName: instanceId,
-                                      servicePort: 6382,
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      }),
+                      content: getIngressConfig({ locationCode, instanceId, enableAuth: true }),
                       headers: {
                         'Content-Type': 'application/json',
                       },
@@ -2259,7 +2052,7 @@ spec:
                     function(error) {
                       if (error) {
                         console.log(error);
-                        deleteNetwork(id);
+                        deleteNetwork({ id, locationCode, instanceId, myFuture });
                       } else {
                         Networks.update(
                           {
@@ -2296,51 +2089,7 @@ spec:
               'POST',
               `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${Config.namespace}/ingresses`,
               {
-                content: JSON.stringify({
-                  apiVersion: 'extensions/v1beta1',
-                  kind: 'Ingress',
-                  metadata: {
-                    name: 'ingress-' + instanceId,
-                    annotations: {
-                      'nginx.ingress.kubernetes.io/rewrite-target': '/',
-                      'nginx.ingress.kubernetes.io/enable-cors': 'true',
-                      'nginx.ingress.kubernetes.io/cors-credentials': 'true',
-                      'kubernetes.io/ingress.class': 'nginx',
-                      'nginx.ingress.kubernetes.io/configuration-snippet': `set $cors \"true\";\n# Nginx doesn't support nested If statements. This is where things get slightly nasty.\n# Determine the HTTP request method used\nif ($request_method = 'OPTIONS') {\n    set $cors \"\${cors}options\";\n}\nif ($request_method = 'GET') {\n    set $cors \"\${cors}get\";\n}\nif ($request_method = 'POST') {\n    set $cors \"\${cors}post\";\n}\n\nif ($cors = \"true\") {\n    # Catch all incase there's a request method we're not dealing with properly\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n}\n\nif ($cors = \"trueoptions\") {\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n\n    #\n    # Om nom nom cookies\n    #\n    add_header 'Access-Control-Allow-Credentials' 'true';\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';\n\n    #\n    # Custom headers and headers various browsers *should* be OK with but aren't\n    #\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n\n    #\n    # Tell client that this pre-flight info is valid for 20 days\n    #\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    return 204;\n}`,
-                    },
-                  },
-                  spec: {
-                    tls: [
-                      {
-                        hosts: [Config.workerNodeDomainName(locationCode)],
-                        secretName: 'blockcluster-ssl',
-                      },
-                    ],
-                    rules: [
-                      {
-                        host: Config.workerNodeDomainName(locationCode),
-                        http: {
-                          paths: [
-                            {
-                              path: '/api/node/' + instanceId + '/jsonrpc',
-                              backend: {
-                                serviceName: instanceId,
-                                servicePort: 8545,
-                              },
-                            },
-                            {
-                              path: '/api/node/' + instanceId,
-                              backend: {
-                                serviceName: instanceId,
-                                servicePort: 6382,
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                }),
+                content: getIngressConfig({ locationCode, instanceId }),
                 headers: {
                   'Content-Type': 'application/json',
                 },
@@ -2348,7 +2097,7 @@ spec:
               function(error) {
                 if (error) {
                   console.log(error);
-                  deleteNetwork(id);
+                  deleteNetwork({ id, locationCode, instanceId, myFuture });
                 } else {
                   Networks.update(
                     {
@@ -2812,7 +2561,7 @@ Meteor.startup(() => {
 
 const LOCK_FILE_PATH = '/tmp/webapp.lock';
 function serverStartup() {
-  Migrations.migrateTo(10);
+  Migrations.migrateTo(Config.migrationVersion);
   fs.writeFileSync(LOCK_FILE_PATH, `Server started at  ${new Date()}`);
 }
 

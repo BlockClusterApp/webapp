@@ -94,8 +94,23 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         billingStartDate = moment(network.createdAt).toDate();
       }
 
+      let price = isMicroNode ? Price.lightNode : Price.powerNode;
+      if (network.metadata && network.metadata.networkConfig && network.metadata.networkConfig.cost) {
+        price = Number(network.metadata.networkConfig.cost.hourly);
+      }
+      if (
+        network.metadata &&
+        network.metadata.voucher &&
+        network.metadata.voucher &&
+        network.metadata.voucher.metadata &&
+        network.metadata.voucher.metadata.networkConfig &&
+        network.metadata.voucher.metadata.networkConfig.cost
+      ) {
+        price = Number(network.metadata.voucher.metadata.networkConfig.cost.hourly);
+      }
+
       const time = convertMilliseconds(thisCalculationEndDate.getTime() - billingStartDate.getTime());
-      const rate = isMicroNode ? Price.lightNode : Price.powerNode; // per month
+      const rate = price; // per month
       let rateString = `$ ${rate} / hr`;
       const ratePerHour = rate;
       const ratePerMinute = ratePerHour / 60;
@@ -151,8 +166,8 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             : (voucher.voucher_claim_status
               ? voucher.voucher_claim_status.length
               : false)
-              ? false
-              : true;
+            ? false
+            : true;
 
         voucher_expired = voucher.expiryDate ? new Date(voucher.expiryDate) <= new Date() : false;
       }
@@ -336,7 +351,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
 };
 
 Billing.isPaymentMethodVerified = async function(userId) {
-  if(!RemoteConfig.features.CardToCreateNetwork) {
+  if (!RemoteConfig.features.CardToCreateNetwork) {
     return true;
   }
   userId = userId || Meteor.userId();
