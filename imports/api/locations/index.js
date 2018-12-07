@@ -6,6 +6,7 @@ process.on('RemoteConfigChanged', () => {
     LocationConfigs = RemoteConfig.clusters[Config.namespace];
   }
 });
+
 if (RemoteConfig.clusters) {
   LocationConfigs = RemoteConfig.clusters[Config.namespace];
 }
