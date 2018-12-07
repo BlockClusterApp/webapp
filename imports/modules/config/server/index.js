@@ -105,16 +105,16 @@ async function getPaymeterConnectionDetails( ) {
 
   function getLocation() {
     return new Promise((resolve, reject) => {
-      Meteor.call("getClusterLocations", (locations) => {
+      Meteor.call("getClusterLocations", (error, locations) => {
         resolve(locations)
       })
     })
   }
 
   //first location in the location list - assuming webapp is also running the first location
-  const locationCode = await getLocation()[0].locationCode;
+  const locationCode = (await getLocation())[0].locationCode;
 
-  return RemoteConfig.clusters[getNamespace()][locationCode].paymeter.ip + RemoteConfig.clusters[getNamespace()][locationCode].paymeter.port;
+  return `${RemoteConfig.clusters[getNamespace()][locationCode].paymeter.ip}:${RemoteConfig.clusters[getNamespace()][locationCode].paymeter.port}`;
 }
 
 function getDynamoWokerDomainName(locationCode) {
