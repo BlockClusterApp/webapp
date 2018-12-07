@@ -129,7 +129,7 @@ JsonRoutes.add('post', '/api/platform/networks', function(req, res, next) {
       });
     } else {
       JsonRoutes.sendResult(res, {
-        code: 400,
+        code: 200,
         data: {
           success: true,
           data: { instanceId },
@@ -151,7 +151,7 @@ JsonRoutes.add('delete', '/api/platform/networks/:instanceId', function(req, res
       });
     } else {
       JsonRoutes.sendResult(res, {
-        code: 400,
+        code: 200,
         data: {
           success: true,
         },
