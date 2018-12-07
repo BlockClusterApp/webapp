@@ -4,3 +4,4 @@ require('./admin/');
 require('./support');
 require('./hyperion.js');
 require('./auth');
+require('./paymeter.js');
