@@ -241,7 +241,7 @@ InvoiceObj.generateHTML = async invoiceId => {
     ];
   }
 
-  const ejsTemplate = await getEJSTemplate({ fileName: 'invoice.ejs' });
+  const ejsTemplate = await getEJSTemplate({ fileName: 'invoice.ejs'});
   const finalHTML = ejsTemplate({
     invoice: {
       _id: invoice._id,
@@ -257,7 +257,7 @@ InvoiceObj.generateHTML = async invoiceId => {
   });
     var fut = new Future();
 
-  var fileName = "pokemon-report.pdf";
+  var fileName = "blockcluster-bill-report.pdf";
 
 var options = {
       //renderDelay: 2000,
@@ -270,9 +270,9 @@ var options = {
   };
 
   // Commence Webshot
-  console.log("Commencing webshot...");
+  // console.log("Commencing webshot...");
 
-  pdf.create(finalHTML, {format: 'Tabloid' ,orientation: "landscape", }).toFile(fileName, function(err, res) {
+  pdf.create(finalHTML, {format: 'Tabloid' ,orientation: "landscape",timeout: '100000'  }).toFile(fileName, function(err, res) {
     if (err) return console.log(err);
     console.log(res);
     fs.readFile(fileName, function (err, data) {
