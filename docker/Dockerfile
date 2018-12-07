@@ -7,6 +7,8 @@ COPY . /blockcluster
 RUN cd /blockcluster && npm --unsafe-perm install
 
 RUN mkdir /meteor-output-tar
+ENV TOOL_NODE_FLAGS=--max-old-space-size=4096
+ENV METEOR_PROFILE=10
 RUN meteor build /meteor-output-tar --architecture os.linux.x86_64 --allow-superuser
 RUN mkdir /meteor-output
 RUN tar -xzf /meteor-output-tar/blockcluster.tar.gz -C /meteor-output
