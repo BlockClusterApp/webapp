@@ -472,7 +472,7 @@ body.menu-pin .overlay .overlay-brand {
   font-size: 16px;
   font-family: FontAwesome;
   height: auto;
-  content: "\f104";
+  content: "\f105";
   font-weight: 300;
   text-shadow: none;
   -webkit-transition: all 0.12s ease;
@@ -1726,7 +1726,7 @@ body.menu-pin .overlay .overlay-brand {
   padding: 0 5px;
   color: #515050;
   font-family: FontAwesome;
-  content: "\f105";
+  content: "\f104";
   font-size: 12px;
   font-weight: bold;
 }

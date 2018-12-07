@@ -18,7 +18,7 @@ ecmascript@0.9.0              # Enable ECMAScript2015+ syntax in app code
 shell-server@0.3.0            # Server-side component of the `meteor shell` command
 react-meteor-data
 accounts-password
-fortawesome:fontawesome@4.7.0
+fortawesome:fontawesome
 blockcluster:jquery
 blockcluster:modernizr
 blockcluster:jquery-scrollbar
@@ -36,3 +36,4 @@ percolate:migrations
 maxfi:remote-collection
 blockcluster:raven
 blockcluster:logs
+maximum:server-transform

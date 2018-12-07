@@ -98,7 +98,7 @@ function getHyperionConnectionDetails(locationCode) {
   ];
 }
 
-async function getPaymeterConnectionDetails( ) {
+async function getPaymeterConnectionDetails(blockchain, network) {
   if (process.env.paymeter) {
     return process.env.paymeter;
   }
@@ -113,8 +113,8 @@ async function getPaymeterConnectionDetails( ) {
 
   //first location in the location list - assuming webapp is also running the first location
   const locationCode = (await getLocation())[0].locationCode;
-
-  return `${RemoteConfig.clusters[getNamespace()][locationCode].paymeter.ip}:${RemoteConfig.clusters[getNamespace()][locationCode].paymeter.port}`;
+  console.log(RemoteConfig.clusters[getNamespace()][locationCode].paymeter)
+  return `${RemoteConfig.clusters[getNamespace()][locationCode].paymeter[blockchain][network].ip}:${RemoteConfig.clusters[getNamespace()][locationCode].paymeter[blockchain][network].port}`;
 }
 
 function getDynamoWokerDomainName(locationCode) {
