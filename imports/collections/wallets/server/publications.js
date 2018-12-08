@@ -9,7 +9,6 @@ Meteor.publishTransformed('wallets', function() {
     let myFuture = new Future();
 
     WalletMethods.getBalanceCallback(doc._id, (err, balance) => {
-      console.log(err, balance)
       if(err) {
         doc.balance = 0
         myFuture.return(doc);

@@ -21,7 +21,8 @@ function createWallet(coinType, walletName, userId, network, options) {
             address: '0x' + address.toString('hex'),
             user: userId,
             walletName: walletName,
-            network: network
+            network: network,
+            createdAt: Date.now()
         })
     } else if(coinType === 'ERC20') {
         let wallet = Wallet.generate();
@@ -37,7 +38,8 @@ function createWallet(coinType, walletName, userId, network, options) {
             contractAddress: options.contractAddress,
             tokenSymbol: options.tokenSymbol,
             walletName: walletName,
-            network: network
+            network: network,
+            createdAt: Date.now()
         })      
     } else if(coinType === 'ERC20-GasTank') {
         let wallet = Wallet.generate();
@@ -50,7 +52,8 @@ function createWallet(coinType, walletName, userId, network, options) {
             address: '0x' + address.toString('hex'),
             user: userId,
             walletName: walletName,
-            network: network
+            network: network,
+            createdAt: Date.now()
         })
     } else {
         return false;
@@ -90,7 +93,7 @@ async function getBalance(walletId) {
                                             confirmedBalance = (((new BigNumber(minedBalance.toString())).minus(unminedBalance.toString())).toString()).substr(1);
                                         }
 
-                                        resolve(confirmedBalance)
+                                        resolve(((new BigNumber(confirmedBalance)).toFixed(5)).toString())
                                     } else {
                                         reject('An error occured')
                                     }
@@ -113,7 +116,7 @@ async function getBalance(walletId) {
                     if(!err) {
                         erc20_instance.balanceOf.call(wallet.address, latestBlockNumber - 12, (error, minedBalance) => {
                             if(!error) {
-                                erc20_instance.balanceOf.call(wallet.address, "pending", (error, unminedBalance) => {
+                                erc20_instance.balanceOf.call(wallet.address, "latest", (error, unminedBalance) => {
                                     if(!error) {
                                         let confirmedBalance = 0;
                                         if(((new BigNumber(minedBalance.toString())).minus(unminedBalance.toString())).isGreaterThanOrEqualTo(0)) {
@@ -124,14 +127,16 @@ async function getBalance(walletId) {
                                             confirmedBalance = (((new BigNumber(minedBalance.toString())).minus(unminedBalance.toString())).toString()).substr(1);
                                         }
 
-                                        resolve(confirmedBalance)
+                                        resolve(((new BigNumber(confirmedBalance)).toFixed(5)).toString())
                                     } else {
+                                        console.log(error, "xxxx")
                                         reject('An error occured')
                                     }
                                 })                           
                             } else {
                                 reject('An error occured')
                             }
+
                         })
                     } else {
                         reject("An error occured")
@@ -159,7 +164,7 @@ async function getBalance(walletId) {
                                             confirmedBalance = (((new BigNumber(minedBalance.toString())).minus(unminedBalance.toString())).toString()).substr(1);
                                         }
 
-                                        resolve(confirmedBalance)
+                                        resolve(((new BigNumber(confirmedBalance)).toFixed(5)).toString())
                                     } else {
                                         reject('An error occured')
                                     }

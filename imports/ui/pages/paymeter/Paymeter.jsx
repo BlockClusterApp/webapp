@@ -47,6 +47,30 @@ class PaymeterComponent extends Component {
     })
   }
 
+  createERC20Wallet = (e) => {
+    e.preventDefault();
+
+    this.setState({
+      "createERC20WalletLoading": true
+    })
+
+    Meteor.call("createWallet", "ERC20", this.refs.erc20WalletName.value, this.refs.erc20WalletNetwork.value, {
+      contractAddress: this.refs.erc20ContractAddress.value,
+      tokenSymbol: this.refs.erc20Symbol.value,
+      password: this.refs.erc20WalletPassword.value
+    }, (err, r) => {
+      if(!err && r) {
+        notifications.success("Wallet Created");
+      } else {
+        notifications.error("An error occured while creating wallet");
+      }
+
+      this.setState({
+        "createERC20WalletLoading": false
+      })
+    })
+  }
+
   getBalance() {
     return 1;
   }
@@ -64,32 +88,32 @@ class PaymeterComponent extends Component {
         <div className="full-height">
         <nav className="secondary-sidebar light" style={{"backgroundColor": "#f0f0f0"}}>
             <div className=" m-b-30 m-l-30 m-r-30 hidden-sm-down">
-              <a onClick={() => {this.setState({firstBox: 'create-wallet', secondBox: ''})}} href="#" className="btn btn-primary btn-block btn-compose">Create New Wallet</a>
+              <a onClick={() => {this.setState({firstBox: 'create-wallet', secondBox: ''})}} href="javascript:void(0);" className="btn btn-primary btn-block btn-compose">Create New Wallet</a>
             </div>
             <p className="menu-title">BROWSE</p>
             <ul className="main-menu">
               <li className="">
-                <a href="#" onClick={() => {this.setState({firstBox: 'eth-wallets', secondBox: ''})}}>
+                <a href="javascript:void(0);" onClick={() => {this.setState({firstBox: 'eth-wallets', secondBox: ''})}}>
                   <span className="title"><i className="fa fa-chain-broken"></i> ETH Wallets</span>
-                  <span className="badge pull-right">5</span>
+                  <span className="badge pull-right">{this.props.totalETHWallets}</span>
                 </a>
               </li>
               <li>
-                <a href="#">
+                <a href="javascript:void(0);" onClick={() => {this.setState({firstBox: 'erc20-wallets', secondBox: ''})}}>
                   <span className="title"><i className="fa fa-code"></i> ERC20 Wallets</span>
-                  <span className="badge pull-right">5</span>
+                  <span className="badge pull-right">{this.props.totalERC20Wallets}</span>
                 </a>
               </li>
             </ul>
             <p className="menu-title m-t-20 all-caps">Others</p>
             <ul className="main-menu">
               <li className="">
-                <a href="#">
+                <a href="javascript:void(0);">
                   <span className="title"><i className="fa fa-credit-card"></i> Billing</span>
                 </a>
               </li>
               <li>
-                <a href="#">
+                <a href="javascript:void(0);">
                   <span className="title"><i className="fa fa-sliders"></i> Settings</span>
                 </a>
               </li>
@@ -127,60 +151,80 @@ class PaymeterComponent extends Component {
                   }
 
                   {this.state.firstBox === 'eth-wallets' && 
-                    <div>
-                      <div data-index="0" className="company-stat-box m-t-15 active padding-20 wallet-box-bg">
-                        <div>
-                          <p className="company-name pull-left text-uppercase bold no-margin">
-                            <span className="fa fa-circle text-success fs-11"></span> AAPL
-                          </p>
-                          <small className="hint-text m-l-10">Yahoo Inc.</small>
-                          <div className="clearfix"></div>
-                        </div>
-                        <div className="m-t-10">
-                          <p className="pull-left small hint-text no-margin p-t-5">9:42AM ET</p>
-                          <div className="pull-right">
-                            <p className="small hint-text no-margin inline">37.73</p>
-                            <span className=" label label-important p-t-5 m-l-5 p-b-5 inline fs-12">+ 0.09</span>
-                          </div>
-                          <div className="clearfix"></div>
-                        </div>
+                      <div>
+                        {this.props.wallets.map(wallet => {
+                            return (
+                              <div key={wallet._id} className="wallet-list-item">
+                                {wallet.coinType === 'ETH' &&
+                                  <div data-index="0" className="company-stat-box m-t-15 active padding-20 wallet-box-bg">
+                                    <div>
+                                      <p className="company-name pull-left text-uppercase bold no-margin">
+                                        {wallet.network === 'testnet' &&
+                                          <span className="fa fa-circle text-warning fs-11"></span>
+                                        }
+
+                                        {wallet.network === 'mainnet' &&
+                                          <span className="fa fa-circle text-success fs-11"></span>
+                                        }
+
+                                        &nbsp;{wallet.walletName}
+                                      </p>
+                                      <small className="hint-text m-l-10">{wallet._id}</small>
+                                      <div className="clearfix"></div>
+                                    </div>
+                                    <div className="m-t-10">
+                                      <p className="pull-left small hint-text no-margin p-t-5">{helpers.timeConverter(wallet.createdAt / 1000)}</p>
+                                      <div className="pull-right">
+                                        <p className="small hint-text no-margin inline">{/*ICO Coin Symbol*/}</p>
+                                        <span className=" label label-info p-t-5 m-l-5 p-b-5 inline fs-12">{wallet.balance} ETH</span>
+                                      </div>
+                                      <div className="clearfix"></div>
+                                    </div>
+                                  </div>
+                                }
+                              </div>
+                            )
+                        })}
                       </div>
-                      <div data-index="0" className="company-stat-box m-t-15 active padding-20 wallet-box-bg">
-                        <div>
-                          <p className="company-name pull-left text-uppercase bold no-margin">
-                            <span className="fa fa-circle text-success fs-11"></span> AAPL
-                          </p>
-                          <small className="hint-text m-l-10">Yahoo Inc.</small>
-                          <div className="clearfix"></div>
-                        </div>
-                        <div className="m-t-10">
-                          <p className="pull-left small hint-text no-margin p-t-5">9:42AM ET</p>
-                          <div className="pull-right">
-                            <p className="small hint-text no-margin inline">37.73</p>
-                            <span className=" label label-important p-t-5 m-l-5 p-b-5 inline fs-12">+ 0.09</span>
-                          </div>
-                          <div className="clearfix"></div>
-                        </div>
+                    }
+
+                    {this.state.firstBox === 'erc20-wallets' && 
+                      <div>
+                        {this.props.wallets.map(wallet => {
+                            return (
+                              <div key={wallet._id} className="wallet-list-item">
+                                {wallet.coinType === 'ERC20' &&
+                                  <div data-index="0" className="company-stat-box m-t-15 active padding-20 wallet-box-bg">
+                                    <div>
+                                      <p className="company-name pull-left text-uppercase bold no-margin">
+                                        {wallet.network === 'testnet' &&
+                                          <span className="fa fa-circle text-warning fs-11"></span>
+                                        }
+
+                                        {wallet.network === 'mainnet' &&
+                                          <span className="fa fa-circle text-success fs-11"></span>
+                                        }
+
+                                        &nbsp;{wallet.walletName}
+                                      </p>
+                                      <small className="hint-text m-l-10">{wallet._id}</small>
+                                      <div className="clearfix"></div>
+                                    </div>
+                                    <div className="m-t-10">
+                                      <p className="pull-left small hint-text no-margin p-t-5">{helpers.timeConverter(wallet.createdAt / 1000)}</p>
+                                      <div className="pull-right">
+                                        <p className="small hint-text no-margin inline">{/*ICO Coin Symbol*/}</p>
+                                        <span className=" label label-info p-t-5 m-l-5 p-b-5 inline fs-12">{wallet.balance} {wallet.tokenSymbol}</span>
+                                      </div>
+                                      <div className="clearfix"></div>
+                                    </div>
+                                  </div>
+                                }
+                              </div>
+                            )
+                        })}
                       </div>
-                      <div data-index="0" className="company-stat-box m-t-15 active padding-20 wallet-box-bg">
-                        <div>
-                          <p className="company-name pull-left text-uppercase bold no-margin">
-                            <span className="fa fa-circle text-success fs-11"></span> AAPL
-                          </p>
-                          <small className="hint-text m-l-10">Yahoo Inc.</small>
-                          <div className="clearfix"></div>
-                        </div>
-                        <div className="m-t-10">
-                          <p className="pull-left small hint-text no-margin p-t-5">9:42AM ET</p>
-                          <div className="pull-right">
-                            <p className="small hint-text no-margin inline">37.73</p>
-                            <span className=" label label-important p-t-5 m-l-5 p-b-5 inline fs-12">+ 0.09</span>
-                          </div>
-                          <div className="clearfix"></div>
-                        </div>
-                      </div>
-                    </div>
-                  }
+                    }
                 </div>
               </div>
               <div data-email="opened" className="split-details">
@@ -228,6 +272,53 @@ class PaymeterComponent extends Component {
                     </div>
                   </div>
                 }
+
+                {this.state.secondBox === 'create-erc20-wallet' &&
+                  <div className="card card-default full-height" style={{"marginBottom": "0px", "borderTop": "0px"}}>
+                    <div className="card-block" >
+                      <h5>
+                        Create New Ethereum Wallet
+                      </h5>
+                      <form className="" role="form" onSubmit={(e) => {this.createERC20Wallet(e)}}>
+                        <div className="form-group form-group-default required ">
+                          <label>Wallet Name</label>
+                          <input type="text" className="form-control" required ref="erc20WalletName" />
+                        </div>
+                        <div className="form-group form-group-default required ">
+                          <label>ERC20 Contract Address</label>
+                          <input type="text" className="form-control" required ref="erc20ContractAddress" />
+                        </div>
+                        <div className="form-group form-group-default required ">
+                          <label>Token Symbol</label>
+                          <input type="text" className="form-control" required ref="erc20Symbol" />
+                        </div>
+                        <div className="form-group form-group-default required ">
+                          <label>Password</label>
+                          <input type="password" className="form-control" required ref="erc20WalletPassword" />
+                        </div>
+                        <div className="form-group form-group-default required ">
+                          <label>Network</label>
+                          <select className="form-control" ref="erc20WalletNetwork">
+                            <option value={"testnet"} key={"testnet"}>Kovan</option>
+                            <option value={"mainnet"} key={"mainnet"}>Mainnet</option>
+                          </select>
+                        </div>
+                        <LaddaButton
+                          loading={this.state.createERC20WalletLoading}
+                          data-size={S}
+                          data-style={SLIDE_UP}
+                          data-spinner-size={30}
+                          data-spinner-lines={12}
+                          className="btn btn-complete btn-cons m-t-10"
+                          type="submit"
+                        >
+                          <i className="fa fa-plus" aria-hidden="true" />
+                          &nbsp;&nbsp;Create
+                        </LaddaButton>
+                      </form>
+                    </div>
+                  </div>
+                }
                 
               </div>
               <div className="compose-wrapper hidden-md-up">
@@ -246,6 +337,8 @@ export default withTracker(props => {
     workerNodeIP: Config.workerNodeIP,
     workerNodeDomainName: Config.workerNodeDomainName,
     wallets: Wallets.find({}).fetch(),
+    totalETHWallets: Wallets.find({coinType: "ETH"}).count(),
+    totalERC20Wallets: Wallets.find({coinType: "ERC20"}).count(),
     subscriptions: [Meteor.subscribe("wallets")]
   };
 })(withRouter(PaymeterComponent));

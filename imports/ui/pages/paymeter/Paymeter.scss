@@ -3,6 +3,14 @@
     background-color: #f7f7f7;
   }
 
+  .wallet-list-item {
+    cursor: pointer;
+
+    :hover {
+      background-color: #f0f0f0
+    }
+  }
+
   .create-wallet-btn {
     margin-right: 0px !important;
     margin-left: 0px !important;
