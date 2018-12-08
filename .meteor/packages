@@ -37,3 +37,4 @@ maxfi:remote-collection
 blockcluster:raven
 blockcluster:logs
 maximum:server-transform
+jspdf:core
