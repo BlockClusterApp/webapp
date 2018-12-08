@@ -95,10 +95,12 @@ async function getBalance(walletId) {
 
                                         resolve(((new BigNumber(confirmedBalance)).toFixed(5)).toString())
                                     } else {
+                                        console.log(error)
                                         reject('An error occured')
                                     }
                                 })
                             } else {
+                                console.log(error)
                                 reject('An error occured')
                             }
                         })
@@ -116,7 +118,7 @@ async function getBalance(walletId) {
                     if(!err) {
                         erc20_instance.balanceOf.call(wallet.address, latestBlockNumber - 12, (error, minedBalance) => {
                             if(!error) {
-                                erc20_instance.balanceOf.call(wallet.address, "latest", (error, unminedBalance) => {
+                                erc20_instance.balanceOf.call(wallet.address, "pending", (error, unminedBalance) => {
                                     if(!error) {
                                         let confirmedBalance = 0;
                                         if(((new BigNumber(minedBalance.toString())).minus(unminedBalance.toString())).isGreaterThanOrEqualTo(0)) {
