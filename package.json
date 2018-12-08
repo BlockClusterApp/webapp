@@ -55,8 +55,6 @@
     "multer": "^1.4.0",
     "node-cmd": "3.0.0",
     "nodemailer": "^4.6.8",
-    "npm": "^6.4.1",
-    "npm-lifecycle": "^2.1.0",
     "pass": "*",
     "prop-types": "^15.6.2",
     "raven": "^2.6.4",
