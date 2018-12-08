@@ -113,7 +113,6 @@ async function getPaymeterConnectionDetails(blockchain, network) {
 
   //first location in the location list - assuming webapp is also running the first location
   const locationCode = (await getLocation())[0].locationCode;
-  console.log(RemoteConfig.clusters[getNamespace()][locationCode].paymeter)
   return `${RemoteConfig.clusters[getNamespace()][locationCode].paymeter[blockchain][network].ip}:${RemoteConfig.clusters[getNamespace()][locationCode].paymeter[blockchain][network].port}`;
 }
 

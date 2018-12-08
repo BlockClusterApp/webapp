@@ -47,6 +47,10 @@ class PaymeterComponent extends Component {
     })
   }
 
+  getBalance() {
+    return 1;
+  }
+
   render() {
     console.log(this.props.wallets)
     return (
