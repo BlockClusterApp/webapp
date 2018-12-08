@@ -76,7 +76,6 @@ class PaymeterComponent extends Component {
   }
 
   render() {
-    console.log(this.props.wallets)
     return (
       <div className="content full-height paymeter" style={{"paddingBottom": "0px"}}>
         <style>{"\
@@ -252,7 +251,7 @@ class PaymeterComponent extends Component {
                         <div className="form-group form-group-default required ">
                           <label>Network</label>
                           <select className="form-control" ref="ethWalletNetwork">
-                            <option value={"testnet"} key={"testnet"}>Kovan</option>
+                            <option value={"testnet"} key={"testnet"}>Rinkeby</option>
                             <option value={"mainnet"} key={"mainnet"}>Mainnet</option>
                           </select>
                         </div>
@@ -299,7 +298,7 @@ class PaymeterComponent extends Component {
                         <div className="form-group form-group-default required ">
                           <label>Network</label>
                           <select className="form-control" ref="erc20WalletNetwork">
-                            <option value={"testnet"} key={"testnet"}>Kovan</option>
+                            <option value={"testnet"} key={"testnet"}>Rinkeby</option>
                             <option value={"mainnet"} key={"mainnet"}>Mainnet</option>
                           </select>
                         </div>
