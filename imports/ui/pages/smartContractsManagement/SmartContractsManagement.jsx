@@ -247,6 +247,6 @@ export default withTracker((props) => {
         			props.history.push("/app/networks");
         		}
         	}
-        }), Meteor.subscribe("utilities")]
+        })]
     }
 })(withRouter(SmartContractsManagement))

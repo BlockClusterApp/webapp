@@ -249,7 +249,6 @@ class Navbar extends Component {
 export default withTracker(() => {
   return {
     kuberREST_IP: Config.kubeRestApiHost,
-    subscriptions: [Meteor.subscribe('utilities')],
     user: Meteor.user(),
   };
 })(Navbar);

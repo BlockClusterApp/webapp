@@ -8,6 +8,7 @@ import Config from "../../../modules/config/client";
 import { Wallets } from "../../../collections/wallets/wallets.js";
 import helpers from "../../../modules/helpers";
 import LoadingIcon from "../../components/LoadingIcon/LoadingIcon.jsx";
+let QRCode = require('qrcode.react');
 
 import "./Paymeter.scss";
 
@@ -17,7 +18,8 @@ class PaymeterComponent extends Component {
 
     this.state = {
       firstBox: 'create-wallet',
-      secondBox: ''
+      secondBox: '',
+      secondBoxData: ''
     };
   }
 
@@ -33,7 +35,6 @@ class PaymeterComponent extends Component {
     this.setState({
       "createETHWalletLoading": true
     })
-
     Meteor.call("createWallet", "ETH", this.refs.ethWalletName.value, this.refs.ethWalletNetwork.value, {password: this.refs.ethWalletPassword.value}, (err, r) => {
       if(!err && r) {
         notifications.success("Wallet Created");
@@ -43,6 +44,28 @@ class PaymeterComponent extends Component {
 
       this.setState({
         "createETHWalletLoading": false
+      })
+    })
+  }
+
+  transferETH = (e, walletId) => {
+    e.preventDefault();
+
+    this.setState({
+      "transferEthLoading": true
+    })
+
+    Meteor.call("transferWallet", walletId, this.refs.transferEthAddress.value, this.refs.transferEthAmount.value, {
+      password: this.refs.transferEthPassword.value
+    }, (error, txnHash) => {
+      if(error) {
+        notifications.error(error.reason);
+      } else {
+        notifications.success("Transaction Sent");
+      }
+
+      this.setState({
+        "transferEthLoading": false
       })
     })
   }
@@ -76,6 +99,7 @@ class PaymeterComponent extends Component {
   }
 
   render() {
+    console.log(Wallets.find({}).fetch())
     return (
       <div className="content full-height paymeter" style={{"paddingBottom": "0px"}}>
         <style>{"\
@@ -153,7 +177,12 @@ class PaymeterComponent extends Component {
                       <div>
                         {this.props.wallets.map(wallet => {
                             return (
-                              <div key={wallet._id} className="wallet-list-item">
+                              <div key={wallet._id} className="wallet-list-item" onClick={() => {this.setState({secondBox: 'eth-wallet-management', secondBoxData: {
+                                walletId: wallet._id,
+                                address: wallet.address,
+                                balance: wallet.balance,
+                                network: wallet.network
+                              }})}}>
                                 {wallet.coinType === 'ETH' &&
                                   <div data-index="0" className="company-stat-box m-t-15 active padding-20 wallet-box-bg">
                                     <div>
@@ -226,7 +255,7 @@ class PaymeterComponent extends Component {
                     }
                 </div>
               </div>
-              <div data-email="opened" className="split-details">
+              <div data-email="opened" className="split-details p-t-20 p-l-20 p-r-20">
                 {this.state.secondBox === '' && 
                   <div className="no-result">
                     <h1>Build Wallets using Paymeter</h1>
@@ -234,7 +263,7 @@ class PaymeterComponent extends Component {
                 }
 
                 {this.state.secondBox === 'create-eth-wallet' &&
-                  <div className="card card-default full-height" style={{"marginBottom": "0px", "borderTop": "0px"}}>
+                  <div className="card card-default" style={{"marginBottom": "0px", "borderTop": "0px"}}>
                     <div className="card-block" >
                       <h5>
                         Create New Ethereum Wallet
@@ -273,7 +302,7 @@ class PaymeterComponent extends Component {
                 }
 
                 {this.state.secondBox === 'create-erc20-wallet' &&
-                  <div className="card card-default full-height" style={{"marginBottom": "0px", "borderTop": "0px"}}>
+                  <div className="card card-default" style={{"marginBottom": "0px", "borderTop": "0px"}}>
                     <div className="card-block" >
                       <h5>
                         Create New Ethereum Wallet
@@ -318,7 +347,99 @@ class PaymeterComponent extends Component {
                     </div>
                   </div>
                 }
-                
+
+                {this.state.secondBox === 'eth-wallet-management' &&
+                  <div className="card card-borderless card-transparent">
+                    <ul
+                      className="nav nav-tabs nav-tabs-linetriangle"
+                      role="tablist"
+                      data-init-reponsive-tabs="dropdownfx"
+                    >
+                      <li className="nav-item">
+                        <a
+                          className="active"
+                          href="#"
+                          data-toggle="tab"
+                          role="tab"
+                          data-target="#transfer"
+                        >
+                          Send and Receive
+                        </a>
+                      </li>
+                      <li className="nav-item">
+                        <a
+                          className=""
+                          href="#"
+                          data-toggle="tab"
+                          role="tab"
+                          data-target="#withdrawlHistory"
+                        >
+                          Withdrawl History
+                        </a>
+                      </li>
+                    </ul>
+                    <div className="tab-content">
+                      <div className="tab-pane active" id="transfer">
+                        <div className="row">
+                          <div className="col-lg-12">
+                            <div className="card card-transparent">
+                              <div
+                                className="card-block"
+                                style={{ paddingBottom: "0px" }}
+                              >
+                                <div className="row row-same-height">
+                                  <div className="col-md-5 b-r b-dashed b-grey sm-b-b">
+                                    <div className="p-t-0 p-b-30 p-l-30 p-r-30 sm-padding-5 sm-m-t-15 m-t-50">
+                                      <QRCode value={this.state.secondBoxData.address} />
+                                      <h5>Deposit Address: {this.state.secondBoxData.address}</h5>
+                                      <p className="small hint-text">
+                                        15 confirmations are required for balance to update
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="col-md-7">
+                                    <div className="padding-30 sm-padding-5">
+                                      <div className="form-group-attached">
+                                        <form role="form" onSubmit={e =>
+                                          this.transferETH(e, this.state.secondBoxData.walletId)
+                                        }>
+                                          <div className="form-group form-group-default m-t-10">
+                                            <label>To Address</label>
+                                            <input type="text" className="form-control" ref="transferEthAddress" />
+                                          </div>
+                                          <div className="form-group form-group-default m-t-10">
+                                            <label>Amount <small>{"(Reciever will pay the network fees)"}</small></label>
+                                            <input type="text" className="form-control" ref="transferEthAmount" />
+                                          </div>
+                                          <div className="form-group form-group-default m-t-10">
+                                            <label>Password</label>
+                                            <input type="password" className="form-control" ref="transferEthPassword" />
+                                          </div>
+                                          <LaddaButton
+                                            loading={this.state.transferEthLoading}
+                                            data-size={S}
+                                            data-style={SLIDE_UP}
+                                            data-spinner-size={30}
+                                            data-spinner-lines={12}
+                                            className="btn btn-complete btn-cons m-t-10"
+                                            type="submit"
+                                          >
+                                            <i className="fa fa-plus" aria-hidden="true" />
+                                            &nbsp;&nbsp;Send
+                                          </LaddaButton>
+                                        </form>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
               </div>
               <div className="compose-wrapper hidden-md-up">
                 <a className="compose-email text-info pull-right m-r-10 m-t-10" href="email_compose.html"><i className="fa fa-pencil-square-o"></i></a>

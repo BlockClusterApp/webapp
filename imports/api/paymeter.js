@@ -7,10 +7,14 @@ let Wallet = require('ethereumjs-wallet');
 import {
   WalletTransactions
 } from '../collections/walletTransactions/walletTransactions.js'
+import {
+  Utilities
+} from '../collections/utilities/utilities.js'
 import helpers from '../modules/helpers';
 const Cryptr = require('cryptr');
 const BigNumber = require('bignumber.js');
 const EthereumTx = require('ethereumjs-tx')
+import agenda from '../modules/schedulers/agenda';
 
 const erc20ABI = [{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"payable":true,"stateMutability":"payable","type":"fallback"},{"anonymous":false,"inputs":[{"indexed":true,"name":"owner","type":"address"},{"indexed":true,"name":"spender","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"from","type":"address"},{"indexed":true,"name":"to","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Transfer","type":"event"}];
 
@@ -19,11 +23,11 @@ function createWallet(coinType, walletName, userId, network, options) {
     let wallet = Wallet.generate();
     let private_key_hex = wallet.getPrivateKey().toString('hex');
     let address = wallet.getAddress();
-    const cryptr = new Cryptr(private_key_hex);
+    const cryptr = new Cryptr(options.password);
 
     Wallets.insert({
       coinType: 'ETH',
-      privateKey: cryptr.encrypt(options.password),
+      privateKey: cryptr.encrypt(private_key_hex),
       address: '0x' + address.toString('hex'),
       user: userId,
       walletName: walletName,
@@ -34,11 +38,11 @@ function createWallet(coinType, walletName, userId, network, options) {
     let wallet = Wallet.generate();
     let private_key_hex = wallet.getPrivateKey().toString('hex');
     let address = wallet.getAddress();
-    const cryptr = new Cryptr(private_key_hex);
+    const cryptr = new Cryptr(options.password);
 
     Wallets.insert({
       coinType: 'ERC20',
-      privateKey: cryptr.encrypt(options.password),
+      privateKey: cryptr.encrypt(private_key_hex),
       address: '0x' + address.toString('hex'),
       user: userId,
       contractAddress: options.contractAddress,
@@ -66,23 +70,31 @@ async function getBalance(walletId) {
       if (coinType === 'ETH') {
         let web3 = new Web3(new Web3.providers.HttpProvider(`${await Config.getPaymeterConnectionDetails("eth", wallet.network)}`));
 
-        web3.eth.getBlockNumber((err, latestBlockNumber) => {
+        web3.eth.getBlockNumber(Meteor.bindEnvironment((err, latestBlockNumber) => {
           if (!err) {
-            web3.eth.getBalance(wallet.address, latestBlockNumber - 15, (error, minedBalance) => {
+            web3.eth.getBalance(wallet.address, latestBlockNumber - 15, Meteor.bindEnvironment((error, minedBalance) => {
               if (!error) {
                 minedBalance = (web3.fromWei(minedBalance, 'ether')).toString();
-                
-                //later on here find the "pending" send txns from DB and deduct from mindedBalance then show.
+
+                let withdraw_txns = WalletTransactions.find({
+                  fromWallet: walletId,
+                  status: "pending",
+                  type: "withdraw"
+                }).fetch()
+
+                for(let count = 0; count < withdraw_txns.length; count++) {
+                  minedBalance = (new BigNumber(minedBalance)).minus(  new BigNumber(withdraw_txns[count].amount).plus(withdraw_txns[count].fee) ).toString()
+                }
 
                 resolve(((new BigNumber(minedBalance)).toFixed(5)).toString())
               } else {
                 reject('An error occured')
               }
-            })
+            }))
           } else {
             reject("An error occured")
           }
-        })
+        }))
       } else if (coinType === 'ERC20') {
         let web3 = new Web3(new Web3.providers.HttpProvider(`${await Config.getPaymeterConnectionDetails("eth", wallet.network)}`));
 
@@ -130,20 +142,6 @@ async function getNonce(address, url) {
   })
 }
 
-async function getGasPrice(url) {
-  let web3 = new Web3(new Web3.providers.HttpProvider(url));
-
-  return new Promise((resolve, reject) => {
-    web3.eth.getGasPrice((error, result) => {
-      if(error) {
-        reject(error)
-      } else {
-        resolve(result)
-      }
-    })
-  })
-}
-
 async function transfer(fromWalletId, toAddress, amount, options) {
   return new Promise(async (resolve, reject) => {
     let wallet = Wallets.findOne({
@@ -157,14 +155,25 @@ async function transfer(fromWalletId, toAddress, amount, options) {
         let url = await Config.getPaymeterConnectionDetails("eth", wallet.network);
         let web3 = new Web3(new Web3.providers.HttpProvider(url));
         let nonce = await getNonce(wallet.address, url)
-        let gasPrice = await getGasPrice(url);
+
+        let gasPrice = Utilities.findOne({
+          key: wallet.network + "-gasPrice"
+        }).value
+
+
+        let amount_bigNumber = new BigNumber(web3.toWei(amount, 'ether'))
+        let fee = (new BigNumber(gasPrice)).multipliedBy(21000)
+        let final_amount = amount_bigNumber.minus(fee)
+        final_amount = web3.fromWei(final_amount.toString(), 'ether')
+
+
         var rawTx = {
           gasPrice: web3.toHex(gasPrice),
           gasLimit: web3.toHex(21000),
           from: wallet.address,
           nonce: web3.toHex(nonce),
           to: toAddress,
-          value: web3.toHex(web3.toWei(amount))
+          value: web3.toHex(web3.toWei(final_amount))
         };
 
         let tx = new EthereumTx(rawTx);
@@ -172,24 +181,32 @@ async function transfer(fromWalletId, toAddress, amount, options) {
         
         let decryptedPrivateKey = cryptr.decrypt(wallet.privateKey);
         const privateKey = Buffer.from(decryptedPrivateKey, 'hex')
+        
         tx.sign(privateKey)
         const serializedTx = tx.serialize()
 
-        web3.eth.sendRawTransaction("0x" + serializedTx.toString("hex"), (err, hash) => {
+        web3.eth.sendRawTransaction("0x" + serializedTx.toString("hex"), Meteor.bindEnvironment((err, hash) => {
           if (err) {
-            reject(err)
+            if(err.toString().includes("insufficient funds")) {
+              reject("Insufficient Funds")
+            } else {
+              reject("Unknown Error")
+            }
           } else {
             WalletTransactions.insert({
-              user: wallet.user,
               fromWallet: wallet._id,
               toAddress: toAddress,
-              amount: amount,
-              createdAt: Date.now()
+              amount: final_amount,
+              createdAt: Date.now(),
+              status: "pending",
+              txnId: hash,
+              type: "withdrawal",
+              fee: web3.fromWei(fee.toString(), 'ether')
             })
 
             resolve(hash)
           }
-        })
+        }))
       } else if (coinType === 'ERC20') {
 
       }
@@ -207,8 +224,17 @@ Meteor.methods({
       throw new Meteor.Error('Not Allowed', 'Please login');
     }
   },
-  'getBalance': async (_id) => {
-    return await getBalance(_id)
+  'transferWallet': async (fromWalletId, toAddress, amount, options) => {
+    if(Meteor.userId()) {
+      try {
+        let txnHash = await transfer(fromWalletId, toAddress, amount, options);
+        return txnHash;
+      } catch(e) {
+        throw new Meteor.Error(e,e);
+      }
+    } else {
+      throw new Meteor.Error('Not Allowed', 'Please login');
+    }
   }
 })
 
@@ -222,5 +248,6 @@ module.exports = {
     } catch (e) {
       func("An error occured")
     }
-  }
+  },
+  transfer: transfer
 }
