@@ -6,6 +6,10 @@ const Web3 = require('web3');
 import {
   WalletTransactions
 } from '../../../../collections/walletTransactions/walletTransactions.js'
+import {
+  Wallets
+} from '../../../../collections/wallets/wallets.js'
+import helpers from '../../../../modules/helpers';
 
 async function getGasPrice(url) {
   let web3 = new Web3(new Web3.providers.HttpProvider(url));
@@ -45,9 +49,67 @@ async function getEthTxnConfirmations(url, txnHash) {
   })
 }
 
+
 module.exports = function(agenda) {
-  /*
+  agenda.define('check confirmations', async (job, done) => {
+    function reSchedule() {
+      agenda.schedule(new Date(Date.now() + 12000), 'check confirmations');
+    }
+
+    try {
+
+      let pending_txns = WalletTransactions.find({
+        status: "pending"
+      }).fetch()
+
+      for(let count = 0; count < pending_txns.length; count++) {
+        try {
+          let wallet_id = pending_txns[count].fromWallet
+          let wallet = Wallets.findOne({
+            _id: wallet_id
+          })
+
+          if(wallet.coinType === 'ETH') {
+            let url = `${await Config.getPaymeterConnectionDetails("eth", wallet.network)}`;
+            let confirmations = await getEthTxnConfirmations(url, pending_txns[count].txnId)
+            if(confirmations >= 15) {
+              WalletTransactions.update({
+                _id: pending_txns[count]._id
+              }, {
+                $set: {
+                  status: "completed"
+                }
+              })
+            } else if(helpers.daysDifference(Date.now(), pending_txns[count].createdAt >= 1)) {
+              WalletTransactions.update({
+                _id: pending_txns[count]._id
+              }, {
+                $set: {
+                  status: "cancelled"
+                }
+              })
+            }
+
+            reSchedule();
+          } else if(wallet.coinType === 'ERC20') {
+            reSchedule();
+          }
+        } catch(e) {
+          reSchedule();
+        }
+      }
+
+      reSchedule();
+    } catch(e) {
+      reSchedule();
+    }
+  });
+
   agenda.define('update gas price', async (job, done) => {
+    function reSchedule() {
+      agenda.schedule(new Date(Date.now() + (1000 * 300)), 'check confirmations');
+    }
+
     try {
       let testnet_gasPrice = await getGasPrice(`${await Config.getPaymeterConnectionDetails("eth", "testnet")}`)
       Utilities.upsert({
@@ -72,50 +134,9 @@ module.exports = function(agenda) {
       agenda.schedule('5 minutes', 'update gas price');
     }
   });
-  */
-
-  agenda.define('txn status', async (job, done) => {
-    try {
-      let pending_txns = WalletTransactions.find({
-        status: "pending"
-      }).fetch()
-
-      console.log(pending_txns)
-  
-      for(let count = 0; count < pending_txns.length; count++) {
-        let wallet_id = pending_txns[count].fromWallet
-        let wallet = Wallets.findOne({
-          _id: wallet_id
-        })
-
-        console.log(wallet)
-        if(wallet.coinType === 'ETH') {
-          let url = `${await Config.getPaymeterConnectionDetails("eth", wallet.network)}`;
-          let confirmations = await getEthTxnConfirmations(url, pending_txns[count].txnId)
-          console.log(confirmations)
-          if(confirmations >= 15) {
-            WalletTransactions.update({
-              _id: pending_txns[count]._id
-            }, {
-              $set: {
-                status: "completed"
-              }
-            })
-          }
-
-          agenda.schedule('2 minutes', 'txn status');
-        } else if(wallet.coinType === 'ERC20') {
-  
-        }
-      }
-    } catch(e) {
-      console.log(e)
-      agenda.schedule('2 minutes', 'txn status');
-    }
-  })
 
   (() => {
-    agenda.schedule('30 seconds', 'update gas price');
-    agenda.schedule('2 minutes', 'txn status');
+    agenda.schedule('5 seconds', 'check confirmations');
+    agenda.schedule('5 seconds', 'update gas price');
   })();
 };

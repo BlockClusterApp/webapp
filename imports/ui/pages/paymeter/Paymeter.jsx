@@ -9,6 +9,7 @@ import { Wallets } from "../../../collections/wallets/wallets.js";
 import helpers from "../../../modules/helpers";
 import LoadingIcon from "../../components/LoadingIcon/LoadingIcon.jsx";
 let QRCode = require('qrcode.react');
+import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
 
 import "./Paymeter.scss";
 
@@ -100,6 +101,13 @@ class PaymeterComponent extends Component {
 
   render() {
     console.log(Wallets.find({}).fetch())
+    let wallet = null;
+    if(this.state.secondBox === 'eth-wallet-management') {
+      wallet = Wallets.findOne({
+        _id: this.state.secondBoxData.walletId
+      })
+    }
+
     return (
       <div className="content full-height paymeter" style={{"paddingBottom": "0px"}}>
         <style>{"\
@@ -178,10 +186,7 @@ class PaymeterComponent extends Component {
                         {this.props.wallets.map(wallet => {
                             return (
                               <div key={wallet._id} className="wallet-list-item" onClick={() => {this.setState({secondBox: 'eth-wallet-management', secondBoxData: {
-                                walletId: wallet._id,
-                                address: wallet.address,
-                                balance: wallet.balance,
-                                network: wallet.network
+                                walletId: wallet._id
                               }})}}>
                                 {wallet.coinType === 'ETH' &&
                                   <div data-index="0" className="company-stat-box m-t-15 active padding-20 wallet-box-bg">
@@ -379,6 +384,9 @@ class PaymeterComponent extends Component {
                       </li>
                     </ul>
                     <div className="tab-content">
+                      {
+
+                      }
                       <div className="tab-pane active" id="transfer">
                         <div className="row">
                           <div className="col-lg-12">
@@ -390,8 +398,8 @@ class PaymeterComponent extends Component {
                                 <div className="row row-same-height">
                                   <div className="col-md-5 b-r b-dashed b-grey sm-b-b">
                                     <div className="p-t-0 p-b-30 p-l-30 p-r-30 sm-padding-5 sm-m-t-15 m-t-50">
-                                      <QRCode value={this.state.secondBoxData.address} />
-                                      <h5>Deposit Address: {this.state.secondBoxData.address}</h5>
+                                      <QRCode value={wallet.address} />
+                                      <h5>Deposit Address: {wallet.address}</h5>
                                       <p className="small hint-text">
                                         15 confirmations are required for balance to update
                                       </p>
@@ -431,6 +439,62 @@ class PaymeterComponent extends Component {
                                       </div>
                                     </div>
                                   </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="tab-pane" id="withdrawlHistory">
+                        <div className="row">
+                          <div className="col-lg-12">
+                            <div className="card card-transparent">
+                              <div
+                                className="card-block"
+                                style={{ paddingBottom: "0px" }}
+                              >
+                                <div className="table-responsive">
+                                  <table
+                                    className="table table-hover"
+                                    id="basicTable"
+                                  >
+                                    <thead>
+                                      <tr>
+                                        <th style={{ width: "18%" }}>Txn ID</th>
+                                        <th style={{ width: "13%" }}>Amount</th>
+                                        <th style={{ width: "18%" }}>Fee</th>
+                                        <th style={{ width: "17%" }}>To Address</th>
+                                        <th style={{ width: "15%" }}>Type</th>
+                                        <th style={{ width: "20%" }}>Status</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {wallet.txns.map((item, index) => {
+                                        return (
+                                          <tr key={item._id}>
+                                            <td className="v-align-middle ">
+                                              {item.txnId}
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {item.amount} ETH
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {item.fee} ETH
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {item.toAddress}
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {helpers.firstLetterCapital(item.type)}
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
+                                    </tbody>
+                                  </table>
                                 </div>
                               </div>
                             </div>

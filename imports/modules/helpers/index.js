@@ -168,6 +168,9 @@ export default {
     hyperionGBCostPerMonth() {
       return 0.00091 * 30;
     },
+    getFlooredFixed(v, d) {
+      return (Math.floor(v * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d);
+    },
     downloadFile(sUrl, ext) {
       //If in Chrome or Safari - download via virtual link click
       if (navigator.userAgent.toLowerCase().indexOf('chrome') || navigator.userAgent.toLowerCase().indexOf('safari')) {
@@ -197,5 +200,11 @@ export default {
       var query = '&download';
 
       window.open(sUrl + query);
+    },
+    daysDifference (timestamp1, timestamp2) {
+        var difference = timestamp1 - timestamp2;
+        var daysDifference = Math.floor(difference/1000/60/60/24);
+    
+        return daysDifference;
     }
 }
