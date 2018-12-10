@@ -28,7 +28,6 @@
     "chai": "^4.1.2",
     "chart.js": "^2.7.3",
     "crypto": "^1.0.1",
-    "cryptr": "^4.0.2",
     "debug": "^3.1.0",
     "ejs": "^2.6.1",
     "elasticsearch": "^15.1.1",

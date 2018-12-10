@@ -11,7 +11,6 @@ import {
   Utilities
 } from '../collections/utilities/utilities.js'
 import helpers from '../modules/helpers';
-const Cryptr = require('cryptr');
 const BigNumber = require('bignumber.js');
 const EthereumTx = require('ethereumjs-tx')
 import agenda from '../modules/schedulers/agenda';
@@ -23,11 +22,10 @@ function createWallet(coinType, walletName, userId, network, options) {
     let wallet = Wallet.generate();
     let private_key_hex = wallet.getPrivateKey().toString('hex');
     let address = wallet.getAddress();
-    const cryptr = new Cryptr(options.password);
 
     Wallets.insert({
       coinType: 'ETH',
-      privateKey: cryptr.encrypt(private_key_hex),
+      privateKey: private_key_hex,
       address: '0x' + address.toString('hex'),
       user: userId,
       walletName: walletName,
@@ -38,11 +36,10 @@ function createWallet(coinType, walletName, userId, network, options) {
     let wallet = Wallet.generate();
     let private_key_hex = wallet.getPrivateKey().toString('hex');
     let address = wallet.getAddress();
-    const cryptr = new Cryptr(options.password);
 
     Wallets.insert({
       coinType: 'ERC20',
-      privateKey: cryptr.encrypt(private_key_hex),
+      privateKey: private_key_hex,
       address: '0x' + address.toString('hex'),
       user: userId,
       contractAddress: options.contractAddress,
@@ -103,13 +100,21 @@ async function getBalance(walletId) {
         let erc20 = web3.eth.contract(erc20ABI)
         let erc20_instance = erc20.at(wallet.contractAddress)
 
-        web3.eth.getBlockNumber((err, latestBlockNumber) => {
+        web3.eth.getBlockNumber(Meteor.bindEnvironment((err, latestBlockNumber) => {
           if (!err) {
-            erc20_instance.balanceOf.call(wallet.address, latestBlockNumber - 15, (error, minedBalance) => {
+            erc20_instance.balanceOf.call(wallet.address, latestBlockNumber - 15, Meteor.bindEnvironment((error, minedBalance) => {
               if (!error) {
                 minedBalance = (web3.fromWei(minedBalance, 'ether')).toString();
 
-                //later on here find the "pending" send txns from DB and deduct from mindedBalance then show.
+                let withdraw_txns = WalletTransactions.find({
+                  fromWallet: walletId,
+                  status: "pending",
+                  type: "withdrawal"
+                }).fetch()
+
+                for(let count = 0; count < withdraw_txns.length; count++) {
+                  minedBalance = (new BigNumber(minedBalance)).minus(new BigNumber(withdraw_txns[count].amount)).toString()
+                }
 
                 resolve(
                   helpers.getFlooredFixed(parseFloat(minedBalance), 5) < 0 ? "0.00000" : helpers.getFlooredFixed(parseFloat(minedBalance), 5)
@@ -117,12 +122,11 @@ async function getBalance(walletId) {
               } else {
                 reject('An error occured')
               }
-
-            })
+            }))
           } else {
             reject("An error occured")
           }
-        })
+        }))
       } else {
         reject('Invalid coin type');
       }
@@ -164,55 +168,215 @@ async function transfer(fromWalletId, toAddress, amount, options) {
           key: wallet.network + "-gasPrice"
         }).value
 
+        let currenct_balance = await getBalance(fromWalletId);
 
-        let amount_bigNumber = new BigNumber(web3.toWei(amount, 'ether'))
-        let fee = (new BigNumber(gasPrice)).multipliedBy(21000)
-        let final_amount = amount_bigNumber.minus(fee)
-        final_amount = web3.fromWei(final_amount.toString(), 'ether')
+        if((new BigNumber(amount)).lte(currenct_balance)) {
+          let amount_bigNumber = new BigNumber(web3.toWei(amount, 'ether'))
+          let fee = (new BigNumber(gasPrice)).multipliedBy(21000)
+          let final_amount = amount_bigNumber.minus(fee)
+          final_amount = web3.fromWei(final_amount.toString(), 'ether')
 
+          var rawTx = {
+            gasPrice: web3.toHex(gasPrice),
+            gasLimit: web3.toHex(21000),
+            from: wallet.address,
+            nonce: web3.toHex(nonce),
+            to: toAddress,
+            value: web3.toHex(web3.toWei(final_amount, 'ether'))
+          };
 
-        var rawTx = {
-          gasPrice: web3.toHex(gasPrice),
-          gasLimit: web3.toHex(21000),
-          from: wallet.address,
-          nonce: web3.toHex(nonce),
-          to: toAddress,
-          value: web3.toHex(web3.toWei(final_amount))
-        };
+          let tx = new EthereumTx(rawTx);
+          const privateKey = Buffer.from(wallet.privateKey, 'hex')
+          tx.sign(privateKey)
+          const serializedTx = tx.serialize()
 
-        let tx = new EthereumTx(rawTx);
-        const cryptr = new Cryptr(options.password);
-        
-        let decryptedPrivateKey = cryptr.decrypt(wallet.privateKey);
-        const privateKey = Buffer.from(decryptedPrivateKey, 'hex')
-        
-        tx.sign(privateKey)
-        const serializedTx = tx.serialize()
-
-        web3.eth.sendRawTransaction("0x" + serializedTx.toString("hex"), Meteor.bindEnvironment((err, hash) => {
-          if (err) {
-            if(err.toString().includes("insufficient funds")) {
-              reject("Insufficient Funds")
+          web3.eth.sendRawTransaction("0x" + serializedTx.toString("hex"), Meteor.bindEnvironment((err, hash) => {
+            if (err) {
+              if(err.toString().includes("insufficient funds")) {
+                reject("Insufficient Funds")
+              } else {
+                reject("Unknown Error")
+              }
             } else {
-              reject("Unknown Error")
+              WalletTransactions.insert({
+                fromWallet: wallet._id,
+                toAddress: toAddress,
+                amount: final_amount,
+                createdAt: Date.now(),
+                status: "pending",
+                txnId: hash,
+                type: "withdrawal",
+                fee: web3.fromWei(fee.toString(), 'ether')
+              })
+
+              resolve(hash)
             }
-          } else {
-            WalletTransactions.insert({
-              fromWallet: wallet._id,
-              toAddress: toAddress,
-              amount: final_amount,
-              createdAt: Date.now(),
-              status: "pending",
-              txnId: hash,
-              type: "withdrawal",
-              fee: web3.fromWei(fee.toString(), 'ether')
-            })
-
-            resolve(hash)
-          }
-        }))
+          }))
+        } else {
+          reject("Insufficient Balance");
+        }
       } else if (coinType === 'ERC20') {
+        let url = await Config.getPaymeterConnectionDetails("eth", wallet.network);
+        let web3 = new Web3(new Web3.providers.HttpProvider(url));
+        if(options.feeWallet) {
+          //transfer fee first then actual tokens. actual token transfer will be done by the cron job
+          let feeWallet = Wallets.findOne({
+            _id: options.feeWallet
+          })
 
+          let nonce = await getNonce(feeWallet.address, url)
+          let gasPrice = Utilities.findOne({
+            key: wallet.network + "-gasPrice"
+          }).value
+
+          let currenct_balance = await getBalance(fromWalletId);
+          let fee_wallet_current_balance = await getBalance(options.feeWallet)
+
+          if((new BigNumber(amount)).lte(currenct_balance)) {
+            let fee = (new BigNumber(gasPrice)).multipliedBy(21000)
+            
+            let erc20 = web3.eth.contract(erc20ABI)
+            let erc20_instance = erc20.at(wallet.contractAddress)
+
+            let data = erc20_instance.transfer.getData(toAddress, web3.toWei(amount, 'ether'));
+
+            web3.eth.estimateGas({
+              to: wallet.contractAddress,
+              data: data,
+              from: wallet.address
+            }, Meteor.bindEnvironment(async (error, contractGasLimit) => {
+              if(!error) {
+                let rawTx = {
+                  gasPrice: web3.toHex(gasPrice),
+                  gasLimit: web3.toHex(21000),
+                  from: feeWallet.address,
+                  nonce: web3.toHex(nonce),
+                  to: wallet.address,
+                  value: web3.toHex((new BigNumber(gasPrice)).multipliedBy(contractGasLimit.toString()).toString())
+                };
+
+                let tx = new EthereumTx(rawTx);
+                let privateKey = Buffer.from(feeWallet.privateKey, 'hex')
+                tx.sign(privateKey)
+                let serializedTx = tx.serialize()
+
+                web3.eth.sendRawTransaction("0x" + serializedTx.toString("hex"), Meteor.bindEnvironment(async (err, hash) => {
+                  if(!error) {
+                    WalletTransactions.insert({
+                      fromWallet: feeWallet._id,
+                      toAddress: wallet.address,
+                      amount: web3.fromWei((new BigNumber(gasPrice)).multipliedBy(contractGasLimit.toString()).toString(), 'ether'),
+                      createdAt: Date.now(),
+                      status: "pending",
+                      txnId: hash,
+                      type: "withdrawal",
+                      fee: web3.fromWei(fee.toString(), 'ether')
+                    })
+
+                    let total_fee = (new BigNumber(gasPrice)).multipliedBy(contractGasLimit.toString()).toString();
+                    total_fee = (new BigNumber(total_fee)).plus(fee.toString()).toString()
+
+                    WalletTransactions.insert({
+                      fromWallet: wallet._id,
+                      toAddress: toAddress,
+                      amount: amount,
+                      createdAt: Date.now(),
+                      status: "processing",
+                      txnId: null,
+                      type: "withdrawal",
+                      fee: web3.fromWei(total_fee, 'ether'),
+                      feeDepositWallet: options.feeWallet,
+                      feeDepositTxnId: hash,
+                      feeDepositGasPrice: gasPrice //both txns should go with same gas price
+                    })
+
+                    resolve()
+                  } else {
+                    if(err.toString().includes("insufficient funds")) {
+                      console.log("First time")
+                      reject("Insufficient Ether for Fees")
+                    } else {
+                      reject("Unknown Error")
+                    }
+                  }
+                }))
+              } else {
+                reject("An error occured")
+              }
+            }))
+          } else {
+            reject("Insufficient Tokens");
+          }
+        } else {
+          let nonce = await getNonce(wallet.address, url)
+
+          let gasPrice = Utilities.findOne({
+            key: wallet.network + "-gasPrice"
+          }).value
+
+          let currenct_balance = await getBalance(fromWalletId);
+
+          if((new BigNumber(amount)).lte(currenct_balance)) {
+            let erc20 = web3.eth.contract(erc20ABI)
+            let erc20_instance = erc20.at(wallet.contractAddress)
+
+            let data = erc20_instance.transfer.getData(toAddress, web3.toWei(amount, 'ether'));
+            
+            web3.eth.estimateGas({
+              to: wallet.contractAddress,
+              data: data,
+              from: wallet.address
+            }, Meteor.bindEnvironment((error, gasLimit) => {
+              if(!error) {
+                var rawTx = {
+                  gasPrice: web3.toHex(gasPrice),
+                  gasLimit: web3.toHex(gasLimit),
+                  from: wallet.address,
+                  nonce: web3.toHex(nonce),
+                  to: wallet.contractAddress,
+                  data: data,
+                  value: web3.toHex(web3.toWei("0", 'ether'))
+                };
+                
+                let tx = new EthereumTx(rawTx);
+                const privateKey = Buffer.from(wallet.privateKey, 'hex')
+                tx.sign(privateKey)
+                const serializedTx = tx.serialize()
+
+                web3.eth.sendRawTransaction("0x" + serializedTx.toString("hex"), Meteor.bindEnvironment((err, hash) => {
+                  if (err) {
+                    if(err.toString().includes("insufficient funds")) {
+                      reject("Insufficient Ether for Fees")
+                    } else {
+                      reject("Unknown Error")
+                    }
+                  } else {
+                    WalletTransactions.insert({
+                      fromWallet: wallet._id,
+                      toAddress: toAddress,
+                      amount: amount,
+                      createdAt: Date.now(),
+                      status: "pending",
+                      txnId: hash,
+                      type: "withdrawal",
+                      fee: web3.fromWei((new BigNumber(gasPrice)).multipliedBy(gasLimit).toString(), 'ether'),
+                      feeDepositWallet: null,
+                      feeDepositStatus: null,
+                      feeDepositTxnId: null,
+                      feeDepositGasPrice: null //both txns should go with same gas price
+                    })
+      
+                    resolve(hash)
+                  }
+                }))
+              } else {
+                reject("An error occured")
+              }
+            }))
+          } else {
+            reject("Insufficient Tokens");
+          }
+        }
       }
     } else {
       reject("Wallet not found");
@@ -253,5 +417,7 @@ module.exports = {
       func("An error occured")
     }
   },
-  transfer: transfer
+  transfer: transfer,
+  getNonce: getNonce,
+  erc20ABI: erc20ABI
 }

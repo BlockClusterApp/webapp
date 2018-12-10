@@ -36,7 +36,7 @@ class PaymeterComponent extends Component {
     this.setState({
       "createETHWalletLoading": true
     })
-    Meteor.call("createWallet", "ETH", this.refs.ethWalletName.value, this.refs.ethWalletNetwork.value, {password: this.refs.ethWalletPassword.value}, (err, r) => {
+    Meteor.call("createWallet", "ETH", this.refs.ethWalletName.value, this.refs.ethWalletNetwork.value, {}, (err, r) => {
       if(!err && r) {
         notifications.success("Wallet Created");
       } else {
@@ -56,9 +56,7 @@ class PaymeterComponent extends Component {
       "transferEthLoading": true
     })
 
-    Meteor.call("transferWallet", walletId, this.refs.transferEthAddress.value, this.refs.transferEthAmount.value, {
-      password: this.refs.transferEthPassword.value
-    }, (error, txnHash) => {
+    Meteor.call("transferWallet", walletId, this.refs.transferEthAddress.value, this.refs.transferEthAmount.value, {}, (error, txnHash) => {
       if(error) {
         notifications.error(error.reason);
       } else {
@@ -67,6 +65,33 @@ class PaymeterComponent extends Component {
 
       this.setState({
         "transferEthLoading": false
+      })
+    })
+  }
+
+  transferERC20 = (e, walletId) => {
+    e.preventDefault();
+
+    this.setState({
+      "transferErc20Loading": true
+    })
+
+    Meteor.call(
+      "transferWallet",
+      walletId,
+      this.refs.transferErc20Address.value,
+      this.refs.transferErc20Amount.value, {
+        feeWallet: (walletId === this.refs.erc20FeeWallet.value ? null : this.refs.erc20FeeWallet.value),
+      }, (error, txnHash) => {
+      
+      if(error) {
+        notifications.error(error.reason);
+      } else {
+        notifications.success("Transaction Sent");
+      }
+
+      this.setState({
+        "transferErc20Loading": false
       })
     })
   }
@@ -81,7 +106,6 @@ class PaymeterComponent extends Component {
     Meteor.call("createWallet", "ERC20", this.refs.erc20WalletName.value, this.refs.erc20WalletNetwork.value, {
       contractAddress: this.refs.erc20ContractAddress.value,
       tokenSymbol: this.refs.erc20Symbol.value,
-      password: this.refs.erc20WalletPassword.value
     }, (err, r) => {
       if(!err && r) {
         notifications.success("Wallet Created");
@@ -95,14 +119,16 @@ class PaymeterComponent extends Component {
     })
   }
 
-  getBalance() {
-    return 1;
-  }
-
   render() {
     console.log(Wallets.find({}).fetch())
     let wallet = null;
     if(this.state.secondBox === 'eth-wallet-management') {
+      wallet = Wallets.findOne({
+        _id: this.state.secondBoxData.walletId
+      })
+    }
+
+    if(this.state.secondBox === 'erc20-wallet-management') {
       wallet = Wallets.findOne({
         _id: this.state.secondBoxData.walletId
       })
@@ -225,7 +251,9 @@ class PaymeterComponent extends Component {
                       <div>
                         {this.props.wallets.map(wallet => {
                             return (
-                              <div key={wallet._id} className="wallet-list-item">
+                              <div key={wallet._id} className="wallet-list-item" onClick={() => {this.setState({secondBox: 'erc20-wallet-management', secondBoxData: {
+                                walletId: wallet._id
+                              }})}}>
                                 {wallet.coinType === 'ERC20' &&
                                   <div data-index="0" className="company-stat-box m-t-15 active padding-20 wallet-box-bg">
                                     <div>
@@ -279,10 +307,6 @@ class PaymeterComponent extends Component {
                           <input type="text" className="form-control" required ref="ethWalletName" />
                         </div>
                         <div className="form-group form-group-default required ">
-                          <label>Password</label>
-                          <input type="password" className="form-control" required ref="ethWalletPassword" />
-                        </div>
-                        <div className="form-group form-group-default required ">
                           <label>Network</label>
                           <select className="form-control" ref="ethWalletNetwork">
                             <option value={"testnet"} key={"testnet"}>Rinkeby</option>
@@ -324,10 +348,6 @@ class PaymeterComponent extends Component {
                         <div className="form-group form-group-default required ">
                           <label>Token Symbol</label>
                           <input type="text" className="form-control" required ref="erc20Symbol" />
-                        </div>
-                        <div className="form-group form-group-default required ">
-                          <label>Password</label>
-                          <input type="password" className="form-control" required ref="erc20WalletPassword" />
                         </div>
                         <div className="form-group form-group-default required ">
                           <label>Network</label>
@@ -384,9 +404,6 @@ class PaymeterComponent extends Component {
                       </li>
                     </ul>
                     <div className="tab-content">
-                      {
-
-                      }
                       <div className="tab-pane active" id="transfer">
                         <div className="row">
                           <div className="col-lg-12">
@@ -411,20 +428,181 @@ class PaymeterComponent extends Component {
                                         <form role="form" onSubmit={e =>
                                           this.transferETH(e, this.state.secondBoxData.walletId)
                                         }>
-                                          <div className="form-group form-group-default m-t-10">
+                                          <div className="form-group form-group-default m-t-10 required">
                                             <label>To Address</label>
                                             <input type="text" className="form-control" ref="transferEthAddress" />
                                           </div>
-                                          <div className="form-group form-group-default m-t-10">
+                                          <div className="form-group form-group-default m-t-10 required">
                                             <label>Amount <small>{"(Reciever will pay the network fees)"}</small></label>
                                             <input type="text" className="form-control" ref="transferEthAmount" />
                                           </div>
-                                          <div className="form-group form-group-default m-t-10">
-                                            <label>Password</label>
-                                            <input type="password" className="form-control" ref="transferEthPassword" />
-                                          </div>
                                           <LaddaButton
                                             loading={this.state.transferEthLoading}
+                                            data-size={S}
+                                            data-style={SLIDE_UP}
+                                            data-spinner-size={30}
+                                            data-spinner-lines={12}
+                                            className="btn btn-complete btn-cons m-t-10"
+                                            type="submit"
+                                          >
+                                            <i className="fa fa-plus" aria-hidden="true" />
+                                            &nbsp;&nbsp;Send
+                                          </LaddaButton>
+                                        </form>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="tab-pane" id="withdrawlHistory">
+                        <div className="row">
+                          <div className="col-lg-12">
+                            <div className="card card-transparent">
+                              <div
+                                className="card-block"
+                                style={{ paddingBottom: "0px" }}
+                              >
+                                <div className="table-responsive">
+                                  <table
+                                    className="table table-hover"
+                                    id="basicTable"
+                                  >
+                                    <thead>
+                                      <tr>
+                                        <th style={{ width: "18%" }}>Txn ID</th>
+                                        <th style={{ width: "13%" }}>Amount</th>
+                                        <th style={{ width: "18%" }}>Fee</th>
+                                        <th style={{ width: "17%" }}>To Address</th>
+                                        <th style={{ width: "15%" }}>Type</th>
+                                        <th style={{ width: "20%" }}>Status</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {wallet.txns.map((item, index) => {
+                                        return (
+                                          <tr key={item._id}>
+                                            <td className="v-align-middle ">
+                                              {item.txnId}
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {item.amount} ETH
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {item.fee} ETH
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {item.toAddress}
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {helpers.firstLetterCapital(item.type)}
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+
+                {this.state.secondBox === 'erc20-wallet-management' &&
+                  <div className="card card-borderless card-transparent">
+                    <ul
+                      className="nav nav-tabs nav-tabs-linetriangle"
+                      role="tablist"
+                      data-init-reponsive-tabs="dropdownfx"
+                    >
+                      <li className="nav-item">
+                        <a
+                          className="active"
+                          href="#"
+                          data-toggle="tab"
+                          role="tab"
+                          data-target="#transfer"
+                        >
+                          Send and Receive
+                        </a>
+                      </li>
+                      <li className="nav-item">
+                        <a
+                          className=""
+                          href="#"
+                          data-toggle="tab"
+                          role="tab"
+                          data-target="#withdrawlHistory"
+                        >
+                          Withdrawl History
+                        </a>
+                      </li>
+                    </ul>
+                    <div className="tab-content">
+                      <div className="tab-pane active" id="transfer">
+                        <div className="row">
+                          <div className="col-lg-12">
+                            <div className="card card-transparent">
+                              <div
+                                className="card-block"
+                                style={{ paddingBottom: "0px" }}
+                              >
+                                <div className="row row-same-height">
+                                  <div className="col-md-5 b-r b-dashed b-grey sm-b-b">
+                                    <div className="p-t-0 p-b-30 p-l-30 p-r-30 sm-padding-5 sm-m-t-15 m-t-50">
+                                      <QRCode value={wallet.address} />
+                                      <h5>Deposit Address: {wallet.address}</h5>
+                                      <p className="small hint-text">
+                                        15 confirmations are required for balance to update
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="col-md-7">
+                                    <div className="padding-30 sm-padding-5">
+                                      <div className="form-group-attached">
+                                        <form role="form" onSubmit={e =>
+                                          this.transferERC20(e, this.state.secondBoxData.walletId)
+                                        }>
+                                          <div className="row">
+                                            <div className="col-md-6">
+                                              <div className="form-group form-group-default m-t-10 required">
+                                                <label>Amount</label>
+                                                <input type="text" className="form-control" ref="transferErc20Amount" required />
+                                              </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                              <div className="form-group form-group-default m-t-10 required">
+                                                <label>To Address</label>
+                                                <input type="text" className="form-control" ref="transferErc20Address" required />
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div className="form-group form-group-default m-t-10 required">
+                                            <label>Fee Address <small>{"Account to Pay Fee from"}</small></label>
+                                            <select className="form-control" ref="erc20FeeWallet">
+                                              <option key={wallet._id} value={wallet._id}>{wallet.walletName} (Pay from same wallet)</option>
+                                              {this.props.wallets.map(temp_wallet => {
+                                                if(temp_wallet.coinType === 'ETH' && temp_wallet.network === wallet.network) {
+                                                  return (
+                                                    <option key={temp_wallet._id} value={temp_wallet._id}>{temp_wallet.walletName}</option>
+                                                  )
+                                                }
+                                              })}
+                                            </select>
+                                          </div>
+                                          
+                                          <LaddaButton
+                                            loading={this.state.transferErc20Loading}
                                             data-size={S}
                                             data-style={SLIDE_UP}
                                             data-spinner-size={30}
