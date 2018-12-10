@@ -1,5 +1,9 @@
+import Bluebird from 'bluebird';
+
 import AuthMiddleware from '../middleware/auth';
 import Paymeter from './';
+
+const { Wallets } = require('../../collections/wallets/wallets');
 
 function authMiddleware(req, res, next) {
   if (!(RemoteConfig.features && RemoteConfig.features.Paymeter)) {
@@ -36,11 +40,44 @@ function sendSuccess(res, data) {
 
 JsonRoutes.Middleware.use('/api/paymeter', authMiddleware);
 
-JsonRoutes.add('get', '/api/paymeter/wallets', (req, res) => {});
+JsonRoutes.add('get', '/api/paymeter/wallets', (req, res) => {
+  const wallets = Wallets.find({
+    userId: req.userId,
+  }).fetch();
 
-JsonRoutes.add('get', '/api/paymeter/wallets/:id', (req, res) => {});
+  try {
+    Bluebird.each(wallets, async wallet => {
+      wallet.balance = await Paymeter.getBalance(wallet._id);
+    });
+    return sendSuccess(res, wallets);
+  } catch (err) {
+    return sendError(res, 400, err);
+  }
+});
 
-JsonRoutes.add('post', '/api/paymeter/wallets', (req, res) => {
+JsonRoutes.add('get', '/api/paymeter/wallets/:id', async (req, res) => {
+  const wallet = Wallets.find({
+    _id: req.params.id,
+    userId: req.userId,
+  }).fetch()[0];
+
+  if (!wallet) {
+    return sendError(res, 400, 'Invalid wallet id');
+  }
+
+  try {
+    const { balance, txns } = await Bluebird.props({ balance: Paymeter.getBalance(wallet._id), txns: Paymeter.getWalletTransactions(wallet._id, req.userId) });
+    return sendSuccess(res, {
+      wallet,
+      balance,
+      transactions: txns,
+    });
+  } catch (err) {
+    return sendError(res, 400, err);
+  }
+});
+
+JsonRoutes.add('post', '/api/paymeter/wallets', async (req, res) => {
   const { coinType, walletName, network, options } = req.body;
 
   if (!coinType) {
@@ -63,7 +100,7 @@ JsonRoutes.add('post', '/api/paymeter/wallets', (req, res) => {
   }
 });
 
-JsonRoutes.add('get', '/api/paymeter/wallets/:id/withdrawals', (req, res) => {
+JsonRoutes.add('get', '/api/paymeter/wallets/:id/withdrawals', async (req, res) => {
   try {
     const transactinos = await Paymeter.getWalletTransactions(req.params.id, req.userId);
     return sendSuccess(res, transactinos);
