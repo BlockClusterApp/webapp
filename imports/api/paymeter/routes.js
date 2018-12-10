@@ -42,7 +42,7 @@ JsonRoutes.Middleware.use('/api/paymeter', authMiddleware);
 
 JsonRoutes.add('get', '/api/paymeter/wallets', (req, res) => {
   const wallets = Wallets.find({
-    userId: req.userId,
+    user: req.userId,
   }).fetch();
 
   try {
@@ -58,7 +58,7 @@ JsonRoutes.add('get', '/api/paymeter/wallets', (req, res) => {
 JsonRoutes.add('get', '/api/paymeter/wallets/:id', async (req, res) => {
   const wallet = Wallets.find({
     _id: req.params.id,
-    userId: req.userId,
+    user: req.userId,
   }).fetch()[0];
 
   if (!wallet) {
@@ -121,7 +121,7 @@ JsonRoutes.add('post', '/api/paymeter/wallets/:id/send', async (req, res) => {
     return sendError(res, 400, 'amount is required field');
   }
   try {
-    const result = await Paymeter.transfer(fromWalletId, toAddress, amount, options || {});
+    const result = await Paymeter.transfer(fromWalletId, toAddress, amount, options || {}, req.userId);
     return sendSuccess(res, { txnHash: result });
   } catch (err) {
     sendError(res, 400, err);

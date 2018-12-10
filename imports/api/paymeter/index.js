@@ -1,13 +1,13 @@
 import Config from '../../modules/config/server';
-import { Wallets } from '../collections/wallets/wallets.js';
+import { Wallets } from '../../collections/wallets/wallets.js';
 const Web3 = require('web3');
 let Wallet = require('ethereumjs-wallet');
-import { WalletTransactions } from '../collections/walletTransactions/walletTransactions.js';
-import { Utilities } from '../collections/utilities/utilities.js';
-import helpers from '../modules/helpers';
+import { WalletTransactions } from '../../collections/walletTransactions/walletTransactions.js';
+import { Utilities } from '../../collections/utilities/utilities.js';
+import helpers from '../../modules/helpers';
 const BigNumber = require('bignumber.js');
 const EthereumTx = require('ethereumjs-tx');
-import agenda from '../modules/schedulers/agenda';
+import agenda from '../../modules/schedulers/agenda';
 
 const erc20ABI = [
   { constant: true, inputs: [], name: 'name', outputs: [{ name: '', type: 'string' }], payable: false, stateMutability: 'view', type: 'function' },
@@ -215,10 +215,14 @@ async function getNonce(address, url) {
   });
 }
 
-async function transfer(fromWalletId, toAddress, amount, options) {
+async function transfer(fromWalletId, toAddress, amount, options, userId) {
+  if (!userId) {
+    throw new Error('Transfer requires user to be logged in');
+  }
   return new Promise(async (resolve, reject) => {
     let wallet = Wallets.findOne({
       _id: fromWalletId,
+      user: userId,
     });
 
     let coinType = wallet.coinType;
@@ -290,6 +294,7 @@ async function transfer(fromWalletId, toAddress, amount, options) {
           //transfer fee first then actual tokens. actual token transfer will be done by the cron job
           let feeWallet = Wallets.findOne({
             _id: options.feeWallet,
+            user: userId
           });
 
           let nonce = await getNonce(feeWallet.address, url);
@@ -465,7 +470,7 @@ async function transfer(fromWalletId, toAddress, amount, options) {
 }
 
 async function getWalletTransactions(walletId, userId) {
-  const userId = userId || Meteor.userId();
+  userId = userId || Meteor.userId();
   const wallet = Wallets.find({
     _id: walletId,
     userId,
@@ -491,7 +496,7 @@ Meteor.methods({
   transferWallet: async (fromWalletId, toAddress, amount, options) => {
     if (Meteor.userId()) {
       try {
-        let txnHash = await transfer(fromWalletId, toAddress, amount, options);
+        let txnHash = await transfer(fromWalletId, toAddress, amount, options || {}, Meteor.userId());
         return txnHash;
       } catch (e) {
         throw new Meteor.Error(e, e);

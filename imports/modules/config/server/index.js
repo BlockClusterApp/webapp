@@ -109,8 +109,10 @@ async function getPaymeterConnectionDetails(blockchain, network) {
     });
   }
 
+  const locations = await getLocation();
+
   //first location in the location list - assuming webapp is also running the first location
-  const locationCode = (await getLocation())[0].locationCode;
+  const locationCode = locations[0].locationCode;
   return RemoteConfig.clusters[getNamespace()][locationCode].paymeter[blockchain][network].url;
 }
 

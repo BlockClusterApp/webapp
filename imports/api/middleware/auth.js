@@ -1,5 +1,6 @@
 import Billing from '../billing';
 import ApiKeys from '../../collections/api-keys';
+import Config from '../../modules/config/server';
 
 import RedisJwt from 'redis-jwt';
 
