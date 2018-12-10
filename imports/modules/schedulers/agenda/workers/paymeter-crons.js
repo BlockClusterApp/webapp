@@ -78,13 +78,16 @@ async function getEthTxnConfirmations(url, txnHash) {
 
 
 module.exports = function(agenda) {
-  agenda.define('check confirmations', async (job, done) => {
+  agenda.define('process paymeter', {
+    concurrency: 1
+  }, async (job, done) => {
+    console.log("running")
     function reSchedule() {
-      agenda.schedule(new Date(Date.now() + 12000), 'check confirmations');
+      done()
+      agenda.schedule(new Date(Date.now() + 12000), 'process paymeter');
     }
 
     try {
-
       let pending_txns = WalletTransactions.find({
         $or: [
           {status: "pending"},
@@ -119,54 +122,54 @@ module.exports = function(agenda) {
               }
             })
           }
-
-          reSchedule();
         } else if(wallet.coinType === 'ERC20') {
+          let url = `${await Config.getPaymeterConnectionDetails("eth", wallet.network)}`;
+          let web3 = new Web3(new Web3.providers.HttpProvider(url));
           if(pending_txns[count].feeDepositWallet) {
-            if(pending_txns[count].txnId === null) {
-              //check if fee deposit txn id is confirmed....if yes they send the next txn
-              let url = `${await Config.getPaymeterConnectionDetails("eth", wallet.network)}`;
+            if(pending_txns[count].status === 'processing') {
+              console.log("Process")
               let confirmations = await getEthTxnConfirmations(url, pending_txns[count].feeDepositTxnId)
+              console.log(confirmations)
               if(confirmations >= 15) {
-                let nonce = await Paymeter.getNonce(wallet.address, url)
-                let gasPrice = pending_txns[count].feeDepositGasPrice;
-                let web3 = new Web3(new Web3.providers.HttpProvider(url));
-                
-                let erc20 = web3.eth.contract(Paymeter.erc20ABI)
-                let erc20_instance = erc20.at(wallet.contractAddress)
-                let data = erc20_instance.transfer.getData(pending_txns[count].toAddress, web3.toWei(pending_txns[count].amount, 'ether'));
-                let gasLimit = await estimateGas({
-                  to: wallet.contractAddress,
-                  data: data,
-                  from: wallet.address
-                }, web3)
-              
-                var rawTx = {
-                  gasPrice: web3.toHex(gasPrice),
-                  gasLimit: web3.toHex(gasLimit),
-                  from: wallet.address,
-                  nonce: web3.toHex(nonce),
-                  to: wallet.contractAddress,
-                  data: data,
-                  value: web3.toHex(web3.toWei("0", 'ether'))
-                };
-
-                let tx = new EthereumTx(rawTx);
-                const privateKey = Buffer.from(wallet.privateKey, 'hex')
-                tx.sign(privateKey)
-                const serializedTx = tx.serialize()
-
-                let hash = await sendRawTxn("0x" + serializedTx.toString("hex"), web3);
-
-                WalletTransactions.update({
-                  _id: pending_txns[count]._id
-                }, {
-                  $set: {
-                    status: "pending",
-                    txnId: hash
-                  }
+                let prev_nonce_txn = WalletTransactions.findOne({
+                  fromWallet: wallet._id,
+                  nonce: pending_txns[count].nonce - 1 
                 })
-
+  
+                if(prev_nonce_txn) {
+                  if(prev_nonce_txn.status === 'pending' || prev_nonce_txn.status === 'completed') {
+                    let hash = await sendRawTxn(pending_txns[count].rawTx, web3);
+  
+                    WalletTransactions.update({
+                      _id: pending_txns[count]._id
+                    }, {
+                      $set: {
+                        status: "pending",
+                        txnId: hash
+                      }
+                    })
+                  } else if(prev_nonce_txn.status === 'cancelled') {
+                    WalletTransactions.update({
+                      _id: pending_txns[count]._id
+                    }, {
+                      $set: {
+                        status: "cancelled"
+                      }
+                    })
+                  }
+                } else {
+                  //first indirect send of the wallet.
+                  let hash = await sendRawTxn(pending_txns[count].rawTx, web3);
+  
+                  WalletTransactions.update({
+                    _id: pending_txns[count]._id
+                  }, {
+                    $set: {
+                      status: "pending",
+                      txnId: hash
+                    }
+                  })
+                }
               } else if(helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
                 WalletTransactions.update({
                   _id: pending_txns[count]._id
@@ -177,7 +180,6 @@ module.exports = function(agenda) {
                 })
               }
             } else {
-              //2nd txn already sent. wait for confirmation
               let url = `${await Config.getPaymeterConnectionDetails("eth", wallet.network)}`;
               let confirmations = await getEthTxnConfirmations(url, pending_txns[count].txnId)
 
@@ -200,29 +202,58 @@ module.exports = function(agenda) {
               }
             }
           } else {
-            let url = `${await Config.getPaymeterConnectionDetails("eth", wallet.network)}`;
-            let confirmations = await getEthTxnConfirmations(url, pending_txns[count].txnId)
-            if(confirmations >= 15) {
-              WalletTransactions.update({
-                _id: pending_txns[count]._id
-              }, {
-                $set: {
-                  status: "completed"
-                }
+            if(pending_txns[count].status === 'processing') {
+              //check if previous nonce is broadcasted
+              let prev_nonce_txn = WalletTransactions.findOne({
+                fromWallet: wallet._id,
+                nonce: pending_txns[count].nonce - 1 
               })
-            } else if(helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
-              WalletTransactions.update({
-                _id: pending_txns[count]._id
-              }, {
-                $set: {
-                  status: "cancelled"
+
+              if(prev_nonce_txn) {
+                if(prev_nonce_txn.status === 'pending' || prev_nonce_txn.status === 'completed') {
+                  let hash = await sendRawTxn(pending_txns[count].rawTx, web3);
+                  WalletTransactions.update({
+                    _id: pending_txns[count]._id
+                  }, {
+                    $set: {
+                      status: "pending",
+                      txnId: hash
+                    }
+                  })
+                } else if(prev_nonce_txn.status === 'cancelled') {
+                  WalletTransactions.update({
+                    _id: pending_txns[count]._id
+                  }, {
+                    $set: {
+                      status: "cancelled"
+                    }
+                  })
                 }
-              })
+              }
+            } else {
+              let url = `${await Config.getPaymeterConnectionDetails("eth", wallet.network)}`;
+              let confirmations = await getEthTxnConfirmations(url, pending_txns[count].txnId)
+              if(confirmations >= 15) {
+                WalletTransactions.update({
+                  _id: pending_txns[count]._id
+                }, {
+                  $set: {
+                    status: "completed"
+                  }
+                })
+              } else if(helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
+                WalletTransactions.update({
+                  _id: pending_txns[count]._id
+                }, {
+                  $set: {
+                    status: "cancelled"
+                  }
+                })
+              }
             }
           }
         }
       }
-
       reSchedule();
     } catch(e) {
       console.log(e)
@@ -230,9 +261,12 @@ module.exports = function(agenda) {
     }
   });
 
-  agenda.define('update gas price', async (job, done) => {
+  agenda.define('update gas price', {
+    concurrency: 1
+  }, async (job, done) => {
     function reSchedule() {
-      agenda.schedule(new Date(Date.now() + (1000 * 300)), 'check confirmations');
+      done()
+      agenda.schedule(new Date(Date.now() + (1000 * 300)), 'process paymeter');
     }
 
     try {
@@ -260,8 +294,10 @@ module.exports = function(agenda) {
     }
   });
 
-  (() => {
-    agenda.schedule('5 seconds', 'check confirmations');
+  (async () => {
+    agenda.cancel({name: 'process paymeter'})
+    agenda.cancel({name: 'update gas price'})
+    agenda.schedule('5 seconds', 'process paymeter');
     agenda.schedule('5 seconds', 'update gas price');
   })();
 };
