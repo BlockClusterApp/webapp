@@ -140,7 +140,7 @@ async function getNonce(address, url) {
   let web3 = new Web3(new Web3.providers.HttpProvider(url));
 
   return new Promise((resolve, reject) => {
-    web3.eth.getTransactionCount(address, function(error, nonce) {
+    web3.eth.getTransactionCount(address, "pending", function(error, nonce) {
       if (!error) {
         resolve(nonce)
       } else {

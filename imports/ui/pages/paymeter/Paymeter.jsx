@@ -654,7 +654,7 @@ class PaymeterComponent extends Component {
                                               {item.txnId}
                                             </td>
                                             <td className="v-align-middle">
-                                              {item.amount} ETH
+                                              {item.amount} {wallet.tokenSymbol}
                                             </td>
                                             <td className="v-align-middle">
                                               {item.fee} ETH
