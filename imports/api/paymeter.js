@@ -14,6 +14,7 @@ import helpers from '../modules/helpers';
 const BigNumber = require('bignumber.js');
 const EthereumTx = require('ethereumjs-tx')
 import agenda from '../modules/schedulers/agenda';
+const Cryptr = require('cryptr');
 
 const erc20ABI = [{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"payable":true,"stateMutability":"payable","type":"fallback"},{"anonymous":false,"inputs":[{"indexed":true,"name":"owner","type":"address"},{"indexed":true,"name":"spender","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"from","type":"address"},{"indexed":true,"name":"to","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Transfer","type":"event"}];
 
@@ -23,9 +24,11 @@ function createWallet(coinType, walletName, userId, network, options) {
     let private_key_hex = wallet.getPrivateKey().toString('hex');
     let address = wallet.getAddress();
 
+    const cryptr = new Cryptr(options.password);
+
     Wallets.insert({
       coinType: 'ETH',
-      privateKey: private_key_hex,
+      privateKey: cryptr.encrypt(private_key_hex),
       address: '0x' + address.toString('hex'),
       user: userId,
       walletName: walletName,
@@ -37,9 +40,11 @@ function createWallet(coinType, walletName, userId, network, options) {
     let private_key_hex = wallet.getPrivateKey().toString('hex');
     let address = wallet.getAddress();
 
+    const cryptr = new Cryptr(options.password);
+
     Wallets.insert({
       coinType: 'ERC20',
-      privateKey: private_key_hex,
+      privateKey: cryptr.encrypt(private_key_hex),
       address: '0x' + address.toString('hex'),
       user: userId,
       contractAddress: options.contractAddress,
@@ -189,8 +194,11 @@ async function transfer(fromWalletId, toAddress, amount, options) {
             value: web3.toHex(web3.toWei(final_amount, 'ether'))
           };
 
+          const cryptr = new Cryptr(options.password);
+          let privateKey_decrypted = cryptr.decrypt(wallet.privateKey);
+
           let tx = new EthereumTx(rawTx);
-          const privateKey = Buffer.from(wallet.privateKey, 'hex')
+          const privateKey = Buffer.from(privateKey_decrypted, 'hex')
           tx.sign(privateKey)
           const serializedTx = tx.serialize()
 
@@ -202,7 +210,7 @@ async function transfer(fromWalletId, toAddress, amount, options) {
                 reject("Unknown Error")
               }
             } else {
-              WalletTransactions.insert({
+              const return_id = WalletTransactions.insert({
                 fromWallet: wallet._id,
                 toAddress: toAddress,
                 amount: final_amount,
@@ -213,7 +221,7 @@ async function transfer(fromWalletId, toAddress, amount, options) {
                 fee: web3.fromWei(fee.toString(), 'ether')
               })
 
-              resolve(hash)
+              resolve(return_id)
             }
           }))
         } else {
@@ -258,8 +266,11 @@ async function transfer(fromWalletId, toAddress, amount, options) {
                   value: web3.toHex((new BigNumber(gasPrice)).multipliedBy(contractGasLimit.toString()).toString())
                 };
 
+                let cryptr = new Cryptr(options.feeWalletPassword);
+                let privateKey_decrypted = cryptr.decrypt(feeWallet.privateKey);
+
                 let tx = new EthereumTx(rawTx);
-                let privateKey = Buffer.from(feeWallet.privateKey, 'hex')
+                let privateKey = Buffer.from(privateKey_decrypted, 'hex')
                 tx.sign(privateKey)
                 let serializedTx = tx.serialize()
 
@@ -301,12 +312,15 @@ async function transfer(fromWalletId, toAddress, amount, options) {
                       value: web3.toHex(web3.toWei("0", 'ether'))
                     };
 
+                    cryptr = new Cryptr(options.password);
+                    privateKey_decrypted = cryptr.decrypt(wallet.privateKey);
+
                     let tx = new EthereumTx(rawTx);
-                    const privateKey = Buffer.from(wallet.privateKey, 'hex')
+                    const privateKey = Buffer.from(privateKey_decrypted, 'hex')
                     tx.sign(privateKey)
                     const serializedTx = tx.serialize()
 
-                    WalletTransactions.insert({
+                    const return_id = WalletTransactions.insert({
                       fromWallet: wallet._id,
                       toAddress: toAddress,
                       amount: amount,
@@ -321,7 +335,7 @@ async function transfer(fromWalletId, toAddress, amount, options) {
                       feeDepositTxnId: hash
                     })
 
-                    resolve()
+                    resolve(return_id)
                   } else {
                     if(err.toString().includes("insufficient funds")) {
                       console.log("First time")
@@ -376,12 +390,15 @@ async function transfer(fromWalletId, toAddress, amount, options) {
                     value: web3.toHex(web3.toWei("0", 'ether'))
                   };
 
+                  const cryptr = new Cryptr(options.password);
+                  let privateKey_decrypted = cryptr.decrypt(wallet.privateKey);
+
                   let tx = new EthereumTx(rawTx);
-                  const privateKey = Buffer.from(wallet.privateKey, 'hex')
+                  const privateKey = Buffer.from(privateKey_decrypted, 'hex')
                   tx.sign(privateKey)
                   const serializedTx = tx.serialize()
 
-                  WalletTransactions.insert({
+                  const return_id = WalletTransactions.insert({
                     fromWallet: wallet._id,
                     toAddress: toAddress,
                     amount: amount,
@@ -398,7 +415,7 @@ async function transfer(fromWalletId, toAddress, amount, options) {
                     feeDepositGasPrice: null //both txns should go with same gas price
                   })
 
-                  resolve()
+                  resolve(return_id)
 
                 } else {
                   var rawTx = {
@@ -410,9 +427,12 @@ async function transfer(fromWalletId, toAddress, amount, options) {
                     data: data,
                     value: web3.toHex(web3.toWei("0", 'ether'))
                   };
+
+                  const cryptr = new Cryptr(options.password);
+                  let privateKey_decrypted = cryptr.decrypt(wallet.privateKey);
                   
                   let tx = new EthereumTx(rawTx);
-                  const privateKey = Buffer.from(wallet.privateKey, 'hex')
+                  const privateKey = Buffer.from(privateKey_decrypted, 'hex')
                   tx.sign(privateKey)
                   const serializedTx = tx.serialize()
   
@@ -424,7 +444,7 @@ async function transfer(fromWalletId, toAddress, amount, options) {
                         reject("Unknown Error")
                       }
                     } else {
-                      WalletTransactions.insert({
+                      const return_id = WalletTransactions.insert({
                         fromWallet: wallet._id,
                         toAddress: toAddress,
                         amount: amount,
@@ -439,7 +459,7 @@ async function transfer(fromWalletId, toAddress, amount, options) {
                         feeDepositGasPrice: null //both txns should go with same gas price
                       })
         
-                      resolve(hash)
+                      resolve(return_id)
                     }
                   }))
                 }

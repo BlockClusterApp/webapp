@@ -81,7 +81,6 @@ module.exports = function(agenda) {
   agenda.define('process paymeter', {
     concurrency: 1
   }, async (job, done) => {
-    console.log("running")
     function reSchedule() {
       done()
       agenda.schedule(new Date(Date.now() + 12000), 'process paymeter');
