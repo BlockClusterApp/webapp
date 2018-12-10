@@ -278,7 +278,7 @@ module.exports = `<!-- saved from url=(0080)https://nonceblox.com/blockcluster_e
                         <tr>
                           <td align="center" style="font-size: 0;">
                             <p style="margin: 20px 15px 16px 15px;font-family: arial, sans-serif; font-size: 22px; color: #4d4d4d;">
-                              <strong>We have received your request!<br><span style="color: #00adef"><a href="https://dev.blockcluster.io/app/support/<%= support.caseId %>">#<%= support.caseId %> </a></span></strong>
+                              <strong>We have received your request!<br><span style="color: #00adef"><a href="<%= link %>">#<%= support.caseId %> </a></span></strong>
                             </p>
                           </td>
                         </tr>
@@ -293,11 +293,11 @@ module.exports = `<!-- saved from url=(0080)https://nonceblox.com/blockcluster_e
                             <div width="200;height:20px;"></div>
                             <table border="0" cellpadding="0" cellspacing="0" style="Margin:0 auto;">
                                         <tbody><tr>
-                                          <td width="250" height="50" align="center" bgcolor="#0062b3" style="-moz-border-radius: 30px; -webkit-border-radius: 30px; border-radius: 30px;"><a href="https://dev.blockcluster.io/app/support/<%= support.caseId %>" target="_blank" style="width:250; display:block; text-decoration:none; border:0; text-align:center; font-weight:bold;font-size:18px; font-family: Arial, sans-serif; color: #ffffff" class="button_link">Check support ticket<img src="https://s3-us-west-2.amazonaws.com/bc-email-t-images/right-arrow.png" width="32" height="17" style="padding-top:5px" alt="" border="0"></a></td>
+                                          <td width="250" height="50" align="center" bgcolor="#0062b3" style="-moz-border-radius: 30px; -webkit-border-radius: 30px; border-radius: 30px;"><a href="<%= link %>" target="_blank" style="width:250; display:block; text-decoration:none; border:0; text-align:center; font-weight:bold;font-size:18px; font-family: Arial, sans-serif; color: #ffffff" class="button_link">Check support ticket<img src="https://s3-us-west-2.amazonaws.com/bc-email-t-images/right-arrow.png" width="32" height="17" style="padding-top:5px" alt="" border="0"></a></td>
                                         </tr>
                                       </tbody></table>
                               <div width="200;height:20px;"></div>
-                              <p style="line-height:22px;font-family: arial, sans-serif; font-size: 15px; color: #4d4d4d;">or copy the URL in browser. https://dev.blockcluster.io/app/support/<%= support.caseId %> in your browser</p>
+                              <p style="line-height:22px;font-family: arial, sans-serif; font-size: 15px; color: #4d4d4d;">or copy the URL in browser. <%= link %> in your browser</p>
                           </td>
                         </tr>
                         <tr>
@@ -322,32 +322,6 @@ module.exports = `<!-- saved from url=(0080)https://nonceblox.com/blockcluster_e
                       </tbody>
                     </table>
                   </td>
-                </tr>
-                <tr>
-                  <!--BLOCK 3 -->
-                  <td align="center" style="font-size: 0;" bgcolor="#effaff">
-                    <table width="468" border="0" cellpadding="0" cellspacing="0" align="center" class="mobile-hidden" bgcolor="#ffffff">
-                      <tbody>
-                        <tr>
-                          <td align="center" style="font-size: 0;">
-                            <p style="margin: 20px 15px 16px 15px;font-family: arial, sans-serif; font-size: 22px; color: #4d4d4d;">
-                              <strong>Did not Request this email?</strong>
-                            </p>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td align="center" style="font-size: 0;padding:0 72px 24px 72px;">
-                            <p style="line-height:22px;font-family: arial, sans-serif; font-size: 13px; color: #4d4d4d;">
-                             No Worries, your address might have been entered by mistake. If you ignore or delete this email, Nothing will Happen
-                            </p>
-                          </td>
-                        </tr>
-
-
-                      </tbody>
-                    </table>
-                  </td>
-                  <!--END BLOCK 3 -->
                 </tr>
 
 
