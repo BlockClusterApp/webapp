@@ -338,7 +338,6 @@ export default withTracker(props => {
           }
         }
       }),
-      Meteor.subscribe("utilities"),
       Meteor.subscribe("bcAccounts", props.match.params.id)
     ]
   };

@@ -1,0 +1,27 @@
+.paymeter {
+  .wallet-box-bg {
+    background-color: #f7f7f7;
+  }
+
+  .wallet-list-item {
+    cursor: pointer;
+
+    .wallet-box-bg:hover {
+      background-color: #f0f0f0
+    }
+  }
+
+  .create-wallet-btn {
+    margin-right: 0px !important;
+    margin-left: 0px !important;
+    margin-bottom: 20px;
+    
+    .btn-group {
+      padding: 20px;
+
+      .btn {
+        padding: 10px;
+      }
+    }
+  }
+}
