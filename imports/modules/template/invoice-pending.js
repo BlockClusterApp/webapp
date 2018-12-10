@@ -286,14 +286,14 @@ module.exports = `
                       <tr>
                         <td align="center" style="font-size: 0;padding:0 75px 15px 75px;">
                           <p style="line-height:22px;font-family: arial, sans-serif; font-size: 13px; color: #4d4d4d;">
-                            <span style="color:#999;font-size: 17px;font-family: &#39;arial&#39;;line-height: 24px;text-align: center;">Hi,  <span style="color: #09759c;font-weight: bold;">i <%= invoice.user.name %>,</span> <br />
-                            Your bill for the period <%= invoice.billingPeriodLabel %> is pending. Your total amount due is $ <%= invoice.totalAmount %> payable by 10th of this month.
+                            <span style="color:#999;font-size: 17px;font-family: &#39;arial&#39;;line-height: 24px;text-align: center;">Hi,  <span style="color: #09759c;font-weight: bold;"><%= invoice.user.name %>,</span> <br />
+                            Your bill for the period <%= invoice.billingPeriodLabel %> is pending. Your total amount due is <b>$ <%= invoice.totalAmount %></b> payable by 10th of this month.
                           </span>
                           </p>
                           <div width="200;height:20px;"></div>
                           <table border="0" cellpadding="0" cellspacing="0" style="Margin:0 auto;">
                                       <tbody><tr>
-                                        <td width="250" height="50" align="center" bgcolor="#0062b3" style="-moz-border-radius: 30px; -webkit-border-radius: 30px; border-radius: 30px;"><a href="<%- paymentLink %>" target="_blank" style="width:250; display:block; text-decoration:none; border:0; text-align:center; font-weight:bold;font-size:18px; font-family: Arial, sans-serif; color: #ffffff" class="button_link">Pay Bills<img src="https://s3-us-west-2.amazonaws.com/bc-email-t-images/right-arrow.png" width="32" height="17" style="padding-top:5px" alt="" border="0"></a></td>
+                                        <td width="250" height="50" align="center" bgcolor="#0062b3" style="-moz-border-radius: 30px; -webkit-border-radius: 30px; border-radius: 30px;"><a href="<%- paymentLink %>" target="_blank" style="width:250; display:block; text-decoration:none; border:0; text-align:center; font-weight:bold;font-size:18px; font-family: Arial, sans-serif; color: #ffffff" class="button_link">Pay Bill<img src="https://s3-us-west-2.amazonaws.com/bc-email-t-images/right-arrow.png" width="32" height="17" style="padding-top:5px" alt="" border="0"></a></td>
                                       </tr>
                                     </tbody></table>
                             <div width="200;height:20px;"></div>
@@ -322,32 +322,6 @@ module.exports = `
                     </tbody>
                   </table>
                 </td>
-              </tr>
-              <tr>
-                <!--BLOCK 3 -->
-                <td align="center" style="font-size: 0;" bgcolor="#effaff">
-                  <table width="468" border="0" cellpadding="0" cellspacing="0" align="center" class="mobile-hidden" bgcolor="#ffffff">
-                    <tbody>
-                      <tr>
-                        <td align="center" style="font-size: 0;">
-                          <p style="margin: 20px 15px 16px 15px;font-family: arial, sans-serif; font-size: 22px; color: #4d4d4d;">
-                            <strong>Did not Request this email?</strong>
-                          </p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td align="center" style="font-size: 0;padding:0 72px 24px 72px;">
-                          <p style="line-height:22px;font-family: arial, sans-serif; font-size: 13px; color: #4d4d4d;">
-                           No Worries, your address might have been entered by mistake. If you ignore or delete this email, Nothing will Happen
-                          </p>
-                        </td>
-                      </tr>
-
-
-                    </tbody>
-                  </table>
-                </td>
-                <!--END BLOCK 3 -->
               </tr>
 
 
@@ -437,4 +411,4 @@ module.exports = `
 
 
 
-</body></html>`
+</body></html>`;
