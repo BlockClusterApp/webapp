@@ -14,5 +14,5 @@ module.exports = {
   zoho: {
     organizationId: '673423965',
     authToken: '282d00893155f7eadec90a38006e6b55',
-  },
+  }
 };
