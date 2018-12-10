@@ -1,83 +1,439 @@
-module.exports = `<!DOCTYPE html>
-<html>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link href="https://fonts.googleapis.com/css?family=Lato:400,900" rel="stylesheet">
-<title>Join <%= network.name %> on blockcluster.io</title>
-<style type="text/css">
-  html,
-  body,
-  p,
-  table,
-  td,
-  div,
-  h1,
-  h2,
-  h3,
-  h4,
-  a {
-    font-family: 'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  }
+module.exports = `
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-  p {
-    font-size: 17px;
-  }
 
-  p{
-    line-height: 1.5em;
-  }
-</style>
 
-<body>
+  <title>Registration Successful</title>
+  <style type="text/css">
+    .ReadMsgBody {width: 100%; background-color: #ffffff;}
+        .ExternalClass {width: 100%; background-color: #ffffff;}
+        body {
+            width: 100%;
+            background-color: #ffffff;
+            margin:0;
+            padding:0;
+            -webkit-font-smoothing: antialiased;
+            font-family: arial, sans-serif;
+        }
 
-  <div style="background: #f0f0f0; width: 80%; margin: auto; padding: 20px;">
-    <img src="https://app.blockcluster.io/assets/img/logo/blockcluster.png" alt="logo" />
-    <h2 style="margin-bottom: 5px;"><%= invitingUser.profile.firstName %> <%= invitingUser.profile.lastName %> has invited you to join their network <%= network.name %></h2>
+        table {border-collapse: collapse;}
 
-    <h4 style="margin-bottom: 0px">Hi,</h4>
-    <p style="margin-top: 5px;">
-        You have been invited by <%= invitingUser.profile.firstName %> <%= invitingUser.profile.lastName %> (<a href="mailto:<%= invitingUser.emails[0].address %>"><%= invitingUser.emails[0].address %></a>) to join their blockchain network <%= network.name %> on <a href="https://www.blockcluster.io">blockcluster.io</a>.
-        <br />
-        <br /> Click on the following button to join this network:
-        <br />
-        <br />
-        <a href="<%= networkJoinLink %>" target="_blank" style="background: #48b0f7;
-          border-color: #48b0f7;
-          color: #fff;
-          line-height: 21px;
-          cursor: pointer;
-          text-shadow: none;
-          box-shadow: 2px 1px 3px #ccc;
-          padding: 10px 17px;
-          border-radius: 5px;
-          text-decoration: none;">Join Network</a>
-        <br />
-        <br />
+        body[yahoo] .desktop-hidden { max-height: 0px; overflow:hidden;  max-height: 0px !important; overflow:hidden !important; display: none; display: none !important;}
 
-    </p>
-    <h3 style="margin-bottom: 5px;">Don't want to join or unexpected email?</h3>
-    <p style="margin-top: 5px;">No worries! Your address may have been entered by mistake. You can ignore or delete this email.
-      <br />
-      <br />
-    </p>
-    <hr style="border-top: 1px solid #ccc" />
-    <p class="small no-margin pull-left sm-pull-reset" style="text-align: center; font-size: 0.9em; color: #888">
-      <span class="hint-text">Copyright &copy; 2017 </span>
-      <span class="font-montserrat">BlockCluster</span>.
-      <span class="hint-text">&nbsp;All rights reserved. </span>
-      <br />
+        @media only screen and (max-width: 640px)  {
+            body[yahoo] .deviceWidth {width:600px!important; padding:0;}
+            body[yahoo] .center {text-align: center!important; display:block; margin-left:auto; margin-right:auto;}
+            body[yahoo] .desktop-hidden { max-height: 0px; overflow:hidden;  max-height: 0px !important; overflow:hidden !important; display: none; display: none !important;}
+        }
 
-      <span class="sm-block">
-        <a href="https://www.blockcluster.io/terms" class="m-l-10 m-r-10" style="color: #222; text-decoration: none;">Terms of use</a>
-        <span class="muted">|</span>
-        <a href="https://www.blockcluster.io/privacy" class="m-l-10" style="color: #222; text-decoration: none;">Privacy Policy</a>
-      </span>
-    </p>
-    <p class="small no-margin pull-right sm-pull-reset" style="text-align: center">
-      Hand-crafted
-      <span class="hint-text">&amp; made with Love</span>
-    </p>
-  </div>
-</body>
+        @media only screen and (max-width: 479px) {
+            body[yahoo] .mobile-font{font-size: 11px!important;color:#777777!important;}
+            body[yahoo] .mobile-font2{font-size: 14px!important;color:#666666!important;}
+            body[yahoo] .mobile-font22{font-size: 22px!important;color:#4d4d4d!important;display:block!important;}
+            body[yahoo] .mobile-font20{font-size: 20px!important;color:#4d4d4d!important;display:block!important;}
+            body[yahoo] .mobile-font14{font-size: 14px!important;color:#4d4d4d!important;display:block!important;}
+             body[yahoo] .mobile-font12{font-size: 12px!important;color:#4d4d4d!important;display:block!important;}
+             body[yahoo] .mobile-font16{font-size: 16px!important;color:#4d4d4d!important;display:block!important;}
+              body[yahoo] .mobile-font24{font-size: 24px!important;color:#4d4d4d!important;display:block!important;}
+               body[yahoo] .mobile-font24c{font-size: 24px!important;color:#fff!important;display:block!important;}
+            body[yahoo] .mobile-font22c{font-size: 22px!important;color:#ffffff!important;display:block!important;}
+            body[yahoo] .mobile-font14c{font-size: 14px!important;color:#ffffff!important;display:block!important;}
+            body[yahoo] .mobile-font16c{font-size: 16px!important;color:#ffffff!important;display:block!important;}
+             body[yahoo] .mobile-font12c{font-size: 12px!important;color:#ffffff!important;display:block!important;}
+            body[yahoo] .mobile-link{color:#f47d31!important;}
+            body[yahoo] .mobile-bg{background-color:#effaff!important}
+            body[yahoo] .center {text-align: center!important;}
+            body[yahoo] .deviceWidth {width:320px!important; padding:0;}
+            body[yahoo] .mobile-hidden { display:none !important; }
+            body[yahoo] .desktop-hidden { max-height: none; overflow:visible;  max-height: none !important; overflow:visible!important; display: block; display: block !important;}
+             body[yahoo] .img-center {text-align: center!important; display:block; margin-left:auto; margin-right:auto;}
 
-</html>`;
+        }
+
+        /***** SMARTPHONE STYLING RULES *****/
+        @media only screen and (max-width: 600px) {
+             body[yahoo] .mobile-font{font-size: 11px!important;color:#777777!important;}
+            body[yahoo] .mobile-font2{font-size: 14px!important;color:#666666!important;}
+            body[yahoo] .mobile-font22{font-size: 22px!important;color:#4d4d4d!important;display:block!important;}
+            body[yahoo] .mobile-font20{font-size: 20px!important;color:#4d4d4d!important;display:block!important;}
+            body[yahoo] .mobile-font14{font-size: 14px!important;color:#4d4d4d!important;display:block!important;}
+             body[yahoo] .mobile-font12{font-size: 12px!important;color:#4d4d4d!important;display:block!important;}
+             body[yahoo] .mobile-font16{font-size: 16px!important;color:#4d4d4d!important;display:block!important;}
+              body[yahoo] .mobile-font24{font-size: 24px!important;color:#4d4d4d!important;display:block!important;}
+               body[yahoo] .mobile-font24c{font-size: 24px!important;color:#fff!important;display:block!important;}
+            body[yahoo] .mobile-font22c{font-size: 22px!important;color:#ffffff!important;display:block!important;}
+            body[yahoo] .mobile-font14c{font-size: 14px!important;color:#ffffff!important;display:block!important;}
+            body[yahoo] .mobile-font16c{font-size: 16px!important;color:#ffffff!important;display:block!important;}
+             body[yahoo] .mobile-font12c{font-size: 12px!important;color:#ffffff!important;display:block!important;}
+            body[yahoo] .mobile-link{color:#f47d31!important;}
+            body[yahoo] .mobile-bg{background-color:#effaff!important}
+            body[yahoo] .center {text-align: center!important;}
+            body[yahoo] .deviceWidth {width:320px!important; padding:0;}
+            body[yahoo] .mobile-hidden { display:none !important; }
+            body[yahoo] .desktop-hidden { max-height: none; overflow:visible;  max-height: none !important; overflow:visible!important; display: block; display: block !important;}
+
+             body[yahoo] .img-center {text-align: center!important; display:block; margin-left:auto; margin-right:auto;}
+
+        }
+  </style>
+<style type="text/css">.backpack.dropzone {
+  font-family: 'SF UI Display', 'Segoe UI';
+  font-size: 15px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 250px;
+  height: 150px;
+  font-weight: lighter;
+  color: white;
+  will-change: right;
+  z-index: 2147483647;
+  bottom: 20%;
+  background: #333;
+  position: fixed;
+  user-select: none;
+  transition: left .5s, right .5s;
+  right: 0px; }
+  .backpack.dropzone .animation {
+    height: 80px;
+    width: 250px;
+    background: url("chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/assets/backpack/dropzone/hoverstate.png") left center; }
+  .backpack.dropzone .title::before {
+    content: 'Save to'; }
+  .backpack.dropzone.closed {
+    right: -250px; }
+  .backpack.dropzone.hover .animation {
+    animation: sxt-play-anim-hover 0.91s steps(21);
+    animation-fill-mode: forwards;
+    background: url("chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/assets/backpack/dropzone/hoverstate.png") left center; }
+
+@keyframes sxt-play-anim-hover {
+  from {
+    background-position: 0px; }
+  to {
+    background-position: -5250px; } }
+  .backpack.dropzone.saving .title::before {
+    content: 'Saving to'; }
+  .backpack.dropzone.saving .animation {
+    background: url("chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/assets/backpack/dropzone/saving_loop.png") left center;
+    animation: sxt-play-anim-saving steps(59) 2.46s infinite; }
+
+@keyframes sxt-play-anim-saving {
+  100% {
+    background-position: -14750px; } }
+  .backpack.dropzone.saved .title::before {
+    content: 'Saved to'; }
+  .backpack.dropzone.saved .animation {
+    background: url("chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/assets/backpack/dropzone/saved.png") left center;
+    animation: sxt-play-anim-saved steps(20) 0.83s forwards; }
+
+@keyframes sxt-play-anim-saved {
+  100% {
+    background-position: -5000px; } }
+</style></head>
+
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" yahoo="fix" style="font-family: arial, sans-serif">
+
+  <!-- Wrapper -->
+  <table width="100%" border="0" cellpadding="0" cellspacing="0" align="center">
+    <tbody>
+      <tr>
+        <!-- Wrapper -->
+        <td width="100%" valign="top" style="padding-top:0px;margin:0;border:0;vertical-align: top;">
+          <!-- Wrapper -->
+
+          <!-- Begin Desktop Content -->
+          <table width="600" border="0" cellpadding="0" cellspacing="0" align="center" class="mobile-hidden" bgcolor="#fff">
+            <tbody>
+              <tr>
+                <td style="min-width: 600px"></td>
+              </tr>
+              <tr>
+                <td style="font-size: 0; ">
+                  <!-- Header -->
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#ffffff">
+                    <tbody>
+                      <tr>
+                        <td align="center">
+                          <table width="600" border="0" cellspacing="0" cellpadding="0" class="mobile-hidden" bgcolor="#ffffff">
+                            <tbody>
+                              <tr>
+                                <td class="td" style="font-size:0pt; line-height:0pt; padding:0; margin:0; Margin:0; font-weight:normal; max-width:600px; width:600px" width="600">
+                                  <div class="hide-for-mobile">
+                                    <table width="100%" border="0" cellspacing="0" cellpadding="0" class="mobile-hidden" bgcolor="#ffffff" style="font-size:0pt; line-height:0pt; text-align:center; width:100%; min-width:100%">
+                                      <tbody>
+                                        <tr>
+                                          <td height="20" class="spacer" style="font-size:0pt; line-height:0pt; text-align:center; width:100%; min-width:100%">&nbsp;</td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+
+                                  </div>
+                                  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="mobile-hidden" bgcolor="#ffffff" style="font-size:0pt; line-height:0pt; text-align:center; width:100%; min-width:100%">
+                                    <tbody>
+                                      <tr>
+                                        <td height="35" class="spacer" style="font-size:0pt; line-height:0pt; text-align:center; width:100%; min-width:100%">&nbsp;</td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+
+                                  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="mobile-hidden" bgcolor="#ffffff">
+                                    <tbody>
+                                      <tr>
+                                        <td class="content-spacing" style="font-size:0pt; line-height:0pt; text-align:left" width="66"></td>
+                                        <td>
+                                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                            <tbody>
+                                              <tr>
+                                                <th class="column" style="font-size:0pt; line-height:0pt; padding:0; margin:0; font-weight:normal; Margin:0" width="208" valign="top">
+                                                  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="mobile-hidden" bgcolor="#ffffff">
+                                                    <tbody>
+                                                      <tr>
+                                                        <td>
+                                                          <div class="img" style="font-size:0pt; line-height:0pt; text-align:left">
+                                                            <div class="img-m-center" style="font-size:0pt; line-height:0pt">
+                                                              <a href="https://blockcluster.io/" target="_blank"><img border="0" src="https://s3-us-west-2.amazonaws.com/bc-email-t-images/block_cluster_logo.png" alt="" width="158"></a>
+                                                            </div>
+                                                          </div>
+                                                          <div style="font-size:0pt; line-height:0pt;" class="mobile-br-15"></div>
+
+                                                        </td>
+                                                      </tr>
+                                                    </tbody>
+                                                  </table>
+                                                </th>
+                                              </tr>
+                                            </tbody>
+                                          </table>
+                                        </td>
+                                        <td class="content-spacing" style="font-size:0pt; line-height:0pt; text-align:left" width="66"></td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="spacer" style="font-size:0pt; line-height:0pt; text-align:center; width:100%; min-width:100%">
+                                    <tbody>
+                                      <tr>
+                                        <td height="25" class="spacer" style="font-size:0pt; line-height:0pt; text-align:center; width:100%; min-width:100%">&nbsp;</td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <!-- END Header -->
+                </td>
+              </tr>
+
+
+              <tr>
+                <td align="center" style="font-size: 0; " bgcolor="#effaff">
+                  <table width="600" border="0" cellpadding="0" cellspacing="0" align="center" class="mobile-hidden">
+                    <tbody>
+                      <tr>
+                        <td align="center" valign="top" style="font-size: 0; ">
+                          <table width="66" border="0" cellpadding="0" cellspacing="0" align="center" class="mobile-hidden" bgcolor="#fff">
+                            <tbody>
+                              <tr>
+                                <td style="font-size: 0;margin-top: 66px;" height="138" bgcolor="#ffffff">
+
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                        <td align="center" style="font-size: 0; " width="468">
+                          <a href="https://blockcluster.io/" target="_blank" conversion="true" alias="">
+                            <img src="https://s3-us-west-2.amazonaws.com/bc-email-t-images/success_deployed.jpg" width="468" style="margin:0 auto;display: block; max-width: 468px; width: 468px;" bgcolor="#ffffff" border="0" alt="">
+                          </a>
+                        </td>
+                        <td align="center" valign="top" style="font-size: 0; ">
+                          <table width="66" border="0" cellpadding="0" cellspacing="0" align="center" class="mobile-hidden" bgcolor="#fff">
+                            <tbody>
+                              <tr>
+                                <td style="font-size: 0;margin-top: 66px;" height="138" bgcolor="#ffffff">
+
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+
+                </td>
+              </tr>
+              <tr>
+                <!--BLOCK 1 -->
+                <td align="center" style="font-size: 0;" bgcolor="#effaff">
+                  <table width="468" border="0" cellpadding="0" cellspacing="0" align="center" class="mobile-hidden" bgcolor="#ffffff">
+                    <tbody>
+                      <tr>
+                        <td align="center" style="font-size: 0;">
+                          <p style="margin: 20px 15px 16px 15px;font-family: arial, sans-serif; font-size: 22px; color: #4d4d4d;">
+                            <strong>You,ve been invited to join <br><span style="color: #00adef">BlockCluster Family</span></strong>
+                          </p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="font-size: 0;padding:0 75px 15px 75px;">
+                          <p style="line-height:22px;font-family: arial, sans-serif; font-size: 13px; color: #4d4d4d;">
+                            <span style="color:#999;font-size: 17px;font-family: &#39;arial&#39;;line-height: 24px;text-align: center;">Hi,  <span style="color: #09759c;font-weight: bold;"><%= invitingUser.profile.firstName %> <%= invitingUser.profile.lastName %></span> You have been Successfull Registered <b><%= network.name %></b> on <a href="https://blockcluster.io/">blockcluster.io</a> click on join network button to join network<br><br></span>
+                          </p>
+                          <div width="200;height:20px;"></div>
+                          <table border="0" cellpadding="0" cellspacing="0" style="Margin:0 auto;">
+                                      <tbody><tr>
+                                        <td width="250" height="50" align="center" bgcolor="#0062b3" style="-moz-border-radius: 30px; -webkit-border-radius: 30px; border-radius: 30px;"><a href="<%= networkJoinLink %>" target="_blank" style="width:250; display:block; text-decoration:none; border:0; text-align:center; font-weight:bold;font-size:18px; font-family: Arial, sans-serif; color: #ffffff" class="button_link">Start Blockchaining <img src="https://s3-us-west-2.amazonaws.com/bc-email-t-images/right-arrow.png" width="32" height="17" style="padding-top:5px" alt="" border="0"></a></td>
+                                      </tr>
+                                    </tbody></table>
+                            <div width="200;height:20px;"></div>
+                            <p style="line-height:22px;font-family: arial, sans-serif; font-size: 15px; color: #4d4d4d;">or copy the URL in browser. <%= networkJoinLink %> in your browser</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td width="200" height="30"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+                <!--END BLOCK 1 -->
+              </tr>
+
+
+              <tr>
+                <td align="center" style="font-size: 0;padding-top:16px;" bgcolor="#effaff">
+                  <table width="468" border="0" cellpadding="0" cellspacing="0" align="center" class="mobile-hidden" bgcolor="#ffffff">
+                    <tbody>
+                      <tr>
+                        <td align="center" style="font-size: 0;padding-top: 37px;" bgcolor="#ffffff">
+
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <!--BLOCK 3 -->
+                <td align="center" style="font-size: 0;" bgcolor="#effaff">
+                  <table width="468" border="0" cellpadding="0" cellspacing="0" align="center" class="mobile-hidden" bgcolor="#ffffff">
+                    <tbody>
+                      <tr>
+                        <td align="center" style="font-size: 0;">
+                          <p style="margin: 20px 15px 16px 15px;font-family: arial, sans-serif; font-size: 22px; color: #4d4d4d;">
+                            <strong>Did not Request this email?</strong>
+                          </p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="font-size: 0;padding:0 72px 24px 72px;">
+                          <p style="line-height:22px;font-family: arial, sans-serif; font-size: 13px; color: #4d4d4d;">
+                           No Worries, your address might have been entered by mistake. If you ignore or delete this email, Nothing will Happen
+                          </p>
+                        </td>
+                      </tr>
+
+
+                    </tbody>
+                  </table>
+                </td>
+                <!--END BLOCK 3 -->
+              </tr>
+
+
+              <!--footer-->
+              <tr>
+
+                <td style="font-size: 0; padding: 20px 0; " align="center" bgcolor="#effaff">
+
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="mobile-hidden">
+                    <tbody>
+                      <tr>
+                        <td align="center">
+                          <table border="0" cellspacing="0" cellpadding="0" class="mobile-hidden">
+                            <tbody>
+                              <tr>
+                                <td width="63" class="img-center" style="font-size:0pt; line-height:0pt; text-align:center">
+                                  <a href="https://www.facebook.com/BlockCluster-242072069921638/" target="_blank"><img border="0" src="https://s3-us-west-2.amazonaws.com/bc-email-t-images/fb.svg" alt="" width="50" height="50"></a>
+                                </td>
+                                <td width="63" class="img-center" style="font-size:0pt; line-height:0pt; text-align:center">
+                                  <a href="https://twitter.com/block_cluster" target="_blank"><img border="0" src="https://s3-us-west-2.amazonaws.com/bc-email-t-images/twitter.svg" alt="" width="50" height="50"></a>
+                                </td>
+
+
+                                <td width="63" class="img-center" style="font-size:0pt; line-height:0pt; text-align:center">
+                                  <a href="https://www.linkedin.com/company/blockcluster" target="_blank"><img border="0" src="https://s3-us-west-2.amazonaws.com/bc-email-t-images/linkedin.svg" alt="" width="50" height="50"></a>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="font-size: 0;" bgcolor="#effaff">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="mobile-hidden">
+                    <tbody>
+                      <tr>
+                        <td class="img" style="font-size:0pt; line-height:0pt; text-align:left" width="10"></td>
+                        <td>
+                          <div class="text-footer" style="color:#b7b5b5; font-family:Arial; font-size:14px; line-height:22px; text-align:center"><a href="https://blockcluster.io/" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><span class="link-footer" style="color:#605f5d; text-decoration:none">Blockcluster</span></a>                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <a href="https://nonceblox.com/blockcluster_emails/emails/lists/registration_success.html" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><span class="link-footer" style="color:#605f5d; text-decoration:none">Pricing</span></a>                            <span class="mobile-block"><span class="hide-for-mobile">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>  <a href="https://www.blockcluster.io/terms" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><span class="link-footer" style="color:#605f5d; text-decoration:none">T&amp;Cs</span></a></div>
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" class="spacer" style="font-size:0pt; line-height:0pt; text-align:center; width:100%; min-width:100%">
+                            <tbody>
+                              <tr>
+                                <td height="26" class="spacer" style="font-size:0pt; line-height:0pt; text-align:center; width:100%; min-width:100%">&nbsp;</td>
+                              </tr>
+                            </tbody>
+                          </table>
+
+
+                          <div class="text-footer2" style="color:#605f5d; font-family:Arial; font-size:12px; line-height:20px; text-align:center">
+                            You have received this email as a registered user of <a href="https://blockcluster.io/" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><strong class="link-footer" style="color:#605f5d; text-decoration:none">Blockcluster.io</strong></a>
+                            <!-- <br>You can unsubscribe from these emails <a href="https://nonceblox.com/blockcluster_emails/emails/lists/registration_success.html#" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><strong class="link-footer" style="color:#605f5d; text-decoration:none">here</strong></a> (Don't worry, we won't take it personally). -->
+                            <br>© BlockCluster 2018. All rights reserved.<br><br>
+                          </div>
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" class="spacer" style="font-size:0pt; line-height:0pt; text-align:center; width:100%; min-width:100%">
+                            <tbody>
+                              <tr>
+                                <td height="26" class="spacer" style="font-size:0pt; line-height:0pt; text-align:center; width:100%; min-width:100%">&nbsp;</td>
+                              </tr>
+                            </tbody>
+                          </table>
+
+                        </td>
+                        <td class="img" style="font-size:0pt; line-height:0pt; text-align:left" width="10"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+              <!--footer-->
+            </tbody>
+          </table>
+          <!-- End Desktop Content -->
+        </td>
+        <!-- End Wrapper -->
+      </tr>
+      <!-- End Wrapper -->
+
+    </tbody>
+  </table>
+  <!-- End Wrapper -->
+
+
+
+</body></html>`;

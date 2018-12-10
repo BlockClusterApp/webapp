@@ -98,6 +98,25 @@ function getHyperionConnectionDetails(locationCode) {
   ];
 }
 
+async function getPaymeterConnectionDetails( ) {
+  if (process.env.paymeter) {
+    return process.env.paymeter;
+  }
+
+  function getLocation() {
+    return new Promise((resolve, reject) => {
+      Meteor.call("getClusterLocations", (error, locations) => {
+        resolve(locations)
+      })
+    })
+  }
+
+  //first location in the location list - assuming webapp is also running the first location
+  const locationCode = (await getLocation())[0].locationCode;
+
+  return `${RemoteConfig.clusters[getNamespace()][locationCode].paymeter.ip}:${RemoteConfig.clusters[getNamespace()][locationCode].paymeter.port}`;
+}
+
 function getDynamoWokerDomainName(locationCode) {
   if (RemoteConfig.clusters) {
     const locationConfig = RemoteConfig.clusters[getNamespace()][locationCode];
@@ -182,6 +201,7 @@ module.exports = {
   database: getDatabase(),
   mongoConnectionString: getMongoConnectionString(),
   getHyperionConnectionDetails: getHyperionConnectionDetails,
+  getPaymeterConnectionDetails: getPaymeterConnectionDetails,
   workerNodeDomainName: (locationCode = 'us-west-2') => {
     return getDynamoWokerDomainName(locationCode);
   },

@@ -36,3 +36,4 @@ percolate:migrations
 maxfi:remote-collection
 blockcluster:raven
 blockcluster:logs
+jspdf:core

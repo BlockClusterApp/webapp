@@ -7,11 +7,24 @@ const Parser = require('bc-sendgrid/packages/inbound-mail-parser');
 const upload = multer();
 
 const Support = {};
+const env = process.env.NODE_ENV || 'development';
 
 const MIN_ADMIN_LEVEL = 1;
 
+const getSupportURL = caseId => {
+  switch (env) {
+    case 'production':
+      return `https://app.blockcluster.io/app/support/${caseId}`;
+    case 'staging':
+      return `https://staging.blockcluster.io/app/support/${caseId}`;
+    case 'dev':
+      return `https://dev.blockcluster.io/app/support/${caseId}`;
+    default:
+      return `https://app.blockcluster.io/app/support/${caseId}`;
+  }
+};
+
 const getSupportFromEmail = caseId => {
-  const env = process.env.NODE_ENV || 'development';
   switch (env) {
     case 'production':
       return `support+${caseId}@support.blockcluster.io`;
@@ -57,6 +70,7 @@ Support.createTicket = async details => {
       email: user.emails[0].address,
       name: `${user.profile.firstName}`,
     },
+    link: getSupportURL(support.caseId),
     support,
   });
 
@@ -163,6 +177,7 @@ Support.addBlockclusterReply = async ({ id, description }) => {
       email: user.emails[0].address,
       name: `${user.profile.firstName}`,
     },
+    link: getSupportURL(support.caseId),
     support,
     description,
     updatedBy: {
@@ -306,6 +321,7 @@ Support.closeTicketByAdmin = async id => {
       email: user.emails[0].address,
       name: `${user.profile.firstName}`,
     },
+    link: getSupportURL(support.caseId),
     support,
     description,
     updatedBy: {
@@ -376,6 +392,7 @@ Support.reopenTicketByAdmin = async id => {
       email: user.emails[0].address,
       name: `${user.profile.firstName}`,
     },
+    link: getSupportURL(support.caseId),
     support,
     description,
     updatedBy: {
