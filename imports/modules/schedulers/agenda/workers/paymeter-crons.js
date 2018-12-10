@@ -220,9 +220,6 @@ module.exports = function(agenda) {
               })
             }
           }
-
-          console.log("Rescheduled")
-          reSchedule();
         }
       }
 
