@@ -9,6 +9,8 @@ const BigNumber = require('bignumber.js');
 const EthereumTx = require('ethereumjs-tx');
 import agenda from '../../modules/schedulers/agenda';
 
+const Cryptr = require('cryptr');
+
 const erc20ABI = [
   { constant: true, inputs: [], name: 'name', outputs: [{ name: '', type: 'string' }], payable: false, stateMutability: 'view', type: 'function' },
   {
@@ -80,9 +82,11 @@ function createWallet(coinType, walletName, userId, network, options) {
     let private_key_hex = wallet.getPrivateKey().toString('hex');
     let address = wallet.getAddress();
 
+    const cryptr = new Cryptr(options.password);
+
     Wallets.insert({
       coinType: 'ETH',
-      privateKey: private_key_hex,
+      privateKey: cryptr.encrypt(private_key_hex),
       address: '0x' + address.toString('hex'),
       user: userId,
       walletName: walletName,
@@ -94,9 +98,11 @@ function createWallet(coinType, walletName, userId, network, options) {
     let private_key_hex = wallet.getPrivateKey().toString('hex');
     let address = wallet.getAddress();
 
+    const cryptr = new Cryptr(options.password);
+
     Wallets.insert({
       coinType: 'ERC20',
-      privateKey: private_key_hex,
+      privateKey: cryptr.encrypt(private_key_hex),
       address: '0x' + address.toString('hex'),
       user: userId,
       contractAddress: options.contractAddress,
@@ -136,7 +142,9 @@ async function getBalance(walletId) {
 
                     let withdraw_txns = WalletTransactions.find({
                       fromWallet: walletId,
-                      status: 'pending',
+                      status: {
+                        $in: ['pending', 'processing'],
+                      },
                       type: 'withdrawal',
                     }).fetch();
 
@@ -173,7 +181,9 @@ async function getBalance(walletId) {
 
                     let withdraw_txns = WalletTransactions.find({
                       fromWallet: walletId,
-                      status: 'pending',
+                      status: {
+                        $in: ['pending', 'processing'],
+                      },
                       type: 'withdrawal',
                     }).fetch();
 
@@ -254,8 +264,11 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
             value: web3.toHex(web3.toWei(final_amount, 'ether')),
           };
 
+          const cryptr = new Cryptr(options.password);
+          let privateKey_decrypted = cryptr.decrypt(wallet.privateKey);
+
           let tx = new EthereumTx(rawTx);
-          const privateKey = Buffer.from(wallet.privateKey, 'hex');
+          const privateKey = Buffer.from(privateKey_decrypted, 'hex');
           tx.sign(privateKey);
           const serializedTx = tx.serialize();
 
@@ -269,7 +282,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                   reject('Unknown Error');
                 }
               } else {
-                WalletTransactions.insert({
+                const return_id = WalletTransactions.insert({
                   fromWallet: wallet._id,
                   toAddress: toAddress,
                   amount: final_amount,
@@ -280,7 +293,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                   fee: web3.fromWei(fee.toString(), 'ether'),
                 });
 
-                resolve(hash);
+                resolve(return_id);
               }
             })
           );
@@ -294,7 +307,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
           //transfer fee first then actual tokens. actual token transfer will be done by the cron job
           let feeWallet = Wallets.findOne({
             _id: options.feeWallet,
-            user: userId
+            user: userId,
           });
 
           let nonce = await getNonce(feeWallet.address, url);
@@ -304,7 +317,6 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
 
           let currenct_balance = await getBalance(fromWalletId);
           let fee_wallet_current_balance = await getBalance(options.feeWallet);
-
           if (new BigNumber(amount).lte(currenct_balance)) {
             let fee = new BigNumber(gasPrice).multipliedBy(21000);
 
@@ -330,8 +342,11 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                     value: web3.toHex(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString()),
                   };
 
+                  let cryptr = new Cryptr(options.feeWalletPassword);
+                  let privateKey_decrypted = cryptr.decrypt(feeWallet.privateKey);
+
                   let tx = new EthereumTx(rawTx);
-                  let privateKey = Buffer.from(feeWallet.privateKey, 'hex');
+                  let privateKey = Buffer.from(privateKey_decrypted, 'hex');
                   tx.sign(privateKey);
                   let serializedTx = tx.serialize();
 
@@ -353,7 +368,36 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                         let total_fee = new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString();
                         total_fee = new BigNumber(total_fee).plus(fee.toString()).toString();
 
-                        WalletTransactions.insert({
+                        let processing_txns = WalletTransactions.find({
+                          fromWallet: wallet._id,
+                          status: 'processing',
+                        }).count();
+
+                        nonce = await getNonce(wallet.address, url);
+
+                        if (processing_txns > 0) {
+                          nonce = nonce + processing_txns;
+                        }
+
+                        let rawTx = {
+                          gasPrice: web3.toHex(gasPrice),
+                          gasLimit: web3.toHex(contractGasLimit.toString()),
+                          from: wallet.address,
+                          nonce: web3.toHex(nonce),
+                          to: wallet.contractAddress,
+                          data: data,
+                          value: web3.toHex(web3.toWei('0', 'ether')),
+                        };
+
+                        cryptr = new Cryptr(options.password);
+                        privateKey_decrypted = cryptr.decrypt(wallet.privateKey);
+
+                        let tx = new EthereumTx(rawTx);
+                        const privateKey = Buffer.from(privateKey_decrypted, 'hex');
+                        tx.sign(privateKey);
+                        const serializedTx = tx.serialize();
+
+                        const return_id = WalletTransactions.insert({
                           fromWallet: wallet._id,
                           toAddress: toAddress,
                           amount: amount,
@@ -362,12 +406,13 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                           txnId: null,
                           type: 'withdrawal',
                           fee: web3.fromWei(total_fee, 'ether'),
+                          nonce: nonce,
+                          rawTx: '0x' + serializedTx.toString('hex'),
                           feeDepositWallet: options.feeWallet,
                           feeDepositTxnId: hash,
-                          feeDepositGasPrice: gasPrice, //both txns should go with same gas price
                         });
 
-                        resolve();
+                        resolve(return_id);
                       } else {
                         if (err.toString().includes('insufficient funds')) {
                           console.log('First time');
@@ -409,50 +454,98 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
               },
               Meteor.bindEnvironment((error, gasLimit) => {
                 if (!error) {
-                  var rawTx = {
-                    gasPrice: web3.toHex(gasPrice),
-                    gasLimit: web3.toHex(gasLimit),
-                    from: wallet.address,
-                    nonce: web3.toHex(nonce),
-                    to: wallet.contractAddress,
-                    data: data,
-                    value: web3.toHex(web3.toWei('0', 'ether')),
-                  };
+                  let processing_txns = WalletTransactions.find({
+                    fromWallet: fromWalletId,
+                    status: 'processing',
+                  }).count();
 
-                  let tx = new EthereumTx(rawTx);
-                  const privateKey = Buffer.from(wallet.privateKey, 'hex');
-                  tx.sign(privateKey);
-                  const serializedTx = tx.serialize();
+                  if (processing_txns > 0) {
+                    nonce = nonce + processing_txns;
+                    var rawTx = {
+                      gasPrice: web3.toHex(gasPrice),
+                      gasLimit: web3.toHex(gasLimit),
+                      from: wallet.address,
+                      nonce: web3.toHex(nonce),
+                      to: wallet.contractAddress,
+                      data: data,
+                      value: web3.toHex(web3.toWei('0', 'ether')),
+                    };
 
-                  web3.eth.sendRawTransaction(
-                    '0x' + serializedTx.toString('hex'),
-                    Meteor.bindEnvironment((err, hash) => {
-                      if (err) {
-                        if (err.toString().includes('insufficient funds')) {
-                          reject('Insufficient Ether for Fees');
+                    const cryptr = new Cryptr(options.password);
+                    let privateKey_decrypted = cryptr.decrypt(wallet.privateKey);
+
+                    let tx = new EthereumTx(rawTx);
+                    const privateKey = Buffer.from(privateKey_decrypted, 'hex');
+                    tx.sign(privateKey);
+                    const serializedTx = tx.serialize();
+
+                    const return_id = WalletTransactions.insert({
+                      fromWallet: wallet._id,
+                      toAddress: toAddress,
+                      amount: amount,
+                      createdAt: Date.now(),
+                      status: 'processing',
+                      txnId: null,
+                      type: 'withdrawal',
+                      fee: web3.fromWei(new BigNumber(gasPrice).multipliedBy(gasLimit).toString(), 'ether'),
+                      nonce: nonce,
+                      rawTx: '0x' + serializedTx.toString('hex'),
+                      feeDepositWallet: null,
+                      feeDepositStatus: null,
+                      feeDepositTxnId: null,
+                      feeDepositGasPrice: null, //both txns should go with same gas price
+                    });
+
+                    resolve(return_id);
+                  } else {
+                    var rawTx = {
+                      gasPrice: web3.toHex(gasPrice),
+                      gasLimit: web3.toHex(gasLimit),
+                      from: wallet.address,
+                      nonce: web3.toHex(nonce),
+                      to: wallet.contractAddress,
+                      data: data,
+                      value: web3.toHex(web3.toWei('0', 'ether')),
+                    };
+
+                    const cryptr = new Cryptr(options.password);
+                    let privateKey_decrypted = cryptr.decrypt(wallet.privateKey);
+
+                    let tx = new EthereumTx(rawTx);
+                    const privateKey = Buffer.from(privateKey_decrypted, 'hex');
+                    tx.sign(privateKey);
+                    const serializedTx = tx.serialize();
+
+                    web3.eth.sendRawTransaction(
+                      '0x' + serializedTx.toString('hex'),
+                      Meteor.bindEnvironment((err, hash) => {
+                        if (err) {
+                          if (err.toString().includes('insufficient funds')) {
+                            reject('Insufficient Ether for Fees');
+                          } else {
+                            reject('Unknown Error');
+                          }
                         } else {
-                          reject('Unknown Error');
-                        }
-                      } else {
-                        WalletTransactions.insert({
-                          fromWallet: wallet._id,
-                          toAddress: toAddress,
-                          amount: amount,
-                          createdAt: Date.now(),
-                          status: 'pending',
-                          txnId: hash,
-                          type: 'withdrawal',
-                          fee: web3.fromWei(new BigNumber(gasPrice).multipliedBy(gasLimit).toString(), 'ether'),
-                          feeDepositWallet: null,
-                          feeDepositStatus: null,
-                          feeDepositTxnId: null,
-                          feeDepositGasPrice: null, //both txns should go with same gas price
-                        });
+                          const return_id = WalletTransactions.insert({
+                            fromWallet: wallet._id,
+                            toAddress: toAddress,
+                            amount: amount,
+                            createdAt: Date.now(),
+                            status: 'pending',
+                            txnId: hash,
+                            type: 'withdrawal',
+                            fee: web3.fromWei(new BigNumber(gasPrice).multipliedBy(gasLimit).toString(), 'ether'),
+                            feeDepositWallet: null,
+                            feeDepositStatus: null,
+                            feeDepositTxnId: null,
+                            feeDepositGasPrice: null, //both txns should go with same gas price
+                          });
 
-                        resolve(hash);
-                      }
-                    })
-                  );
+                          resolve(return_id);
+                        }
+                      })
+                    );
+                  }
                 } else {
                   reject('An error occured');
                 }
