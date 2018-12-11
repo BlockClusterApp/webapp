@@ -760,12 +760,15 @@ Meteor.methods({
 
     var network = Networks.find({
       instanceId: id,
-      user: userId,
       deletedAt: null,
     }).fetch()[0];
 
     if (!network) {
       throw new Meteor.Error('bad-request', 'Invalid instance id');
+    }
+
+    if (network.user !== Meteor.userId() && Meteor.user().admin <= 0) {
+      throw new Meteor.Error('bad-request', 'Not the owner of this network');
     }
 
     Networks.update(
@@ -2542,13 +2545,24 @@ spec:
       }
     );
   },
-  updateNetworksCallbackURL: function(callbackURL) {
+  updateNetworksCallbackURL: function({ platform, paymeter }) {
+    Meteor.users.update(
+      { _id: this.userId },
+      {
+        $set: {
+          'profile.notifyURL': platform,
+          'profile.paymeterNotifyURL': paymeter,
+        },
+      }
+    );
+  },
+  updateWalletsCallbackURL: function(callbackURL) {
     console.log(this.userId, callbackURL);
     Meteor.users.update(
       { _id: this.userId },
       {
         $set: {
-          'profile.notifyURL': callbackURL,
+          'profile.paymeterNotifyURL': callbackURL,
         },
       }
     );

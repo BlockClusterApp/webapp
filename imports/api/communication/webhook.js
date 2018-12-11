@@ -61,7 +61,8 @@ WebHookApis.generatePayload = data => {
   return result;
 };
 
-WebHookApis.queue = async ({ payload, userId, id, delay }) => {
+WebHookApis.queue = async ({ payload, userId, id, delay, type }) => {
+  type = type || 'platform';
   let url;
   let retries = 0;
   if (id) {
@@ -89,7 +90,8 @@ WebHookApis.queue = async ({ payload, userId, id, delay }) => {
   }
 
   if (!url) {
-    url = user.profile.notifyURL;
+    if (type === 'platform') url = user.profile.notifyURL;
+    else if (type === 'paymeter') url = url.profile.paymeterNotifyURL;
   }
 
   if (!url) {
@@ -102,6 +104,8 @@ WebHookApis.queue = async ({ payload, userId, id, delay }) => {
     url,
     payload,
     status: WebHook.StatusMapping.Pending,
+    type,
+    userId,
   });
   debug('Inserting to bull', id);
   Bull.addJob(
@@ -135,6 +139,7 @@ WebHookApis.send = async ({ id }) => {
     headers: {
       'content-type': 'application/json',
     },
+    simple: false,
   };
 
   try {
