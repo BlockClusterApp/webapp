@@ -1,5 +1,3 @@
-import { Mongo } from 'meteor/mongo';
-
 const defaults = require('../local.config.js');
 const request = require('request-promise');
 const debug = require('debug')('RemoteConfig');
@@ -105,14 +103,16 @@ async function getPaymeterConnectionDetails(blockchain, network) {
 
   function getLocation() {
     return new Promise((resolve, reject) => {
-      Meteor.call("getClusterLocations", (error, locations) => {
-        resolve(locations)
-      })
-    })
+      Meteor.call('getClusterLocations', (error, locations) => {
+        resolve(locations);
+      });
+    });
   }
 
+  const locations = await getLocation();
+
   //first location in the location list - assuming webapp is also running the first location
-  const locationCode = (await getLocation())[0].locationCode;
+  const locationCode = locations[0].locationCode;
   return RemoteConfig.clusters[getNamespace()][locationCode].paymeter[blockchain][network].url;
 }
 
