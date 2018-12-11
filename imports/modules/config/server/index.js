@@ -1,5 +1,3 @@
-import { Mongo } from 'meteor/mongo';
-
 const defaults = require('../local.config.js');
 const request = require('request-promise');
 const debug = require('debug')('RemoteConfig');
@@ -98,23 +96,24 @@ function getHyperionConnectionDetails(locationCode) {
   ];
 }
 
-async function getPaymeterConnectionDetails( ) {
+async function getPaymeterConnectionDetails(blockchain, network) {
   if (process.env.paymeter) {
     return process.env.paymeter;
   }
 
   function getLocation() {
     return new Promise((resolve, reject) => {
-      Meteor.call("getClusterLocations", (error, locations) => {
-        resolve(locations)
-      })
-    })
+      Meteor.call('getClusterLocations', (error, locations) => {
+        resolve(locations);
+      });
+    });
   }
 
-  //first location in the location list - assuming webapp is also running the first location
-  const locationCode = (await getLocation())[0].locationCode;
+  const locations = await getLocation();
 
-  return `${RemoteConfig.clusters[getNamespace()][locationCode].paymeter.ip}:${RemoteConfig.clusters[getNamespace()][locationCode].paymeter.port}`;
+  //first location in the location list - assuming webapp is also running the first location
+  const locationCode = locations[0].locationCode;
+  return RemoteConfig.clusters[getNamespace()][locationCode].paymeter[blockchain][network].url;
 }
 
 function getDynamoWokerDomainName(locationCode) {

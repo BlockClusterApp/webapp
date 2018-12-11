@@ -4,7 +4,7 @@ import {Link} from "react-router-dom"
 export default class Navbar extends Component {
 	render(){
 		return (
-			<div className="page-container ">
+			<div className="page-container footer">
 				<div className="page-content-wrapper ">
 	                <div className="content p-t-20">
 	                    <div className="container-fluid container-fixed-lg">
