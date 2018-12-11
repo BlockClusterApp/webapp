@@ -1,7 +1,7 @@
 import { Hyperion } from '../collections/hyperion/hyperion.js';
 import { Files } from '../collections/files/files.js';
-import ApiKeys from '../collections/api-keys';
-import RedisJwt from 'redis-jwt';
+import AuthMiddleware from './middleware/auth';
+
 import helpers from '../modules/helpers';
 import Config from '../modules/config/server';
 const ipfsAPI = require('ipfs-api');
@@ -11,24 +11,6 @@ var multer = require('multer');
 var upload = multer(); //in case of scalibility issue use multer file storage. By default it uses memory.
 var Future = Npm.require('fibers/future');
 import Billing from './billing';
-
-const jwt = new RedisJwt({
-  host: Config.redisHost,
-  port: Config.redisPort,
-  secret: 'rch4nuct90i3t9ik#%$^&u3jrmv29r239cr2',
-  multiple: true,
-});
-
-async function validateToken(token) {
-  const key = ApiKeys.find({
-    key: token,
-  }).fetch()[0];
-
-  if (!key) {
-    return false;
-  }
-  return key.userId;
-}
 
 Meteor.methods({
   getHyperionToken: file => {
@@ -48,16 +30,7 @@ Meteor.methods({
   },
 });
 
-async function authMiddleware(req, res, next) {
-  if (!(RemoteConfig.features && RemoteConfig.features.Hyperion)) {
-    return JsonRoutes.sendResult(res, {
-      code: 401,
-      data: {
-        error: 'Not available in this licence',
-      },
-    });
-  }
-
+async function _authFunc(req, res, next) {
   function getToken(req) {
     if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
       // Authorization: Bearer g1jipjgi1ifjioj
@@ -139,6 +112,18 @@ async function authMiddleware(req, res, next) {
     req.userId = userId;
     next();
   }
+}
+
+async function authMiddleware(req, res, next) {
+  if (!(RemoteConfig.features && RemoteConfig.features.Hyperion)) {
+    return JsonRoutes.sendResult(res, {
+      code: 401,
+      data: {
+        error: 'Not available in this licence',
+      },
+    });
+  }
+  AuthMiddleware(req, res, next);
 }
 
 JsonRoutes.Middleware.use('/api/hyperion/upload', authMiddleware);
@@ -469,3 +454,5 @@ JsonRoutes.add('post', '/api/hyperion/logout', (req, res, next) => {
 
 //Hyperion.remove({});
 //Files.remove({})
+
+module.exports = {};
