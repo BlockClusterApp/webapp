@@ -40,7 +40,7 @@ class PlatformNotifications extends Component {
       ['_nodeEvents_formSubmitError']: '',
     });
 
-    Meteor.call('updateNetworksCallbackURL', this['_nodeEvents_url'].value, error => {
+    Meteor.call('updateCallbackURL', { platform: this['_nodeEvents_url'].value, paymeter: his['_nodeEvents_paymeterUrl'].value }, error => {
       if (!error) {
         this.setState({
           ['_nodeEvents_formloading']: false,
@@ -91,7 +91,10 @@ class PlatformNotifications extends Component {
                       <br />
                       <b>Response code: {this.state.webhook.response && this.state.webhook.response.code}</b>
                       <br />
-                      {moment(this.state.webhook.createdAt).format('DD-MMM-YYYY HH:mm:SS')}
+                      Event time: {moment(this.state.webhook.createdAt).format('DD-MMM-YYYY HH:mm:SS')}
+                      <br />
+                      <b>Type:</b>
+                      {this.state.webhook.type}
                     </div>
                   </div>
                 </div>
@@ -105,7 +108,7 @@ class PlatformNotifications extends Component {
             <div className="col-lg-12">
               <div className="card card-transparent">
                 <div className="card-header ">
-                  <div className="card-title">Networks Notifications Web Book</div>
+                  <div className="card-title">WebHooks</div>
                 </div>
                 <div className="card-block">
                   <div className="card card-transparent">
@@ -119,15 +122,38 @@ class PlatformNotifications extends Component {
                         <div className="form-group">
                           <label>URL</label>
                           <span className="help"> e.g. "http://callback.blockcluster.io/eventHandler"</span>
-                          <input
-                            type="text"
-                            className="form-control"
-                            required
-                            defaultValue={this.props.user.profile.notifyURL}
-                            ref={input => {
-                              this['_nodeEvents_url'] = input;
-                            }}
-                          />
+                          <div className="row">
+                            <div className="col-md-2 p-t-6" style={{ padding: '6px' }}>
+                              Platform Notifications
+                            </div>
+                            <div className="col-md-10">
+                              <input
+                                type="text"
+                                className="form-control"
+                                required
+                                defaultValue={this.props.user.profile.notifyURL}
+                                ref={input => {
+                                  this['_nodeEvents_url'] = input;
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <div className="row" style={{ marginTop: '10px' }}>
+                            <div className="col-md-2 p-t-6" style={{ padding: '6px' }}>
+                              Paymeter Notifications
+                            </div>
+                            <div className="col-md-10">
+                              <input
+                                type="text"
+                                className="form-control"
+                                required
+                                defaultValue={this.props.user.profile.paymeterNotifyURL}
+                                ref={input => {
+                                  this['_nodeEvents_paymeterUrl'] = input;
+                                }}
+                              />
+                            </div>
+                          </div>
                         </div>
                       )}
 
@@ -193,10 +219,10 @@ class PlatformNotifications extends Component {
                                     >
                                       <td className="font-montserrat b-r b-dashed b-grey fs-12 w-40">{webhook.id}</td>
                                       <td className="font-montserrat b-r b-dashed b-grey all-caps fs-12 w-30">{moment(webhook.createdAt).format('DD-MMM-YYYY HH:mm:SS')}</td>
-                                      <td className="text-right b-r b-dashed b-grey w-15" style={{ textAlign: 'center!important' }}>
+                                      <td className="b-r b-dashed b-grey w-15" style={{ textAlign: 'center!important' }}>
                                         {this.getWebhookStatus(webhook.status)}
                                       </td>
-                                      <td className="text-right b-r b-dashed b-grey w-15" style={{ textAlign: 'center!important' }}>
+                                      <td className="b-r b-dashed b-grey w-15" style={{ textAlign: 'center!important' }}>
                                         {webhook.response && webhook.response.code}
                                       </td>
                                     </tr>

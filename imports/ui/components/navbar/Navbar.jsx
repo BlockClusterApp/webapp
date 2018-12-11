@@ -95,14 +95,14 @@ class Navbar extends Component {
                 <span className="icon-thumbnail">
                   <i className="fa fa-cube" />
                 </span>
-                <ul className="sub-menu">
+                {/* <ul className="sub-menu">
                   <li>
                     <Link to="/app/paymeter/notifications">Notifications</Link>
                     <span className="icon-thumbnail">
                       <i className="fa fa-bell" />
                     </span>
                   </li>
-                </ul>
+                </ul> */}
               </li>
             )}
             {features.Hyperion && (
