@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom';
 import { withTracker } from 'meteor/react-meteor-data';
-import {withRouter} from 'react-router-dom';
+import { withRouter } from 'react-router-dom';
 
 import Navbar from '../../components/navbar/Navbar.jsx';
 import Header from '../../components/header/Header.jsx';
@@ -36,6 +36,7 @@ import BillingDashboard from '../../pages/billing/BillingDashboard.jsx';
 import Payments from '../../pages/billing/Payments.jsx';
 import SupportDetails from '../../pages/support/Support.jsx';
 import SmartContractsManagement from '../../pages/smartContractsManagement/SmartContractsManagement.jsx';
+import WalletNotifications from '../../pages/paymeter/Notifications.jsx';
 
 import UserList from '../../pages/admin/users/UserList.jsx';
 import UserDetails from '../../pages/admin/users/Details.jsx';
@@ -56,104 +57,111 @@ import ClientMetrics from '../../pages/admin/clients/ClientMetrics';
 import ConfigList from '../../pages/admin/network-config/List';
 import PlatformAPIKeys from '../../pages/platformApis/PlatformAPIKeys.jsx';
 
-export default withRouter(class Main extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      remoteConfig: window.RemoteConfig,
-      pathsWithFullHeight: ['/app/paymeter']
-    };
-  }
-
-  componentDidMount() {
-    if (this.props.user && !localStorage.getItem('admin')) {
-      locationStorage.setItem('admin', this.props.user.admin);
-    }
-    window.addEventListener('RemoteConfigChanged', () => {
-      this.setState({
+export default withRouter(
+  class Main extends Component {
+    constructor(props) {
+      super(props);
+      this.state = {
         remoteConfig: window.RemoteConfig,
+        pathsWithFullHeight: ['/app/paymeter'],
+      };
+    }
+
+    componentDidMount() {
+      if (this.props.user && !localStorage.getItem('admin')) {
+        locationStorage.setItem('admin', this.props.user.admin);
+      }
+      window.addEventListener('RemoteConfigChanged', () => {
+        this.setState({
+          remoteConfig: window.RemoteConfig,
+        });
       });
-    });
-  }
-
-  render() {
-    const { remoteConfig } = this.state;
-    let { features } = remoteConfig;
-    if (!features) {
-      features = {};
     }
 
-    let fullHeight = '';
+    render() {
+      const { remoteConfig } = this.state;
+      let { features } = remoteConfig;
+      if (!features) {
+        features = {};
+      }
 
-    if(this.state.pathsWithFullHeight.includes(this.props.location.pathname)) {
-      fullHeight = 'full-height'
-    }
+      let fullHeight = '';
 
-    return (
-      <div className={`${fullHeight}`}>
-        <Navbar />
-        <div className="page-container">
-          <Header />
-          <div className={`page-content-wrapper ${fullHeight}`}>
-            <Route exact path="/app/networks" component={NetworksList} />
-            <Route exact path="/app/notifications" component={PlatformNotifications} />
-            <Route exact path="/app/createNetwork" component={CreateNetwork} />
-            <Route exact path="/app/networks/:id/settings" component={ViewEditNetwork} />
-            <Route exact path="/app/networks/:id/impulse" component={ViewEditImpulse} />
-            <Route exact path="/app/networks/:id" component={ViewNetwork} />
-            <Route exact path="/app/join/networks" component={JoinNetwork} />
-            <Route exact path="/app/invites" component={Invites} />
-            <Route exact path="/app/networks/:id/security/peers" component={Peers} />
-            <Route exact path="/app/networks/:id/events" component={NodeEvents} />
-            <Route exact path="/app/networks/:id/explorer" component={Explorer} />
-            <Route exact path="/app/networks/:id/assets/search" component={AssetsSearch} />
-            <Route exact path="/app/networks/:id/assets/exchange" component={AssetsExchange} />
-            <Route exact path="/app/networks/:id/assets/create" component={CreateAssetType} />
-            <Route exact path="/app/networks/:id/assets/stats" component={AssetsStats} />
-            <Route exact path="/app/networks/:id/assets/management" component={AssetsManagement} />
-            <Route exact path="/app/networks/:id/assets/audit" component={AssetsAudit} />
-            <Route exact path="/app/networks/:id/streams/create" component={CreateStream} />
-            <Route exact path="/app/networks/:id/streams/publish" component={PublishStream} />
-            <Route exact path="/app/networks/:id/streams/access-control" component={AccessControlStreams} />
-            <Route exact path="/app/networks/:id/bc-accounts" component={BCAccountsView} />
-            <Route exact path="/app/networks/:id/security/apis" component={APIsCreds} />
-            <Route exact path="/app/networks/:id/sc/management" component={SmartContractsManagement} />
-            <Route exact path="/app/platform-apis" component={PlatformAPIKeys} />
+      if (this.state.pathsWithFullHeight.includes(this.props.location.pathname)) {
+        fullHeight = 'full-height';
+      }
 
-            {features.Payments && <Route exact path="/app/payments" component={Payments} />}
-            {features.Invoice && <Route exact path="/app/billing" component={BillingDashboard} />}
-            {features.SupportTicket && <Route exact path="/app/support" component={SupportContainer} />}
-            {features.SupportTicket && <Route exact path="/app/support/:id" component={SupportDetails} />}
-            {features.Hyperion && <Route exact path="/app/hyperion" component={Hyperion} />}
-            <Route exact path="/app/paymeter" component={Paymeter} />
-            {features.Admin && (
-              <div>
-                <Route exact path="/app/admin" render={() => <Redirect to="/app/admin/users" />} />
-                <Route exact path="/app/admin/users" component={UserList} />
-                <Route exact path="/app/admin/users/:id" component={UserDetails} />
-                <Route exact path="/app/admin/networks" component={NetworkList} />
-                <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
-                <Route exact path="/app/admin/network-configs" component={ConfigList} />
-                {features.Vouchers && <Route exact path="/app/admin/vouchers" component={VoucherList} />}
-                {features.Vouchers && <Route exact path="/app/admin/vouchers/details/:id" component={VoucherDetails} />}
-                {features.Vouchers && <Route exact path="/app/admin/vouchers/create" component={VoucherCreate} />}
+      return (
+        <div className={`${fullHeight}`}>
+          <Navbar />
+          <div className="page-container">
+            <Header />
+            <div className={`page-content-wrapper ${fullHeight}`}>
+              <Route exact path="/app/networks" component={NetworksList} />
+              <Route exact path="/app/notifications" component={PlatformNotifications} />
+              <Route exact path="/app/createNetwork" component={CreateNetwork} />
+              <Route exact path="/app/networks/:id/settings" component={ViewEditNetwork} />
+              <Route exact path="/app/networks/:id/impulse" component={ViewEditImpulse} />
+              <Route exact path="/app/networks/:id" component={ViewNetwork} />
+              <Route exact path="/app/join/networks" component={JoinNetwork} />
+              <Route exact path="/app/invites" component={Invites} />
+              <Route exact path="/app/networks/:id/security/peers" component={Peers} />
+              <Route exact path="/app/networks/:id/events" component={NodeEvents} />
+              <Route exact path="/app/networks/:id/explorer" component={Explorer} />
+              <Route exact path="/app/networks/:id/assets/search" component={AssetsSearch} />
+              <Route exact path="/app/networks/:id/assets/exchange" component={AssetsExchange} />
+              <Route exact path="/app/networks/:id/assets/create" component={CreateAssetType} />
+              <Route exact path="/app/networks/:id/assets/stats" component={AssetsStats} />
+              <Route exact path="/app/networks/:id/assets/management" component={AssetsManagement} />
+              <Route exact path="/app/networks/:id/assets/audit" component={AssetsAudit} />
+              <Route exact path="/app/networks/:id/streams/create" component={CreateStream} />
+              <Route exact path="/app/networks/:id/streams/publish" component={PublishStream} />
+              <Route exact path="/app/networks/:id/streams/access-control" component={AccessControlStreams} />
+              <Route exact path="/app/networks/:id/bc-accounts" component={BCAccountsView} />
+              <Route exact path="/app/networks/:id/security/apis" component={APIsCreds} />
+              <Route exact path="/app/networks/:id/sc/management" component={SmartContractsManagement} />
+              <Route exact path="/app/platform-apis" component={PlatformAPIKeys} />
 
-                {features.SupportTicket && <Route exact path="/app/admin/support" component={AdminSupport} />}
-                {features.SupportTicket && <Route exact path="/app/admin/support/:id" component={AdminSupportDetails} />}
+              {features.Payments && <Route exact path="/app/payments" component={Payments} />}
+              {features.Invoice && <Route exact path="/app/billing" component={BillingDashboard} />}
+              {features.SupportTicket && <Route exact path="/app/support" component={SupportContainer} />}
+              {features.SupportTicket && <Route exact path="/app/support/:id" component={SupportDetails} />}
+              {features.Hyperion && <Route exact path="/app/hyperion" component={Hyperion} />}
+              {features.Paymeter && (
+                <div>
+                  <Route exact path="/app/paymeter" component={Paymeter} />
+                  <Route exact path="/app/paymeter/notifications" component={WalletNotifications} />
+                </div>
+              )}
+              {features.Admin && (
+                <div>
+                  <Route exact path="/app/admin" render={() => <Redirect to="/app/admin/users" />} />
+                  <Route exact path="/app/admin/users" component={UserList} />
+                  <Route exact path="/app/admin/users/:id" component={UserDetails} />
+                  <Route exact path="/app/admin/networks" component={NetworkList} />
+                  <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
+                  <Route exact path="/app/admin/network-configs" component={ConfigList} />
+                  {features.Vouchers && <Route exact path="/app/admin/vouchers" component={VoucherList} />}
+                  {features.Vouchers && <Route exact path="/app/admin/vouchers/details/:id" component={VoucherDetails} />}
+                  {features.Vouchers && <Route exact path="/app/admin/vouchers/create" component={VoucherCreate} />}
 
-                {features.Invoice && <Route exact path="/app/admin/invoices" component={AdminInvoiceList} />}
-                {features.Invoice && <Route exact path="/app/admin/invoices/:id" component={AdminInvoiceDetails} />}
+                  {features.SupportTicket && <Route exact path="/app/admin/support" component={AdminSupport} />}
+                  {features.SupportTicket && <Route exact path="/app/admin/support/:id" component={AdminSupportDetails} />}
 
-                {features.ClientDashboard && <Route exact path="/app/admin/clients" component={ClientList} />}
-                {features.ClientDashboard && <Route exact path="/app/admin/clients/details/:id" component={ClientDetails} />}
-                {features.ClientDashboard && <Route exact path="/app/admin/clients/details/:id/metrics" component={ClientMetrics} />}
-                {features.ClientDashboard && <Route exact path="/app/admin/clients/create" component={ClientCreate} />}
-              </div>
-            )}
+                  {features.Invoice && <Route exact path="/app/admin/invoices" component={AdminInvoiceList} />}
+                  {features.Invoice && <Route exact path="/app/admin/invoices/:id" component={AdminInvoiceDetails} />}
+
+                  {features.ClientDashboard && <Route exact path="/app/admin/clients" component={ClientList} />}
+                  {features.ClientDashboard && <Route exact path="/app/admin/clients/details/:id" component={ClientDetails} />}
+                  {features.ClientDashboard && <Route exact path="/app/admin/clients/details/:id/metrics" component={ClientMetrics} />}
+                  {features.ClientDashboard && <Route exact path="/app/admin/clients/create" component={ClientCreate} />}
+                </div>
+              )}
+            </div>
           </div>
+          <Footer />
         </div>
-        <Footer />
-      </div>
-    );
+      );
+    }
   }
-})
+);

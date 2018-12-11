@@ -2545,13 +2545,24 @@ spec:
       }
     );
   },
-  updateNetworksCallbackURL: function(callbackURL) {
+  updateNetworksCallbackURL: function({ platform, paymeter }) {
+    Meteor.users.update(
+      { _id: this.userId },
+      {
+        $set: {
+          'profile.notifyURL': platform,
+          'profile.paymeterNotifyURL': paymeter,
+        },
+      }
+    );
+  },
+  updateWalletsCallbackURL: function(callbackURL) {
     console.log(this.userId, callbackURL);
     Meteor.users.update(
       { _id: this.userId },
       {
         $set: {
-          'profile.notifyURL': callbackURL,
+          'profile.paymeterNotifyURL': callbackURL,
         },
       }
     );
