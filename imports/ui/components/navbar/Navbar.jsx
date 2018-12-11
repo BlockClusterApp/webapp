@@ -86,6 +86,17 @@ class Navbar extends Component {
                 <i className="fa fa-list" />
               </span>
             </li>
+            {features.Paymeter && (
+              <li>
+                <Link to={'/app/paymeter'} className="detailed">
+                  <span className="title">Wallets</span>
+                  <span className="details">Manage Paymeter</span>
+                </Link>
+                <span className="icon-thumbnail">
+                  <i className="fa fa-cube" />
+                </span>
+              </li>
+            )}
             {features.Hyperion && (
               <li>
                 <Link to={'/app/hyperion'} className="detailed">
@@ -97,6 +108,7 @@ class Navbar extends Component {
                 </span>
               </li>
             )}
+
             {/* {(this.props.kuberREST_IP[0] !== undefined) &&
 							<li className="">
 			                    <Link to={this.props.kuberREST_IP.split("://")[1].split(":")[0] + ":5001/ipfs/QmPhnvn747LqwPYMJmQVorMaGbMSgA7mRRoyyZYz3DoZRQ/#/home"} target="_blank" className="detailed">
@@ -105,29 +117,18 @@ class Navbar extends Component {
 		                    	</Link>
 		                        <span className="icon-thumbnail"><i className="fa fa-database"></i></span>
 		                    </li>
-						} */}
-            <li className="">
-              <a href="javascript:;">
-                <span className="title">Settings</span>
-                <span className="arrow" />
-              </a>
+            } */}
+            <li>
+              <Link to={'/app/notifications'}>Notifications</Link>
               <span className="icon-thumbnail">
-                <i className="fa fa-cogs" />
+                <i className="fa fa-bell" />
               </span>
-              <ul className="sub-menu">
-                <li>
-                  <Link to={'/app/notifications'}>Notifications</Link>
-                  <span className="icon-thumbnail">
-                    <i className="fa fa-bell" />
-                  </span>
-                </li>
-                <li>
-                  <Link to={'/app/platform-apis'}>Platform API</Link>
-                  <span className="icon-thumbnail">
-                    <i className="fa fa-key" />
-                  </span>
-                </li>
-              </ul>
+            </li>
+            <li>
+              <Link to={'/app/platform-apis'}>API Keys</Link>
+              <span className="icon-thumbnail">
+                <i className="fa fa-key" />
+              </span>
             </li>
             {(features.Payments || features.SupportTicket || features.Invoice) && (
               <li>
@@ -250,7 +251,6 @@ class Navbar extends Component {
 export default withTracker(() => {
   return {
     kuberREST_IP: Config.kubeRestApiHost,
-    subscriptions: [Meteor.subscribe('utilities')],
     user: Meteor.user(),
   };
 })(Navbar);

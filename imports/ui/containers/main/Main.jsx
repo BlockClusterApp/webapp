@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom';
 import { withTracker } from 'meteor/react-meteor-data';
+import {withRouter} from 'react-router-dom';
 
 import Navbar from '../../components/navbar/Navbar.jsx';
 import Header from '../../components/header/Header.jsx';
@@ -24,6 +25,7 @@ import AssetsSearch from '../../pages/assetsSearch/AssetsSearch.jsx';
 import Explorer from '../../pages/explorer/Explorer.jsx';
 import APIsCreds from '../../pages/apisCreds/APIsCreds.jsx';
 import Hyperion from '../../pages/hyperion/Hyperion.jsx';
+import Paymeter from '../../pages/paymeter/Paymeter.jsx';
 import Peers from '../../pages/peers/Peers.jsx';
 import CreateStream from '../../pages/createStream/CreateStream.jsx';
 import PublishStream from '../../pages/publishStream/PublishStream.jsx';
@@ -54,11 +56,12 @@ import ClientMetrics from '../../pages/admin/clients/ClientMetrics';
 import ConfigList from '../../pages/admin/network-config/List';
 import PlatformAPIKeys from '../../pages/platformApis/PlatformAPIKeys.jsx';
 
-export default class Main extends Component {
+export default withRouter(class Main extends Component {
   constructor(props) {
     super(props);
     this.state = {
       remoteConfig: window.RemoteConfig,
+      pathsWithFullHeight: ['/app/paymeter']
     };
   }
 
@@ -79,12 +82,19 @@ export default class Main extends Component {
     if (!features) {
       features = {};
     }
+
+    let fullHeight = '';
+
+    if(this.state.pathsWithFullHeight.includes(this.props.location.pathname)) {
+      fullHeight = 'full-height'
+    }
+
     return (
-      <div>
+      <div className={`${fullHeight}`}>
         <Navbar />
         <div className="page-container">
           <Header />
-          <div className="page-content-wrapper">
+          <div className={`page-content-wrapper ${fullHeight}`}>
             <Route exact path="/app/networks" component={NetworksList} />
             <Route exact path="/app/notifications" component={PlatformNotifications} />
             <Route exact path="/app/createNetwork" component={CreateNetwork} />
@@ -115,6 +125,7 @@ export default class Main extends Component {
             {features.SupportTicket && <Route exact path="/app/support" component={SupportContainer} />}
             {features.SupportTicket && <Route exact path="/app/support/:id" component={SupportDetails} />}
             {features.Hyperion && <Route exact path="/app/hyperion" component={Hyperion} />}
+            <Route exact path="/app/paymeter" component={Paymeter} />
             {features.Admin && (
               <div>
                 <Route exact path="/app/admin" render={() => <Redirect to="/app/admin/users" />} />
@@ -145,4 +156,4 @@ export default class Main extends Component {
       </div>
     );
   }
-}
+})

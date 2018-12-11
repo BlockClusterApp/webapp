@@ -70,6 +70,7 @@ class PlatformApis extends Component {
                     <li>Create or Delete Networks</li>
                     <li>Manage Invitations</li>
                     <li>Use for all hyperion related functions</li>
+                    <li>Manage your paymeter wallets</li>
                   </ul>
                   <p>P.S. You cannot control the functionality of your blockchain nodes via these API keys.</p>
                   <p>

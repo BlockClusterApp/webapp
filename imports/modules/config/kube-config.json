@@ -15,6 +15,18 @@
         "hyperion": {
           "ipfsPort": "32679",
           "ipfsClusterPort": "32498"
+        },
+        "paymeter": {
+          "eth": {
+            "testnet": {
+              "ip": "eth-node.dev.svc.cluster.local",
+              "port": "8545"
+            }, 
+            "mainnet": {
+              "ip": "eth-node.dev.svc.cluster.local",
+              "port": "8545"
+            }
+          }
         }
       }
     }

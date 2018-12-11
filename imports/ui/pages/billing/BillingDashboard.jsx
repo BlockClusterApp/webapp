@@ -3,6 +3,7 @@ import { withTracker } from 'meteor/react-meteor-data';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import { withRouter } from 'react-router-dom';
 import moment from 'moment';
+
 const html2pdf = require("html2pdf.js")
 
 import './Dashboard.scss';
@@ -96,10 +97,19 @@ class BillingDashboard extends Component {
         })
         return false;
       }
-      html2pdf().from(res).set({jsPDF:{ unit: 'in', format: 'a4', orientation: 'landscape' }, margin: [0.5, 1]}).save();
+
+      // debugger;
+      // html2pdf().from(res).set({jsPDF:{ unit: 'in', format: 'a4', orientation: 'portrait' }, margin: [0, 0]}).save();
       this.setState({
         downloading: false
       });
+//       let pdfWindow = window.open("")
+// pdfWindow.document.write("<iframe width='100%' height='100%' src='data:application/pdf;base64, " + encodeURI(res)+"'></iframe>")
+// window.open("data:application/octet-stream;charset=utf-16le;base64,"+encodeURI(res));
+let a = document.createElement("a");
+ a.href = "data:application/octet-stream;base64,"+res;
+ a.download = `BlockclusterBill-${this.state.bill.invoiceId}.pdf`
+ a.click();
     });
   }
 
