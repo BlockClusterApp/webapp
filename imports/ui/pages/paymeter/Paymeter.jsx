@@ -36,7 +36,9 @@ class PaymeterComponent extends Component {
     this.setState({
       "createETHWalletLoading": true
     })
-    Meteor.call("createWallet", "ETH", this.refs.ethWalletName.value, this.refs.ethWalletNetwork.value, {}, (err, r) => {
+    Meteor.call("createWallet", "ETH", this.refs.ethWalletName.value, this.refs.ethWalletNetwork.value, {
+      password: this.refs.ethWalletPassword.value
+    }, (err, r) => {
       if(!err && r) {
         notifications.success("Wallet Created");
       } else {
@@ -56,7 +58,9 @@ class PaymeterComponent extends Component {
       "transferEthLoading": true
     })
 
-    Meteor.call("transferWallet", walletId, this.refs.transferEthAddress.value, this.refs.transferEthAmount.value, {}, (error, txnHash) => {
+    Meteor.call("transferWallet", walletId, this.refs.transferEthAddress.value, this.refs.transferEthAmount.value, {
+      password: this.refs.transferEthPassword.value
+    }, (error, txnHash) => {
       if(error) {
         notifications.error(error.reason);
       } else {
@@ -82,8 +86,9 @@ class PaymeterComponent extends Component {
       this.refs.transferErc20Address.value,
       this.refs.transferErc20Amount.value, {
         feeWallet: (walletId === this.refs.erc20FeeWallet.value ? null : this.refs.erc20FeeWallet.value),
-      }, (error, txnHash) => {
-      
+        password: this.refs.transferErc20Password.value,
+        feeWalletPassword: this.refs.transferErc20FeePassword.value
+      }, (error, txnHash) => {      
       if(error) {
         notifications.error(error.reason);
       } else {
@@ -106,6 +111,7 @@ class PaymeterComponent extends Component {
     Meteor.call("createWallet", "ERC20", this.refs.erc20WalletName.value, this.refs.erc20WalletNetwork.value, {
       contractAddress: this.refs.erc20ContractAddress.value,
       tokenSymbol: this.refs.erc20Symbol.value,
+      password: this.refs.erc20Password.value
     }, (err, r) => {
       if(!err && r) {
         notifications.success("Wallet Created");
@@ -307,6 +313,10 @@ class PaymeterComponent extends Component {
                           <input type="text" className="form-control" required ref="ethWalletName" />
                         </div>
                         <div className="form-group form-group-default required ">
+                          <label>Wallet Password</label>
+                          <input type="password" className="form-control" required ref="ethWalletPassword" />
+                        </div>
+                        <div className="form-group form-group-default required ">
                           <label>Network</label>
                           <select className="form-control" ref="ethWalletNetwork">
                             <option value={"testnet"} key={"testnet"}>Rinkeby</option>
@@ -350,6 +360,10 @@ class PaymeterComponent extends Component {
                           <input type="text" className="form-control" required ref="erc20Symbol" />
                         </div>
                         <div className="form-group form-group-default required ">
+                          <label>Wallet Password</label>
+                          <input type="password" className="form-control" required ref="erc20Password" />
+                        </div>
+                        <div className="form-group form-group-default required ">
                           <label>Network</label>
                           <select className="form-control" ref="erc20WalletNetwork">
                             <option value={"testnet"} key={"testnet"}>Rinkeby</option>
@@ -386,9 +400,20 @@ class PaymeterComponent extends Component {
                           href="#"
                           data-toggle="tab"
                           role="tab"
+                          data-target="#deposit"
+                        >
+                          Deposit
+                        </a>
+                      </li>
+                      <li className="nav-item">
+                        <a
+                          className=""
+                          href="#"
+                          data-toggle="tab"
+                          role="tab"
                           data-target="#transfer"
                         >
-                          Send and Receive
+                          Send
                         </a>
                       </li>
                       <li className="nav-item">
@@ -404,7 +429,7 @@ class PaymeterComponent extends Component {
                       </li>
                     </ul>
                     <div className="tab-content">
-                      <div className="tab-pane active" id="transfer">
+                      <div className="tab-pane active" id="deposit">
                         <div className="row">
                           <div className="col-lg-12">
                             <div className="card card-transparent">
@@ -413,16 +438,31 @@ class PaymeterComponent extends Component {
                                 style={{ paddingBottom: "0px" }}
                               >
                                 <div className="row row-same-height">
-                                  <div className="col-md-5 b-r b-dashed b-grey sm-b-b">
-                                    <div className="p-t-0 p-b-30 p-l-30 p-r-30 sm-padding-5 sm-m-t-15 m-t-50">
+                                  <div className="col-xl-12 sm-b-b">
+                                    <div className="p-t-0 p-b-30 p-l-30 p-r-30 sm-padding-5 sm-m-t-15 m-t-50 deposit-box">
                                       <QRCode value={wallet.address} />
-                                      <h5>Deposit Address: {wallet.address}</h5>
+                                      <h5>Deposit Address <br /> <b>{wallet.address}</b></h5>
                                       <p className="small hint-text">
                                         15 confirmations are required for balance to update
                                       </p>
                                     </div>
                                   </div>
-                                  <div className="col-md-7">
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="tab-pane" id="transfer">
+                        <div className="row">
+                          <div className="col-lg-12">
+                            <div className="card card-transparent">
+                              <div
+                                className="card-block"
+                                style={{ paddingBottom: "0px" }}
+                              >
+                                <div className="row row-same-height">
+                                  <div className="col-xl-12">
                                     <div className="padding-30 sm-padding-5">
                                       <div className="form-group-attached">
                                         <form role="form" onSubmit={e =>
@@ -431,6 +471,10 @@ class PaymeterComponent extends Component {
                                           <div className="form-group form-group-default m-t-10 required">
                                             <label>To Address</label>
                                             <input type="text" className="form-control" ref="transferEthAddress" />
+                                          </div>
+                                          <div className="form-group form-group-default m-t-10 required">
+                                            <label>Password</label>
+                                            <input type="password" className="form-control" ref="transferEthPassword" />
                                           </div>
                                           <div className="form-group form-group-default m-t-10 required">
                                             <label>Amount <small>{"(Reciever will pay the network fees)"}</small></label>
@@ -445,7 +489,7 @@ class PaymeterComponent extends Component {
                                             className="btn btn-complete btn-cons m-t-10"
                                             type="submit"
                                           >
-                                            <i className="fa fa-plus" aria-hidden="true" />
+                                            <i className="fa fa-paper-plane" aria-hidden="true" />
                                             &nbsp;&nbsp;Send
                                           </LaddaButton>
                                         </form>
@@ -531,9 +575,20 @@ class PaymeterComponent extends Component {
                           href="#"
                           data-toggle="tab"
                           role="tab"
+                          data-target="#deposit"
+                        >
+                          Deposit
+                        </a>
+                      </li>
+                      <li className="nav-item">
+                        <a
+                          className=""
+                          href="#"
+                          data-toggle="tab"
+                          role="tab"
                           data-target="#transfer"
                         >
-                          Send and Receive
+                          Send
                         </a>
                       </li>
                       <li className="nav-item">
@@ -549,7 +604,7 @@ class PaymeterComponent extends Component {
                       </li>
                     </ul>
                     <div className="tab-content">
-                      <div className="tab-pane active" id="transfer">
+                      <div className="tab-pane active" id="deposit">
                         <div className="row">
                           <div className="col-lg-12">
                             <div className="card card-transparent">
@@ -558,29 +613,38 @@ class PaymeterComponent extends Component {
                                 style={{ paddingBottom: "0px" }}
                               >
                                 <div className="row row-same-height">
-                                  <div className="col-md-5 b-r b-dashed b-grey sm-b-b">
-                                    <div className="p-t-0 p-b-30 p-l-30 p-r-30 sm-padding-5 sm-m-t-15 m-t-50">
+                                  <div className="col-md-12 sm-b-b">
+                                    <div className="p-t-0 p-b-30 p-l-30 p-r-30 sm-padding-5 sm-m-t-15 m-t-50 deposit-box ">
                                       <QRCode value={wallet.address} />
-                                      <h5>Deposit Address: {wallet.address}</h5>
+                                      <h5>Deposit Address: <br /> <b>{wallet.address}</b></h5>
                                       <p className="small hint-text">
                                         15 confirmations are required for balance to update
                                       </p>
                                     </div>
                                   </div>
-                                  <div className="col-md-7">
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="tab-pane" id="transfer">
+                        <div className="row">
+                          <div className="col-lg-12">
+                            <div className="card card-transparent">
+                              <div
+                                className="card-block"
+                                style={{ paddingBottom: "0px" }}
+                              >
+                                <div className="row row-same-height">
+                                  <div className="col-md-12">
                                     <div className="padding-30 sm-padding-5">
                                       <div className="form-group-attached">
                                         <form role="form" onSubmit={e =>
                                           this.transferERC20(e, this.state.secondBoxData.walletId)
                                         }>
                                           <div className="row">
-                                            <div className="col-md-6">
-                                              <div className="form-group form-group-default m-t-10 required">
-                                                <label>Amount</label>
-                                                <input type="text" className="form-control" ref="transferErc20Amount" required />
-                                              </div>
-                                            </div>
-                                            <div className="col-md-6">
+                                            <div className="col-md-12">
                                               <div className="form-group form-group-default m-t-10 required">
                                                 <label>To Address</label>
                                                 <input type="text" className="form-control" ref="transferErc20Address" required />
@@ -600,6 +664,20 @@ class PaymeterComponent extends Component {
                                               })}
                                             </select>
                                           </div>
+                                          <div className="row">
+                                            <div className="col-md-6">
+                                              <div className="form-group form-group-default m-t-10 required">
+                                                <label>Wallet Password</label>
+                                                <input type="password" className="form-control" ref="transferErc20Password" required />
+                                              </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                              <div className="form-group form-group-default m-t-10">
+                                                <label>Gas Wallet Password</label>
+                                                <input type="password" className="form-control" ref="transferErc20FeePassword" />
+                                              </div>
+                                            </div>
+                                          </div>
                                           
                                           <LaddaButton
                                             loading={this.state.transferErc20Loading}
@@ -610,7 +688,7 @@ class PaymeterComponent extends Component {
                                             className="btn btn-complete btn-cons m-t-10"
                                             type="submit"
                                           >
-                                            <i className="fa fa-plus" aria-hidden="true" />
+                                            <i className="fa fa-paper-plane" aria-hidden="true" />
                                             &nbsp;&nbsp;Send
                                           </LaddaButton>
                                         </form>

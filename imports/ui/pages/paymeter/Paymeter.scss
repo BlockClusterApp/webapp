@@ -11,6 +11,10 @@
     }
   }
 
+  h5 {
+    word-break: break-all;
+  }
+
   .create-wallet-btn {
     margin-right: 0px !important;
     margin-left: 0px !important;
@@ -23,5 +27,9 @@
         padding: 10px;
       }
     }
+  }
+
+  .deposit-box {
+    text-align: center
   }
 }

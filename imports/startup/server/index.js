@@ -51,9 +51,8 @@ JsonRoutes.Middleware.use(
       responseTime: tokens['response-time'](req, res),
       timestamp: new Date(),
       cfRay: req.headers['cf-ray'],
-      contentLength: req.headers['content-length']
+      contentLength: req.headers['content-length'],
     };
-
 
     if (req && req.headers) {
       const headers = req.headers;
@@ -76,7 +75,7 @@ JsonRoutes.Middleware.use(
     if (logObject && logObject.url === '/ping') {
       return undefined;
     }
-    ElasticLogger.log("ApiRequest", logObject);
+    ElasticLogger.log('ApiRequest', logObject);
 
     return undefined;
   })
@@ -97,6 +96,7 @@ require('../../collections/vouchers/server/publications');
 require('../../collections/support-ticket/server/publications');
 require('../../collections/network-configuration/server/publications');
 require('../../collections/api-keys/server/publications');
+require('../../collections/webhooks/server/publications');
 require('../../api/payments');
 require('../../api/billing');
 
