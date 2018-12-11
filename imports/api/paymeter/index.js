@@ -7,6 +7,7 @@ import { Utilities } from '../../collections/utilities/utilities.js';
 import helpers from '../../modules/helpers';
 const BigNumber = require('bignumber.js');
 const EthereumTx = require('ethereumjs-tx');
+import Webhook from '../communication/webhook';
 import agenda from '../../modules/schedulers/agenda';
 
 const Cryptr = require('cryptr');

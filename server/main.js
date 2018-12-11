@@ -2556,7 +2556,7 @@ spec:
       }
     );
   },
-  updateWalletCallbackURL: function(callbackURL) {
+  updateWalletsCallbackURL: function(callbackURL) {
     console.log(this.userId, callbackURL);
     Meteor.users.update(
       { _id: this.userId },
