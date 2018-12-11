@@ -2556,6 +2556,17 @@ spec:
       }
     );
   },
+  updateWalletCallbackURL: function(callbackURL) {
+    console.log(this.userId, callbackURL);
+    Meteor.users.update(
+      { _id: this.userId },
+      {
+        $set: {
+          'profile.paymeterNotifyURL': callbackURL,
+        },
+      }
+    );
+  },
 });
 
 Meteor.startup(() => {

@@ -1,43 +1,46 @@
 import { Mongo } from 'meteor/mongo';
 import SimpleSchema from 'simpl-schema';
+import AttachBaseHooks from '../../modules/helpers/model-helpers';
 
 const WebHook = new Mongo.Collection('webhooks');
+
+AttachBaseHooks(WebHook);
 
 WebHook.StatusMapping = {
   Pending: 1,
   Sent: 2,
   Failed: 3,
-  Error: 4
-}
+  Error: 4,
+};
 
 WebHook.Schema = new SimpleSchema({
   id: {
-    type: String
+    type: String,
   },
   url: {
-    type: String
+    type: String,
   },
   response: {
-    type: Object
+    type: Object,
   },
   payload: {
-    type: Object
+    type: Object,
   },
   userId: {
-    type: String
+    type: String,
   },
   createdAt: {
-    type: Date
+    type: Date,
   },
   updatedAt: {
-    type: Date
+    type: Date,
   },
   status: {
-    type: Number
+    type: Number,
   },
   retries: {
-    type: Number
-  }
+    type: Number,
+  },
 });
 
 export default WebHook;
