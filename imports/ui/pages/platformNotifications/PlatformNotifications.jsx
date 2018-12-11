@@ -40,7 +40,7 @@ class PlatformNotifications extends Component {
       ['_nodeEvents_formSubmitError']: '',
     });
 
-    Meteor.call('updateCallbackURL', { platform: this['_nodeEvents_url'].value, paymeter: his['_nodeEvents_paymeterUrl'].value }, error => {
+    Meteor.call('updateCallbackURL', { platform: this['_nodeEvents_url'].value, paymeter: this['_nodeEvents_paymeterUrl'].value }, error => {
       if (!error) {
         this.setState({
           ['_nodeEvents_formloading']: false,
