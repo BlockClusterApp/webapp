@@ -10,6 +10,7 @@ import helpers from "../../../modules/helpers";
 import LoadingIcon from "../../components/LoadingIcon/LoadingIcon.jsx";
 let QRCode = require('qrcode.react');
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
+import WebHook from '../../../collections/webhooks';
 
 import "./Paymeter.scss";
 
@@ -125,6 +126,32 @@ class PaymeterComponent extends Component {
     })
   }
 
+  updateURL = e => {
+    e.preventDefault();
+
+    this.setState({
+      ['_notifications_formloading']: true,
+      ['_notifications_formSubmitError']: '',
+    });
+
+    Meteor.call('updateCallbackURL', { paymeter: this.refs._notifications_paymeterUrl.value }, error => {
+      console.log(error)
+      if (!error) {
+        this.setState({
+          ['_notifications_formloading']: false,
+          ['_notifications_formSubmitError']: '',
+        });
+
+        notifications.success('URL Updated');
+      } else {
+        this.setState({
+          ['_notifications_formloading']: false,
+          ['_notifications_formSubmitError']: error.reason,
+        });
+      }
+    });
+  };
+
   render() {
     console.log(Wallets.find({}).fetch())
     let wallet = null;
@@ -176,7 +203,7 @@ class PaymeterComponent extends Component {
                 </a>
               </li>
               <li>
-                <a href="javascript:void(0);">
+                <a href="javascript:void(0);" onClick={() => {this.setState({firstBox: 'settings-list', secondBox: ''})}}>
                   <span className="title"><i className="fa fa-sliders"></i> Settings</span>
                 </a>
               </li>
@@ -186,6 +213,33 @@ class PaymeterComponent extends Component {
             <div className="split-view">
               <div className="split-list">
                 <div data-email="list" className=" boreded no-top-border">
+                  {this.state.firstBox === 'settings-list' && 
+                    <div style={{"padding": "20px"}}>
+                      <div className="btn-group btn-group-justified row w-100 create-wallet-btn">
+                        <div className="btn-group col-12 p-0">
+                          <button type="button" className="btn btn-default w-100" onClick={() => {this.setState({firstBox: 'settings-list', secondBox: 'notifications'})}}>
+                            <span className="p-t-5 p-b-5">
+                                <i className="fa fa-bell fs-15"></i>
+                            </span>
+                            <br />
+                            <span className="fs-11 font-montserrat text-uppercase">Notifications</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="btn-group btn-group-justified row w-100 create-wallet-btn">
+                        <div className="btn-group col-12 p-0">
+                          <button type="button" className="btn btn-default w-100">
+                            <span className="p-t-5 p-b-5">
+                                <i className="fa fa-shopping-cart fs-15"></i>
+                            </span>
+                            <br />
+                            <span className="fs-11 font-montserrat text-uppercase">Activate/Deactivate</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  
                   {this.state.firstBox === 'create-wallet' && 
                     <div style={{"padding": "20px"}}>
                       <div className="btn-group btn-group-justified row w-100 create-wallet-btn">
@@ -298,6 +352,50 @@ class PaymeterComponent extends Component {
                 {this.state.secondBox === '' && 
                   <div className="no-result">
                     <h1>Build Wallets using Paymeter</h1>
+                  </div>
+                }
+
+                {this.state.secondBox === 'notifications' &&
+                  <div className="card card-default" style={{"marginBottom": "0px", "borderTop": "0px"}}>
+                    <div className="card-block" >
+                      <form
+                        role="form"
+                        onSubmit={e => {
+                          this.updateURL(e);
+                        }}
+                      >
+                        {this.props.user && (
+                          <div className="form-group form-group-default required ">
+                            <label>Paymeter Notifications Webhook URL</label>
+                            <input placeholder="https://example.com/wallet" type="text" defaultValue={this.props.user.profile.paymeterNotifyURL} className="form-control" required  ref="_notifications_paymeterUrl" />
+                          </div>
+                        )}
+
+                        {this.state['_notifications_formSubmitError'] && (
+                          <div className="row m-t-30">
+                            <div className="col-md-12">
+                              <div className="m-b-20 alert alert-danger m-b-0" role="alert">
+                                <button className="close" data-dismiss="alert" />
+                                {this.state['_notifications_formSubmitError']}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <LaddaButton
+                          loading={this.state['_notifications_formloading']}
+                          data-size={S}
+                          data-style={SLIDE_UP}
+                          data-spinner-size={30}
+                          data-spinner-lines={12}
+                          className="btn btn-complete  btn-cons m-t-10"
+                          type="submit"
+                        >
+                          <i className="fa fa-upload" aria-hidden="true" />
+                          &nbsp;&nbsp;Update
+                        </LaddaButton>
+                      </form>
+                    </div>
                   </div>
                 }
 
@@ -779,6 +877,8 @@ export default withTracker(props => {
     wallets: Wallets.find({}).fetch(),
     totalETHWallets: Wallets.find({coinType: "ETH"}).count(),
     totalERC20Wallets: Wallets.find({coinType: "ERC20"}).count(),
-    subscriptions: [Meteor.subscribe("wallets")]
+    subscriptions: [Meteor.subscribe("wallets")],
+    user: Meteor.user(),
+    webhooks: WebHook.find({}).fetch(),
   };
 })(withRouter(PaymeterComponent));
