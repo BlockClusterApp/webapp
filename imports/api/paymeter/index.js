@@ -78,6 +78,7 @@ const erc20ABI = [
 ];
 
 function createWallet(coinType, walletName, userId, network, options) {
+  let walletId;
   if (coinType === 'ETH') {
     let wallet = Wallet.generate();
     let private_key_hex = wallet.getPrivateKey().toString('hex');
@@ -85,7 +86,7 @@ function createWallet(coinType, walletName, userId, network, options) {
 
     const cryptr = new Cryptr(options.password);
 
-    Wallets.insert({
+    walletId = Wallets.insert({
       coinType: 'ETH',
       privateKey: cryptr.encrypt(private_key_hex),
       address: '0x' + address.toString('hex'),
@@ -101,7 +102,7 @@ function createWallet(coinType, walletName, userId, network, options) {
 
     const cryptr = new Cryptr(options.password);
 
-    Wallets.insert({
+    walletId = Wallets.insert({
       coinType: 'ERC20',
       privateKey: cryptr.encrypt(private_key_hex),
       address: '0x' + address.toString('hex'),
@@ -116,7 +117,7 @@ function createWallet(coinType, walletName, userId, network, options) {
     return false;
   }
 
-  return true;
+  return walletId;
 }
 
 async function getBalance(walletId) {
