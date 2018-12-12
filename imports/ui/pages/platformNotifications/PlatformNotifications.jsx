@@ -40,7 +40,7 @@ class PlatformNotifications extends Component {
       ['_nodeEvents_formSubmitError']: '',
     });
 
-    Meteor.call('updateCallbackURL', { platform: this['_nodeEvents_url'].value, paymeter: this['_nodeEvents_paymeterUrl'].value }, error => {
+    Meteor.call('updateCallbackURL', { platform: this['_nodeEvents_url'].value }, error => {
       if (!error) {
         this.setState({
           ['_nodeEvents_formloading']: false,
@@ -134,22 +134,6 @@ class PlatformNotifications extends Component {
                                 defaultValue={this.props.user.profile.notifyURL}
                                 ref={input => {
                                   this['_nodeEvents_url'] = input;
-                                }}
-                              />
-                            </div>
-                          </div>
-                          <div className="row" style={{ marginTop: '10px' }}>
-                            <div className="col-md-2 p-t-6" style={{ padding: '6px' }}>
-                              Paymeter Notifications
-                            </div>
-                            <div className="col-md-10">
-                              <input
-                                type="text"
-                                className="form-control"
-                                required
-                                defaultValue={this.props.user.profile.paymeterNotifyURL}
-                                ref={input => {
-                                  this['_nodeEvents_paymeterUrl'] = input;
                                 }}
                               />
                             </div>
