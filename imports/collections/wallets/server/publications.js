@@ -1,5 +1,5 @@
 import {Wallets} from "../wallets.js"
-import WalletMethods from "../../../api/paymeter"
+import WalletMethods from '../../../api/paymeter/index.js'; 
 let Future = Npm.require('fibers/future');
 import {WalletTransactions} from "../../walletTransactions/walletTransactions.js"
 //"async" function always returns an promise.

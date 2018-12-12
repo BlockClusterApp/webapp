@@ -110,7 +110,8 @@ JsonRoutes.add('get', '/api/paymeter/wallets/:id/withdrawals', async (req, res) 
 });
 
 JsonRoutes.add('post', '/api/paymeter/wallets/:id/send', async (req, res) => {
-  const { fromWalletId, toAddress, amount, options } = req.body;
+  const fromWalletId = req.params.id;
+  const { toAddress, amount, options } = req.body;
   if (!fromWalletId) {
     return sendError(res, 400, 'fromWalletId is required field');
   }

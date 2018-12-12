@@ -128,7 +128,7 @@ export default withRouter(
               {features.SupportTicket && <Route exact path="/app/support/:id" component={SupportDetails} />}
               {features.Hyperion && <Route exact path="/app/hyperion" component={Hyperion} />}
               {features.Paymeter && (
-                <div>
+                <div className="full-height">
                   <Route exact path="/app/paymeter" component={Paymeter} />
                   <Route exact path="/app/paymeter/notifications" component={WalletNotifications} />
                 </div>
