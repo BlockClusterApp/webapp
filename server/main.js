@@ -2545,7 +2545,7 @@ spec:
       }
     );
   },
-  updateNetworksCallbackURL: function({ platform, paymeter }) {
+  updateCallbackURL: function({ platform, paymeter }) {
     Meteor.users.update(
       { _id: this.userId },
       {
