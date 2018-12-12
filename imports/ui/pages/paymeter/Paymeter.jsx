@@ -135,7 +135,6 @@ class PaymeterComponent extends Component {
     });
 
     Meteor.call('updateCallbackURL', { paymeter: this.refs._notifications_paymeterUrl.value }, error => {
-      console.log(error)
       if (!error) {
         this.setState({
           ['_notifications_formloading']: false,
@@ -153,7 +152,6 @@ class PaymeterComponent extends Component {
   };
 
   render() {
-    console.log(Wallets.find({}).fetch())
     let wallet = null;
     if(this.state.secondBox === 'eth-wallet-management') {
       wallet = Wallets.findOne({
