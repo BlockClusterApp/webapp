@@ -2546,13 +2546,17 @@ spec:
     );
   },
   updateCallbackURL: function({ platform, paymeter }) {
+    const updateObject = {};
+    if (platform !== undefined) {
+      updateObject['profile.notifyURL'] = platform;
+    }
+    if (paymeter !== undefined) {
+      updateObject['profile.paymeterNotifyURL'] = paymeter;
+    }
     Meteor.users.update(
       { _id: this.userId },
       {
-        $set: {
-          'profile.notifyURL': platform,
-          'profile.paymeterNotifyURL': paymeter,
-        },
+        $set: updateObject,
       }
     );
   },
