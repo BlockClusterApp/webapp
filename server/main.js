@@ -758,6 +758,12 @@ Meteor.methods({
       RavenLogger.log(err);
     }
 
+    const user = Meteor.users
+      .find({
+        _id: userId,
+      })
+      .fetch()[0];
+
     var network = Networks.find({
       instanceId: id,
       deletedAt: null,
@@ -767,7 +773,7 @@ Meteor.methods({
       throw new Meteor.Error('bad-request', 'Invalid instance id');
     }
 
-    if (network.user !== Meteor.userId() && Meteor.user().admin <= 0) {
+    if (network.user !== userId && user.admin <= 0) {
       throw new Meteor.Error('bad-request', 'Not the owner of this network');
     }
 
