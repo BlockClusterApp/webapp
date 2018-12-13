@@ -1,16 +1,16 @@
 server:
 
   staging:
-    minReplicas: 2
-    maxReplicas: 5
+    minReplicas: 1
+    maxReplicas: 1
 
   test:
-    minReplicas: 2
-    maxReplicas: 2
+    minReplicas: 1
+    maxReplicas: 1
 
   dev:
-    minReplicas: 2
-    maxReplicas: 2
+    minReplicas: 1
+    maxReplicas: 1
 
   production:
     minReplicas: 3
