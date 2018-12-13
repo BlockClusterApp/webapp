@@ -20,48 +20,46 @@ async function getUserFromPayment(payment) {
       _id: payment.notes.paymentRequestId,
     }).fetch()[0];
     if (paymentRequest) {
-      return Meteor.users
+      const user = Meteor.users
         .find({
           _id: paymentRequest.userId,
         })
         .fetch()[0];
+      if (!user.rzCustomerId || (!(user.rzCustomerId && user.rzCustomerId.includes(payment.customer_id)) && payment.customer_id)) {
+        debug('Updating customer id from payment request', request._id, user._id);
+        Meteor.users.update(
+          {
+            _id: user._id,
+          },
+          {
+            $push: {
+              rzCustomerId: payment.customer_id,
+            },
+          }
+        );
+        return Meteor.users
+          .find({
+            _id: paymentRequest.userId,
+          })
+          .fetch()[0];
+      }
+      return user;
     }
   }
-  const user = Meteor.users
-    .find({
-      rzCustomerId: payment.customer_id,
-    })
-    .fetch()[0];
-  if (user) {
-    debug('Fetched user from customer id', payment.customer_id);
-    return user;
-  }
-  if (payment.notes.paymentRequestId) {
-    const request = PaymentRequest.find({
-      _id: id,
-    }).fetch()[0];
+  if (payment.customer_id) {
     const user = Meteor.users
       .find({
-        _id: request.userId,
+        rzCustomerId: payment.customer_id,
       })
       .fetch()[0];
-    if (!user.rzCustomerId || !(user.rzCustomerId && user.rzCustomerId.includes(payment.customer_id))) {
-      debug('Updating customer id from payment request', request._id, user._id);
-      Meteor.users.update(
-        {
-          'emails.address': payment.email,
-        },
-        {
-          $push: {
-            rzCustomerId: payment.customer_id,
-          },
-        }
-      );
+    if (user) {
+      debug('Fetched user from customer id', payment.customer_id);
+      return user;
     }
-    return Meteor.users.find({ _id: user._id }).fetch()[0];
   }
+
   const emailuser = await getUserFromEmail(payment.email);
-  if (!emailuser.rzCustomerId || !(emailuser.rzCustomerId && emailuser.rzCustomerId.includes(payment.customer_id))) {
+  if (!emailuser.rzCustomerId || (!(emailuser.rzCustomerId && emailuser.rzCustomerId.includes(payment.customer_id)) && payment.customer_id)) {
     debug('Updating customer id from email', payment.email, payment.customer_id);
     Meteor.users.update(
       {
@@ -79,6 +77,8 @@ async function getUserFromPayment(payment) {
       })
       .fetch()[0];
   }
+
+  return emailuser;
 }
 
 async function getUserFromEmail(email) {
@@ -196,7 +196,7 @@ async function attachPaymentToRequest(payment) {
         },
         $set: {
           paymentStatus: PaymentRequestReverseMap[payment.status],
-        }
+        },
       }
     );
   }
@@ -352,7 +352,7 @@ async function handleSubscriptionHalted({ subscription }, bullSystem) {
   }).fetch()[0];
 
   if (!invoice) {
-    ElasticLogger.log('No invoice to be halted', {subscriptionId: subscription.id});
+    ElasticLogger.log('No invoice to be halted', { subscriptionId: subscription.id });
   }
 
   InvoiceModel.update(
@@ -405,43 +405,44 @@ async function updateFailedInvoice({ payment }) {
 }
 
 async function handleInvoicePaid({ invoice, payment }) {
-
   const rzPaymentLink = RZPaymentLink.find({
     id: invoice.id,
   }).fetch()[0];
 
-  if(rzPaymentLink) {
-    RZPaymentLink.update({
-      _id: rzPaymentLink._id
-    }, {
-      $set: {
-        status: 'paid'
+  if (rzPaymentLink) {
+    RZPaymentLink.update(
+      {
+        _id: rzPaymentLink._id,
+      },
+      {
+        $set: {
+          status: 'paid',
+        },
       }
-    });
+    );
     const invoice = InvoiceModel.find({
-      "paymentLink.id": rzPaymentLink._id
+      'paymentLink.id': rzPaymentLink._id,
     }).fetch()[0];
 
-    if(!payment.notes) {
+    if (!payment.notes) {
       payment.notes = {
-        paymentRequestId: rzPaymentLink.paymentRequestId
-      }
+        paymentRequestId: rzPaymentLink.paymentRequestId,
+      };
     }
 
-    if(!payment.notes.paymentRequestId) {
+    if (!payment.notes.paymentRequestId) {
       payment.notes.paymentRequestId = rzPaymentLink.paymentRequestId;
     }
 
     await attachPaymentToRequest(payment);
-    if(invoice) {
+    if (invoice) {
       return Invoice.settleInvoice({
         invoiceId: invoice._id,
-        rzPayment: payment
+        rzPayment: payment,
       });
     }
     return true;
   }
-
 
   // we only want the halted subscriptions to trigger this as others will be processed by subscription.charged
   const rzSubscription = RZSubscription.find({
