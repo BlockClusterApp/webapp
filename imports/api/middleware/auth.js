@@ -117,4 +117,6 @@ async function _authFunc(req, res, next) {
   }
 }
 
+_authFunc.jwt = jwt;
+
 module.exports = _authFunc;
