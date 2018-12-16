@@ -165,6 +165,8 @@ class PaymeterComponent extends Component {
       })
     }
 
+    console.log(Wallets.find({}).fetch())
+
     return (
       <div className="content full-height paymeter" style={{"paddingBottom": "0px"}}>
         <style>{"\
