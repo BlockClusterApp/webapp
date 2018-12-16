@@ -622,7 +622,6 @@ function scanEthTestnet() {
     
           if(last_block) {
             last_block = last_block.value;
-            console.log('# got block from db: ', last_block)
             block = await getBlock(last_block + 1, testnet_web3)
           } else {
             let latest_block_number = await latestBlock(testnet_web3)
@@ -717,7 +716,6 @@ function scanEthTestnet() {
             promises.push(processContract(erc20_contracts_addresses[count]))
           }
     
-          console.log('Wrote Block # ' + block.number)
 
           Utilities.upsert({
             key: "testnet-eth-last-scanned-block"
@@ -728,9 +726,6 @@ function scanEthTestnet() {
           })
     
           await Promise.all(promises)
-
-          console.log('next block')
-          await sleep(10000);
 
           scanEthTestnet()
           myFuture.return();
