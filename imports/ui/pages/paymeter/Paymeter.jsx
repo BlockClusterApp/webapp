@@ -747,6 +747,14 @@ class PaymeterComponent extends Component {
                                               </div>
                                             </div>
                                           </div>
+                                          <div className="row">
+                                            <div className="col-md-12">
+                                              <div className="form-group form-group-default m-t-10 required">
+                                                <label>Amount</label>
+                                                <input type="text" className="form-control" ref="transferErc20Amount" required />
+                                              </div>
+                                            </div>
+                                          </div>
                                           <div className="form-group form-group-default m-t-10 required">
                                             <label>Fee Address <small>{"Account to Pay Fee from"}</small></label>
                                             <select className="form-control" ref="erc20FeeWallet">
