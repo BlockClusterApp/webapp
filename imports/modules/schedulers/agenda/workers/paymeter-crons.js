@@ -34,7 +34,7 @@ async function estimateGas(obj, web3) {
   return new Promise((resolve, reject) => {
     web3.eth.estimateGas(obj, (err, gasLimit) => {
       if(err) {
-        reject()
+        reject(err)
       } else {
         resolve(gasLimit)
       }
@@ -48,7 +48,7 @@ async function latestBlock(web3) {
       if(!error && result) {
         resolve(result)
       } else {
-        reject()
+        reject(error)
       }
     })
   })
@@ -60,7 +60,7 @@ async function getBlock(blockNumber, web3) {
       if(!error && result) {
         resolve(result)
       } else {
-        reject()
+        reject(error)
       }
     })
   })
@@ -70,7 +70,7 @@ async function sendRawTxn(txn, web3) {
   return new Promise((resolve, reject) => {
     web3.eth.sendSignedTransaction(txn, (error, hash) => {
       if(error) {
-        reject()
+        reject(error)
       } else {
         resolve(hash)
       }
@@ -82,7 +82,7 @@ async function getETHTransaction(txn, web3) {
   return new Promise((resolve, reject) => {
     web3.eth.getTransaction(txn, (error, details) => {
       if(error) {
-        reject()
+        reject(error)
       } else {
         resolve(details)
       }
@@ -360,10 +360,61 @@ module.exports = function(agenda) {
       }
       reSchedule();
     } catch(e) {
+      reSchedule();
+    }
+  });
+
+  agenda.define('process deposits', {
+    concurrency: 1
+  }, async (job, done) => {
+    function reSchedule() {
+      done()
+      agenda.schedule(new Date(Date.now() + 12000), 'process deposits');
+    }
+
+    try {
+      let pending_txns = WalletTransactions.find({
+        type: 'deposit',
+        status: 'pending'
+      }).fetch()
+
+      for(let count = 0; count < pending_txns.length; count++) {
+        let wallet_id = pending_txns[count].toWallet
+        let wallet = Wallets.findOne({
+          _id: wallet_id
+        })
+
+        if(wallet.coinType === 'ETH' || wallet.coinType === 'ERC20') {
+          let url = `${await Config.getPaymeterConnectionDetails("eth", wallet.network)}`;
+          let confirmations = await getEthTxnConfirmations(url, pending_txns[count].txnId)
+          if(confirmations >= 15) {
+            WalletTransactions.update({
+              _id: pending_txns[count]._id
+            }, {
+              $set: {
+                status: "completed"
+              }
+            })
+          } else if(helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
+            WalletTransactions.update({
+              _id: pending_txns[count]._id
+            }, {
+              $set: {
+                status: "cancelled"
+              }
+            })
+          }
+        }
+      }
+
+      reSchedule();
+    } catch(e) {
       console.log(e)
       reSchedule();
     }
   });
+
+
 
   agenda.define('scan eth block testnet', {
     concurrency: 1
@@ -385,7 +436,6 @@ module.exports = function(agenda) {
 
       let block = null;
 
-
       if(last_block) {
         last_block = last_block.value;
         block = await getBlock(last_block + 1, testnet_web3)
@@ -402,69 +452,94 @@ module.exports = function(agenda) {
         })
       }
 
+
+      let promises = [];
+
       if(block.transactions) {
-        for(let count = 0; count < block.transactions.length; count++) {
-          let txn_details = await getETHTransaction(block.transactions[count], testnet_web3)
-          if(txn_details.to) {
-            let to_exists_internally = Wallets.findOne({
-              coinType: 'ETH',
-              network: 'testnet',
-              address: txn_details.to.toLowerCase()
-            })
-  
-            if(to_exists_internally) {
-              WalletTransactions.upsert({
-                toWallet: to_exists_internally._id,
-                fromAddress: txn_details.from.toLowerCase(),
-                amount: txn_details.value.toString(),
-                createdAt: block.timestamp,
-                status: 'pending',
-                txnId: block.transactions[count],
-                type: 'deposit',
-                coinType: 'ETH'
-              }, {
-                $set: {
-                  value: testnet_web3.utils.fromWei(txn_details.value, 'ether').toString()
+
+        async function processTxn(txnHash) {
+          return new Promise(async (resolve, reject) => {
+            try {
+              let txn_details = await getETHTransaction(txnHash, testnet_web3)
+              
+              if(txn_details.to) {
+                let to_exists_internally = Wallets.findOne({
+                  coinType: 'ETH',
+                  network: 'testnet',
+                  address: txn_details.to.toLowerCase()
+                })
+      
+                if(to_exists_internally) {
+                  WalletTransactions.upsert({
+                    toWallet: to_exists_internally._id,
+                    fromAddress: txn_details.from.toLowerCase(),
+                    createdAt: block.timestamp * 1000,
+                    txnId: txnHash,
+                    type: 'deposit'
+                  }, {
+                    $setOnInsert: {
+                      amount: testnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
+                      status: 'pending'
+                    }
+                  });
                 }
-              });
+              }
+
+              resolve()
+            } catch(e) {
+              reject(e)
             }
-          }
+          })
+        }
+
+        for(let count = 0; count < block.transactions.length; count++) {
+          promises.push(processTxn(block.transactions[count]))
         }
       }
 
       //detect erc20 deposits
       let erc20_contracts_addresses = await getDistinctERC20('testnet')
 
-      for(let count = 0; count < erc20_contracts_addresses.length; count++) {
-        let logs = await getERC20Events(testnet_web3, erc20_contracts_addresses[count], block.number)
-        for (var iii = 0; iii < logs.length; iii++) {
-          let fromAddressOfEvent = logs[iii].returnValues.from.toLowerCase()
-          let toAddressOfEvent = logs[iii].returnValues.to.toLowerCase()
-          let amountOfEvent = logs[iii].returnValues.value
+      async function processContract(contractAddress) {
+        return new Promise(async (resolve, reject) => {
+          try {
+            let logs = await getERC20Events(testnet_web3, contractAddress, block.number)
+            for (var iii = 0; iii < logs.length; iii++) {
+              let fromAddressOfEvent = logs[iii].returnValues.from.toLowerCase()
+              let toAddressOfEvent = logs[iii].returnValues.to.toLowerCase()
+              let amountOfEvent = logs[iii].returnValues.value
+              let to_exists_internally = Wallets.findOne({
+                coinType: 'ERC20',
+                network: 'testnet',
+                address: toAddressOfEvent,
+                contractAddress: contractAddress
+              })
 
-          let to_exists_internally = Wallets.findOne({
-            coinType: 'ERC20',
-            network: 'testnet',
-            address: toAddressOfEvent,
-            contractAddress: erc20_contracts_addresses[count]
-          })
-          
-          if(to_exists_internally) {
-            WalletTransactions.upsert({
-              toWallet: to_exists_internally._id,
-              fromAddress: fromAddressOfEvent,
-              createdAt: block.timestamp,
-              status: 'pending',
-              txnId: logs[iii].transactionHash,
-              type: 'deposit',
-              coinType: 'ERC20'
-            }, {
-              $set: {
-                amount: testnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()
+              if(to_exists_internally) {
+                WalletTransactions.upsert({
+                  toWallet: to_exists_internally._id,
+                  fromAddress: fromAddressOfEvent,
+                  createdAt: block.timestamp * 1000,
+                  txnId: logs[iii].transactionHash,
+                  type: 'deposit'
+                }, {
+                  $setOnInsert: {
+                    amount: testnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
+                    status: 'pending'
+                  }
+                });
               }
-            });
+            }
+
+            resolve()
+          } catch(e) {
+            reject(e)
           }
-        }
+        })
+      }
+
+      for(let count = 0; count < erc20_contracts_addresses.length; count++) {
+        promises.push(processContract(erc20_contracts_addresses[count]))
       }
 
       Utilities.upsert({
@@ -475,9 +550,10 @@ module.exports = function(agenda) {
         }
       })
 
+      await Promise.all(promises)
+
       reSchedule()
     } catch(e) {
-      console.log(e)
       reSchedule()
     }
   })
@@ -559,7 +635,6 @@ module.exports = function(agenda) {
 
       reSchedule()
     } catch(e) {
-      console.log(e)
       reSchedule()
     }
   });
@@ -570,7 +645,7 @@ module.exports = function(agenda) {
 
     function reSchedule() {
       done()
-      agenda.schedule(new Date(Date.now() + (1000 * 1)), 'scan eth block mainnet'); //after 3 seconds
+      agenda.schedule(new Date(Date.now() + (1000 * 1)), 'scan eth block mainnet'); //after 1 seconds
     }
 
     try {
@@ -599,242 +674,259 @@ module.exports = function(agenda) {
         })
       }
 
+      let promises = [];
+
       if(block.transactions) {
-        for(let count = 0; count < block.transactions.length; count++) {
-          let txn_details = await getETHTransaction(block.transactions[count], mainnet_web3)
+        async function processTxn(txnHash) {
+          return new Promise(async (resolve, reject) => {
+            try {
+              let txn_details = await getETHTransaction(txnHash, mainnet_web3)
 
-          let from_exists_internally = Wallets.findOne({
-            coinType: 'ETH',
-            network: 'mainnet',
-            address: txn_details.from.toLowerCase()
-          })
-
-          if(from_exists_internally) {
-            if(txn_details.to) {
-              let to_exists_internally = Wallets.findOne({
+              let from_exists_internally = Wallets.findOne({
                 coinType: 'ETH',
                 network: 'mainnet',
-                address: txn_details.to.toLowerCase()
+                address: txn_details.from.toLowerCase()
               })
-  
-              if(to_exists_internally) {
-                WalletTransactions.upsert({
-                  toWallet: to_exists_internally._id,
-                  fromAddress: txn_details.from.toLowerCase(),
-                  amount: txn_details.value.toString(),
-                  createdAt: block.timestamp,
-                  status: 'pending',
-                  txnId: block.transactions[count],
-                  type: 'deposit',
-                  coinType: 'ETH'
-                }, {
-                  $set: {
-                    value: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString()
+    
+              if(from_exists_internally) {
+                if(txn_details.to) {
+                  let to_exists_internally = Wallets.findOne({
+                    coinType: 'ETH',
+                    network: 'mainnet',
+                    address: txn_details.to.toLowerCase()
+                  })
+      
+                  if(to_exists_internally) {
+                    WalletTransactions.upsert({
+                      toWallet: to_exists_internally._id,
+                      fromAddress: txn_details.from.toLowerCase(),
+                      createdAt: block.timestamp * 1000,
+                      txnId: txnHash,
+                      type: 'deposit'
+                    }, {
+                      $setOnInsert: {
+                        amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
+                        status: 'pending',
+                      }
+                    });
                   }
-                });
-              }
-            }
-          } else {
-            if(txn_details.to) {
-              let to_exists_internally = Wallets.findOne({
-                coinType: 'ETH',
-                network: 'mainnet',
-                address: txn_details.to.toLowerCase()
-              })
-  
-              if(to_exists_internally) {
-                //came from outside. show deposit and charge user
-                let eth_price = CoinPrices.findOne({
-                  'symbol': 'ETH'
-                })
-  
-                if(eth_price.usd_price && helpers.minutesDifference(Date.now(), block.timestamp * 1000) < 6) {
-                  WalletTransactions.upsert({
-                    toWallet: to_exists_internally._id,
-                    fromAddress: txn_details.from.toLowerCase(),
-                    createdAt: block.timestamp * 1000,
-                    status: 'pending',
-                    txnId: block.transactions[count],
-                    type: 'deposit',
+                }
+              } else {
+                if(txn_details.to) {
+                  let to_exists_internally = Wallets.findOne({
                     coinType: 'ETH',
-                    usdCharged: ((0.15 * ((mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString()) * eth_price.usd_price)) / 100),
-                    usdPrice: eth_price.usd_price
-                  }, {
-                    $set: {
-                      amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
+                    network: 'mainnet',
+                    address: txn_details.to.toLowerCase()
+                  })
+      
+                  if(to_exists_internally) {
+                    //came from outside. show deposit and charge user
+                    let eth_price = CoinPrices.findOne({
+                      'symbol': 'ETH'
+                    })
+      
+                    if(eth_price.usd_price && helpers.minutesDifference(Date.now(), block.timestamp * 1000) < 6) {
+                      WalletTransactions.upsert({
+                        toWallet: to_exists_internally._id,
+                        fromAddress: txn_details.from.toLowerCase(),
+                        createdAt: block.timestamp * 1000,
+                        txnId: txnHash,
+                        type: 'deposit'
+                      }, {
+                        $setOnInsert: {
+                          amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
+                          usdCharged: ((0.15 * ((mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString()) * eth_price.usd_price)) / 100),
+                          usdPrice: eth_price.usd_price,
+                          status: 'pending'
+                        }
+                      });
+                    } else {
+                      //this may happen when coinmarketcap API not working or txn detected before price update on DB (i.e., old price in DB)
+                      //in this case we just charge $0.20
+                      //in future get coinmarketcap premium API and find the historical value and calculate fees using it.
+                      WalletTransactions.upsert({
+                        toWallet: to_exists_internally._id,
+                        fromAddress: txn_details.from.toLowerCase(),
+                        createdAt: block.timestamp * 1000,
+                        txnId: txnHash,
+                        type: 'deposit'
+                      }, {
+                        $setOnInsert: {
+                          amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
+                          usdCharged: 0.20,
+                          status: 'pending'
+                        }
+                      });
                     }
-                  });
-                } else {
-                  //this may happen when coinmarketcap API not working or txn detected before price update on DB (i.e., old price in DB)
-                  //in this case we just charge $0.20
-                  //in future get coinmarketcap premium API and find the historical value and calculate fees using it.
-                  WalletTransactions.upsert({
-                    toWallet: to_exists_internally._id,
-                    fromAddress: txn_details.from.toLowerCase(),
-                    createdAt: block.timestamp * 1000,
-                    status: 'pending',
-                    txnId: block.transactions[count],
-                    type: 'deposit',
-                    coinType: 'ETH',
-                    usdCharged: "0.20"
-                  }, {
-                    $set: {
-                      amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                    }
-                  });
+                  }
                 }
               }
+
+              resolve()
+            } catch(e) {
+              reject(e)
             }
-          }
+          })
+        }
+
+        for(let count = 0; count < block.transactions.length; count++) {
+          promises.push(processTxn(block.transactions[count]))
         }
       }
 
       //detect erc20 deposits
       let erc20_contracts_addresses = await getDistinctERC20('mainnet')
-      
-      for(let count = 0; count < erc20_contracts_addresses.length; count++) {
-        let logs = await getERC20Events(mainnet_web3, erc20_contracts_addresses[count], block.number)
 
-        for (var iii = 0; iii < logs.length; iii++) {
-          let fromAddressOfEvent = logs[iii].returnValues.from.toLowerCase()
-          let toAddressOfEvent = logs[iii].returnValues.to.toLowerCase()
-          let amountOfEvent = logs[iii].returnValues.value.toString()
+      async function processContract(contractAddress) {
+        return new Promise(async (resolve, reject) => {
+          try {
+            let logs = await getERC20Events(mainnet_web3, contractAddress, block.number)
 
-          let from_exists_internally = Wallets.findOne({
-            coinType: 'ERC20',
-            network: 'mainnet',
-            address: fromAddressOfEvent,
-            contractAddress: erc20_contracts_addresses[count]
-          })
-
-          if(from_exists_internally) {
-            let to_exists_internally = Wallets.findOne({
-              coinType: 'ERC20',
-              network: 'mainnet',
-              address: toAddressOfEvent,
-              contractAddress: erc20_contracts_addresses[count]
-            })
-
-            if(to_exists_internally) {
-              WalletTransactions.upsert({
-                toWallet: to_exists_internally._id,
-                fromAddress: fromAddressOfEvent.toLowerCase(),
-                createdAt: block.timestamp,
-                status: 'pending',
-                txnId: logs[iii].transactionHash,
-                type: 'deposit',
-                coinType: 'ERC20'
-              }, {
-                $set: {
-                  amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()
-                }
-              });
-            }
-          } else {
-            let to_exists_internally = Wallets.findOne({
-              coinType: 'ETH',
-              network: 'mainnet',
-              address: block.transactions[count].to.toLowerCase()
-            })
-
-            if(to_exists_internally) {
-              let erc20_info = ERC20.findOne({
-                address: erc20_contracts_addresses[count]
+            for (var iii = 0; iii < logs.length; iii++) {
+              let fromAddressOfEvent = logs[iii].returnValues.from.toLowerCase()
+              let toAddressOfEvent = logs[iii].returnValues.to.toLowerCase()
+              let amountOfEvent = logs[iii].returnValues.value.toString()
+    
+              let from_exists_internally = Wallets.findOne({
+                coinType: 'ERC20',
+                network: 'mainnet',
+                address: fromAddressOfEvent,
+                contractAddress: contractAddress
               })
-
-              if(erc20_info) {
-                if(erc20_info.symbol) {
-                  let token_price = CoinPrices.findOne({
-                    'symbol': erc20_info.symbol
-                  })
-
-                  if(token_price.usd_price) {
-                    WalletTransactions.upsert({
-                      toWallet: to_exists_internally._id,
-                      fromAddress: fromAddressOfEvent.toLowerCase(),
-                      createdAt: block.timestamp * 1000,
-                      status: 'pending',
-                      txnId: block.transactions[count],
-                      type: 'deposit',
-                      coinType: 'ERC20',
-                      usdCharged: ((0.15 * ((mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()) * token_price.usd_price)) / 100),
-                      usdPrice: token_price.usd_price
-                    }, {
-                      $set: {
-                        amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                      }
-                    });
-                  } else {
-                    WalletTransactions.upsert({
-                      toWallet: to_exists_internally._id,
-                      fromAddress: fromAddressOfEvent.toLowerCase(),
-                      createdAt: block.timestamp * 1000,
-                      status: 'pending',
-                      txnId: block.transactions[count],
-                      type: 'deposit',
-                      coinType: 'ERC20',
-                      usdCharged: "0.20",
-                    }, {
-                      $set: {
-                        amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                      }
-                    });
-                  }
-                } else {
+    
+              if(from_exists_internally) {
+                let to_exists_internally = Wallets.findOne({
+                  coinType: 'ERC20',
+                  network: 'mainnet',
+                  address: toAddressOfEvent,
+                  contractAddress: contractAddress
+                })
+    
+                if(to_exists_internally) {
                   WalletTransactions.upsert({
                     toWallet: to_exists_internally._id,
                     fromAddress: fromAddressOfEvent.toLowerCase(),
                     createdAt: block.timestamp * 1000,
-                    status: 'pending',
-                    txnId: block.transactions[count],
+                    txnId: logs[iii].transactionHash,
                     type: 'deposit',
-                    coinType: 'ERC20',
-                    usdCharged: "0.20",
                   }, {
-                    $set: {
+                    $setOnInsert: {
                       amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
+                      status: 'pending'
                     }
                   });
                 }
               } else {
-                //make ethploroer call and find token symbol
-                try {
-                  let price = await getAndUpdateERC20ContractSymbol(erc20_contracts_addresses[count], "mainnet")
-                  WalletTransactions.upsert({
-                    toWallet: to_exists_internally._id,
-                    fromAddress: fromAddressOfEvent.toLowerCase(),
-                    createdAt: block.timestamp * 1000,
-                    status: 'pending',
-                    txnId: block.transactions[count],
-                    type: 'deposit',
-                    coinType: 'ERC20',
-                    usdCharged: ((0.15 * ((mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()) * price)) / 100),
-                    usdPrice: price
-                  }, {
-                    $set: {
-                      amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
+                let to_exists_internally = Wallets.findOne({
+                  coinType: 'ETH',
+                  network: 'mainnet',
+                  address: toAddressOfEvent.toLowerCase()
+                })
+    
+                if(to_exists_internally) {
+                  let erc20_info = ERC20.findOne({
+                    address: contractAddress
+                  })
+    
+                  if(erc20_info) {
+                    if(erc20_info.symbol) {
+                      let token_price = CoinPrices.findOne({
+                        'symbol': erc20_info.symbol
+                      })
+    
+                      if(token_price.usd_price) {
+                        WalletTransactions.upsert({
+                          toWallet: to_exists_internally._id,
+                          fromAddress: fromAddressOfEvent.toLowerCase(),
+                          createdAt: block.timestamp * 1000,
+                          txnId: logs[iii].transactionHash,
+                          type: 'deposit',
+                          
+                        }, {
+                          $setOnInsert: {
+                            amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
+                            usdCharged: ((0.15 * ((mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()) * token_price.usd_price)) / 100),
+                            usdPrice: token_price.usd_price,
+                            status: 'pending'
+                          }
+                        });
+                      } else {
+                        WalletTransactions.upsert({
+                          toWallet: to_exists_internally._id,
+                          fromAddress: fromAddressOfEvent.toLowerCase(),
+                          createdAt: block.timestamp * 1000,
+                          txnId: logs[iii].transactionHash,
+                          type: 'deposit'
+                        }, {
+                          $setOnInsert: {
+                            amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
+                            usdCharged: 0.20,
+                            status: 'pending'
+                          }
+                        });
+                      }
+                    } else {
+                      WalletTransactions.upsert({
+                        toWallet: to_exists_internally._id,
+                        fromAddress: fromAddressOfEvent.toLowerCase(),
+                        createdAt: block.timestamp * 1000,
+                        txnId: logs[iii].transactionHash,
+                        type: 'deposit'
+                      }, {
+                        $setOnInsert: {
+                          amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
+                          usdCharged: 0.20,
+                          status: 'pending'
+                        }
+                      });
                     }
-                  });
-                } catch(e) {
-                  WalletTransactions.upsert({
-                    toWallet: to_exists_internally._id,
-                    fromAddress: fromAddressOfEvent.toLowerCase(),
-                    createdAt: block.timestamp * 1000,
-                    status: 'pending',
-                    txnId: block.transactions[count],
-                    type: 'deposit',
-                    coinType: 'ERC20',
-                    usdCharged: "0.20",
-                  }, {
-                    $set: {
-                      amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
+                  } else {
+                    //make ethploroer call and find token symbol
+                    try {
+                      let price = await getAndUpdateERC20ContractSymbol(contractAddress, "mainnet")
+                      WalletTransactions.upsert({
+                        toWallet: to_exists_internally._id,
+                        fromAddress: fromAddressOfEvent.toLowerCase(),
+                        createdAt: block.timestamp * 1000,
+                        txnId: logs[iii].transactionHash,
+                        type: 'deposit'
+                      }, {
+                        $setOnInsert: {
+                          amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
+                          usdCharged: ((0.15 * ((mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()) * price)) / 100),
+                          usdPrice: price,
+                          status: 'pending'
+                        }
+                      });
+                    } catch(e) {
+                      WalletTransactions.upsert({
+                        toWallet: to_exists_internally._id,
+                        fromAddress: fromAddressOfEvent.toLowerCase(),
+                        createdAt: block.timestamp * 1000,
+                        txnId: logs[iii].transactionHash,
+                        type: 'deposit',
+                      }, {
+                        $setOnInsert: {
+                          amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
+                          usdCharged: 0.20,
+                          status: 'pending'
+                        }
+                      });
                     }
-                  });
+                  }
                 }
               }
             }
+
+            resolve()
+          } catch(e) {
+            reject(e)
           }
-        }
+        })
+      }
+      
+      for(let count = 0; count < erc20_contracts_addresses.length; count++) {
+        promises.push(processContract(erc20_contracts_addresses[count]))
       }
 
       Utilities.upsert({
@@ -845,13 +937,13 @@ module.exports = function(agenda) {
         }
       })
 
+      await Promise.all(promises)
+
       reSchedule()
     } catch(e) {
       reSchedule()
     }
   });
-
-  
 
   (async () => {
     agenda.cancel({name: 'process withdrawls'})
@@ -864,9 +956,9 @@ module.exports = function(agenda) {
     agenda.schedule('5 seconds', 'process withdrawls')
     agenda.schedule('5 seconds', 'process deposits')
     agenda.schedule('5 seconds', 'update gas price')
-    agenda.schedule('60 minutes', 'add symbol to contracts') //purpose is if a contract is not found on ethploroer today but later if it's found then 0.15% should be charged
-    agenda.schedule('3 seconds', 'scan eth block mainnet')
-    agenda.schedule('3 seconds', 'scan eth block testnet')
+    agenda.schedule('60 minutes', 'add symbol to contracts') //purpose is if a contract is not found on ethploroer today but later if it's found in future \then 0.15% should be charged
+    agenda.schedule('5 seconds', 'scan eth block mainnet')
+    agenda.schedule('5 seconds', 'scan eth block testnet')
 
     if (['production'].includes(process.env.NODE_ENV)) {
       agenda.schedule('5 seconds', 'update prices')
@@ -877,11 +969,3 @@ module.exports = function(agenda) {
     }
   })();
 };
-
-Utilities.upsert({
-  key: "testnet-eth-last-scanned-block"
-}, {
-  $set: {
-    value: 3519410
-  }
-})

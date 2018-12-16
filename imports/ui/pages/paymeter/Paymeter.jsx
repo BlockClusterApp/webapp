@@ -523,6 +523,17 @@ class PaymeterComponent extends Component {
                           Withdrawl History
                         </a>
                       </li>
+                      <li className="nav-item">
+                        <a
+                          className=""
+                          href="#"
+                          data-toggle="tab"
+                          role="tab"
+                          data-target="#depositHistory"
+                        >
+                          Deposit History
+                        </a>
+                      </li>
                     </ul>
                     <div className="tab-content">
                       <div className="tab-pane active" id="deposit">
@@ -617,12 +628,11 @@ class PaymeterComponent extends Component {
                                         <th style={{ width: "13%" }}>Amount</th>
                                         <th style={{ width: "18%" }}>Fee</th>
                                         <th style={{ width: "17%" }}>To Address</th>
-                                        <th style={{ width: "15%" }}>Type</th>
                                         <th style={{ width: "20%" }}>Status</th>
                                       </tr>
                                     </thead>
                                     <tbody>
-                                      {wallet.txns.map((item, index) => {
+                                      {wallet.withdrawl_txns.map((item, index) => {
                                         return (
                                           <tr key={item._id}>
                                             <td className="v-align-middle ">
@@ -638,7 +648,56 @@ class PaymeterComponent extends Component {
                                               {item.toAddress}
                                             </td>
                                             <td className="v-align-middle">
-                                              {helpers.firstLetterCapital(item.type)}
+                                              {ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="tab-pane" id="depositHistory">
+                        <div className="row">
+                          <div className="col-lg-12">
+                            <div className="card card-transparent">
+                              <div
+                                className="card-block"
+                                style={{ paddingBottom: "0px" }}
+                              >
+                                <div className="table-responsive">
+                                  <table
+                                    className="table table-hover"
+                                    id="basicTable"
+                                  >
+                                    <thead>
+                                      <tr>
+                                        <th style={{ width: "18%" }}>Txn ID</th>
+                                        <th style={{ width: "13%" }}>Amount</th>
+                                        <th style={{ width: "18%" }}>Fee</th>
+                                        <th style={{ width: "17%" }}>From Address</th>
+                                        <th style={{ width: "20%" }}>Status</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {wallet.deposit_txns.map((item, index) => {
+                                        return (
+                                          <tr key={item._id}>
+                                            <td className="v-align-middle ">
+                                              {item.txnId}
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {item.amount} ETH
+                                            </td>
+                                            <td className="v-align-middle">
+                                              ${item.usdCharged || '0.00'}
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {item.fromAddress}
                                             </td>
                                             <td className="v-align-middle">
                                               {ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}
@@ -696,6 +755,17 @@ class PaymeterComponent extends Component {
                           data-target="#withdrawlHistory"
                         >
                           Withdrawl History
+                        </a>
+                      </li>
+                      <li className="nav-item">
+                        <a
+                          className=""
+                          href="#"
+                          data-toggle="tab"
+                          role="tab"
+                          data-target="#depositHistory"
+                        >
+                          Deposit History
                         </a>
                       </li>
                     </ul>
@@ -824,12 +894,11 @@ class PaymeterComponent extends Component {
                                         <th style={{ width: "13%" }}>Amount</th>
                                         <th style={{ width: "18%" }}>Fee</th>
                                         <th style={{ width: "17%" }}>To Address</th>
-                                        <th style={{ width: "15%" }}>Type</th>
                                         <th style={{ width: "20%" }}>Status</th>
                                       </tr>
                                     </thead>
                                     <tbody>
-                                      {wallet.txns.map((item, index) => {
+                                      {wallet.withdrawl_txns.map((item, index) => {
                                         return (
                                           <tr key={item._id}>
                                             <td className="v-align-middle ">
@@ -845,7 +914,56 @@ class PaymeterComponent extends Component {
                                               {item.toAddress}
                                             </td>
                                             <td className="v-align-middle">
-                                              {helpers.firstLetterCapital(item.type)}
+                                              {ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="tab-pane" id="depositHistory">
+                        <div className="row">
+                          <div className="col-lg-12">
+                            <div className="card card-transparent">
+                              <div
+                                className="card-block"
+                                style={{ paddingBottom: "0px" }}
+                              >
+                                <div className="table-responsive">
+                                  <table
+                                    className="table table-hover"
+                                    id="basicTable"
+                                  >
+                                    <thead>
+                                      <tr>
+                                        <th style={{ width: "18%" }}>Txn ID</th>
+                                        <th style={{ width: "13%" }}>Amount</th>
+                                        <th style={{ width: "18%" }}>Fee</th>
+                                        <th style={{ width: "17%" }}>From Address</th>
+                                        <th style={{ width: "20%" }}>Status</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {wallet.deposit_txns.map((item, index) => {
+                                        return (
+                                          <tr key={item._id}>
+                                            <td className="v-align-middle ">
+                                              {item.txnId}
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {item.amount} {wallet.tokenSymbol}
+                                            </td>
+                                            <td className="v-align-middle">
+                                              ${item.usdCharged || '0.00'}
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {item.fromAddress}
                                             </td>
                                             <td className="v-align-middle">
                                               {ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}
