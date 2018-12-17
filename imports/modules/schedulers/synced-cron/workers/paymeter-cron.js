@@ -522,6 +522,31 @@ function processDeposits() {
                     confirmedBalance: await Paymeter.getBalance(wallet._id)
                   }
                 })
+
+                if(pending_txns[count].usdCharged) {
+                  let paymeter_userData = Paymeter.find({userId: wallet.userId})
+
+                  if(paymeter_userData) {
+                    let bill = paymeter_userData.bill || '0'
+                    bill = ((new BigNumber(bill)).plus(pending_txns[count].usdCharged)).toString()
+
+                    Paymeter.upsert({
+                      userId: wallet.userId
+                    }, {
+                      $set: {
+                        bill: bill
+                      }
+                    })
+                  } else {
+                    Paymeter.upsert({
+                      userId: wallet.userId
+                    }, {
+                      $set: {
+                        bill: pending_txns[count].usdCharged
+                      }
+                    })
+                  }
+                }
               } else if(helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
                 WalletTransactions.update({
                   _id: pending_txns[count]._id
@@ -974,8 +999,7 @@ function scanEthMainnet(time) {
                           }, {
                             $setOnInsert: {
                               amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                              usdCharged: ((0.15 * ((mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString()) * eth_price.usd_price)) / 100),
-                              usdPrice: eth_price.usd_price,
+                              usdCharged: (((new BigNumber(0.18)).times(  ((new BigNumber((mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString()))).times(eth_price.usd_price))   )).dividedBy(100)).toString(),
                               status: 'pending'
                             }
                           });
@@ -992,7 +1016,7 @@ function scanEthMainnet(time) {
                           }, {
                             $setOnInsert: {
                               amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                              usdCharged: 0.20,
+                              usdCharged: "0.20",
                               status: 'pending'
                             }
                           });
@@ -1085,7 +1109,7 @@ function scanEthMainnet(time) {
                             }, {
                               $setOnInsert: {
                                 amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                                usdCharged: ((0.15 * ((mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()) * token_price.usd_price)) / 100),
+                                usdCharged: (((new BigNumber(0.18)).times(  ((new BigNumber((mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()))).times(token_price.usd_price))   )).dividedBy(100)).toString(),
                                 usdPrice: token_price.usd_price,
                                 status: 'pending'
                               }
@@ -1100,7 +1124,7 @@ function scanEthMainnet(time) {
                             }, {
                               $setOnInsert: {
                                 amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                                usdCharged: 0.20,
+                                usdCharged: "0.20",
                                 status: 'pending'
                               }
                             });
@@ -1115,7 +1139,7 @@ function scanEthMainnet(time) {
                           }, {
                             $setOnInsert: {
                               amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                              usdCharged: 0.20,
+                              usdCharged: "0.20",
                               status: 'pending'
                             }
                           });
@@ -1133,7 +1157,7 @@ function scanEthMainnet(time) {
                           }, {
                             $setOnInsert: {
                               amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                              usdCharged: ((0.15 * ((mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()) * price)) / 100),
+                              usdCharged: (((new BigNumber(0.18)).times(  ((new BigNumber((mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()))).times(price))   )).dividedBy(100)).toString(),
                               usdPrice: price,
                               status: 'pending'
                             }
@@ -1148,7 +1172,7 @@ function scanEthMainnet(time) {
                           }, {
                             $setOnInsert: {
                               amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                              usdCharged: 0.20,
+                              usdCharged: "0.20",
                               status: 'pending'
                             }
                           });

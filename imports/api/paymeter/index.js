@@ -650,6 +650,68 @@ function isUserSubscribedToPaymeter(userId) {
   }
 }
 
+function paymeter_getAndResetUserBill(userId) {
+  if(userId) {
+
+    let paymeter_userData = Paymeter.find({userId: userId})
+
+    if(paymeter_userData) {
+      if(paymeter_userData.subscribed) {
+        let bill = paymeter_userData.bill || '0';
+
+        if(paymeter_userData.unsubscribeNextMonth) {
+          let UserWallets = Wallets.find({
+            userId: userId
+          }).fetch()
+    
+          UserWallets.forEach((wallet) => {
+            WalletTransactions.remove({
+              fromWallet: wallet._id
+            })
+    
+            WalletTransactions.remove({
+              toWallet: wallet._id
+            })
+          })
+
+          Wallets.remove({
+            userId: userId
+          })
+
+          PaymeterCollection.upsert({
+            userId: userId
+          }, {
+            $set: {
+              subscribed: false,
+              unsubscribeNextMonth: false,
+            }
+          })
+        }
+
+        if((new BigNumber(bill)).lt('299')) {
+          bill = '299'
+        }
+
+        PaymeterCollection.upsert({
+          userId: userId
+        }, {
+          $set: {
+            bill: '0'
+          }
+        })
+
+        return bill;
+      } else {
+        return '0.00'
+      }  
+    } else {
+      return '0.00'
+    }
+  } else {
+    return '0.00'
+  }
+}
+
 Meteor.methods({
   createWallet: (coinType, walletName, network, options) => {
     if (Meteor.userId()) {
@@ -678,7 +740,8 @@ Meteor.methods({
         userId: Meteor.userId()
       }, {
         $set: {
-          subscribed: true
+          subscribed: true,
+          unsubscribeNextMonth: false
         }
       })
     } else {
@@ -688,16 +751,20 @@ Meteor.methods({
   unsubscribePaymeter: async () => {
     const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(Meteor.userId());
 
-    if(isPaymentMethodVerified) {
-      PaymeterCollection.upsert({
-        userId: Meteor.userId()
-      }, {
-        $set: {
-          subscribed: false
-        }
-      })
+    if(Meteor.userId()) {
+      if(isPaymentMethodVerified) {
+        PaymeterCollection.upsert({
+          userId: Meteor.userId()
+        }, {
+          $set: {
+            unsubscribeNextMonth: true
+          }
+        })
+      } else {
+        throw new Meteor.Error('Please add card', 'Please add card');
+      }  
     } else {
-      throw new Meteor.Error('Please add card', 'Please add card');
+      throw new Meteor.Error('Please login', 'Please login');
     }
   }
 });

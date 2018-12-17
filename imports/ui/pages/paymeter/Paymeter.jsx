@@ -191,6 +191,7 @@ class PaymeterComponent extends Component {
   }
 
   render() {
+    console.log(this.props.paymeterUserData)
     let wallet = null;
     if(this.state.secondBox === 'eth-wallet-management') {
       wallet = Wallets.findOne({
@@ -234,11 +235,6 @@ class PaymeterComponent extends Component {
             </ul>
             <p className="menu-title m-t-20 all-caps">Others</p>
             <ul className="main-menu">
-              <li className="">
-                <a href="javascript:void(0);">
-                  <span className="title"><i className="fa fa-credit-card"></i> Billing</span>
-                </a>
-              </li>
               <li>
                 <a href="javascript:void(0);" onClick={() => {this.setState({firstBox: 'settings-list', secondBox: ''})}}>
                   <span className="title"><i className="fa fa-sliders"></i> Settings</span>
@@ -450,10 +446,26 @@ class PaymeterComponent extends Component {
                                 <p className="small hint-text">Note that we don't store the plain private keys of your wallets. The private keys are encrypted with wallet's password which you solely own</p>
                                 <div>
                                   <div>
-                                    {this.props.paymeterUserData &&
-                                      <div>
+
+                                  {this.props.paymeterUserData ? (
+                                    <div>
+                                      {this.props.paymeterUserData.subscribed ? (
                                         <div>
-                                          {this.props.paymeterUserData.subscribed &&
+                                          {this.props.paymeterUserData.unsubscribeNextMonth ? (
+                                            <LaddaButton
+                                              onClick={(e) => { this.activate(); }}
+                                              loading={this.state['_activate_loading']}
+                                              data-size={S}
+                                              data-style={SLIDE_UP}
+                                              data-spinner-size={30}
+                                              data-spinner-lines={12}
+                                              className="btn btn-complete  btn-cons m-t-10"
+                                              type="button"
+                                            >
+                                              <i className="fa fa-check" aria-hidden="true" />
+                                              &nbsp;&nbsp;Re-Subscribe
+                                            </LaddaButton>
+                                          ) : (
                                             <LaddaButton
                                               onClick={(e) => { this.deactivate(); }}
                                               loading={this.state['_activate_loading']}
@@ -467,44 +479,40 @@ class PaymeterComponent extends Component {
                                               <i className="fa fa-times" aria-hidden="true" />
                                               &nbsp;&nbsp;Unsubscribe
                                             </LaddaButton>
-                                          }
+                                          )}
                                         </div>
-                                        <div>
-                                          {!this.props.paymeterUserData.subscribed &&
-                                            <LaddaButton
-                                              onClick={(e) => { this.activate(); }}
-                                              loading={this.state['_activate_loading']}
-                                              data-size={S}
-                                              data-style={SLIDE_UP}
-                                              data-spinner-size={30}
-                                              data-spinner-lines={12}
-                                              className="btn btn-success  btn-cons m-t-10"
-                                              type="button"
-                                            >
-                                              <i className="fa fa-check" aria-hidden="true" />
-                                              &nbsp;&nbsp;Subscribe
-                                            </LaddaButton>
-                                          }
-                                        </div>
-                                      </div>
-                                    }
-                                  </div>
-                                  <div>
-                                    {!this.props.paymeterUserData &&
-                                      <LaddaButton
-                                        onClick={(e) => { this.activate(); }}
-                                        loading={this.state['_activate_loading']}
-                                        data-size={S}
-                                        data-style={SLIDE_UP}
-                                        data-spinner-size={30}
-                                        data-spinner-lines={12}
-                                        className="btn btn-success  btn-cons m-t-10"
-                                        type="button"
-                                      >
-                                        <i className="fa fa-check" aria-hidden="true" />
-                                        &nbsp;&nbsp;Subscribe
-                                      </LaddaButton>
-                                    }
+                                      ) : (
+                                        <LaddaButton
+                                          onClick={(e) => { this.activate(); }}
+                                          loading={this.state['_activate_loading']}
+                                          data-size={S}
+                                          data-style={SLIDE_UP}
+                                          data-spinner-size={30}
+                                          data-spinner-lines={12}
+                                          className="btn btn-success  btn-cons m-t-10"
+                                          type="button"
+                                        >
+                                          <i className="fa fa-check" aria-hidden="true" />
+                                          &nbsp;&nbsp;Subscribe
+                                        </LaddaButton>
+                                      )}
+                                      
+                                    </div>
+                                  ) : (
+                                    <LaddaButton
+                                      onClick={(e) => { this.activate(); }}
+                                      loading={this.state['_activate_loading']}
+                                      data-size={S}
+                                      data-style={SLIDE_UP}
+                                      data-spinner-size={30}
+                                      data-spinner-lines={12}
+                                      className="btn btn-success  btn-cons m-t-10"
+                                      type="button"
+                                    >
+                                      <i className="fa fa-check" aria-hidden="true" />
+                                      &nbsp;&nbsp;Subscribe
+                                    </LaddaButton>
+                                  )}
                                   </div>
                                 </div>
                               </div>
@@ -520,29 +528,37 @@ class PaymeterComponent extends Component {
                                   </p>
                                 </div>
                               </div>
+                              <div className="row">
+                                <div className="col-lg-12">
+                                  <p className="no-margin">Monthly Minimum</p>
+                                  <p className="small hint-text">
+                                    We charge $299 or total transactions fees at the EOM depending on whichever is greater
+                                  </p>
+                                </div>
+                              </div>
                               <table className="table table-condensed">
                                   <tbody><tr>
                                     <td className="col-lg-8 col-md-6 col-sm-7 ">
                                       <a href="#" className="remove-item"><i className="fa fa-check"></i></a>
-                                      <span className="m-l-10 font-montserrat fs-11 all-caps">Deposit from External Wallet</span>
+                                      <span className="m-l-10 font-montserrat fs-11 all-caps no-hidden-text">Deposit from External Wallet</span>
                                     </td>
                                     <td className=" col-lg-2 col-md-3 col-sm-3 text-right">
-                                      <span>Each Txn</span>
+                                      <span className="no-hidden-text">Each Txn</span>
                                     </td>
                                     <td className=" col-lg-2 col-md-3 col-sm-2 text-right">
-                                      <h4 className="text-primary no-margin font-montserrat">0.15%</h4>
+                                      <h4 className="text-primary no-margin font-montserrat no-hidden-text">0.18%</h4>
                                     </td>
                                   </tr>
                                   <tr>
                                     <td className="col-lg-8 col-md-6 col-sm-7 ">
                                       <a href="#" className="remove-item"><i className="fa fa-check"></i></a>
-                                      <span className="m-l-10 font-montserrat fs-11 all-caps">ERC20 Deposit from External Wallet</span>
+                                      <span className="m-l-10 font-montserrat fs-11 all-caps no-hidden-text">ERC20 Deposit from External Wallet</span>
                                     </td>
                                     <td className=" col-lg-2 col-md-3 col-sm-3 text-right">
-                                      <span>Each Txn, if price not found</span>
+                                      <span className="no-hidden-text">Each Txn, if price not found</span>
                                     </td>
                                     <td className=" col-lg-2 col-md-3 col-sm-2 text-right">
-                                      <h4 className="text-primary no-margin font-montserrat">$0.20</h4>
+                                      <h4 className="text-primary no-margin font-montserrat no-hidden-text">$0.20</h4>
                                     </td>
                                   </tr>
                                 </tbody></table>
@@ -551,15 +567,31 @@ class PaymeterComponent extends Component {
                                 <div className="row b-a b-grey no-margin">
                                   <div className="col-md-8 p-l-10 sm-padding-15 align-items-center d-flex">
                                     <div>
-                                      <h5 className="font-montserrat all-caps small no-margin hint-text bold">Monthly Minimum</h5>
-                                      <p className="no-margin">We charge $249 or total transactions fees at the EOM depending on whichever is greater</p>
+                                      <h5 className="font-montserrat all-caps small no-margin hint-text bold">This month bill so far</h5>
                                     </div>
                                   </div>
                                   <div className="col-md-2 p-l-10 sm-padding-15 align-items-center d-flex">
                                   </div>
                                   <div className="col-md-2 text-right bg-primary padding-10">
-                                    <h5 className="font-montserrat all-caps small no-margin hint-text text-white bold">Fee</h5>
-                                    <h4 className="no-margin text-white">$249</h4>
+                                    <h5 className="font-montserrat all-caps small no-margin hint-text text-white bold">Bill</h5>
+                                    <h4 className="no-margin text-white">$
+                                      <span>
+                                        {this.props.paymeterUserData &&
+                                          <span>
+                                            <span>
+                                              {this.props.paymeterUserData.bill &&
+                                                <span>{this.props.paymeterUserData.bill}</span>
+                                              }
+                                            </span>
+                                            <span>
+                                              {!this.props.paymeterUserData.bill &&
+                                                <span>0.00</span>
+                                              }
+                                            </span>
+                                          </span>
+                                        }
+                                      </span>
+                                    </h4>
                                   </div>
                                 </div>
                               </div>
@@ -1175,7 +1207,7 @@ export default withTracker(props => {
     wallets: Wallets.find({}).fetch(),
     totalETHWallets: Wallets.find({coinType: "ETH"}).count(),
     totalERC20Wallets: Wallets.find({coinType: "ERC20"}).count(),
-    subscriptions: [Meteor.subscribe("wallets"), Meteor.subscribe("paymeter_user_data")],
+    subscriptions: [Meteor.subscribe("paymeter_user_data"), Meteor.subscribe("wallets")],
     user: Meteor.user(),
     webhooks: WebHook.find({}).fetch(),
     paymeterUserData: Paymeter.findOne({userId: Meteor.userId()})
