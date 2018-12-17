@@ -97,6 +97,7 @@ require('../../collections/support-ticket/server/publications');
 require('../../collections/network-configuration/server/publications');
 require('../../collections/api-keys/server/publications');
 require('../../collections/webhooks/server/publications');
+require('../../collections/paymeter/server/publications');
 require('../../api/payments');
 require('../../api/billing');
 

@@ -9,7 +9,10 @@ const BigNumber = require('bignumber.js');
 const EthereumTx = require('ethereumjs-tx');
 import Webhook from '../communication/webhook';
 import agenda from '../../modules/schedulers/agenda';
-
+import {
+  Paymeter as PaymeterCollection
+} from '../../collections/paymeter/paymeter.js'
+import Billing from '../../api/billing';
 const Cryptr = require('cryptr');
 
 const erc20ABI = [
@@ -78,6 +81,11 @@ const erc20ABI = [
 ];
 
 function createWallet(coinType, walletName, userId, network, options) {
+
+  if(!isUserSubscribedToPaymeter(userId)) {
+    return false;
+  }
+
   let walletId;
   if (coinType === 'ETH') {
     let wallet = Wallet.generate();
@@ -227,10 +235,19 @@ async function getNonce(address, url) {
 }
 
 async function transfer(fromWalletId, toAddress, amount, options, userId) {
-  if (!userId) {
-    throw new Error('Transfer requires user to be logged in');
-  }
+  
   return new Promise(async (resolve, reject) => {
+
+    if (!userId) {
+      reject('Transfer requires user to be logged in');
+      return;
+    }
+
+    if(!isUserSubscribedToPaymeter(userId)) {
+      reject('You need to subscribe');
+      return;
+    }
+
     let wallet = Wallets.findOne({
       _id: fromWalletId,
       user: userId,
@@ -325,7 +342,6 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
           }).value;
 
           let currenct_balance = await getBalance(fromWalletId);
-          let fee_wallet_current_balance = await getBalance(options.feeWallet);
           if (new BigNumber(amount).lte(currenct_balance)) {
             let fee = new BigNumber(gasPrice).multipliedBy(21000);
 
@@ -350,102 +366,108 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                     value: web3.utils.toHex(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString()),
                   };
 
-                  let cryptr = new Cryptr(options.feeWalletPassword);
-                  let privateKey_decrypted = cryptr.decrypt(feeWallet.privateKey);
+                  let fee_wallet_current_balance = await getBalance(options.feeWallet);
 
-                  let tx = new EthereumTx(rawTx);
-                  let privateKey = Buffer.from(privateKey_decrypted, 'hex');
-                  tx.sign(privateKey);
-                  let serializedTx = tx.serialize();
+                  if(new BigNumber(web3.utils.fromWei(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString(), 'ether')).lte(fee_wallet_current_balance)) {
+                    let cryptr = new Cryptr(options.feeWalletPassword);
+                    let privateKey_decrypted = cryptr.decrypt(feeWallet.privateKey);
 
-                  web3.eth.sendSignedTransaction(
-                    '0x' + serializedTx.toString('hex'),
-                    Meteor.bindEnvironment(async (err, hash) => {
-                      if (!error) {
-                        WalletTransactions.insert({
-                          fromWallet: feeWallet._id,
-                          toAddress: wallet.address,
-                          amount: web3.utils.fromWei(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString(), 'ether'),
-                          createdAt: Date.now(),
-                          status: 'pending',
-                          txnId: hash,
-                          type: 'withdrawal',
-                          fee: web3.utils.fromWei(fee.toString(), 'ether'),
-                        });
+                    let tx = new EthereumTx(rawTx);
+                    let privateKey = Buffer.from(privateKey_decrypted, 'hex');
+                    tx.sign(privateKey);
+                    let serializedTx = tx.serialize();
 
-                        Wallets.update({
-                          _id: feeWallet._id
-                        }, {
-                          $set: {
-                            confirmedBalance: await getBalance(feeWallet._id)
+                    web3.eth.sendSignedTransaction(
+                      '0x' + serializedTx.toString('hex'),
+                      Meteor.bindEnvironment(async (err, hash) => {
+                        if (!error) {
+                          WalletTransactions.insert({
+                            fromWallet: feeWallet._id,
+                            toAddress: wallet.address,
+                            amount: web3.utils.fromWei(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString(), 'ether'),
+                            createdAt: Date.now(),
+                            status: 'pending',
+                            txnId: hash,
+                            type: 'withdrawal',
+                            fee: web3.utils.fromWei(fee.toString(), 'ether'),
+                          });
+
+                          Wallets.update({
+                            _id: feeWallet._id
+                          }, {
+                            $set: {
+                              confirmedBalance: await getBalance(feeWallet._id)
+                            }
+                          })
+
+                          let total_fee = new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString();
+                          total_fee = new BigNumber(total_fee).plus(fee.toString()).toString();
+
+                          let processing_txns = WalletTransactions.find({
+                            fromWallet: wallet._id,
+                            status: 'processing',
+                          }).count();
+
+                          nonce = await getNonce(wallet.address, url);
+
+                          if (processing_txns > 0) {
+                            nonce = nonce + processing_txns;
                           }
-                        })
 
-                        let total_fee = new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString();
-                        total_fee = new BigNumber(total_fee).plus(fee.toString()).toString();
+                          let rawTx = {
+                            gasPrice: web3.utils.toHex(gasPrice),
+                            gasLimit: web3.utils.toHex(contractGasLimit.toString()),
+                            from: wallet.address,
+                            nonce: web3.utils.toHex(nonce),
+                            to: wallet.contractAddress,
+                            data: data,
+                            value: web3.utils.toHex(web3.utils.toWei('0', 'ether')),
+                          };
 
-                        let processing_txns = WalletTransactions.find({
-                          fromWallet: wallet._id,
-                          status: 'processing',
-                        }).count();
+                          cryptr = new Cryptr(options.password);
+                          privateKey_decrypted = cryptr.decrypt(wallet.privateKey);
 
-                        nonce = await getNonce(wallet.address, url);
+                          let tx = new EthereumTx(rawTx);
+                          const privateKey = Buffer.from(privateKey_decrypted, 'hex');
+                          tx.sign(privateKey);
+                          const serializedTx = tx.serialize();
 
-                        if (processing_txns > 0) {
-                          nonce = nonce + processing_txns;
-                        }
+                          const return_id = WalletTransactions.insert({
+                            fromWallet: wallet._id,
+                            toAddress: toAddress,
+                            amount: amount,
+                            createdAt: Date.now(),
+                            status: 'processing',
+                            txnId: null,
+                            type: 'withdrawal',
+                            fee: web3.utils.fromWei(total_fee, 'ether'),
+                            nonce: nonce,
+                            rawTx: '0x' + serializedTx.toString('hex'),
+                            feeDepositWallet: options.feeWallet,
+                            feeDepositTxnId: hash,
+                          });
 
-                        let rawTx = {
-                          gasPrice: web3.utils.toHex(gasPrice),
-                          gasLimit: web3.utils.toHex(contractGasLimit.toString()),
-                          from: wallet.address,
-                          nonce: web3.utils.toHex(nonce),
-                          to: wallet.contractAddress,
-                          data: data,
-                          value: web3.utils.toHex(web3.utils.toWei('0', 'ether')),
-                        };
+                          Wallets.update({
+                            _id: wallet._id
+                          }, {
+                            $set: {
+                              confirmedBalance: await getBalance(wallet._id)
+                            }
+                          })
 
-                        cryptr = new Cryptr(options.password);
-                        privateKey_decrypted = cryptr.decrypt(wallet.privateKey);
-
-                        let tx = new EthereumTx(rawTx);
-                        const privateKey = Buffer.from(privateKey_decrypted, 'hex');
-                        tx.sign(privateKey);
-                        const serializedTx = tx.serialize();
-
-                        const return_id = WalletTransactions.insert({
-                          fromWallet: wallet._id,
-                          toAddress: toAddress,
-                          amount: amount,
-                          createdAt: Date.now(),
-                          status: 'processing',
-                          txnId: null,
-                          type: 'withdrawal',
-                          fee: web3.utils.fromWei(total_fee, 'ether'),
-                          nonce: nonce,
-                          rawTx: '0x' + serializedTx.toString('hex'),
-                          feeDepositWallet: options.feeWallet,
-                          feeDepositTxnId: hash,
-                        });
-
-                        Wallets.update({
-                          _id: wallet._id
-                        }, {
-                          $set: {
-                            confirmedBalance: await getBalance(wallet._id)
-                          }
-                        })
-
-                        resolve(return_id);
-                      } else {
-                        if (err.toString().includes('insufficient funds')) {
-                          reject('Insufficient Ether for Fees');
+                          resolve(return_id);
                         } else {
-                          reject('Unknown Error');
+                          if (err.toString().includes('insufficient funds')) {
+                            reject('Insufficient Ether for Fees');
+                          } else {
+                            reject('Unknown Error');
+                          }
                         }
-                      }
-                    })
-                  );
+                      })
+                    );
+                  } else {
+                    reject('Insufficient Ether for Fees');
+                  }
                 } else {
                   reject('An error occured');
                 }
@@ -616,6 +638,18 @@ async function getWalletTransactions(walletId, userId) {
   }).fetch();
 }
 
+function isUserSubscribedToPaymeter(userId) {
+  let obj = PaymeterCollection.findOne({
+    userId: userId
+  })
+
+  if(obj.subscribed) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 Meteor.methods({
   createWallet: (coinType, walletName, network, options) => {
     if (Meteor.userId()) {
@@ -636,6 +670,36 @@ Meteor.methods({
       throw new Meteor.Error('Not Allowed', 'Please login');
     }
   },
+  subscribePaymeter: async () => {
+    const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(Meteor.userId());
+
+    if(isPaymentMethodVerified) {
+      PaymeterCollection.upsert({
+        userId: Meteor.userId()
+      }, {
+        $set: {
+          subscribed: true
+        }
+      })
+    } else {
+      throw new Meteor.Error('Please add card', 'Please add card');
+    }
+  },
+  unsubscribePaymeter: async () => {
+    const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(Meteor.userId());
+
+    if(isPaymentMethodVerified) {
+      PaymeterCollection.upsert({
+        userId: Meteor.userId()
+      }, {
+        $set: {
+          subscribed: false
+        }
+      })
+    } else {
+      throw new Meteor.Error('Please add card', 'Please add card');
+    }
+  }
 });
 
 module.exports = {

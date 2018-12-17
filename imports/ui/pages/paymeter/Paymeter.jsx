@@ -11,6 +11,9 @@ import LoadingIcon from "../../components/LoadingIcon/LoadingIcon.jsx";
 let QRCode = require('qrcode.react');
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
 import WebHook from '../../../collections/webhooks';
+import {
+  Paymeter
+} from '../../../collections/paymeter/paymeter.js'
 
 import "./Paymeter.scss";
 
@@ -43,7 +46,7 @@ class PaymeterComponent extends Component {
       if(!err && r) {
         notifications.success("Wallet Created");
       } else {
-        notifications.error("An error occured while creating wallet");
+        notifications.error("An error occured");
       }
 
       this.setState({
@@ -151,6 +154,42 @@ class PaymeterComponent extends Component {
     });
   };
 
+  activate = _ => {
+    this.setState({
+      ['_activate_loading']: true
+    });
+
+    Meteor.call('subscribePaymeter', (e) => {
+      if(e) {
+        notifications.error(e.reason);
+      } else {
+        notifications.success('Subscription Successful');
+      }
+
+      this.setState({
+        ['_activate_loading']: false
+      });
+    })
+  }
+
+  deactivate = _ => {
+    this.setState({
+      ['_activate_loading']: true
+    });
+
+    Meteor.call('unsubscribePaymeter', (e) => {
+      if(e) {
+        notifications.error(e.reason);
+      } else {
+        notifications.success('Unsubscription Successful');
+      }
+
+      this.setState({
+        ['_activate_loading']: false
+      });
+    })
+  }
+
   render() {
     let wallet = null;
     if(this.state.secondBox === 'eth-wallet-management') {
@@ -164,8 +203,6 @@ class PaymeterComponent extends Component {
         _id: this.state.secondBoxData.walletId
       })
     }
-
-    console.log(Wallets.find({}).fetch())
 
     return (
       <div className="content full-height paymeter" style={{"paddingBottom": "0px"}}>
@@ -228,7 +265,7 @@ class PaymeterComponent extends Component {
                       </div>
                       <div className="btn-group btn-group-justified row w-100 create-wallet-btn">
                         <div className="btn-group col-12 p-0">
-                          <button type="button" className="btn btn-default w-100">
+                          <button type="button" className="btn btn-default w-100" onClick={() => {this.setState({firstBox: 'settings-list', secondBox: 'activate'})}}>
                             <span className="p-t-5 p-b-5">
                                 <i className="fa fa-shopping-cart fs-15"></i>
                             </span>
@@ -399,6 +436,141 @@ class PaymeterComponent extends Component {
                   </div>
                 }
 
+                {this.state.secondBox === 'activate' &&
+                  <div className="card card-default" style={{"marginBottom": "0px", "borderTop": "0px"}}>
+                    <div className="card-block" >
+                      <div>
+                        <div className="tab-pane padding-20 sm-no-padding active slide-left" id="tab1">
+                          <div className="row row-same-height">
+                            <div className="col-lg-4 b-r b-dashed b-grey sm-b-b">
+                              <div className="padding-30 sm-padding-5 sm-m-t-15">
+                                <i className="fa fa fa-cube fa-2x hint-text" />
+                                <h2>Wallet-as-a-Service</h2>
+                                <p>Paymeter let's you integrate ETH and any ERC20 Token Wallets securly in your Crypto based app.</p>
+                                <p className="small hint-text">Note that we don't store the plain private keys of your wallets. The private keys are encrypted with wallet's password which you solely own</p>
+                                <div>
+                                  <div>
+                                    {this.props.paymeterUserData &&
+                                      <div>
+                                        <div>
+                                          {this.props.paymeterUserData.subscribed &&
+                                            <LaddaButton
+                                              onClick={(e) => { this.deactivate(); }}
+                                              loading={this.state['_activate_loading']}
+                                              data-size={S}
+                                              data-style={SLIDE_UP}
+                                              data-spinner-size={30}
+                                              data-spinner-lines={12}
+                                              className="btn btn-danger  btn-cons m-t-10"
+                                              type="button"
+                                            >
+                                              <i className="fa fa-times" aria-hidden="true" />
+                                              &nbsp;&nbsp;Unsubscribe
+                                            </LaddaButton>
+                                          }
+                                        </div>
+                                        <div>
+                                          {!this.props.paymeterUserData.subscribed &&
+                                            <LaddaButton
+                                              onClick={(e) => { this.activate(); }}
+                                              loading={this.state['_activate_loading']}
+                                              data-size={S}
+                                              data-style={SLIDE_UP}
+                                              data-spinner-size={30}
+                                              data-spinner-lines={12}
+                                              className="btn btn-success  btn-cons m-t-10"
+                                              type="button"
+                                            >
+                                              <i className="fa fa-check" aria-hidden="true" />
+                                              &nbsp;&nbsp;Subscribe
+                                            </LaddaButton>
+                                          }
+                                        </div>
+                                      </div>
+                                    }
+                                  </div>
+                                  <div>
+                                    {!this.props.paymeterUserData &&
+                                      <LaddaButton
+                                        onClick={(e) => { this.activate(); }}
+                                        loading={this.state['_activate_loading']}
+                                        data-size={S}
+                                        data-style={SLIDE_UP}
+                                        data-spinner-size={30}
+                                        data-spinner-lines={12}
+                                        className="btn btn-success  btn-cons m-t-10"
+                                        type="button"
+                                      >
+                                        <i className="fa fa-check" aria-hidden="true" />
+                                        &nbsp;&nbsp;Subscribe
+                                      </LaddaButton>
+                                    }
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="col-lg-8">
+                              <div className="padding-30 sm-padding-5">
+                              <h5>Pricing Model</h5>
+                              <div className="row">
+                                <div className="col-lg-12">
+                                  <p className="no-margin">Internal and External Transactions</p>
+                                  <p className="small hint-text">
+                                    For internal transactions only network fee is charged without any service fees. Creating wallets doesn't add extra charges. We deduct the fees from your added debit/credit card at the end of the month.
+                                  </p>
+                                </div>
+                              </div>
+                              <table className="table table-condensed">
+                                  <tbody><tr>
+                                    <td className="col-lg-8 col-md-6 col-sm-7 ">
+                                      <a href="#" className="remove-item"><i className="fa fa-check"></i></a>
+                                      <span className="m-l-10 font-montserrat fs-11 all-caps">Deposit from External Wallet</span>
+                                    </td>
+                                    <td className=" col-lg-2 col-md-3 col-sm-3 text-right">
+                                      <span>Each Txn</span>
+                                    </td>
+                                    <td className=" col-lg-2 col-md-3 col-sm-2 text-right">
+                                      <h4 className="text-primary no-margin font-montserrat">0.15%</h4>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="col-lg-8 col-md-6 col-sm-7 ">
+                                      <a href="#" className="remove-item"><i className="fa fa-check"></i></a>
+                                      <span className="m-l-10 font-montserrat fs-11 all-caps">ERC20 Deposit from External Wallet</span>
+                                    </td>
+                                    <td className=" col-lg-2 col-md-3 col-sm-3 text-right">
+                                      <span>Each Txn, if price not found</span>
+                                    </td>
+                                    <td className=" col-lg-2 col-md-3 col-sm-2 text-right">
+                                      <h4 className="text-primary no-margin font-montserrat">$0.20</h4>
+                                    </td>
+                                  </tr>
+                                </tbody></table>
+                                
+                                <br />
+                                <div className="row b-a b-grey no-margin">
+                                  <div className="col-md-8 p-l-10 sm-padding-15 align-items-center d-flex">
+                                    <div>
+                                      <h5 className="font-montserrat all-caps small no-margin hint-text bold">Monthly Minimum</h5>
+                                      <p className="no-margin">We charge $249 or total transactions fees at the EOM depending on whichever is greater</p>
+                                    </div>
+                                  </div>
+                                  <div className="col-md-2 p-l-10 sm-padding-15 align-items-center d-flex">
+                                  </div>
+                                  <div className="col-md-2 text-right bg-primary padding-10">
+                                    <h5 className="font-montserrat all-caps small no-margin hint-text text-white bold">Fee</h5>
+                                    <h4 className="no-margin text-white">$249</h4>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+
                 {this.state.secondBox === 'create-eth-wallet' &&
                   <div className="card card-default" style={{"marginBottom": "0px", "borderTop": "0px"}}>
                     <div className="card-block" >
@@ -442,7 +614,7 @@ class PaymeterComponent extends Component {
                   <div className="card card-default" style={{"marginBottom": "0px", "borderTop": "0px"}}>
                     <div className="card-block" >
                       <h5>
-                        Create New Ethereum Wallet
+                        Create New ERC20 Wallet
                       </h5>
                       <form className="" role="form" onSubmit={(e) => {this.createERC20Wallet(e)}}>
                         <div className="form-group form-group-default required ">
@@ -1003,8 +1175,9 @@ export default withTracker(props => {
     wallets: Wallets.find({}).fetch(),
     totalETHWallets: Wallets.find({coinType: "ETH"}).count(),
     totalERC20Wallets: Wallets.find({coinType: "ERC20"}).count(),
-    subscriptions: [Meteor.subscribe("wallets")],
+    subscriptions: [Meteor.subscribe("wallets"), Meteor.subscribe("paymeter_user_data")],
     user: Meteor.user(),
     webhooks: WebHook.find({}).fetch(),
+    paymeterUserData: Paymeter.findOne({userId: Meteor.userId()})
   };
 })(withRouter(PaymeterComponent));

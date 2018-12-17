@@ -9,6 +9,9 @@ import {
 import {
   Wallets
 } from '../../../../collections/wallets/wallets.js'
+import {
+  Paymeter as PaymeterCollection
+} from '../../../../collections/paymeter/paymeter.js'
 import helpers from '../../../../modules/helpers';
 import Paymeter from '../../../../api/paymeter/index.js';
 import {ERC20} from '../../../../collections/erc20/erc20.js';
