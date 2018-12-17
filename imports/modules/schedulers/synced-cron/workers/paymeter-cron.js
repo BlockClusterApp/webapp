@@ -486,21 +486,25 @@ function updateGasPrice() {
   })
 }
 
-function updatePrices() {
+function updatePrices(time) {
   SyncedCron.add({
     name: 'update prices',
     schedule: function(parser) {
       // parser is a later.parse object
       if (['production'].includes(process.env.NODE_ENV)) {
-        return parser.recur().on(new Date(Date.now() + (1000 * 60 * 5))).fullDate();
+        if(time) {
+          return (parser.recur().on(new Date(Date.now() + (time))).fullDate());
+        } else {
+          return (parser.recur().on(new Date(Date.now() + (1000 * 60 * 12))).fullDate());
+        }
       } else {
+        //return parser.recur().on(new Date(Date.now() + (1000 * 60 * 1))).fullDate();
         return parser.recur().on(new Date(Date.now() + (1000 * 60 * 60 * 12))).fullDate();
       }
     },
     job: () => {
 
       var myFuture = new Future();
-
       
       (async () => {
         try {
@@ -532,11 +536,11 @@ function updatePrices() {
           }
 
           SyncedCron.remove('update prices')
-          updatePrices()
+          updatePrices(1000 * 60 * 5)
           myFuture.return();
         } catch(e) {
           SyncedCron.remove('update prices')
-          updatePrices()
+          updatePrices(1000 * 60 * 5)
           myFuture.return();
         }
       })()
@@ -611,11 +615,16 @@ function addSymbolToContracts() {
   })
 }
 
-function scanEthTestnet() {
+function scanEthTestnet(time) {
   SyncedCron.add({
     name: 'scan eth block testnet',
     schedule: function(parser) {
-      return parser.recur().on(new Date(Date.now() + 1000)).fullDate();
+      if(time) {
+        return parser.recur().on(new Date(Date.now() + time)).fullDate();
+      } else {
+        return parser.recur().on(new Date(Date.now() + 12000)).fullDate();
+      }
+      return time || parser.recur().on(new Date(Date.now() + 12000)).fullDate();
     },
     job: () => {
       var myFuture = new Future();
@@ -738,12 +747,12 @@ function scanEthTestnet() {
           })
     
           SyncedCron.remove('scan eth block testnet')
-          scanEthTestnet()
+          scanEthTestnet(1000)
           myFuture.return();
         } catch(e) {
           SyncedCron.remove('scan eth block testnet')
           scanEthTestnet()
-          myFuture.return();
+          myFuture.return(1000);
         }
       })()
 
@@ -752,11 +761,16 @@ function scanEthTestnet() {
   })
 }
 
-function scanEthMainnet() {
+function scanEthMainnet(time) {
   SyncedCron.add({
     name: 'scan eth block mainnet',
     schedule: function(parser) {
-      return parser.recur().on(new Date(Date.now() + 1000)).fullDate();
+      if(time) {
+        return parser.recur().on(new Date(Date.now() + time)).fullDate();
+      } else {
+        return parser.recur().on(new Date(Date.now() + 12000)).fullDate();
+      }
+      
     },
     job: () => {
       var myFuture = new Future();
@@ -1049,12 +1063,12 @@ function scanEthMainnet() {
           await Promise.all(promises)
           
           SyncedCron.remove('scan eth block mainnet')
-          scanEthMainnet()
+          scanEthMainnet(1000)
           myFuture.return();
         } catch(e) {
 
           SyncedCron.remove('scan eth block mainnet')
-          scanEthMainnet()
+          scanEthMainnet(1000)
           myFuture.return();
         }
       })()
@@ -1082,6 +1096,6 @@ SyncedCron.start();
   key: "mainnet-eth-last-scanned-blockNumber"
 }, {
   $set: {
-    value: 6899999
+    value: 6902561
   }
 })*/
