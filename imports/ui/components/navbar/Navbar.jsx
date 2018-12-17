@@ -217,6 +217,14 @@ class Navbar extends Component {
                       </span>
                     </li>
                   )}
+                  {(features.Paymeter || features.Hyperion) && (
+                    <li>
+                      <Link to="/app/admin/pricing">Pricing</Link>
+                      <span className="icon-thumbnail">
+                        <i className="fa fa-money" />
+                      </span>
+                    </li>
+                  )}
                   {features.ClientDashboard && (
                     <li>
                       <Link to="/app/admin/clients">Clients</Link>

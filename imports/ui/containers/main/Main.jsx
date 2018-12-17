@@ -56,6 +56,7 @@ import ClientCreate from '../../pages/admin/clients/ClientCreate';
 import ClientMetrics from '../../pages/admin/clients/ClientMetrics';
 import ConfigList from '../../pages/admin/network-config/List';
 import PlatformAPIKeys from '../../pages/platformApis/PlatformAPIKeys.jsx';
+import AdminPricingDashboard from '../../pages/admin/pricing/Dashboard.jsx';
 
 export default withRouter(
   class Main extends Component {
@@ -150,6 +151,8 @@ export default withRouter(
 
                   {features.Invoice && <Route exact path="/app/admin/invoices" component={AdminInvoiceList} />}
                   {features.Invoice && <Route exact path="/app/admin/invoices/:id" component={AdminInvoiceDetails} />}
+
+                  {(features.Paymeter || features.Hyperion) && <Route path="/app/admin/pricing" component={AdminPricingDashboard} />}
 
                   {features.ClientDashboard && <Route exact path="/app/admin/clients" component={ClientList} />}
                   {features.ClientDashboard && <Route exact path="/app/admin/clients/details/:id" component={ClientDetails} />}
