@@ -113,7 +113,43 @@ async function getPaymeterConnectionDetails(blockchain, network) {
 
   //first location in the location list - assuming webapp is also running the first location
   const locationCode = locations[0].locationCode;
-  return RemoteConfig.clusters[getNamespace()][locationCode].paymeter[blockchain][network].url;
+  return RemoteConfig.clusters[getNamespace()][locationCode].paymeter.blockchains[blockchain][network].url;
+}
+
+async function getCoinmarketcapAPIKey() {
+  if (process.env.coinmarketcap_key) {
+    return process.env.coinmarketcap_key;
+  }
+
+  function getLocation() {
+    return new Promise((resolve, reject) => {
+      Meteor.call('getClusterLocations', (error, locations) => {
+        resolve(locations);
+      });
+    });
+  }
+
+  const locations = await getLocation();
+  const locationCode = locations[0].locationCode;
+  return RemoteConfig.clusters[getNamespace()][locationCode].paymeter.api_keys.coinmarketcap;
+}
+
+async function getEthplorerAPIKey() {
+  if (process.env.coinmarketcap_key) {
+    return process.env.coinmarketcap_key;
+  }
+
+  function getLocation() {
+    return new Promise((resolve, reject) => {
+      Meteor.call('getClusterLocations', (error, locations) => {
+        resolve(locations);
+      });
+    });
+  }
+
+  const locations = await getLocation();
+  const locationCode = locations[0].locationCode;
+  return RemoteConfig.clusters[getNamespace()][locationCode].paymeter.api_keys.ethplorer;
 }
 
 function getDynamoWokerDomainName(locationCode) {
@@ -201,6 +237,8 @@ module.exports = {
   mongoConnectionString: getMongoConnectionString(),
   getHyperionConnectionDetails: getHyperionConnectionDetails,
   getPaymeterConnectionDetails: getPaymeterConnectionDetails,
+  getCoinmarketcapAPIKey: getCoinmarketcapAPIKey,
+  getEthplorerAPIKey: getEthplorerAPIKey,
   workerNodeDomainName: (locationCode = 'us-west-2') => {
     return getDynamoWokerDomainName(locationCode);
   },

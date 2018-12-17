@@ -38,3 +38,4 @@ blockcluster:raven
 blockcluster:logs
 maximum:server-transform
 jspdf:core
+littledata:synced-cron

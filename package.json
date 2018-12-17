@@ -15,6 +15,7 @@
     "agenda": "2.0.0",
     "apache-md5": "*",
     "atob": "2.1.1",
+    "await-sleep": "0.0.1",
     "axios": "^0.18.0",
     "babel-runtime": "^6.26.0",
     "base-64": "*",
@@ -84,7 +85,8 @@
     "url": "^0.11.0",
     "utf8": "*",
     "uuid": "^3.3.2",
-    "web3": "0.20.6",
+    "web3": "^1.0.0-beta.37",
+    "websocket": "^1.0.28",
     "winston": "^3.1.0",
     "winston-daily-rotate-file": "^3.5.1",
     "written-number": "^0.8.1"
