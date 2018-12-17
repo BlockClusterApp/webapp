@@ -119,7 +119,7 @@ async function getEthTxnConfirmations(url, txnHash) {
 //add filter network later
 async function getDistinctERC20(network) {
   return new Promise((resolve, reject) => {
-    ERC20.rawCollection().distinct('address', {network: network}).then(distinctValues => resolve(distinctValues))
+    Wallets.rawCollection().distinct('contractAddress', {network: network, coinType: 'ERC20'}).then(distinctValues => resolve(distinctValues))
   })
 }
 
@@ -175,9 +175,11 @@ async function getAndUpdateERC20ContractSymbol(contractAddress, network) {
               last_updated: Date.now()
             }
           })
-        }
 
-        resolve(prices.data.data[coin].quote.USD.price)
+          resolve(prices.data.data[coin].quote.USD.price)
+
+          return;
+        }
       }
     } catch(e) {
       reject(e)  
@@ -189,7 +191,7 @@ function processWithdrawls() {
   SyncedCron.add({
     name: 'process withdrawls',
     schedule: function(parser) {
-      return parser.text('after 12 seconds');
+      return parser.recur().on(new Date(Date.now() + 12000)).fullDate();
     },
     job: () => {
 
@@ -362,17 +364,18 @@ function processWithdrawls() {
               }
             }
           }
+
+          SyncedCron.remove('process withdrawls')
           processWithdrawls();
           myFuture.return();
         } catch(e) {
+          SyncedCron.remove('process withdrawls')
           processWithdrawls();
           myFuture.return();
         }
       })()
 
       return myFuture.wait();
-
-      
     }
   });
 }
@@ -381,7 +384,7 @@ function processDeposits() {
   SyncedCron.add({
     name: 'process deposits',
     schedule: function(parser) {
-      return parser.text('after 12 seconds');
+      return parser.recur().on(new Date(Date.now() + 12000)).fullDate();
     },
     job: () => {
       var myFuture = new Future();
@@ -421,10 +424,12 @@ function processDeposits() {
               }
             }
           }
-    
+          
+          SyncedCron.remove('process deposits')
           processDeposits()
           myFuture.return()
         } catch(e) {
+          SyncedCron.remove('process deposits')
           processDeposits()
           myFuture.return()
         }
@@ -440,7 +445,7 @@ function updateGasPrice() {
   SyncedCron.add({
     name: 'update gas price',
     schedule: function(parser) {
-      return parser.text('after 12 seconds');
+      return parser.recur().on(new Date(Date.now() + 12000)).fullDate();
     },
     job: () => {
       var myFuture = new Future();
@@ -465,9 +470,12 @@ function updateGasPrice() {
               value: mainnet_gasPrice.toString()
             }
           })
+
+          SyncedCron.remove('update gas price')
           updateGasPrice()
           myFuture.return()
         } catch(e) {
+          SyncedCron.remove('update gas price')
           updateGasPrice()
           myFuture.return()
         }
@@ -484,9 +492,9 @@ function updatePrices() {
     schedule: function(parser) {
       // parser is a later.parse object
       if (['production'].includes(process.env.NODE_ENV)) {
-        return parser.text('after 5 minutes');
+        return parser.recur().on(new Date(Date.now() + (1000 * 60 * 5))).fullDate();
       } else {
-        return parser.text('after 12 hours');
+        return parser.recur().on(new Date(Date.now() + (1000 * 60 * 60 * 12))).fullDate();
       }
     },
     job: () => {
@@ -523,9 +531,11 @@ function updatePrices() {
             })
           }
 
+          SyncedCron.remove('update prices')
           updatePrices()
           myFuture.return();
         } catch(e) {
+          SyncedCron.remove('update prices')
           updatePrices()
           myFuture.return();
         }
@@ -541,7 +551,7 @@ function addSymbolToContracts() {
   SyncedCron.add({
     name: 'add symbol to contracts',
     schedule: function(parser) {
-      return parser.text('after 12 hours');
+      return parser.recur().on(new Date(Date.now() + (1000 * 60 * 60 * 12))).fullDate();
     },
     job: () => {
 
@@ -585,10 +595,12 @@ function addSymbolToContracts() {
     
             await sleep(3000);
           }
-    
+          
+          SyncedCron.remove('add symbol to contracts')
           addSymbolToContracts();
           myFuture.return();
         } catch(e) {
+          SyncedCron.remove('add symbol to contracts')
           addSymbolToContracts();
           myFuture.return();
         }
@@ -603,7 +615,7 @@ function scanEthTestnet() {
   SyncedCron.add({
     name: 'scan eth block testnet',
     schedule: function(parser) {
-      return parser.text('after 5 seconds');
+      return parser.recur().on(new Date(Date.now() + 1000)).fullDate();
     },
     job: () => {
       var myFuture = new Future();
@@ -615,9 +627,9 @@ function scanEthTestnet() {
           let testnet_web3 = new Web3(provider)
      
           let last_block = Utilities.findOne({
-            key: "testnet-eth-last-scanned-block"
+            key: "testnet-eth-last-scanned-blockNumber"
           })
-    
+
           let block = null;
     
           if(last_block) {
@@ -627,9 +639,8 @@ function scanEthTestnet() {
             let latest_block_number = await latestBlock(testnet_web3)
             block = await getBlock(latest_block_number, testnet_web3)
           }
-    
+
           let promises = [];
-  
           if(block.transactions) {
             async function processTxn(txnHash) {
               return new Promise(async (resolve, reject) => {
@@ -715,21 +726,22 @@ function scanEthTestnet() {
           for(let count = 0; count < erc20_contracts_addresses.length; count++) {
             promises.push(processContract(erc20_contracts_addresses[count]))
           }
-    
+          
+          await Promise.all(promises)
 
           Utilities.upsert({
-            key: "testnet-eth-last-scanned-block"
+            key: "testnet-eth-last-scanned-blockNumber"
           }, {
             $set: {
               value: block.number
             }
           })
     
-          await Promise.all(promises)
-
+          SyncedCron.remove('scan eth block testnet')
           scanEthTestnet()
           myFuture.return();
         } catch(e) {
+          SyncedCron.remove('scan eth block testnet')
           scanEthTestnet()
           myFuture.return();
         }
@@ -744,7 +756,7 @@ function scanEthMainnet() {
   SyncedCron.add({
     name: 'scan eth block mainnet',
     schedule: function(parser) {
-      return parser.text('after 5 seconds');
+      return parser.recur().on(new Date(Date.now() + 1000)).fullDate();
     },
     job: () => {
       var myFuture = new Future();
@@ -756,7 +768,7 @@ function scanEthMainnet() {
           let mainnet_web3 = new Web3(new Web3.providers.WebsocketProvider(mainnet_url));
 
           let last_block = Utilities.findOne({
-            key: "mainnet-eth-last-scanned-block"
+            key: "mainnet-eth-last-scanned-blockNumber"
           })
           
           let block = null;
@@ -876,6 +888,7 @@ function scanEthMainnet() {
           async function processContract(contractAddress) {
             return new Promise(async (resolve, reject) => {
               try {
+
                 let logs = await getERC20Events(mainnet_web3, contractAddress, block.number)
 
                 for (var iii = 0; iii < logs.length; iii++) {
@@ -914,11 +927,11 @@ function scanEthMainnet() {
                     }
                   } else {
                     let to_exists_internally = Wallets.findOne({
-                      coinType: 'ETH',
+                      coinType: 'ERC20',
                       network: 'mainnet',
                       address: toAddressOfEvent.toLowerCase()
                     })
-        
+
                     if(to_exists_internally) {
                       let erc20_info = ERC20.findOne({
                         address: contractAddress
@@ -1026,7 +1039,7 @@ function scanEthMainnet() {
           }
 
           Utilities.upsert({
-            key: "mainnet-eth-last-scanned-block"
+            key: "mainnet-eth-last-scanned-blockNumber"
           }, {
             $set: {
               value: block.number
@@ -1035,9 +1048,12 @@ function scanEthMainnet() {
 
           await Promise.all(promises)
           
+          SyncedCron.remove('scan eth block mainnet')
           scanEthMainnet()
           myFuture.return();
         } catch(e) {
+
+          SyncedCron.remove('scan eth block mainnet')
           scanEthMainnet()
           myFuture.return();
         }
@@ -1061,3 +1077,11 @@ SyncedCron.config({
 });
 
 SyncedCron.start();
+
+/*Utilities.upsert({
+  key: "mainnet-eth-last-scanned-blockNumber"
+}, {
+  $set: {
+    value: 6899999
+  }
+})*/

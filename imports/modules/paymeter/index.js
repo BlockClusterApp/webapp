@@ -40,7 +40,7 @@ async function getCryptosPrice(tokenSymbols) { //comma seperated symbols
 async function getTokenInfoFromAddress(address) {
   return new Promise(async (resolve, reject) => {
     try {
-      HTTP.call('GET', `http://api.ethplorer.io/getTokenInfo?address=${address}&apiKey=${await Config.getEthplorerAPIKey()}`, {}, (error, response) => {
+      HTTP.call('GET', `http://api.ethplorer.io/getTokenInfo/${address}?apiKey=${await Config.getEthplorerAPIKey()}`, {}, (error, response) => {
         if(!error) {
           resolve(response.data)
         } else {
