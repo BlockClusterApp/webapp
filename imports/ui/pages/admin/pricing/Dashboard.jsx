@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
-import { withRouter, Link, Route } from 'react-router-dom';
+import { withRouter, Link, Route, Redirect } from 'react-router-dom';
 
-import HyperionionPricing from './components/HyperionPricing';
+import HyperionPricing from './components/HyperionPricing';
 import PaymeterPricing from './components/PaymeterPricing';
 
 class PricingDashboard extends Component {
@@ -48,8 +48,9 @@ class PricingDashboard extends Component {
             </ul>
           </nav>
           <div className="inner-content full-height">
+            <Route exact path="/app/admin/pricing" render={() => <Redirect to="/app/admin/pricing/hyperion" />} />
             <Route exact path="/app/admin/pricing/paymeter" component={PaymeterPricing} />
-            <Route exact path="/app/admin/pricing/hyperion" component={HyperionionPricing} />
+            <Route exact path="/app/admin/pricing/hyperion" component={HyperionPricing} />
           </div>
         </div>
       </div>
