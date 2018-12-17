@@ -295,7 +295,7 @@ class PaymeterComponent extends Component {
                                       <p className="pull-left small hint-text no-margin p-t-5">{helpers.timeConverter(wallet.createdAt / 1000)}</p>
                                       <div className="pull-right">
                                         <p className="small hint-text no-margin inline">{/*ICO Coin Symbol*/}</p>
-                                        <span className=" label label-info p-t-5 m-l-5 p-b-5 inline fs-12">{wallet.balance} ETH</span>
+                                        <span className=" label label-info p-t-5 m-l-5 p-b-5 inline fs-12">{wallet.confirmedBalance || '0'} ETH</span>
                                       </div>
                                       <div className="clearfix"></div>
                                     </div>
@@ -335,7 +335,7 @@ class PaymeterComponent extends Component {
                                       <p className="pull-left small hint-text no-margin p-t-5">{helpers.timeConverter(wallet.createdAt / 1000)}</p>
                                       <div className="pull-right">
                                         <p className="small hint-text no-margin inline">{/*ICO Coin Symbol*/}</p>
-                                        <span className=" label label-info p-t-5 m-l-5 p-b-5 inline fs-12">{wallet.balance} {wallet.tokenSymbol}</span>
+                                        <span className=" label label-info p-t-5 m-l-5 p-b-5 inline fs-12">{wallet.confirmedBalance || '0'} {wallet.tokenSymbol}</span>
                                       </div>
                                       <div className="clearfix"></div>
                                     </div>

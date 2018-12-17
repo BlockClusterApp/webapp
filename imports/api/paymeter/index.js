@@ -94,6 +94,7 @@ function createWallet(coinType, walletName, userId, network, options) {
       walletName: walletName,
       network: network,
       createdAt: Date.now(),
+      confirmedBalance: '0'
     });
   } else if (coinType === 'ERC20') {
     let wallet = Wallet.generate();
@@ -112,6 +113,7 @@ function createWallet(coinType, walletName, userId, network, options) {
       walletName: walletName,
       network: network,
       createdAt: Date.now(),
+      confirmedBalance: '0'
     });
   } else {
     return false;
@@ -273,7 +275,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
 
           web3.eth.sendSignedTransaction(
             '0x' + serializedTx.toString('hex'),
-            Meteor.bindEnvironment((err, hash) => {
+            Meteor.bindEnvironment(async (err, hash) => {
               if (err) {
                 if (err.toString().includes('insufficient funds')) {
                   reject('Insufficient Funds');
@@ -291,6 +293,14 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                   type: 'withdrawal',
                   fee: web3.utils.fromWei(fee.toString(), 'ether'),
                 });
+
+                Wallets.update({
+                  _id: wallet._id
+                }, {
+                  $set: {
+                    confirmedBalance: await getBalance(wallet._id)
+                  }
+                })
 
                 resolve(return_id);
               }
@@ -363,6 +373,14 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                           fee: web3.utils.fromWei(fee.toString(), 'ether'),
                         });
 
+                        Wallets.update({
+                          _id: feeWallet._id
+                        }, {
+                          $set: {
+                            confirmedBalance: await getBalance(feeWallet._id)
+                          }
+                        })
+
                         let total_fee = new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString();
                         total_fee = new BigNumber(total_fee).plus(fee.toString()).toString();
 
@@ -410,10 +428,17 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                           feeDepositTxnId: hash,
                         });
 
+                        Wallets.update({
+                          _id: wallet._id
+                        }, {
+                          $set: {
+                            confirmedBalance: await getBalance(wallet._id)
+                          }
+                        })
+
                         resolve(return_id);
                       } else {
                         if (err.toString().includes('insufficient funds')) {
-                          console.log('First time');
                           reject('Insufficient Ether for Fees');
                         } else {
                           reject('Unknown Error');
@@ -449,7 +474,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                 data: data,
                 from: wallet.address,
               },
-              Meteor.bindEnvironment((error, gasLimit) => {
+              Meteor.bindEnvironment(async (error, gasLimit) => {
                 if (!error) {
                   let processing_txns = WalletTransactions.find({
                     fromWallet: fromWalletId,
@@ -493,6 +518,14 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                       feeDepositGasPrice: null, //both txns should go with same gas price
                     });
 
+                    Wallets.update({
+                      _id: wallet._id
+                    }, {
+                      $set: {
+                        confirmedBalance: await getBalance(wallet._id)
+                      }
+                    })
+
                     resolve(return_id);
                   } else {
                     var rawTx = {
@@ -515,7 +548,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
 
                     web3.eth.sendSignedTransaction(
                       '0x' + serializedTx.toString('hex'),
-                      Meteor.bindEnvironment((err, hash) => {
+                      Meteor.bindEnvironment(async (err, hash) => {
                         if (err) {
                           if (err.toString().includes('insufficient funds')) {
                             reject('Insufficient Ether for Fees');
@@ -537,6 +570,14 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                             feeDepositTxnId: null,
                             feeDepositGasPrice: null, //both txns should go with same gas price
                           });
+
+                          Wallets.update({
+                            _id: wallet._id
+                          }, {
+                            $set: {
+                              confirmedBalance: await getBalance(wallet._id)
+                            }
+                          })
 
                           resolve(return_id);
                         }

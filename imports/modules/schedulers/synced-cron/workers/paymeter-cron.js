@@ -16,6 +16,7 @@ import {CoinPrices} from '../../../../collections/coin-prices/coin-prices.js';
 import {getTopERC20List, getCryptosPrice, getTokenInfoFromAddress} from '../../../../modules/paymeter/index.js'
 import { Meteor } from 'meteor/meteor';
 import sleep from 'await-sleep'
+import BigNumber from 'bignumber.js';
 var Future = Npm.require('fibers/future');
 
 async function getGasPrice(url) {
@@ -225,12 +226,28 @@ function processWithdrawls() {
                     status: "completed"
                   }
                 })
+
+                Wallets.update({
+                  _id: wallet._id
+                }, {
+                  $set: {
+                    confirmedBalance: await Paymeter.getBalance(wallet._id)
+                  }
+                })
               } else if(helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
                 WalletTransactions.update({
                   _id: pending_txns[count]._id
                 }, {
                   $set: {
                     status: "cancelled"
+                  }
+                })
+
+                Wallets.update({
+                  _id: wallet._id
+                }, {
+                  $set: {
+                    confirmedBalance: await Paymeter.getBalance(wallet._id)
                   }
                 })
               }
@@ -258,12 +275,28 @@ function processWithdrawls() {
                             txnId: hash
                           }
                         })
+
+                        Wallets.update({
+                          _id: wallet._id
+                        }, {
+                          $set: {
+                            confirmedBalance: await Paymeter.getBalance(wallet._id)
+                          }
+                        })
                       } else if(prev_nonce_txn.status === 'cancelled') {
                         WalletTransactions.update({
                           _id: pending_txns[count]._id
                         }, {
                           $set: {
                             status: "cancelled"
+                          }
+                        })
+
+                        Wallets.update({
+                          _id: wallet._id
+                        }, {
+                          $set: {
+                            confirmedBalance: await Paymeter.getBalance(wallet._id)
                           }
                         })
                       }
@@ -279,6 +312,14 @@ function processWithdrawls() {
                           txnId: hash
                         }
                       })
+
+                      Wallets.update({
+                        _id: wallet._id
+                      }, {
+                        $set: {
+                          confirmedBalance: await Paymeter.getBalance(wallet._id)
+                        }
+                      })
                     }
                   } else if(helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
                     WalletTransactions.update({
@@ -286,6 +327,14 @@ function processWithdrawls() {
                     }, {
                       $set: {
                         status: "cancelled"
+                      }
+                    })
+
+                    Wallets.update({
+                      _id: wallet._id
+                    }, {
+                      $set: {
+                        confirmedBalance: await Paymeter.getBalance(wallet._id)
                       }
                     })
                   }
@@ -301,12 +350,28 @@ function processWithdrawls() {
                         status: "completed"
                       }
                     })
+
+                    Wallets.update({
+                      _id: wallet._id
+                    }, {
+                      $set: {
+                        confirmedBalance: await Paymeter.getBalance(wallet._id)
+                      }
+                    })
                   } else if(helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
                     WalletTransactions.update({
                       _id: pending_txns[count]._id
                     }, {
                       $set: {
                         status: "cancelled"
+                      }
+                    })
+
+                    Wallets.update({
+                      _id: wallet._id
+                    }, {
+                      $set: {
+                        confirmedBalance: await Paymeter.getBalance(wallet._id)
                       }
                     })
                   }
@@ -330,12 +395,28 @@ function processWithdrawls() {
                           txnId: hash
                         }
                       })
+
+                      Wallets.update({
+                        _id: wallet._id
+                      }, {
+                        $set: {
+                          confirmedBalance: await Paymeter.getBalance(wallet._id)
+                        }
+                      })
                     } else if(prev_nonce_txn.status === 'cancelled') {
                       WalletTransactions.update({
                         _id: pending_txns[count]._id
                       }, {
                         $set: {
                           status: "cancelled"
+                        }
+                      })
+
+                      Wallets.update({
+                        _id: wallet._id
+                      }, {
+                        $set: {
+                          confirmedBalance: await Paymeter.getBalance(wallet._id)
                         }
                       })
                     }
@@ -351,12 +432,28 @@ function processWithdrawls() {
                         status: "completed"
                       }
                     })
+
+                    Wallets.update({
+                      _id: wallet._id
+                    }, {
+                      $set: {
+                        confirmedBalance: await Paymeter.getBalance(wallet._id)
+                      }
+                    })
                   } else if(helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
                     WalletTransactions.update({
                       _id: pending_txns[count]._id
                     }, {
                       $set: {
                         status: "cancelled"
+                      }
+                    })
+
+                    Wallets.update({
+                      _id: wallet._id
+                    }, {
+                      $set: {
+                        confirmedBalance: await Paymeter.getBalance(wallet._id)
                       }
                     })
                   }
@@ -406,11 +503,20 @@ function processDeposits() {
               let url = `${await Config.getPaymeterConnectionDetails("eth", wallet.network)}`;
               let confirmations = await getEthTxnConfirmations(url, pending_txns[count].txnId)
               if(confirmations >= 15) {
+
                 WalletTransactions.update({
                   _id: pending_txns[count]._id
                 }, {
                   $set: {
                     status: "completed"
+                  }
+                })
+
+                Wallets.update({
+                  _id: wallet._id
+                }, {
+                  $set: {
+                    confirmedBalance: await Paymeter.getBalance(wallet._id)
                   }
                 })
               } else if(helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
@@ -419,6 +525,14 @@ function processDeposits() {
                 }, {
                   $set: {
                     status: "cancelled"
+                  }
+                })
+
+                Wallets.update({
+                  _id: wallet._id
+                }, {
+                  $set: {
+                    confirmedBalance: await Paymeter.getBalance(wallet._id)
                   }
                 })
               }
@@ -1093,9 +1207,9 @@ SyncedCron.config({
 SyncedCron.start();
 
 /*Utilities.upsert({
-  key: "mainnet-eth-last-scanned-blockNumber"
+  key: "testnet-eth-last-scanned-blockNumber"
 }, {
   $set: {
-    value: 6902561
+    value: 3527701
   }
 })*/
