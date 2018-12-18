@@ -583,15 +583,19 @@ class PaymeterComponent extends Component {
                                       
                                       </h3>
                                     </div>*/}
-                                    <div className="col-md-7 clearfix sm-p-b-15 d-flex flex-column justify-content-center">
+                                    <div className="col-md-6 clearfix sm-p-b-15 d-flex flex-column justify-content-center">
                                       <h5 className="font-montserrat all-caps small no-margin hint-text bold">Minimum Fee This Month</h5>
                                       <h3 className="no-margin">
                                       {this.props.paymeterUserData &&
-                                        <span>{'$' + (this.props.paymeterUserData.minimumFeeThisMonth || '0.00')}</span>
+                                        <span>${helpers.getFlooredFixed(parseFloat((this.props.paymeterUserData.minimumFeeThisMonth || '0.00')), 2)}</span>
+                                      }
+
+                                      {!this.props.paymeterUserData &&
+                                        <span>$0.00</span>
                                       }
                                       </h3>
                                     </div>
-                                    <div className="col-md-5 text-right bg-master-darker col-sm-height padding-15 d-flex flex-column justify-content-center align-items-end">
+                                    <div className="col-md-6 text-right bg-master-darker col-sm-height padding-15 d-flex flex-column justify-content-center align-items-end">
                                       <h5 className="font-montserrat all-caps small no-margin hint-text text-white bold">Total Deposit Fee This Month</h5>
                                       <h1 className="no-margin text-white">
                                         <span>$</span>
@@ -600,7 +604,7 @@ class PaymeterComponent extends Component {
                                             <span>
                                               <span>
                                                 {this.props.paymeterUserData.bill &&
-                                                  <span>{this.props.paymeterUserData.bill}</span>
+                                                  <span>{helpers.getFlooredFixed(parseFloat(this.props.paymeterUserData.bill), 2)}</span>
                                                 }
                                               </span>
                                               <span>
