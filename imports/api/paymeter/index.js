@@ -691,15 +691,16 @@ function paymeter_getAndResetUserBill(userId) {
           })
         }
 
-        if((new BigNumber(bill)).lt('299')) {
-          bill = '299'
+        if((new BigNumber(bill)).lt(paymeter_userData.minimumFeeThisMonth)) {
+          bill = paymeter_userData.minimumFeeThisMonth
         }
 
         PaymeterCollection.upsert({
           userId: userId
         }, {
           $set: {
-            bill: '0'
+            bill: '0',
+            minimumFeeThisMonth: '299'
           }
         })
 
@@ -744,6 +745,34 @@ Meteor.methods({
     const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(Meteor.userId());
 
     if(isPaymentMethodVerified) {
+
+      let paymeter_userData = Paymeter.find({userId: Meteor.userId()})
+
+      if(paymeter_userData.unsubscribeNextMonth) {
+        PaymeterCollection.upsert({
+          userId: Meteor.userId()
+        }, {
+          $set: {
+            subscribed: true,
+            unsubscribeNextMonth: false
+          }
+        })
+      } else {
+        let totalDaysThisMonth = helpers.daysInThisMonth()
+        let perDayCost = (new BigNumber(299))dividedBy(totalDaysThisMonth) 
+        let minimumFeeThisMonth = (new BigNumber(perDayCost)).times(helpers.getRemanningDays() + 1) //including today
+        
+        PaymeterCollection.upsert({
+          userId: Meteor.userId()
+        }, {
+          $set: {
+            subscribed: true,
+            unsubscribeNextMonth: false,
+            minimumFeeThisMonth: minimumFeeThisMonth.toString()
+          }
+        })
+      }
+      
       PaymeterCollection.upsert({
         userId: Meteor.userId()
       }, {

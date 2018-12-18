@@ -385,6 +385,9 @@ class Explorer extends Component {
         let assetsContractAddress = null;
         let username = null ;
         let password = null; 
+        let atomicSwapContractAddress = null;
+        let assetsContractAddress = null;
+        let streamsContractAddress = null;
 
         rpc = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/jsonrpc`
         username = this.props.network[0].instanceId
