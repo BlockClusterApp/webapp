@@ -219,5 +219,6 @@ export default {
         time.setMonth(date.getMonth() + 1);
         time.setDate(0);
         var days =time.getDate() > date.getDate() ? time.getDate() - date.getDate() : 0;
+        return days;
     }
 }
