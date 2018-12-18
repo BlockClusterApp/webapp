@@ -42,11 +42,12 @@ class PaymeterComponent extends Component {
     })
     Meteor.call("createWallet", "ETH", this.refs.ethWalletName.value, this.refs.ethWalletNetwork.value, {
       password: this.refs.ethWalletPassword.value
-    }, (err, r) => {
-      if(!err && r) {
+    }, (error, r) => {
+      console.log(error, r)
+      if(!error && r) {
         notifications.success("Wallet Created");
       } else {
-        notifications.error("An error occured");
+        notifications.error(error.reason);
       }
 
       this.setState({
@@ -137,7 +138,7 @@ class PaymeterComponent extends Component {
       ['_notifications_formSubmitError']: '',
     });
 
-    Meteor.call('updateCallbackURL', { paymeter: this.refs._notifications_paymeterUrl.value }, error => {
+    Meteor.call('updateCallbackURLPayment', this.refs._notifications_paymeterUrl.value, error => {
       if (!error) {
         this.setState({
           ['_notifications_formloading']: false,
@@ -191,7 +192,6 @@ class PaymeterComponent extends Component {
   }
 
   render() {
-    console.log(this.props.paymeterUserData)
     let wallet = null;
     if(this.state.secondBox === 'eth-wallet-management') {
       wallet = Wallets.findOne({
@@ -203,6 +203,12 @@ class PaymeterComponent extends Component {
       wallet = Wallets.findOne({
         _id: this.state.secondBoxData.walletId
       })
+    }
+
+    let notifyURL = '';
+
+    if(this.props.paymeterUserData) {
+      notifyURL = this.props.paymeterUserData.notifyURL || ''
     }
 
     return (
@@ -400,7 +406,7 @@ class PaymeterComponent extends Component {
                         {this.props.user && (
                           <div className="form-group form-group-default required ">
                             <label>Paymeter Notifications Webhook URL</label>
-                            <input placeholder="https://example.com/wallet" type="text" defaultValue={this.props.user.profile.paymeterNotifyURL} className="form-control" required  ref="_notifications_paymeterUrl" />
+                            <input placeholder="https://example.com/wallet" type="text" defaultValue={notifyURL} className="form-control" required  ref="_notifications_paymeterUrl" />
                           </div>
                         )}
 
@@ -438,7 +444,7 @@ class PaymeterComponent extends Component {
                       <div>
                         <div className="tab-pane padding-20 sm-no-padding active slide-left" id="tab1">
                           <div className="row row-same-height">
-                            <div className="col-lg-4 b-r b-dashed b-grey sm-b-b">
+                            <div className="col-lg-12 sm-b-b">
                               <div className="padding-30 sm-padding-5 sm-m-t-15">
                                 <i className="fa fa fa-cube fa-2x hint-text" />
                                 <h2>Wallet-as-a-Service</h2>
@@ -517,14 +523,19 @@ class PaymeterComponent extends Component {
                                 </div>
                               </div>
                             </div>
-                            <div className="col-lg-8">
+                          </div>
+                          <div style={{paddingLeft: '30px', paddingRight: '30px'}}>
+                            <hr className="b-dashed" />
+                          </div>
+                          <div className="row row-same-height">
+                            <div className="col-lg-12">
                               <div className="padding-30 sm-padding-5">
                               <h5>Pricing Model</h5>
                               <div className="row">
                                 <div className="col-lg-12">
                                   <p className="no-margin">Internal and External Transactions</p>
                                   <p className="small hint-text">
-                                    For internal transactions only network fee is charged without any service fees. Creating wallets doesn't add extra charges. We deduct the fees from your added debit/credit card at the end of the month.
+                                    For internal transactions, only network fee is charged without any service fees. Creating wallets doesn't add extra charges. We deduct the fees from your added debit/credit card at the end of the month.
                                   </p>
                                 </div>
                               </div>
@@ -588,6 +599,12 @@ class PaymeterComponent extends Component {
                                                 <span>0.00</span>
                                               }
                                             </span>
+                                          </span>
+                                        }
+
+                                        {!this.props.paymeterUserData &&
+                                          <span>
+                                            0.00
                                           </span>
                                         }
                                       </span>

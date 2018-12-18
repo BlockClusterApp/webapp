@@ -64,12 +64,12 @@ async function _authFunc(req, res, next) {
             },
           });
         } else {
+          req.userId = decode.id;
+          req.rjwt = decode.rjwt;
+          next();
+          /*
           const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(decode.id);
-
           if (isPaymentMethodVerified) {
-            req.userId = decode.id;
-            req.rjwt = decode.rjwt;
-            next();
           } else {
             JsonRoutes.sendResult(res, {
               code: 401,
@@ -78,6 +78,7 @@ async function _authFunc(req, res, next) {
               },
             });
           }
+          */
         }
       })
       .catch(err => {
@@ -98,16 +99,6 @@ async function _authFunc(req, res, next) {
         data: {
           success: false,
           error: 'Unauthorized',
-        },
-      });
-    }
-
-    const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(userId);
-    if (!isPaymentMethodVerified) {
-      return JsonRoutes.sendResult(res, {
-        code: 401,
-        data: {
-          error: 'Verify your payment method',
         },
       });
     }
