@@ -54,17 +54,62 @@ Meteor.publish('users.details', function({ userId }) {
   if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
-  return [
-    Meteor.users.find({ _id: userId }, { fields: { services: 0 } }),
-    Networks.find({ user: userId }),
-    UserInvitation.find({ inviteFrom: userId }),
-    UserCards.find({ userId }),
-    PaymentRequests.find({ userId }),
-    Voucher.find({ claimedBy: userId }),
-    Invoice.find({ userId }, {fields: {
-      items: 0,
-      networks: 0
-    }}),
-    RZPaymentLink.find({ userId }),
-  ];
+  return [Meteor.users.find({ _id: userId }, { fields: { services: 0 } })];
+});
+
+Meteor.publish('user.details.networks', ({ userId }) => {
+  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
+  return Networks.find({ user: userId });
+});
+
+Meteor.publish('user.details.userInvitations', ({ userId }) => {
+  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
+  return UserInvitation.find({ inviteFrom: userId });
+});
+
+Meteor.publish('user.details.userCards', ({ userId }) => {
+  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
+  return UserCards.find({ userId });
+});
+
+Meteor.publish('user.details.payments', ({ userId }) => {
+  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
+  return PaymentRequests.find({ userId });
+});
+
+Meteor.publish('user.details.vouchers', ({ userId }) => {
+  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
+  return Voucher.find({ claimedBy: userId });
+});
+
+Meteor.publish('user.details.invoices', ({ userId }) => {
+  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
+  return Invoice.find(
+    { userId },
+    {
+      fields: {
+        items: 0,
+        networks: 0,
+      },
+    }
+  );
+});
+
+Meteor.publish('user.details.paymentLinks', ({ userId }) => {
+  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
+  return RZPaymentLink.find({ userId });
 });

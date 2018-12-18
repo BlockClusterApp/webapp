@@ -15,6 +15,7 @@ import { RZPaymentLink } from '../../../../collections/razorpay';
 import Voucher from '../../../../collections/vouchers/voucher';
 import Invoice from '../../../../collections/payments/invoice';
 import notifications from '../../../../modules/notifications';
+import LoadButton from './components/LoadButton';
 
 class UserDetails extends Component {
   constructor(props) {
@@ -28,10 +29,16 @@ class UserDetails extends Component {
       payment: {},
       remoteConfig: window.RemoteConfig,
     };
+
+    this.subscriptionTypes = [];
+    this.subscriptions = [];
   }
 
   componentWillUnmount() {
     this.props.subscriptions.forEach(s => {
+      s.stop();
+    });
+    this.subscriptions.forEach(s => {
       s.stop();
     });
     window.removeEventListener('RemoteConfigChanged', this.RemoteConfigListener);
@@ -229,8 +236,37 @@ class UserDetails extends Component {
     });
   };
 
+  loadComponents = type => {
+    if (this.subscriptionTypes.includes(type)) {
+      return true;
+    }
+    const sub = Meteor.subscribe(
+      type,
+      { userId: this.props.match.params.id },
+      {
+        onReady: () => {
+          const userId = this.props.match.params.id;
+          const states = {
+            networks: Networks.find({ user: userId }).fetch(),
+            invitations: UserInvitation.find({ inviteFrom: userId }).fetch(),
+            cards: UserCards.find({ userId }).fetch(),
+            payments: PaymentRequests.find({ userId }).fetch(),
+            vouchers: Voucher.find({ claimedBy: userId }).fetch(),
+            invoices: Invoice.find({ userId }).fetch(),
+            paymentLinks: RZPaymentLink.find({ userId }).fetch(),
+          };
+          this.subscriptionTypes.push(type);
+          this.setState({ ...this.state, ...states });
+        },
+      }
+    );
+
+    this.subscriptions.push(sub);
+  };
+
   render() {
-    const { cards, invitations, payments, vouchers, user, networks, invoices, paymentLinks } = this.props;
+    const { user } = this.props;
+    const { cards, invitations, payments, vouchers, networks, invoices, paymentLinks } = this.state;
 
     if (!(user && user.profile)) {
       const LoadingView = (
@@ -449,7 +485,8 @@ class UserDetails extends Component {
                     <div className="clearfix" />
                   </div>
                   <div className="card-description">
-                    {cards[0] &&
+                    {cards &&
+                      cards[0] &&
                       cards[0].cards.map((card, index) => {
                         return (
                           <div key={index}>
@@ -464,9 +501,10 @@ class UserDetails extends Component {
                           </div>
                         );
                       })}
+                    {!(cards && cards[0]) && <LoadButton subscription="user.details.userCards" buttonText="Load Cards" onLoad={this.loadComponents} />}
                   </div>
                   <div className="card-footer clearfix">
-                    {cards[0] && (
+                    {cards && cards[0] && (
                       <div>
                         <div className="pull-left">Added on</div>
                         <div className="pull-right hint-text">{moment(cards[0].updatedAt).format('DD-MMM-YYYY')}</div>
@@ -500,7 +538,8 @@ class UserDetails extends Component {
                   <div className="auto-overflow widget-11-2-table" style={{ height: '375px' }}>
                     <table className="table table-condensed table-hover">
                       <tbody>
-                        {networks &&
+                        {this.subscriptionTypes.includes('user.details.networks') &&
+                          networks &&
                           networks
                             .sort((a, b) => b.createdOn - a.createdOn)
                             .map((network, index) => {
@@ -518,6 +557,13 @@ class UserDetails extends Component {
                                 </tr>
                               );
                             })}
+                        {!(this.subscriptionTypes.includes('user.details.networks') && networks) && (
+                          <tr>
+                            <td className="font-montserrat fs-12 w-100">
+                              <LoadButton subscription="user.details.networks" buttonText="Load Networks" onLoad={this.loadComponents} />
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                       <tfoot>
                         <tr>
@@ -558,7 +604,8 @@ class UserDetails extends Component {
                       <div className="auto-overflow widget-11-2-table" style={{ height: '275px' }}>
                         <table className="table table-condensed table-hover">
                           <tbody>
-                            {payments &&
+                            {this.subscriptionTypes.includes('user.details.payments') &&
+                              payments &&
                               payments
                                 .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                                 .map((payment, index) => {
@@ -580,6 +627,13 @@ class UserDetails extends Component {
                                     </tr>
                                   );
                                 })}
+                            {!(this.subscriptionTypes.includes('user.details.payments') && payments) && (
+                              <tr>
+                                <td className="font-montserrat fs-12 w-100">
+                                  <LoadButton subscription="user.details.payments" buttonText="Load Payments" onLoad={this.loadComponents} />
+                                </td>
+                              </tr>
+                            )}
                           </tbody>
                         </table>
                       </div>
@@ -611,7 +665,8 @@ class UserDetails extends Component {
                       <div className="auto-overflow widget-11-2-table" style={{ height: '275px' }}>
                         <table className="table table-condensed table-hover">
                           <tbody>
-                            {invoices &&
+                            {this.subscriptionTypes.includes('user.details.invoices') &&
+                              invoices &&
                               invoices.map((invoice, index) => {
                                 return (
                                   <tr key={index + 1}>
@@ -625,6 +680,13 @@ class UserDetails extends Component {
                                   </tr>
                                 );
                               })}
+                            {!(this.subscriptionTypes.includes('user.details.invoices') && invoices) && (
+                              <tr>
+                                <td className="font-montserrat fs-12 w-100">
+                                  <LoadButton subscription="user.details.invoices" buttonText="Load Invoices" onLoad={this.loadComponents} />
+                                </td>
+                              </tr>
+                            )}
                           </tbody>
                         </table>
                       </div>
@@ -633,95 +695,97 @@ class UserDetails extends Component {
                 )}
               </div>
             )}
-            {features.Payments && <div className="row">
-              <div className="col-lg-12 m-b-10 d-flex">
-                <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
-                  <div className="padding-25">
-                    <div className="pull-left">
-                      <h2 className="text-success no-margin">Actions</h2>
-                    </div>
-                  </div>
-                  <div className="row p-b-25">
-                    <div className="p-l-25 p-r-25 col-md-12">
-                      <h5 className="no-margin p-b-10">Create Payment Link</h5>
-                      <div className="row">
-                        <div className="col-md-7">
-                          <div className="form-group form-group-default required">
-                            <label>Reason</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="paymentReason"
-                              required
-                              ref={input => {
-                                this.paymentLinkReason = input;
-                              }}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-3">
-                          <div className="form-group form-group-default required">
-                            <label>Amount (IN USD)</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="paymentAmount"
-                              placeholder="$"
-                              required
-                              ref={input => {
-                                this.paymentLinkAmount = input;
-                              }}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-2">
-                          <LaddaButton
-                            disabled={this.state.paymentLinkCreationDisabled}
-                            loading={this.state.paymentLinkLoading}
-                            data-size={S}
-                            data-style={SLIDE_UP}
-                            data-spinner-size={30}
-                            data-spinner-lines={12}
-                            onClick={this.createPaymentLink}
-                            className="btn btn-success"
-                          >
-                            <i className="fa fa-plus-circle" aria-hidden="true" />
-                            &nbsp;&nbsp;Create
-                          </LaddaButton>
-                        </div>
+            {features.Payments && (
+              <div className="row">
+                <div className="col-lg-12 m-b-10 d-flex">
+                  <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+                    <div className="padding-25">
+                      <div className="pull-left">
+                        <h2 className="text-success no-margin">Actions</h2>
                       </div>
-                      {this.state.generatedLink && (
+                    </div>
+                    <div className="row p-b-25">
+                      <div className="p-l-25 p-r-25 col-md-12">
+                        <h5 className="no-margin p-b-10">Create Payment Link</h5>
                         <div className="row">
                           <div className="col-md-7">
                             <div className="form-group form-group-default required">
-                              <label>Link</label>
-                              <input type="text" className="form-control" name="paymentReason" disabled value={this.state.generatedLink.short_url} />
+                              <label>Reason</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="paymentReason"
+                                required
+                                ref={input => {
+                                  this.paymentLinkReason = input;
+                                }}
+                              />
                             </div>
                           </div>
-                          <div className="col-md-4">
+                          <div className="col-md-3">
+                            <div className="form-group form-group-default required">
+                              <label>Amount (IN USD)</label>
+                              <input
+                                type="number"
+                                className="form-control"
+                                name="paymentAmount"
+                                placeholder="$"
+                                required
+                                ref={input => {
+                                  this.paymentLinkAmount = input;
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <div className="col-md-2">
                             <LaddaButton
-                              disabled={this.state.paymentLinkDeletionDisabled}
+                              disabled={this.state.paymentLinkCreationDisabled}
                               loading={this.state.paymentLinkLoading}
                               data-size={S}
                               data-style={SLIDE_UP}
                               data-spinner-size={30}
                               data-spinner-lines={12}
-                              onClick={this.cancelPaymentLink.bind(this, this.state.generatedLink._id)}
-                              className="btn btn-danger"
+                              onClick={this.createPaymentLink}
+                              className="btn btn-success"
                             >
-                              <i className="fa fa-minus-circle" aria-hidden="true" />
-                              &nbsp;&nbsp;Delete
+                              <i className="fa fa-plus-circle" aria-hidden="true" />
+                              &nbsp;&nbsp;Create
                             </LaddaButton>
                           </div>
                         </div>
-                      )}
+                        {this.state.generatedLink && (
+                          <div className="row">
+                            <div className="col-md-7">
+                              <div className="form-group form-group-default required">
+                                <label>Link</label>
+                                <input type="text" className="form-control" name="paymentReason" disabled value={this.state.generatedLink.short_url} />
+                              </div>
+                            </div>
+                            <div className="col-md-4">
+                              <LaddaButton
+                                disabled={this.state.paymentLinkDeletionDisabled}
+                                loading={this.state.paymentLinkLoading}
+                                data-size={S}
+                                data-style={SLIDE_UP}
+                                data-spinner-size={30}
+                                data-spinner-lines={12}
+                                onClick={this.cancelPaymentLink.bind(this, this.state.generatedLink._id)}
+                                className="btn btn-danger"
+                              >
+                                <i className="fa fa-minus-circle" aria-hidden="true" />
+                                &nbsp;&nbsp;Delete
+                              </LaddaButton>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>}
+            )}
             <div className="row">
-              {this.props.paymentLinks && this.props.paymentLinks.length > 0 && features.Payments && (
+              {features.Payments && (
                 <div className="col-lg-6 m-b-10 d-flex">
                   <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
                     <div className="padding-25">
@@ -735,7 +799,8 @@ class UserDetails extends Component {
                     <div className="auto-overflow widget-11-2-table" style={{ height: '275px' }}>
                       <table className="table table-condensed table-hover">
                         <tbody>
-                          {paymentLinks &&
+                          {this.subscriptionTypes.includes('user.details.paymentLinks') &&
+                            paymentLinks &&
                             paymentLinks.map((paymentLink, index) => {
                               return (
                                 <tr key={index + 1}>
@@ -761,13 +826,20 @@ class UserDetails extends Component {
                                 </tr>
                               );
                             })}
+                          {!(this.subscriptionTypes.includes('user.details.paymentLinks') && paymentLinks) && (
+                            <tr>
+                              <td className="font-montserrat fs-12 w-100">
+                                <LoadButton subscription="user.details.paymentLinks" buttonText="Load Payment Links" onLoad={this.loadComponents} />
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
                   </div>
                 </div>
               )}
-              <div className={`${this.props.paymentLinks && this.props.paymentLinks.length > 0 && features.Payments? 'col-lg-6' : 'col-lg-12'} m-b-10 d-flex`}>
+              <div className={`${features.Payments ? 'col-lg-6' : 'col-lg-12'} m-b-10 d-flex`}>
                 <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
                   <div className="padding-25">
                     <div className="pull-left">
@@ -780,7 +852,8 @@ class UserDetails extends Component {
                   <div className="auto-overflow widget-11-2-table" style={{ height: '275px' }}>
                     <table className="table table-condensed table-hover">
                       <tbody>
-                        {invitations &&
+                        {this.subscriptionTypes.includes('user.details.userInvitations') &&
+                          invitations &&
                           invitations.map((invitation, index) => {
                             const data = invitation.metadata;
                             return (
@@ -800,6 +873,13 @@ class UserDetails extends Component {
                               </tr>
                             );
                           })}
+                        {!(this.subscriptionTypes.includes('user.details.userInvitations') && invitations) && (
+                          <tr>
+                            <td className="font-montserrat fs-12 w-100">
+                              <LoadButton subscription="user.details.userInvitations" buttonText="Load Invitations" onLoad={this.loadComponents} />
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -817,13 +897,6 @@ export default withTracker(props => {
   const userId = props.match.params.id;
   return {
     user: Meteor.users.find({ _id: userId }).fetch()[0],
-    networks: Networks.find({ user: userId }).fetch(),
-    invitations: UserInvitation.find({ inviteFrom: userId }).fetch(),
-    cards: UserCards.find({ userId }).fetch(),
-    payments: PaymentRequests.find({ userId }).fetch(),
-    vouchers: Voucher.find({ claimedBy: userId }).fetch(),
     subscriptions: [Meteor.subscribe('users.details', { userId: props.match.params.id })],
-    invoices: Invoice.find({ userId }).fetch(),
-    paymentLinks: RZPaymentLink.find({ userId }).fetch(),
   };
 })(withRouter(UserDetails));
