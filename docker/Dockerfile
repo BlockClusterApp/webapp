@@ -1,7 +1,5 @@
 FROM node:8.9.3 as builder
 
-RUN npm install -g npm
-
 RUN  curl https://install.meteor.com/ | sh
 
 WORKDIR /blockcluster
