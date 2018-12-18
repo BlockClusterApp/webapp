@@ -11,10 +11,6 @@
     }
   }
 
-  h5 {
-    word-break: break-all;
-  }
-
   .create-wallet-btn {
     margin-right: 0px !important;
     margin-left: 0px !important;
@@ -35,5 +31,9 @@
 
   .no-hidden-text {
     white-space: normal !important
+  }
+
+  .paymeter h5 {
+    word-break: break-word;
   }
 }
