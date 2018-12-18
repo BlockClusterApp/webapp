@@ -759,7 +759,7 @@ Meteor.methods({
         })
       } else {
         let totalDaysThisMonth = helpers.daysInThisMonth()
-        let perDayCost = (new BigNumber(299))dividedBy(totalDaysThisMonth) 
+        let perDayCost = (new BigNumber(299)).dividedBy(totalDaysThisMonth) 
         let minimumFeeThisMonth = (new BigNumber(perDayCost)).times(helpers.getRemanningDays() + 1) //including today
         
         PaymeterCollection.upsert({
