@@ -191,7 +191,6 @@ class PaymeterComponent extends Component {
   }
 
   render() {
-    console.log(this.props.paymeterUserData)
     let wallet = null;
     if(this.state.secondBox === 'eth-wallet-management') {
       wallet = Wallets.findOne({

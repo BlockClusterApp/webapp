@@ -5,6 +5,8 @@ import moment, { invalid } from 'moment';
 import Invoice from '../../collections/payments/invoice';
 import helpers from '../../modules/helpers';
 import { Hyperion } from '../../collections/hyperion/hyperion';
+import HyperionPricing from '../../collections/pricing/hyperion';
+import ChargeableAPI from '../../collections/chargeable-apis';
 
 const Billing = {};
 
@@ -290,11 +292,15 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
 
   if (hyperion_stats.length === 1) {
     const totalDaysThisMonth = helpers.daysInThisMonth();
-    const costPerGBPerDay = helpers.hyperionGBCostPerDay();
+
+    const hyperionPricing = HyperionPricing.find({ active: true }).fetch()[0];
+
+    let costPerGBPerDay = helpers.hyperionGBCostPerDay(hyperionPricing.perGBCost);
+
     const fileSizeInGB = hyperion_stats[0].size / 1024 / 1024 / 1024;
     const fileCostPerDay = costPerGBPerDay * fileSizeInGB;
     total_hyperion_cost = totalDaysThisMonth * fileCostPerDay;
-    total_hyperion_cost = (total_hyperion_cost - hyperion_stats[0].discount).toPrecision(2);
+    total_hyperion_cost = (total_hyperion_cost + hyperion_stats[0].discount).toPrecision(2);
 
     if (!isFromFrontend) {
       Hyperion.update(
@@ -320,12 +326,40 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             .subtract(1, 'month')
             .startOf('month')
             .toDate(),
-      rate: `$ ${helpers.hyperionGBCostPerDay()} / GB-month `,
-      runtime: `${Number(fileSizeInGB).toFixed(5)} GB`,
+      rate: `$ ${hyperionPricing.perGBCost} / GB-month `,
+      runtime: `${Number(total_hyperion_cost / hyperionPricing.perGBCost).toFixed(5)} GB`,
       cost: total_hyperion_cost,
     });
-
     result.totalAmount += Number(total_hyperion_cost);
+
+    if (hyperionPricing.perApiCost) {
+      const apiCalls = ChargeableAPI.find({
+        userId,
+        createdAt: {
+          $gte: selectedMonth.toDate(),
+          $lte: calculationEndDate,
+        },
+      }).fetch();
+
+      const totalApiCallCost = hyperionPricing.perApiCost * apiCalls.length;
+      result.networks.push({
+        name: 'Hyperion API Cost',
+        instanceId: '',
+        createdOn: isFromFrontend
+          ? moment()
+              .startOf('month')
+              .toDate()
+          : moment()
+              .subtract(1, 'month')
+              .startOf('month')
+              .toDate(),
+        rate: `$ ${hyperionPricing.perApiCost} / request`,
+        runtime: `${apiCalls.length} requests`,
+        cost: totalApiCallCost,
+      });
+
+      result.totalAmount += Number(totalApiCallCost);
+    }
   }
   //end
 

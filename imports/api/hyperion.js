@@ -1,6 +1,8 @@
 import { Hyperion } from '../collections/hyperion/hyperion.js';
+import HyperionPricing from '../collections/pricing/hyperion';
 import { Files } from '../collections/files/files.js';
 import AuthMiddleware from './middleware/auth';
+import ChargeableAPI from '../collections/chargeable-apis/';
 
 import helpers from '../modules/helpers';
 import Config from '../modules/config/server';
@@ -99,7 +101,8 @@ JsonRoutes.add(
                   let daysRemaining = totalDaysThisMonth - (todayDay - 1);
                   let daysIgnored = todayDay - 1;
 
-                  let costPerGBPerDay = helpers.hyperionGBCostPerDay();
+                  const hyperionPricing = HyperionPricing.find({ active: true }).fetch()[0];
+                  let costPerGBPerDay = helpers.hyperionGBCostPerDay(hyperionPricing.perGBCost);
                   let fileSizeInGB = req.file.size / 1024 / 1024 / 1024;
                   let fileCostPerDay = costPerGBPerDay * fileSizeInGB;
                   let costIgnored = daysIgnored * fileCostPerDay;
@@ -115,6 +118,22 @@ JsonRoutes.add(
                       },
                     }
                   );
+
+                  ChargeableAPI.insert({
+                    url: req.url,
+                    userId: req.userId,
+                    serviceType: 'hyperion',
+                    metadata: {
+                      type: 'UploadFile',
+                      fileSizeInGB: req.file.size / 1024 / 1024 / 1024,
+                      responseCode: 200,
+                      response: JSON.stringify({
+                        message: `${file[0].hash}`,
+                        success: true,
+                        method: 'POST',
+                      }),
+                    },
+                  });
 
                   res.end(
                     JSON.stringify({
@@ -156,6 +175,17 @@ JsonRoutes.add('get', '/api/hyperion/download', function(req, res, next) {
     if (files) {
       files.forEach(file => {
         if (file) {
+          ChargeableAPI.insert({
+            url: req.url,
+            userId: req.userId,
+            serviceType: 'hyperion',
+            metadata: {
+              type: 'DownloadFile',
+              fileHash: hash,
+              size: file.content.length,
+              method: 'GET',
+            },
+          });
           res.end(file.content);
           return;
         }
@@ -254,7 +284,8 @@ JsonRoutes.add('delete', '/api/hyperion/delete', (req, res, next) => {
                   let daysRemaining = totalDaysThisMonth - (todayDay - 1);
                   let daysIgnored = todayDay - 1;
 
-                  let costPerGBPerDay = helpers.hyperionGBCostPerDay();
+                  const hyperionPricing = HyperionPricing.find({ active: true }).fetch()[0];
+                  let costPerGBPerDay = helpers.hyperionGBCostPerDay(hyperionPricing.perGBCost);
                   let fileSizeInGB = file[0].size / 1024 / 1024 / 1024;
                   let fileCostPerDay = costPerGBPerDay * fileSizeInGB;
                   let costIgnored = daysIgnored * fileCostPerDay; //total discount that was given
@@ -319,7 +350,8 @@ JsonRoutes.add('delete', '/api/hyperion/delete', (req, res, next) => {
       let daysRemaining = totalDaysThisMonth - (todayDay - 1);
       let daysIgnored = todayDay - 1;
 
-      let costPerGBPerDay = helpers.hyperionGBCostPerDay();
+      const hyperionPricing = HyperionPricing.find({ active: true }).fetch()[0];
+      let costPerGBPerDay = helpers.hyperionGBCostPerDay(hyperionPricing.perGBCost);
       let fileSizeInGB = file[0].size / 1024 / 1024 / 1024;
       let fileCostPerDay = costPerGBPerDay * fileSizeInGB;
       let costIgnored = daysIgnored * fileCostPerDay; //total discount that was given

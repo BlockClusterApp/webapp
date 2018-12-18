@@ -71,7 +71,7 @@ class Pricing extends Component {
                   <div className="row">
                     <div className="col-md-12" style={{ marginTop: '10px' }}>
                       <i className="fa fa-joomla" />
-                      &nbsp;Per GB Cost &nbsp;($)
+                      &nbsp;Per GB Cost per month&nbsp;($)
                       <input type="number" className="form-control" placeholder="$" defaultValue={hyperion.perGBCost} ref={input => (this.perGBCost = input)} />
                     </div>
                   </div>
@@ -79,14 +79,7 @@ class Pricing extends Component {
                     <div className="col-md-12" style={{ marginTop: '10px' }}>
                       <i className="fa fa-joomla" />
                       &nbsp;Per API Cost &nbsp;($)
-                      <input
-                        type="number"
-                        className="form-control"
-                        placeholder="Logic not implemented yet"
-                        disabled
-                        defaultValue={hyperion.perApiCost}
-                        ref={input => (this.perApiCost = input)}
-                      />
+                      <input type="number" className="form-control" placeholder="$" defaultValue={hyperion.perApiCost} ref={input => (this.perApiCost = input)} />
                     </div>
                   </div>
                   <div className="row">
