@@ -575,40 +575,50 @@ class PaymeterComponent extends Component {
                                 </tbody></table>
                                 
                                 <br />
-                                <div className="row b-a b-grey no-margin">
-                                  <div className="col-md-8 p-l-10 sm-padding-15 align-items-center d-flex">
-                                    <div>
-                                      <h5 className="font-montserrat all-caps small no-margin hint-text bold">This month bill so far</h5>
+                                <div className="p-l-15 p-r-15">
+                                  <div className="row b-a b-grey">
+                                    {/*<div className="col-md-2 p-l-15 sm-p-t-15 clearfix sm-p-b-15 d-flex flex-column justify-content-center">
+                                      <h5 className="font-montserrat all-caps small no-margin hint-text bold">Advance</h5>
+                                      <h3 className="no-margin">
+                                      
+                                      </h3>
+                                    </div>*/}
+                                    <div className="col-md-7 clearfix sm-p-b-15 d-flex flex-column justify-content-center">
+                                      <h5 className="font-montserrat all-caps small no-margin hint-text bold">Minimum Fee This Month</h5>
+                                      <h3 className="no-margin">
+                                      {this.props.paymeterUserData &&
+                                        <span>{'$' + (this.props.paymeterUserData.minimumFeeThisMonth || '0.00')}</span>
+                                      }
+                                      </h3>
                                     </div>
-                                  </div>
-                                  <div className="col-md-2 p-l-10 sm-padding-15 align-items-center d-flex">
-                                  </div>
-                                  <div className="col-md-2 text-right bg-primary padding-10">
-                                    <h5 className="font-montserrat all-caps small no-margin hint-text text-white bold">Bill</h5>
-                                    <h4 className="no-margin text-white">$
-                                      <span>
-                                        {this.props.paymeterUserData &&
-                                          <span>
+                                    <div className="col-md-5 text-right bg-master-darker col-sm-height padding-15 d-flex flex-column justify-content-center align-items-end">
+                                      <h5 className="font-montserrat all-caps small no-margin hint-text text-white bold">Total Deposit Fee This Month</h5>
+                                      <h1 className="no-margin text-white">
+                                        <span>$</span>
+                                        <span>
+                                          {this.props.paymeterUserData &&
                                             <span>
-                                              {this.props.paymeterUserData.bill &&
-                                                <span>{this.props.paymeterUserData.bill}</span>
-                                              }
+                                              <span>
+                                                {this.props.paymeterUserData.bill &&
+                                                  <span>{this.props.paymeterUserData.bill}</span>
+                                                }
+                                              </span>
+                                              <span>
+                                                {!this.props.paymeterUserData.bill &&
+                                                  <span>0.00</span>
+                                                }
+                                              </span>
                                             </span>
-                                            <span>
-                                              {!this.props.paymeterUserData.bill &&
-                                                <span>0.00</span>
-                                              }
-                                            </span>
-                                          </span>
-                                        }
+                                          }
 
-                                        {!this.props.paymeterUserData &&
-                                          <span>
-                                            0.00
-                                          </span>
-                                        }
-                                      </span>
-                                    </h4>
+                                          {!this.props.paymeterUserData &&
+                                            <span>
+                                              0.00
+                                            </span>
+                                          }
+                                        </span>
+                                      </h1>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
