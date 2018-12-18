@@ -171,6 +171,8 @@ class Peers extends Component {
   refreshConnectedPeers() {
     let rpc = null;
     let status = null;
+    let username = null;
+    let password = null;
 
     if (this.props.network.length === 1) {
       username = this.props.network[0].instanceId;

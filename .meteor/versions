@@ -18,6 +18,7 @@ blockcluster:modernizr@0.0.1
 blockcluster:pages@0.0.1
 blockcluster:raven@0.3.0
 blockcluster:tether@0.0.1
+blockcluster:web3@0.0.1
 boilerplate-generator@1.6.0
 caching-compiler@1.2.1
 caching-html-compiler@1.1.3

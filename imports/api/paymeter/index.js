@@ -81,53 +81,56 @@ const erc20ABI = [
 ];
 
 function createWallet(coinType, walletName, userId, network, options) {
+  return new Promise((resolve, reject) => {
+    if(!isUserSubscribedToPaymeter(userId)) {
+      reject('Please subscribe');
+    } else {
+      let walletId;
+      if (coinType === 'ETH') {
+        let wallet = Wallet.generate();
+        let private_key_hex = wallet.getPrivateKey().toString('hex');
+        let address = wallet.getAddress();
 
-  if(!isUserSubscribedToPaymeter(userId)) {
-    return false;
-  }
+        const cryptr = new Cryptr(options.password);
 
-  let walletId;
-  if (coinType === 'ETH') {
-    let wallet = Wallet.generate();
-    let private_key_hex = wallet.getPrivateKey().toString('hex');
-    let address = wallet.getAddress();
+        walletId = Wallets.insert({
+          coinType: 'ETH',
+          privateKey: cryptr.encrypt(private_key_hex),
+          address: '0x' + address.toString('hex'),
+          user: userId,
+          walletName: walletName,
+          network: network,
+          createdAt: Date.now(),
+          confirmedBalance: '0'
+        });
 
-    const cryptr = new Cryptr(options.password);
+        resolve(walletId)
+      } else if (coinType === 'ERC20') {
+        let wallet = Wallet.generate();
+        let private_key_hex = wallet.getPrivateKey().toString('hex');
+        let address = wallet.getAddress();
 
-    walletId = Wallets.insert({
-      coinType: 'ETH',
-      privateKey: cryptr.encrypt(private_key_hex),
-      address: '0x' + address.toString('hex'),
-      user: userId,
-      walletName: walletName,
-      network: network,
-      createdAt: Date.now(),
-      confirmedBalance: '0'
-    });
-  } else if (coinType === 'ERC20') {
-    let wallet = Wallet.generate();
-    let private_key_hex = wallet.getPrivateKey().toString('hex');
-    let address = wallet.getAddress();
+        const cryptr = new Cryptr(options.password);
 
-    const cryptr = new Cryptr(options.password);
+        walletId = Wallets.insert({
+          coinType: 'ERC20',
+          privateKey: cryptr.encrypt(private_key_hex),
+          address: '0x' + address.toString('hex'),
+          user: userId,
+          contractAddress: options.contractAddress,
+          tokenSymbol: options.tokenSymbol,
+          walletName: walletName,
+          network: network,
+          createdAt: Date.now(),
+          confirmedBalance: '0'
+        });
 
-    walletId = Wallets.insert({
-      coinType: 'ERC20',
-      privateKey: cryptr.encrypt(private_key_hex),
-      address: '0x' + address.toString('hex'),
-      user: userId,
-      contractAddress: options.contractAddress,
-      tokenSymbol: options.tokenSymbol,
-      walletName: walletName,
-      network: network,
-      createdAt: Date.now(),
-      confirmedBalance: '0'
-    });
-  } else {
-    return false;
-  }
-
-  return walletId;
+        resolve(walletId)
+      } else {
+        reject('Invalid coin type')
+      }
+    }
+  })
 }
 
 async function getBalance(walletId) {
@@ -713,9 +716,14 @@ function paymeter_getAndResetUserBill(userId) {
 }
 
 Meteor.methods({
-  createWallet: (coinType, walletName, network, options) => {
+  createWallet: async (coinType, walletName, network, options) => {
     if (Meteor.userId()) {
-      return createWallet(coinType, walletName, Meteor.userId(), network, options);
+      try {
+        let walletId = await createWallet(coinType, walletName, Meteor.userId(), network, options);
+        return walletId;
+      } catch (e) {
+        throw new Meteor.Error(e, e);
+      }
     } else {
       throw new Meteor.Error('Not Allowed', 'Please login');
     }
@@ -766,6 +774,15 @@ Meteor.methods({
     } else {
       throw new Meteor.Error('Please login', 'Please login');
     }
+  },
+  updateCallbackURLPayment: async (notifyURL) => {
+    PaymeterCollection.upsert({
+      userId: Meteor.userId()
+    }, {
+      $set: {
+        notifyURL: notifyURL
+      }
+    })
   }
 });
 
@@ -785,3 +802,4 @@ module.exports = {
   erc20ABI,
   getWalletTransactions,
 };
+
