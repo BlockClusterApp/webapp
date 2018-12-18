@@ -27,6 +27,9 @@ HyperionPricing.schema = new SimpleSchema({
   createdBy: {
     type: String,
   },
+  deletedBy: {
+    type: String,
+  },
 });
 
 if (Meteor.isServer) {

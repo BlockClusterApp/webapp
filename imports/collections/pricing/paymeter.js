@@ -9,13 +9,19 @@ const PaymeterPricing = new Mongo.Collection('paymeterPricing');
 AttachBaseHooks(PaymeterPricing);
 
 PaymeterPricing.schema = new SimpleSchema({
-  minimumCost: {
+  minimumMonthlyCost: {
     type: Number,
   },
   perApiCost: {
     type: Number,
   },
   perWalletCost: {
+    type: Number,
+  },
+  perTransactionCost: {
+    type: Number,
+  },
+  perTransactionCostFlat: {
     type: Number,
   },
   active: {

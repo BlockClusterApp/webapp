@@ -2,7 +2,9 @@ import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
+
 import HyperionPricing from '../../../../../collections/pricing/hyperion';
+import notifications from '../../../../../modules/notifications';
 
 class Pricing extends Component {
   constructor(props) {
@@ -13,10 +15,32 @@ class Pricing extends Component {
     };
   }
 
-  save() {}
+  save() {
+    this.setState({
+      loading: true,
+    });
+    Meteor.call(
+      'updateHyperionPricing',
+      {
+        minimumMonthlyCost: this.minimumMonthlyCost.value || 0,
+        perApiCost: this.perApiCost.value || 0,
+        perGBCost: this.perGBCost.value || 0,
+        perGBDataTransferCost: this.perGBDataTransferCost.value || 0,
+      },
+      (err, data) => {
+        this.setState({
+          loading: false,
+        });
+        if (err) {
+          return notifications.error(err.reason);
+        }
+        notifications.success('Pricing updated');
+      }
+    );
+  }
 
   render() {
-    const { hyperion } = this.props;
+    let { hyperion } = this.props;
 
     if (!hyperion) {
       hyperion = {};
@@ -35,12 +59,13 @@ class Pricing extends Component {
                     </h5>
                   </div>
                 </div>
+
                 <div className="card-block">
                   <div className="row" style={{ marginTop: '10px' }}>
                     <div className="col-md-12">
                       <i className="fa fa-joomla" />
                       &nbsp;Minimum Monthly Cost &nbsp;($)
-                      <input type="number" className="form-control" placeholder="$" defaultValue={hyperion.minimumMonthlyCost} ref={input => (this.minimumMonthly = input)} />
+                      <input type="number" className="form-control" placeholder="$" defaultValue={hyperion.minimumMonthlyCost} ref={input => (this.minimumMonthlyCost = input)} />
                     </div>
                   </div>
                   <div className="row">
@@ -54,7 +79,14 @@ class Pricing extends Component {
                     <div className="col-md-12" style={{ marginTop: '10px' }}>
                       <i className="fa fa-joomla" />
                       &nbsp;Per API Cost &nbsp;($)
-                      <input type="number" className="form-control" placeholder="$" defaultValue={hyperion.perApiCost} ref={input => (this.perApiCost = input)} />
+                      <input
+                        type="number"
+                        className="form-control"
+                        placeholder="Logic not implemented yet"
+                        disabled
+                        defaultValue={hyperion.perApiCost}
+                        ref={input => (this.perApiCost = input)}
+                      />
                     </div>
                   </div>
                   <div className="row">
@@ -64,7 +96,8 @@ class Pricing extends Component {
                       <input
                         type="number"
                         className="form-control"
-                        placeholder="$"
+                        placeholder="Logic not implemented yet"
+                        disabled
                         defaultValue={hyperion.perGBDataTransferCost}
                         ref={input => (this.perGBDataTransferCost = input)}
                       />
@@ -78,7 +111,7 @@ class Pricing extends Component {
                         data-spinner-size={30}
                         data-spinner-lines={12}
                         className="btn btn-success pull-left "
-                        onClick={this.save}
+                        onClick={this.save.bind(this)}
                         loading={this.state.loading}
                       >
                         <i className="fa fa-save" /> &nbsp;&nbsp;Save
