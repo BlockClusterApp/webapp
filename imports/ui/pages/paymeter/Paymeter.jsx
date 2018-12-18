@@ -11,6 +11,9 @@ import LoadingIcon from "../../components/LoadingIcon/LoadingIcon.jsx";
 let QRCode = require('qrcode.react');
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
 import WebHook from '../../../collections/webhooks';
+import {
+  Paymeter
+} from '../../../collections/paymeter/paymeter.js'
 
 import "./Paymeter.scss";
 
@@ -43,7 +46,7 @@ class PaymeterComponent extends Component {
       if(!err && r) {
         notifications.success("Wallet Created");
       } else {
-        notifications.error("An error occured while creating wallet");
+        notifications.error("An error occured");
       }
 
       this.setState({
@@ -151,7 +154,44 @@ class PaymeterComponent extends Component {
     });
   };
 
+  activate = _ => {
+    this.setState({
+      ['_activate_loading']: true
+    });
+
+    Meteor.call('subscribePaymeter', (e) => {
+      if(e) {
+        notifications.error(e.reason);
+      } else {
+        notifications.success('Subscription Successful');
+      }
+
+      this.setState({
+        ['_activate_loading']: false
+      });
+    })
+  }
+
+  deactivate = _ => {
+    this.setState({
+      ['_activate_loading']: true
+    });
+
+    Meteor.call('unsubscribePaymeter', (e) => {
+      if(e) {
+        notifications.error(e.reason);
+      } else {
+        notifications.success('Unsubscription Successful');
+      }
+
+      this.setState({
+        ['_activate_loading']: false
+      });
+    })
+  }
+
   render() {
+    console.log(this.props.paymeterUserData)
     let wallet = null;
     if(this.state.secondBox === 'eth-wallet-management') {
       wallet = Wallets.findOne({
@@ -195,11 +235,6 @@ class PaymeterComponent extends Component {
             </ul>
             <p className="menu-title m-t-20 all-caps">Others</p>
             <ul className="main-menu">
-              <li className="">
-                <a href="javascript:void(0);">
-                  <span className="title"><i className="fa fa-credit-card"></i> Billing</span>
-                </a>
-              </li>
               <li>
                 <a href="javascript:void(0);" onClick={() => {this.setState({firstBox: 'settings-list', secondBox: ''})}}>
                   <span className="title"><i className="fa fa-sliders"></i> Settings</span>
@@ -226,7 +261,7 @@ class PaymeterComponent extends Component {
                       </div>
                       <div className="btn-group btn-group-justified row w-100 create-wallet-btn">
                         <div className="btn-group col-12 p-0">
-                          <button type="button" className="btn btn-default w-100">
+                          <button type="button" className="btn btn-default w-100" onClick={() => {this.setState({firstBox: 'settings-list', secondBox: 'activate'})}}>
                             <span className="p-t-5 p-b-5">
                                 <i className="fa fa-shopping-cart fs-15"></i>
                             </span>
@@ -293,7 +328,7 @@ class PaymeterComponent extends Component {
                                       <p className="pull-left small hint-text no-margin p-t-5">{helpers.timeConverter(wallet.createdAt / 1000)}</p>
                                       <div className="pull-right">
                                         <p className="small hint-text no-margin inline">{/*ICO Coin Symbol*/}</p>
-                                        <span className=" label label-info p-t-5 m-l-5 p-b-5 inline fs-12">{wallet.balance} ETH</span>
+                                        <span className=" label label-info p-t-5 m-l-5 p-b-5 inline fs-12">{wallet.confirmedBalance || '0'} ETH</span>
                                       </div>
                                       <div className="clearfix"></div>
                                     </div>
@@ -333,7 +368,7 @@ class PaymeterComponent extends Component {
                                       <p className="pull-left small hint-text no-margin p-t-5">{helpers.timeConverter(wallet.createdAt / 1000)}</p>
                                       <div className="pull-right">
                                         <p className="small hint-text no-margin inline">{/*ICO Coin Symbol*/}</p>
-                                        <span className=" label label-info p-t-5 m-l-5 p-b-5 inline fs-12">{wallet.balance} {wallet.tokenSymbol}</span>
+                                        <span className=" label label-info p-t-5 m-l-5 p-b-5 inline fs-12">{wallet.confirmedBalance || '0'} {wallet.tokenSymbol}</span>
                                       </div>
                                       <div className="clearfix"></div>
                                     </div>
@@ -397,6 +432,177 @@ class PaymeterComponent extends Component {
                   </div>
                 }
 
+                {this.state.secondBox === 'activate' &&
+                  <div className="card card-default" style={{"marginBottom": "0px", "borderTop": "0px"}}>
+                    <div className="card-block" >
+                      <div>
+                        <div className="tab-pane padding-20 sm-no-padding active slide-left" id="tab1">
+                          <div className="row row-same-height">
+                            <div className="col-lg-4 b-r b-dashed b-grey sm-b-b">
+                              <div className="padding-30 sm-padding-5 sm-m-t-15">
+                                <i className="fa fa fa-cube fa-2x hint-text" />
+                                <h2>Wallet-as-a-Service</h2>
+                                <p>Paymeter let's you integrate ETH and any ERC20 Token Wallets securly in your Crypto based app.</p>
+                                <p className="small hint-text">Note that we don't store the plain private keys of your wallets. The private keys are encrypted with wallet's password which you solely own</p>
+                                <div>
+                                  <div>
+
+                                  {this.props.paymeterUserData ? (
+                                    <div>
+                                      {this.props.paymeterUserData.subscribed ? (
+                                        <div>
+                                          {this.props.paymeterUserData.unsubscribeNextMonth ? (
+                                            <LaddaButton
+                                              onClick={(e) => { this.activate(); }}
+                                              loading={this.state['_activate_loading']}
+                                              data-size={S}
+                                              data-style={SLIDE_UP}
+                                              data-spinner-size={30}
+                                              data-spinner-lines={12}
+                                              className="btn btn-complete  btn-cons m-t-10"
+                                              type="button"
+                                            >
+                                              <i className="fa fa-check" aria-hidden="true" />
+                                              &nbsp;&nbsp;Re-Subscribe
+                                            </LaddaButton>
+                                          ) : (
+                                            <LaddaButton
+                                              onClick={(e) => { this.deactivate(); }}
+                                              loading={this.state['_activate_loading']}
+                                              data-size={S}
+                                              data-style={SLIDE_UP}
+                                              data-spinner-size={30}
+                                              data-spinner-lines={12}
+                                              className="btn btn-danger  btn-cons m-t-10"
+                                              type="button"
+                                            >
+                                              <i className="fa fa-times" aria-hidden="true" />
+                                              &nbsp;&nbsp;Unsubscribe
+                                            </LaddaButton>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <LaddaButton
+                                          onClick={(e) => { this.activate(); }}
+                                          loading={this.state['_activate_loading']}
+                                          data-size={S}
+                                          data-style={SLIDE_UP}
+                                          data-spinner-size={30}
+                                          data-spinner-lines={12}
+                                          className="btn btn-success  btn-cons m-t-10"
+                                          type="button"
+                                        >
+                                          <i className="fa fa-check" aria-hidden="true" />
+                                          &nbsp;&nbsp;Subscribe
+                                        </LaddaButton>
+                                      )}
+                                      
+                                    </div>
+                                  ) : (
+                                    <LaddaButton
+                                      onClick={(e) => { this.activate(); }}
+                                      loading={this.state['_activate_loading']}
+                                      data-size={S}
+                                      data-style={SLIDE_UP}
+                                      data-spinner-size={30}
+                                      data-spinner-lines={12}
+                                      className="btn btn-success  btn-cons m-t-10"
+                                      type="button"
+                                    >
+                                      <i className="fa fa-check" aria-hidden="true" />
+                                      &nbsp;&nbsp;Subscribe
+                                    </LaddaButton>
+                                  )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="col-lg-8">
+                              <div className="padding-30 sm-padding-5">
+                              <h5>Pricing Model</h5>
+                              <div className="row">
+                                <div className="col-lg-12">
+                                  <p className="no-margin">Internal and External Transactions</p>
+                                  <p className="small hint-text">
+                                    For internal transactions only network fee is charged without any service fees. Creating wallets doesn't add extra charges. We deduct the fees from your added debit/credit card at the end of the month.
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="row">
+                                <div className="col-lg-12">
+                                  <p className="no-margin">Monthly Minimum</p>
+                                  <p className="small hint-text">
+                                    We charge $299 or total transactions fees at the EOM depending on whichever is greater
+                                  </p>
+                                </div>
+                              </div>
+                              <table className="table table-condensed">
+                                  <tbody><tr>
+                                    <td className="col-lg-8 col-md-6 col-sm-7 ">
+                                      <a href="#" className="remove-item"><i className="fa fa-check"></i></a>
+                                      <span className="m-l-10 font-montserrat fs-11 all-caps no-hidden-text">Deposit from External Wallet</span>
+                                    </td>
+                                    <td className=" col-lg-2 col-md-3 col-sm-3 text-right">
+                                      <span className="no-hidden-text">Each Txn</span>
+                                    </td>
+                                    <td className=" col-lg-2 col-md-3 col-sm-2 text-right">
+                                      <h4 className="text-primary no-margin font-montserrat no-hidden-text">0.18%</h4>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="col-lg-8 col-md-6 col-sm-7 ">
+                                      <a href="#" className="remove-item"><i className="fa fa-check"></i></a>
+                                      <span className="m-l-10 font-montserrat fs-11 all-caps no-hidden-text">ERC20 Deposit from External Wallet</span>
+                                    </td>
+                                    <td className=" col-lg-2 col-md-3 col-sm-3 text-right">
+                                      <span className="no-hidden-text">Each Txn, if price not found</span>
+                                    </td>
+                                    <td className=" col-lg-2 col-md-3 col-sm-2 text-right">
+                                      <h4 className="text-primary no-margin font-montserrat no-hidden-text">$0.20</h4>
+                                    </td>
+                                  </tr>
+                                </tbody></table>
+                                
+                                <br />
+                                <div className="row b-a b-grey no-margin">
+                                  <div className="col-md-8 p-l-10 sm-padding-15 align-items-center d-flex">
+                                    <div>
+                                      <h5 className="font-montserrat all-caps small no-margin hint-text bold">This month bill so far</h5>
+                                    </div>
+                                  </div>
+                                  <div className="col-md-2 p-l-10 sm-padding-15 align-items-center d-flex">
+                                  </div>
+                                  <div className="col-md-2 text-right bg-primary padding-10">
+                                    <h5 className="font-montserrat all-caps small no-margin hint-text text-white bold">Bill</h5>
+                                    <h4 className="no-margin text-white">$
+                                      <span>
+                                        {this.props.paymeterUserData &&
+                                          <span>
+                                            <span>
+                                              {this.props.paymeterUserData.bill &&
+                                                <span>{this.props.paymeterUserData.bill}</span>
+                                              }
+                                            </span>
+                                            <span>
+                                              {!this.props.paymeterUserData.bill &&
+                                                <span>0.00</span>
+                                              }
+                                            </span>
+                                          </span>
+                                        }
+                                      </span>
+                                    </h4>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+
                 {this.state.secondBox === 'create-eth-wallet' &&
                   <div className="card card-default" style={{"marginBottom": "0px", "borderTop": "0px"}}>
                     <div className="card-block" >
@@ -440,7 +646,7 @@ class PaymeterComponent extends Component {
                   <div className="card card-default" style={{"marginBottom": "0px", "borderTop": "0px"}}>
                     <div className="card-block" >
                       <h5>
-                        Create New Ethereum Wallet
+                        Create New ERC20 Wallet
                       </h5>
                       <form className="" role="form" onSubmit={(e) => {this.createERC20Wallet(e)}}>
                         <div className="form-group form-group-default required ">
@@ -521,6 +727,17 @@ class PaymeterComponent extends Component {
                           data-target="#withdrawlHistory"
                         >
                           Withdrawl History
+                        </a>
+                      </li>
+                      <li className="nav-item">
+                        <a
+                          className=""
+                          href="#"
+                          data-toggle="tab"
+                          role="tab"
+                          data-target="#depositHistory"
+                        >
+                          Deposit History
                         </a>
                       </li>
                     </ul>
@@ -617,12 +834,11 @@ class PaymeterComponent extends Component {
                                         <th style={{ width: "13%" }}>Amount</th>
                                         <th style={{ width: "18%" }}>Fee</th>
                                         <th style={{ width: "17%" }}>To Address</th>
-                                        <th style={{ width: "15%" }}>Type</th>
                                         <th style={{ width: "20%" }}>Status</th>
                                       </tr>
                                     </thead>
                                     <tbody>
-                                      {wallet.txns.map((item, index) => {
+                                      {wallet.withdrawl_txns.map((item, index) => {
                                         return (
                                           <tr key={item._id}>
                                             <td className="v-align-middle ">
@@ -638,7 +854,56 @@ class PaymeterComponent extends Component {
                                               {item.toAddress}
                                             </td>
                                             <td className="v-align-middle">
-                                              {helpers.firstLetterCapital(item.type)}
+                                              {ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="tab-pane" id="depositHistory">
+                        <div className="row">
+                          <div className="col-lg-12">
+                            <div className="card card-transparent">
+                              <div
+                                className="card-block"
+                                style={{ paddingBottom: "0px" }}
+                              >
+                                <div className="table-responsive">
+                                  <table
+                                    className="table table-hover"
+                                    id="basicTable"
+                                  >
+                                    <thead>
+                                      <tr>
+                                        <th style={{ width: "18%" }}>Txn ID</th>
+                                        <th style={{ width: "13%" }}>Amount</th>
+                                        <th style={{ width: "18%" }}>Fee</th>
+                                        <th style={{ width: "17%" }}>From Address</th>
+                                        <th style={{ width: "20%" }}>Status</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {wallet.deposit_txns.map((item, index) => {
+                                        return (
+                                          <tr key={item._id}>
+                                            <td className="v-align-middle ">
+                                              {item.txnId}
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {item.amount} ETH
+                                            </td>
+                                            <td className="v-align-middle">
+                                              ${item.usdCharged || '0.00'}
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {item.fromAddress}
                                             </td>
                                             <td className="v-align-middle">
                                               {ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}
@@ -698,6 +963,17 @@ class PaymeterComponent extends Component {
                           Withdrawl History
                         </a>
                       </li>
+                      <li className="nav-item">
+                        <a
+                          className=""
+                          href="#"
+                          data-toggle="tab"
+                          role="tab"
+                          data-target="#depositHistory"
+                        >
+                          Deposit History
+                        </a>
+                      </li>
                     </ul>
                     <div className="tab-content">
                       <div className="tab-pane active" id="deposit">
@@ -744,6 +1020,14 @@ class PaymeterComponent extends Component {
                                               <div className="form-group form-group-default m-t-10 required">
                                                 <label>To Address</label>
                                                 <input type="text" className="form-control" ref="transferErc20Address" required />
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div className="row">
+                                            <div className="col-md-12">
+                                              <div className="form-group form-group-default m-t-10 required">
+                                                <label>Amount</label>
+                                                <input type="text" className="form-control" ref="transferErc20Amount" required />
                                               </div>
                                             </div>
                                           </div>
@@ -816,12 +1100,11 @@ class PaymeterComponent extends Component {
                                         <th style={{ width: "13%" }}>Amount</th>
                                         <th style={{ width: "18%" }}>Fee</th>
                                         <th style={{ width: "17%" }}>To Address</th>
-                                        <th style={{ width: "15%" }}>Type</th>
                                         <th style={{ width: "20%" }}>Status</th>
                                       </tr>
                                     </thead>
                                     <tbody>
-                                      {wallet.txns.map((item, index) => {
+                                      {wallet.withdrawl_txns.map((item, index) => {
                                         return (
                                           <tr key={item._id}>
                                             <td className="v-align-middle ">
@@ -837,7 +1120,56 @@ class PaymeterComponent extends Component {
                                               {item.toAddress}
                                             </td>
                                             <td className="v-align-middle">
-                                              {helpers.firstLetterCapital(item.type)}
+                                              {ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="tab-pane" id="depositHistory">
+                        <div className="row">
+                          <div className="col-lg-12">
+                            <div className="card card-transparent">
+                              <div
+                                className="card-block"
+                                style={{ paddingBottom: "0px" }}
+                              >
+                                <div className="table-responsive">
+                                  <table
+                                    className="table table-hover"
+                                    id="basicTable"
+                                  >
+                                    <thead>
+                                      <tr>
+                                        <th style={{ width: "18%" }}>Txn ID</th>
+                                        <th style={{ width: "13%" }}>Amount</th>
+                                        <th style={{ width: "18%" }}>Fee</th>
+                                        <th style={{ width: "17%" }}>From Address</th>
+                                        <th style={{ width: "20%" }}>Status</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {wallet.deposit_txns.map((item, index) => {
+                                        return (
+                                          <tr key={item._id}>
+                                            <td className="v-align-middle ">
+                                              {item.txnId}
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {item.amount} {wallet.tokenSymbol}
+                                            </td>
+                                            <td className="v-align-middle">
+                                              ${item.usdCharged || '0.00'}
+                                            </td>
+                                            <td className="v-align-middle">
+                                              {item.fromAddress}
                                             </td>
                                             <td className="v-align-middle">
                                               {ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}
@@ -875,8 +1207,9 @@ export default withTracker(props => {
     wallets: Wallets.find({}).fetch(),
     totalETHWallets: Wallets.find({coinType: "ETH"}).count(),
     totalERC20Wallets: Wallets.find({coinType: "ERC20"}).count(),
-    subscriptions: [Meteor.subscribe("wallets")],
+    subscriptions: [Meteor.subscribe("paymeter_user_data"), Meteor.subscribe("wallets")],
     user: Meteor.user(),
     webhooks: WebHook.find({}).fetch(),
+    paymeterUserData: Paymeter.findOne({userId: Meteor.userId()})
   };
 })(withRouter(PaymeterComponent));

@@ -206,5 +206,11 @@ export default {
         var daysDifference = Math.floor(difference/1000/60/60/24);
     
         return daysDifference;
+    },
+    minutesDifference (timestamp1, timestamp2) {
+        var difference = timestamp1 - timestamp2;
+        var minutesDifference = Math.floor(difference/1000/60);
+    
+        return minutesDifference;
     }
 }
