@@ -4,7 +4,7 @@ import {Networks} from "../../../collections/networks/networks.js"
 import helpers from "../../../modules/helpers"
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from "react-html-parser";
 import {withRouter} from 'react-router-dom'
-var Web3 = require('web3');
+//var Web3 = require('web3');
 var abiDecoder = require('abi-decoder');
 import {Link} from "react-router-dom";
 import Config from '../../../modules/config/client'
@@ -145,6 +145,7 @@ class Explorer extends Component {
         }
 
         if(status == "running") {
+            /*
             let web3 = new Web3(new Web3.providers.HttpProvider(rpc, 0, username, password));
             web3.eth.getBlockNumber((error, result) => {
                 if(!error) {
@@ -192,6 +193,7 @@ class Explorer extends Component {
                     })
                 }
             })
+            */
         } else {
             this.setState({
                 refreshTxpoolTimer: setTimeout(this.refreshTxpool, 500)

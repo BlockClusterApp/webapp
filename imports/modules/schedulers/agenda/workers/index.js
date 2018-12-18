@@ -4,5 +4,4 @@ module.exports = (agenda) => {
   require('./forex-update')(agenda);
   require('./invoice-reminder-email')(agenda);
   require('./attach-razorpay-addons')(agenda);
-  require('./paymeter-crons')(agenda);
 }
