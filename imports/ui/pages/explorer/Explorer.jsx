@@ -317,6 +317,8 @@ class Explorer extends Component {
 
             let rpc = null;
             let status = null;
+            let username = null;
+            let password = null;
 
             rpc = `https://${this.props.workerNodeDomainName(this.props.network[0].locationCode)}/api/node/${this.props.network[0].instanceId}/jsonrpc`
             username = this.props.network[0].instanceId
