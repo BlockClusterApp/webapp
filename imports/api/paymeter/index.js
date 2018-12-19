@@ -646,8 +646,12 @@ function isUserSubscribedToPaymeter(userId) {
     userId: userId
   })
 
-  if(obj.subscribed) {
-    return true;
+  if(obj) {
+    if(obj.subscribed) {
+      return true;
+    } else {
+      return false;
+    }
   } else {
     return false;
   }
