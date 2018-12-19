@@ -203,7 +203,6 @@ export default withTracker(props => {
     network: Networks.find({ instanceId: props.match.params.id, active: true }).fetch(),
     networks: Networks.find({ active: true }).fetch(),
     workerNodeIP: Config.workerNodeIP,
-    apiKeys: ApiKeys.find({}),
     workerNodeDomainName: Config.workerNodeDomainName,
     subscriptions: [
       Meteor.subscribe('networks', {
@@ -212,8 +211,7 @@ export default withTracker(props => {
             props.history.push('/app/networks');
           }
         },
-      }),
-      Meteor.subscribe('apiKeys.all'),
+      })
     ],
   };
 })(withRouter(APIsCreds));

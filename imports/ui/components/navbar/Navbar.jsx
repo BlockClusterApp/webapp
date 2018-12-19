@@ -11,12 +11,6 @@ class Navbar extends Component {
     };
   }
 
-  componentWillUnmount() {
-    this.props.subscriptions.forEach(s => {
-      s.stop();
-    });
-  }
-
   componentDidMount() {
     window.addEventListener('RemoteConfigChanged', () => {
       this.setState({

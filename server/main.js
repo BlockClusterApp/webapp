@@ -802,6 +802,7 @@ Meteor.methods({
       Bull.addJob('delete-network', {
         instanceId: network.instanceId,
         locationCode,
+        namespace: Config.namespace
       });
     } catch (err) {
       console.log('Kube delete error ', err);

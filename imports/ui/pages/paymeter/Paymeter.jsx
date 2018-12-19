@@ -42,11 +42,12 @@ class PaymeterComponent extends Component {
     })
     Meteor.call("createWallet", "ETH", this.refs.ethWalletName.value, this.refs.ethWalletNetwork.value, {
       password: this.refs.ethWalletPassword.value
-    }, (err, r) => {
-      if(!err && r) {
+    }, (error, r) => {
+      console.log(error, r)
+      if(!error && r) {
         notifications.success("Wallet Created");
       } else {
-        notifications.error("An error occured");
+        notifications.error(error.reason);
       }
 
       this.setState({
@@ -137,7 +138,7 @@ class PaymeterComponent extends Component {
       ['_notifications_formSubmitError']: '',
     });
 
-    Meteor.call('updateCallbackURL', { paymeter: this.refs._notifications_paymeterUrl.value }, error => {
+    Meteor.call('updateCallbackURLPayment', this.refs._notifications_paymeterUrl.value, error => {
       if (!error) {
         this.setState({
           ['_notifications_formloading']: false,
@@ -202,6 +203,12 @@ class PaymeterComponent extends Component {
       wallet = Wallets.findOne({
         _id: this.state.secondBoxData.walletId
       })
+    }
+
+    let notifyURL = '';
+
+    if(this.props.paymeterUserData) {
+      notifyURL = this.props.paymeterUserData.notifyURL || ''
     }
 
     return (
@@ -399,7 +406,7 @@ class PaymeterComponent extends Component {
                         {this.props.user && (
                           <div className="form-group form-group-default required ">
                             <label>Paymeter Notifications Webhook URL</label>
-                            <input placeholder="https://example.com/wallet" type="text" defaultValue={this.props.user.profile.paymeterNotifyURL} className="form-control" required  ref="_notifications_paymeterUrl" />
+                            <input placeholder="https://example.com/wallet" type="text" defaultValue={notifyURL} className="form-control" required  ref="_notifications_paymeterUrl" />
                           </div>
                         )}
 
@@ -437,7 +444,7 @@ class PaymeterComponent extends Component {
                       <div>
                         <div className="tab-pane padding-20 sm-no-padding active slide-left" id="tab1">
                           <div className="row row-same-height">
-                            <div className="col-lg-4 b-r b-dashed b-grey sm-b-b">
+                            <div className="col-lg-12 sm-b-b">
                               <div className="padding-30 sm-padding-5 sm-m-t-15">
                                 <i className="fa fa fa-cube fa-2x hint-text" />
                                 <h2>Wallet-as-a-Service</h2>
@@ -516,14 +523,19 @@ class PaymeterComponent extends Component {
                                 </div>
                               </div>
                             </div>
-                            <div className="col-lg-8">
+                          </div>
+                          <div style={{paddingLeft: '30px', paddingRight: '30px'}}>
+                            <hr className="b-dashed" />
+                          </div>
+                          <div className="row row-same-height">
+                            <div className="col-lg-12">
                               <div className="padding-30 sm-padding-5">
                               <h5>Pricing Model</h5>
                               <div className="row">
                                 <div className="col-lg-12">
                                   <p className="no-margin">Internal and External Transactions</p>
                                   <p className="small hint-text">
-                                    For internal transactions only network fee is charged without any service fees. Creating wallets doesn't add extra charges. We deduct the fees from your added debit/credit card at the end of the month.
+                                    For internal transactions, only network fee is charged without any service fees. Creating wallets doesn't add extra charges. We deduct the fees from your added debit/credit card at the end of the month.
                                   </p>
                                 </div>
                               </div>
@@ -563,34 +575,54 @@ class PaymeterComponent extends Component {
                                 </tbody></table>
                                 
                                 <br />
-                                <div className="row b-a b-grey no-margin">
-                                  <div className="col-md-8 p-l-10 sm-padding-15 align-items-center d-flex">
-                                    <div>
-                                      <h5 className="font-montserrat all-caps small no-margin hint-text bold">This month bill so far</h5>
+                                <div className="p-l-15 p-r-15">
+                                  <div className="row b-a b-grey">
+                                    {/*<div className="col-md-2 p-l-15 sm-p-t-15 clearfix sm-p-b-15 d-flex flex-column justify-content-center">
+                                      <h5 className="font-montserrat all-caps small no-margin hint-text bold">Advance</h5>
+                                      <h3 className="no-margin">
+                                      
+                                      </h3>
+                                    </div>*/}
+                                    <div className="col-md-6 clearfix sm-p-b-15 d-flex flex-column justify-content-center">
+                                      <h5 className="font-montserrat all-caps small no-margin hint-text bold">Minimum Fee This Month</h5>
+                                      <h3 className="no-margin">
+                                      {this.props.paymeterUserData &&
+                                        <span>${helpers.getFlooredFixed(parseFloat((this.props.paymeterUserData.minimumFeeThisMonth || '0.00')), 2)}</span>
+                                      }
+
+                                      {!this.props.paymeterUserData &&
+                                        <span>$0.00</span>
+                                      }
+                                      </h3>
                                     </div>
-                                  </div>
-                                  <div className="col-md-2 p-l-10 sm-padding-15 align-items-center d-flex">
-                                  </div>
-                                  <div className="col-md-2 text-right bg-primary padding-10">
-                                    <h5 className="font-montserrat all-caps small no-margin hint-text text-white bold">Bill</h5>
-                                    <h4 className="no-margin text-white">$
-                                      <span>
-                                        {this.props.paymeterUserData &&
-                                          <span>
+                                    <div className="col-md-6 text-right bg-master-darker col-sm-height padding-15 d-flex flex-column justify-content-center align-items-end">
+                                      <h5 className="font-montserrat all-caps small no-margin hint-text text-white bold">Total Deposit Fee This Month</h5>
+                                      <h1 className="no-margin text-white">
+                                        <span>$</span>
+                                        <span>
+                                          {this.props.paymeterUserData &&
                                             <span>
-                                              {this.props.paymeterUserData.bill &&
-                                                <span>{this.props.paymeterUserData.bill}</span>
-                                              }
+                                              <span>
+                                                {this.props.paymeterUserData.bill &&
+                                                  <span>{helpers.getFlooredFixed(parseFloat(this.props.paymeterUserData.bill), 2)}</span>
+                                                }
+                                              </span>
+                                              <span>
+                                                {!this.props.paymeterUserData.bill &&
+                                                  <span>0.00</span>
+                                                }
+                                              </span>
                                             </span>
+                                          }
+
+                                          {!this.props.paymeterUserData &&
                                             <span>
-                                              {!this.props.paymeterUserData.bill &&
-                                                <span>0.00</span>
-                                              }
+                                              0.00
                                             </span>
-                                          </span>
-                                        }
-                                      </span>
-                                    </h4>
+                                          }
+                                        </span>
+                                      </h1>
+                                    </div>
                                   </div>
                                 </div>
                               </div>

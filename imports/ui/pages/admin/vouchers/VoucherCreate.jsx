@@ -80,7 +80,7 @@ class VoucherCreate extends Component {
         enable_download: false,
       },
       () => {
-        payload = this.state;
+        let payload = this.state;
         const _doc_voucher = {
           code: this.state.customCode ? payload.code : null,
           noOfVouchers: payload.noOfVouchers,
