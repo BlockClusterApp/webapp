@@ -7,12 +7,13 @@ import { Utilities } from '../../collections/utilities/utilities.js';
 import helpers from '../../modules/helpers';
 const BigNumber = require('bignumber.js');
 const EthereumTx = require('ethereumjs-tx');
+import PaymeterPricing from '../../collections/pricing/paymeter';
+import PaymeterBillHistory from '../../collections/paymeter/paymeter-bill-history';
 import Webhook from '../communication/webhook';
 import agenda from '../../modules/schedulers/agenda';
-import {
-  Paymeter as PaymeterCollection
-} from '../../collections/paymeter/paymeter.js'
+import { Paymeter as PaymeterCollection } from '../../collections/paymeter/paymeter.js';
 import Billing from '../../api/billing';
+import moment from 'moment';
 const Cryptr = require('cryptr');
 
 const erc20ABI = [
@@ -82,7 +83,7 @@ const erc20ABI = [
 
 function createWallet(coinType, walletName, userId, network, options) {
   return new Promise((resolve, reject) => {
-    if(!isUserSubscribedToPaymeter(userId)) {
+    if (!isUserSubscribedToPaymeter(userId)) {
       reject('Please subscribe');
     } else {
       let walletId;
@@ -101,10 +102,10 @@ function createWallet(coinType, walletName, userId, network, options) {
           walletName: walletName,
           network: network,
           createdAt: Date.now(),
-          confirmedBalance: '0'
+          confirmedBalance: '0',
         });
 
-        resolve(walletId)
+        resolve(walletId);
       } else if (coinType === 'ERC20') {
         let wallet = Wallet.generate();
         let private_key_hex = wallet.getPrivateKey().toString('hex');
@@ -122,15 +123,15 @@ function createWallet(coinType, walletName, userId, network, options) {
           walletName: walletName,
           network: network,
           createdAt: Date.now(),
-          confirmedBalance: '0'
+          confirmedBalance: '0',
         });
 
-        resolve(walletId)
+        resolve(walletId);
       } else {
-        reject('Invalid coin type')
+        reject('Invalid coin type');
       }
     }
-  })
+  });
 }
 
 async function getBalance(walletId) {
@@ -186,7 +187,9 @@ async function getBalance(walletId) {
         web3.eth.getBlockNumber(
           Meteor.bindEnvironment((err, latestBlockNumber) => {
             if (!err) {
-              erc20_instance.methods.balanceOf(wallet.address).call({}, latestBlockNumber - 15,
+              erc20_instance.methods.balanceOf(wallet.address).call(
+                {},
+                latestBlockNumber - 15,
                 Meteor.bindEnvironment((error, minedBalance) => {
                   if (!error) {
                     minedBalance = web3.utils.fromWei(minedBalance, 'ether').toString();
@@ -238,15 +241,13 @@ async function getNonce(address, url) {
 }
 
 async function transfer(fromWalletId, toAddress, amount, options, userId) {
-  
   return new Promise(async (resolve, reject) => {
-
     if (!userId) {
       reject('Transfer requires user to be logged in');
       return;
     }
 
-    if(!isUserSubscribedToPaymeter(userId)) {
+    if (!isUserSubscribedToPaymeter(userId)) {
       reject('You need to subscribe');
       return;
     }
@@ -314,13 +315,16 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                   fee: web3.utils.fromWei(fee.toString(), 'ether'),
                 });
 
-                Wallets.update({
-                  _id: wallet._id
-                }, {
-                  $set: {
-                    confirmedBalance: await getBalance(wallet._id)
+                Wallets.update(
+                  {
+                    _id: wallet._id,
+                  },
+                  {
+                    $set: {
+                      confirmedBalance: await getBalance(wallet._id),
+                    },
                   }
-                })
+                );
 
                 resolve(return_id);
               }
@@ -371,7 +375,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
 
                   let fee_wallet_current_balance = await getBalance(options.feeWallet);
 
-                  if(new BigNumber(web3.utils.fromWei(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString(), 'ether')).lte(fee_wallet_current_balance)) {
+                  if (new BigNumber(web3.utils.fromWei(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString(), 'ether')).lte(fee_wallet_current_balance)) {
                     let cryptr = new Cryptr(options.feeWalletPassword);
                     let privateKey_decrypted = cryptr.decrypt(feeWallet.privateKey);
 
@@ -395,13 +399,16 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                             fee: web3.utils.fromWei(fee.toString(), 'ether'),
                           });
 
-                          Wallets.update({
-                            _id: feeWallet._id
-                          }, {
-                            $set: {
-                              confirmedBalance: await getBalance(feeWallet._id)
+                          Wallets.update(
+                            {
+                              _id: feeWallet._id,
+                            },
+                            {
+                              $set: {
+                                confirmedBalance: await getBalance(feeWallet._id),
+                              },
                             }
-                          })
+                          );
 
                           let total_fee = new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString();
                           total_fee = new BigNumber(total_fee).plus(fee.toString()).toString();
@@ -450,13 +457,16 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                             feeDepositTxnId: hash,
                           });
 
-                          Wallets.update({
-                            _id: wallet._id
-                          }, {
-                            $set: {
-                              confirmedBalance: await getBalance(wallet._id)
+                          Wallets.update(
+                            {
+                              _id: wallet._id,
+                            },
+                            {
+                              $set: {
+                                confirmedBalance: await getBalance(wallet._id),
+                              },
                             }
-                          })
+                          );
 
                           resolve(return_id);
                         } else {
@@ -543,13 +553,16 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                       feeDepositGasPrice: null, //both txns should go with same gas price
                     });
 
-                    Wallets.update({
-                      _id: wallet._id
-                    }, {
-                      $set: {
-                        confirmedBalance: await getBalance(wallet._id)
+                    Wallets.update(
+                      {
+                        _id: wallet._id,
+                      },
+                      {
+                        $set: {
+                          confirmedBalance: await getBalance(wallet._id),
+                        },
                       }
-                    })
+                    );
 
                     resolve(return_id);
                   } else {
@@ -596,13 +609,16 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                             feeDepositGasPrice: null, //both txns should go with same gas price
                           });
 
-                          Wallets.update({
-                            _id: wallet._id
-                          }, {
-                            $set: {
-                              confirmedBalance: await getBalance(wallet._id)
+                          Wallets.update(
+                            {
+                              _id: wallet._id,
+                            },
+                            {
+                              $set: {
+                                confirmedBalance: await getBalance(wallet._id),
+                              },
                             }
-                          })
+                          );
 
                           resolve(return_id);
                         }
@@ -643,11 +659,11 @@ async function getWalletTransactions(walletId, userId) {
 
 function isUserSubscribedToPaymeter(userId) {
   let obj = PaymeterCollection.findOne({
-    userId: userId
-  })
+    userId: userId,
+  });
 
-  if(obj) {
-    if(obj.subscribed) {
+  if (obj) {
+    if (obj.subscribed) {
       return true;
     } else {
       return false;
@@ -657,69 +673,93 @@ function isUserSubscribedToPaymeter(userId) {
   }
 }
 
-function paymeter_getAndResetUserBill(userId) {
-  if(userId) {
+async function paymeter_getAndResetUserBill(userId, isFromFrontEnd) {
+  if (userId) {
+    let paymeter_userData = PaymeterCollection.findOne({ userId: userId });
+    const paymeterPricing = PaymeterPricing.find({ active: true }).fetch()[0];
 
-    let paymeter_userData = PaymeterCollection.findOne({userId: userId})
-
-    if(paymeter_userData) {
-      if(paymeter_userData.subscribed) {
+    if (paymeter_userData) {
+      if (paymeter_userData.subscribed) {
         let bill = paymeter_userData.bill || '0';
-        let nextMonthMin = '299.00'
+        let nextMonthMin = String(paymeterPricing.minimumMonthlyCost);
 
-        if(paymeter_userData.unsubscribeNextMonth) {
+        if (paymeter_userData.unsubscribeNextMonth) {
           let UserWallets = Wallets.find({
-            userId: userId
-          }).fetch()
-    
-          UserWallets.forEach((wallet) => {
+            userId: userId,
+          }).fetch();
+
+          UserWallets.forEach(wallet => {
             WalletTransactions.remove({
-              fromWallet: wallet._id
-            })
-    
+              fromWallet: wallet._id,
+            });
+
             WalletTransactions.remove({
-              toWallet: wallet._id
-            })
-          })
+              toWallet: wallet._id,
+            });
+          });
 
           Wallets.remove({
-            userId: userId
-          })
+            userId: userId,
+          });
 
-          PaymeterCollection.upsert({
-            userId: userId
-          }, {
-            $set: {
-              subscribed: false,
-              unsubscribeNextMonth: false,
+          PaymeterCollection.upsert(
+            {
+              userId: userId,
+            },
+            {
+              $set: {
+                subscribed: false,
+                unsubscribeNextMonth: false,
+              },
             }
-          })
+          );
 
-          nextMonthMin = '0.00'
+          nextMonthMin = '0.00';
         }
 
-        if((new BigNumber(bill)).lt(paymeter_userData.minimumFeeThisMonth)) {
-          bill = paymeter_userData.minimumFeeThisMonth
+        if (new BigNumber(bill).lt(paymeter_userData.minimumFeeThisMonth)) {
+          bill = paymeter_userData.minimumFeeThisMonth;
         }
 
-        PaymeterCollection.upsert({
-          userId: userId
-        }, {
-          $set: {
-            bill: '0',
-            minimumFeeThisMonth: nextMonthMin
-          }
-        })
+        const historyLabel = moment()
+          .subtract(1, 'month')
+          .format('MMM-YYYY');
+        const history = PaymeterBillHistory.find({ billingPeriodLabel: historyLabel, userId }).fetch()[0];
+        if (history) {
+          return history.bill;
+        } else if (!isFromFrontend) {
+          PaymeterBillHistory.insert({
+            billingPeriodLabel: historyLabel,
+            userId,
+            bill,
+            metadata: paymeter_userData,
+          });
+        }
+
+        // Reset it to 0 only if call is via generate bill script i.e. from backend
+        if (!isFromFrontEnd) {
+          PaymeterCollection.upsert(
+            {
+              userId: userId,
+            },
+            {
+              $set: {
+                bill: '0',
+                minimumFeeThisMonth: nextMonthMin,
+              },
+            }
+          );
+        }
 
         return bill;
       } else {
-        return '0.00'
-      }  
+        return '0.00';
+      }
     } else {
-      return '0.00'
+      return '0.00';
     }
   } else {
-    return '0.00'
+    return '0.00';
   }
 }
 
@@ -750,48 +790,84 @@ Meteor.methods({
   },
   subscribePaymeter: async () => {
     const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(Meteor.userId());
+    const paymeterPricing = PaymeterPricing.find({ active: true }).fetch()[0];
 
-    if(isPaymentMethodVerified) {
+    if (isPaymentMethodVerified) {
+      let paymeter_userData = PaymeterCollection.findOne({ userId: Meteor.userId() });
 
-      let paymeter_userData = PaymeterCollection.findOne({userId: Meteor.userId()})
-
-      if(paymeter_userData) {
-        if(paymeter_userData.unsubscribeNextMonth) {
-          PaymeterCollection.upsert({
-            userId: Meteor.userId()
-          }, {
-            $set: {
-              subscribed: true,
-              unsubscribeNextMonth: false
+      if (paymeter_userData) {
+        if (paymeter_userData.unsubscribeNextMonth) {
+          PaymeterCollection.upsert(
+            {
+              userId: Meteor.userId(),
+            },
+            {
+              $set: {
+                subscribed: true,
+                unsubscribeNextMonth: false,
+              },
+              $push: {
+                subscriptions: {
+                  action: 'subscribe',
+                  at: new Date(),
+                },
+              },
+              $unset: {
+                subscriptionTill: '',
+              },
             }
-          })
+          );
         } else {
-          let totalDaysThisMonth = helpers.daysInThisMonth()
-          let perDayCost = (new BigNumber(299)).dividedBy(totalDaysThisMonth) 
-          let minimumFeeThisMonth = (new BigNumber(perDayCost)).times(helpers.getRemanningDays() + 1) //including today
-          PaymeterCollection.upsert({
-            userId: Meteor.userId()
-          }, {
+          let totalDaysThisMonth = helpers.daysInThisMonth();
+          let perDayCost = new BigNumber(paymeterPricing.minimumMonthlyCost).dividedBy(totalDaysThisMonth);
+          let minimumFeeThisMonth = new BigNumber(perDayCost).times(helpers.getRemainingDays() + 1); //including today
+          PaymeterCollection.upsert(
+            {
+              userId: Meteor.userId(),
+            },
+            {
+              $set: {
+                subscribed: true,
+                unsubscribeNextMonth: false,
+                minimumFeeThisMonth: minimumFeeThisMonth.toString(),
+              },
+              $push: {
+                subscriptions: {
+                  action: 'subscribe',
+                  at: new Date(),
+                },
+              },
+              $unset: {
+                subscriptionTill: '',
+              },
+            }
+          );
+        }
+      } else {
+        let totalDaysThisMonth = helpers.daysInThisMonth();
+        let perDayCost = new BigNumber(paymeterPricing.minimumMonthlyCost).dividedBy(totalDaysThisMonth);
+        let minimumFeeThisMonth = new BigNumber(perDayCost).times(helpers.getRemainingDays() + 1); //including today
+        PaymeterCollection.upsert(
+          {
+            userId: Meteor.userId(),
+          },
+          {
             $set: {
               subscribed: true,
               unsubscribeNextMonth: false,
-              minimumFeeThisMonth: minimumFeeThisMonth.toString()
-            }
-          })
-        }
-      } else {
-        let totalDaysThisMonth = helpers.daysInThisMonth()
-        let perDayCost = (new BigNumber(299)).dividedBy(totalDaysThisMonth) 
-        let minimumFeeThisMonth = (new BigNumber(perDayCost)).times(helpers.getRemanningDays() + 1) //including today
-        PaymeterCollection.upsert({
-          userId: Meteor.userId()
-        }, {
-          $set: {
-            subscribed: true,
-            unsubscribeNextMonth: false,
-            minimumFeeThisMonth: minimumFeeThisMonth.toString()
+              minimumFeeThisMonth: minimumFeeThisMonth.toString(),
+            },
+            $push: {
+              subscriptions: {
+                action: 'subscribe',
+                at: new Date(),
+              },
+            },
+            $unset: {
+              subscriptionTill: '',
+            },
           }
-        })
+        );
       }
     } else {
       throw new Meteor.Error('Please add card', 'Please add card');
@@ -800,31 +876,46 @@ Meteor.methods({
   unsubscribePaymeter: async () => {
     const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(Meteor.userId());
 
-    if(Meteor.userId()) {
-      if(isPaymentMethodVerified) {
-        PaymeterCollection.upsert({
-          userId: Meteor.userId()
-        }, {
-          $set: {
-            unsubscribeNextMonth: true
+    if (Meteor.userId()) {
+      if (isPaymentMethodVerified) {
+        PaymeterCollection.upsert(
+          {
+            userId: Meteor.userId(),
+          },
+          {
+            $set: {
+              unsubscribeNextMonth: true,
+              subscriptionTill: moment()
+                .endOf('month')
+                .toDate(),
+            },
+            $push: {
+              subscriptions: {
+                action: 'unsubscribe',
+                at: new Date(),
+              },
+            },
           }
-        })
+        );
       } else {
         throw new Meteor.Error('Please add card', 'Please add card');
-      }  
+      }
     } else {
       throw new Meteor.Error('Please login', 'Please login');
     }
   },
-  updateCallbackURLPayment: async (notifyURL) => {
-    PaymeterCollection.upsert({
-      userId: Meteor.userId()
-    }, {
-      $set: {
-        notifyURL: notifyURL
+  updateCallbackURLPayment: async notifyURL => {
+    PaymeterCollection.upsert(
+      {
+        userId: Meteor.userId(),
+      },
+      {
+        $set: {
+          notifyURL: notifyURL,
+        },
       }
-    })
-  }
+    );
+  },
 });
 
 module.exports = {
@@ -842,5 +933,5 @@ module.exports = {
   getNonce,
   erc20ABI,
   getWalletTransactions,
+  getBill: paymeter_getAndResetUserBill,
 };
-

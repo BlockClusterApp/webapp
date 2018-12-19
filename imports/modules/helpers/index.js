@@ -214,7 +214,7 @@ export default {
 
     return minutesDifference;
   },
-  getRemanningDays: () => {
+  getRemainingDays: () => {
     var date = new Date();
     var time = new Date(date.getTime());
     time.setMonth(date.getMonth() + 1);

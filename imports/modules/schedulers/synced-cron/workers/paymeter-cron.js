@@ -11,6 +11,7 @@ import Paymeter from '../../../../api/paymeter/index.js';
 import { ERC20 } from '../../../../collections/erc20/erc20.js';
 import { CoinPrices } from '../../../../collections/coin-prices/coin-prices.js';
 import { getTopERC20List, getCryptosPrice, getTokenInfoFromAddress } from '../../../../modules/paymeter/index.js';
+import PaymeterPricing from '../../../../collections/pricing/paymeter';
 import { Meteor } from 'meteor/meteor';
 import sleep from 'await-sleep';
 import BigNumber from 'bignumber.js';
@@ -906,7 +907,6 @@ function scanEthTestnet(time) {
     },
     job: () => {
       var myFuture = new Future();
-
       (async () => {
         try {
           let testnet_url = await Config.getPaymeterConnectionDetails('eth', 'testnet');
@@ -1070,6 +1070,7 @@ function scanEthMainnet(time) {
       (async () => {
         try {
           let mainnet_url = await Config.getPaymeterConnectionDetails('eth', 'mainnet');
+          const paymeterPricing = PaymeterPricing.find({ active: true }).fetch()[0];
           let mainnet_web3 = new Web3(new Web3.providers.WebsocketProvider(mainnet_url));
 
           let last_block = Utilities.findOne({
@@ -1094,6 +1095,14 @@ function scanEthMainnet(time) {
                 try {
                   let txn_details = await getETHTransaction(txnHash, mainnet_web3);
 
+                  let to_exists_internally = false;
+                  if (txn_details.to) {
+                    to_exists_internally = Wallets.findOne({
+                      coinType: 'ETH',
+                      network: 'mainnet',
+                      address: txn_details.to.toLowerCase(),
+                    });
+                  }
                   let from_exists_internally = Wallets.findOne({
                     coinType: 'ETH',
                     network: 'mainnet',
@@ -1102,12 +1111,6 @@ function scanEthMainnet(time) {
 
                   if (from_exists_internally) {
                     if (txn_details.to) {
-                      let to_exists_internally = Wallets.findOne({
-                        coinType: 'ETH',
-                        network: 'mainnet',
-                        address: txn_details.to.toLowerCase(),
-                      });
-
                       if (to_exists_internally) {
                         WalletTransactions.upsert(
                           {
@@ -1128,12 +1131,6 @@ function scanEthMainnet(time) {
                     }
                   } else {
                     if (txn_details.to) {
-                      let to_exists_internally = Wallets.findOne({
-                        coinType: 'ETH',
-                        network: 'mainnet',
-                        address: txn_details.to.toLowerCase(),
-                      });
-
                       if (to_exists_internally) {
                         //came from outside. show deposit and charge user
                         let eth_price = CoinPrices.findOne({
@@ -1153,7 +1150,7 @@ function scanEthMainnet(time) {
                             {
                               $setOnInsert: {
                                 amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                                usdCharged: new BigNumber(0.18)
+                                usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
                                   .times(new BigNumber(mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString()).times(eth_price.usd_price))
                                   .dividedBy(100)
                                   .toString(),
@@ -1176,7 +1173,7 @@ function scanEthMainnet(time) {
                             {
                               $setOnInsert: {
                                 amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                                usdCharged: '0.20',
+                                usdCharged: String(paymeterPricing.perTransactionCostFlat),
                                 status: 'pending',
                               },
                             }
@@ -1273,7 +1270,7 @@ function scanEthMainnet(time) {
                               {
                                 $setOnInsert: {
                                   amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                                  usdCharged: new BigNumber(0.18)
+                                  usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
                                     .times(new BigNumber(mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()).times(token_price.usd_price))
                                     .dividedBy(100)
                                     .toString(),
@@ -1294,7 +1291,7 @@ function scanEthMainnet(time) {
                               {
                                 $setOnInsert: {
                                   amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                                  usdCharged: '0.20',
+                                  usdCharged: String(paymeterPricing.perTransactionCostFlat),
                                   status: 'pending',
                                 },
                               }
@@ -1312,7 +1309,7 @@ function scanEthMainnet(time) {
                             {
                               $setOnInsert: {
                                 amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                                usdCharged: '0.20',
+                                usdCharged: String(paymeterPricing.perTransactionCostFlat),
                                 status: 'pending',
                               },
                             }
@@ -1333,7 +1330,7 @@ function scanEthMainnet(time) {
                             {
                               $setOnInsert: {
                                 amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                                usdCharged: new BigNumber(0.18)
+                                usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
                                   .times(new BigNumber(mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()).times(price))
                                   .dividedBy(100)
                                   .toString(),
@@ -1354,7 +1351,7 @@ function scanEthMainnet(time) {
                             {
                               $setOnInsert: {
                                 amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                                usdCharged: '0.20',
+                                usdCharged: String(paymeterPricing.perTransactionCostFlat),
                                 status: 'pending',
                               },
                             }

@@ -6,6 +6,7 @@ import Invoice from '../../collections/payments/invoice';
 import helpers from '../../modules/helpers';
 import { Hyperion } from '../../collections/hyperion/hyperion';
 import HyperionPricing from '../../collections/pricing/hyperion';
+import PaymeterApis from '../paymeter/index.js';
 import ChargeableAPI from '../../collections/chargeable-apis';
 
 const Billing = {};
@@ -361,6 +362,22 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       result.totalAmount += Number(totalApiCallCost);
     }
   }
+
+  const paymeterCost = await PaymeterApis.getBill(userId);
+  if (Math.floor(Number(paymeterCost)) > 0) {
+    result.networks = result.networks || [];
+    result.networks.push({
+      name: 'Paymeter Cost',
+      instanceId: '',
+      createdOn: '',
+      rate: '',
+      runtime: '',
+      cost: paymeterCost,
+    });
+
+    result.totalAmount += Number(paymeterCost);
+  }
+
   //end
 
   if (!(selectedMonth.month() === moment().month() && selectedMonth.year() === moment().year()) && isFromFrontend) {
