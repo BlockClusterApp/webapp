@@ -1,15 +1,15 @@
 import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
-import notifications from '../../../../modules/notifications';
-import Vouchers from '../../../../collections/vouchers/voucher';
+import notifications from '../../../../../modules/notifications';
+import Vouchers from '../../../../../collections/vouchers/voucher';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import { CSVLink, CSVDownload } from 'react-csv';
 import Toggle from 'react-toggle';
 import 'react-toggle/style.css';
 
 import moment from 'moment';
-import NetworkConfiguration from '../../../../collections/network-configuration/network-configuration';
+import NetworkConfiguration from '../../../../../collections/network-configuration/network-configuration';
 
 class VoucherCreate extends Component {
   constructor(props) {
@@ -245,7 +245,7 @@ class VoucherCreate extends Component {
     }
 
     return (
-      <div className="content VoucherCreate">
+      <div className="VoucherCreate">
         <div className="m-t-20 container-fluid container-fixed-lg bg-white">
           <div className="row">
             <div className="card-block">
@@ -466,9 +466,7 @@ class VoucherCreate extends Component {
                 </div>
               </div>
               <LaddaButton
-                disabled={
-                  !(this.state.noOfVouchers > 0 && (this.state.code.length > 0 ? !this.state.exist : true))
-                }
+                disabled={!(this.state.noOfVouchers > 0 && (this.state.code.length > 0 ? !this.state.exist : true))}
                 loading={this.state.createVoucher_formloading ? this.state.createVoucher_formloading : false}
                 data-size={S}
                 data-style={SLIDE_UP}

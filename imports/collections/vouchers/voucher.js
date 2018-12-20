@@ -47,6 +47,9 @@ VoucherCollection.schema = new SimpleSchema({
       },
     },
   },
+  service: {
+    type: String,
+  },
   networkConfig: {
     type: Object,
   },
@@ -77,6 +80,15 @@ VoucherCollection.schema = new SimpleSchema({
       },
     },
   ],
+  campaignId: {
+    type: String,
+  },
+  hyperion: {
+    type: Object,
+  },
+  paymeter: {
+    type: Object,
+  },
 });
 
 export default VoucherCollection;

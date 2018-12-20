@@ -43,8 +43,8 @@ import UserDetails from '../../pages/admin/users/Details.jsx';
 import NetworkList from '../../pages/admin/networks/NetworkList.jsx';
 import NetworkDetails from '../../pages/admin/networks/Details.jsx';
 import SupportContainer from '../../pages/support/Container.jsx';
-import VoucherList from '../../pages/admin/vouchers/VoucherList.jsx';
-import VoucherCreate from '../../pages/admin/vouchers/VoucherCreate.jsx';
+import VoucherList from '../../pages/admin/vouchers/ListDashboard.jsx';
+import VoucherCreate from '../../pages/admin/vouchers/CreateDashboard.jsx';
 import VoucherDetails from '../../pages/admin/vouchers/VoucherDetails';
 import AdminSupport from '../../pages/admin/support/TicketList.jsx';
 import AdminSupportDetails from '../../pages/admin/support/Details.jsx';
@@ -143,9 +143,9 @@ export default withRouter(
                   <Route exact path="/app/admin/networks" component={NetworkList} />
                   <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
                   <Route exact path="/app/admin/network-configs" component={ConfigList} />
-                  {features.Vouchers && <Route exact path="/app/admin/vouchers" component={VoucherList} />}
+                  {features.Vouchers && <Route path="/app/admin/vouchers" component={VoucherList} />}
                   {features.Vouchers && <Route exact path="/app/admin/vouchers/details/:id" component={VoucherDetails} />}
-                  {features.Vouchers && <Route exact path="/app/admin/vouchers/create" component={VoucherCreate} />}
+                  {features.Vouchers && <Route path="/app/admin/voucher/create" component={VoucherCreate} />}
 
                   {features.SupportTicket && <Route exact path="/app/admin/support" component={AdminSupport} />}
                   {features.SupportTicket && <Route exact path="/app/admin/support/:id" component={AdminSupportDetails} />}
