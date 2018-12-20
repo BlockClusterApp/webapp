@@ -42,9 +42,8 @@ class VoucherDetails extends Component {
         onReady: () => {
           const i = Vouchers.find(this.query, { limit: 1, skip: 0 }).fetch()[0];
           const formattedData = {
+            'Valid for': i.type || 'Networks',
             'Voucher Code': i.code,
-            'Network Config\n(CPU,RAM,DISK)': `${i.networkConfig.cpu}C,${i.networkConfig.ram}G,${i.networkConfig.disk}G`,
-            'Disk Changebale': i.isDiskChangeable ? 'YES' : 'NO',
             'Discount Type': i.discount.percent ? 'In Percentage' : 'Flat',
             'Discount Amount': i.discount.percent ? i.discount.value + '%' : i.discount.value,
             'Discounted Days': i.discountedDays,
@@ -58,6 +57,10 @@ class VoucherDetails extends Component {
             'Voucher Status': i.expiryDate < new Date() ? 'Expired' : i.voucher_status ? 'Active' : 'Inactive',
             'Expiry Date': new Date(i.expiryDate).toLocaleDateString() + ' ' + new Date(i.expiryDate).toLocaleTimeString(),
           };
+          if (i.type === 'network') {
+            formattedData['Network Config\n(CPU,RAM,DISK)'] = `${i.networkConfig.cpu}C,${i.networkConfig.ram}G,${i.networkConfig.disk}G`;
+            formattedData['Disk Changebale'] = i.isDiskChangeable ? 'YES' : 'NO';
+          }
           if (i.campaignId && i.campaignId !== 'None') {
             this.campaignSubscription = Meteor.subscribe('campaign.all', {
               onReady: () => {

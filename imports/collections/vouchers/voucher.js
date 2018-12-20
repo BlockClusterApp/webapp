@@ -47,7 +47,7 @@ VoucherCollection.schema = new SimpleSchema({
       },
     },
   },
-  service: {
+  type: {
     type: String,
   },
   networkConfig: {

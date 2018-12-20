@@ -78,7 +78,7 @@ Voucher.create = async function(payload) {
   });
   let savabl_doc = [];
   voucher_codes.forEach(voucher => {
-    savabl_doc.push({
+    const obj = {
       usability: {
         recurring: payload.usablity.recurring,
         no_months: payload.usablity.no_months || 0,
@@ -96,20 +96,24 @@ Voucher.create = async function(payload) {
       },
       code: voucher,
       voucher_status: payload.active,
-      metadata: {
-        networkConfig: payload.networkConfig,
-      },
-      networkConfig: { cpu: payload.networkConfig.cpu, ram: payload.networkConfig.ram, disk: payload.networkConfig.disk },
       expiryDate: payload.expiryDate
         ? new Date(payload.expiryDate)
         : moment()
             .add(30, 'days')
             .toDate(), //lets take by default 30days
-      isDiskChangeable: payload.networkConfig.isDiskChangeable,
-      discountedDays: payload.discountedDays || 0,
+      discountedDays: payload.discountedDays || payload.usablity.no_months * 30,
       voucher_claim_status: [],
       campaignId: payload.campaignId,
-    });
+      type: payload.type,
+    };
+    if (payload.type === 'network') {
+      obj.networkConfig = { cpu: payload.networkConfig.cpu, ram: payload.networkConfig.ram, disk: payload.networkConfig.disk };
+      obj.metadata = {
+        networkConfig: payload.networkConfig,
+      };
+      obj.isDiskChangeable = payload.networkConfig.isDiskChangeable;
+    }
+    savabl_doc.push(obj);
   });
 
   const promises = [];

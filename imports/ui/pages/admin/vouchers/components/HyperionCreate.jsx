@@ -23,7 +23,8 @@ class VoucherCreate extends Component {
       for_all: true,
       recurring: true,
       no_times_per_user: 1,
-      discountedDays: Number.MAX_SAFE_INTEGER, // Don't know what this field does and Sai doesn't remember it as well. So to be on safe side.
+      noOfVouchers: 1,
+      discountedDays: 0, // Not used in hyperion vouchers so setting to 0. It calculates the free hours for a node
     };
   }
   createVoucher = e => {
@@ -59,6 +60,7 @@ class VoucherCreate extends Component {
               .add(30, 'days')
               .toDate(), //lets take by default 30days
           discountedDays: payload.discountedDays || 0,
+          type: 'hyperion',
         };
 
         if (this.campaignId && this.campaignId !== 'None') {
@@ -69,7 +71,6 @@ class VoucherCreate extends Component {
           createVoucher_formloading: true,
         });
         Meteor.call('CreateVoucher', _doc_voucher, async (error, done) => {
-          console.log(error, done);
           if (!error) {
             this.setState({
               csv_ids: done,
@@ -96,8 +97,6 @@ class VoucherCreate extends Component {
       return {
         ID: i._id,
         'Voucher Code': i.code,
-        'Network Config\n(CPU,RAM,DISK)': `${i.networkConfig.cpu}C,${i.networkConfig.ram}G,${i.networkConfig.disk}G`,
-        'Disk Changebale': i.isDiskChangeable ? 'YES' : 'NO',
         'Discount Type': i.discount.percent ? 'In Percentage' : 'Flat',
         'Discount Amount': i.discount.percent ? i.discount.value + '%' : i.discount.value,
         'Discounted Days': i.discountedDays,
@@ -109,7 +108,7 @@ class VoucherCreate extends Component {
         'Usable For Everyone': i.availability.for_all ? 'YES' : 'NO',
         'Usable Only For': i.availability.for_all ? '-' : i.availability.email_ids.join(','),
         'Voucher Status': i.expiryDate < new Date() ? 'Expired' : i.voucher_status ? 'Active' : 'Inactive',
-        'Expiry Date': new Date(i.expiryDate).toLocaleDateString() + ' ' + new Date(i.expiryDate).toLocaleTimeString(),
+        'Expiry Date': moment(i.expiryDate).format('DD-MMM-YYYY HH:mm:SS'),
       };
     });
   };
@@ -152,7 +151,7 @@ class VoucherCreate extends Component {
           },
           {
             onReady: () => {
-              voucher = Vouchers.find({ code: this.state.code }).fetch()[0];
+              const voucher = Vouchers.find({ code: this.state.code }).fetch()[0];
               if (voucher) {
                 this.setState({
                   exist: true,
@@ -266,7 +265,7 @@ class VoucherCreate extends Component {
                     <div className="col-md-6 form-input-group">
                       <label>Voucher Code</label>
                       <span className="help"> e.g. "HYPERWORLD" &nbsp;&nbsp;</span>
-                      {this.state.code.length > 0 ? (
+                      {this.state.code && this.state.code.length > 0 ? (
                         this.state.exist ? (
                           <span className="text-center text-danger no-margin"> Not Available</span>
                         ) : (
@@ -289,7 +288,7 @@ class VoucherCreate extends Component {
                   </div>
                 )}
                 <br />
-                <label class="fs-14 text-primary">Usability</label>
+                <label className="fs-14 text-primary">Usability</label>
                 <div className="row">
                   <div className="col-md-3 form-input-group">
                     <label>Is Recurring</label>
@@ -312,7 +311,7 @@ class VoucherCreate extends Component {
                   )}
                 </div>
                 <br />
-                <label class="fs-14 text-primary">Availability</label>
+                <label className="fs-14 text-primary">Availability</label>
                 <div className="row">
                   <div className="col-md-3 form-input-group">
                     <label>For Everyone</label>
@@ -338,7 +337,7 @@ class VoucherCreate extends Component {
                   </div>
                 </div>
                 <br />
-                <label class="fs-14 text-primary">Discounts</label>
+                <label className="fs-14 text-primary">Discounts</label>
                 <div className="row">
                   <div className="col-md-3 form-input-group">
                     <label>Discount in Percentage</label>
@@ -357,7 +356,7 @@ class VoucherCreate extends Component {
                   </div>
                 </div>
                 <br />
-                <label class="fs-14 text-primary">Others</label>
+                <label className="fs-14 text-primary">Others</label>
                 <div className="row">
                   <div className="col-md-4 form-input-group">
                     <label>Expiry Date</label>
@@ -370,7 +369,7 @@ class VoucherCreate extends Component {
                 </div>
               </div>
               <LaddaButton
-                disabled={!(this.state.noOfVouchers > 0 && (this.state.code.length > 0 ? !this.state.exist : true))}
+                disabled={!(this.state.noOfVouchers > 0 && (this.state.code && this.state.code.length > 0 ? !this.state.exist : true))}
                 loading={this.state.createVoucher_formloading ? this.state.createVoucher_formloading : false}
                 data-size={S}
                 data-style={SLIDE_UP}
@@ -385,19 +384,6 @@ class VoucherCreate extends Component {
               &nbsp;&nbsp;
               {this.state.enable_download && (
                 <div>
-                  <LaddaButton
-                    // loading={this.state[this.props.network[0].instanceId + "_createStream_formloading"]}
-                    data-size={S}
-                    data-style={SLIDE_UP}
-                    data-spinner-size={30}
-                    data-spinner-lines={12}
-                    className="btn btn-info m-t-10"
-                    onClick={this.resetForm.bind(this)}
-                  >
-                    <i className="fa fa-minus-circle" aria-hidden="true" />
-                    &nbsp;&nbsp;Reset Form
-                  </LaddaButton>{' '}
-                  &nbsp;&nbsp;
                   <LaddaButton className="btn btn-danger m-t-10" data-size={S} data-style={SLIDE_UP} data-spinner-size={30} data-spinner-lines={12}>
                     <CSVLink style={{ textDecoration: 'none !important', color: 'inherit' }} filename={'Vouchers_' + Date.now() + '.csv'} data={this.state.csv_data}>
                       Download CSV
