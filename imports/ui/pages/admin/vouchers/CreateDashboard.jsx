@@ -35,7 +35,7 @@ class VoucherDashboard extends Component {
             <p className="menu-title fs-16">Create Vouchers</p>
             <ul className="main-menu">
               <li className="active">
-                <Link to={'/app/admin/vouchers/create/campaign'}>
+                <Link to={'/app/admin/voucher/create/campaign'}>
                   <span className="title">
                     <i className="fa fa-file" />
                     Campaign
@@ -43,7 +43,7 @@ class VoucherDashboard extends Component {
                 </Link>
               </li>
               <li>
-                <Link to={'/app/admin/vouchers/create/networks'}>
+                <Link to={'/app/admin/voucher/create/networks'}>
                   <span className="title">
                     <i className="fa fa-cube" />
                     Networks
@@ -51,7 +51,7 @@ class VoucherDashboard extends Component {
                 </Link>
               </li>
               <li>
-                <Link to={'/app/admin/vouchers/create/hyperion'}>
+                <Link to={'/app/admin/voucher/create/hyperion'}>
                   <span className="title">
                     <i className="fa fa-cube" />
                     Hyperion
@@ -59,7 +59,7 @@ class VoucherDashboard extends Component {
                 </Link>
               </li>
               <li>
-                <Link to={'/app/admin/vouchers/create/paymeter'}>
+                <Link to={'/app/admin/voucher/create/paymeter'}>
                   <span className="title">
                     <i className="fa fa-cube" />
                     Paymeter
@@ -78,7 +78,6 @@ class VoucherDashboard extends Component {
                 className="btn btn-danger m-t-10 m-l-20"
                 onClick={this.create}
               >
-                <i className="fa fa-plus-circle" aria-hidden="true" />
                 &nbsp;&nbsp;Back to list
               </LaddaButton>
             </p>

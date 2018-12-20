@@ -3,6 +3,14 @@ import Campaign from '../campaign';
 
 const pageSize = 20;
 const MIN_ADMIN_LEVEL = 0;
+
+Meteor.publish('campaign.all', function() {
+  if (Meteor.user() && Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
+  return Campaign.find();
+});
+
 Meteor.publish('vouchers.all', function({ page, type }) {
   if (Meteor.user() && Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];

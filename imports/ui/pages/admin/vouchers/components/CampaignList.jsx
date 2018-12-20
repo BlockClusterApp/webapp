@@ -136,7 +136,7 @@ class VoucherList extends Component {
                       <tbody>
                         {this.state.vouchers.map((voucher, index) => {
                           return (
-                            <tr key={index + 1} onClick={() => this.openVoucher(voucher._id)}>
+                            <tr key={index + 1}>
                               <td>{this.state.page * PAGE_LIMIT + index + 1}</td>
                               <td>{voucher.description}</td>
                               <td>{this.getActiveStatus(voucher.live, voucher.expiryDate)}</td>

@@ -108,6 +108,7 @@ Voucher.create = async function(payload) {
       isDiskChangeable: payload.networkConfig.isDiskChangeable,
       discountedDays: payload.discountedDays || 0,
       voucher_claim_status: [],
+      campaignId: payload.campaignId,
     });
   });
 

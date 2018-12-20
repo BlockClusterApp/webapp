@@ -114,7 +114,7 @@ class VoucherList extends Component {
   };
 
   openVoucher = voucherId => {
-    this.props.history.push('/app/admin/vouchers/details/' + voucherId);
+    this.props.history.push('/app/admin/voucher/details/' + voucherId);
   };
 
   getNetworkType = config => {

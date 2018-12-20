@@ -10,10 +10,15 @@ import 'react-toggle/style.css';
 
 import moment from 'moment';
 import NetworkConfiguration from '../../../../../collections/network-configuration/network-configuration';
+import Campaign from '../../../../../collections/vouchers/campaign';
+
+import './style.scss';
 
 class VoucherCreate extends Component {
   constructor(props) {
     super(props);
+
+    this.campaignId = undefined;
 
     this.state = {
       exist: null,
@@ -109,6 +114,10 @@ class VoucherCreate extends Component {
               .toDate(), //lets take by default 30days
           discountedDays: payload.discountedDays || 0,
         };
+
+        if (this.campaignId && this.campaignId !== 'None') {
+          _doc_voucher.campaignId = this.campaignId;
+        }
         this.setState({
           createVoucher_formSubmitError: '',
           createVoucher_formloading: true,
@@ -225,6 +234,10 @@ class VoucherCreate extends Component {
     });
   };
 
+  campaignChange = e => {
+    this.campaignId = e.target.value;
+  };
+
   render() {
     const configs = this.props.configs;
     let networks = null;
@@ -244,13 +257,45 @@ class VoucherCreate extends Component {
       );
     }
 
+    const { campaigns } = this.props;
+
+    const options = [
+      <option value={undefined} key={'opt_1'} selected>
+        None
+      </option>,
+    ];
+    if (campaigns && campaigns.length > 0) {
+      campaigns.forEach(c => {
+        options.push(
+          <option value={c._id} key={c._id}>
+            {c.description}
+          </option>
+        );
+      });
+    }
+
     return (
       <div className="VoucherCreate">
         <div className="m-t-20 container-fluid container-fixed-lg bg-white">
           <div className="row">
             <div className="card-block">
+              <div className="row">
+                <div className="col-md-12">
+                  <div className="card-title">
+                    <h3>Create Network Voucher</h3>
+                  </div>
+                </div>
+              </div>
               <div className="form-group">
                 <div className="row">
+                  <div className="col-md-12  form-input-group">
+                    <label>Select Campaign</label>
+                    <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.campaignChange}>
+                      {options}
+                    </select>
+                  </div>
+                </div>
+                <div className="row m-t-20">
                   <div className="col-md-4 form-input-group">
                     <label>Customized Voucher Code</label>
                     <span className="help"> e.g WORLDSUMMITB </span>
@@ -511,6 +556,7 @@ class VoucherCreate extends Component {
 export default withTracker(() => {
   return {
     configs: NetworkConfiguration.find({ active: true }).fetch(),
-    subscriptions: [Meteor.subscribe('vouchers.all', { page: 0 }), Meteor.subscribe('networkConfig.all')],
+    campaigns: Campaign.find({}).fetch(),
+    subscriptions: [Meteor.subscribe('vouchers.all', { page: 0 }), Meteor.subscribe('networkConfig.all'), Meteor.subscribe('campaign.all')],
   };
 })(withRouter(VoucherCreate));

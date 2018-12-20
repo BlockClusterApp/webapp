@@ -144,7 +144,7 @@ export default withRouter(
                   <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
                   <Route exact path="/app/admin/network-configs" component={ConfigList} />
                   {features.Vouchers && <Route path="/app/admin/vouchers" component={VoucherList} />}
-                  {features.Vouchers && <Route exact path="/app/admin/vouchers/details/:id" component={VoucherDetails} />}
+                  {features.Vouchers && <Route exact path="/app/admin/voucher/details/:id" component={VoucherDetails} />}
                   {features.Vouchers && <Route path="/app/admin/voucher/create" component={VoucherCreate} />}
 
                   {features.SupportTicket && <Route exact path="/app/admin/support" component={AdminSupport} />}
