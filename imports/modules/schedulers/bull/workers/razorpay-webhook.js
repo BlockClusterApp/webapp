@@ -26,7 +26,7 @@ async function getUserFromPayment(payment) {
         })
         .fetch()[0];
       if (!user.rzCustomerId || (!(user.rzCustomerId && user.rzCustomerId.includes(payment.customer_id)) && payment.customer_id)) {
-        debug('Updating customer id from payment request', request._id, user._id);
+        debug('Updating customer id from payment request', paymentRequest._id, user._id);
         Meteor.users.update(
           {
             _id: user._id,
