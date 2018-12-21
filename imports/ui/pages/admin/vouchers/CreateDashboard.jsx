@@ -7,6 +7,7 @@ import Network from './components/NetworkCreate';
 import Campaign from './components/CampaignCreate';
 import Hyperion from './components/HyperionCreate';
 import Paymeter from './components/PaymeterCreate';
+import CreditsCreate from './components/CreditsCreate';
 
 class VoucherDashboard extends Component {
   constructor(props) {
@@ -39,6 +40,14 @@ class VoucherDashboard extends Component {
                   <span className="title">
                     <i className="fa fa-file" />
                     Campaign
+                  </span>
+                </Link>
+              </li>
+              <li className="">
+                <Link to={'/app/admin/voucher/create/credits'}>
+                  <span className="title">
+                    <i className="fa fa-file" />
+                    Credits
                   </span>
                 </Link>
               </li>
@@ -85,6 +94,7 @@ class VoucherDashboard extends Component {
           <div className="inner-content full-height">
             <Route exact path="/app/admin/voucher/create" render={() => <Redirect to="/app/admin/voucher/create/campaign" />} />
             <Route exact path="/app/admin/voucher/create/campaign" component={Campaign} />
+            <Route exact path="/app/admin/voucher/create/credits" component={CreditsCreate} />
             <Route exact path="/app/admin/voucher/create/networks" component={Network} />
             <Route exact path="/app/admin/voucher/create/hyperion" component={Hyperion} />
             <Route exact path="/app/admin/voucher/create/paymeter" component={Paymeter} />

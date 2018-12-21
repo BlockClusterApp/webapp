@@ -38,7 +38,7 @@ class VoucherCreate extends Component {
       expiry_date: '',
       discountedDays: 0,
       isDiskChangeable: false,
-      voucher_status: false,
+      voucher_status: true,
       once_per_user: true,
       no_times_per_user: 5,
       card_vfctn_needed: true,

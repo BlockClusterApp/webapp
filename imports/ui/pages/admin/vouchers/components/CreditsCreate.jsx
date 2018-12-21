@@ -13,7 +13,7 @@ import Campaign from '../../../../../collections/vouchers/campaign';
 
 import './style.scss';
 
-class VoucherCreate extends Component {
+class CreditsCreate extends Component {
   constructor(props) {
     super(props);
 
@@ -23,7 +23,7 @@ class VoucherCreate extends Component {
       recurring: true,
       no_times_per_user: 1,
       noOfVouchers: 1,
-      discountedDays: 0, // Not used in hyperion vouchers so setting to 0. It calculates the free hours for a node
+      card_vfctn_needed: false,
       voucher_status: true,
     };
   }
@@ -39,19 +39,18 @@ class VoucherCreate extends Component {
           noOfVouchers: payload.noOfVouchers,
           voucher_code_size: payload.voucher_code_size,
           usablity: {
-            recurring: payload.recurring,
-            no_months: payload.no_months || 0,
-            once_per_user: payload.once_per_user,
-            no_times_per_user: payload.no_times_per_user || 1,
+            recurring: false,
+            no_months: 0,
+            once_per_user: true,
+            no_times_per_user: 1,
           },
           availability: {
-            card_vfctn_needed: payload.card_vfctn_needed,
+            card_vfctn_needed: false,
             for_all: payload.for_all,
             email_ids: payload.email_ids ? payload.email_ids.split(',').map(a => a.trim()) : [],
           },
           discount: {
             value: payload.discount_amt || 0,
-            percent: payload.is_percent,
           },
           active: payload.voucher_status,
           expiryDate:
@@ -59,8 +58,8 @@ class VoucherCreate extends Component {
             moment()
               .add(30, 'days')
               .toDate(), //lets take by default 30days
-          discountedDays: payload.discountedDays || 0,
-          type: 'hyperion',
+          discountedDays: 0,
+          type: 'credit',
         };
 
         if (this.campaignId && this.campaignId !== 'None') {
@@ -97,14 +96,8 @@ class VoucherCreate extends Component {
       return {
         ID: i._id,
         'Voucher Code': i.code,
-        'Discount Type': i.discount.percent ? 'In Percentage' : 'Flat',
-        'Discount Amount': i.discount.percent ? i.discount.value + '%' : i.discount.value,
-        'Discounted Days': i.discountedDays,
-        'Recurring Voucher': i.usability.recurring ? 'YES' : 'NO',
-        'Recurring Months': i.usability.recurring ? i.usability.no_months : '-',
-        'Once Per User': i.usability.once_per_user ? 'YES' : 'NO',
-        'Times Per User': i.usability.once_per_user ? '-' : i.usability.no_times_per_user,
-        'Card Verification Mandate': i.availability.card_vfctn_needed ? 'YES' : 'NO',
+        'Credit Amount': i.discount.percent ? i.discount.value + '%' : i.discount.value,
+        'Card Verification Mandate': 'No',
         'Usable For Everyone': i.availability.for_all ? 'YES' : 'NO',
         'Usable Only For': i.availability.for_all ? '-' : i.availability.email_ids.join(','),
         'Voucher Status': i.expiryDate < new Date() ? 'Expired' : i.voucher_status ? 'Active' : 'Inactive',
@@ -209,7 +202,7 @@ class VoucherCreate extends Component {
               <div className="row">
                 <div className="col-md-12">
                   <div className="card-title">
-                    <h3>Create Hyperion Voucher</h3>
+                    <h3>Create Credits Voucher</h3>
                   </div>
                 </div>
               </div>
@@ -224,8 +217,8 @@ class VoucherCreate extends Component {
                 </div>
                 <div className="row m-t-20">
                   <div className="col-md-12 form-input-group">
-                    <label>Customized Voucher Code</label>
-                    <span className="help"> e.g WORLDSUMMITB </span>
+                    <label>Customized Promotional Code</label>
+                    <span className="help"> e.g CREDIT1000 </span>
                     <Toggle name="customCode" className="form-control" icons={false} defaultChecked={false} onChange={this.handleChangesToggle.bind(this)} />
                   </div>
                 </div>
@@ -233,7 +226,7 @@ class VoucherCreate extends Component {
                 {!this.state.customCode && (
                   <div className="row">
                     <div className="col-md-4 form-input-group">
-                      <label>No of Vouchers</label>
+                      <label>No of Codes</label>
                       <input
                         name="noOfVouchers"
                         type="number"
@@ -245,7 +238,7 @@ class VoucherCreate extends Component {
                       />
                     </div>
                     <div className="col-md-4 form-input-group">
-                      <label>Voucher code length</label>
+                      <label>Promotional code length</label>
                       <span className="help"> e.g. "HI12JG" Size 6 </span>
                       <input
                         name="voucher_code_size"
@@ -263,7 +256,7 @@ class VoucherCreate extends Component {
                 {this.state.customCode && (
                   <div className="row">
                     <div className="col-md-6 form-input-group">
-                      <label>Voucher Code</label>
+                      <label>Promotional Code</label>
                       <span className="help"> e.g. "HYPERWORLD" &nbsp;&nbsp;</span>
                       {this.state.code && this.state.code.length > 0 ? (
                         this.state.exist ? (
@@ -290,25 +283,7 @@ class VoucherCreate extends Component {
                 <br />
                 <label className="fs-14 text-primary">Usability</label>
                 <div className="row">
-                  <div className="col-md-3 form-input-group">
-                    <label>Is Recurring</label>
-                    <Toggle name="recurring" className="form-control" icons={false} checked={this.state.recurring} onChange={this.handleChangesToggle.bind(this)} />
-                  </div>
-                  {this.state.recurring && (
-                    <div className="col-md-9 form-input-group">
-                      <label>Number Of Months</label>
-                      <input
-                        name="no_months"
-                        type="number"
-                        placeholder="e.g 3"
-                        className="form-control"
-                        defaultValue="1"
-                        onChange={this.handleChanges.bind(this)}
-                        value={this.state.no_months}
-                        required
-                      />
-                    </div>
-                  )}
+                  <p>Each promotional code can be used only once by the customer (if eligible) to claim credits</p>
                 </div>
                 <br />
                 <label className="fs-14 text-primary">Availability</label>
@@ -331,28 +306,13 @@ class VoucherCreate extends Component {
                       />
                     </div>
                   )}
-                  <div className="col-md-6 form-input-group">
-                    <label>Card Verification Needed</label>
-                    <Toggle name="card_vfctn_needed" className="form-control" icons={false} checked={this.state.card_vfctn_needed} onChange={this.handleChangesToggle.bind(this)} />
-                  </div>
                 </div>
                 <br />
-                <label className="fs-14 text-primary">Discounts</label>
+                <label className="fs-14 text-primary">Credits</label>
                 <div className="row">
-                  <div className="col-md-3 form-input-group">
-                    <label>Discount in Percentage</label>
-                    <Toggle name="is_percent" className="form-control" icons={false} checked={this.state.is_percent} onChange={this.handleChangesToggle.bind(this)} />
-                  </div>
                   <div className="col-md-6 form-input-group">
-                    <label>Discount Amount ({this.state.is_percent ? 'percentage' : 'Flat Amount'})</label>
-                    <input
-                      name="discount_amt"
-                      type="number"
-                      placeholder={this.state.is_percent ? '50 %' : '50 USD'}
-                      className="form-control"
-                      onChange={this.handleChanges.bind(this)}
-                      required
-                    />
+                    <label>Credits to be given ($)</label>
+                    <input name="discount_amt" type="number" placeholder="200" className="form-control" onChange={this.handleChanges.bind(this)} required />
                   </div>
                 </div>
                 <br />
@@ -384,6 +344,7 @@ class VoucherCreate extends Component {
               &nbsp;&nbsp;
               {this.state.enable_download && (
                 <div>
+                  &nbsp;&nbsp;
                   <LaddaButton className="btn btn-danger m-t-10" data-size={S} data-style={SLIDE_UP} data-spinner-size={30} data-spinner-lines={12}>
                     <CSVLink style={{ textDecoration: 'none !important', color: 'inherit' }} filename={'Vouchers_' + Date.now() + '.csv'} data={this.state.csv_data}>
                       Download CSV
@@ -403,4 +364,4 @@ export default withTracker(() => {
     campaigns: Campaign.find({}).fetch(),
     subscriptions: [Meteor.subscribe('campaign.all')],
   };
-})(withRouter(VoucherCreate));
+})(withRouter(CreditsCreate));

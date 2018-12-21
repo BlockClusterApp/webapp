@@ -9,7 +9,6 @@ import Toggle from 'react-toggle';
 import 'react-toggle/style.css';
 
 import moment from 'moment';
-import NetworkConfiguration from '../../../../../collections/network-configuration/network-configuration';
 import Campaign from '../../../../../collections/vouchers/campaign';
 
 import './style.scss';
@@ -25,6 +24,7 @@ class PaymeterVoucherCreate extends Component {
       no_times_per_user: 1,
       noOfVouchers: 1,
       discountedDays: 0, // Not used in hyperion vouchers so setting to 0. It calculates the free hours for a node
+      voucher_status: true,
     };
   }
   createVoucher = e => {
@@ -401,7 +401,6 @@ class PaymeterVoucherCreate extends Component {
 }
 export default withTracker(() => {
   return {
-    configs: NetworkConfiguration.find({ active: true }).fetch(),
     campaigns: Campaign.find({}).fetch(),
     subscriptions: [Meteor.subscribe('campaign.all')],
   };

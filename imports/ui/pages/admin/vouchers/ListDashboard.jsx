@@ -41,6 +41,14 @@ class VoucherDashboard extends Component {
                 </Link>
               </li>
               <li>
+                <Link to={'/app/admin/vouchers/credits'}>
+                  <span className="title">
+                    <i className="fa fa-cube" />
+                    Credit Vouchers
+                  </span>
+                </Link>
+              </li>
+              <li>
                 <Link to={'/app/admin/vouchers/networks'}>
                   <span className="title">
                     <i className="fa fa-cube" />
@@ -76,13 +84,14 @@ class VoucherDashboard extends Component {
                 onClick={this.create}
               >
                 <i className="fa fa-plus-circle" aria-hidden="true" />
-                &nbsp;&nbsp;Create
+                &nbsp;&nbsp;Create Vouchers
               </LaddaButton>
             </p>
           </nav>
           <div className="inner-content full-height">
             <Route exact path="/app/admin/vouchers" render={() => <Redirect to="/app/admin/vouchers/campaign" />} />
             <Route exact path="/app/admin/vouchers/campaign" render={() => <CampaignList type="campaign" />} />
+            <Route exact path="/app/admin/vouchers/credits" render={() => <VoucherList type="credit" />} />
             <Route exact path="/app/admin/vouchers/networks" render={() => <VoucherList type="network" />} />
             <Route exact path="/app/admin/vouchers/hyperion" render={() => <VoucherList type="hyperion" />} />
             <Route exact path="/app/admin/vouchers/paymeter" render={() => <VoucherList type="paymeter" />} />
