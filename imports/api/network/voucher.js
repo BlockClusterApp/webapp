@@ -4,6 +4,9 @@ import Campaign from '../../collections/vouchers/campaign';
 import moment from 'moment';
 import { Meteor } from 'meteor/meteor';
 
+import Credits from '../../collections/payments/credits';
+import CreditRedemption from '../../collections/vouchers/credits-redemption';
+
 const Voucher = {};
 
 Voucher.createCampaign = async function({ description, live, expiryDate }) {
@@ -21,9 +24,66 @@ Voucher.createCampaign = async function({ description, live, expiryDate }) {
   return Campaign.insert({ description, live, expiryDate, createdBy: Meteor.userId() });
 };
 
-Voucher.validate = async function(voucherCode) {
+Voucher.applyPromotionalCode = async function({ code, userId }) {
+  const voucher = await Voucher.validate({ voucherCode: code, type: 'credit' });
+
+  userId = userId || Meteor.userId();
+
+  const previousRedemption = CreditRedemption.find({ userId, codeId: voucher._id }).fetch()[0];
+  if (previousRedemption) {
+    throw new Meteor.Error(403, 'Already redeemed');
+  }
+
+  // Apply code
+  let redemptionId;
+  let creditsId;
+  try {
+    redemptionId = CreditRedemption.insert({
+      codeId: voucher._id,
+      code,
+      userId,
+    });
+    // Apply credits
+    creditsId = Credits.insert({
+      amount: voucher.discount.value,
+      userId,
+      code,
+      metadata: {
+        redemptionId,
+      },
+    });
+
+    Vouchers.update(
+      {
+        _id: voucher._id,
+      },
+      {
+        $push: {
+          voucher_claim_status: {
+            claimed: true,
+            claimedBy: userId,
+            claimedOn: new Date(),
+          },
+        },
+      }
+    );
+
+    return true;
+  } catch (err) {
+    if (redemptionId) {
+      CreditRedemption.remove({ _id: redemptionId });
+    }
+    if (creditsId) {
+      Credits.remove({ _id: creditsId });
+    }
+    throw new Meteor.Error(err);
+  }
+};
+
+Voucher.validate = async function({ voucherCode, type }) {
   const voucher = Vouchers.find({
     code: voucherCode,
+    type,
     active: true,
     voucher_status: true,
     expiryDate: {
@@ -32,11 +92,14 @@ Voucher.validate = async function(voucherCode) {
   }).fetch()[0];
 
   if (!voucher) {
-    throw new Meteor.Error('Invalid or expired voucher');
+    throw new Meteor.Error(400, 'Invalid voucher');
   }
-  const card_validated = await Billing.isPaymentMethodVerified(Meteor.userId());
-  if (voucher.availability.card_vfctn_needed && !card_validated) {
-    throw new Meteor.Error('Please verify card in billing>payments');
+
+  if (voucher.availability.card_vfctn_needed) {
+    const card_validated = await Billing.isPaymentMethodVerified(Meteor.userId());
+    if (!card_validated) {
+      throw new Meteor.Error('Please verify card in billing -> payments');
+    }
   }
   const email_matching = voucher.availability.email_ids.indexOf(Meteor.user().emails[0].address);
   const claimed_status = voucher.voucher_claim_status
@@ -45,13 +108,17 @@ Voucher.validate = async function(voucherCode) {
       })
     : 0;
 
+  // Voucher is for specific users and current user is not eligible
   if (!voucher.availability.for_all && email_matching <= -1) {
-    throw new Meteor.Error('Voucher is not eligible for your Email.');
+    throw new Meteor.Error(400, 'Invalid code');
   }
+
+  // Voucher is once per user and is already claimed by this user
   if (voucher.usability.once_per_user && claimed_status.length) {
-    throw new Meteor.Error('already claimed');
+    throw new Meteor.Error(400, 'Already Claimed');
   } else if (!voucher.usability.once_per_user && claimed_status.length == voucher.usability.no_times_per_user) {
-    throw new Meteor.Error('Use Limit Exceed');
+    // Voucher can be claimed multiple times but user already claimed maximum number of times
+    throw new Meteor.Error(400, 'Already Claimed');
   }
   return voucher;
 };

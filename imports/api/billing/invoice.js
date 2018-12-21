@@ -16,8 +16,40 @@ import writtenNumber from 'written-number';
 import BullSystem from '../../modules/schedulers/bull';
 import { RZPaymentLink } from '../../collections/razorpay';
 import RZPTAddon from '../../collections/razorpay/trasient-addon';
+import Credits from '../../collections/payments/credits';
 
 const InvoiceObj = {};
+
+function fetchApplicableAmount(credit, totalAmount) {
+  if (!credit.metadata.invoices) {
+    return Math.min(credit.amount, totalAmount);
+  }
+  const usedAmount = credit.metadata.invoices.reduce((sum, invoice) => sum + invoice, 0);
+  const usableAmount = Math.min(credit.amount - usedAmount, totalAmount);
+
+  if (usableAmount <= 0) {
+    return null;
+  }
+
+  return usableAmount;
+}
+
+function fetchEligibleCredits(credits, totalAmount) {
+  const result = [];
+  let amount = totalAmount;
+  credits.forEach(credit => {
+    const usableAmount = fetchApplicableAmount(credit, amount);
+    if(amount <= 0) {
+      return;
+    }
+    result.push({
+      credit,
+      amount: usableAmount
+    });
+    amount = amount - usableAmount;
+  });
+  return {credits: result.filter(r => !!r.amount), remainingAmount: amount};
+}
 
 InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription }) => {
   const totalAmount = Number(bill.totalAmount).toFixed(2);
@@ -39,7 +71,8 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
     paymentStatus: user.demoUser ? Invoice.PaymentStatusMapping.DemoUser : Invoice.PaymentStatusMapping.Pending,
     billingPeriod: billingMonth,
     billingPeriodLabel: moment(billingMonth).format('MMM-YYYY'),
-    totalAmount,
+    billingAmount: totalAmount,
+    totalAmount
   };
 
   if (rzSubscription && rzSubscription.bc_status === 'active') {
@@ -66,6 +99,21 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
     }
   }
 
+  // Credits application
+  let eligibleCredits = [];
+  const _credits = Credits.find({ userId }, { sort: { createdAt: 1 } }).fetch();
+  if (_credits.length > 0) {
+    const totalCredits = _credits.reduce((sumTillNow, credit) => sumTillNow + credit.amount, 0);
+    if (totalCredits > 0) {
+      const {credits, remainingAmount} = fetchEligibleCredits(credits, totalAmount);
+      if(credits.length > 0) {
+        totalAmount = remainingAmount;
+        invoiceObject.totalAmount = remainingAmount;
+        eligibleCredits = credits;
+      }
+    }
+  }
+
   const items = bill.networks;
 
   invoiceObject.items = items;
@@ -76,6 +124,23 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   invoiceObject.conversionRate = conversion;
 
   const invoiceId = Invoice.insert(invoiceObject);
+  let creditClaims = [];
+
+  eligibleCredits.forEach(ec => {
+    const {credit} = ec;
+    const id = Credits.update({
+      _id: credit._id
+    }, {
+      $push: {
+        invoices: {
+          invoiceId,
+          amount: ec.amount,
+          claimedOn: new Date()
+        }
+      }
+    });
+    creditClaims.push({id, code: credit.code, amount: ec.amount});
+  });
 
   if (!user.demoUser && Math.round(invoiceObject.totalAmountINR) > 100 && !user.byPassOnlinePayment && rzSubscription && rzSubscription.bc_status === 'active') {
     RZPTAddon.insert({
@@ -125,6 +190,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
           id: rzPaymentLink._id,
           link: rzPaymentLink.short_url,
         },
+        creditClaims
       },
     }
   );
@@ -142,7 +208,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
 
   let selector = {
     paymentStatus: {
-      $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Settled]
+      $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Settled],
     },
   };
   if (rzSubscriptionId) {
@@ -175,10 +241,10 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     return true;
   }
 
-  if(invoice.paymentStatus === Invoice.PaymentStatusMapping.Settled) {
-    ElasticLogger.log("Invoice already settled", {
+  if (invoice.paymentStatus === Invoice.PaymentStatusMapping.Settled) {
+    ElasticLogger.log('Invoice already settled', {
       invoiceId,
-      id: spanId
+      id: spanId,
     });
     return invoice._id;
   }
@@ -241,7 +307,7 @@ InvoiceObj.generateHTML = async invoiceId => {
     ];
   }
 
-  const ejsTemplate = await getEJSTemplate({ fileName: 'invoice.ejs'});
+  const ejsTemplate = await getEJSTemplate({ fileName: 'invoice.ejs' });
   const finalHTML = ejsTemplate({
     invoice: {
       _id: invoice._id,
@@ -255,35 +321,35 @@ InvoiceObj.generateHTML = async invoiceId => {
     },
     items,
   });
-    var fut = new Future();
+  var fut = new Future();
 
-  var fileName = "blockcluster-bill-report.pdf";
+  var fileName = 'blockcluster-bill-report.pdf';
 
-var options = {
-      //renderDelay: 2000,
-      "paperSize": {
-          "format": "Letter",
-          "orientation": "portrait",
-          "margin": "1cm"
-      },
-      siteType: 'html'
+  var options = {
+    //renderDelay: 2000,
+    paperSize: {
+      format: 'Letter',
+      orientation: 'portrait',
+      margin: '1cm',
+    },
+    siteType: 'html',
   };
 
   // Commence Webshot
   // console.log("Commencing webshot...");
 
-  pdf.create(finalHTML, {format: 'Tabloid' ,orientation: "landscape",timeout: '100000'  }).toFile(fileName, function(err, res) {
+  pdf.create(finalHTML, { format: 'Tabloid', orientation: 'landscape', timeout: '100000' }).toFile(fileName, function(err, res) {
     if (err) return console.log(err);
     console.log(res);
-    fs.readFile(fileName, function (err, data) {
-              if (err) {
-                  return console.log(err);
-              }
+    fs.readFile(fileName, function(err, data) {
+      if (err) {
+        return console.log(err);
+      }
 
-              fs.unlinkSync(fileName);
-              fut.return(data);
+      fs.unlinkSync(fileName);
+      fut.return(data);
+    });
   });
-});
   // webshot(finalHTML, fileName, options, function(error,success) {
   //   if(error){
   //     return console.log(error);
@@ -304,18 +370,16 @@ var options = {
   let base64String = new Buffer(pdfData).toString('base64');
   return base64String;
   // return base64ToUint8Array(base64String);
-
 };
 
 function base64ToUint8Array(base64) {
   var raw = atob(base64);
   var uint8Array = new Uint8Array(raw.length);
   for (var i = 0; i < raw.length; i++) {
-  uint8Array[i] = raw.charCodeAt(i);
+    uint8Array[i] = raw.charCodeAt(i);
   }
   return uint8Array;
-  }
-
+}
 
 InvoiceObj.sendInvoiceCreatedEmail = async invoice => {
   if (invoice.totalAmountINR <= 0) {
@@ -446,8 +510,6 @@ InvoiceObj.waiveOffInvoice = async ({ invoiceId, reason, userId, user }) => {
 
   return true;
 };
-
-
 
 Meteor.methods({
   generateInvoiceHTML: InvoiceObj.generateHTML,

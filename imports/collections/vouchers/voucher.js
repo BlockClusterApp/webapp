@@ -91,4 +91,16 @@ VoucherCollection.schema = new SimpleSchema({
   },
 });
 
+if (Meteor.isServer) {
+  VoucherCollection._ensureIndex({
+    campaignId: 1,
+  });
+  VoucherCollection._ensureIndex({
+    code: 1,
+  });
+  VoucherCollection._ensureIndex({
+    type: 1,
+  });
+}
+
 export default VoucherCollection;
