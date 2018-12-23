@@ -90,7 +90,7 @@ class PaymeterComponent extends Component {
       walletId,
       this.refs.transferErc20Address.value,
       this.refs.transferErc20Amount.value, {
-        feeWallet: (walletId === this.refs.erc20FeeWallet.value ? null : this.refs.erc20FeeWallet.value),
+        feeWalletId: (walletId === this.refs.erc20FeeWallet.value ? null : this.refs.erc20FeeWallet.value),
         password: this.refs.transferErc20Password.value,
         feeWalletPassword: this.refs.transferErc20FeePassword.value
       }, (error, txnHash) => {      

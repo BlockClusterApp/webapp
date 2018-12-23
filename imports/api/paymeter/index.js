@@ -332,10 +332,10 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
       } else if (coinType === 'ERC20') {
         let url = await Config.getPaymeterConnectionDetails('eth', wallet.network);
         let web3 = new Web3(new Web3.providers.WebsocketProvider(url));
-        if (options.feeWallet) {
+        if (options.feeWalletId) {
           //transfer fee first then actual tokens. actual token transfer will be done by the cron job
           let feeWallet = Wallets.findOne({
-            _id: options.feeWallet,
+            _id: options.feeWalletId,
             user: userId,
           });
 
@@ -369,7 +369,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                     value: web3.utils.toHex(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString()),
                   };
 
-                  let fee_wallet_current_balance = await getBalance(options.feeWallet);
+                  let fee_wallet_current_balance = await getBalance(options.feeWalletId);
 
                   if(new BigNumber(web3.utils.fromWei(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString(), 'ether')).lte(fee_wallet_current_balance)) {
                     let cryptr = new Cryptr(options.feeWalletPassword);
@@ -446,7 +446,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                             fee: web3.utils.fromWei(total_fee, 'ether'),
                             nonce: nonce,
                             rawTx: '0x' + serializedTx.toString('hex'),
-                            feeDepositWallet: options.feeWallet,
+                            feeDepositWallet: options.feeWalletId,
                             feeDepositTxnId: hash,
                           });
 
