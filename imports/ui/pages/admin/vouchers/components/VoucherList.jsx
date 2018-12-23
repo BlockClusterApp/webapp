@@ -176,14 +176,6 @@ class VoucherList extends Component {
                         </select>
                       </div>
                     </div>
-                    <div className="col-md-4" align="right">
-                      <Link to={'/app/admin/vouchers/create'}>
-                        <LaddaButton data-size={S} data-style={SLIDE_UP} data-spinner-size={30} data-spinner-lines={12} className="btn btn-success ">
-                          <i className="fa fa-plus-circle" aria-hidden="true" />
-                          &nbsp;&nbsp;Create
-                        </LaddaButton>
-                      </Link>
-                    </div>
                   </div>
                   <div className="table-responsive">
                     <table className="table table-hover" id="basicTable">

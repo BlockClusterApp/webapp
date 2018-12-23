@@ -80,6 +80,25 @@ Voucher.applyPromotionalCode = async function({ code, userId }) {
   }
 };
 
+Voucher.fetchBalanceCredits = async ({ userId }) => {
+  if (!(userId === Meteor.userId() || Meteor.user().admin < 2)) {
+    throw new Meteor.Error(401, 'Unauthorized');
+  }
+
+  const credits = Credits.find({ userId }).fetch();
+  const balance = credits.reduce((sum, credit) => {
+    const currentBalance = sum + Number(credit.amount);
+    if (!(credit.metadata && credit.metadata.invoices)) {
+      return currentBalance;
+    }
+    credit.metadata.invoices.forEach(invoice => {
+      currentBalance = currentBalance - Number(invoice.amount);
+    });
+    return currentBalance;
+  }, 0);
+  return Number(balance).toFixed(2);
+};
+
 Voucher.validate = async function({ voucherCode, type }) {
   const voucher = Vouchers.find({
     code: voucherCode,
@@ -127,10 +146,6 @@ const insertVoucher = async savable_doc => {
   return Vouchers.insert(savable_doc);
 };
 
-/**
- * @param { voucher_code_size*, noOfVouchers*, networkConfig*, active*, expiryDate*, isDiskChangeable*, discountedDays*, claimed*} payload
- * @param { cpu: Number, ram: Number, disk: Number } payload.networkConfig
- */
 Voucher.create = async function(payload) {
   let voucher_codes;
   if (payload.code) {
@@ -226,4 +241,6 @@ Meteor.methods({
   validateVoucher: Voucher.validate,
   CreateVoucher: Voucher.create,
   createCampaign: Voucher.createCampaign,
+  applyPromotionalCode: Voucher.applyPromotionalCode,
+  fetchBalanceCredits: Voucher.fetchBalanceCredits,
 });
