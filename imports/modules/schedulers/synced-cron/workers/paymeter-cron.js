@@ -1153,7 +1153,7 @@ function scanEthMainnet(time) {
                             {
                               $setOnInsert: {
                                 amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                                usdCharged: new BigNumber(0.18)
+                                usdCharged: new BigNumber(helpers.paymeterDepositFees())
                                   .times(new BigNumber(mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString()).times(eth_price.usd_price))
                                   .dividedBy(100)
                                   .toString(),
@@ -1163,7 +1163,7 @@ function scanEthMainnet(time) {
                           );
                         } else {
                           //this may happen when coinmarketcap API not working or txn detected before price update on DB (i.e., old price in DB)
-                          //in this case we just charge $0.20
+                          //in this case we just charge $helpers.paymeterDepositFeesERC20NotFound()
                           //in future get coinmarketcap premium API and find the historical value and calculate fees using it.
                           WalletTransactions.upsert(
                             {
@@ -1176,7 +1176,7 @@ function scanEthMainnet(time) {
                             {
                               $setOnInsert: {
                                 amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                                usdCharged: '0.20',
+                                usdCharged: helpers.paymeterDepositFeesERC20NotFound(),
                                 status: 'pending',
                               },
                             }
@@ -1273,7 +1273,7 @@ function scanEthMainnet(time) {
                               {
                                 $setOnInsert: {
                                   amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                                  usdCharged: new BigNumber(0.18)
+                                  usdCharged: new BigNumber(helpers.paymeterDepositFees())
                                     .times(new BigNumber(mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()).times(token_price.usd_price))
                                     .dividedBy(100)
                                     .toString(),
@@ -1294,7 +1294,7 @@ function scanEthMainnet(time) {
                               {
                                 $setOnInsert: {
                                   amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                                  usdCharged: '0.20',
+                                  usdCharged: helpers.paymeterDepositFeesERC20NotFound(),
                                   status: 'pending',
                                 },
                               }
@@ -1312,7 +1312,7 @@ function scanEthMainnet(time) {
                             {
                               $setOnInsert: {
                                 amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                                usdCharged: '0.20',
+                                usdCharged: helpers.paymeterDepositFeesERC20NotFound(),
                                 status: 'pending',
                               },
                             }
@@ -1333,7 +1333,7 @@ function scanEthMainnet(time) {
                             {
                               $setOnInsert: {
                                 amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                                usdCharged: new BigNumber(0.18)
+                                usdCharged: new BigNumber(helpers.paymeterDepositFees())
                                   .times(new BigNumber(mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()).times(price))
                                   .dividedBy(100)
                                   .toString(),
@@ -1354,7 +1354,7 @@ function scanEthMainnet(time) {
                             {
                               $setOnInsert: {
                                 amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                                usdCharged: '0.20',
+                                usdCharged: helpers.paymeterDepositFeesERC20NotFound(),
                                 status: 'pending',
                               },
                             }
