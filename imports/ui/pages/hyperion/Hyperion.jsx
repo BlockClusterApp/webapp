@@ -12,6 +12,7 @@ import FineUploaderTraditional from "fine-uploader-wrappers";
 import Gallery from "react-fine-uploader";
 import LocationSelector from "../../components/Selectors/LocationSelector.jsx";
 import LoadingIcon from "../../components/LoadingIcon/LoadingIcon.jsx";
+const BigNumber = require('bignumber.js');
 
 import {
   ComposableMap,
