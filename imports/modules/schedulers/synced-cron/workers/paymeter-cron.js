@@ -908,10 +908,10 @@ const scanEthTestnet = async (ready) => {
     );
 
     ready()
-    cron.setTimeout(Meteor.bindEnvironment(scanEthTestnet), 4000, 'scan eth block testnet')
+    cron.setTimeout(Meteor.bindEnvironment(scanEthTestnet), 2000, 'scan eth block testnet')
   } catch (e) {
     ready()
-    cron.setTimeout(Meteor.bindEnvironment(scanEthTestnet), 4000, 'scan eth block testnet')
+    cron.setTimeout(Meteor.bindEnvironment(scanEthTestnet), 2000, 'scan eth block testnet')
   }
 }
 
@@ -1238,10 +1238,10 @@ const scanEthMainnet = async (ready) => {
     await Promise.all(promises);
 
     ready()
-    cron.setTimeout(Meteor.bindEnvironment(scanEthMainnet), 4000, 'scan eth block mainnet')
+    cron.setTimeout(Meteor.bindEnvironment(scanEthMainnet), 2000, 'scan eth block mainnet')
   } catch (e) {
     ready()
-    cron.setTimeout(Meteor.bindEnvironment(scanEthMainnet), 4000, 'scan eth block mainnet')
+    cron.setTimeout(Meteor.bindEnvironment(scanEthMainnet), 2000, 'scan eth block mainnet')
   }
 }
 
