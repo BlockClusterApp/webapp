@@ -761,7 +761,7 @@ function updatePrices(time) {
     },
     job: () => {
       var myFuture = new Future();
-
+      console.log("Updating prices: ", helpers.timeConverter(Date.now() / 1000))
       (async () => {
         try {
           let symbols_list = ['ETH']; //add other coins here
@@ -1407,6 +1407,7 @@ function scanEthMainnet(time) {
 function startCrons() {
   if (!isPaymeterCronInitialized && RemoteConfig && RemoteConfig.features && RemoteConfig.features.Paymeter) {
     console.log('Starting paymeter');
+    SyncedCron.remove('update prices');
     processWithdrawls();
     processDeposits();
     updateGasPrice();
@@ -1437,3 +1438,16 @@ SyncedCron.start();
     value: 3527701
   }
 })*/
+
+
+
+SyncedCron.add({
+  name: 'Crunch some important numbers for the marketing department',
+  schedule: function(parser) {
+    // parser is a later.parse object
+    return parser.text('every 2 minutes');
+  },
+  job: function() {
+    console.log('aassss')
+  }
+});
