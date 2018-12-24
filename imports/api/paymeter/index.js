@@ -14,6 +14,7 @@ import agenda from '../../modules/schedulers/agenda';
 import { Paymeter as PaymeterCollection } from '../../collections/paymeter/paymeter.js';
 import Billing from '../../api/billing';
 import moment from 'moment';
+import Voucher from '../network/voucher';
 const Cryptr = require('cryptr');
 
 const erc20ABI = [
@@ -722,6 +723,29 @@ async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMo
           bill = paymeter_userData.minimumFeeThisMonth;
         }
 
+        const vouchers = paymeter_userData.vouchers;
+        let discount = 0;
+        let discountsApplied = [];
+        if (vouchers) {
+          vouchers
+            .sort((a, b) => new Date(a.appliedOn).getTime() - new Date(b.appliedOn).getDate())
+            .filter(voucher => () => {
+              if (selectedMonth.diff(moment(voucher.appliedOn), 'months') > voucher.usability.no_months) {
+                return false;
+              }
+              return true;
+            })
+            .forEach(voucher => {
+              const _discount = Number(Voucher.getDiscountAmountForVoucher(voucher, bill));
+              if (_discount > bill - discount && _discount > 0) {
+                _discount = bill - discount;
+                discountsApplied.push({ _id: voucher._id, code: voucher.code, amount: _discount });
+              }
+              discount = discount + _discount;
+            });
+          bill = Math.max(0, bill - discount);
+        }
+
         const history = PaymeterBillHistory.find({ billingPeriodLabel }).fetch()[0];
         if (history) {
           return history.bill;
@@ -731,6 +755,8 @@ async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMo
             userId,
             bill,
             metadata: paymeter_userData,
+            discountsApplied,
+            totalDiscountGiven: discount,
           });
         }
 
