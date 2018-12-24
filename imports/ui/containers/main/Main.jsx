@@ -124,7 +124,7 @@ export default withRouter(
               <Route exact path="/app/networks/:id/sc/management" component={SmartContractsManagement} />
               <Route exact path="/app/platform-apis" component={PlatformAPIKeys} />
 
-              {features.Payments && <Route exact path="/app/payments" component={Payments} />}
+              {features.Payments && <Route path="/app/payments" component={Payments} />}
               {features.Invoice && <Route exact path="/app/billing" component={BillingDashboard} />}
               {features.SupportTicket && <Route exact path="/app/support" component={SupportContainer} />}
               {features.SupportTicket && <Route exact path="/app/support/:id" component={SupportDetails} />}

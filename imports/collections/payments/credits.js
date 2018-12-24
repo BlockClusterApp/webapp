@@ -43,7 +43,7 @@ Credits.schema = new SimpleSchema({
   },
 });
 
-if (!Meteor.isServer) {
+if (Meteor.isServer) {
   Credits._ensureIndex({
     userId: 1,
   });

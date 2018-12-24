@@ -110,7 +110,7 @@ class CardsAndNewPayment extends Component {
     let paymentDisplay = null;
     if (
       this.props.invoice &&
-      this.props.invoice.paymentStatus !== 2 &&
+      ![2, undefined].includes(this.props.invoice.paymentStatus) &&
       !(this.props.rzSubscription && this.props.rzSubscription.bc_status === 'active') &&
       (this.props.user && !this.props.user.demoUser)
     ) {

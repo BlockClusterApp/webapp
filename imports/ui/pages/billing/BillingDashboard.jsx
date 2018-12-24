@@ -30,11 +30,6 @@ class BillingDashboard extends Component {
   };
 
   componentDidMount() {
-    // Meteor.call("getClusterLocations", (err, res) => {
-    //   this.setState({
-    //     locations: res
-    //   });
-    // });
     this.updateBilling();
   }
 
