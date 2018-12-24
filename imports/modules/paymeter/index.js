@@ -24,7 +24,6 @@ async function getCryptosPrice(tokenSymbols) { //comma seperated symbols
         "X-CMC_PRO_API_KEY": (await Config.getCoinmarketcapAPIKey())
       }
     }, (error, response) => {
-      console.log(error, response)
       if(!error) {
         resolve(response)
       } else {
