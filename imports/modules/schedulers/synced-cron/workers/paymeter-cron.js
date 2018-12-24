@@ -15,6 +15,15 @@ import { Meteor } from 'meteor/meteor';
 import sleep from 'await-sleep';
 import BigNumber from 'bignumber.js';
 var Future = Npm.require('fibers/future');
+import { CRONjob } from 'meteor/ostrio:cron-jobs';
+
+const db  = Meteor.users.rawDatabase();
+
+const cron = new CRONjob({
+  db: db,
+  autoClear: true,
+  resetOnInit: false //don't re-run pending tasks when restarted
+});
 
 let isPaymeterCronInitialized = false;
 
@@ -734,62 +743,6 @@ function updateGasPrice() {
   });
 }
 
-function updatePrices(time) {
-  SyncedCron.add({
-    name: 'update prices',
-    schedule: function(parser) {
-      // parser is a later.parse object
-      if (['production'].includes(process.env.NODE_ENV)) {
-        return parser.text('every 5 minutes');
-      } else {
-        return parser.text('every 12 hours');
-      }
-    },
-    job: () => {
-      var myFuture = new Future();
-      console.log("Updating prices: ", helpers.timeConverter(Date.now() / 1000))
-      (async () => {
-        try {
-          let symbols_list = ['ETH']; //add other coins here
-
-          let erc20_coins = ERC20.find({
-            symbol: {
-              $exists: true,
-            },
-            network: 'mainnet',
-          }).fetch();
-
-          erc20_coins.forEach(erc20_token => {
-            symbols_list.push(erc20_token.symbol);
-          });
-
-          symbols_list = symbols_list.join();
-          let prices = await getCryptosPrice(symbols_list);
-
-          for (let coin in prices.data.data) {
-            CoinPrices.upsert(
-              {
-                symbol: coin,
-              },
-              {
-                $set: {
-                  usd_price: prices.data.data[coin].quote.USD.price,
-                  last_updated: Date.now(),
-                },
-              }
-            );
-          }
-
-          myFuture.return();
-        } catch (e) {
-          myFuture.return();
-        }
-      })();
-
-      return myFuture.wait();
-    },
-  });
-}
 
 function addSymbolToContracts() {
   SyncedCron.add({
@@ -1386,13 +1339,58 @@ function scanEthMainnet(time) {
   });
 }
 
+const updatePrices = async (ready) => {
+  try {
+    let symbols_list = ['ETH']; //add other coins here
+    let erc20_coins = ERC20.find({
+      symbol: {
+        $exists: true,
+      },
+      network: 'mainnet',
+    }).fetch();
+
+    erc20_coins.forEach(erc20_token => {
+      symbols_list.push(erc20_token.symbol);
+    });
+
+    symbols_list = symbols_list.join();
+    let prices = await getCryptosPrice(symbols_list);
+
+    for (let coin in prices.data.data) {
+      CoinPrices.upsert(
+        {
+          symbol: coin,
+        },
+        {
+          $set: {
+            usd_price: prices.data.data[coin].quote.USD.price,
+            last_updated: Date.now(),
+          },
+        }
+      );
+    }
+
+    ready();
+  } catch (e) {
+    ready();
+  }
+};
+
+
 function startCrons() {
   if (!isPaymeterCronInitialized && RemoteConfig && RemoteConfig.features && RemoteConfig.features.Paymeter) {
     console.log('Starting paymeter');
     processWithdrawls();
     processDeposits();
     updateGasPrice();
-    updatePrices();
+
+    if (['production'].includes(process.env.NODE_ENV)) {
+      cron.setInterval(Meteor.bindEnvironment(updatePrices), 1000 * 60 * 5, 'update prices');
+    } else {
+      cron.setInterval(Meteor.bindEnvironment(updatePrices), 1000 * 60 * 60 * 12, 'update prices');
+    }
+
+    
     addSymbolToContracts();
     scanEthTestnet();
     scanEthMainnet();
@@ -1419,16 +1417,3 @@ SyncedCron.start();
     value: 3527701
   }
 })*/
-
-
-
-SyncedCron.add({
-  name: 'Crunch some important numbers for the marketing department',
-  schedule: function(parser) {
-    // parser is a later.parse object
-    return parser.text('every 2 minutes');
-  },
-  job: function() {
-    console.log('aassss')
-  }
-});
