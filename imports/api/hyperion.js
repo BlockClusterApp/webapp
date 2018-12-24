@@ -1,4 +1,3 @@
-import { Hyperion } from '../collections/hyperion/hyperion.js';
 import { Files } from '../collections/files/files.js';
 import AuthMiddleware from './middleware/auth';
 const BigNumber = require('bignumber.js');
@@ -8,10 +7,15 @@ const ipfsAPI = require('ipfs-api');
 const fs = require('fs');
 var ipfsClusterAPI = require('ipfs-cluster-api');
 import ChargeableAPI from '../collections/chargeable-apis/';
+import { Hyperion } from '../collections/hyperion/hyperion';
+import HyperionBillHistory from '../collections/hyperion/hyperion-bill-history';
 var multer = require('multer');
 var upload = multer(); //in case of scalibility issue use multer file storage. By default it uses memory.
 var Future = Npm.require('fibers/future');
 import Billing from './billing';
+import moment from 'moment';
+import Voucher from './network/voucher';
+import HyperionPricing from '../collections/pricing/hyperion';
 
 Meteor.methods({
   getHyperionToken: file => {
@@ -46,11 +50,22 @@ Meteor.methods({
                 subscribed: true,
                 unsubscribeNextMonth: false,
               },
+              $push: {
+                subscriptions: {
+                  action: 'subscribe',
+                  at: new Date(),
+                },
+              },
+              $unset: {
+                subscriptionTill: '',
+              },
             }
           );
         } else {
           let totalDaysThisMonth = helpers.daysInThisMonth();
-          let perDayCost = new BigNumber(helpers.hyperionMinimumCostPerMonth()).dividedBy(totalDaysThisMonth);
+
+          const hyperionPricing = HyperionPricing.find({ active: true }).fetch()[0];
+          let perDayCost = new BigNumber(hyperionPricing.minimumMonthlyCost).dividedBy(totalDaysThisMonth);
           let minimumFeeThisMonth = new BigNumber(perDayCost).times(helpers.getRemainingDays() + 1); //including today
           Hyperion.upsert(
             {
@@ -62,12 +77,22 @@ Meteor.methods({
                 unsubscribeNextMonth: false,
                 minimumFeeThisMonth: minimumFeeThisMonth.toString(),
               },
+              $push: {
+                subscriptions: {
+                  action: 'subscribe',
+                  at: new Date(),
+                },
+              },
+              $unset: {
+                subscriptionTill: '',
+              },
             }
           );
         }
       } else {
         let totalDaysThisMonth = helpers.daysInThisMonth();
-        let perDayCost = new BigNumber(helpers.hyperionMinimumCostPerMonth()).dividedBy(totalDaysThisMonth);
+        const hyperionPricing = HyperionPricing.find({ active: true }).fetch()[0];
+        let perDayCost = new BigNumber(hyperionPricing.minimumMonthlyCost).dividedBy(totalDaysThisMonth);
         let minimumFeeThisMonth = new BigNumber(perDayCost).times(helpers.getRemainingDays() + 1); //including today
         Hyperion.upsert(
           {
@@ -78,6 +103,15 @@ Meteor.methods({
               subscribed: true,
               unsubscribeNextMonth: false,
               minimumFeeThisMonth: minimumFeeThisMonth.toString(),
+            },
+            $push: {
+              subscriptions: {
+                action: 'subscribe',
+                at: new Date(),
+              },
+            },
+            $unset: {
+              subscriptionTill: '',
             },
           }
         );
@@ -98,6 +132,15 @@ Meteor.methods({
           {
             $set: {
               unsubscribeNextMonth: true,
+              subscriptionTill: moment()
+                .endOf('month')
+                .toDate(),
+            },
+            $push: {
+              subscriptions: {
+                action: 'unsubscribe',
+                at: new Date(),
+              },
             },
           }
         );
@@ -110,8 +153,10 @@ Meteor.methods({
   },
 });
 
-function hyperion_getAndResetUserBill(userId) {
+function hyperion_getAndResetUserBill({ userId, isFromFrontEnd, selectedMonth }) {
+  selectedMonth = selectedMonth || moment();
   if (userId) {
+    const billingPeriodLabel = selectedMonth.format('MMM-YYYY');
     let total_hyperion_cost = 0; //add this value to invoice amount
     const hyperion_stats = Hyperion.findOne({
       userId: userId,
@@ -129,12 +174,6 @@ function hyperion_getAndResetUserBill(userId) {
         let nextMonthMin = helpers.hyperionMinimumCostPerMonth();
 
         if (hyperion_stats.unsubscribeNextMonth) {
-          let UserWallets = Wallets.find({
-            userId: userId,
-          }).fetch();
-
-          //delete files
-
           Hyperion.upsert(
             {
               userId: userId,
@@ -152,6 +191,58 @@ function hyperion_getAndResetUserBill(userId) {
 
         if (new BigNumber(total_hyperion_cost).lt(hyperion_stats.minimumFeeThisMonth)) {
           total_hyperion_cost = hyperion_stats.minimumFeeThisMonth;
+        }
+
+        const vouchers = hyperion_stats.vouchers;
+        let discount = 0;
+        let discountsApplied = [];
+        if (vouchers) {
+          vouchers
+            .sort((a, b) => new Date(a.appliedOn).getTime() - new Date(b.appliedOn).getDate())
+            .filter(voucher => () => {
+              if (selectedMonth.diff(moment(voucher.appliedOn), 'months') > voucher.usability.no_months) {
+                return false;
+              }
+              return true;
+            })
+            .forEach(voucher => {
+              const _discount = Number(Voucher.getDiscountAmountForVoucher(voucher, total_hyperion_cost));
+              if (_discount > total_hyperion_cost - discount && _discount > 0) {
+                _discount = total_hyperion_cost - discount;
+                discountsApplied.push({ _id: voucher._id, code: voucher.code, amount: _discount });
+              }
+              discount = discount + _discount;
+            });
+          total_hyperion_cost = Math.max(0, total_hyperion_cost - discount);
+        }
+
+        const history = PaymeterBillHistory.find({ billingPeriodLabel }).fetch()[0];
+        if (history) {
+          return history.bill;
+        } else if (!isFromFrontEnd) {
+          HyperionBillHistory.insert({
+            billingPeriodLabel,
+            userId,
+            bill: total_hyperion_cost,
+            metadata: hyperion_stats,
+            discountsApplied,
+            totalDiscountGiven: discount,
+          });
+        }
+
+        // Reset it to 0 only if call is via generate bill script i.e. from backend
+        if (!isFromFrontEnd) {
+          PaymeterCollection.upsert(
+            {
+              userId: userId,
+            },
+            {
+              $set: {
+                bill: '0',
+                minimumFeeThisMonth: nextMonthMin,
+              },
+            }
+          );
         }
 
         Hyperion.upsert(
@@ -633,4 +724,6 @@ JsonRoutes.add('delete', '/api/hyperion/delete', async (req, res, next) => {
     });
   }
 });
-module.exports = {};
+module.exports = {
+  getBill: hyperion_getAndResetUserBill,
+};

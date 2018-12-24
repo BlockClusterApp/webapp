@@ -19,6 +19,7 @@ import { ComposableMap, ZoomableGroup, Geographies, Geography, Markers, Marker }
 // ...or load this specific CSS file using a <link> tag in your document
 import 'react-fine-uploader/gallery/gallery.css';
 import './Hyperion.scss';
+import moment from 'moment';
 
 const wrapperStyles = {
   width: '100%',
@@ -246,6 +247,22 @@ class HyperionComponent extends Component {
     });
   };
 
+  applyPromotionalCode = () => {
+    this.setState({
+      promotionalCodeLoading: true,
+    });
+    Meteor.call('applyVoucherCode', { code: this.promotionalCode.value, type: 'hyperion', userId: Meteor.userId() }, (err, res) => {
+      this.setState({
+        promotionalCodeLoading: false,
+      });
+      if (err) {
+        return notifications.error(err.reason);
+      }
+      this.promotionalCode.value = '';
+      return notifications.success('Applied Successfully');
+    });
+  };
+
   searchFile = e => {
     e.preventDefault();
 
@@ -377,18 +394,23 @@ class HyperionComponent extends Component {
                   </a>
                 </li>
                 <li className="nav-item">
-                  <a href="#" data-toggle="tab" role="tab" data-target="#stats">
-                    Stats & Billing
-                  </a>
-                </li>
-                <li className="nav-item">
                   <a href="#" data-toggle="tab" role="tab" data-target="#search">
                     Search
                   </a>
                 </li>
                 <li className="nav-item">
+                  <a href="#" data-toggle="tab" role="tab" data-target="#stats">
+                    Stats & Billing
+                  </a>
+                </li>
+                <li className="nav-item">
                   <a href="#" data-toggle="tab" role="tab" data-target="#activation">
                     Activation
+                  </a>
+                </li>
+                <li className="nav-item">
+                  <a href="#" data-toggle="tab" role="tab" data-target="#vouchers">
+                    Vouchers
                   </a>
                 </li>
               </ul>
@@ -481,9 +503,9 @@ class HyperionComponent extends Component {
                                   </div>
                                   <div className="p-l-20">
                                     <h3 className="no-margin p-b-30 text-white ">
-                                      {this.props.hyperion.length === 1 && <span>{helpers.bytesToSize(this.props.hyperion[0].size)}</span>}
+                                      {this.props.hyperion && <span>{helpers.bytesToSize(this.props.hyperion.size)}</span>}
 
-                                      {this.props.hyperion.length === 0 && <span>0</span>}
+                                      {!this.props.hyperion && <span>0</span>}
                                     </h3>
                                   </div>
                                 </div>
@@ -537,11 +559,11 @@ class HyperionComponent extends Component {
                                   </div>
                                   <div className="p-l-20">
                                     <h3 className="no-margin p-b-30 text-white ">
-                                      {this.props.hyperion.length === 1 && (
-                                        <span>${(this.props.hyperion[0].size / 1024 / 1024 / 1024) * (hyperionPricing && hyperionPricing.perGBCost)}</span>
+                                      {this.props.hyperion && (
+                                        <span>${Number((this.props.hyperion.size / (1024 * 1024 * 1024)) * (hyperionPricing && hyperionPricing.perGBCost)).toFixed(2)}</span>
                                       )}
 
-                                      {this.props.hyperion.length === 0 && <span>$0</span>}
+                                      {!this.props.hyperion && <span>$0</span>}
                                     </h3>
                                   </div>
                                 </div>
@@ -568,17 +590,17 @@ class HyperionComponent extends Component {
                                   </div>
                                   <div className="p-l-20">
                                     <h3 className="no-margin p-b-30 text-white ">
-                                      {this.props.hyperion.length === 1 && (
+                                      {this.props.hyperion && (
                                         <span>
                                           $
-                                          {(
-                                            (this.props.hyperion[0].size / 1024 / 1024 / 1024) * (hyperionPricing && hyperionPricing.perGBCost) -
-                                            this.props.hyperion[0].discount
-                                          ).toPrecision(2)}
+                                          {Math.max(
+                                            (this.props.hyperion.size / (1024 * 1024 * 1024)) * (hyperionPricing && hyperionPricing.perGBCost) - this.props.hyperion.discount,
+                                            this.props.hyperion.minimumFeeThisMonth
+                                          ).toFixed(2)}
                                         </span>
                                       )}
 
-                                      {this.props.hyperion.length === 0 && <span>$0</span>}
+                                      {!this.props.hyperion && <span>$0</span>}
                                     </h3>
                                   </div>
                                 </div>
@@ -649,11 +671,11 @@ class HyperionComponent extends Component {
                                     </p>
                                     <div>
                                       <div>
-                                        {this.props.hyperion.length === 1 ? (
+                                        {this.props.hyperion ? (
                                           <div>
-                                            {this.props.hyperion[0].subscribed ? (
+                                            {this.props.hyperion.subscribed ? (
                                               <div>
-                                                {this.props.hyperion[0].unsubscribeNextMonth ? (
+                                                {this.props.hyperion.unsubscribeNextMonth ? (
                                                   <LaddaButton
                                                     onClick={e => {
                                                       this.activate();
@@ -754,10 +776,10 @@ class HyperionComponent extends Component {
                                             <span className="m-l-10 font-montserrat fs-11 all-caps no-hidden-text">File Upload</span>
                                           </td>
                                           <td className=" col-lg-2 col-md-3 col-sm-3 text-right">
-                                            <span className="no-hidden-text">Per GB</span>
+                                            <span className="no-hidden-text">Per GB / month</span>
                                           </td>
                                           <td className=" col-lg-2 col-md-3 col-sm-2 text-right">
-                                            <h4 className="text-primary no-margin font-montserrat no-hidden-text">${helpers.hyperionGBCostPerMonth()}</h4>
+                                            <h4 className="text-primary no-margin font-montserrat no-hidden-text">${hyperionPricing && hyperionPricing.perGBCost}</h4>
                                           </td>
                                         </tr>
                                         <tr>
@@ -771,7 +793,7 @@ class HyperionComponent extends Component {
                                             <span className="no-hidden-text">Per month</span>
                                           </td>
                                           <td className=" col-lg-2 col-md-3 col-sm-2 text-right">
-                                            <h4 className="text-primary no-margin font-montserrat no-hidden-text">${helpers.hyperionMinimumCostPerMonth()}</h4>
+                                            <h4 className="text-primary no-margin font-montserrat no-hidden-text">${hyperionPricing && hyperionPricing.minimumMonthlyCost}</h4>
                                           </td>
                                         </tr>
                                       </tbody>
@@ -789,11 +811,9 @@ class HyperionComponent extends Component {
                                         <div className="col-md-6 clearfix sm-p-b-15 d-flex flex-column justify-content-center">
                                           <h5 className="font-montserrat all-caps small no-margin hint-text bold">Minimum Fee This Month</h5>
                                           <h3 className="no-margin">
-                                            {this.props.hyperion.length === 1 && (
-                                              <span>${helpers.getFlooredFixed(parseFloat(this.props.hyperion[0].minimumFeeThisMonth || '0.00'), 2)}</span>
-                                            )}
+                                            {this.props.hyperion && <span>${helpers.getFlooredFixed(parseFloat(this.props.hyperion.minimumFeeThisMonth || '0.00'), 2)}</span>}
 
-                                            {this.props.hyperion.length === 0 && <span>$0.00</span>}
+                                            {!this.props.hyperion && <span>$0.00</span>}
                                           </h3>
                                         </div>
                                         <div className="col-md-6 text-right bg-master-darker col-sm-height padding-15 d-flex flex-column justify-content-center align-items-end">
@@ -801,21 +821,20 @@ class HyperionComponent extends Component {
                                           <h1 className="no-margin text-white">
                                             <span>$</span>
                                             <span>
-                                              {this.props.hyperion.length === 1 && (
+                                              {this.props.hyperion && (
                                                 <span>
                                                   {helpers.getFlooredFixed(
                                                     (
-                                                      (
-                                                        (this.props.hyperion[0].size / 1024 / 1024 / 1024) *
-                                                        (helpers.hyperionGBCostPerDay() * helpers.daysInThisMonth())
-                                                      ).toPrecision(2) - this.props.hyperion[0].discount
+                                                      ((this.props.hyperion.size / 1024 / 1024 / 1024) * (helpers.hyperionGBCostPerDay() * helpers.daysInThisMonth())).toPrecision(
+                                                        2
+                                                      ) - this.props.hyperion.discount
                                                     ).toPrecision(2),
                                                     2
                                                   )}
                                                 </span>
                                               )}
 
-                                              {this.props.hyperion.length === 0 && <span>0</span>}
+                                              {!this.props.hyperion && <span>0</span>}
                                             </span>
                                           </h1>
                                         </div>
@@ -827,6 +846,59 @@ class HyperionComponent extends Component {
                             </div>
                           </div>
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="tab-pane" id="vouchers">
+                  <div className="row">
+                    <div className="col-md-8 col-md-6 b-r b-dashed b-grey">
+                      <div className="card card-transparent m-b-0">
+                        <div className="card-block">
+                          <div className="form-group-attached">
+                            <form role="form">
+                              <div className="form-group form-group-default m-t-10">
+                                <label>Apply promotional code</label>
+                                <input
+                                  type="text"
+                                  placeholder="HYPERIONCODE100"
+                                  className="form-control"
+                                  ref={i => (this.promotionalCode = i)}
+                                  style={{ height: 'calc(2.25rem + 2px)' }}
+                                />
+                              </div>
+                              <LaddaButton
+                                loading={this.state.promotionalCodeLoading}
+                                data-size={S}
+                                data-style={SLIDE_UP}
+                                data-spinner-size={30}
+                                data-spinner-lines={12}
+                                className="btn btn-complete btn-cons m-t-10"
+                                onClick={this.applyPromotionalCode}
+                              >
+                                <i className="fa fa-check" aria-hidden="true" />
+                                &nbsp;&nbsp;Redeem
+                              </LaddaButton>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-4 col-sm-6">
+                      <div className="card-block">
+                        <h4 className="text-primary">Applied voucher codes</h4>
+                        <br />
+                        <ul>
+                          {this.props.hyperion &&
+                            this.props.hyperion.vouchers &&
+                            this.props.hyperion.vouchers.map(voucher => {
+                              return (
+                                <li>
+                                  <b>{voucher.code}</b> | {moment(voucher.appliedOn).format('DD-MMM-YYYY')}
+                                </li>
+                              );
+                            })}
+                        </ul>
                       </div>
                     </div>
                   </div>
@@ -843,7 +915,7 @@ class HyperionComponent extends Component {
 export default withTracker(props => {
   return {
     files: Files.find({}).fetch(),
-    hyperion: Hyperion.find({}).fetch(),
+    hyperion: Hyperion.find({ userId: Meteor.userId() }).fetch()[0],
     hyperionPricing: HyperionPricing.find({ active: true }).fetch()[0],
     workerNodeIP: Config.workerNodeIP,
     workerNodeDomainName: Config.workerNodeDomainName,

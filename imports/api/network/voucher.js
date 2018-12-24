@@ -6,8 +6,20 @@ import { Meteor } from 'meteor/meteor';
 
 import Credits from '../../collections/payments/credits';
 import CreditRedemption from '../../collections/vouchers/credits-redemption';
+import { Hyperion } from '../../collections/hyperion/hyperion';
+import { Paymeter } from '../../collections/paymeter/paymeter';
 
 const Voucher = {};
+
+Voucher.getDiscountAmountForVoucher = (voucher, totalAmount) => {
+  if (!voucher.discount) {
+    return 0;
+  }
+  if (voucher.discount.percent) {
+    return totalAmount * (voucher.discount.value / 100);
+  }
+  return Math.min(voucher.discount.value);
+};
 
 Voucher.createCampaign = async function({ description, live, expiryDate }) {
   if (!description) {
@@ -24,10 +36,68 @@ Voucher.createCampaign = async function({ description, live, expiryDate }) {
   return Campaign.insert({ description, live, expiryDate, createdBy: Meteor.userId() });
 };
 
-Voucher.applyPromotionalCode = async function({ code, userId }) {
-  const voucher = await Voucher.validate({ voucherCode: code, type: 'credit' });
+Voucher.applyVoucherCode = async function({ code, type, userId }) {
+  const voucher = await Voucher.validate({ voucherCode: code, type, userId });
 
+  delete voucher.voucher_claim_status;
+  delete voucher.voucher_status;
+  delete voucher.availability;
+  delete voucher.active;
+  voucher.appliedOn = new Date();
+
+  let Model = undefined;
+
+  if (type === 'hyperion') {
+    Model = Hyperion;
+  } else if (type === 'paymeter') {
+    Model = Paymeter;
+  }
+
+  if (!Model) {
+    throw new Meteor.Error(403, 'Invalid voucher type');
+  }
+  const obj = Model.find({ userId }).fetch()[0];
+  if (!obj) {
+    throw new Meteor.Error(400, `User not subscribed to ${Model.name}`);
+  }
+  if (obj.vouchers) {
+    const isVoucherClaimed = obj.vouchers.find(v => voucher._id === v._id);
+    if (isVoucherClaimed) {
+      throw new Meteor.Error(400, 'Voucher already claimed');
+    }
+  }
+  Model.update(
+    {
+      userId,
+    },
+    {
+      $push: {
+        vouchers: voucher,
+      },
+    }
+  );
+
+  Vouchers.update(
+    {
+      _id: voucher._id,
+    },
+    {
+      $push: {
+        voucher_claim_status: {
+          claimed: true,
+          claimedBy: userId,
+          claimedOn: new Date(),
+        },
+      },
+    }
+  );
+
+  return true;
+};
+
+Voucher.applyPromotionalCode = async function({ code, userId }) {
   userId = userId || Meteor.userId();
+  const voucher = await Voucher.validate({ voucherCode: code, type: 'credit', userId });
 
   const previousRedemption = CreditRedemption.find({ userId, codeId: voucher._id }).fetch()[0];
   if (previousRedemption) {
@@ -99,7 +169,9 @@ Voucher.fetchBalanceCredits = async ({ userId }) => {
   return Number(balance).toFixed(2);
 };
 
-Voucher.validate = async function({ voucherCode, type }) {
+Voucher.validate = async function({ voucherCode, type, userId }) {
+  userId = userId || Meteor.userId();
+  const user = Meteor.users.find({ _id: userId }).fetch()[0];
   const voucher = Vouchers.find({
     code: voucherCode,
     type,
@@ -115,15 +187,15 @@ Voucher.validate = async function({ voucherCode, type }) {
   }
 
   if (voucher.availability.card_vfctn_needed) {
-    const card_validated = await Billing.isPaymentMethodVerified(Meteor.userId());
+    const card_validated = await Billing.isPaymentMethodVerified(userId);
     if (!card_validated) {
       throw new Meteor.Error('Please verify card in billing -> payments');
     }
   }
-  const email_matching = voucher.availability.email_ids.indexOf(Meteor.user().emails[0].address);
+  const email_matching = voucher.availability.email_ids.indexOf(user.emails[0].address);
   const claimed_status = voucher.voucher_claim_status
     ? voucher.voucher_claim_status.filter(i => {
-        return i['claimedBy'] == Meteor.userId();
+        return i['claimedBy'] == userId;
       })
     : 0;
 
@@ -243,4 +315,5 @@ Meteor.methods({
   createCampaign: Voucher.createCampaign,
   applyPromotionalCode: Voucher.applyPromotionalCode,
   fetchBalanceCredits: Voucher.fetchBalanceCredits,
+  applyVoucherCode: Voucher.applyVoucherCode,
 });

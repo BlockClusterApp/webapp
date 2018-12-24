@@ -673,8 +673,10 @@ function isUserSubscribedToPaymeter(userId) {
   }
 }
 
-async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, billingPeriodLabel }) {
+async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMonth }) {
+  selectedMonth = selectedMonth || moment();
   if (userId) {
+    const billingPeriodLabel = selectedMonth.format('MMM-YYYY');
     let paymeter_userData = PaymeterCollection.findOne({ userId: userId });
     const paymeterPricing = PaymeterPricing.find({ active: true }).fetch()[0];
     if (paymeter_userData) {
