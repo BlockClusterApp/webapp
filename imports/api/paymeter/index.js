@@ -665,7 +665,7 @@ function paymeter_getAndResetUserBill(userId) {
     if(paymeter_userData) {
       if(paymeter_userData.subscribed) {
         let bill = paymeter_userData.bill || '0';
-        let nextMonthMin = '299.00'
+        let nextMonthMin = helpers.paymeterMinimimCostPerMonth()
 
         if(paymeter_userData.unsubscribeNextMonth) {
           let UserWallets = Wallets.find({
@@ -767,7 +767,7 @@ Meteor.methods({
           })
         } else {
           let totalDaysThisMonth = helpers.daysInThisMonth()
-          let perDayCost = (new BigNumber(299)).dividedBy(totalDaysThisMonth) 
+          let perDayCost = (new BigNumber(helpers.paymeterMinimimCostPerMonth())).dividedBy(totalDaysThisMonth) 
           let minimumFeeThisMonth = (new BigNumber(perDayCost)).times(helpers.getRemanningDays() + 1) //including today
           PaymeterCollection.upsert({
             userId: Meteor.userId()
@@ -781,7 +781,7 @@ Meteor.methods({
         }
       } else {
         let totalDaysThisMonth = helpers.daysInThisMonth()
-        let perDayCost = (new BigNumber(299)).dividedBy(totalDaysThisMonth) 
+        let perDayCost = (new BigNumber(helpers.paymeterMinimimCostPerMonth())).dividedBy(totalDaysThisMonth) 
         let minimumFeeThisMonth = (new BigNumber(perDayCost)).times(helpers.getRemanningDays() + 1) //including today
         PaymeterCollection.upsert({
           userId: Meteor.userId()
