@@ -799,6 +799,8 @@ const scanEthTestnet = async (ready) => {
       block = await getBlock(latest_block_number, testnet_web3);
     }
 
+    console.log(block.number)
+
     let promises = [];
     if (block.transactions) {
       async function processTxn(txnHash) {
@@ -1236,10 +1238,10 @@ const scanEthMainnet = async (ready) => {
     await Promise.all(promises);
 
     ready()
-    cron.setTimeout(Meteor.bindEnvironment(scanEthMainnet), 12000, 'scan eth block testnet')
+    cron.setTimeout(Meteor.bindEnvironment(scanEthMainnet), 12000, 'scan eth block mainnet')
   } catch (e) {
     ready()
-    cron.setTimeout(Meteor.bindEnvironment(scanEthMainnet), 12000, 'scan eth block testnet')
+    cron.setTimeout(Meteor.bindEnvironment(scanEthMainnet), 12000, 'scan eth block mainnet')
   }
 }
 
@@ -1259,7 +1261,7 @@ function startCrons() {
     cron.setInterval(Meteor.bindEnvironment(updateGasPrice), 1000 * 12, 'update gas price');
     
     cron.setTimeout(Meteor.bindEnvironment(scanEthTestnet), 1000, 'scan eth block testnet')
-    cron.setTimeout(Meteor.bindEnvironment(scanEthMainnet), 1000, 'scan eth block testnet')
+    cron.setTimeout(Meteor.bindEnvironment(scanEthMainnet), 1000, 'scan eth block mainnet')
 
     isPaymeterCronInitialized = true;
   }

@@ -587,7 +587,7 @@ class PaymeterComponent extends Component {
                                       <h5 className="font-montserrat all-caps small no-margin hint-text bold">Minimum Fee This Month</h5>
                                       <h3 className="no-margin">
                                       {this.props.paymeterUserData &&
-                                        <span>${helpers.getFlooredFixed(parseFloat((this.props.paymeterUserData.minimumFeeThisMonth || '0.00')), 2)}</span>
+                                        <span>${this.props.paymeterUserData.minimumFeeThisMonth || 0.00}</span>
                                       }
 
                                       {!this.props.paymeterUserData &&
@@ -604,7 +604,7 @@ class PaymeterComponent extends Component {
                                             <span>
                                               <span>
                                                 {this.props.paymeterUserData.bill &&
-                                                  <span>{helpers.getFlooredFixed(parseFloat(this.props.paymeterUserData.bill), 2)}</span>
+                                                  <span>{this.props.paymeterUserData.bill}</span>
                                                 }
                                               </span>
                                               <span>
