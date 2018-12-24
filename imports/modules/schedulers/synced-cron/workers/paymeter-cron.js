@@ -21,7 +21,7 @@ const db  = Meteor.users.rawDatabase();
 
 const cron = new CRONjob({
   db: db,
-  autoClear: false,
+  autoClear: true,
   resetOnInit: false //don't re-run pending tasks when restarted
 });
 
@@ -1339,7 +1339,7 @@ function scanEthMainnet(time) {
   });
 }
 
-const updatePrices = (ready) => {
+const updatePrices = async (ready) => {
   try {
     let symbols_list = ['ETH']; //add other coins here
     let erc20_coins = ERC20.find({
