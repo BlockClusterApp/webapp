@@ -104,7 +104,7 @@ class PaymeterComponent extends Component {
       this.refs.transferErc20Address.value,
       this.refs.transferErc20Amount.value,
       {
-        feeWallet: walletId === this.refs.erc20FeeWallet.value ? null : this.refs.erc20FeeWallet.value,
+        feeWalletId: walletId === this.refs.erc20FeeWallet.value ? null : this.refs.erc20FeeWallet.value,
         password: this.refs.transferErc20Password.value,
         feeWalletPassword: this.refs.transferErc20FeePassword.value,
       },
@@ -676,7 +676,9 @@ class PaymeterComponent extends Component {
                                         <span className="no-hidden-text">Each Txn, if price not found</span>
                                       </td>
                                       <td className=" col-lg-2 col-md-3 col-sm-2 text-right">
-                                        <h4 className="text-primary no-margin font-montserrat no-hidden-text">${this.props.paymeterPricing && this.props.paymeterPricing.perTransactionCostFlat}</h4>
+                                        <h4 className="text-primary no-margin font-montserrat no-hidden-text">
+                                          ${this.props.paymeterPricing && this.props.paymeterPricing.perTransactionCostFlat}
+                                        </h4>
                                       </td>
                                     </tr>
                                   </tbody>

@@ -1160,7 +1160,7 @@ function scanEthMainnet(time) {
                           );
                         } else {
                           //this may happen when coinmarketcap API not working or txn detected before price update on DB (i.e., old price in DB)
-                          //in this case we just charge $0.20
+                          //in this case we just charge $helpers.paymeterDepositFeesERC20NotFound()
                           //in future get coinmarketcap premium API and find the historical value and calculate fees using it.
                           WalletTransactions.upsert(
                             {

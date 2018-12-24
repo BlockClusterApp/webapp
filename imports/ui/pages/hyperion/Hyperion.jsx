@@ -321,6 +321,42 @@ class HyperionComponent extends Component {
     });
   };
 
+  activate = _ => {
+    this.setState({
+      ['_activate_loading']: true,
+    });
+
+    Meteor.call('subscribeForHyperion', e => {
+      if (e) {
+        notifications.error(e.reason);
+      } else {
+        notifications.success('Subscription Successful');
+      }
+
+      this.setState({
+        ['_activate_loading']: false,
+      });
+    });
+  };
+
+  deactivate = _ => {
+    this.setState({
+      ['_activate_loading']: true,
+    });
+
+    Meteor.call('unsubscribeFromHyperion', e => {
+      if (e) {
+        notifications.error(e.reason);
+      } else {
+        notifications.success('Unsubscription Successful');
+      }
+
+      this.setState({
+        ['_activate_loading']: false,
+      });
+    });
+  };
+
   render() {
     const hyperionPricing = this.props.hyperionPricing;
 
@@ -348,6 +384,11 @@ class HyperionComponent extends Component {
                 <li className="nav-item">
                   <a href="#" data-toggle="tab" role="tab" data-target="#search">
                     Search
+                  </a>
+                </li>
+                <li className="nav-item">
+                  <a href="#" data-toggle="tab" role="tab" data-target="#activation">
+                    Activation
                   </a>
                 </li>
               </ul>
@@ -583,6 +624,207 @@ class HyperionComponent extends Component {
                                 &nbsp;&nbsp;Search
                               </LaddaButton>
                             </form>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="tab-pane" id="activation">
+                  <div className="row">
+                    <div className="col-lg-12">
+                      <div className="card card-transparent m-b-0">
+                        <div className="card-block">
+                          <div>
+                            <div className="tab-pane padding-20 sm-no-padding active slide-left" id="tab1">
+                              <div className="row row-same-height">
+                                <div className="col-md-6 sm-b-b b-r b-dashed b-grey ">
+                                  <div className="padding-30 sm-padding-5 sm-m-t-15">
+                                    <i className="fa fa fa-cube fa-2x hint-text" />
+                                    <h2>IPFS Cluster-as-a-Service</h2>
+                                    <p>Hyperion let's you upload files to a specific geographic location and share it with anyone using just the hash of the file.</p>
+                                    <p className="small hint-text">
+                                      Note that anyone with the hash of the file can download the file from any geo-graphic location. The hash should be shared only with parties
+                                      which should have access to it.
+                                    </p>
+                                    <div>
+                                      <div>
+                                        {this.props.hyperion.length === 1 ? (
+                                          <div>
+                                            {this.props.hyperion[0].subscribed ? (
+                                              <div>
+                                                {this.props.hyperion[0].unsubscribeNextMonth ? (
+                                                  <LaddaButton
+                                                    onClick={e => {
+                                                      this.activate();
+                                                    }}
+                                                    loading={this.state['_activate_loading']}
+                                                    data-size={S}
+                                                    data-style={SLIDE_UP}
+                                                    data-spinner-size={30}
+                                                    data-spinner-lines={12}
+                                                    className="btn btn-complete  btn-cons m-t-10"
+                                                    type="button"
+                                                  >
+                                                    <i className="fa fa-check" aria-hidden="true" />
+                                                    &nbsp;&nbsp;Re-Subscribe
+                                                  </LaddaButton>
+                                                ) : (
+                                                  <LaddaButton
+                                                    onClick={e => {
+                                                      this.deactivate();
+                                                    }}
+                                                    loading={this.state['_activate_loading']}
+                                                    data-size={S}
+                                                    data-style={SLIDE_UP}
+                                                    data-spinner-size={30}
+                                                    data-spinner-lines={12}
+                                                    className="btn btn-danger  btn-cons m-t-10"
+                                                    type="button"
+                                                  >
+                                                    <i className="fa fa-times" aria-hidden="true" />
+                                                    &nbsp;&nbsp;Unsubscribe
+                                                  </LaddaButton>
+                                                )}
+                                              </div>
+                                            ) : (
+                                              <LaddaButton
+                                                onClick={e => {
+                                                  this.activate();
+                                                }}
+                                                loading={this.state['_activate_loading']}
+                                                data-size={S}
+                                                data-style={SLIDE_UP}
+                                                data-spinner-size={30}
+                                                data-spinner-lines={12}
+                                                className="btn btn-success  btn-cons m-t-10"
+                                                type="button"
+                                              >
+                                                <i className="fa fa-check" aria-hidden="true" />
+                                                &nbsp;&nbsp;Subscribe
+                                              </LaddaButton>
+                                            )}
+                                          </div>
+                                        ) : (
+                                          <LaddaButton
+                                            onClick={e => {
+                                              this.activate();
+                                            }}
+                                            loading={this.state['_activate_loading']}
+                                            data-size={S}
+                                            data-style={SLIDE_UP}
+                                            data-spinner-size={30}
+                                            data-spinner-lines={12}
+                                            className="btn btn-success  btn-cons m-t-10"
+                                            type="button"
+                                          >
+                                            <i className="fa fa-check" aria-hidden="true" />
+                                            &nbsp;&nbsp;Subscribe
+                                          </LaddaButton>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="col-md-6">
+                                  <div className="padding-30 sm-padding-5">
+                                    <h5>Pricing Model</h5>
+                                    <div className="row">
+                                      <div className="col-lg-12">
+                                        <p className="no-margin">Storage Consumed</p>
+                                        <p className="small hint-text">
+                                          We only charge for uploading files. There are no charges for bandwidth utilization. We deduct the fees from your added debit/credit card
+                                          at the end of the month.
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="row">
+                                      <div className="col-lg-12">
+                                        <p className="no-margin">Monthly Minimum</p>
+                                        <p className="small hint-text">We charge $399 or total storage fees consumed depending on whichever is greater</p>
+                                      </div>
+                                    </div>
+                                    <table className="table table-condensed">
+                                      <tbody>
+                                        <tr>
+                                          <td className="col-lg-8 col-md-6 col-sm-7 ">
+                                            <a href="#" className="remove-item">
+                                              <i className="fa fa-check" />
+                                            </a>
+                                            <span className="m-l-10 font-montserrat fs-11 all-caps no-hidden-text">File Upload</span>
+                                          </td>
+                                          <td className=" col-lg-2 col-md-3 col-sm-3 text-right">
+                                            <span className="no-hidden-text">Per GB</span>
+                                          </td>
+                                          <td className=" col-lg-2 col-md-3 col-sm-2 text-right">
+                                            <h4 className="text-primary no-margin font-montserrat no-hidden-text">${helpers.hyperionGBCostPerMonth()}</h4>
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <td className="col-lg-8 col-md-6 col-sm-7 ">
+                                            <a href="#" className="remove-item">
+                                              <i className="fa fa-check" />
+                                            </a>
+                                            <span className="m-l-10 font-montserrat fs-11 all-caps no-hidden-text">Minimum fees</span>
+                                          </td>
+                                          <td className=" col-lg-2 col-md-3 col-sm-3 text-right">
+                                            <span className="no-hidden-text">Per month</span>
+                                          </td>
+                                          <td className=" col-lg-2 col-md-3 col-sm-2 text-right">
+                                            <h4 className="text-primary no-margin font-montserrat no-hidden-text">${helpers.hyperionMinimumCostPerMonth()}</h4>
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+
+                                    <br />
+                                    <div className="p-l-15 p-r-15">
+                                      <div className="row b-a b-grey">
+                                        {/*<div className="col-md-2 p-l-15 sm-p-t-15 clearfix sm-p-b-15 d-flex flex-column justify-content-center">
+                                          <h5 className="font-montserrat all-caps small no-margin hint-text bold">Advance</h5>
+                                          <h3 className="no-margin">
+
+                                          </h3>
+                                        </div>*/}
+                                        <div className="col-md-6 clearfix sm-p-b-15 d-flex flex-column justify-content-center">
+                                          <h5 className="font-montserrat all-caps small no-margin hint-text bold">Minimum Fee This Month</h5>
+                                          <h3 className="no-margin">
+                                            {this.props.hyperion.length === 1 && (
+                                              <span>${helpers.getFlooredFixed(parseFloat(this.props.hyperion[0].minimumFeeThisMonth || '0.00'), 2)}</span>
+                                            )}
+
+                                            {this.props.hyperion.length === 0 && <span>$0.00</span>}
+                                          </h3>
+                                        </div>
+                                        <div className="col-md-6 text-right bg-master-darker col-sm-height padding-15 d-flex flex-column justify-content-center align-items-end">
+                                          <h5 className="font-montserrat all-caps small no-margin hint-text text-white bold">Total Fee This Month</h5>
+                                          <h1 className="no-margin text-white">
+                                            <span>$</span>
+                                            <span>
+                                              {this.props.hyperion.length === 1 && (
+                                                <span>
+                                                  {helpers.getFlooredFixed(
+                                                    (
+                                                      (
+                                                        (this.props.hyperion[0].size / 1024 / 1024 / 1024) *
+                                                        (helpers.hyperionGBCostPerDay() * helpers.daysInThisMonth())
+                                                      ).toPrecision(2) - this.props.hyperion[0].discount
+                                                    ).toPrecision(2),
+                                                    2
+                                                  )}
+                                                </span>
+                                              )}
+
+                                              {this.props.hyperion.length === 0 && <span>0</span>}
+                                            </span>
+                                          </h1>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
