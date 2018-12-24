@@ -740,28 +740,14 @@ function updatePrices(time) {
     schedule: function(parser) {
       // parser is a later.parse object
       if (['production'].includes(process.env.NODE_ENV)) {
-        if (time) {
-          return parser
-            .recur()
-            .on(new Date(Date.now() + time))
-            .fullDate();
-        } else {
-          return parser
-            .recur()
-            .on(new Date(Date.now() + 1000 * 60 * 12))
-            .fullDate();
-        }
+        return parser.text('every 5 minutes');
       } else {
-        //return parser.recur().on(new Date(Date.now() + (1000 * 60 * 1))).fullDate();
-        return parser
-          .recur()
-          .on(new Date(Date.now() + 1000 * 60 * 60 * 12))
-          .fullDate();
+        return parser.text('every 12 hours');
       }
     },
     job: () => {
       var myFuture = new Future();
-
+      console.log("Updating prices: ", helpers.timeConverter(Date.now() / 1000))
       (async () => {
         try {
           let symbols_list = ['ETH']; //add other coins here
@@ -794,12 +780,8 @@ function updatePrices(time) {
             );
           }
 
-          SyncedCron.remove('update prices');
-          updatePrices(1000 * 60 * 5);
           myFuture.return();
         } catch (e) {
-          SyncedCron.remove('update prices');
-          updatePrices(1000 * 60 * 5);
           myFuture.return();
         }
       })();
@@ -1437,3 +1419,16 @@ SyncedCron.start();
     value: 3527701
   }
 })*/
+
+
+
+SyncedCron.add({
+  name: 'Crunch some important numbers for the marketing department',
+  schedule: function(parser) {
+    // parser is a later.parse object
+    return parser.text('every 2 minutes');
+  },
+  job: function() {
+    console.log('aassss')
+  }
+});
