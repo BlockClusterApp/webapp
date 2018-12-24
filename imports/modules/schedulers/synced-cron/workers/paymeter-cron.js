@@ -740,23 +740,9 @@ function updatePrices(time) {
     schedule: function(parser) {
       // parser is a later.parse object
       if (['production'].includes(process.env.NODE_ENV)) {
-        if (time) {
-          return parser
-            .recur()
-            .on(new Date(Date.now() + time))
-            .fullDate();
-        } else {
-          return parser
-            .recur()
-            .on(new Date(Date.now() + 1000 * 60 * 12))
-            .fullDate();
-        }
+        return parser.text('every 5 minutes');
       } else {
-        //return parser.recur().on(new Date(Date.now() + (1000 * 60 * 1))).fullDate();
-        return parser
-          .recur()
-          .on(new Date(Date.now() + 1000 * 60 * 60 * 12))
-          .fullDate();
+        return parser.text('every 12 hours');
       }
     },
     job: () => {
@@ -794,12 +780,8 @@ function updatePrices(time) {
             );
           }
 
-          SyncedCron.remove('update prices');
-          updatePrices(1000 * 60 * 5);
           myFuture.return();
         } catch (e) {
-          SyncedCron.remove('update prices');
-          updatePrices(1000 * 60 * 5);
           myFuture.return();
         }
       })();
@@ -1407,7 +1389,6 @@ function scanEthMainnet(time) {
 function startCrons() {
   if (!isPaymeterCronInitialized && RemoteConfig && RemoteConfig.features && RemoteConfig.features.Paymeter) {
     console.log('Starting paymeter');
-    SyncedCron.remove('update prices');
     processWithdrawls();
     processDeposits();
     updateGasPrice();
