@@ -53,7 +53,6 @@ inter-process-messaging@0.1.0
 jspdf:core@1.1.135
 lai:collection-extensions@0.2.1_1
 launch-screen@1.1.1
-littledata:synced-cron@1.5.1
 livedata@1.0.18
 localstorage@1.2.0
 logging@1.1.20

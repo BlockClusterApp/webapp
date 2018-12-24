@@ -38,7 +38,6 @@ blockcluster:raven
 blockcluster:logs
 maximum:server-transform
 jspdf:core
-littledata:synced-cron
 underscore
 blockcluster:web3
 ostrio:cron-jobs
