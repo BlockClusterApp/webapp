@@ -3,16 +3,15 @@ import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
 import notifications from '../../../modules/notifications';
-import { Link } from 'react-router-dom';
 import Config from '../../../modules/config/client';
 import { Wallets } from '../../../collections/wallets/wallets.js';
 import helpers from '../../../modules/helpers';
-import LoadingIcon from '../../components/LoadingIcon/LoadingIcon.jsx';
 let QRCode = require('qrcode.react');
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from 'react-html-parser';
 import WebHook from '../../../collections/webhooks';
 import { Paymeter } from '../../../collections/paymeter/paymeter.js';
 import PaymeterPricing from '../../../collections/pricing/paymeter';
+import moment from 'moment';
 
 import './Paymeter.scss';
 
@@ -90,6 +89,21 @@ class PaymeterComponent extends Component {
       }
     );
   };
+
+  applyPromotionalCode = () => {
+    this.setState({
+      applyPromotionalCodeLoading: true
+    });
+    Meteor.call('applyVoucherCode', {userId: Meteor.userId(), type: 'paymeter', code: this.promotionalCode.value}, (err, res) => {
+      this.setState({
+        applyPromotionalCodeLoading: false
+      });
+      if(err){
+        return notifications.error(err.reason);
+      }
+      return notifications.success('Applied successfully')
+    });
+  }
 
   transferERC20 = (e, walletId) => {
     e.preventDefault();
@@ -336,6 +350,23 @@ class PaymeterComponent extends Component {
                             </span>
                             <br />
                             <span className="fs-11 font-montserrat text-uppercase">Activate/Deactivate</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="btn-group btn-group-justified row w-100 create-wallet-btn">
+                        <div className="btn-group col-12 p-0">
+                          <button
+                            type="button"
+                            className="btn btn-default w-100"
+                            onClick={() => {
+                              this.setState({ firstBox: 'settings-list', secondBox: 'vouchers' });
+                            }}
+                          >
+                            <span className="p-t-5 p-b-5">
+                              <i className="fa fa-shopping-cart fs-15" />
+                            </span>
+                            <br />
+                            <span className="fs-11 font-montserrat text-uppercase">Vouchers</span>
                           </button>
                         </div>
                       </div>
@@ -998,6 +1029,51 @@ class PaymeterComponent extends Component {
                           </div>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {this.state.secondBox === 'vouchers' && (
+                  <div className="card card-default" style={{ marginBottom: '0px', borderTop: '0px' }}>
+                    <div className="card-block">
+                      <h5 className="text-primary">Apply Voucher Codes</h5>
+                      <form
+                        className=""
+                        role="form"
+                      >
+                        <div className="form-group form-group-default required ">
+                          <label>Promotional Code</label>
+                          <input type="text" className="form-control" required ref={i => this.promotionalCode = i} />
+                        </div>
+                        <LaddaButton
+                          loading={this.state.applyPromotionalCodeLoading}
+                          data-size={S}
+                          data-style={SLIDE_UP}
+                          data-spinner-size={30}
+                          data-spinner-lines={12}
+                          className="btn btn-complete btn-cons m-t-10"
+                          onClick={this.applyPromotionalCode}
+                        >
+                          <i className="fa fa-check" aria-hidden="true" />
+                          &nbsp;&nbsp;Redeem
+                        </LaddaButton>
+                      </form>
+                    </div>
+
+                    <div className="card-block">
+                      <h6 className="text-primary">Redeemed codes</h6>
+                      <br />
+                        <ul>
+                          {this.props.paymeterUserData &&
+                            this.props.paymeterUserData.vouchers &&
+                            this.props.paymeterUserData.vouchers.map(voucher => {
+                              return (
+                                <li>
+                                  <b>{voucher.code}</b> | {moment(voucher.appliedOn).format('DD-MMM-YYYY')}
+                                </li>
+                              );
+                            })}
+                        </ul>
                     </div>
                   </div>
                 )}
