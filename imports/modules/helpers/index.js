@@ -215,6 +215,6 @@ export default {
     return minutesDifference;
   },
   getRemainingDays: () => {
-    return moment().daysInMonth() - moment().get('date') + 1;
+    return moment().daysInMonth() - moment().get('date');
   },
 };

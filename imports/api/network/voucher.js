@@ -317,3 +317,5 @@ Meteor.methods({
   fetchBalanceCredits: Voucher.fetchBalanceCredits,
   applyVoucherCode: Voucher.applyVoucherCode,
 });
+
+export default Voucher;

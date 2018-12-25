@@ -683,7 +683,7 @@ async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMo
     if (paymeter_userData) {
       if (paymeter_userData.subscribed) {
         let bill = paymeter_userData.bill || '0';
-        let nextMonthMin = String(paymeterPricing.minimumMonthlyCost);
+        let nextMonthMin = new BigNumber(paymeterPricing.minimumMonthlyCost);
 
         if (paymeter_userData.unsubscribeNextMonth) {
           let UserWallets = Wallets.find({
@@ -716,11 +716,11 @@ async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMo
             }
           );
 
-          nextMonthMin = '0.00';
+          nextMonthMin = 0;
         }
 
-        if (new BigNumber(bill).lt(paymeter_userData.minimumFeeThisMonth)) {
-          bill = paymeter_userData.minimumFeeThisMonth;
+        if (new BigNumber(bill).lt(new BigNumber(paymeter_userData.minimumFeeThisMonth))) {
+          bill = new BigNumber(paymeter_userData.minimumFeeThisMonth);
         }
 
         const vouchers = paymeter_userData.vouchers;
@@ -746,14 +746,16 @@ async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMo
           bill = Math.max(0, bill - discount);
         }
 
-        const history = PaymeterBillHistory.find({ billingPeriodLabel }).fetch()[0];
+        const history = PaymeterBillHistory.find({ billingPeriodLabel, userId }).fetch()[0];
         if (history) {
           return history.bill;
         } else if (!isFromFrontEnd) {
+          delete paymeter_userData.subscriptions;
+          delete paymeter_userData.userId;
           PaymeterBillHistory.insert({
             billingPeriodLabel,
             userId,
-            bill,
+            bill: Number(bill),
             metadata: paymeter_userData,
             discountsApplied,
             totalDiscountGiven: discount,
@@ -775,15 +777,15 @@ async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMo
           );
         }
 
-        return bill;
+        return new BigNumber(bill);
       } else {
-        return '0.00';
+        return 0;
       }
     } else {
-      return '0.00';
+      return 0;
     }
   } else {
-    return '0.00';
+    return 0;
   }
 }
 

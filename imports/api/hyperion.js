@@ -160,18 +160,22 @@ function hyperion_getAndResetUserBill({ userId, isFromFrontEnd, selectedMonth })
     let total_hyperion_cost = 0; //add this value to invoice amount
     const hyperion_stats = Hyperion.findOne({
       userId: userId,
-    }).fetch();
+    });
 
     if (hyperion_stats) {
       if (hyperion_stats.subscribed) {
+        const hyperionPricing = HyperionPricing.find({ active: true }).fetch()[0];
         const totalDaysThisMonth = helpers.daysInThisMonth();
-        const costPerGBPerDay = helpers.hyperionGBCostPerDay();
-        const fileSizeInGB = hyperion_stats.size / 1024 / 1024 / 1024;
-        const fileCostPerDay = costPerGBPerDay * fileSizeInGB;
-        total_hyperion_cost = totalDaysThisMonth * fileCostPerDay;
-        total_hyperion_cost = new BigNumber(total_hyperion_cost).minus(hyperion_stats.discount).toNumber();
+        const costPerGBPerDay = helpers.hyperionGBCostPerDay(hyperionPricing.perGBCost);
+        const fileSizeInGB = new BigNumber(hyperion_stats.size || 0)
+          .dividedBy(1024)
+          .dividedBy(1024)
+          .dividedBy(1024);
+        const fileCostPerDay = new BigNumber(costPerGBPerDay).times(fileSizeInGB);
+        total_hyperion_cost = new BigNumber(totalDaysThisMonth).times(fileCostPerDay);
+        total_hyperion_cost = new BigNumber(total_hyperion_cost).minus(new BigNumber(hyperion_stats.discount));
 
-        let nextMonthMin = helpers.hyperionMinimumCostPerMonth();
+        let nextMonthMin = new BigNumber(hyperionPricing.minimumMonthlyCost);
 
         if (hyperion_stats.unsubscribeNextMonth) {
           Hyperion.upsert(
@@ -186,11 +190,11 @@ function hyperion_getAndResetUserBill({ userId, isFromFrontEnd, selectedMonth })
             }
           );
 
-          nextMonthMin = '0.00';
+          nextMonthMin = new BigNumber(0);
         }
 
-        if (new BigNumber(total_hyperion_cost).lt(hyperion_stats.minimumFeeThisMonth)) {
-          total_hyperion_cost = hyperion_stats.minimumFeeThisMonth;
+        if (new BigNumber(total_hyperion_cost).lt(new BigNumber(hyperion_stats.minimumFeeThisMonth))) {
+          total_hyperion_cost = new BigNumber(hyperion_stats.minimumFeeThisMonth);
         }
 
         const vouchers = hyperion_stats.vouchers;
@@ -216,14 +220,16 @@ function hyperion_getAndResetUserBill({ userId, isFromFrontEnd, selectedMonth })
           total_hyperion_cost = Math.max(0, total_hyperion_cost - discount);
         }
 
-        const history = PaymeterBillHistory.find({ billingPeriodLabel }).fetch()[0];
+        const history = HyperionBillHistory.find({ billingPeriodLabel, userId }).fetch()[0];
         if (history) {
           return history.bill;
         } else if (!isFromFrontEnd) {
+          delete hyperion_stats.subscriptions;
+          delete hyperion_stats.userId;
           HyperionBillHistory.insert({
             billingPeriodLabel,
             userId,
-            bill: total_hyperion_cost,
+            bill: Number(total_hyperion_cost),
             metadata: hyperion_stats,
             discountsApplied,
             totalDiscountGiven: discount,
@@ -232,40 +238,27 @@ function hyperion_getAndResetUserBill({ userId, isFromFrontEnd, selectedMonth })
 
         // Reset it to 0 only if call is via generate bill script i.e. from backend
         if (!isFromFrontEnd) {
-          PaymeterCollection.upsert(
+          Hyperion.upsert(
             {
               userId: userId,
             },
             {
               $set: {
                 bill: '0',
-                minimumFeeThisMonth: nextMonthMin,
+                minimumFeeThisMonth: Number(nextMonthMin),
               },
             }
           );
         }
-
-        Hyperion.upsert(
-          {
-            userId: userId,
-          },
-          {
-            $set: {
-              discount: 0, //reset discount
-              minimumFeeThisMonth: nextMonthMin,
-            },
-          }
-        );
-
-        return total_hyperion_cost;
+        return Number(total_hyperion_cost).toFixed(2);
       } else {
-        return '0.00';
+        return 0;
       }
     } else {
-      return '0.00';
+      return 0;
     }
   } else {
-    return '0.00';
+    return 0;
   }
 }
 

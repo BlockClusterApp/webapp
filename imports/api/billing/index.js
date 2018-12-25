@@ -308,8 +308,8 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             .startOf('month')
             .toDate(),
       rate: `$ ${hyperionPricing.perGBCost} / GB-month `,
-      runtime: `${Number(total_hyperion_cost / hyperionPricing.perGBCost).toFixed(5)} GB`,
-      cost: total_hyperion_cost,
+      runtime: '',
+      cost: Number(total_hyperion_cost).toFixed(2),
     });
     result.totalAmount += Number(total_hyperion_cost);
 
@@ -352,7 +352,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
     createdOn: '',
     rate: '',
     runtime: '',
-    cost: paymeterCost,
+    cost: Number(paymeterCost).toFixed(2),
   });
 
   result.totalAmount += Number(paymeterCost);
