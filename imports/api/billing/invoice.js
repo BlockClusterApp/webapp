@@ -39,16 +39,16 @@ function fetchEligibleCredits(credits, totalAmount) {
   let amount = totalAmount;
   credits.forEach(credit => {
     const usableAmount = fetchApplicableAmount(credit, amount);
-    if(amount <= 0) {
+    if (amount <= 0) {
       return;
     }
     result.push({
       credit,
-      amount: usableAmount
+      amount: usableAmount,
     });
     amount = amount - usableAmount;
   });
-  return {credits: result.filter(r => !!r.amount), remainingAmount: amount};
+  return { credits: result.filter(r => !!r.amount), remainingAmount: amount };
 }
 
 InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription }) => {
@@ -72,7 +72,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
     billingPeriod: billingMonth,
     billingPeriodLabel: moment(billingMonth).format('MMM-YYYY'),
     billingAmount: totalAmount,
-    totalAmount
+    totalAmount,
   };
 
   if (rzSubscription && rzSubscription.bc_status === 'active') {
@@ -105,8 +105,8 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   if (_credits.length > 0) {
     const totalCredits = _credits.reduce((sumTillNow, credit) => sumTillNow + credit.amount, 0);
     if (totalCredits > 0) {
-      const {credits, remainingAmount} = fetchEligibleCredits(credits, totalAmount);
-      if(credits.length > 0) {
+      const { credits, remainingAmount } = fetchEligibleCredits(credits, totalAmount);
+      if (credits.length > 0) {
         totalAmount = remainingAmount;
         invoiceObject.totalAmount = remainingAmount;
         eligibleCredits = credits;
@@ -127,19 +127,22 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   let creditClaims = [];
 
   eligibleCredits.forEach(ec => {
-    const {credit} = ec;
-    const id = Credits.update({
-      _id: credit._id
-    }, {
-      $push: {
-        invoices: {
-          invoiceId,
-          amount: ec.amount,
-          claimedOn: new Date()
-        }
+    const { credit } = ec;
+    const id = Credits.update(
+      {
+        _id: credit._id,
+      },
+      {
+        $push: {
+          invoices: {
+            invoiceId,
+            amount: ec.amount,
+            claimedOn: new Date(),
+          },
+        },
       }
-    });
-    creditClaims.push({id, code: credit.code, amount: ec.amount});
+    );
+    creditClaims.push({ id, code: credit.code, amount: ec.amount });
   });
 
   if (!user.demoUser && Math.round(invoiceObject.totalAmountINR) > 100 && !user.byPassOnlinePayment && rzSubscription && rzSubscription.bc_status === 'active') {
@@ -190,7 +193,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
           id: rzPaymentLink._id,
           link: rzPaymentLink.short_url,
         },
-        creditClaims
+        creditClaims,
       },
     }
   );
@@ -265,9 +268,34 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
       paymentId: rzPayment.id,
       paidAmount: rzPayment.amount,
     },
+    $unset: {
+      paymentPending: '',
+      paymentPendingForInvoiceId: '',
+      paymentPendingOn: '',
+    },
   });
 
   ElasticLogger.log('Settled invoice', { invoiceId: invoice._id, id: spanId });
+
+  Meteor.users.update(
+    {
+      _id: invoice.userId,
+      'paymentFailedStatus.status': {
+        $in: ['failed-warning'],
+      },
+      'paymentFailedStatus.status': {
+        $nin: ['payment-made'],
+      },
+    },
+    {
+      $push: {
+        paymentFailedStatus: {
+          status: 'payment-made',
+          on: new Date(),
+        },
+      },
+    }
+  );
 
   return invoice._id;
 };

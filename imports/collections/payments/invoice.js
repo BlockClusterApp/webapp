@@ -97,6 +97,22 @@ Invoice.schema = new SimpleSchema({
       },
     },
   },
+  userId: {
+    type: String,
+  },
+  paymentFailedStatus: {
+    type: Array,
+  },
+  'paymentFailedStatus.$': {
+    type: {
+      status: {
+        type: String,
+      },
+      on: {
+        type: Date,
+      },
+    },
+  },
 });
 
 if (!Meteor.isClient) {
