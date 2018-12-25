@@ -53,7 +53,6 @@ inter-process-messaging@0.1.0
 jspdf:core@1.1.135
 lai:collection-extensions@0.2.1_1
 launch-screen@1.1.1
-littledata:synced-cron@1.5.1
 livedata@1.0.18
 localstorage@1.2.0
 logging@1.1.20
@@ -79,6 +78,7 @@ mongo-id@1.0.7
 npm-bcrypt@0.9.3
 npm-mongo@3.1.1
 ordered-dict@1.1.0
+ostrio:cron-jobs@2.2.1
 peerlibrary:assert@0.2.5
 peerlibrary:fiber-utils@0.6.0
 peerlibrary:reactive-mongo@0.1.1

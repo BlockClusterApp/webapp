@@ -92,18 +92,18 @@ class PaymeterComponent extends Component {
 
   applyPromotionalCode = () => {
     this.setState({
-      applyPromotionalCodeLoading: true
+      applyPromotionalCodeLoading: true,
     });
-    Meteor.call('applyVoucherCode', {userId: Meteor.userId(), type: 'paymeter', code: this.promotionalCode.value}, (err, res) => {
+    Meteor.call('applyVoucherCode', { userId: Meteor.userId(), type: 'paymeter', code: this.promotionalCode.value }, (err, res) => {
       this.setState({
-        applyPromotionalCodeLoading: false
+        applyPromotionalCodeLoading: false,
       });
-      if(err){
+      if (err) {
         return notifications.error(err.reason);
       }
-      return notifications.success('Applied successfully')
+      return notifications.success('Applied successfully');
     });
-  }
+  };
 
   transferERC20 = (e, walletId) => {
     e.preventDefault();
@@ -1037,13 +1037,10 @@ class PaymeterComponent extends Component {
                   <div className="card card-default" style={{ marginBottom: '0px', borderTop: '0px' }}>
                     <div className="card-block">
                       <h5 className="text-primary">Apply Voucher Codes</h5>
-                      <form
-                        className=""
-                        role="form"
-                      >
+                      <form className="" role="form">
                         <div className="form-group form-group-default required ">
                           <label>Promotional Code</label>
-                          <input type="text" className="form-control" required ref={i => this.promotionalCode = i} />
+                          <input type="text" className="form-control" required ref={i => (this.promotionalCode = i)} />
                         </div>
                         <LaddaButton
                           loading={this.state.applyPromotionalCodeLoading}
@@ -1063,17 +1060,17 @@ class PaymeterComponent extends Component {
                     <div className="card-block">
                       <h6 className="text-primary">Redeemed codes</h6>
                       <br />
-                        <ul>
-                          {this.props.paymeterUserData &&
-                            this.props.paymeterUserData.vouchers &&
-                            this.props.paymeterUserData.vouchers.map(voucher => {
-                              return (
-                                <li>
-                                  <b>{voucher.code}</b> | {moment(voucher.appliedOn).format('DD-MMM-YYYY')}
-                                </li>
-                              );
-                            })}
-                        </ul>
+                      <ul>
+                        {this.props.paymeterUserData &&
+                          this.props.paymeterUserData.vouchers &&
+                          this.props.paymeterUserData.vouchers.map(voucher => {
+                            return (
+                              <li>
+                                <b>{voucher.code}</b> | {moment(voucher.appliedOn).format('DD-MMM-YYYY')}
+                              </li>
+                            );
+                          })}
+                      </ul>
                     </div>
                   </div>
                 )}

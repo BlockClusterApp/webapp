@@ -169,7 +169,7 @@ async function getBalance(walletId) {
                       minedBalance = new BigNumber(minedBalance).minus(new BigNumber(withdraw_txns[count].amount).plus(withdraw_txns[count].fee)).toString();
                     }
 
-                    resolve(helpers.getFlooredFixed(parseFloat(minedBalance), 5) < 0 ? '0.00000' : helpers.getFlooredFixed(parseFloat(minedBalance), 5));
+                    resolve(new BigNumber(minedBalance).toNumber().toString());
                   } else {
                     reject('An error occured');
                   }
@@ -207,7 +207,7 @@ async function getBalance(walletId) {
                       minedBalance = new BigNumber(minedBalance).minus(new BigNumber(withdraw_txns[count].amount)).toString();
                     }
 
-                    resolve(helpers.getFlooredFixed(parseFloat(minedBalance), 5) < 0 ? '0.00000' : helpers.getFlooredFixed(parseFloat(minedBalance), 5));
+                    resolve(new BigNumber(minedBalance).toNumber().toString());
                   } else {
                     reject('An error occured');
                   }

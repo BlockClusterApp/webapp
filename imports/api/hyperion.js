@@ -169,7 +169,7 @@ function hyperion_getAndResetUserBill({ userId, isFromFrontEnd, selectedMonth })
         const fileSizeInGB = hyperion_stats.size / 1024 / 1024 / 1024;
         const fileCostPerDay = costPerGBPerDay * fileSizeInGB;
         total_hyperion_cost = totalDaysThisMonth * fileCostPerDay;
-        total_hyperion_cost = (total_hyperion_cost - hyperion_stats.discount).toPrecision(2);
+        total_hyperion_cost = new BigNumber(total_hyperion_cost).minus(hyperion_stats.discount).toNumber();
 
         let nextMonthMin = helpers.hyperionMinimumCostPerMonth();
 
@@ -362,9 +362,13 @@ JsonRoutes.add(
 
                       const hyperionPricing = HyperionPricing.find({ active: true }).fetch()[0];
                       let costPerGBPerDay = helpers.hyperionGBCostPerDay(hyperionPricing.perGBCost);
-                      let fileSizeInGB = req.file.size / 1024 / 1024 / 1024;
-                      let fileCostPerDay = costPerGBPerDay * fileSizeInGB;
-                      let costIgnored = daysIgnored * fileCostPerDay;
+                      let fileSizeInGB = new BigNumber(req.file.size)
+                        .div(1024)
+                        .div(1024)
+                        .div(1024)
+                        .toNumber();
+                      let fileCostPerDay = new BigNumber(costPerGBPerDay).times(fileSizeInGB).toNumber();
+                      let costIgnored = new BigNumber(daysIgnored).times(fileCostPerDay).toNumber();
 
                       Hyperion.upsert(
                         {
@@ -605,11 +609,18 @@ JsonRoutes.add('delete', '/api/hyperion/delete', async (req, res, next) => {
 
                       const hyperionPricing = HyperionPricing.find({ active: true }).fetch()[0];
                       let costPerGBPerDay = helpers.hyperionGBCostPerDay(hyperionPricing.perGBCost);
-                      let fileSizeInGB = file[0].size / 1024 / 1024 / 1024;
-                      let fileCostPerDay = costPerGBPerDay * fileSizeInGB;
-                      let costIgnored = daysIgnored * fileCostPerDay; //total discount that was given
+                      let fileSizeInGB = new BigNumber(file[0].size)
+                        .div(1024)
+                        .div(1024)
+                        .div(1024)
+                        .toNumber();
+                      let fileCostPerDay = new BigNumber(costPerGBPerDay).times(fileSizeInGB).toNumber();
+                      let costIgnored = new BigNumber(daysIgnored).times(fileCostPerDay).toNumber(); //total discount that was given
 
-                      newDisount = (totalDaysThisMonth - todayDay) * fileCostPerDay;
+                      newDisount = new BigNumber(totalDaysThisMonth)
+                        .minus(todayDay)
+                        .times(fileCostPerDay)
+                        .toNumber();
                     }
 
                     Files.remove({
@@ -624,8 +635,8 @@ JsonRoutes.add('delete', '/api/hyperion/delete', async (req, res, next) => {
                       },
                       {
                         $inc: {
-                          size: parseInt('-' + file[0].size),
-                          discount: parseFloat(parseFloat('-' + newDisount.toString()).toPrecision(2)),
+                          size: new BigNumber('-' + file[0].size).toNumber(),
+                          discount: new BigNumber('-' + newDisount.toString()).toNumber(),
                         },
                       }
                     );
@@ -671,11 +682,18 @@ JsonRoutes.add('delete', '/api/hyperion/delete', async (req, res, next) => {
 
           const hyperionPricing = HyperionPricing.find({ active: true }).fetch()[0];
           let costPerGBPerDay = helpers.hyperionGBCostPerDay(hyperionPricing.perGBCost);
-          let fileSizeInGB = file[0].size / 1024 / 1024 / 1024;
-          let fileCostPerDay = costPerGBPerDay * fileSizeInGB;
-          let costIgnored = daysIgnored * fileCostPerDay; //total discount that was given
+          let fileSizeInGB = new BigNumber(file[0].size)
+            .div(1024)
+            .div(1024)
+            .div(1024)
+            .toNumber();
+          let fileCostPerDay = new BigNumber(costPerGBPerDay).times(fileSizeInGB).toNumber();
+          let costIgnored = new BigNumber(daysIgnored).times(fileCostPerDay).toNumber(); //total discount that was given
 
-          newDisount = (totalDaysThisMonth - todayDay) * fileCostPerDay;
+          newDisount = new BigNumber(totalDaysThisMonth)
+            .minus(todayDay)
+            .times(fileCostPerDay)
+            .toNumber();
         }
 
         Hyperion.upsert(
@@ -684,8 +702,8 @@ JsonRoutes.add('delete', '/api/hyperion/delete', async (req, res, next) => {
           },
           {
             $inc: {
-              size: parseInt('-' + file[0].size),
-              discount: parseFloat(parseFloat('-' + newDisount.toString()).toPrecision(2)),
+              size: new BigNumber('-' + file[0].size).toNumber(),
+              discount: new BigNumber('-' + newDisount.toString()).toNumber(),
             },
           }
         );
