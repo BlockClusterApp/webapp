@@ -40,74 +40,6 @@ function sendSuccess(res, data) {
 
 JsonRoutes.Middleware.use('/api/paymeter', authMiddleware);
 
-JsonRoutes.add('get', '/api/paymeter/wallets', (req, res) => {
-  const wallets = Wallets.find(
-    {
-      user: req.userId,
-    },
-    {
-      fields: {
-        privateKey: 0,
-      },
-    }
-  ).fetch();
-
-  try {
-    return sendSuccess(res, wallets);
-  } catch (err) {
-    return sendError(res, 400, err);
-  }
-});
-
-JsonRoutes.add('get', '/api/paymeter/wallets/:id', async (req, res) => {
-  const wallet = Wallets.find(
-    {
-      _id: req.params.id,
-      user: req.userId,
-    },
-    {
-      fields: {
-        privateKey: 0,
-      },
-    }
-  ).fetch()[0];
-
-  if (!wallet) {
-    return sendError(res, 400, 'Invalid wallet id');
-  }
-
-  try {
-    return sendSuccess(res, {
-      wallet,
-    });
-  } catch (err) {
-    return sendError(res, 400, err);
-  }
-});
-
-JsonRoutes.add('post', '/api/paymeter/wallets', async (req, res) => {
-  const { coinType, walletName, network, options } = req.body;
-
-  if (!coinType) {
-    return sendError(res, 400, 'coinType is required field');
-  }
-
-  if (!walletName) {
-    return sendError(res, 400, 'walletName is required');
-  }
-
-  if (!network) {
-    return sendError(res, 400, 'network is required');
-  }
-
-  try {
-    const result = await Paymeter.createWallet(coinType, walletName, req.userId, network, options || {});
-    return sendSuccess(res, result);
-  } catch (err) {
-    return sendError(res, 400, err);
-  }
-});
-
 JsonRoutes.add('get', '/api/paymeter/wallets/:id/withdrawals', async (req, res) => {
   try {
     const transactions = await Paymeter.getWalletTransactions(req.params.id, req.userId, 'withdrawal');
@@ -143,5 +75,73 @@ JsonRoutes.add('post', '/api/paymeter/wallets/:id/send', async (req, res) => {
     return sendSuccess(res, { txnHash: result });
   } catch (err) {
     sendError(res, 400, err);
+  }
+});
+
+JsonRoutes.add('get', '/api/paymeter/wallets/:id', async (req, res) => {
+  const wallet = Wallets.find(
+    {
+      _id: req.params.id,
+      user: req.userId,
+    },
+    {
+      fields: {
+        privateKey: 0,
+      },
+    }
+  ).fetch()[0];
+
+  if (!wallet) {
+    return sendError(res, 400, 'Invalid wallet id');
+  }
+
+  try {
+    return sendSuccess(res, {
+      wallet,
+    });
+  } catch (err) {
+    return sendError(res, 400, err);
+  }
+});
+
+JsonRoutes.add('get', '/api/paymeter/wallets', (req, res) => {
+  const wallets = Wallets.find(
+    {
+      user: req.userId,
+    },
+    {
+      fields: {
+        privateKey: 0,
+      },
+    }
+  ).fetch();
+
+  try {
+    return sendSuccess(res, wallets);
+  } catch (err) {
+    return sendError(res, 400, err);
+  }
+});
+
+JsonRoutes.add('post', '/api/paymeter/wallets', async (req, res) => {
+  const { coinType, walletName, network, options } = req.body;
+
+  if (!coinType) {
+    return sendError(res, 400, 'coinType is required field');
+  }
+
+  if (!walletName) {
+    return sendError(res, 400, 'walletName is required');
+  }
+
+  if (!network) {
+    return sendError(res, 400, 'network is required');
+  }
+
+  try {
+    const result = await Paymeter.createWallet(coinType, walletName, req.userId, network, options || {});
+    return sendSuccess(res, result);
+  } catch (err) {
+    return sendError(res, 400, err);
   }
 });
