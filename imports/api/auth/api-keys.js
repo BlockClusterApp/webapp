@@ -1,7 +1,7 @@
 import ApiKeys from '../../collections/api-keys';
 const Apis = {};
 
-const API_KEY_LENGTH = 28;
+const API_KEY_LENGTH = 27;
 const allowed = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890@#$%&';
 
 async function generateApiKey() {
