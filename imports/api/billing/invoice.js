@@ -52,7 +52,7 @@ function fetchEligibleCredits(credits, totalAmount) {
 }
 
 InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription }) => {
-  const totalAmount = Number(bill.totalAmount).toFixed(2);
+  let totalAmount = Number(bill.totalAmount).toFixed(2);
   const user = Meteor.users
     .find({
       _id: userId,

@@ -22,6 +22,19 @@ import Invoice from '../../../../collections/payments/invoice';
 import notifications from '../../../../modules/notifications';
 import LoadButton from './components/LoadButton';
 
+function calculateBalanceCredits(credits) {
+  let totalSum = 0;
+  credits.forEach(credit => {
+    totalSum += Number(credit.amount);
+    if (credit.metadata && credit.metadata.invoices) {
+      credit.metadata.invoices.forEach(invoice => {
+        totalSum -= Number(invoice.amount);
+      });
+    }
+  });
+  return Number(totalSum).toFixed(2);
+}
+
 class UserDetails extends Component {
   constructor(props) {
     super(props);
@@ -254,7 +267,8 @@ class UserDetails extends Component {
         onReady: () => {
           const userId = this.props.match.params.id;
           const states = {
-            networks: Networks.find({ user: userId }).fetch(),
+            networks: Networks.find({ user: userId, deletedAt: null }).fetch(),
+            oldNetworks: Networks.find({ user: userId, deletedAt: { $ne: null } }).fetch(),
             invitations: UserInvitation.find({ inviteFrom: userId }).fetch(),
             cards: UserCards.find({ userId }).fetch(),
             payments: PaymentRequests.find({ userId }).fetch(),
@@ -276,7 +290,26 @@ class UserDetails extends Component {
 
   render() {
     const { user } = this.props;
-    const { cards, invitations, payments, vouchers, networks, invoices, paymentLinks, hyperion, paymeter, credits, hyperionPricing, paymeterPricing } = this.state;
+    const { cards, invitations, payments, vouchers, networks, invoices, paymentLinks, hyperion, paymeter, credits, hyperionPricing, paymeterPricing, oldNetworks } = this.state;
+
+    const txns = [];
+    credits &&
+      credits.forEach(credit => {
+        txns.push({
+          amount: `+ $${credit.amount}`,
+          description: `Redeemed using code ${credit.code}`,
+          date: credit.createdAt,
+        });
+        if (credit.metadata && credit.metadata.invoices) {
+          credit.metadata.invoices.forEach(invoice => {
+            txns.push({
+              amount: `- $${invoice.amount}`,
+              description: `Used for settling invoice ${invoice.invoiceId}`,
+              date: invoice.claimedOn,
+            });
+          });
+        }
+      });
 
     if (!(user && user.profile)) {
       const LoadingView = (
@@ -539,38 +572,43 @@ class UserDetails extends Component {
                   </div>
                   <div className="padding-25">
                     <div className="pull-left">
-                      <h2 className="text-success no-margin">Networks</h2>
-                      <p className="no-margin">Network History</p>
+                      <h2 className="text-success no-margin">Credits</h2>
+                      <p className="no-margin">Credits Redemptions</p>
                     </div>
-                    <h3 className="pull-right semi-bold">{networks && networks.length}</h3>
+                    <h3 className="pull-right semi-bold">$ {credits && calculateBalanceCredits(credits)}</h3>
                     <div className="clearfix" />
                   </div>
                   <div className="auto-overflow -table" style={{ maxHeight: '375px' }}>
                     <table className="table table-condensed table-hover">
+                      {this.subscriptionTypes.includes('user.details.credits') && credits && (
+                        <thead>
+                          <tr>
+                            <th style={{ width: '5%' }}>S.No</th>
+                            <th style={{ width: '20%' }}>Amount</th>
+                            <th style={{ width: '55%' }}>Description</th>
+                            <th style={{ width: '20%' }}>Date</th>
+                          </tr>
+                        </thead>
+                      )}
                       <tbody>
-                        {this.subscriptionTypes.includes('user.details.networks') &&
-                          networks &&
-                          networks
-                            .sort((a, b) => b.createdOn - a.createdOn)
-                            .map((network, index) => {
-                              return (
-                                <tr key={index + 1}>
-                                  <td className="font-montserrat all-caps fs-12 w-40">
-                                    <Link to={`/app/admin/networks/${network._id}`}>{network.name}</Link>
-                                  </td>
-                                  <td className="text-right b-r b-dashed b-grey w-35">
-                                    <span className="hint-text small">{this.getNetworkType(network)}</span>
-                                  </td>
-                                  <td className="w-25">
-                                    <span className="font-montserrat fs-18">{this.getNetworkTypeName(network)}</span>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                        {!(this.subscriptionTypes.includes('user.details.networks') && networks) && (
+                        {this.subscriptionTypes.includes('user.details.credits') &&
+                          credits &&
+                          txns.map((txn, index) => {
+                            return (
+                              <tr key={index + 1}>
+                                <td>{index + 1}</td>
+                                <td>{txn.amount}</td>
+                                <td className="fs-12">{txn.description}</td>
+                                <td className="fs-12" title={moment(txn.date).format('DD-MMM-YYYY HH:mm')}>
+                                  {moment(txn.date).format('DD-MMM-YYYY HH:mm')}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        {!(this.subscriptionTypes.includes('user.details.credits') && credits) && (
                           <tr>
                             <td className="font-montserrat fs-12 w-100">
-                              <LoadButton subscription="user.details.networks" buttonText="Load Networks" onLoad={this.loadComponents} />
+                              <LoadButton subscription="user.details.credits" buttonText="Load Promotional Credits" onLoad={this.loadComponents} />
                             </td>
                           </tr>
                         )}
@@ -778,6 +816,118 @@ class UserDetails extends Component {
                   </div>
                 </div>
               )}
+            </div>
+            <div className="row">
+              <div className="col-lg-6 m-b-10 d-flex">
+                <div className=" card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+                  <div className="card-header top-right">
+                    <div className="card-controls">
+                      <ul>
+                        <li>
+                          <a data-toggle="refresh" className="portlet-refresh text-black" href="#">
+                            <i className="portlet-icon portlet-icon-refresh" />
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="padding-25">
+                    <div className="pull-left">
+                      <h2 className="text-success no-margin">Networks</h2>
+                      <p className="no-margin">Running Networks</p>
+                    </div>
+                    <h3 className="pull-right semi-bold">{networks && networks.length}</h3>
+                    <div className="clearfix" />
+                  </div>
+                  <div className="auto-overflow -table" style={{ maxHeight: '275px' }}>
+                    <table className="table table-condensed table-hover">
+                      <tbody>
+                        {this.subscriptionTypes.includes('user.details.networks') &&
+                          networks &&
+                          networks
+                            .sort((a, b) => b.createdOn - a.createdOn)
+                            .map((network, index) => {
+                              return (
+                                <tr key={index + 1}>
+                                  <td className="font-montserrat all-caps fs-12 w-40">
+                                    <Link to={`/app/admin/networks/${network._id}`}>{network.name}</Link>
+                                  </td>
+                                  <td className="text-right b-r b-dashed b-grey w-35">
+                                    <span className="hint-text small">{this.getNetworkType(network)}</span>
+                                  </td>
+                                  <td className="w-25">
+                                    <span className="font-montserrat fs-18">{this.getNetworkTypeName(network)}</span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        {!(this.subscriptionTypes.includes('user.details.networks') && networks) && (
+                          <tr>
+                            <td className="font-montserrat fs-12 w-100">
+                              <LoadButton subscription="user.details.networks" buttonText="Load Networks" onLoad={this.loadComponents} />
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div className="col-lg-6 m-b-10 d-flex">
+                <div className=" card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+                  <div className="card-header top-right">
+                    <div className="card-controls">
+                      <ul>
+                        <li>
+                          <a data-toggle="refresh" className="portlet-refresh text-black" href="#">
+                            <i className="portlet-icon portlet-icon-refresh" />
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="padding-25">
+                    <div className="pull-left">
+                      <h2 className="text-success no-margin">Deleted Networks</h2>
+                      <p className="no-margin">Deleted networks</p>
+                    </div>
+                    <h3 className="pull-right semi-bold">{oldNetworks && oldNetworks.length}</h3>
+                    <div className="clearfix" />
+                  </div>
+                  <div className="auto-overflow -table" style={{ maxHeight: '275px' }}>
+                    <table className="table table-condensed table-hover">
+                      <tbody>
+                        {this.subscriptionTypes.includes('user.details.oldNetworks') &&
+                          oldNetworks &&
+                          oldNetworks
+                            .sort((a, b) => b.createdOn - a.createdOn)
+                            .map((network, index) => {
+                              return (
+                                <tr key={index + 1}>
+                                  <td className="font-montserrat all-caps fs-12 w-40">
+                                    <Link to={`/app/admin/networks/${network._id}`}>{network.name}</Link>
+                                  </td>
+                                  <td className="text-right b-r b-dashed b-grey w-35">
+                                    <span className="hint-text small">{this.getNetworkType(network)}</span>
+                                  </td>
+                                  <td className="w-25">
+                                    <span className="font-montserrat fs-18">{this.getNetworkTypeName(network)}</span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        {!(this.subscriptionTypes.includes('user.details.oldNetworks') && oldNetworks) && (
+                          <tr>
+                            <td className="font-montserrat fs-12 w-100">
+                              <LoadButton subscription="user.details.oldNetworks" buttonText="Load Deleted Networks" onLoad={this.loadComponents} />
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
             {(features.Payments || features.Invoice) && (
               <div className="row">
