@@ -681,106 +681,103 @@ async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMo
     let paymeter_userData = PaymeterCollection.findOne({ userId: userId });
     const paymeterPricing = PaymeterPricing.find({ active: true }).fetch()[0];
     if (paymeter_userData) {
-      if (paymeter_userData.subscribed) {
-        let bill = paymeter_userData.bill || '0';
-        let nextMonthMin = new BigNumber(paymeterPricing.minimumMonthlyCost);
+      // if (paymeter_userData.subscribed) {
+      let bill = paymeter_userData.bill || '0';
+      let nextMonthMin = new BigNumber(paymeterPricing.minimumMonthlyCost);
 
-        if (paymeter_userData.unsubscribeNextMonth) {
-          let UserWallets = Wallets.find({
+      if (paymeter_userData.unsubscribeNextMonth) {
+        let UserWallets = Wallets.find({
+          userId: userId,
+        }).fetch();
+
+        UserWallets.forEach(wallet => {
+          WalletTransactions.remove({
+            fromWallet: wallet._id,
+          });
+
+          WalletTransactions.remove({
+            toWallet: wallet._id,
+          });
+        });
+
+        Wallets.remove({
+          userId: userId,
+        });
+
+        PaymeterCollection.upsert(
+          {
             userId: userId,
-          }).fetch();
-
-          UserWallets.forEach(wallet => {
-            WalletTransactions.remove({
-              fromWallet: wallet._id,
-            });
-
-            WalletTransactions.remove({
-              toWallet: wallet._id,
-            });
-          });
-
-          Wallets.remove({
-            userId: userId,
-          });
-
-          PaymeterCollection.upsert(
-            {
-              userId: userId,
+          },
+          {
+            $set: {
+              subscribed: false,
+              unsubscribeNextMonth: false,
             },
-            {
-              $set: {
-                subscribed: false,
-                unsubscribeNextMonth: false,
-              },
-            }
-          );
+          }
+        );
 
-          nextMonthMin = 0;
-        }
-
-        if (new BigNumber(bill).lt(new BigNumber(paymeter_userData.minimumFeeThisMonth))) {
-          bill = new BigNumber(paymeter_userData.minimumFeeThisMonth);
-        }
-
-        const vouchers = paymeter_userData.vouchers;
-        let discount = 0;
-        let discountsApplied = [];
-        if (vouchers) {
-          vouchers
-            .sort((a, b) => new Date(a.appliedOn).getTime() - new Date(b.appliedOn).getDate())
-            .filter(voucher => () => {
-              if (selectedMonth.diff(moment(voucher.appliedOn), 'months') > voucher.usability.no_months) {
-                return false;
-              }
-              return true;
-            })
-            .forEach(voucher => {
-              const _discount = Number(Voucher.getDiscountAmountForVoucher(voucher, bill));
-              if (_discount > bill - discount && _discount > 0) {
-                _discount = bill - discount;
-                discountsApplied.push({ _id: voucher._id, code: voucher.code, amount: _discount });
-              }
-              discount = discount + _discount;
-            });
-          bill = Math.max(0, bill - discount);
-        }
-
-        const history = PaymeterBillHistory.find({ billingPeriodLabel, userId }).fetch()[0];
-        if (history) {
-          return history.bill;
-        } else if (!isFromFrontEnd) {
-          delete paymeter_userData.subscriptions;
-          delete paymeter_userData.userId;
-          PaymeterBillHistory.insert({
-            billingPeriodLabel,
-            userId,
-            bill: Number(bill),
-            metadata: paymeter_userData,
-            discountsApplied,
-            totalDiscountGiven: discount,
-          });
-        }
-
-        // Reset it to 0 only if call is via generate bill script i.e. from backend
-        if (!isFromFrontEnd) {
-          PaymeterCollection.upsert(
-            {
-              userId: userId,
-            },
-            {
-              $set: {
-                bill: '0',
-                minimumFeeThisMonth: nextMonthMin,
-              },
-            }
-          );
-        }
-
-        return new BigNumber(bill);
-      } else {
-        return 0;
+        nextMonthMin = 0;
       }
+
+      if (new BigNumber(bill).lt(new BigNumber(paymeter_userData.minimumFeeThisMonth))) {
+        bill = new BigNumber(paymeter_userData.minimumFeeThisMonth);
+      }
+
+      const vouchers = paymeter_userData.vouchers;
+      let discount = 0;
+      let discountsApplied = [];
+      if (vouchers) {
+        vouchers
+          .sort((a, b) => new Date(a.appliedOn).getTime() - new Date(b.appliedOn).getDate())
+          .filter(voucher => () => {
+            if (selectedMonth.diff(moment(voucher.appliedOn), 'months') > voucher.usability.no_months) {
+              return false;
+            }
+            return true;
+          })
+          .forEach(voucher => {
+            const _discount = Number(Voucher.getDiscountAmountForVoucher(voucher, bill));
+            if (_discount > bill - discount && _discount > 0) {
+              _discount = bill - discount;
+              discountsApplied.push({ _id: voucher._id, code: voucher.code, amount: _discount });
+            }
+            discount = discount + _discount;
+          });
+        bill = Math.max(0, bill - discount);
+      }
+
+      const history = PaymeterBillHistory.find({ billingPeriodLabel, userId }).fetch()[0];
+      if (history) {
+        return history.bill;
+      } else if (!isFromFrontEnd) {
+        delete paymeter_userData.subscriptions;
+        delete paymeter_userData.userId;
+        PaymeterBillHistory.insert({
+          billingPeriodLabel,
+          userId,
+          bill: Number(bill),
+          metadata: paymeter_userData,
+          discountsApplied,
+          totalDiscountGiven: discount,
+        });
+      }
+
+      // Reset it to 0 only if call is via generate bill script i.e. from backend
+      if (!isFromFrontEnd) {
+        PaymeterCollection.upsert(
+          {
+            userId: userId,
+          },
+          {
+            $set: {
+              bill: '0',
+              minimumFeeThisMonth: nextMonthMin,
+            },
+          }
+        );
+      }
+
+      return new BigNumber(bill);
     } else {
       return 0;
     }

@@ -671,11 +671,11 @@ class UserDetails extends Component {
                               <tbody>
                                 <tr>
                                   <td className="font-montserrat fs-12 w-60">Minimum fee this month</td>
-                                  <td className="text-right b-r b-dashed b-grey w-45">{Number(hyperion.minimumFeeThisMonth).toFixed(2)}</td>
+                                  <td className="text-right b-r b-dashed b-grey w-45">$ {Number(hyperion.minimumFeeThisMonth).toFixed(2)}</td>
                                 </tr>
                                 <tr>
                                   <td className="font-montserrat fs-12 w-60">Discount</td>
-                                  <td className="text-right b-r b-dashed b-grey w-45">{Number(hyperion.discount).toFixed(5)}</td>
+                                  <td className="text-right b-r b-dashed b-grey w-45">$ {Number(hyperion.discount).toFixed(5)}</td>
                                 </tr>
                                 <tr>
                                   <td className="font-montserrat fs-12 w-60">Vouchers</td>

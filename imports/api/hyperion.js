@@ -163,97 +163,95 @@ function hyperion_getAndResetUserBill({ userId, isFromFrontEnd, selectedMonth })
     });
 
     if (hyperion_stats) {
-      if (hyperion_stats.subscribed) {
-        const hyperionPricing = HyperionPricing.find({ active: true }).fetch()[0];
-        const totalDaysThisMonth = helpers.daysInThisMonth();
-        const costPerGBPerDay = helpers.hyperionGBCostPerDay(hyperionPricing.perGBCost);
-        const fileSizeInGB = new BigNumber(hyperion_stats.size || 0)
-          .dividedBy(1024)
-          .dividedBy(1024)
-          .dividedBy(1024);
-        const fileCostPerDay = new BigNumber(costPerGBPerDay).times(fileSizeInGB);
-        total_hyperion_cost = new BigNumber(totalDaysThisMonth).times(fileCostPerDay);
-        total_hyperion_cost = new BigNumber(total_hyperion_cost).minus(new BigNumber(hyperion_stats.discount));
+      // Since for billing, if the user unsubscribes on last day then bill will become 0
+      // if (hyperion_stats.subscribed) {
+      const hyperionPricing = HyperionPricing.find({ active: true }).fetch()[0];
+      const totalDaysThisMonth = helpers.daysInThisMonth();
+      const costPerGBPerDay = helpers.hyperionGBCostPerDay(hyperionPricing.perGBCost);
+      const fileSizeInGB = new BigNumber(hyperion_stats.size || 0)
+        .dividedBy(1024)
+        .dividedBy(1024)
+        .dividedBy(1024);
+      const fileCostPerDay = new BigNumber(costPerGBPerDay).times(fileSizeInGB);
+      total_hyperion_cost = new BigNumber(totalDaysThisMonth).times(fileCostPerDay);
+      total_hyperion_cost = new BigNumber(total_hyperion_cost).minus(new BigNumber(hyperion_stats.discount));
 
-        let nextMonthMin = new BigNumber(hyperionPricing.minimumMonthlyCost);
+      let nextMonthMin = new BigNumber(hyperionPricing.minimumMonthlyCost);
 
-        if (hyperion_stats.unsubscribeNextMonth) {
-          Hyperion.upsert(
-            {
-              userId: userId,
+      if (hyperion_stats.unsubscribeNextMonth) {
+        Hyperion.upsert(
+          {
+            userId: userId,
+          },
+          {
+            $set: {
+              subscribed: false,
+              unsubscribeNextMonth: false,
             },
-            {
-              $set: {
-                subscribed: false,
-                unsubscribeNextMonth: false,
-              },
-            }
-          );
+          }
+        );
 
-          nextMonthMin = new BigNumber(0);
-        }
-
-        if (new BigNumber(total_hyperion_cost).lt(new BigNumber(hyperion_stats.minimumFeeThisMonth))) {
-          total_hyperion_cost = new BigNumber(hyperion_stats.minimumFeeThisMonth);
-        }
-
-        const vouchers = hyperion_stats.vouchers;
-        let discount = 0;
-        let discountsApplied = [];
-        if (vouchers) {
-          vouchers
-            .sort((a, b) => new Date(a.appliedOn).getTime() - new Date(b.appliedOn).getDate())
-            .filter(voucher => () => {
-              if (selectedMonth.diff(moment(voucher.appliedOn), 'months') > voucher.usability.no_months) {
-                return false;
-              }
-              return true;
-            })
-            .forEach(voucher => {
-              const _discount = Number(Voucher.getDiscountAmountForVoucher(voucher, total_hyperion_cost));
-              if (_discount > total_hyperion_cost - discount && _discount > 0) {
-                _discount = total_hyperion_cost - discount;
-                discountsApplied.push({ _id: voucher._id, code: voucher.code, amount: _discount });
-              }
-              discount = discount + _discount;
-            });
-          total_hyperion_cost = Math.max(0, total_hyperion_cost - discount);
-        }
-
-        const history = HyperionBillHistory.find({ billingPeriodLabel, userId }).fetch()[0];
-        if (history) {
-          return history.bill;
-        } else if (!isFromFrontEnd) {
-          delete hyperion_stats.subscriptions;
-          delete hyperion_stats.userId;
-          HyperionBillHistory.insert({
-            billingPeriodLabel,
-            userId,
-            bill: Number(total_hyperion_cost),
-            metadata: hyperion_stats,
-            discountsApplied,
-            totalDiscountGiven: discount,
-          });
-        }
-
-        // Reset it to 0 only if call is via generate bill script i.e. from backend
-        if (!isFromFrontEnd) {
-          Hyperion.upsert(
-            {
-              userId: userId,
-            },
-            {
-              $set: {
-                bill: '0',
-                minimumFeeThisMonth: Number(nextMonthMin),
-              },
-            }
-          );
-        }
-        return Number(total_hyperion_cost).toFixed(2);
-      } else {
-        return 0;
+        nextMonthMin = new BigNumber(0);
       }
+
+      if (new BigNumber(total_hyperion_cost).lt(new BigNumber(hyperion_stats.minimumFeeThisMonth))) {
+        total_hyperion_cost = new BigNumber(hyperion_stats.minimumFeeThisMonth);
+      }
+
+      const vouchers = hyperion_stats.vouchers;
+      let discount = 0;
+      let discountsApplied = [];
+      if (vouchers) {
+        vouchers
+          .sort((a, b) => new Date(a.appliedOn).getTime() - new Date(b.appliedOn).getDate())
+          .filter(voucher => () => {
+            if (selectedMonth.diff(moment(voucher.appliedOn), 'months') > voucher.usability.no_months) {
+              return false;
+            }
+            return true;
+          })
+          .forEach(voucher => {
+            const _discount = Number(Voucher.getDiscountAmountForVoucher(voucher, total_hyperion_cost));
+            if (_discount > total_hyperion_cost - discount && _discount > 0) {
+              _discount = total_hyperion_cost - discount;
+              discountsApplied.push({ _id: voucher._id, code: voucher.code, amount: _discount });
+            }
+            discount = discount + _discount;
+          });
+        total_hyperion_cost = Math.max(0, total_hyperion_cost - discount);
+      }
+
+      const history = HyperionBillHistory.find({ billingPeriodLabel, userId }).fetch()[0];
+      if (history) {
+        return history.bill;
+      } else if (!isFromFrontEnd) {
+        delete hyperion_stats.subscriptions;
+        delete hyperion_stats.userId;
+        HyperionBillHistory.insert({
+          billingPeriodLabel,
+          userId,
+          bill: Number(total_hyperion_cost),
+          metadata: hyperion_stats,
+          discountsApplied,
+          totalDiscountGiven: discount,
+        });
+      }
+
+      // Reset it to 0 only if call is via generate bill script i.e. from backend
+      if (!isFromFrontEnd) {
+        Hyperion.upsert(
+          {
+            userId: userId,
+          },
+          {
+            $set: {
+              bill: '0',
+              minimumFeeThisMonth: Number(nextMonthMin),
+            },
+          }
+        );
+      }
+      return Number(total_hyperion_cost).toFixed(2);
     } else {
       return 0;
     }
