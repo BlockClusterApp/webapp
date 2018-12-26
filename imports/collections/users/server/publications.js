@@ -5,6 +5,9 @@ import PaymentRequests from '../../../collections/payments/payment-requests';
 import Invoice from '../../../collections/payments/invoice';
 import Voucher from '../../../collections/vouchers/voucher';
 import { RZPaymentLink } from '../../../collections/razorpay';
+import Credits from '../../../collections/payments/credits';
+import { Hyperion } from '../../../collections/hyperion/hyperion';
+import { Paymeter } from '../../../collections/paymeter/paymeter';
 
 Meteor.publish(null, function() {
   return Meteor.users.find(this.userId, { fields: { emails: 1, profile: 1, admin: 1, _id: 1, demoUser: 1 } });
@@ -62,7 +65,7 @@ Meteor.publish('user.details.networks', ({ userId }) => {
   if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
-  return Networks.find({ user: userId });
+  return Networks.find({ user: userId, deletedAt: null });
 });
 
 Meteor.publish('user.details.userInvitations', ({ userId }) => {
@@ -91,6 +94,33 @@ Meteor.publish('user.details.vouchers', ({ userId }) => {
     return [];
   }
   return Voucher.find({ claimedBy: userId });
+});
+
+Meteor.publish('user.details.credits', ({ userId }) => {
+  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
+  return Credits.find({
+    userId,
+  });
+});
+
+Meteor.publish('user.details.hyperionStats', ({ userId }) => {
+  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
+  return Hyperion.find({
+    userId,
+  });
+});
+
+Meteor.publish('user.details.paymeterStats', ({ userId }) => {
+  if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
+    return [];
+  }
+  return Paymeter.find({
+    userId,
+  });
 });
 
 Meteor.publish('user.details.invoices', ({ userId }) => {

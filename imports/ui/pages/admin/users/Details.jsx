@@ -7,11 +7,16 @@ import moment from 'moment';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import PaymentModal from './components/PaymentModal';
 
+import { Hyperion } from '../../../../collections/hyperion/hyperion';
+import { Paymeter } from '../../../../collections/paymeter/paymeter';
 import { Networks } from '../../../../collections/networks/networks';
-import UserCards from '../../../../collections/payments/user-cards';
 import { UserInvitation } from '../../../../collections/user-invitation';
-import PaymentRequests from '../../../../collections/payments/payment-requests';
 import { RZPaymentLink } from '../../../../collections/razorpay';
+import HyperionPricing from '../../../../collections/pricing/hyperion';
+import PaymeterPricing from '../../../../collections/pricing/paymeter';
+import Credits from '../../../../collections/payments/credits';
+import UserCards from '../../../../collections/payments/user-cards';
+import PaymentRequests from '../../../../collections/payments/payment-requests';
 import Voucher from '../../../../collections/vouchers/voucher';
 import Invoice from '../../../../collections/payments/invoice';
 import notifications from '../../../../modules/notifications';
@@ -28,6 +33,8 @@ class UserDetails extends Component {
       user: {},
       payment: {},
       remoteConfig: window.RemoteConfig,
+      hyperionPricing: HyperionPricing.findOne({ active: true }),
+      paymeterPricing: PaymeterPricing.findOne({ active: true }),
     };
 
     this.subscriptionTypes = [];
@@ -254,6 +261,9 @@ class UserDetails extends Component {
             vouchers: Voucher.find({ claimedBy: userId }).fetch(),
             invoices: Invoice.find({ userId }).fetch(),
             paymentLinks: RZPaymentLink.find({ userId }).fetch(),
+            hyperion: Hyperion.findOne({ userId }),
+            paymeter: Paymeter.findOne({ userId }),
+            credits: Credits.find({ userId }).fetch(),
           };
           this.subscriptionTypes.push(type);
           this.setState({ ...this.state, ...states });
@@ -266,7 +276,7 @@ class UserDetails extends Component {
 
   render() {
     const { user } = this.props;
-    const { cards, invitations, payments, vouchers, networks, invoices, paymentLinks } = this.state;
+    const { cards, invitations, payments, vouchers, networks, invoices, paymentLinks, hyperion, paymeter, credits, hyperionPricing, paymeterPricing } = this.state;
 
     if (!(user && user.profile)) {
       const LoadingView = (
@@ -450,7 +460,7 @@ class UserDetails extends Component {
                     <div className="row-xs-height">
                       <div className="col-xs-height col-top">
                         <div className="p-l-20 p-t-50 p-b-40 p-r-20">
-                          <h3 className="no-margin p-b-5">$ {bill && bill.totalAmount}</h3>
+                          <h3 className="no-margin p-b-5">$ {Number(bill && bill.totalAmount).toFixed(2)}</h3>
                           <span className="small hint-text pull-left">Free Node Usage</span>
                           <span className="pull-right small text-danger">
                             {bill && bill.totalFreeMicroHours.hours}/{1490 * 2} hrs
@@ -515,7 +525,7 @@ class UserDetails extends Component {
                 </div>
               </div>
               <div className="col-lg-6 m-b-10 d-flex">
-                <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+                <div className=" card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
                   <div className="card-header top-right">
                     <div className="card-controls">
                       <ul>
@@ -535,7 +545,7 @@ class UserDetails extends Component {
                     <h3 className="pull-right semi-bold">{networks && networks.length}</h3>
                     <div className="clearfix" />
                   </div>
-                  <div className="auto-overflow widget-11-2-table" style={{ height: '375px' }}>
+                  <div className="auto-overflow -table" style={{ maxHeight: '375px' }}>
                     <table className="table table-condensed table-hover">
                       <tbody>
                         {this.subscriptionTypes.includes('user.details.networks') &&
@@ -577,11 +587,203 @@ class UserDetails extends Component {
             </div>
           </div>
           <div className="container-fluid p-l-25 p-r-25 p-t-0 p-b-25 sm-padding-10">
+            <div className="row">
+              {features.Hyperion && (
+                <div className="col-lg-6 m-b-10 d-flex">
+                  <div className=" card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+                    <div className="padding-25">
+                      <div className="pull-left">
+                        <h2 className="text-success no-margin">Hyperion</h2>
+                        <p className="no-margin">Hyperion Statistics</p>
+                      </div>
+                    </div>
+                    {this.subscriptionTypes.includes('user.details.hyperionStats') && hyperion && (
+                      <div>
+                        <div className="row card-block">
+                          <div className="col-sm-6 col-md-6 col-lg-4">
+                            <div className="widget-9 card no-border bg-success no-margin widget-loader-bar">
+                              <div className="full-height d-flex flex-column">
+                                <div className="card-header ">
+                                  <div className="card-title text-black">
+                                    <span className="font-montserrat fs-11 all-caps text-white">
+                                      Disk Space Consumed <i className="fa fa-chevron-right" />
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="p-l-20">
+                                  <h3 className="no-margin p-b-30 text-white ">{hyperion && <span>{helpers.bytesToSize(hyperion.size)}</span>}</h3>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="col-sm-6 col-md-6 col-lg-4">
+                            <div className="widget-9 card no-border bg-warning no-margin widget-loader-bar">
+                              <div className="full-height d-flex flex-column">
+                                <div className="card-header ">
+                                  <div className="card-title text-black">
+                                    <span className="font-montserrat fs-11 all-caps text-white">
+                                      Monthly Cost <i className="fa fa-chevron-right" />
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="p-l-20">
+                                  <h3 className="no-margin p-b-30 text-white ">
+                                    {hyperion && <span>${Number((hyperion.size / (1024 * 1024 * 1024)) * (hyperionPricing && hyperionPricing.perGBCost)).toFixed(2)}</span>}
+
+                                    {!hyperion && <span>$0</span>}
+                                  </h3>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="col-sm-12 col-lg-4">
+                            <div className="widget-9 card no-border bg-complete no-margin widget-loader-bar">
+                              <div className="full-height d-flex flex-column">
+                                <div className="card-header ">
+                                  <div className="card-title text-black">
+                                    <span className="font-montserrat fs-11 all-caps text-white">
+                                      This Month Invoice <i className="fa fa-chevron-right" />
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="p-l-20">
+                                  <h3 className="no-margin p-b-30 text-white ">
+                                    {hyperion && (
+                                      <span>
+                                        $
+                                        {Math.max(
+                                          (hyperion.size / (1024 * 1024 * 1024)) * (hyperionPricing && hyperionPricing.perGBCost) - hyperion.discount,
+                                          hyperion.minimumFeeThisMonth
+                                        ).toFixed(2)}
+                                      </span>
+                                    )}
+
+                                    {!hyperion && <span>$0</span>}
+                                  </h3>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="row">
+                          <div className="col-md-12">
+                            <table className="table table-condensed table-hover">
+                              <tbody>
+                                <tr>
+                                  <td className="font-montserrat fs-12 w-60">Minimum fee this month</td>
+                                  <td className="text-right b-r b-dashed b-grey w-45">{Number(hyperion.minimumFeeThisMonth).toFixed(2)}</td>
+                                </tr>
+                                <tr>
+                                  <td className="font-montserrat fs-12 w-60">Discount</td>
+                                  <td className="text-right b-r b-dashed b-grey w-45">{Number(hyperion.discount).toFixed(5)}</td>
+                                </tr>
+                                <tr>
+                                  <td className="font-montserrat fs-12 w-60">Vouchers</td>
+                                  <td className="text-right b-r b-dashed b-grey w-45">
+                                    {hyperion.vouchers.map(v => `${v.code} : ${moment(v.appliedOn).format('DD-MMM-YYYY HH:mm:SS')}`).join(', ')}
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td className="font-montserrat fs-12 w-60">Subscribed</td>
+                                  <td className="text-right b-r b-dashed b-grey w-45">{hyperion.subscribed ? 'Yes' : 'No'}</td>
+                                </tr>
+                                <tr>
+                                  <td className="font-montserrat fs-12 w-60">Unsubscribe next month</td>
+                                  <td className="text-right b-r b-dashed b-grey w-45">{hyperion.unsubscribeNextMonth ? 'Yes' : 'No'}</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {!(this.subscriptionTypes.includes('user.details.hyperionStats') && invitations) && (
+                      <div className="row">
+                        <div className="col-md-12 p-l-30 p-b-10">
+                          <LoadButton subscription="user.details.hyperionStats" buttonText="Load Hyperion stats" onLoad={this.loadComponents} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              {features.Paymeter && (
+                <div className="col-lg-6 m-b-10 d-flex">
+                  <div className=" card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+                    <div className="padding-25">
+                      <div className="pull-left">
+                        <h2 className="text-success no-margin">Paymeter</h2>
+                        <p className="no-margin">Paymeter Statistics</p>
+                      </div>
+                    </div>
+                    {this.subscriptionTypes.includes('user.details.paymeterStats') && paymeter && (
+                      <div>
+                        <div className="row card-block">
+                          <div className="col-sm-12 col-lg-12">
+                            <div className="widget-9 card no-border bg-complete no-margin widget-loader-bar">
+                              <div className="full-height d-flex flex-column">
+                                <div className="card-header ">
+                                  <div className="card-title text-black">
+                                    <span className="font-montserrat fs-11 all-caps text-white">
+                                      This Month Invoice <i className="fa fa-chevron-right" />
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="p-l-20">
+                                  <h3 className="no-margin p-b-30 text-white ">
+                                    {paymeter && <span>$ {Number(Math.max(paymeter.bill, paymeter.minimumFeeThisMonth)).toFixed(2)}</span>}
+
+                                    {!paymeter && <span>$0</span>}
+                                  </h3>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="row">
+                          <div className="col-md-12">
+                            <table className="table table-condensed table-hover">
+                              <tbody>
+                                <tr>
+                                  <td className="font-montserrat fs-12 w-60">Minimum fee this month</td>
+                                  <td className="text-right b-r b-dashed b-grey w-45">$ {Number(paymeter.minimumFeeThisMonth).toFixed(2)}</td>
+                                </tr>
+                                <tr>
+                                  <td className="font-montserrat fs-12 w-60">Vouchers</td>
+                                  <td className="text-right b-r b-dashed b-grey w-45">
+                                    {paymeter.vouchers.map(v => `${v.code} : ${moment(v.appliedOn).format('DD-MMM-YYYY HH:mm:SS')}`).join(', ')}
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td className="font-montserrat fs-12 w-60">Subscribed</td>
+                                  <td className="text-right b-r b-dashed b-grey w-45">{paymeter.subscribed ? 'Yes' : 'No'}</td>
+                                </tr>
+                                <tr>
+                                  <td className="font-montserrat fs-12 w-60">Unsubscribe next month</td>
+                                  <td className="text-right b-r b-dashed b-grey w-45">{paymeter.unsubscribeNextMonth ? 'Yes' : 'No'}</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {!(this.subscriptionTypes.includes('user.details.paymeterStats') && invitations) && (
+                      <div className="row">
+                        <div className="col-md-12 font-montserrat p-l-30 p-b-10">
+                          <LoadButton subscription="user.details.paymeterStats" buttonText="Load Paymeter stats" onLoad={this.loadComponents} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             {(features.Payments || features.Invoice) && (
               <div className="row">
                 {features.Payments && (
                   <div className="col-lg-6 m-b-10 d-flex">
-                    <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+                    <div className=" card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
                       <div className="card-header top-right">
                         <div className="card-controls">
                           <ul>
@@ -601,7 +803,7 @@ class UserDetails extends Component {
                         <h3 className="pull-right semi-bold">{payments && payments.length}</h3>
                         <div className="clearfix" />
                       </div>
-                      <div className="auto-overflow widget-11-2-table" style={{ height: '275px' }}>
+                      <div className="auto-overflow -table" style={{ maxHeight: '275px' }}>
                         <table className="table table-condensed table-hover">
                           <tbody>
                             {this.subscriptionTypes.includes('user.details.payments') &&
@@ -642,7 +844,7 @@ class UserDetails extends Component {
                 )}
                 {features.Invoice && (
                   <div className="col-lg-6 m-b-10 d-flex">
-                    <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+                    <div className=" card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
                       <div className="card-header top-right">
                         <div className="card-controls">
                           <ul>
@@ -662,7 +864,7 @@ class UserDetails extends Component {
                         <h3 className="pull-right semi-bold">{invoices && invoices.length}</h3>
                         <div className="clearfix" />
                       </div>
-                      <div className="auto-overflow widget-11-2-table" style={{ height: '275px' }}>
+                      <div className="auto-overflow -table" style={{ maxHeight: '275px' }}>
                         <table className="table table-condensed table-hover">
                           <tbody>
                             {this.subscriptionTypes.includes('user.details.invoices') &&
@@ -698,7 +900,7 @@ class UserDetails extends Component {
             {features.Payments && (
               <div className="row">
                 <div className="col-lg-12 m-b-10 d-flex">
-                  <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+                  <div className=" card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
                     <div className="padding-25">
                       <div className="pull-left">
                         <h2 className="text-success no-margin">Actions</h2>
@@ -787,7 +989,7 @@ class UserDetails extends Component {
             <div className="row">
               {features.Payments && (
                 <div className="col-lg-6 m-b-10 d-flex">
-                  <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+                  <div className=" card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
                     <div className="padding-25">
                       <div className="pull-left">
                         <h2 className="text-success no-margin">Payment Links</h2>
@@ -796,7 +998,7 @@ class UserDetails extends Component {
                       <h3 className="pull-right semi-bold">{paymentLinks && paymentLinks.length}</h3>
                       <div className="clearfix" />
                     </div>
-                    <div className="auto-overflow widget-11-2-table" style={{ height: '275px' }}>
+                    <div className="auto-overflow -table" style={{ maxHeight: '275px' }}>
                       <table className="table table-condensed table-hover">
                         <tbody>
                           {this.subscriptionTypes.includes('user.details.paymentLinks') &&
@@ -840,7 +1042,7 @@ class UserDetails extends Component {
                 </div>
               )}
               <div className={`${features.Payments ? 'col-lg-6' : 'col-lg-12'} m-b-10 d-flex`}>
-                <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+                <div className=" card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
                   <div className="padding-25">
                     <div className="pull-left">
                       <h2 className="text-success no-margin">Invitations</h2>
@@ -849,7 +1051,7 @@ class UserDetails extends Component {
                     <h3 className="pull-right semi-bold">{invitations && invitations.length}</h3>
                     <div className="clearfix" />
                   </div>
-                  <div className="auto-overflow widget-11-2-table" style={{ height: '275px' }}>
+                  <div className="auto-overflow -table" style={{ maxHeight: '275px' }}>
                     <table className="table table-condensed table-hover">
                       <tbody>
                         {this.subscriptionTypes.includes('user.details.userInvitations') &&
