@@ -41,14 +41,18 @@ function sendSuccess(res, data) {
 JsonRoutes.Middleware.use('/api/paymeter', authMiddleware);
 
 JsonRoutes.add('get', '/api/paymeter/wallets', (req, res) => {
-  const wallets = Wallets.find({
-    user: req.userId,
-  }).fetch();
+  const wallets = Wallets.find(
+    {
+      user: req.userId,
+    },
+    {
+      fields: {
+        privateKey: 0,
+      },
+    }
+  ).fetch();
 
   try {
-    Bluebird.each(wallets, async wallet => {
-      wallet.balance = await Paymeter.getBalance(wallet._id);
-    });
     return sendSuccess(res, wallets);
   } catch (err) {
     return sendError(res, 400, err);
@@ -56,21 +60,25 @@ JsonRoutes.add('get', '/api/paymeter/wallets', (req, res) => {
 });
 
 JsonRoutes.add('get', '/api/paymeter/wallets/:id', async (req, res) => {
-  const wallet = Wallets.find({
-    _id: req.params.id,
-    user: req.userId,
-  }).fetch()[0];
+  const wallet = Wallets.find(
+    {
+      _id: req.params.id,
+      user: req.userId,
+    },
+    {
+      fields: {
+        privateKey: 0,
+      },
+    }
+  ).fetch()[0];
 
   if (!wallet) {
     return sendError(res, 400, 'Invalid wallet id');
   }
 
   try {
-    const { balance, txns } = await Bluebird.props({ balance: Paymeter.getBalance(wallet._id), txns: Paymeter.getWalletTransactions(wallet._id, req.userId) });
     return sendSuccess(res, {
       wallet,
-      balance,
-      transactions: txns,
     });
   } catch (err) {
     return sendError(res, 400, err);
@@ -102,8 +110,17 @@ JsonRoutes.add('post', '/api/paymeter/wallets', async (req, res) => {
 
 JsonRoutes.add('get', '/api/paymeter/wallets/:id/withdrawals', async (req, res) => {
   try {
-    const transactinos = await Paymeter.getWalletTransactions(req.params.id, req.userId);
-    return sendSuccess(res, transactinos);
+    const transactions = await Paymeter.getWalletTransactions(req.params.id, req.userId, 'withdrawal');
+    return sendSuccess(res, transactions);
+  } catch (err) {
+    return sendError(res, 400, err);
+  }
+});
+
+JsonRoutes.add('get', '/api/paymeter/wallets/:id/deposits', async (req, res) => {
+  try {
+    const transactions = await Paymeter.getWalletTransactions(req.params.id, req.userId, 'deposit');
+    return sendSuccess(res, transactions);
   } catch (err) {
     return sendError(res, 400, err);
   }
