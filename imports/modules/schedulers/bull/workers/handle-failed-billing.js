@@ -1,4 +1,5 @@
 const debug = require('debug')('scheduler:bull:handleFailedBilling');
+import UserFunctions from '../../../../api/server-functions/user';
 import Invoice from '../../../../collections/payments/invoice';
 
 module.exports = function(bullSystem) {
@@ -14,6 +15,7 @@ module.exports = function(bullSystem) {
           $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed],
         },
       });
+      debug('Handling failed invoice', invoice._id);
       if (!invoice) {
         ElasticLogger.log('Bull - Handle failed billing', {
           invoiceId,
@@ -35,6 +37,8 @@ module.exports = function(bullSystem) {
         }
       );
 
+      await UserFunctions.disableFunctions({ userId: invoice.userId });
+
       Invoice.update(
         {
           _id: invoiceId,
@@ -48,6 +52,8 @@ module.exports = function(bullSystem) {
           },
         }
       );
+
+      return resolve();
     });
   });
 

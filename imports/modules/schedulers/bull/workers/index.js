@@ -11,4 +11,5 @@ module.exports = bullSystem => {
   require('./attach-razorpay-addons')(bullSystem);
   require('./clean-dangling-pods')(bullSystem);
   require('./handle-failed-billing')(bullSystem);
+  require('./disable-ingress')(bullSystem);
 };

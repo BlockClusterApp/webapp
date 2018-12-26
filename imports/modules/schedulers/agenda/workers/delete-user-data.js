@@ -2,7 +2,7 @@ import Invoice from '../../../../collections/payments/invoice';
 import bull from '../../bull';
 import moment from 'moment';
 
-const debug = require('debug')('scheduler:agenda:handleFailedBilling');
+const debug = require('debug')('scheduler:agenda:delete-user-data');
 
 let uuid = '';
 if (process.env.NODE_ENV === 'development') {
@@ -10,13 +10,12 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 module.exports = function(agenda) {
-  const name = `handle-failed-billing${uuid.split('-')[0]}`;
+  const name = `delete-user-data${uuid.split('-')[0]}`;
 
-  console.log('Handle failed billing task name', name);
+  console.log('Delete user data task name', name);
 
   agenda.define(
     name,
-    { priority: 'highest' },
     Meteor.bindEnvironment(job => {
       const pendingInvoices = Invoice.find({
         billingPeriodLabel: moment().format('MMM-YYYY'),
@@ -28,12 +27,14 @@ module.exports = function(agenda) {
         },
       }).fetch();
       if (!pendingInvoices[0]) {
-        ElasticLogger.log('Failed Billing', { status: 'No failed invoices' });
+        ElasticLogger.log('Delete user data', { status: 'No eligible users' });
         return true;
       }
       pendingInvoices.forEach(pi => {
-        bull.addJob('handle-failed-billing', {
+        debug('Deleting user data for ', { invoiceId: pi.invoiceId });
+        bull.addJob('delete-user-data', {
           invoiceId: pi._id,
+          userId: pi.userId,
         });
       });
 
@@ -42,13 +43,8 @@ module.exports = function(agenda) {
   );
 
   (async () => {
-    if (['staging', 'production'].includes(process.env.NODE_ENV)) {
-      await agenda.every('30 0 15 * *', name);
-    } else if (process.env.HANDLE_FAILED_BILLING) {
-      console.log('Handling failed billing in 20 seconds');
-      await agenda.schedule('in 20 seconds', name);
-    } else {
-      await agenda.every('30 0 15 * *', name);
-    }
+    // if (['staging', 'production'].includes(process.env.NODE_ENV)) {
+    await agenda.every('30 0 30 * *', name);
+    // }
   })();
 };

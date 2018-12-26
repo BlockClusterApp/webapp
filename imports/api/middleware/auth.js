@@ -25,7 +25,6 @@ async function validateToken(token) {
 async function _authFunc(req, res, next) {
   function getToken(req) {
     if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
-      // Authorization: Bearer g1jipjgi1ifjioj
       // Handle token presented as a Bearer token in the Authorization header
       return req.headers.authorization.split(' ')[1];
     } else if (req.query && req.query.token) {
@@ -43,7 +42,7 @@ async function _authFunc(req, res, next) {
   const token = getToken(req);
 
   if (!token) {
-    JsonRoutes.sendResult(res, {
+    return JsonRoutes.sendResult(res, {
       code: 401,
       data: {
         error: 'Unauthorized',
@@ -57,7 +56,7 @@ async function _authFunc(req, res, next) {
       .verify(token)
       .then(async decode => {
         if (decode == false) {
-          JsonRoutes.sendResult(res, {
+          return JsonRoutes.sendResult(res, {
             code: 401,
             data: {
               error: 'Invalid JWT token',
@@ -82,7 +81,7 @@ async function _authFunc(req, res, next) {
         }
       })
       .catch(err => {
-        JsonRoutes.sendResult(res, {
+        return JsonRoutes.sendResult(res, {
           code: 401,
           data: {
             error: 'Invalid JWT token',
@@ -94,7 +93,7 @@ async function _authFunc(req, res, next) {
     const userId = await validateToken(token);
 
     if (!userId) {
-      JsonRoutes.sendResult(res, {
+      return JsonRoutes.sendResult(res, {
         code: 401,
         data: {
           success: false,
@@ -103,7 +102,20 @@ async function _authFunc(req, res, next) {
       });
     }
 
+    const user = Meteor.users.find({ _id: userId });
+
+    if (user.paymentPending) {
+      return JsonRoutes.sendResult(res, {
+        code: 401,
+        data: {
+          success: false,
+          error: 'Payment Pending. Functions disabled',
+        },
+      });
+    }
+
     req.userId = userId;
+    req.user = user;
     next();
   }
 }

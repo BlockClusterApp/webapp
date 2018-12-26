@@ -30,6 +30,7 @@ Meteor.publish('users.all', function({ page }) {
         demoUser: 1,
         _id: 1,
         createdAt: 1,
+        paymentPending: 1,
       },
     }
   );

@@ -15,7 +15,7 @@ User.fetchAdminDashboardDetails = async userId => {
   }
   const result = await Bluebird.props({
     details: Meteor.users.find({ _id: userId }, { fields: { services: 0 } }).fetch()[0],
-    bill: Billing.generateBill({ userId, isFromFrontend }),
+    bill: Billing.generateBill({ userId, isFromFrontend: true }),
   });
 
   return result;
