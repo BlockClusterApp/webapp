@@ -173,14 +173,14 @@ export default {
   hyperionMinimumCostPerMonth() {
     return 399;
   },
-  paymeterMinimumCostPerMonth() {
+  paymeterMinimimCostPerMonth() {
     return 399;
   },
   paymeterDepositFees() {
     return 0.18;
   },
   paymeterDepositFeesERC20NotFound() {
-    return 0.20;
+    return 0.2;
   },
   getFlooredFixed(v, d) {
     return (Math.floor(v * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d);
