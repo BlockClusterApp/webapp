@@ -429,7 +429,7 @@ class UserDetails extends Component {
                             <div
                               className="progress-bar progress-bar-danger"
                               style={{
-                                width: `${bill && (bill.totalFreeMicroHours.hours * 100) / (1490 * 2)}%`,
+                                width: `100%`,
                               }}
                             />
                           </div>
