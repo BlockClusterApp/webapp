@@ -256,6 +256,34 @@ class UserDetails extends Component {
     });
   };
 
+  toggleUserAccess = () => {
+    const {user} = this.props;
+
+    let functionName;
+    if(user && user.paymentPending) {
+      functionName = 'enableUser'
+    } else if (user) {
+      functionName = 'disableUser'
+    }
+
+    if(!functionName) {
+      return null;
+    }
+
+    this.setState({
+      userFunctionLoading: true
+    });
+    Meteor.call(functionName, {userId: user._id}, (err, res) => {
+      this.setState({
+        userFunctionLoading: false
+      });
+      if(err) {
+        return notifications.error(err.reason);
+      }
+      return notifications.success('Successful')
+    });
+  }
+
   loadComponents = type => {
     if (this.subscriptionTypes.includes(type)) {
       return true;
@@ -554,6 +582,28 @@ class UserDetails extends Component {
                       </div>
                     )}
                     <div className="clearfix" />
+                  </div>
+                </div>
+                <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
+                  <div className="card-header clearfix">
+                    <h5 className="text-success pull-left fs-12">
+                      User functions
+                      <i className="fa fa-circle text-success fs-11" />
+                    </h5>
+                    <div className="clearfix" />
+                  </div>
+                  <div className="card-description">
+                    <LaddaButton
+                      loading={this.state.userFunctionLoading}
+                      data-size={S}
+                      data-style={SLIDE_UP}
+                      data-spinner-size={30}
+                      data-spinner-lines={12}
+                      onClick={this.toggleUserAccess}
+                      className="btn btn-danger"
+                    >
+                      &nbsp;&nbsp;{this.props.user && this.props.user.paymentPending ? 'Enable User' : 'Disable User'}
+                    </LaddaButton>
                   </div>
                 </div>
               </div>

@@ -9,7 +9,7 @@ module.exports = function(bullSystem) {
       const { instanceId, locationCode, userId, namespace } = job.data;
 
       HTTP.call('GET', `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${namespace}/ingresses/ingress-${instanceId}`, function(err, response) {
-        const ingress = JSON.parse(ingress);
+        const ingress = JSON.parse(response);
         delete ingress.metadata.selfLink;
         delete ingress.metadata.uid;
         delete ingress.metadata.resourceVersion;

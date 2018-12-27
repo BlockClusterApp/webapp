@@ -34,6 +34,13 @@ module.exports = function(bullSystem) {
             paymentPendingForInvoiceId: invoiceId,
             paymentPendingOn: new Data(),
           },
+          $push: {
+            metastatus: {
+              status: 'payment-pending',
+              from: 'failed-bill-handling',
+              on: new Date(),
+            },
+          },
         }
       );
 

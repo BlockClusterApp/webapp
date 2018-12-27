@@ -102,14 +102,71 @@ User.areFunctionsDisabled = async function({ userId }) {
 };
 
 User.disableFunctions = async function({ userId }) {
-  await deleteDynamoIngresses({ userId });
+  const user = Meteor.user();
+  if (user && user.admin < 2) {
+    throw new Meteor.Error(401, 'Unauthorized');
+  }
+  if (user) await deleteDynamoIngresses({ userId });
   // TODO: Send email for this
+
+  if (user) {
+    const updateObject = {
+      $set: {
+        paymentPending: true,
+      },
+    };
+    updateObject.$push = {
+      metastatus: {
+        status: 'disable-functions',
+        from: `admin-${user.emails[0].address}`,
+        on: new Date(),
+        by: user._od,
+      },
+    };
+    Meteor.users.update({ _id: userId }, updateObject);
+  }
   return true;
 };
 
 User.enableFunctions = async function({ userId }) {
+  const user = Meteor.user();
+  if (user && user.admin < 2) {
+    throw new Meteor.Error(401, 'Unauthorized');
+  }
   await enableDynamoIngresses({ userId });
   // TODO: send email for alerting about this
+
+  const updateObject = {
+    $unset: {
+      paymentPending: '',
+    },
+    $push: {},
+  };
+  if (!user) {
+    updateObject.$push = {
+      metastatus: {
+        status: 'enable-functions',
+        from: 'bill-payment',
+        on: new Date(),
+      },
+    };
+  } else {
+    updateObject.$push = {
+      metastatus: {
+        status: 'enable-functions',
+        from: `admin-${user.emails[0].address}`,
+        on: new Date(),
+        by: user._id,
+      },
+    };
+  }
+  Meteor.users.update(
+    {
+      _id: userId,
+    },
+    updateObject
+  );
+
   return true;
 };
 
@@ -122,5 +179,10 @@ User.deleteAllUserData = async function({ userId }) {
 
   return true;
 };
+
+Meteor.methods({
+  disableUser: User.disableFunctions,
+  enableUser: User.enableFunctions,
+});
 
 export default User;
