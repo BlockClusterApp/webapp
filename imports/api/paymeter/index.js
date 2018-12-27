@@ -642,7 +642,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
   });
 }
 
-async function getWalletTransactions(walletId, userId) {
+async function getWalletTransactions(walletId, userId, type = 'withdrawal') {
   userId = userId || Meteor.userId();
   const wallet = Wallets.find({
     _id: walletId,
@@ -653,9 +653,15 @@ async function getWalletTransactions(walletId, userId) {
     return Promise.reject(new Error('Invalid wallet id'));
   }
 
-  return WalletTransactions.find({
-    fromWallet: wallet._id,
-  }).fetch();
+  if (type === 'withdrawal') {
+    return WalletTransactions.find({
+      fromWallet: wallet._id,
+    }).fetch();
+  } else {
+    return WalletTransactions.find({
+      toWallet: wallet._id,
+    }).fetch();
+  }
 }
 
 function isUserSubscribedToPaymeter(userId) {
@@ -776,7 +782,6 @@ async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMo
           }
         );
       }
-
       return new BigNumber(bill);
     } else {
       return 0;
@@ -852,7 +857,7 @@ Meteor.methods({
               $set: {
                 subscribed: true,
                 unsubscribeNextMonth: false,
-                minimumFeeThisMonth: String(Number(minimumFeeThisMonth.toString()).toFixed(2)),
+                minimumFeeThisMonth: Number(minimumFeeThisMonth).toFixed(2),
               },
               $push: {
                 subscriptions: {

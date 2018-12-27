@@ -25,7 +25,7 @@ const Price = {
 const POWER_NODE_INCLUDED_STORAGE = 200;
 
 const FreeHoursPerUser = {
-  Micro: 1490 * 2,
+  Micro: 0,
 };
 
 function convertMilliseconds(ms) {
@@ -208,7 +208,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
           );
         }
       }
-      let label = voucher ? voucher.code : networkConfig && networkConfig.name === 'Micro free' ? networkConfig.name : null;
+      let label = voucher ? voucher.code : null;
 
       // if(isMicroNode && network.active){
       //   nodeTypeCount.Micro += 1;
@@ -226,8 +226,8 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             .toDate()
             .getTime() - billingStartDate.getTime()
         );
-        const freeHoursLeft = Math.max(FreeHoursPerUser.Micro - nodeUsageCountMinutes.Micro / 60, 0);
-        let paidHours = -1,
+        const freeHoursLeft = 0;
+        let paidHours = 0,
           paidMinutes = 0;
         if (freeHoursLeft < usedTime.hours) {
           paidHours = usedTime.hours - freeHoursLeft;

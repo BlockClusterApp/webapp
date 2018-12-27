@@ -152,7 +152,7 @@ class BillingDashboard extends Component {
                 </div>
                 <div className="card-block">
                   <div className="table-responsive">
-                    <div className="row">
+                    {/* <div className="row">
                       <div className="col-md-5">
                         <p style={{ lineHeight: '45px' }}>
                           Free micro node usage:&nbsp;
@@ -162,7 +162,7 @@ class BillingDashboard extends Component {
                           / {1490 * 2} hrs
                         </p>
                       </div>
-                    </div>
+                    </div> */}
                     <div className="row">
                       <div className="col-md-3">
                         <div className="form-group ">

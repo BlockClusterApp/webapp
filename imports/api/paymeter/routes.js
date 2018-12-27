@@ -41,20 +41,41 @@ function sendSuccess(res, data) {
 
 JsonRoutes.Middleware.use('/api/paymeter', authMiddleware);
 
-JsonRoutes.add('get', '/api/paymeter/wallets', (req, res) => {
-  const wallets = Wallets.find(
-    {
-      user: req.userId,
-    },
-    {
-      fields: { privateKey: 0 },
-    }
-  ).fetch();
-
+JsonRoutes.add('get', '/api/paymeter/wallets/:id/withdrawals', async (req, res) => {
   try {
-    return sendSuccess(res, wallets);
+    const transactions = await Paymeter.getWalletTransactions(req.params.id, req.userId, 'withdrawal');
+    return sendSuccess(res, transactions);
   } catch (err) {
     return sendError(res, 400, err);
+  }
+});
+
+JsonRoutes.add('get', '/api/paymeter/wallets/:id/deposits', async (req, res) => {
+  try {
+    const transactions = await Paymeter.getWalletTransactions(req.params.id, req.userId, 'deposit');
+    return sendSuccess(res, transactions);
+  } catch (err) {
+    return sendError(res, 400, err);
+  }
+});
+
+JsonRoutes.add('post', '/api/paymeter/wallets/:id/send', async (req, res) => {
+  const fromWalletId = req.params.id;
+  const { toAddress, amount, options } = req.body;
+  if (!fromWalletId) {
+    return sendError(res, 400, 'fromWalletId is required field');
+  }
+  if (!toAddress) {
+    return sendError(res, 400, 'toAddress is required field');
+  }
+  if (!amount) {
+    return sendError(res, 400, 'amount is required field');
+  }
+  try {
+    const result = await Paymeter.transfer(fromWalletId, toAddress, amount, options || {}, req.userId);
+    return sendSuccess(res, { txnHash: result });
+  } catch (err) {
+    sendError(res, 400, err);
   }
 });
 
@@ -84,6 +105,25 @@ JsonRoutes.add('get', '/api/paymeter/wallets/:id', async (req, res) => {
   }
 });
 
+JsonRoutes.add('get', '/api/paymeter/wallets', (req, res) => {
+  const wallets = Wallets.find(
+    {
+      user: req.userId,
+    },
+    {
+      fields: {
+        privateKey: 0,
+      },
+    }
+  ).fetch();
+
+  try {
+    return sendSuccess(res, wallets);
+  } catch (err) {
+    return sendError(res, 400, err);
+  }
+});
+
 JsonRoutes.add('post', '/api/paymeter/wallets', async (req, res) => {
   const { coinType, walletName, network, options } = req.body;
 
@@ -104,34 +144,5 @@ JsonRoutes.add('post', '/api/paymeter/wallets', async (req, res) => {
     return sendSuccess(res, result);
   } catch (err) {
     return sendError(res, 400, err);
-  }
-});
-
-JsonRoutes.add('get', '/api/paymeter/wallets/:id/withdrawals', async (req, res) => {
-  try {
-    const transactions = await Paymeter.getWalletTransactions(req.params.id, req.userId);
-    return sendSuccess(res, transactions);
-  } catch (err) {
-    return sendError(res, 400, err);
-  }
-});
-
-JsonRoutes.add('post', '/api/paymeter/wallets/:id/send', async (req, res) => {
-  const fromWalletId = req.params.id;
-  const { toAddress, amount, options } = req.body;
-  if (!fromWalletId) {
-    return sendError(res, 400, 'fromWalletId is required field');
-  }
-  if (!toAddress) {
-    return sendError(res, 400, 'toAddress is required field');
-  }
-  if (!amount) {
-    return sendError(res, 400, 'amount is required field');
-  }
-  try {
-    const result = await Paymeter.transfer(fromWalletId, toAddress, amount, options || {}, req.userId);
-    return sendSuccess(res, { txnId: result });
-  } catch (err) {
-    sendError(res, 400, err);
   }
 });

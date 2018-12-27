@@ -496,7 +496,7 @@ class UserDetails extends Component {
                           <h3 className="no-margin p-b-5">$ {Number(bill && bill.totalAmount).toFixed(2)}</h3>
                           <span className="small hint-text pull-left">Free Node Usage</span>
                           <span className="pull-right small text-danger">
-                            {bill && bill.totalFreeMicroHours.hours}/{1490 * 2} hrs
+                            {bill && bill.totalFreeMicroHours.hours}/{0} hrs
                           </span>
                         </div>
                       </div>
@@ -508,7 +508,7 @@ class UserDetails extends Component {
                             <div
                               className="progress-bar progress-bar-danger"
                               style={{
-                                width: `${bill && (bill.totalFreeMicroHours.hours * 100) / (1490 * 2)}%`,
+                                width: `100%`,
                               }}
                             />
                           </div>
