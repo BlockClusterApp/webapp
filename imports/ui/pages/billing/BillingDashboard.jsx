@@ -4,7 +4,7 @@ import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import { withRouter } from 'react-router-dom';
 import moment from 'moment';
 
-const html2pdf = require("html2pdf.js")
+const html2pdf = require('html2pdf.js');
 
 import './Dashboard.scss';
 
@@ -82,36 +82,36 @@ class BillingDashboard extends Component {
 
   downloadInvoice = () => {
     this.setState({
-      downloading: true
+      downloading: true,
     });
     Meteor.call('generateInvoiceHTML', this.state.bill.invoiceId, (err, res) => {
-      if(err){
+      if (err) {
         console.log(err);
         RavenLogger.log('Generate Invoice HTML err', {
           invoice: this.props.invoice._id,
-          res
+          res,
         });
         alert('Error downloading', err.reason);
         this.setState({
-          downloading: false
-        })
+          downloading: false,
+        });
         return false;
       }
 
       // debugger;
       // html2pdf().from(res).set({jsPDF:{ unit: 'in', format: 'a4', orientation: 'portrait' }, margin: [0, 0]}).save();
       this.setState({
-        downloading: false
+        downloading: false,
       });
-//       let pdfWindow = window.open("")
-// pdfWindow.document.write("<iframe width='100%' height='100%' src='data:application/pdf;base64, " + encodeURI(res)+"'></iframe>")
-// window.open("data:application/octet-stream;charset=utf-16le;base64,"+encodeURI(res));
-let a = document.createElement("a");
- a.href = "data:application/octet-stream;base64,"+res;
- a.download = `BlockclusterBill-${this.state.bill.invoiceId}.pdf`
- a.click();
+      //       let pdfWindow = window.open("")
+      // pdfWindow.document.write("<iframe width='100%' height='100%' src='data:application/pdf;base64, " + encodeURI(res)+"'></iframe>")
+      // window.open("data:application/octet-stream;charset=utf-16le;base64,"+encodeURI(res));
+      let a = document.createElement('a');
+      a.href = 'data:application/octet-stream;base64,' + res;
+      a.download = `BlockclusterBill-${this.state.bill.invoiceId}.pdf`;
+      a.click();
     });
-  }
+  };
 
   getInvoicePaidStatus = paymentStatus => {
     switch (Number(paymentStatus)) {
@@ -157,7 +157,7 @@ let a = document.createElement("a");
                 </div>
                 <div className="card-block">
                   <div className="table-responsive">
-                    <div className="row">
+                    {/* <div className="row">
                       <div className="col-md-5">
                         <p style={{ lineHeight: '45px' }}>
                           Free micro node usage:&nbsp;
@@ -167,7 +167,7 @@ let a = document.createElement("a");
                           / {1490 * 2} hrs
                         </p>
                       </div>
-                    </div>
+                    </div> */}
                     <div className="row">
                       <div className="col-md-3">
                         <div className="form-group ">
@@ -232,13 +232,24 @@ let a = document.createElement("a");
                         >
                           <i className="fa fa-check" /> &nbsp;Select
                         </LaddaButton>
-                      {this.state.bill &&
-                        this.state.bill.invoiceStatus && (
-                            <span>
-                              &nbsp;&nbsp;
-                              <button className="btn btn-primary" disabled={this.state.downloading} onClick={this.downloadInvoice}>{this.state.downloading && <i className="fa fa-spinner fa-spin" />}Download Invoice</button>
-                              &nbsp;{this.state.bill && this.state.bill.invoiceStatus === 1 && <button className="btn btn-success" onClick={() => {this.props.history.push('/app/payments')}}>Pay Now</button>}
-                            </span>
+                        {this.state.bill && this.state.bill.invoiceStatus && (
+                          <span>
+                            &nbsp;&nbsp;
+                            <button className="btn btn-primary" disabled={this.state.downloading} onClick={this.downloadInvoice}>
+                              {this.state.downloading && <i className="fa fa-spinner fa-spin" />}Download Invoice
+                            </button>
+                            &nbsp;
+                            {this.state.bill && this.state.bill.invoiceStatus === 1 && (
+                              <button
+                                className="btn btn-success"
+                                onClick={() => {
+                                  this.props.history.push('/app/payments');
+                                }}
+                              >
+                                Pay Now
+                              </button>
+                            )}
+                          </span>
                         )}
                       </div>
                     </div>

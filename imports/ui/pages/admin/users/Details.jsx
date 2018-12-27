@@ -417,7 +417,7 @@ class UserDetails extends Component {
                           <h3 className="no-margin p-b-5">$ {bill && bill.totalAmount}</h3>
                           <span className="small hint-text pull-left">Free Node Usage</span>
                           <span className="pull-right small text-danger">
-                            {bill && bill.totalFreeMicroHours.hours}/{1490 * 2} hrs
+                            {bill && bill.totalFreeMicroHours.hours}/{0} hrs
                           </span>
                         </div>
                       </div>
@@ -429,7 +429,7 @@ class UserDetails extends Component {
                             <div
                               className="progress-bar progress-bar-danger"
                               style={{
-                                width: `${bill && (bill.totalFreeMicroHours.hours * 100) / (1490 * 2)}%`,
+                                width: `100%`,
                               }}
                             />
                           </div>
@@ -633,93 +633,95 @@ class UserDetails extends Component {
                 )}
               </div>
             )}
-            {features.Payments && <div className="row">
-              <div className="col-lg-12 m-b-10 d-flex">
-                <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
-                  <div className="padding-25">
-                    <div className="pull-left">
-                      <h2 className="text-success no-margin">Actions</h2>
-                    </div>
-                  </div>
-                  <div className="row p-b-25">
-                    <div className="p-l-25 p-r-25 col-md-12">
-                      <h5 className="no-margin p-b-10">Create Payment Link</h5>
-                      <div className="row">
-                        <div className="col-md-7">
-                          <div className="form-group form-group-default required">
-                            <label>Reason</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="paymentReason"
-                              required
-                              ref={input => {
-                                this.paymentLinkReason = input;
-                              }}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-3">
-                          <div className="form-group form-group-default required">
-                            <label>Amount (IN USD)</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="paymentAmount"
-                              placeholder="$"
-                              required
-                              ref={input => {
-                                this.paymentLinkAmount = input;
-                              }}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-2">
-                          <LaddaButton
-                            disabled={this.state.paymentLinkCreationDisabled}
-                            loading={this.state.paymentLinkLoading}
-                            data-size={S}
-                            data-style={SLIDE_UP}
-                            data-spinner-size={30}
-                            data-spinner-lines={12}
-                            onClick={this.createPaymentLink}
-                            className="btn btn-success"
-                          >
-                            <i className="fa fa-plus-circle" aria-hidden="true" />
-                            &nbsp;&nbsp;Create
-                          </LaddaButton>
-                        </div>
+            {features.Payments && (
+              <div className="row">
+                <div className="col-lg-12 m-b-10 d-flex">
+                  <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+                    <div className="padding-25">
+                      <div className="pull-left">
+                        <h2 className="text-success no-margin">Actions</h2>
                       </div>
-                      {this.state.generatedLink && (
+                    </div>
+                    <div className="row p-b-25">
+                      <div className="p-l-25 p-r-25 col-md-12">
+                        <h5 className="no-margin p-b-10">Create Payment Link</h5>
                         <div className="row">
                           <div className="col-md-7">
                             <div className="form-group form-group-default required">
-                              <label>Link</label>
-                              <input type="text" className="form-control" name="paymentReason" disabled value={this.state.generatedLink.short_url} />
+                              <label>Reason</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="paymentReason"
+                                required
+                                ref={input => {
+                                  this.paymentLinkReason = input;
+                                }}
+                              />
                             </div>
                           </div>
-                          <div className="col-md-4">
+                          <div className="col-md-3">
+                            <div className="form-group form-group-default required">
+                              <label>Amount (IN USD)</label>
+                              <input
+                                type="number"
+                                className="form-control"
+                                name="paymentAmount"
+                                placeholder="$"
+                                required
+                                ref={input => {
+                                  this.paymentLinkAmount = input;
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <div className="col-md-2">
                             <LaddaButton
-                              disabled={this.state.paymentLinkDeletionDisabled}
+                              disabled={this.state.paymentLinkCreationDisabled}
                               loading={this.state.paymentLinkLoading}
                               data-size={S}
                               data-style={SLIDE_UP}
                               data-spinner-size={30}
                               data-spinner-lines={12}
-                              onClick={this.cancelPaymentLink.bind(this, this.state.generatedLink._id)}
-                              className="btn btn-danger"
+                              onClick={this.createPaymentLink}
+                              className="btn btn-success"
                             >
-                              <i className="fa fa-minus-circle" aria-hidden="true" />
-                              &nbsp;&nbsp;Delete
+                              <i className="fa fa-plus-circle" aria-hidden="true" />
+                              &nbsp;&nbsp;Create
                             </LaddaButton>
                           </div>
                         </div>
-                      )}
+                        {this.state.generatedLink && (
+                          <div className="row">
+                            <div className="col-md-7">
+                              <div className="form-group form-group-default required">
+                                <label>Link</label>
+                                <input type="text" className="form-control" name="paymentReason" disabled value={this.state.generatedLink.short_url} />
+                              </div>
+                            </div>
+                            <div className="col-md-4">
+                              <LaddaButton
+                                disabled={this.state.paymentLinkDeletionDisabled}
+                                loading={this.state.paymentLinkLoading}
+                                data-size={S}
+                                data-style={SLIDE_UP}
+                                data-spinner-size={30}
+                                data-spinner-lines={12}
+                                onClick={this.cancelPaymentLink.bind(this, this.state.generatedLink._id)}
+                                className="btn btn-danger"
+                              >
+                                <i className="fa fa-minus-circle" aria-hidden="true" />
+                                &nbsp;&nbsp;Delete
+                              </LaddaButton>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>}
+            )}
             <div className="row">
               {this.props.paymentLinks && this.props.paymentLinks.length > 0 && features.Payments && (
                 <div className="col-lg-6 m-b-10 d-flex">
@@ -767,7 +769,7 @@ class UserDetails extends Component {
                   </div>
                 </div>
               )}
-              <div className={`${this.props.paymentLinks && this.props.paymentLinks.length > 0 && features.Payments? 'col-lg-6' : 'col-lg-12'} m-b-10 d-flex`}>
+              <div className={`${this.props.paymentLinks && this.props.paymentLinks.length > 0 && features.Payments ? 'col-lg-6' : 'col-lg-12'} m-b-10 d-flex`}>
                 <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
                   <div className="padding-25">
                     <div className="pull-left">
