@@ -44,12 +44,33 @@ function fetchEligibleCredits(credits, totalAmount) {
     }
     result.push({
       credit,
-      amount: usableAmount,
+      amount: Number(Number(usableAmount).toFixed(2)),
     });
     amount = amount - usableAmount;
   });
   return { credits: result.filter(r => !!r.amount), remainingAmount: amount };
 }
+
+InvoiceObj.fetchCreditsRedemption = async ({ userId, totalAmount, invoiceObject }) => {
+  // Credits application
+  let eligibleCredits = [];
+  const _credits = Credits.find({ userId }, { sort: { createdAt: 1 } }).fetch();
+  if (_credits.length > 0) {
+    const totalCredits = _credits.reduce((sumTillNow, credit) => sumTillNow + credit.amount, 0);
+    if (totalCredits > 0) {
+      const { credits, remainingAmount } = fetchEligibleCredits(_credits, totalAmount);
+      if (credits.length > 0) {
+        totalAmount = remainingAmount;
+        if (invoiceObject) {
+          invoiceObject.totalAmount = remainingAmount;
+        }
+        eligibleCredits = credits;
+      }
+    }
+  }
+
+  return { _totalAmount: totalAmount, eligibleCredits };
+};
 
 InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription }) => {
   let totalAmount = Number(bill.totalAmount).toFixed(2);
@@ -100,19 +121,8 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   }
 
   // Credits application
-  let eligibleCredits = [];
-  const _credits = Credits.find({ userId }, { sort: { createdAt: 1 } }).fetch();
-  if (_credits.length > 0) {
-    const totalCredits = _credits.reduce((sumTillNow, credit) => sumTillNow + credit.amount, 0);
-    if (totalCredits > 0) {
-      const { credits, remainingAmount } = fetchEligibleCredits(credits, totalAmount);
-      if (credits.length > 0) {
-        totalAmount = remainingAmount;
-        invoiceObject.totalAmount = remainingAmount;
-        eligibleCredits = credits;
-      }
-    }
-  }
+  const { _totalAmount, eligibleCredits } = await InvoiceObj.fetchCreditsRedemption({ userId, totalAmount, invoiceObject });
+  console.log('Eligible credits', eligibleCredits);
 
   const items = bill.networks;
 
@@ -125,6 +135,8 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
 
   const invoiceId = Invoice.insert(invoiceObject);
   let creditClaims = [];
+
+  totalAmount = _totalAmount;
 
   eligibleCredits.forEach(ec => {
     const { credit } = ec;

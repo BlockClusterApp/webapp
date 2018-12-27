@@ -9,6 +9,7 @@ import HyperionPricing from '../../collections/pricing/hyperion';
 import HyperionApis from '../hyperion.js';
 import PaymeterApis from '../paymeter/index.js';
 import ChargeableAPI from '../../collections/chargeable-apis';
+import InvoiceApis from './invoice';
 
 const Billing = {};
 
@@ -51,6 +52,23 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
     calculationEndDate = currentTime.toDate();
   }
 
+  const result = {
+    totalAmount: 0,
+  };
+  if (!(selectedMonth.month() === moment().month() && selectedMonth.year() === moment().year()) && isFromFrontend) {
+    const prevMonthInvoice = Invoice.find({
+      userId: userId,
+      billingPeriodLabel: selectedMonth.format('MMM-YYYY'),
+    }).fetch()[0];
+    if (prevMonthInvoice) {
+      result.networks = prevMonthInvoice.items;
+      result.totalAmount = prevMonthInvoice.totalAmount;
+      result.invoiceStatus = prevMonthInvoice.paymentStatus;
+      result.invoiceId = prevMonthInvoice._id;
+      return result;
+    }
+  }
+
   const userNetworks = Networks.find({
     user: userId,
     createdAt: {
@@ -69,9 +87,6 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
     ],
   }).fetch();
 
-  const result = {
-    totalAmount: 0,
-  };
   const nodeTypeCount = {
     Micro: 0,
   };
@@ -357,7 +372,20 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
   result.totalAmount += Number(paymeterCost);
   // }
 
-  //end
+  // Fetch redeemable credits
+  if (isFromFrontend) {
+    const { eligibleCredits } = await InvoiceApis.fetchCreditsRedemption({ userId, totalAmount: result.totalAmount });
+    eligibleCredits.forEach(ec => {
+      result.networks.push({
+        name: `Credit Redemption`,
+        instanceId: ec.credit.code,
+        createdOn: '',
+        rate: `$ ${ec.credit.amount}`,
+        cost: `-${ec.amount}`,
+      });
+      result.totalAmount -= ec.amount;
+    });
+  }
 
   if (!(selectedMonth.month() === moment().month() && selectedMonth.year() === moment().year()) && isFromFrontend) {
     const prevMonthInvoice = Invoice.find({
@@ -376,6 +404,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
   }
 
   result.totalFreeMicroHours = convertMilliseconds(nodeUsageCountMinutes.Micro * 60 * 1000);
+  result.totalAmount = Math.max(result.totalAmount, 0);
 
   return result;
 };
