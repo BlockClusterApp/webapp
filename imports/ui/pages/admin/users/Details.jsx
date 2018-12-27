@@ -316,6 +316,22 @@ class UserDetails extends Component {
     this.subscriptions.push(sub);
   };
 
+  toggleDeletePrevention = () => {
+    const {user} = this.props;
+    this.setState({
+      preventDeleteLoading: true
+    });
+    Meteor.call('preventDelete', {userId: user._id}, (err, res) => {
+      this.setState({
+        preventDeleteLoading: false
+      });
+      if(err) {
+        return notifications.error(err.reason);
+      }
+      return notifications.success('Successful')
+    });
+  }
+
   render() {
     const { user } = this.props;
     const { cards, invitations, payments, vouchers, networks, invoices, paymentLinks, hyperion, paymeter, credits, hyperionPricing, paymeterPricing, oldNetworks } = this.state;
@@ -603,6 +619,18 @@ class UserDetails extends Component {
                       className="btn btn-danger"
                     >
                       &nbsp;&nbsp;{this.props.user && this.props.user.paymentPending ? 'Enable User' : 'Disable User'}
+                    </LaddaButton>
+                    <br /><br />
+                    <LaddaButton
+                      loading={this.state.preventDeleteLoading}
+                      data-size={S}
+                      data-style={SLIDE_UP}
+                      data-spinner-size={30}
+                      data-spinner-lines={12}
+                      onClick={this.toggleDeletePrevention}
+                      className="btn btn-danger"
+                    >
+                      &nbsp;&nbsp;{this.props.user && this.props.user.preventDelete ? 'Allow deletion' : 'Disable deletion'}
                     </LaddaButton>
                   </div>
                 </div>

@@ -17,6 +17,9 @@ module.exports = function(bullSystem) {
         paymentStatus: {
           $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed],
         },
+        preventDelete: {
+          $ne: true,
+        },
       }).fetch()[0];
 
       if (!invoice) {

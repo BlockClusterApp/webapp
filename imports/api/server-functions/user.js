@@ -93,6 +93,27 @@ async function deleteDynamoIngresses({ userId }) {
   return true;
 }
 
+User.preventDelete = async function({ userId }) {
+  const _user = Meteor.user();
+  if (_user && _user.admin < 2) {
+    throw new Meteor.Error(401, 'Unauthorized');
+  }
+  const user = Meteor.users.find({ _id: userId }).fetch()[0];
+  const updateObject = {};
+  if (user.preventDelete) {
+    updateObject.$unset = {
+      preventDelete: '',
+    };
+  } else {
+    updateObject.$set = {
+      preventDelete: true,
+    };
+  }
+  Meteor.users.update({ _id: userId }, updateObject);
+
+  return true;
+};
+
 User.areFunctionsDisabled = async function({ userId }) {
   const user = Meteor.users.find({ _id: userId }).fetch()[0];
   if (!user) {
@@ -184,6 +205,7 @@ User.deleteAllUserData = async function({ userId }) {
 Meteor.methods({
   disableUser: User.disableFunctions,
   enableUser: User.enableFunctions,
+  preventDelete: User.preventDelete,
 });
 
 export default User;

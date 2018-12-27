@@ -25,6 +25,9 @@ module.exports = function(agenda) {
         paymentStatus: {
           $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed],
         },
+        preventDelete: {
+          $ne: true,
+        },
       }).fetch();
       if (!pendingInvoices[0]) {
         ElasticLogger.log('Delete user data', { status: 'No eligible users' });

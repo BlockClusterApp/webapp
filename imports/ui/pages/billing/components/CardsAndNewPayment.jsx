@@ -141,6 +141,51 @@ class CardsAndNewPayment extends Component {
       );
     }
 
+    if (user && user.paymentPending && this.props.invoice) {
+      paymentDisplay = (
+        <div className="alert alert-danger col-md-12">
+          <div className="col-md-12 b-r b-dashed b-grey sm-b-b">
+            <i className="fa fa-danger" /> <h3>Account suspended</h3>
+            <br />
+            <br />
+            <p>
+              Your account has been suspended due to non payment of invoice. All the functionalities have been disabled temporarily. If the payment is not made by 30th of this
+              month, all your data will be deleted which would be an irreversible process.
+            </p>
+            <br />
+            <div className="row" style={{ padding: '15px' }}>
+              <button className="btn btn-primary" onClick={this.downloadInvoice}>
+                Download Invoice
+              </button>
+              &nbsp;&nbsp;
+              <RazorPay
+                buttonText={`Pay $${this.props.invoice.totalAmount}`}
+                buttonIcon="fa-open"
+                loading={this.state.loading || (this.state.waitingForCards && cards.length === 0)}
+                preTriggerPaymentListener={this.invoicePrePaymentTrigger}
+                paymentHandler={this.invoicePaymentHandler}
+                modalDismissListener={this.modalDismissListener}
+              />
+            </div>
+            <div className="bottom" style={{ fontSize: '8px' }}>
+              If you think this is an error, kindly raise a support ticket.
+            </div>
+          </div>
+        </div>
+      );
+    } else if (user && user.paymentPending) {
+      paymentDisplay = (
+        <div className="alert alert-danger col-md-12">
+          <div className="col-md-12 b-r b-dashed b-grey sm-b-b">
+            <i className="fa fa-danger" /> <h3>Account suspended</h3>
+            <p>
+              Your account has been suspended by admin. Kindly raise a support ticket for details. Your data is safe but will be deleted on 30th of this month if no disputes arise.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     cards.forEach((card, index) => {
       if (index % CARDS_IN_ROW === 0) {
         currentRow = [];
