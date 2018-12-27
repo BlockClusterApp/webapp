@@ -248,7 +248,6 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         );
         nodeUsageCountMinutes.Micro += runtime.hours * 60;
         nodeUsageCountMinutes.Micro += runtime.minutes % 60;
-        label = label || 'light';
       } else {
         if (network.networkConfig.disk > 200) {
           extraDiskStorage = Math.max(network.networkConfig.disk - POWER_NODE_INCLUDED_STORAGE, 0);
