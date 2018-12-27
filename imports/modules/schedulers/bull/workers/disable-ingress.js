@@ -9,7 +9,7 @@ module.exports = function(bullSystem) {
       const { instanceId, locationCode, userId, namespace } = job.data;
 
       HTTP.call('GET', `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${namespace}/ingresses/ingress-${instanceId}`, function(err, response) {
-        const ingress = JSON.parse(response);
+        const ingress = JSON.parse(response.content);
         delete ingress.metadata.selfLink;
         delete ingress.metadata.uid;
         delete ingress.metadata.resourceVersion;
@@ -29,7 +29,7 @@ module.exports = function(bullSystem) {
 
         ElasticLogger.log('Disable ingress', { instanceId, locationCode, userId, namespace, ingressStore: id });
         try {
-          HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${namespace}/ingresses/` + 'ingress-' + id, (err, res) => {
+          HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${namespace}/ingresses/` + 'ingress-' + instanceId, (err, res) => {
             return resolve();
           });
         } catch (err) {

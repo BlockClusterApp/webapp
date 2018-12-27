@@ -12,4 +12,5 @@ module.exports = bullSystem => {
   require('./clean-dangling-pods')(bullSystem);
   require('./handle-failed-billing')(bullSystem);
   require('./disable-ingress')(bullSystem);
+  require('./enable-ingress')(bullSystem);
 };

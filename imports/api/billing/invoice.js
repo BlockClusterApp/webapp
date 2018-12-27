@@ -17,6 +17,7 @@ import BullSystem from '../../modules/schedulers/bull';
 import { RZPaymentLink } from '../../collections/razorpay';
 import RZPTAddon from '../../collections/razorpay/trasient-addon';
 import Credits from '../../collections/payments/credits';
+import User from '../server-functions/user';
 
 const InvoiceObj = {};
 
@@ -289,25 +290,32 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
 
   ElasticLogger.log('Settled invoice', { invoiceId: invoice._id, id: spanId });
 
-  Meteor.users.update(
-    {
-      _id: invoice.userId,
-      'paymentFailedStatus.status': {
-        $in: ['failed-warning'],
-      },
-      'paymentFailedStatus.status': {
-        $nin: ['payment-made'],
-      },
-    },
-    {
-      $push: {
-        paymentFailedStatus: {
-          status: 'payment-made',
-          on: new Date(),
+  try {
+    Invoice.update(
+      {
+        _id: invoice._id,
+        'paymentFailedStatus.status': {
+          $in: ['failed-warning'],
+        },
+        'paymentFailedStatus.status': {
+          $nin: ['payment-made'],
         },
       },
-    }
-  );
+      {
+        $push: {
+          paymentFailedStatus: {
+            status: 'payment-made',
+            on: new Date(),
+          },
+        },
+      }
+    );
+
+    await User.enableFunctions({ userId: invoice.userId });
+    ElasticLogger.log('Enabling user', { invoiceId: invoice._id, id: spanId });
+  } catch (err) {
+    RavenLogger.log(err);
+  }
 
   return invoice._id;
 };

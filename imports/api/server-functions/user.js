@@ -150,6 +150,7 @@ User.enableFunctions = async function({ userId }) {
         on: new Date(),
       },
     };
+    updateObject.$unset = { ...updateObject.$unset, paymentPendingForInvoiceId: '', paymentPendingOn: '' };
   } else {
     updateObject.$push = {
       metastatus: {
