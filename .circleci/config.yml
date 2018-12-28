@@ -6,6 +6,11 @@ references:
       - image: circleci/node:8.9
     working_directory: ~/repo
 
+  container_test_config: &container_test_config
+    docker:
+      - image: circleci/node:8.9
+    working_directory: ~/circleci-webapp-tests
+
   ui_test_container: &ui_test_container
     docker:
       - image: circleci/node:8.9
@@ -145,8 +150,11 @@ jobs:
           fingerprints:
             - f0:77:e5:01:af:bb:0a:28:10:93:12:70:5f:aa:7e:e9
       - run:
+          name: Avoid hosts unknown for github
+          command: mkdir ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+      - run:
           name: 'Clone testing module'
-          command: 'git clone git@github.com:BlockClusterApp/circleci-webapp-tests.git --yes'
+          command: 'git clone git@github.com:BlockClusterApp/circleci-webapp-tests.git ~/repo'
       - run:
           name: 'Npm Install'
           command: 'npm install'
