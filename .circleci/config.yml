@@ -128,11 +128,15 @@ jobs:
           name: 'Install dependencies'
           command: './.circleci/install-chrome-dependencies.sh'
       - run:
-          name: 'Wait for deployment'
-          command: 'sleep 60'
-      - run:
           name: 'Chrome tests'
           command: 'npm run ui-test'
+
+  wait_for_deployment:
+    <<: *container_config
+    steps:
+      - run:
+          name: 'Wait for deployment'
+          command: 'sleep 150'
 
   fetch_testing_module:
     <<: *container_config
@@ -240,20 +244,24 @@ workflows:
           requires:
             - docker_push_for_test
           context: aws-creds
-      - run_ui_tests:
+      - wait_for_deployment:
           <<: *build_tags
           requires:
             - apply_kube_config_for_test
+      - run_ui_tests:
+          <<: *build_tags
+          requires:
+            - wait_for_deployment
       - hyperion_tests:
           <<: *build_tags
           requires:
             - fetch_testing_module
-            - run_ui_tests
+            - wait_for_deployment
       - paymeter_tests:
           <<: *build_tags
           requires:
             - fetch_testing_module
-            - run_ui_tests
+            - wait_for_deployment
       - notify_github_bot:
           <<: *build_tags
           requires:
