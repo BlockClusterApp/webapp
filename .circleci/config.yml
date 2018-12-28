@@ -6,6 +6,11 @@ references:
       - image: circleci/node:8.9
     working_directory: ~/repo
 
+  container_test_config: &container_test_config
+    docker:
+      - image: circleci/node:8.9
+    working_directory: ~/circleci-webapp-tests
+
   ui_test_container: &ui_test_container
     docker:
       - image: circleci/node:8.9
@@ -27,15 +32,26 @@ references:
       paths:
         - .
 
+  save_testing_repo: &save_testing_repo
+    save_cache:
+      key: repo-test-app-{{ .Branch }}-{{ .Revision }}
+      paths:
+        - .
+
+  restore_testing_repo: &restore_testing_repo
+    restore_cache:
+      keys:
+        - repo-test-app-{{ .Branch }}-{{ .Revision }}
+
   deploy_tag_filters: &deploy_tag_filters
     filters:
       branches:
         only:
-         - master
-         - hot-fix
-         - staging
-         - dev
-         - test
+          - master
+          - hot-fix
+          - staging
+          - dev
+          - test
       tags:
         only:
           - dev
@@ -54,7 +70,6 @@ references:
           - test
           - production
 
-
 jobs:
   checkout_code:
     <<: *container_config
@@ -62,10 +77,10 @@ jobs:
       - *restore_repo
       - checkout
       - run:
-          name: "Init submodules"
+          name: 'Init submodules'
           command: git submodule init
       - run:
-          name: "Checkout submodules"
+          name: 'Checkout submodules'
           command: git submodule update
       - *save_repo
 
@@ -74,18 +89,17 @@ jobs:
     steps:
       - *restore_repo
       - run:
-          name: "Build start notification"
+          name: 'Build start notification'
           command: ./.circleci/build-start-notification.sh
       - setup_remote_docker:
           version: 17.11.0-ce
       - run:
-          name: "Docker build"
+          name: 'Docker build'
           command: ./.circleci/docker-build.sh
-          no_output_timeout: "20m"
+          no_output_timeout: '20m'
       - run:
-          name: "Docker push"
+          name: 'Docker push'
           command: ./.circleci/docker-push.sh
-
 
   docker_push_for_test:
     <<: *helm_container
@@ -94,56 +108,92 @@ jobs:
       - setup_remote_docker:
           version: 17.11.0-ce
       - run:
-          name: "Update IS_TEST"
+          name: 'Update IS_TEST'
           command: |
             echo 'export IS_TEST=1' >> $BASH_ENV
             source $BASH_ENV
       - run:
-          name: "Docker build"
-          command: "IS_TEST=1 ./.circleci/docker-build.sh"
-          no_output_timeout: "20m"
+          name: 'Docker build'
+          command: 'IS_TEST=1 ./.circleci/docker-build.sh'
+          no_output_timeout: '20m'
       - run:
-          name: "Docker push"
-          command: "IS_TEST=1 ./.circleci/docker-push.sh"
+          name: 'Docker push'
+          command: 'IS_TEST=1 ./.circleci/docker-push.sh'
 
   run_ui_tests:
     <<: *ui_test_container
     steps:
       - *restore_repo
       - run:
-          name: "Update IS_TEST"
+          name: 'Update IS_TEST'
           command: |
             echo 'export IS_TEST=1' >> $BASH_ENV
             source $BASH_ENV
       - run:
-          name: "Install dependencies"
-          command: "./.circleci/install-chrome-dependencies.sh"
+          name: 'Install dependencies'
+          command: './.circleci/install-chrome-dependencies.sh'
       - run:
-          name: "Wait for deployment"
-          command: "sleep 60"
+          name: 'Chrome tests'
+          command: 'npm run ui-test'
+
+  wait_for_deployment:
+    <<: *container_config
+    steps:
       - run:
-          name: "Chrome tests"
-          command: "npm run ui-test"
+          name: 'Wait for deployment'
+          command: 'sleep 150'
+
+  fetch_testing_module:
+    <<: *container_config
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - f0:77:e5:01:af:bb:0a:28:10:93:12:70:5f:aa:7e:e9
+      - run:
+          name: Avoid hosts unknown for github
+          command: mkdir ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+      - run:
+          name: 'Clone testing module'
+          command: 'git clone git@github.com:BlockClusterApp/circleci-webapp-tests.git ~/repo'
+      - run:
+          name: 'Npm Install'
+          command: 'npm install'
+      - *save_testing_repo
+
+  hyperion_tests:
+    <<: *container_config
+    steps:
+      - *restore_testing_repo
+      - run:
+          name: 'Run Hyperion tests'
+          command: 'npm run test:hyperion'
+
+  paymeter_tests:
+    <<: *container_config
+    steps:
+      - *restore_testing_repo
+      - run:
+          name: 'Run Paymeter tests'
+          command: 'npm run test:paymeter'
 
   apply_kube_config:
     <<: *helm_container
     steps:
       - *restore_repo
       - run:
-          name: "Helm apply"
+          name: 'Helm apply'
           command: ./.circleci/helm-apply.sh
       - run:
-          name: "Build end notification"
+          name: 'Build end notification'
           command: ./.circleci/build-end-notification.sh
-
 
   apply_kube_config_for_test:
     <<: *helm_container
     steps:
       - *restore_repo
       - run:
-          name: "Helm apply"
-          command: "IS_TEST=1 ./.circleci/helm-apply.sh"
+          name: 'Helm apply'
+          command: 'IS_TEST=1 ./.circleci/helm-apply.sh'
 
   notify_github_bot:
     <<: *ui_test_container
@@ -151,14 +201,14 @@ jobs:
       - *restore_repo
       - run:
           name: 'Curl'
-          command: "./.circleci/notify-github-bot.sh"
+          command: './.circleci/notify-github-bot.sh'
 
   build:
     <<: *container_config
     steps:
       - *restore_repo
       - run:
-          name: "Repo Build"
+          name: 'Repo Build'
           command: ./.circleci/build.sh
 
 workflows:
@@ -193,16 +243,34 @@ workflows:
           requires:
             - checkout_code
           context: aws-creds
+      - fetch_testing_module:
+          <<: *build_tags
       - apply_kube_config_for_test:
           <<: *build_tags
           requires:
             - docker_push_for_test
           context: aws-creds
-      - run_ui_tests:
+      - wait_for_deployment:
           <<: *build_tags
           requires:
             - apply_kube_config_for_test
+      - run_ui_tests:
+          <<: *build_tags
+          requires:
+            - wait_for_deployment
+      - hyperion_tests:
+          <<: *build_tags
+          requires:
+            - fetch_testing_module
+            - wait_for_deployment
+      - paymeter_tests:
+          <<: *build_tags
+          requires:
+            - fetch_testing_module
+            - wait_for_deployment
       - notify_github_bot:
           <<: *build_tags
           requires:
+            - hyperion_tests
+            - paymeter_tests
             - run_ui_tests
