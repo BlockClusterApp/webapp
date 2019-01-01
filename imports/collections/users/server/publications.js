@@ -18,11 +18,11 @@ Meteor.publish('users.all', function({ page }) {
   if (Meteor.user() && Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
+  page = page || 1;
   return Meteor.users.find(
     {},
     {
-      limit: pageSize,
-      skip: page * pageSize,
+      limit: pageSize * page,
       sort: {
         createdAt: -1,
       },

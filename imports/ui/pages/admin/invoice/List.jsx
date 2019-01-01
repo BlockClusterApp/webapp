@@ -23,10 +23,10 @@ class InvoiceList extends Component {
   }
 
   componentWillUnmount() {
-    this.props.subscriptions.forEach(s => {
-      s.stop();
-    });
-    this.invoiceSubscription.stop();
+    // this.props.subscriptions.forEach(s => {
+    //   s.stop();
+    // });
+    // this.invoiceSubscription.stop();
   }
 
   componentDidMount() {

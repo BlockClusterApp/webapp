@@ -26,10 +26,10 @@ class NetworkList extends Component {
 
 
     componentWillUnmount() {
-        this.props.subscriptions.forEach((s) =>{
-            s.stop();
-        });
-        this.networkSubscription.stop();
+        // this.props.subscriptions.forEach((s) =>{
+        //     s.stop();
+        // });
+        // this.networkSubscription.stop();
     }
 
 

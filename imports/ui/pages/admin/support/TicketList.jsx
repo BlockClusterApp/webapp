@@ -20,10 +20,10 @@ class TicketList extends Component {
   }
 
   componentWillUnmount() {
-    this.props.subscriptions.forEach(s => {
-      s.stop();
-    });
-    this.supportSubscription.stop();
+    // this.props.subscriptions.forEach(s => {
+    //   s.stop();
+    // });
+    // this.supportSubscription.stop();
   }
 
   componentDidMount() {

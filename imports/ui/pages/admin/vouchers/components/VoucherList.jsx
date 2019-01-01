@@ -23,10 +23,10 @@ class VoucherList extends Component {
   }
 
   componentWillUnmount() {
-    this.props.subscriptions.forEach(s => {
-      s.stop();
-    });
-    this.voucherSubscription.stop();
+    // this.props.subscriptions.forEach(s => {
+    //   s.stop();
+    // });
+    // this.voucherSubscription.stop();
   }
 
   componentDidMount() {

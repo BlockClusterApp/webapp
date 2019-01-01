@@ -14,17 +14,17 @@ class VoucherList extends Component {
 
     this.state = {
       page: 0,
-      vouchers: [],
+      vouchers: Campaign.find(this.query).fetch(),
     };
 
     this.query = {};
   }
 
   componentWillUnmount() {
-    this.props.subscriptions.forEach(s => {
-      s.stop();
-    });
-    this.voucherSubscription.stop();
+    // this.props.subscriptions.forEach(s => {
+    //   s.stop();
+    // });
+    // this.voucherSubscription.stop();
   }
 
   componentDidMount() {
