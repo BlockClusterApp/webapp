@@ -2,19 +2,43 @@ import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
 import moment from 'moment';
+import querystring from 'querystring';
 
 const PAGE_LIMIT = 10;
 class UserList extends Component {
   constructor(props) {
     super(props);
 
+    if (props.location.search) {
+      const query = querystring.parse(props.location.search.substr(1));
+      if (query.searchText) {
+        this.searchText = query.searchText;
+      }
+      delete query.searchText;
+      if (this.searchText) {
+        query.$or = [
+          { 'profile.firstName': { $regex: `${this.searchText}*`, $options: 'i' } },
+          { 'profile.lastName': { $regex: `${this.searchText}*`, $options: 'i' } },
+          { _id: { $regex: `${this.searchText}*`, $options: 'i' } },
+          { 'emails.address': { $regex: `${this.searchText}*`, $options: 'i' } },
+        ];
+      }
+      if (query['emails.verified'] === 'false') {
+        query['emails.verified'] = false;
+      } else if (query['emails.verified'] === 'true') {
+        query['emails.verified'] = true;
+      }
+      delete query.page;
+      this.query = query;
+    } else {
+      this.query = {};
+    }
+
     this.state = {
       locations: [],
       page: 0,
-      users: Meteor.users.find().fetch(),
+      users: Meteor.users.find(this.query).fetch(),
     };
-
-    this.query = {};
   }
 
   componentWillUnmount() {
@@ -27,8 +51,20 @@ class UserList extends Component {
   componentDidMount() {
     this.search();
   }
+  updateRoute = () => {
+    const sanitizedQuery = { ...this.query };
+    this.page = sanitizedQuery.page || 1;
+    delete this.query.page;
+    delete sanitizedQuery.$or;
+    delete sanitizedQuery.page;
+    this.props.history.replace({
+      pathname: this.props.location.pathname,
+      search: `?${querystring.stringify({ ...sanitizedQuery, searchText: this.searchText, page: this.page })}`,
+    });
+  };
 
   search = () => {
+    this.updateRoute();
     this.userSubscription = Meteor.subscribe(
       'users.search',
       {
@@ -45,14 +81,19 @@ class UserList extends Component {
   };
 
   onSearch = e => {
+    this.searchText = e.target.value;
     const searchQuery = e.target.value;
     if (!searchQuery) {
+      this.searchText = '';
+      this.updateRoute();
       delete this.query.$or;
-      return this.changePage(0);
+      return this.search();
     }
     if (searchQuery.length <= 3) {
+      this.searchText = '';
+      this.updateRoute();
       delete this.query.$or;
-      return this.changePage(0);
+      return this.search();
     }
     this.query.$or = [
       { 'profile.firstName': { $regex: `${searchQuery}*`, $options: 'i' } },
@@ -79,7 +120,6 @@ class UserList extends Component {
     if (this.state.page + pageOffset < 0) {
       return;
     }
-    this.userSubscription.stop();
     this.userSubscription = Meteor.subscribe(
       'users.all',
       { page: this.state.page + pageOffset },
@@ -126,7 +166,7 @@ class UserList extends Component {
                         <span className="input-group-addon">
                           <i className="fa fa-search" />
                         </span>
-                        <input type="text" placeholder="User name, email or id" className="form-control" onChange={this.onSearch} />
+                        <input type="text" placeholder="User name, email or id" defaultValue={this.searchText} className="form-control" onChange={this.onSearch} />
                       </div>
                     </div>
                     <div className="col-md-3">
@@ -138,9 +178,15 @@ class UserList extends Component {
                           aria-hidden="true"
                           onChange={this.onEmailVerificationChange}
                         >
-                          <option value="all">Email: All</option>
-                          <option value="verified">Verified</option>
-                          <option value="unverified">Not Verified</option>
+                          <option value="all" selected={!this.query['emails.verified'] === undefined}>
+                            Email: All
+                          </option>
+                          <option value="verified" selected={this.query['emails.verified'] === true}>
+                            Verified
+                          </option>
+                          <option value="unverified" selected={this.query['emails.verified'] === false}>
+                            Not Verified
+                          </option>
                         </select>
                       </div>
                     </div>
