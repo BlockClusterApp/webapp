@@ -30,11 +30,6 @@ class BillingDashboard extends Component {
   };
 
   componentDidMount() {
-    // Meteor.call("getClusterLocations", (err, res) => {
-    //   this.setState({
-    //     locations: res
-    //   });
-    // });
     this.updateBilling();
   }
 
@@ -163,7 +158,7 @@ class BillingDashboard extends Component {
                           Free micro node usage:&nbsp;
                           {this.state.bill && this.state.bill.totalFreeMicroHours
                             ? `${this.state.bill.totalFreeMicroHours.hours}:${this.state.bill.totalFreeMicroHours.minutes % 60} `
-                            : '0'}{' '}
+                            : '0'}
                           / {1490 * 2} hrs
                         </p>
                       </div>
@@ -216,6 +211,9 @@ class BillingDashboard extends Component {
                           <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onYearChange}>
                             <option value="2018" selected={moment().year() === 2018}>
                               2018
+                            </option>
+                            <option value="2019" selected={moment().year() === 2019}>
+                              2019
                             </option>
                           </select>
                         </div>

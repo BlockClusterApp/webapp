@@ -85,10 +85,11 @@ spec:
         - name: NODE_ENV
           value: {{ .Values.NODE_ENV }}
         livenessProbe:
-          exec:
-            command:
-            - cat
-            - /tmp/webapp.lock
+          httpGet:
+            path: /ping
+            port: 3000
+          timeoutSeconds: 1
+          periodSeconds: 5
           initialDelaySeconds: 30
           periodSeconds: 15
         readinessProbe:

@@ -62,7 +62,7 @@ class NetworkConfigSelector extends Component {
         status: undefined,
       },
     });
-    Meteor.call('validateVoucher', voucherCode, (err, reply) => {
+    Meteor.call('validateVoucher', { voucherCode, type: 'network' }, (err, reply) => {
       if (err) {
         return this.setState({
           voucherLoading: false,

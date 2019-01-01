@@ -10,7 +10,6 @@ module.exports = function(agenda) {
     'invoice-reminder-email',
     { priority: 'highest' },
     Meteor.bindEnvironment(job => {
-
       const billingMonthLabel = moment()
         .subtract(1, 'month')
         .format('MMM-YYYY');
@@ -19,7 +18,7 @@ module.exports = function(agenda) {
       const pendingInvoices = Invoice.find({
         billingMonthLabel,
         totalAmount: {
-          $gt: 0
+          $gt: 0,
         },
         paymentStatus: {
           $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed],
@@ -34,7 +33,7 @@ module.exports = function(agenda) {
       });
       let users = [];
 
-      ElasticLogger.log("Invoice reminder", {mapping: userInvoiceMapping});
+      ElasticLogger.log('Invoice reminder', { mapping: userInvoiceMapping });
       if (moment().get('date') <= 5) {
         const verificationPlan = RZPlan.find({
           identifier: 'verification',
@@ -81,5 +80,4 @@ module.exports = function(agenda) {
       await agenda.every('0 6 4,8 * *', 'invoice-reminder-email');
     }
   })();
-
 };
