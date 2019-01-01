@@ -120,12 +120,11 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       if (
         network.metadata &&
         network.metadata.voucher &&
-        network.metadata.voucher &&
         network.metadata.voucher.metadata &&
-        network.metadata.voucher.metadata.networkConfig &&
-        network.metadata.voucher.metadata.networkConfig.cost
+        network.metadata.networkConfig &&
+        network.metadata.networkConfig.cost
       ) {
-        price = Number(network.metadata.voucher.metadata.networkConfig.cost.hourly);
+        price = Number(network.metadata.networkConfig.cost.hourly);
       }
 
       const time = convertMilliseconds(thisCalculationEndDate.getTime() - billingStartDate.getTime());
@@ -179,14 +178,14 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
 
         vouchar_usable =
           voucher.usability.recurring == true
-            ? voucher.usability.no_months > (voucher.voucher_claim_status ? voucher.voucher_claim_status.length : 0)
+            ? ((voucher.usability.no_months > (voucher.voucher_claim_status ? voucher.voucher_claim_status.length : 0))
               ? true
-              : false
-            : (voucher.voucher_claim_status
+              : false)
+            : ((voucher.voucher_claim_status
               ? voucher.voucher_claim_status.length
               : false)
             ? false
-            : true;
+            : true);
 
         voucher_expired = voucher.expiryDate ? new Date(voucher.expiryDate) <= new Date() : false;
       }
@@ -213,7 +212,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             { _id: network._id },
             {
               $push: {
-                voucher_claim_status: {
+                "metadata.voucher.voucher_claim_status": {
                   claimedBy: userId,
                   claimedOn: new Date(),
                   claimed: true,
