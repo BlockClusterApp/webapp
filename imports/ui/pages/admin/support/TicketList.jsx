@@ -13,7 +13,7 @@ class TicketList extends Component {
 
     this.state = {
       page: 0,
-      support: [],
+      support: SupportTicket.find({}).fetch(),
     };
 
     this.query = {};

@@ -12,13 +12,13 @@ class VoucherList extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      page: 0,
-      vouchers: [],
-    };
-
     this.query = {
       type: props.type,
+    };
+
+    this.state = {
+      page: 0,
+      vouchers: Vouchers.find(this.query).fetch(),
     };
   }
 

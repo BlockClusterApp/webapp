@@ -14,7 +14,7 @@ class VoucherList extends Component {
 
     this.state = {
       page: 0,
-      vouchers: Campaign.find(this.query).fetch(),
+      vouchers: Campaign.find({}).fetch(),
     };
 
     this.query = {};

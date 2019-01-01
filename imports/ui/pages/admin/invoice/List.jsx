@@ -9,16 +9,16 @@ class InvoiceList extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      page: 0,
-      invoices: [],
-    };
-
     this.query = {
       billingPeriodLabel: moment()
         .subtract(1, 'month')
         .format('MMM-YYYY'),
       paymentStatus: 1,
+    };
+
+    this.state = {
+      page: 0,
+      invoices: Invoice.find(this.query).fetch(),
     };
   }
 
@@ -145,7 +145,9 @@ class InvoiceList extends Component {
                       <div className="form-group ">
                         <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onInvoiceStatusChanged}>
                           <option value="all">States: All</option>
-                          <option value="1">Pending</option>
+                          <option value="1" selected={true}>
+                            Pending
+                          </option>
                           <option value="2">Paid</option>
                           <option value="3">Demo User</option>
                           <option value="4">Failed</option>
