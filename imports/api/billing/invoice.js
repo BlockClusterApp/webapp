@@ -345,6 +345,19 @@ InvoiceObj.generateHTML = async invoiceId => {
     return item;
   });
 
+  if (invoice.creditClaims) {
+    invoice.creditClaims.forEach(claim => {
+      items.push({
+        name: 'Promotional Credits Redemption',
+        instanceId: claim.code,
+        duration: '',
+        rate: '',
+        discount: '',
+        cost: `$ -${claim.amount}`,
+      });
+    });
+  }
+
   const user = Meteor.user();
 
   if (!user.profile.mobiles) {

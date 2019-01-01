@@ -110,6 +110,7 @@ class InvoiceDetails extends Component {
 
   render() {
     let billView = null;
+    let creditsView = null;
 
     const { invoice } = this.props;
     const { user } = invoice;
@@ -127,6 +128,19 @@ class InvoiceDetails extends Component {
             <td>
               $ {network.cost} {this.convertCostToTag(network.label)}{' '}
             </td>
+          </tr>
+        );
+      });
+    }
+    if (invoice && invoice.creditClaims) {
+      creditsView = invoice.creditClaims.map((claim, index) => {
+        return (
+          <tr key={`p${index + 1}`}>
+            <td>Promotional Credit Redemption</td>
+            <td>{claim.code}</td>
+            <td />
+            <td />
+            <td>$ -{Number(claim.amount).toFixed(2)}</td>
           </tr>
         );
       });
@@ -222,8 +236,8 @@ class InvoiceDetails extends Component {
                       ? this.state.disableReminder
                         ? 'Reminder sent'
                         : invoice.paymentStatus !== 5
-                          ? 'Send Invoice: Created mail not sent yet'
-                          : 'Send Invoice: Invoice waived off'
+                        ? 'Send Invoice: Created mail not sent yet'
+                        : 'Send Invoice: Invoice waived off'
                       : 'Send Invoice: Invoice already paid'
                   }
                   actionText="Send Invoice Reminder"
@@ -285,7 +299,10 @@ class InvoiceDetails extends Component {
                   <th style={{ width: '19%' }}>Cost</th>
                 </tr>
               </thead>
-              <tbody>{billView}</tbody>
+              <tbody>
+                {billView}
+                {creditsView}
+              </tbody>
               <tfoot>
                 <tr>
                   <td colSpan="4" style={{ textAlign: 'right' }}>

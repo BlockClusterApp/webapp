@@ -65,6 +65,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       result.totalAmount = prevMonthInvoice.totalAmount;
       result.invoiceStatus = prevMonthInvoice.paymentStatus;
       result.invoiceId = prevMonthInvoice._id;
+      result.creditClaims = prevMonthInvoice.creditClaims;
       return result;
     }
   }
@@ -117,19 +118,12 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       if (network.metadata && network.metadata.networkConfig && network.metadata.networkConfig.cost) {
         price = Number(network.metadata.networkConfig.cost.hourly);
       }
-      if (
-        network.metadata &&
-        network.metadata.voucher &&
-        network.metadata.voucher.metadata &&
-        network.metadata.networkConfig &&
-        network.metadata.networkConfig.cost
-      ) {
+      if (network.metadata && network.metadata.voucher && network.metadata.voucher.metadata && network.metadata.networkConfig && network.metadata.networkConfig.cost) {
         price = Number(network.metadata.networkConfig.cost.hourly);
       }
 
       const time = convertMilliseconds(thisCalculationEndDate.getTime() - billingStartDate.getTime());
       const rate = price; // per month
-      let rateString = `$ ${rate} / hr`;
       const ratePerHour = rate;
       const ratePerMinute = ratePerHour / 60;
 
@@ -178,14 +172,14 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
 
         vouchar_usable =
           voucher.usability.recurring == true
-            ? ((voucher.usability.no_months > (voucher.voucher_claim_status ? voucher.voucher_claim_status.length : 0))
+            ? voucher.usability.no_months > (voucher.voucher_claim_status ? voucher.voucher_claim_status.length : 0)
               ? true
-              : false)
-            : ((voucher.voucher_claim_status
+              : false
+            : (voucher.voucher_claim_status
               ? voucher.voucher_claim_status.length
               : false)
             ? false
-            : true);
+            : true;
 
         voucher_expired = voucher.expiryDate ? new Date(voucher.expiryDate) <= new Date() : false;
       }
@@ -212,7 +206,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             { _id: network._id },
             {
               $push: {
-                "metadata.voucher.voucher_claim_status": {
+                'metadata.voucher.voucher_claim_status': {
                   claimedBy: userId,
                   claimedOn: new Date(),
                   claimed: true,
@@ -279,16 +273,16 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         return undefined;
       }
       result.totalAmount += Number(cost);
-      function floorFigure(figure, decimals){
+      function floorFigure(figure, decimals) {
         if (!decimals) decimals = 3;
-        var d = Math.pow(10,decimals);
-        return (parseInt(figure*d)/d).toFixed(decimals);
-       };
+        var d = Math.pow(10, decimals);
+        return (parseInt(figure * d) / d).toFixed(decimals);
+      }
       return {
         name: network.name,
         instanceId: network.instanceId,
         createdOn: new Date(network.createdOn),
-        rate: floorFigure(rateString,3), //taking upto 3 decimals , as shown in pricing page
+        rate: ` $ ${floorFigure(rate, 3)} / hr `, //taking upto 3 decimals , as shown in pricing page
         runtime: `${time.hours}:${time.minutes % 60 < 10 ? `0${time.minutes % 60}` : time.minutes % 60} hrs | ${extraDiskStorage} GB extra`,
         cost,
         time,
@@ -404,6 +398,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       result.totalAmount = prevMonthInvoice.totalAmount;
       result.invoiceStatus = prevMonthInvoice.paymentStatus;
       result.invoiceId = prevMonthInvoice._id;
+      result.creditClaims = prevMonthInvoice.creditClaims;
     }
   }
 
