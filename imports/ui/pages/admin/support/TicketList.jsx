@@ -5,19 +5,57 @@ import helpers from '../../../../modules/helpers';
 import { withRouter } from 'react-router-dom';
 import ReactHtmlParser from 'react-html-parser';
 import moment from 'moment';
+import querystring from 'querystring';
 
 const PAGE_LIMIT = 20;
 class TicketList extends Component {
   constructor(props) {
     super(props);
 
+    if (props.location.search) {
+      const query = querystring.parse(props.location.search.substr(1));
+      if (query.searchText) {
+        this.searchText = query.searchText;
+      }
+      delete query.searchText;
+      if (this.searchText) {
+        query.caseId = { $regex: `${this.searchText}*`, $options: 'i' };
+      }
+      delete query.page;
+
+      if (query.status) {
+        query.status = Number(query.status);
+      }
+      if (query.active === 'true') {
+        query.active = true;
+      } else if (query.active === 'false') {
+        query.active = false;
+      } else {
+        delete query.active;
+      }
+      this.query = query;
+    } else {
+      this.query = {};
+    }
+
     this.state = {
       page: 0,
-      support: SupportTicket.find({}).fetch(),
+      support: SupportTicket.find(this.query).fetch(),
     };
-
-    this.query = {};
   }
+
+  updateRoute = () => {
+    const sanitizedQuery = { ...this.query };
+    this.page = sanitizedQuery.page || 1;
+    delete this.query.page;
+    delete sanitizedQuery.caseId;
+    delete sanitizedQuery.$or;
+    delete sanitizedQuery.page;
+    this.props.history.replace({
+      pathname: this.props.location.pathname,
+      search: `?${querystring.stringify({ ...sanitizedQuery, searchText: this.searchText, page: this.page })}`,
+    });
+  };
 
   componentWillUnmount() {
     // this.props.subscriptions.forEach(s => {
@@ -31,6 +69,7 @@ class TicketList extends Component {
   }
 
   search = () => {
+    this.updateRoute();
     this.supportSubscription = Meteor.subscribe(
       'support.search',
       {
@@ -50,7 +89,6 @@ class TicketList extends Component {
     if (this.state.page + pageOffset < 0) {
       return;
     }
-    this.supportSubscription.stop();
     this.supportSubscription = Meteor.subscribe(
       'support.all',
       { query: this.query, page: this.state.page + pageOffset },
@@ -68,8 +106,11 @@ class TicketList extends Component {
 
   onSearch = e => {
     const searchQuery = e.target.value;
+    this.searchText = e.target.value;
     if (!searchQuery) {
       delete this.query.caseId;
+      this.searchText = '';
+      this.updateRoute();
       return this.changePage(0);
     }
     this.query.caseId = { $regex: `${searchQuery}*`, $options: 'i' };
@@ -107,19 +148,33 @@ class TicketList extends Component {
                         <span className="input-group-addon">
                           <i className="fa fa-search" />
                         </span>
-                        <input type="text" placeholder="Case ID" className="form-control" onChange={this.onSearch} />
+                        <input type="text" placeholder="Case ID" defaultValue={this.searchText} className="form-control" onChange={this.onSearch} />
                       </div>
                     </div>
                     <div className="col-md-4">
                       <div className="form-group ">
                         <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onTicketStatusChange}>
-                          <option value="all">States: All</option>
-                          <option value="1">New</option>
-                          <option value="2">BlockCluster Action Pending</option>
-                          <option value="3">Customer Action Pending</option>
-                          <option value="4">Cancelled</option>
-                          <option value="5">Resolved</option>
-                          <option value="6">System Closed</option>
+                          <option value="all" selected={!this.query.status}>
+                            States: All
+                          </option>
+                          <option value="1" selected={this.query.status === 1}>
+                            New
+                          </option>
+                          <option value="2" selected={this.query.status === 2}>
+                            BlockCluster Action Pending
+                          </option>
+                          <option value="3" selected={this.query.status === 3}>
+                            Customer Action Pending
+                          </option>
+                          <option value="4" selected={this.query.status === 4}>
+                            Cancelled
+                          </option>
+                          <option value="5" selected={this.query.status === 5}>
+                            Resolved
+                          </option>
+                          <option value="6" selected={this.query.status === 6}>
+                            System Closed
+                          </option>
                         </select>
                       </div>
                     </div>

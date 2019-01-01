@@ -5,22 +5,60 @@ import helpers from '../../../../modules/helpers';
 import { withRouter } from 'react-router-dom';
 import ReactHtmlParser from 'react-html-parser';
 import moment from 'moment';
+import querystring from 'querystring';
 
 const PAGE_LIMIT = 20;
 class NetworkList extends Component {
   constructor(props) {
     super(props);
 
+    if (props.location.search) {
+      const query = querystring.parse(props.location.search.substr(1));
+      if (query.searchText) {
+        this.searchText = query.searchText;
+      }
+      delete query.searchText;
+      if (this.searchText) {
+        query.$or = [
+          { name: { $regex: `${this.searchText}*`, $options: 'i' } },
+          { instanceId: { $regex: `${this.searchText}*`, $options: 'i' } },
+          { _id: { $regex: `${this.search}*`, $options: 'i' } },
+        ];
+      }
+      delete query.page;
+
+      if (query.deletedAt === 'null') {
+        query.deletedAt = null;
+      }
+
+      this.query = query;
+    } else {
+      this.query = {
+        deletedAt: null,
+      };
+    }
+
     this.state = {
       locations: [],
       page: 0,
-      networks: Networks.find({}).fetch(),
-    };
-
-    this.query = {
-      deletedAt: null,
+      networks: Networks.find(this.query).fetch(),
     };
   }
+
+  updateRoute = () => {
+    const sanitizedQuery = { ...this.query };
+    if (this.query.deletedAt === null) {
+      sanitizedQuery.deletedAt = 'null';
+    }
+    this.page = sanitizedQuery.page || 1;
+    delete this.query.page;
+    delete sanitizedQuery.$or;
+    delete sanitizedQuery.page;
+    this.props.history.replace({
+      pathname: this.props.location.pathname,
+      search: `?${querystring.stringify({ ...sanitizedQuery, searchText: this.searchText, page: this.page })}`,
+    });
+  };
 
   componentWillUnmount() {
     // this.props.subscriptions.forEach((s) =>{
@@ -40,6 +78,7 @@ class NetworkList extends Component {
   }
 
   search = () => {
+    this.updateRoute();
     this.networkSubscription = Meteor.subscribe(
       'networks.search',
       {
@@ -78,10 +117,14 @@ class NetworkList extends Component {
   onSearch = e => {
     const searchQuery = e.target.value;
     if (!searchQuery) {
+      this.searchText = '';
+      this.updateRoute();
       delete this.query.$or;
       return this.changePage(0);
     }
     if (searchQuery.length <= 3) {
+      this.searchText = '';
+      this.updateRoute();
       delete this.query.$or;
       return this.changePage(0);
     }
@@ -124,7 +167,7 @@ class NetworkList extends Component {
   render() {
     const locationOptions = this.state.locations.map(location => {
       return (
-        <option value={location.locationCode} key={location.locationCode}>
+        <option value={location.locationCode} key={location.locationCode} selected={this.query.locationCode === location.locationCode}>
           {location.locationName}
         </option>
       );
@@ -151,17 +194,24 @@ class NetworkList extends Component {
                     <div className="col-md-3">
                       <div className="form-group ">
                         <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onInstanceStateChange}>
-                          <option value="running">States: All</option>
-                          <option value="running">Running</option>
-                          <option value="down">Down</option>
-                          <option value="initializing">Initializing</option>
+                          <option value="running" selected={this.query.status === 'running'}>
+                            Running
+                          </option>
+                          <option value="down" selected={this.query.status === 'down'}>
+                            Down
+                          </option>
+                          <option value="initializing" selected={this.query.status === 'initializing'}>
+                            Initializing
+                          </option>
                         </select>
                       </div>
                     </div>
                     <div className="col-md-3">
                       <div className="form-group ">
                         <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onLocationChange}>
-                          <option value="all">Locations: All</option>
+                          <option value="all" selected={!this.query.locationCode}>
+                            Locations: All
+                          </option>
                           {locationOptions}
                         </select>
                       </div>
@@ -171,7 +221,7 @@ class NetworkList extends Component {
                         <input
                           type="checkbox"
                           value="1"
-                          defaultChecked="checked"
+                          defaultChecked={this.query.deletedAt === null}
                           id="checkbox2"
                           onClick={e => {
                             if (e.target.checked) {

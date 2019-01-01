@@ -3,24 +3,71 @@ import { withTracker } from 'meteor/react-meteor-data';
 import Invoice from '../../../../collections/payments/invoice';
 import { withRouter } from 'react-router-dom';
 import moment from 'moment';
+import querystring from 'querystring';
 
 const PAGE_LIMIT = 20;
 class InvoiceList extends Component {
   constructor(props) {
     super(props);
 
-    this.query = {
-      billingPeriodLabel: moment()
-        .subtract(1, 'month')
-        .format('MMM-YYYY'),
-      paymentStatus: 1,
-    };
+    if (props.location.search) {
+      const query = querystring.parse(props.location.search.substr(1));
+      if (query.searchText) {
+        this.searchText = query.searchText;
+      }
+      delete query.searchText;
+      if (this.searchText) {
+        query.$or = [
+          { _id: { $regex: `${this.searchText}*`, $options: 'i' } },
+          { userId: { $regex: `${this.searchText}*`, $options: 'i' } },
+          { 'user.name': { $regex: `${this.searchText}*`, $options: 'i' } },
+          { 'user.email': { $regex: `${this.searchText}*`, $options: 'i' } },
+          { 'paymentLink.link': { $regex: `${this.searchText}*`, $options: 'i' } },
+          { 'paymentLink.id': { $regex: `${this.searchText}*`, $options: 'i' } },
+          { billingPeriodLabel: { $regex: `${this.searchText}*`, $options: 'i' } },
+        ];
+      }
+      delete query.page;
+
+      if (query.active === 'true') {
+        query.active = true;
+      } else if (query.active === 'false') {
+        query.active = false;
+      } else {
+        delete query.active;
+      }
+
+      if (query.paymentStatus) {
+        query.paymentStatus = Number(query.paymentStatus);
+      }
+
+      this.query = query;
+    } else {
+      this.query = {
+        billingPeriodLabel: moment()
+          .subtract(1, 'month')
+          .format('MMM-YYYY'),
+        paymentStatus: 1,
+      };
+    }
 
     this.state = {
       page: 0,
       invoices: Invoice.find(this.query).fetch(),
     };
   }
+
+  updateRoute = () => {
+    const sanitizedQuery = { ...this.query };
+    this.page = sanitizedQuery.page || 1;
+    delete this.query.page;
+    delete sanitizedQuery.$or;
+    delete sanitizedQuery.page;
+    this.props.history.replace({
+      pathname: this.props.location.pathname,
+      search: `?${querystring.stringify({ ...sanitizedQuery, searchText: this.searchText, page: this.page })}`,
+    });
+  };
 
   componentWillUnmount() {
     // this.props.subscriptions.forEach(s => {
@@ -34,6 +81,7 @@ class InvoiceList extends Component {
   }
 
   search = () => {
+    this.updateRoute();
     this.invoiceSubscription = Meteor.subscribe(
       'invoice.search',
       {
@@ -70,7 +118,6 @@ class InvoiceList extends Component {
     if (this.state.page + pageOffset < 0) {
       return;
     }
-    this.invoiceSubscription.stop();
     this.invoiceSubscription = Meteor.subscribe(
       'invoice.all',
       { query: this.query, page: this.state.page + pageOffset },
@@ -88,11 +135,16 @@ class InvoiceList extends Component {
 
   onSearch = e => {
     const searchQuery = e.target.value;
+    this.searchText = e.target.value;
     if (!searchQuery) {
+      this.searchText = '';
+      this.updateRoute();
       delete this.query.$or;
       return this.changePage(0);
     }
     if (searchQuery.length <= 3) {
+      this.searchText = '';
+      this.updateRoute();
       delete this.query.$or;
       return this.changePage(0);
     }
@@ -138,20 +190,36 @@ class InvoiceList extends Component {
                         <span className="input-group-addon">
                           <i className="fa fa-search" />
                         </span>
-                        <input type="text" placeholder="Invoice id, billing label, user details, payment links" className="form-control" onChange={this.onSearch} />
+                        <input
+                          type="text"
+                          placeholder="Invoice id, billing label, user details, payment links"
+                          className="form-control"
+                          defaultValue={this.searchText}
+                          onChange={this.onSearch}
+                        />
                       </div>
                     </div>
                     <div className="col-md-3">
                       <div className="form-group ">
                         <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onInvoiceStatusChanged}>
-                          <option value="all">States: All</option>
-                          <option value="1" selected={true}>
+                          <option value="all" selected={!this.query.paymentStatus}>
+                            States: All
+                          </option>
+                          <option value="1" selected={this.query.paymentStatus === 1}>
                             Pending
                           </option>
-                          <option value="2">Paid</option>
-                          <option value="3">Demo User</option>
-                          <option value="4">Failed</option>
-                          <option value="5">Waived Off</option>
+                          <option value="2" selected={this.query.paymentStatus === 2}>
+                            Paid
+                          </option>
+                          <option value="3" selected={this.query.paymentStatus === 3}>
+                            Demo User
+                          </option>
+                          <option value="4" selected={this.query.paymentStatus === 4}>
+                            Failed
+                          </option>
+                          <option value="5" selected={this.query.paymentStatus === 5}>
+                            Waived Off
+                          </option>
                         </select>
                       </div>
                     </div>
@@ -161,7 +229,7 @@ class InvoiceList extends Component {
                         <input
                           type="checkbox"
                           value="1"
-                          defaultChecked="checked"
+                          defaultChecked={!!this.query.billingPeriodLabel}
                           id="checkbox2"
                           onClick={e => {
                             if (e.target.checked) {
