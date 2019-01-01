@@ -105,7 +105,7 @@ class PlatformApis extends Component {
                                 <center>{index + 1}</center>
                               </td>
                               <td style={{ fontFamily: 'monospace' }}>{apiKey.key}</td>
-                              <td>{moment(apiKey.createdAt).format('DD-MMM-YY HH:mm')}</td>
+                              <td>{moment(apiKey.createdAt).format('DD-MMM-YY kk')}</td>
                               <td>
                                 <ConfirmationButton
                                   loadingText="Deleting"

@@ -254,7 +254,7 @@ class NetworkList extends Component {
                   <div className="card-description">
                     {this.getNetworkStatus(network.status)}&nbsp;{helpers.firstLetterCapital(network.name)}
                     <br />
-                    <span style={{ fontSize: '10px', color: '#888' }}>Created On: {moment(network.createdAt).format('DD-MMM-YYYY HH:mm:SS')}</span>
+                    <span style={{ fontSize: '10px', color: '#888' }}>Created On: {moment(network.createdAt).format('DD-MMM-YYYY kk:ss')}</span>
                   </div>
                   <div className="clearfix" />
                 </div>

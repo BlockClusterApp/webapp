@@ -169,7 +169,7 @@ class UserList extends Component {
                               </td>
                               <td>{user.emails[0].address}</td>
                               <td>{this.getEmailVerificationLabel(user.emails[0].verified)}</td>
-                              <td>{moment(user.createdAt).format('DD-MMM-YYYY HH:mm:SS')}</td>
+                              <td>{moment(user.createdAt).format('DD-MMM-YYYY kk:ss')}</td>
                             </tr>
                           );
                         })}

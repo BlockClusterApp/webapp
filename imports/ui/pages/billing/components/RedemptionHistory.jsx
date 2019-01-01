@@ -52,7 +52,7 @@ class RedemptionHistory extends Component {
                         <td>{index + 1}</td>
                         <td>{txn.amount}</td>
                         <td>{txn.description}</td>
-                        <td>{moment(txn.date).format('DD-MMM-YYYY HH:mm')}</td>
+                        <td>{moment(txn.date).format('DD-MMM-YYYY kk')}</td>
                       </tr>
                     );
                   })}

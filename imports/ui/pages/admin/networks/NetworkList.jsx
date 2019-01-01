@@ -196,7 +196,7 @@ class NetworkList extends Component {
                                                       <td>{network.name}</td>
                                                       <td>{network.instanceId}</td>
                                                       <td>{ReactHtmlParser(helpers.convertStatusToTag(helpers.calculateNodeStatus(network.status), helpers.firstLetterCapital(helpers.calculateNodeStatus(network.status))))}</td>
-                                                      <td>{moment(network.createdAt).format('DD-MMM-YYYY HH:mm:SS')}</td>
+                                                      <td>{moment(network.createdAt).format('DD-MMM-YYYY kk:ss')}</td>
                                                     </tr>
                                                   )
                                                 })
