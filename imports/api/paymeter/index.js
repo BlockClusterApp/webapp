@@ -7,8 +7,14 @@ import { Utilities } from '../../collections/utilities/utilities.js';
 import helpers from '../../modules/helpers';
 const BigNumber = require('bignumber.js');
 const EthereumTx = require('ethereumjs-tx');
+import PaymeterPricing from '../../collections/pricing/paymeter';
+import PaymeterBillHistory from '../../collections/paymeter/paymeter-bill-history';
+import Webhook from '../communication/webhook';
+import agenda from '../../modules/schedulers/agenda';
 import { Paymeter as PaymeterCollection } from '../../collections/paymeter/paymeter.js';
 import Billing from '../../api/billing';
+import moment from 'moment';
+import Voucher from '../network/voucher';
 const Cryptr = require('cryptr');
 
 const erc20ABI = [
@@ -674,53 +680,96 @@ function isUserSubscribedToPaymeter(userId) {
   }
 }
 
-function paymeter_getAndResetUserBill(userId) {
+async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMonth }) {
+  selectedMonth = selectedMonth || moment();
   if (userId) {
+    const billingPeriodLabel = selectedMonth.format('MMM-YYYY');
     let paymeter_userData = PaymeterCollection.findOne({ userId: userId });
-
+    const paymeterPricing = PaymeterPricing.find({ active: true }).fetch()[0];
     if (paymeter_userData) {
-      if (paymeter_userData.subscribed) {
-        let bill = paymeter_userData.bill || '0';
-        let nextMonthMin = helpers.paymeterMinimimCostPerMonth();
+      // if (paymeter_userData.subscribed) {
+      let bill = paymeter_userData.bill || '0';
+      let nextMonthMin = new BigNumber(paymeterPricing.minimumMonthlyCost);
 
-        if (paymeter_userData.unsubscribeNextMonth) {
-          let UserWallets = Wallets.find({
-            userId: userId,
-          }).fetch();
+      if (paymeter_userData.unsubscribeNextMonth) {
+        let UserWallets = Wallets.find({
+          userId: userId,
+        }).fetch();
 
-          UserWallets.forEach(wallet => {
-            WalletTransactions.remove({
-              fromWallet: wallet._id,
-            });
-
-            WalletTransactions.remove({
-              toWallet: wallet._id,
-            });
+        UserWallets.forEach(wallet => {
+          WalletTransactions.remove({
+            fromWallet: wallet._id,
           });
 
-          Wallets.remove({
-            userId: userId,
+          WalletTransactions.remove({
+            toWallet: wallet._id,
           });
+        });
 
-          PaymeterCollection.upsert(
-            {
-              userId: userId,
+        Wallets.remove({
+          userId: userId,
+        });
+
+        PaymeterCollection.upsert(
+          {
+            userId: userId,
+          },
+          {
+            $set: {
+              subscribed: false,
+              unsubscribeNextMonth: false,
             },
-            {
-              $set: {
-                subscribed: false,
-                unsubscribeNextMonth: false,
-              },
+          }
+        );
+
+        nextMonthMin = 0;
+      }
+
+      if (new BigNumber(bill).lt(new BigNumber(paymeter_userData.minimumFeeThisMonth))) {
+        bill = new BigNumber(paymeter_userData.minimumFeeThisMonth);
+      }
+
+      const vouchers = paymeter_userData.vouchers;
+      let discount = 0;
+      let discountsApplied = [];
+      if (vouchers) {
+        vouchers
+          .sort((a, b) => new Date(a.appliedOn).getTime() - new Date(b.appliedOn).getDate())
+          .filter(voucher => () => {
+            if (selectedMonth.diff(moment(voucher.appliedOn), 'months') > voucher.usability.no_months) {
+              return false;
             }
-          );
+            return true;
+          })
+          .forEach(voucher => {
+            const _discount = Number(Voucher.getDiscountAmountForVoucher(voucher, bill));
+            if (_discount > bill - discount && _discount > 0) {
+              _discount = bill - discount;
+              discountsApplied.push({ _id: voucher._id, code: voucher.code, amount: _discount });
+            }
+            discount = discount + _discount;
+          });
+        bill = Math.max(0, bill - discount);
+      }
 
-          nextMonthMin = '0.00';
-        }
+      const history = PaymeterBillHistory.find({ billingPeriodLabel, userId }).fetch()[0];
+      if (history) {
+        return history.bill;
+      } else if (!isFromFrontEnd) {
+        delete paymeter_userData.subscriptions;
+        delete paymeter_userData.userId;
+        PaymeterBillHistory.insert({
+          billingPeriodLabel,
+          userId,
+          bill: Number(bill),
+          metadata: paymeter_userData,
+          discountsApplied,
+          totalDiscountGiven: discount,
+        });
+      }
 
-        if (new BigNumber(bill).lt(paymeter_userData.minimumFeeThisMonth)) {
-          bill = paymeter_userData.minimumFeeThisMonth;
-        }
-
+      // Reset it to 0 only if call is via generate bill script i.e. from backend
+      if (!isFromFrontEnd) {
         PaymeterCollection.upsert(
           {
             userId: userId,
@@ -732,16 +781,13 @@ function paymeter_getAndResetUserBill(userId) {
             },
           }
         );
-
-        return bill;
-      } else {
-        return '0.00';
       }
+      return new BigNumber(bill);
     } else {
-      return '0.00';
+      return 0;
     }
   } else {
-    return '0.00';
+    return 0;
   }
 }
 
@@ -772,6 +818,7 @@ Meteor.methods({
   },
   subscribePaymeter: async () => {
     const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(Meteor.userId());
+    const paymeterPricing = PaymeterPricing.find({ active: true }).fetch()[0];
 
     if (isPaymentMethodVerified) {
       let paymeter_userData = PaymeterCollection.findOne({ userId: Meteor.userId() });
@@ -787,12 +834,21 @@ Meteor.methods({
                 subscribed: true,
                 unsubscribeNextMonth: false,
               },
+              $push: {
+                subscriptions: {
+                  action: 'subscribe',
+                  at: new Date(),
+                },
+              },
+              $unset: {
+                subscriptionTill: '',
+              },
             }
           );
         } else {
           let totalDaysThisMonth = helpers.daysInThisMonth();
-          let perDayCost = new BigNumber(helpers.paymeterMinimimCostPerMonth()).dividedBy(totalDaysThisMonth);
-          let minimumFeeThisMonth = new BigNumber(perDayCost).times(helpers.getRemanningDays() + 1); //including today
+          let perDayCost = new BigNumber(paymeterPricing.minimumMonthlyCost).dividedBy(totalDaysThisMonth);
+          let minimumFeeThisMonth = new BigNumber(perDayCost).times(helpers.getRemainingDays() + 1); //including today
           PaymeterCollection.upsert(
             {
               userId: Meteor.userId(),
@@ -801,15 +857,24 @@ Meteor.methods({
               $set: {
                 subscribed: true,
                 unsubscribeNextMonth: false,
-                minimumFeeThisMonth: minimumFeeThisMonth.toString(),
+                minimumFeeThisMonth: Number(minimumFeeThisMonth).toFixed(2),
+              },
+              $push: {
+                subscriptions: {
+                  action: 'subscribe',
+                  at: new Date(),
+                },
+              },
+              $unset: {
+                subscriptionTill: '',
               },
             }
           );
         }
       } else {
         let totalDaysThisMonth = helpers.daysInThisMonth();
-        let perDayCost = new BigNumber(helpers.paymeterMinimimCostPerMonth()).dividedBy(totalDaysThisMonth);
-        let minimumFeeThisMonth = new BigNumber(perDayCost).times(helpers.getRemanningDays() + 1); //including today
+        let perDayCost = new BigNumber(paymeterPricing.minimumMonthlyCost).dividedBy(totalDaysThisMonth);
+        let minimumFeeThisMonth = new BigNumber(perDayCost).times(helpers.getRemainingDays() + 1); //including today
         PaymeterCollection.upsert(
           {
             userId: Meteor.userId(),
@@ -818,7 +883,16 @@ Meteor.methods({
             $set: {
               subscribed: true,
               unsubscribeNextMonth: false,
-              minimumFeeThisMonth: minimumFeeThisMonth.toString(),
+              minimumFeeThisMonth: String(Number(minimumFeeThisMonth.toString()).toFixed(2)),
+            },
+            $push: {
+              subscriptions: {
+                action: 'subscribe',
+                at: new Date(),
+              },
+            },
+            $unset: {
+              subscriptionTill: '',
             },
           }
         );
@@ -839,6 +913,15 @@ Meteor.methods({
           {
             $set: {
               unsubscribeNextMonth: true,
+              subscriptionTill: moment()
+                .endOf('month')
+                .toDate(),
+            },
+            $push: {
+              subscriptions: {
+                action: 'unsubscribe',
+                at: new Date(),
+              },
             },
           }
         );
@@ -878,4 +961,5 @@ module.exports = {
   getNonce,
   erc20ABI,
   getWalletTransactions,
+  getBill: paymeter_getAndResetUserBill,
 };

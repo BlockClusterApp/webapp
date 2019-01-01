@@ -15,7 +15,7 @@ User.fetchAdminDashboardDetails = async userId => {
   }
   const result = await Bluebird.props({
     details: Meteor.users.find({ _id: userId }, { fields: { services: 0 } }).fetch()[0],
-    bill: Billing.generateBill(userId),
+    bill: Billing.generateBill({ userId, isFromFrontend: true }),
   });
 
   return result;
@@ -44,25 +44,28 @@ User.updateAdmin = async (userId, updateQuery) => {
   return true;
 };
 
-User.verifyEmail = async ({userId, email, verified}) => {
+User.verifyEmail = async ({ userId, email, verified }) => {
   if ((Meteor.userId() === userId && updateQuery.admin !== undefined) || Meteor.user().admin <= ADMIN_LEVEL) {
     return false;
   }
-  const result = Meteor.users.update({
-    _id: userId,
-    "emails.address": email
-  }, {
-    $set: {
-      "emails.$.verified": verified
+  const result = Meteor.users.update(
+    {
+      _id: userId,
+      'emails.address': email,
+    },
+    {
+      $set: {
+        'emails.$.verified': verified,
+      },
     }
-  });
+  );
   return true;
-}
+};
 
 Meteor.methods({
   fetchAdminDashboardDetails: User.fetchAdminDashboardDetails,
   updateUserAdmin: User.updateAdmin,
-  adminVerifyEmail: User.verifyEmail
+  adminVerifyEmail: User.verifyEmail,
 });
 
 export default User;

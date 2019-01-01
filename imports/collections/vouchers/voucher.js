@@ -47,6 +47,9 @@ VoucherCollection.schema = new SimpleSchema({
       },
     },
   },
+  type: {
+    type: String,
+  },
   networkConfig: {
     type: Object,
   },
@@ -77,6 +80,27 @@ VoucherCollection.schema = new SimpleSchema({
       },
     },
   ],
+  campaignId: {
+    type: String,
+  },
+  hyperion: {
+    type: Object,
+  },
+  paymeter: {
+    type: Object,
+  },
 });
+
+if (Meteor.isServer) {
+  VoucherCollection._ensureIndex({
+    campaignId: 1,
+  });
+  VoucherCollection._ensureIndex({
+    code: 1,
+  });
+  VoucherCollection._ensureIndex({
+    type: 1,
+  });
+}
 
 export default VoucherCollection;

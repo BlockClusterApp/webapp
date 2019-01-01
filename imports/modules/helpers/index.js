@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 Array.prototype.remByVal = function(val) {
   for (var i = 0; i < this.length; i++) {
     if (this[i] === val) {
@@ -161,26 +163,11 @@ export default {
     }
   },
   daysInThisMonth() {
-    var now = new Date();
-    return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    return moment().daysInMonth();
   },
-  hyperionGBCostPerDay() {
-    return 0.0114;
-  },
-  hyperionGBCostPerMonth() {
-    return 0.0114 * 30;
-  },
-  hyperionMinimumCostPerMonth() {
-    return 399;
-  },
-  paymeterMinimimCostPerMonth() {
-    return 399;
-  },
-  paymeterDepositFees() {
-    return 0.18;
-  },
-  paymeterDepositFeesERC20NotFound() {
-    return 0.2;
+  hyperionGBCostPerDay(costPerMonth = 0.00091 * 30) {
+    const daysInMonth = moment().daysInMonth();
+    return Number(Number(costPerMonth / daysInMonth).toFixed(6));
   },
   getFlooredFixed(v, d) {
     return (Math.floor(v * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d);
@@ -227,12 +214,7 @@ export default {
 
     return minutesDifference;
   },
-  getRemanningDays: () => {
-    var date = new Date();
-    var time = new Date(date.getTime());
-    time.setMonth(date.getMonth() + 1);
-    time.setDate(0);
-    var days = time.getDate() > date.getDate() ? time.getDate() - date.getDate() : 0;
-    return days;
+  getRemainingDays: () => {
+    return moment().daysInMonth() - moment().get('date');
   },
 };

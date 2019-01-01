@@ -19,6 +19,7 @@ function authMiddleware(req, res, next) {
 }
 
 function sendError(res, statusCode, message) {
+  console.log('Error', message);
   JsonRoutes.sendResult(res, {
     code: statusCode,
     data: {

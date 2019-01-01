@@ -11,18 +11,19 @@ import Paymeter from '../../../../api/paymeter/index.js';
 import { ERC20 } from '../../../../collections/erc20/erc20.js';
 import { CoinPrices } from '../../../../collections/coin-prices/coin-prices.js';
 import { getTopERC20List, getCryptosPrice, getTokenInfoFromAddress } from '../../../../modules/paymeter/index.js';
+import PaymeterPricing from '../../../../collections/pricing/paymeter';
 import { Meteor } from 'meteor/meteor';
 import sleep from 'await-sleep';
 import BigNumber from 'bignumber.js';
 var Future = Npm.require('fibers/future');
 import { CRONjob } from 'meteor/ostrio:cron-jobs';
 
-const db  = Meteor.users.rawDatabase();
+const db = Meteor.users.rawDatabase();
 
 const cron = new CRONjob({
   db: db,
   autoClear: true,
-  resetOnInit: true //don't re-run pending tasks when restarted
+  resetOnInit: true, //don't re-run pending tasks when restarted
 });
 
 let isPaymeterCronInitialized = false;
@@ -208,7 +209,7 @@ async function getAndUpdateERC20ContractSymbol(contractAddress, network) {
   });
 }
 
-const updatePrices = async (ready) => {
+const updatePrices = async ready => {
   try {
     let symbols_list = ['ETH']; //add other coins here
     let erc20_coins = ERC20.find({
@@ -241,21 +242,21 @@ const updatePrices = async (ready) => {
 
     ready();
     if (['production'].includes(process.env.NODE_ENV)) {
-      cron.setTimeout(Meteor.bindEnvironment(updatePrices), 1000 * 60 * 5, 'update prices')
+      cron.setTimeout(Meteor.bindEnvironment(updatePrices), 1000 * 60 * 5, 'update prices');
     } else {
-      cron.setTimeout(Meteor.bindEnvironment(updatePrices), 1000 * 60 * 60 * 12, 'update prices')
+      cron.setTimeout(Meteor.bindEnvironment(updatePrices), 1000 * 60 * 60 * 12, 'update prices');
     }
   } catch (e) {
     ready();
     if (['production'].includes(process.env.NODE_ENV)) {
-      cron.setTimeout(Meteor.bindEnvironment(updatePrices), 10000, 'update prices')
+      cron.setTimeout(Meteor.bindEnvironment(updatePrices), 10000, 'update prices');
     } else {
-      cron.setTimeout(Meteor.bindEnvironment(updatePrices), 1000 * 60 * 60 * 12, 'update prices')
+      cron.setTimeout(Meteor.bindEnvironment(updatePrices), 1000 * 60 * 60 * 12, 'update prices');
     }
   }
 };
 
-const addSymbolToContracts = async (ready) => {
+const addSymbolToContracts = async ready => {
   try {
     let erc20_coins = ERC20.find({
       symbol: {
@@ -301,13 +302,12 @@ const addSymbolToContracts = async (ready) => {
     }
 
     ready();
-
   } catch (e) {
     ready();
   }
-}
+};
 
-const processWithdrawls = async (ready) => {
+const processWithdrawls = async ready => {
   try {
     let pending_txns = WalletTransactions.find({
       $or: [{ status: 'pending' }, { status: 'processing' }],
@@ -643,9 +643,9 @@ const processWithdrawls = async (ready) => {
   } catch (e) {
     ready();
   }
-}
+};
 
-const processDeposits = async (ready) => {
+const processDeposits = async ready => {
   try {
     let pending_txns = WalletTransactions.find({
       type: 'deposit',
@@ -740,13 +740,13 @@ const processDeposits = async (ready) => {
       }
     }
 
-    ready()
+    ready();
   } catch (e) {
-    ready()
+    ready();
   }
-}
+};
 
-const updateGasPrice = async (ready) => {
+const updateGasPrice = async ready => {
   try {
     let testnet_gasPrice = await getGasPrice(`${await Config.getPaymeterConnectionDetails('eth', 'testnet')}`);
     Utilities.upsert(
@@ -773,13 +773,13 @@ const updateGasPrice = async (ready) => {
       }
     );
 
-    ready()
+    ready();
   } catch (e) {
-    ready()
+    ready();
   }
-}
+};
 
-const scanEthTestnet = async (ready) => {
+const scanEthTestnet = async ready => {
   try {
     let testnet_url = await Config.getPaymeterConnectionDetails('eth', 'testnet');
     let provider = new Web3.providers.WebsocketProvider(testnet_url);
@@ -799,7 +799,7 @@ const scanEthTestnet = async (ready) => {
       block = await getBlock(latest_block_number, testnet_web3);
     }
 
-    console.log(block.number)
+    console.log(block.number);
 
     let promises = [];
     if (block.transactions) {
@@ -907,15 +907,15 @@ const scanEthTestnet = async (ready) => {
       }
     );
 
-    ready()
-    cron.setTimeout(Meteor.bindEnvironment(scanEthTestnet), 2000, 'scan eth block testnet')
+    ready();
+    cron.setTimeout(Meteor.bindEnvironment(scanEthTestnet), 2000, 'scan eth block testnet');
   } catch (e) {
-    ready()
-    cron.setTimeout(Meteor.bindEnvironment(scanEthTestnet), 2000, 'scan eth block testnet')
+    ready();
+    cron.setTimeout(Meteor.bindEnvironment(scanEthTestnet), 2000, 'scan eth block testnet');
   }
-}
+};
 
-const scanEthMainnet = async (ready) => {
+const scanEthMainnet = async ready => {
   try {
     let mainnet_url = await Config.getPaymeterConnectionDetails('eth', 'mainnet');
     let mainnet_web3 = new Web3(new Web3.providers.WebsocketProvider(mainnet_url));
@@ -1001,7 +1001,7 @@ const scanEthMainnet = async (ready) => {
                       {
                         $setOnInsert: {
                           amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                          usdCharged: new BigNumber(helpers.paymeterDepositFees())
+                          usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
                             .times(new BigNumber(mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString()).times(eth_price.usd_price))
                             .dividedBy(100)
                             .toString(),
@@ -1011,7 +1011,7 @@ const scanEthMainnet = async (ready) => {
                     );
                   } else {
                     //this may happen when coinmarketcap API not working or txn detected before price update on DB (i.e., old price in DB)
-                    //in this case we just charge $helpers.paymeterDepositFeesERC20NotFound()
+                    //in this case we just charge $paymeterPricing.perTransactionCostFlat,
                     //in future get coinmarketcap premium API and find the historical value and calculate fees using it.
                     WalletTransactions.upsert(
                       {
@@ -1024,7 +1024,7 @@ const scanEthMainnet = async (ready) => {
                       {
                         $setOnInsert: {
                           amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                          usdCharged: helpers.paymeterDepositFeesERC20NotFound(),
+                          usdCharged: paymeterPricing.perTransactionCostFlat,
                           status: 'pending',
                         },
                       }
@@ -1050,6 +1050,7 @@ const scanEthMainnet = async (ready) => {
     let erc20_contracts_addresses = await getDistinctERC20('mainnet');
 
     async function processContract(contractAddress) {
+      const paymeterPricing = PaymeterPricing.findOne({ active: true });
       return new Promise(async (resolve, reject) => {
         try {
           let logs = await getERC20Events(mainnet_web3, contractAddress, block.number);
@@ -1121,7 +1122,7 @@ const scanEthMainnet = async (ready) => {
                         {
                           $setOnInsert: {
                             amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                            usdCharged: new BigNumber(helpers.paymeterDepositFees())
+                            usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
                               .times(new BigNumber(mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()).times(token_price.usd_price))
                               .dividedBy(100)
                               .toString(),
@@ -1142,7 +1143,7 @@ const scanEthMainnet = async (ready) => {
                         {
                           $setOnInsert: {
                             amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                            usdCharged: helpers.paymeterDepositFeesERC20NotFound(),
+                            usdCharged: paymeterPricing.perTransactionCostFlat,
                             status: 'pending',
                           },
                         }
@@ -1160,7 +1161,7 @@ const scanEthMainnet = async (ready) => {
                       {
                         $setOnInsert: {
                           amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                          usdCharged: helpers.paymeterDepositFeesERC20NotFound(),
+                          usdCharged: paymeterPricing.perTransactionCostFlat,
                           status: 'pending',
                         },
                       }
@@ -1181,7 +1182,7 @@ const scanEthMainnet = async (ready) => {
                       {
                         $setOnInsert: {
                           amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                          usdCharged: new BigNumber(helpers.paymeterDepositFees())
+                          usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
                             .times(new BigNumber(mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()).times(price))
                             .dividedBy(100)
                             .toString(),
@@ -1202,7 +1203,7 @@ const scanEthMainnet = async (ready) => {
                       {
                         $setOnInsert: {
                           amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                          usdCharged: helpers.paymeterDepositFeesERC20NotFound(),
+                          usdCharged: paymeterPricing.perTransactionCostFlat,
                           status: 'pending',
                         },
                       }
@@ -1237,31 +1238,31 @@ const scanEthMainnet = async (ready) => {
 
     await Promise.all(promises);
 
-    ready()
-    cron.setTimeout(Meteor.bindEnvironment(scanEthMainnet), 2000, 'scan eth block mainnet')
+    ready();
+    cron.setTimeout(Meteor.bindEnvironment(scanEthMainnet), 2000, 'scan eth block mainnet');
   } catch (e) {
-    ready()
-    cron.setTimeout(Meteor.bindEnvironment(scanEthMainnet), 2000, 'scan eth block mainnet')
+    ready();
+    cron.setTimeout(Meteor.bindEnvironment(scanEthMainnet), 2000, 'scan eth block mainnet');
   }
-}
+};
 
 function startCrons() {
   if (!isPaymeterCronInitialized && RemoteConfig && RemoteConfig.features && RemoteConfig.features.Paymeter) {
     console.log('Starting paymeter');
 
     if (['production'].includes(process.env.NODE_ENV)) {
-      cron.setTimeout(Meteor.bindEnvironment(updatePrices), 1000, 'update prices')
+      cron.setTimeout(Meteor.bindEnvironment(updatePrices), 1000, 'update prices');
     } else {
-      cron.setTimeout(Meteor.bindEnvironment(updatePrices), 1000 * 60 * 60 * 12, 'update prices')
+      cron.setTimeout(Meteor.bindEnvironment(updatePrices), 1000 * 60 * 60 * 12, 'update prices');
     }
 
     cron.setInterval(Meteor.bindEnvironment(addSymbolToContracts), 1000 * 60 * 60 * 12, 'add symbols to contracts');
     cron.setInterval(Meteor.bindEnvironment(processWithdrawls), 1000 * 12, 'process withdrawls');
     cron.setInterval(Meteor.bindEnvironment(processDeposits), 1000 * 12, 'process deposits');
     cron.setInterval(Meteor.bindEnvironment(updateGasPrice), 1000 * 12, 'update gas price');
-    
-    cron.setTimeout(Meteor.bindEnvironment(scanEthTestnet), 1000, 'scan eth block testnet')
-    cron.setTimeout(Meteor.bindEnvironment(scanEthMainnet), 1000, 'scan eth block mainnet')
+
+    cron.setTimeout(Meteor.bindEnvironment(scanEthTestnet), 1000, 'scan eth block testnet');
+    cron.setTimeout(Meteor.bindEnvironment(scanEthMainnet), 1000, 'scan eth block mainnet');
 
     isPaymeterCronInitialized = true;
   }

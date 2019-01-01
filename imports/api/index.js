@@ -1,7 +1,8 @@
 require('./network/voucher');
-require('./network/network-configuration') ;
+require('./network/network-configuration');
 require('./admin/');
 require('./support');
 require('./hyperion.js');
 require('./auth');
 require('./paymeter.js');
+require('./server-functions/user');
