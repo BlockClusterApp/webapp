@@ -20,6 +20,12 @@ class Navbar extends Component {
     $.Pages.init();
   }
 
+  componentWillReceiveProps(newProps, oldProps) {
+    if (newProps.user && !localStorage.getItem('admin')) {
+      localStorage.setItem('admin', newProps.user.admin);
+    }
+  }
+
   componentDidUpdate() {
     $.Pages.init();
   }
