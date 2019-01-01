@@ -189,7 +189,6 @@ module.exports = `<!DOCTYPE html>
                     1: The payment has to be made within 10th of the Invoice month.<br />
                     2: Delay in payment will lead to node deletion as per the company policy.<br />
                     3: Extra data per node at $ 0.3 / GB-month<br />
-                    4: 2980 hrs of light nodes free per account<br />
                   </p>
                 </td>
                 <td style="text-align: right;">

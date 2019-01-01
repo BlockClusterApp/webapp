@@ -22,10 +22,10 @@ import User from '../server-functions/user';
 const InvoiceObj = {};
 
 function fetchApplicableAmount(credit, totalAmount) {
-  if (!credit.metadata.invoices) {
+  if (!credit.invoices) {
     return Math.min(credit.amount, totalAmount);
   }
-  const usedAmount = credit.metadata.invoices.reduce((sum, invoice) => sum + invoice, 0);
+  const usedAmount = credit.invoices.reduce((sum, invoice) => sum + invoice, 0);
   const usableAmount = Math.min(credit.amount - usedAmount, totalAmount);
 
   if (usableAmount <= 0) {
@@ -344,6 +344,19 @@ InvoiceObj.generateHTML = async invoiceId => {
     }
     return item;
   });
+
+  if (invoice.creditClaims) {
+    invoice.creditClaims.forEach(claim => {
+      items.push({
+        name: 'Promotional Credits Redemption',
+        instanceId: claim.code,
+        duration: '',
+        rate: '',
+        discount: '',
+        cost: `$ -${claim.amount}`,
+      });
+    });
+  }
 
   const user = Meteor.user();
 

@@ -65,6 +65,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       result.totalAmount = prevMonthInvoice.totalAmount;
       result.invoiceStatus = prevMonthInvoice.paymentStatus;
       result.invoiceId = prevMonthInvoice._id;
+      result.creditClaims = prevMonthInvoice.creditClaims;
       return result;
     }
   }
@@ -117,20 +118,12 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       if (network.metadata && network.metadata.networkConfig && network.metadata.networkConfig.cost) {
         price = Number(network.metadata.networkConfig.cost.hourly);
       }
-      if (
-        network.metadata &&
-        network.metadata.voucher &&
-        network.metadata.voucher &&
-        network.metadata.voucher.metadata &&
-        network.metadata.voucher.metadata.networkConfig &&
-        network.metadata.voucher.metadata.networkConfig.cost
-      ) {
-        price = Number(network.metadata.voucher.metadata.networkConfig.cost.hourly);
+      if (network.metadata && network.metadata.voucher && network.metadata.voucher.metadata && network.metadata.networkConfig && network.metadata.networkConfig.cost) {
+        price = Number(network.metadata.networkConfig.cost.hourly);
       }
 
       const time = convertMilliseconds(thisCalculationEndDate.getTime() - billingStartDate.getTime());
       const rate = price; // per month
-      let rateString = `$ ${rate} / hr`;
       const ratePerHour = rate;
       const ratePerMinute = ratePerHour / 60;
 
@@ -192,7 +185,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       }
       let cost = Number(time.hours * ratePerHour + (time.minutes % 60) * ratePerMinute).toFixed(2);
 
-      if (voucher && voucher._id && !isMicroNode && vouchar_usable && voucher_expired) {
+      if (voucher && voucher._id && !isMicroNode && vouchar_usable) {
         const hoursFree = voucher.discountedDays * 24;
         const paidHours = Math.max(time.hours - hoursFree, 0);
         const paidMinutes = time.hours > 0 && paidHours < 1 ? time.minutes % 60 : 0;
@@ -213,7 +206,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             { _id: network._id },
             {
               $push: {
-                voucher_claim_status: {
+                'metadata.voucher.voucher_claim_status': {
                   claimedBy: userId,
                   claimedOn: new Date(),
                   claimed: true,
@@ -280,11 +273,16 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         return undefined;
       }
       result.totalAmount += Number(cost);
+      function floorFigure(figure, decimals) {
+        if (!decimals) decimals = 3;
+        var d = Math.pow(10, decimals);
+        return (parseInt(figure * d) / d).toFixed(decimals);
+      }
       return {
         name: network.name,
         instanceId: network.instanceId,
         createdOn: new Date(network.createdOn),
-        rate: rateString,
+        rate: ` $ ${floorFigure(rate, 3)} / hr `, //taking upto 3 decimals , as shown in pricing page
         runtime: `${time.hours}:${time.minutes % 60 < 10 ? `0${time.minutes % 60}` : time.minutes % 60} hrs | ${extraDiskStorage} GB extra`,
         cost,
         time,
@@ -400,6 +398,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       result.totalAmount = prevMonthInvoice.totalAmount;
       result.invoiceStatus = prevMonthInvoice.paymentStatus;
       result.invoiceId = prevMonthInvoice._id;
+      result.creditClaims = prevMonthInvoice.creditClaims;
     }
   }
 
