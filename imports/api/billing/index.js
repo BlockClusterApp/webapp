@@ -279,11 +279,16 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         return undefined;
       }
       result.totalAmount += Number(cost);
+      function floorFigure(figure, decimals){
+        if (!decimals) decimals = 3;
+        var d = Math.pow(10,decimals);
+        return (parseInt(figure*d)/d).toFixed(decimals);
+       };
       return {
         name: network.name,
         instanceId: network.instanceId,
         createdOn: new Date(network.createdOn),
-        rate: rateString,
+        rate: floorFigure(rateString,3), //taking upto 3 decimals , as shown in pricing page
         runtime: `${time.hours}:${time.minutes % 60 < 10 ? `0${time.minutes % 60}` : time.minutes % 60} hrs | ${extraDiskStorage} GB extra`,
         cost,
         time,
