@@ -749,7 +749,7 @@ async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMo
             }
             discount = discount + _discount;
           });
-        bill = Math.max(0, bill - discount);
+        bill = Math.max(0, Number(bill) - discount);
       }
 
       const history = PaymeterBillHistory.find({ billingPeriodLabel, userId }).fetch()[0];
@@ -777,7 +777,7 @@ async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMo
           {
             $set: {
               bill: '0',
-              minimumFeeThisMonth: nextMonthMin,
+              minimumFeeThisMonth: Number(nextMonthMin),
             },
           }
         );
