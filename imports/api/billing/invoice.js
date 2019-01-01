@@ -22,10 +22,10 @@ import User from '../server-functions/user';
 const InvoiceObj = {};
 
 function fetchApplicableAmount(credit, totalAmount) {
-  if (!credit.metadata.invoices) {
+  if (!credit.invoices) {
     return Math.min(credit.amount, totalAmount);
   }
-  const usedAmount = credit.metadata.invoices.reduce((sum, invoice) => sum + invoice, 0);
+  const usedAmount = credit.invoices.reduce((sum, invoice) => sum + invoice, 0);
   const usableAmount = Math.min(credit.amount - usedAmount, totalAmount);
 
   if (usableAmount <= 0) {
