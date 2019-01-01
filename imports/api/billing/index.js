@@ -191,7 +191,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       }
       let cost = Number(time.hours * ratePerHour + (time.minutes % 60) * ratePerMinute).toFixed(2);
 
-      if (voucher && voucher._id && !isMicroNode && vouchar_usable && voucher_expired) {
+      if (voucher && voucher._id && !isMicroNode && vouchar_usable) {
         const hoursFree = voucher.discountedDays * 24;
         const paidHours = Math.max(time.hours - hoursFree, 0);
         const paidMinutes = time.hours > 0 && paidHours < 1 ? time.minutes % 60 : 0;
