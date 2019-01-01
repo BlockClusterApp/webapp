@@ -124,6 +124,7 @@ class BillingDashboard extends Component {
 
   render() {
     let billView = undefined;
+    let creditsView = undefined;
 
     if (this.state.bill && this.state.bill.networks) {
       billView = this.state.bill.networks.map((network, index) => {
@@ -136,6 +137,20 @@ class BillingDashboard extends Component {
             <td>
               $ {network.cost} {this.convertCostToTag(network.label)}{' '}
             </td>
+          </tr>
+        );
+      });
+    }
+
+    if (this.state.bill && this.state.bill.creditClaims) {
+      creditsView = this.state.bill.creditClaims.map((claim, index) => {
+        return (
+          <tr key={`p${index + 1}`}>
+            <td>Promotional Credit Redemption</td>
+            <td>{claim.code}</td>
+            <td />
+            <td />
+            <td>$ -{Number(claim.amount).toFixed(2)}</td>
           </tr>
         );
       });
@@ -261,7 +276,10 @@ class BillingDashboard extends Component {
                           <th style={{ width: '19%' }}>Cost</th>
                         </tr>
                       </thead>
-                      <tbody>{billView}</tbody>
+                      <tbody>
+                        {billView}
+                        {creditsView}
+                      </tbody>
                       <tfoot>
                         <tr>
                           <td colSpan="4" style={{ textAlign: 'right' }}>

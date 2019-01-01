@@ -26,8 +26,8 @@ function calculateBalanceCredits(credits) {
   let totalSum = 0;
   credits.forEach(credit => {
     totalSum += Number(credit.amount);
-    if (credit.metadata && credit.metadata.invoices) {
-      credit.metadata.invoices.forEach(invoice => {
+    if (credit.metadata && credit.invoices) {
+      credit.invoices.forEach(invoice => {
         totalSum -= Number(invoice.amount);
       });
     }
@@ -257,32 +257,32 @@ class UserDetails extends Component {
   };
 
   toggleUserAccess = () => {
-    const {user} = this.props;
+    const { user } = this.props;
 
     let functionName;
-    if(user && user.paymentPending) {
-      functionName = 'enableUser'
+    if (user && user.paymentPending) {
+      functionName = 'enableUser';
     } else if (user) {
-      functionName = 'disableUser'
+      functionName = 'disableUser';
     }
 
-    if(!functionName) {
+    if (!functionName) {
       return null;
     }
 
     this.setState({
-      userFunctionLoading: true
+      userFunctionLoading: true,
     });
-    Meteor.call(functionName, {userId: user._id}, (err, res) => {
+    Meteor.call(functionName, { userId: user._id }, (err, res) => {
       this.setState({
-        userFunctionLoading: false
+        userFunctionLoading: false,
       });
-      if(err) {
+      if (err) {
         return notifications.error(err.reason);
       }
-      return notifications.success('Successful')
+      return notifications.success('Successful');
     });
-  }
+  };
 
   loadComponents = type => {
     if (this.subscriptionTypes.includes(type)) {
@@ -317,20 +317,20 @@ class UserDetails extends Component {
   };
 
   toggleDeletePrevention = () => {
-    const {user} = this.props;
+    const { user } = this.props;
     this.setState({
-      preventDeleteLoading: true
+      preventDeleteLoading: true,
     });
-    Meteor.call('preventDelete', {userId: user._id}, (err, res) => {
+    Meteor.call('preventDelete', { userId: user._id }, (err, res) => {
       this.setState({
-        preventDeleteLoading: false
+        preventDeleteLoading: false,
       });
-      if(err) {
+      if (err) {
         return notifications.error(err.reason);
       }
-      return notifications.success('Successful')
+      return notifications.success('Successful');
     });
-  }
+  };
 
   render() {
     const { user } = this.props;
@@ -344,8 +344,8 @@ class UserDetails extends Component {
           description: `Redeemed using code ${credit.code}`,
           date: credit.createdAt,
         });
-        if (credit.metadata && credit.metadata.invoices) {
-          credit.metadata.invoices.forEach(invoice => {
+        if (credit.metadata && credit.invoices) {
+          credit.invoices.forEach(invoice => {
             txns.push({
               amount: `- $${invoice.amount}`,
               description: `Used for settling invoice ${invoice.invoiceId}`,
@@ -620,7 +620,8 @@ class UserDetails extends Component {
                     >
                       &nbsp;&nbsp;{this.props.user && this.props.user.paymentPending ? 'Enable User' : 'Disable User'}
                     </LaddaButton>
-                    <br /><br />
+                    <br />
+                    <br />
                     <LaddaButton
                       loading={this.state.preventDeleteLoading}
                       data-size={S}
@@ -796,7 +797,7 @@ class UserDetails extends Component {
                                 <tr>
                                   <td className="font-montserrat fs-12 w-60">Vouchers</td>
                                   <td className="text-right b-r b-dashed b-grey w-45">
-                                    {hyperion.vouchers.map(v => `${v.code} : ${moment(v.appliedOn).format('DD-MMM-YYYY HH:mm:SS')}`).join(', ')}
+                                    {hyperion.vouchers && hyperion.vouchers.map(v => `${v.code} : ${moment(v.appliedOn).format('DD-MMM-YYYY HH:mm:SS')}`).join(', ')}
                                   </td>
                                 </tr>
                                 <tr>
@@ -867,7 +868,7 @@ class UserDetails extends Component {
                                 <tr>
                                   <td className="font-montserrat fs-12 w-60">Vouchers</td>
                                   <td className="text-right b-r b-dashed b-grey w-45">
-                                    {paymeter.vouchers.map(v => `${v.code} : ${moment(v.appliedOn).format('DD-MMM-YYYY HH:mm:SS')}`).join(', ')}
+                                    {paymeter.vouchers && paymeter.vouchers.map(v => `${v.code} : ${moment(v.appliedOn).format('DD-MMM-YYYY HH:mm:SS')}`).join(', ')}
                                   </td>
                                 </tr>
                                 <tr>

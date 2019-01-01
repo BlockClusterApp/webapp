@@ -113,6 +113,7 @@ class VoucherCreate extends Component {
               .add(30, 'days')
               .toDate(), //lets take by default 30days
           discountedDays: payload.discountedDays || 0,
+          type: 'paymeter',
         };
 
         if (this.campaignId && this.campaignId !== 'None') {

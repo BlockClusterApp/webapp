@@ -17,8 +17,8 @@ class RedemptionHistory extends Component {
         description: `Redeemed using code ${credit.code}`,
         date: credit.createdAt,
       });
-      if (credit.metadata && credit.metadata.invoices) {
-        credit.metadata.invoices.forEach(invoice => {
+      if (credit.metadata && credit.invoices) {
+        credit.invoices.forEach(invoice => {
           txns.push({
             amount: `- $${invoice.amount}`,
             description: `Used for settling invoice ${invoice.invoiceId}`,
