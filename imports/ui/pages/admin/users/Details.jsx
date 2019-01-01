@@ -848,7 +848,7 @@ class UserDetails extends Component {
                                 </div>
                                 <div className="p-l-20">
                                   <h3 className="no-margin p-b-30 text-white ">
-                                    {paymeter && <span>$ {Number(Math.max(paymeter.bill, paymeter.minimumFeeThisMonth)).toFixed(2)}</span>}
+                                    {paymeter && <span>$ {Number(Math.max(paymeter.bill || 0, paymeter.minimumFeeThisMonth)).toFixed(2)}</span>}
 
                                     {!paymeter && <span>$0</span>}
                                   </h3>

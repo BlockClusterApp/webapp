@@ -18,6 +18,7 @@ class InvoiceList extends Component {
       billingPeriodLabel: moment()
         .subtract(1, 'month')
         .format('MMM-YYYY'),
+      paymentStatus: 1,
     };
   }
 
