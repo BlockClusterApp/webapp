@@ -7,20 +7,18 @@ const debug = require('debug')('scheduler:bull:bill');
 
 const CONCURRENCY = 5;
 
-module.exports = (bullSystem) => {
-
-  const processFunction = (job) => {
+module.exports = bullSystem => {
+  const processFunction = job => {
     return new Promise(async resolve => {
-
       const plan = RZPlan.find({
-        identifier: 'verification'
+        identifier: 'verification',
       }).fetch()[0];
 
       const { userId } = job.data;
-      debug("Generating invoice for ", userId);
+      debug('Generating invoice for ', userId);
 
       let billingMonth = moment().subtract(1, 'month');
-      if(process.env.GENERATE_BILL) {
+      if (process.env.GENERATE_BILL) {
         // billingMonth = moment().subtract(1, 'month');
       }
       const prevMonth = billingMonth.get('month');
@@ -28,30 +26,29 @@ module.exports = (bullSystem) => {
       const bill = await Billing.generateBill({
         userId,
         month: prevMonth,
-        year: prevYear
+        year: prevYear,
       });
       debug('Bill', bill);
 
       const rzSubscription = RZSubscription.find({
         userId,
         plan_id: plan.id,
-        bc_status: 'active'
+        bc_status: 'active',
       }).fetch()[0];
 
       const invoiceId = await Invoice.generateInvoice({
         userId,
         billingMonth: billingMonth.toDate(),
         bill,
-        rzSubscription
+        rzSubscription,
       });
 
-      ElasticLogger.log("Invoice generated", {
+      ElasticLogger.log('Invoice generated', {
         billingMonth: billingMonth.format('MMM-YYYY'),
         userId,
         rzSubscription: rzSubscription && rzSubscription._id,
-        invoiceId
+        invoiceId,
       });
-
 
       // if(!rzSubscription) {
       //   console.log("Subscription not found", userId, plan.id);
@@ -60,7 +57,7 @@ module.exports = (bullSystem) => {
 
       return resolve(invoiceId);
     });
-  }
+  };
 
   bullSystem.bullJobs.process('generate-bill-user', CONCURRENCY, processFunction);
-}
+};

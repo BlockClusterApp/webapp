@@ -363,20 +363,20 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
     }
   }
 
-  const paymeterCost = await PaymeterApis.getBill(userId);
-  if (Math.floor(Number(paymeterCost)) > 0) {
-    result.networks = result.networks || [];
-    result.networks.push({
-      name: 'Paymeter Cost',
-      instanceId: '',
-      createdOn: '',
-      rate: '',
-      runtime: '',
-      cost: paymeterCost,
-    });
+  const paymeterCost = await PaymeterApis.getBill({ userId, isFromFrontEnd: isFromFrontend, billingPeriodLabel: selectedMonth.format('MMM-YYYY') });
+  // if (Math.floor(Number(paymeterCost)) > 0) {
+  result.networks = result.networks || [];
+  result.networks.push({
+    name: 'Paymeter Cost',
+    instanceId: '',
+    createdOn: '',
+    rate: '',
+    runtime: '',
+    cost: paymeterCost,
+  });
 
-    result.totalAmount += Number(paymeterCost);
-  }
+  result.totalAmount += Number(paymeterCost);
+  // }
 
   //end
 

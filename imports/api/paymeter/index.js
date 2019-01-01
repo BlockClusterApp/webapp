@@ -673,11 +673,10 @@ function isUserSubscribedToPaymeter(userId) {
   }
 }
 
-async function paymeter_getAndResetUserBill(userId, isFromFrontEnd) {
+async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, billingPeriodLabel }) {
   if (userId) {
     let paymeter_userData = PaymeterCollection.findOne({ userId: userId });
     const paymeterPricing = PaymeterPricing.find({ active: true }).fetch()[0];
-
     if (paymeter_userData) {
       if (paymeter_userData.subscribed) {
         let bill = paymeter_userData.bill || '0';
@@ -721,15 +720,12 @@ async function paymeter_getAndResetUserBill(userId, isFromFrontEnd) {
           bill = paymeter_userData.minimumFeeThisMonth;
         }
 
-        const historyLabel = moment()
-          .subtract(1, 'month')
-          .format('MMM-YYYY');
-        const history = PaymeterBillHistory.find({ billingPeriodLabel: historyLabel, userId }).fetch()[0];
+        const history = PaymeterBillHistory.find({ billingPeriodLabel }).fetch()[0];
         if (history) {
           return history.bill;
-        } else if (!isFromFrontend) {
+        } else if (!isFromFrontEnd) {
           PaymeterBillHistory.insert({
-            billingPeriodLabel: historyLabel,
+            billingPeriodLabel,
             userId,
             bill,
             metadata: paymeter_userData,
@@ -829,7 +825,7 @@ Meteor.methods({
               $set: {
                 subscribed: true,
                 unsubscribeNextMonth: false,
-                minimumFeeThisMonth: minimumFeeThisMonth.toString(),
+                minimumFeeThisMonth: String(Number(minimumFeeThisMonth.toString()).toFixed(2)),
               },
               $push: {
                 subscriptions: {
@@ -855,7 +851,7 @@ Meteor.methods({
             $set: {
               subscribed: true,
               unsubscribeNextMonth: false,
-              minimumFeeThisMonth: minimumFeeThisMonth.toString(),
+              minimumFeeThisMonth: String(Number(minimumFeeThisMonth.toString()).toFixed(2)),
             },
             $push: {
               subscriptions: {
