@@ -40,7 +40,7 @@ class App extends Component {
           return <RouteComponent user={this.props.user} />;
         } else {
         }
-        if (!Number(localStorage.getItem('admin')) > 1) {
+        if (Number(localStorage.getItem('admin')) < 1) {
           return <Redirect to="/app/networks" />;
         }
         return <RouteComponent user={this.props.user} />;

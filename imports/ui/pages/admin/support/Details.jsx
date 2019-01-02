@@ -14,22 +14,26 @@ class Support extends Component {
   }
 
   componentDidMount() {
-    this.subscriptions = [Meteor.subscribe('support.id', this.props.match.params.id, {
-      onReady: () => {
-        const support = SupportTickets.find({ _id: this.props.match.params.id }).fetch()[0];
-        const user = Meteor.users.find({
-          _id: support.createdBy
-        }).fetch()[0];
-        const network = Networks.find({
-          _id: support.serviceType === 'network' && support.serviceTypeId,
-        }).fetch()[0];
+    this.subscriptions = [
+      Meteor.subscribe('support.id', this.props.match.params.id, {
+        onReady: () => {
+          const support = SupportTickets.find({ _id: this.props.match.params.id }).fetch()[0];
+          const user = Meteor.users
+            .find({
+              _id: support.createdBy,
+            })
+            .fetch()[0];
+          const network = Networks.find({
+            _id: support.serviceType === 'network' && support.serviceTypeId,
+          }).fetch()[0];
 
-        this.setState({
-          createdBy: user,
-          network
-        });
-      },
-    })]
+          this.setState({
+            createdBy: user,
+            network,
+          });
+        },
+      }),
+    ];
   }
 
   componentWillUnmount() {
@@ -179,11 +183,18 @@ class Support extends Component {
                     </div>
                   )}
                   {ticket.history &&
-                    ticket.history.sort((h1, h2) => new Date(h2.createdAt).getTime() - new Date(h1.createdAt).getTime()).map((history, index) => {
-                      return (
-                        <Conversation key={`history_${index}`} isCustomerMessage={!history.isFromBlockcluster} message={history.description} extra={{ time: history.createdAt }} />
-                      );
-                    })}
+                    ticket.history
+                      .sort((h1, h2) => new Date(h2.createdAt).getTime() - new Date(h1.createdAt).getTime())
+                      .map((history, index) => {
+                        return (
+                          <Conversation
+                            key={`history_${index}`}
+                            isCustomerMessage={!history.isFromBlockcluster}
+                            message={history.description}
+                            extra={{ time: history.createdAt }}
+                          />
+                        );
+                      })}
                 </div>
               </div>
             </div>

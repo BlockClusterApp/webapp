@@ -102,7 +102,7 @@ class NetworksList extends Component {
                                                                 {ReactHtmlParser(helpers.convertStatusToTag(helpers.calculateNodeStatus(item.status, item.lastPinged), helpers.firstLetterCapital(helpers.calculateNodeStatus(item.status, item.lastPinged))))}
                                                             </td>
                                                             <td className="v-align-middle">
-                                                                {moment(item.createdOn).format('DD-MMM-YYYY HH:mm')}
+                                                                {moment(item.createdOn).format('DD-MMM-YYYY kk:mm')}
                                                             </td>
                                                         </tr>
                                                     )

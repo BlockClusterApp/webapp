@@ -1,10 +1,10 @@
-import React, { Component } from "react";
-import { withTracker } from "meteor/react-meteor-data";
-import helpers from "../../../../modules/helpers";
-import { withRouter } from "react-router-dom";
-import { Link } from "react-router-dom";
-import moment from "moment";
-import notifications from '../../../../modules/notifications'
+import React, { Component } from 'react';
+import { withTracker } from 'meteor/react-meteor-data';
+import helpers from '../../../../modules/helpers';
+import { withRouter } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import moment from 'moment';
+import notifications from '../../../../modules/notifications';
 import KubeDashboard from './components/KubeDashboard';
 
 class NetworkList extends Component {
@@ -16,13 +16,13 @@ class NetworkList extends Component {
       page: 0,
       networkId: null,
       network: {},
-      deleteConfirmAsked: false
+      deleteConfirmAsked: false,
     };
   }
 
   componentWillUnmount() {
     this.unmounted = true;
-    if(this.timer){
+    if (this.timer) {
       clearTimeout(this.timer);
     }
     this.props.subscriptions.forEach(s => {
@@ -32,24 +32,20 @@ class NetworkList extends Component {
 
   componentDidMount() {
     this.setState({
-      networkId: this.props.match.params.id
+      networkId: this.props.match.params.id,
     });
     this.fetchNetwork();
   }
 
-  fetchNetwork(){
-    Meteor.call(
-      "fetchNetworkForAdmin",
-      this.props.match.params.id,
-      (err, res) => {
-        if (err) {
-          return console.log(err);
-        }
-        this.setState({
-          network: res
-        });
+  fetchNetwork() {
+    Meteor.call('fetchNetworkForAdmin', this.props.match.params.id, (err, res) => {
+      if (err) {
+        return console.log(err);
       }
-    );
+      this.setState({
+        network: res,
+      });
+    });
   }
 
   getNetworkType = config => {
@@ -71,106 +67,97 @@ class NetworkList extends Component {
     return <span className="label label-info">Custom</span>;
   };
 
-  getNetworkStatus = (status) => {
-      if (status === "initializing" || status === "pending") {
-          return <span className="label label-inverse">Initializing</span>
-      } else if (status === "running" || status === "completed") {
-          return <span className="label label-success">Running</span>
-      } else if (status === "down" || status === "cancelled") {
-          return <span className="label label-important">Down</span>
-      } else {
-          return <span className="label label-primary">Default</span>
-      }
-  }
+  getNetworkStatus = status => {
+    if (status === 'initializing' || status === 'pending') {
+      return <span className="label label-inverse">Initializing</span>;
+    } else if (status === 'running' || status === 'completed') {
+      return <span className="label label-success">Running</span>;
+    } else if (status === 'down' || status === 'cancelled') {
+      return <span className="label label-important">Down</span>;
+    } else {
+      return <span className="label label-primary">Default</span>;
+    }
+  };
 
   deleteNode = () => {
-    if(!this.state.deleteConfirmAsked) {
+    if (!this.state.deleteConfirmAsked) {
       this.timer = setTimeout(() => {
-        if(this.state && !this.unmounted) {
+        if (this.state && !this.unmounted) {
           this.setState({
-            deleteConfirmAsked: false
+            deleteConfirmAsked: false,
           });
         }
       }, 5 * 1000);
 
       return this.setState({
-        deleteConfirmAsked: true
+        deleteConfirmAsked: true,
       });
     }
 
-    Meteor.call("adminDeleteNetwork", this.state.network.network.instanceId, (err, res) => {
-      if(!err){
+    Meteor.call('adminDeleteNetwork', this.state.network.network.instanceId, (err, res) => {
+      if (!err) {
         this.setState({
-          deleteDisabled: true
+          deleteDisabled: true,
         });
         this.fetchNetwork();
-        notifications.success("Network deleted successfully");
+        notifications.success('Network deleted successfully');
       } else {
         notifications.error(err.reason);
       }
     });
-  }
+  };
 
   restartPod = () => {
-    if(!this.state.restartConfirmAsked) {
+    if (!this.state.restartConfirmAsked) {
       this.restartTimer = setTimeout(() => {
-        if(this.state && !this.unmounted) {
+        if (this.state && !this.unmounted) {
           this.setState({
-            restartConfirmAsked: false
+            restartConfirmAsked: false,
           });
         }
       }, 5 * 1000);
 
       return this.setState({
-        restartConfirmAsked: true
+        restartConfirmAsked: true,
       });
     }
 
     this.setState({
-      restartingPod: true
+      restartingPod: true,
     });
 
-    Meteor.call("restartPod", this.state.network.network.instanceId, (err, res) => {
+    Meteor.call('restartPod', this.state.network.network.instanceId, (err, res) => {
       this.setState({
         restartConfirmAsked: false,
       });
-      if(!err){
+      if (!err) {
         this.restartTimer = setTimeout(() => {
           this.setState({
-            restartingPod: false
-          })
+            restartingPod: false,
+          });
         }, 60 * 1000);
-        notifications.success("Pod restarted successfully");
+        notifications.success('Pod restarted successfully');
       } else {
         notifications.error(err.reason);
       }
     });
-  }
+  };
 
   render() {
-    const {
-      network,
-      user,
-      locations,
-      voucher,
-      networkType,
-      bill
-    } = this.state.network;
+    const { network, user, locations, voucher, networkType, bill } = this.state.network;
     if (!user) {
       const LoadingView = (
         <div
           className="d-flex justify-content-center flex-column full-height"
           style={{
-            marginTop: "250px",
-            paddingBottom: "250px",
-            paddingLeft: "250px"
+            marginTop: '250px',
+            paddingBottom: '250px',
+            paddingLeft: '250px',
           }}
         >
           <div id="loader" />
           <br />
-          <p style={{ textAlign: "center", fontSize: "1.2em" }}>
-            Just a minute
-          </p>
+          <p style={{ textAlign: 'center', fontSize: '1.2em' }}>Just a minute</p>
         </div>
       );
       return LoadingView;
@@ -178,7 +165,7 @@ class NetworkList extends Component {
 
     let thisLocation = locations.find(loc => loc.locationCode === network.locationCode);
 
-    if(!thisLocation) {
+    if (!thisLocation) {
       thisLocation = locations[0];
     }
 
@@ -195,9 +182,7 @@ class NetworkList extends Component {
                   <li className="breadcrumb-item">
                     <Link to="/app/admin/networks">Networks</Link>
                   </li>
-                  <li className="breadcrumb-item active">
-                    {this.state.networkId}
-                  </li>
+                  <li className="breadcrumb-item active">{this.state.networkId}</li>
                 </ol>
               </div>
             </div>
@@ -205,26 +190,23 @@ class NetworkList extends Component {
           <div className="container-fluid p-l-25 p-r-25 p-t-0 p-b-25 sm-padding-10">
             <div className="row">
               <div className="col-lg-3 col-sm-6  d-flex flex-column">
-                <div
-                  className="card social-card share  full-width m-b-10 no-border"
-                  data-social="item"
-                >
+                <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
                   <div className="card-header ">
                     <h5 className="text-primary pull-left fs-12">
                       User <i className="fa fa-circle text-complete fs-11" />
                     </h5>
                     <div className="pull-right small hint-text">
-                    <Link to={`/app/admin/users/${user._id}`}>
-                      Details <i className="fa fa-comment-o" />
-                    </Link>
+                      <Link to={`/app/admin/users/${user._id}`}>
+                        Details <i className="fa fa-comment-o" />
+                      </Link>
                     </div>
                     <div className="clearfix" />
                   </div>
                   <div className="card-description">
                     <p>
-                    <Link to={`/app/admin/users/${user._id}`}>
-                      {user.profile.firstName} {user.profile.lastName}
-                    </Link>
+                      <Link to={`/app/admin/users/${user._id}`}>
+                        {user.profile.firstName} {user.profile.lastName}
+                      </Link>
                     </p>
                   </div>
                 </div>
@@ -238,16 +220,13 @@ class NetworkList extends Component {
                               Email <i className="fa fa-chevron-right" />
                             </span>
                           </div>
-
                         </div>
                       </div>
                     </div>
                     <div className="row-xs-height">
                       <div className="col-xs-height col-top">
                         <div className="p-l-20 p-t-50 p-b-40 p-r-20">
-                          <p className="no-margin p-b-5">
-                            {user.emails[0].address}
-                          </p>
+                          <p className="no-margin p-b-5">{user.emails[0].address}</p>
                         </div>
                       </div>
                     </div>
@@ -257,7 +236,7 @@ class NetworkList extends Component {
                           <div
                             className="progress-bar progress-bar-primary"
                             style={{
-                              width: "100%"
+                              width: '100%',
                             }}
                           />
                         </div>
@@ -267,87 +246,77 @@ class NetworkList extends Component {
                 </div>
               </div>
               <div className="col-lg-4 col-sm-6  d-flex flex-column">
-                <div
-                  className="card social-card share  full-width m-b-10 no-border"
-                  data-social="item"
-                >
+                <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
                   <div className="card-header clearfix">
-                    <h5 className="text-success pull-left fs-12">
-                     Network Info | {network.instanceId}
-                    </h5>
+                    <h5 className="text-success pull-left fs-12">Network Info | {network.instanceId}</h5>
                     <div className="clearfix" />
                   </div>
                   <div className="card-description">
-                  {this.getNetworkStatus(network.status)}&nbsp;{helpers.firstLetterCapital(network.name)}
+                    {this.getNetworkStatus(network.status)}&nbsp;{helpers.firstLetterCapital(network.name)}
                     <br />
-                    <span style={{fontSize: '10px', color: '#888'}}>
-                      Created On: {moment(network.createdAt).format('DD-MMM-YYYY HH:mm:SS')}
-                    </span>
+                    <span style={{ fontSize: '10px', color: '#888' }}>Created On: {moment(network.createdAt).format('DD-MMM-YYYY kk:mm:ss')}</span>
                   </div>
                   <div className="clearfix" />
                 </div>
-                <div
-                  className="card social-card share  full-width m-b-10 no-border"
-                  data-social="item"
-                >
+                <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
                   <div className="card-header clearfix">
-                    <h5 className="text-danger pull-left fs-12">
-                     Actions
-                    </h5>
+                    <h5 className="text-danger pull-left fs-12">Actions</h5>
                     <div className="clearfix" />
                   </div>
                   <div className="card-description">
-                    <button className="btn btn-danger" style={{marginBottom: '5px'}} onClick={this.deleteNode} disabled={!!network.deletedAt || this.state.deleteDisabled}>{!!network.deletedAt ? "Already deleted" : this.state.deleteConfirmAsked ? "Are you sure? This is irreversible" : "Delete Node"}</button>&nbsp;
-                    <button className="btn btn-danger"  style={{marginBottom: '5px'}} onClick={this.restartPod} disabled={this.state.restartingPod}>{this.state.restartingPod && (<i className="fa fa-spinner fa-spin" />)}&nbsp;{!!this.state.restartingPod ? "Restarting Pod" : this.state.restartConfirmAsked ? "Are you sure? This is irreversible" : "Restart Pod"}</button>
+                    <button className="btn btn-danger" style={{ marginBottom: '5px' }} onClick={this.deleteNode} disabled={!!network.deletedAt || this.state.deleteDisabled}>
+                      {!!network.deletedAt ? 'Already deleted' : this.state.deleteConfirmAsked ? 'Are you sure? This is irreversible' : 'Delete Node'}
+                    </button>
+                    &nbsp;
+                    <button className="btn btn-danger" style={{ marginBottom: '5px' }} onClick={this.restartPod} disabled={this.state.restartingPod}>
+                      {this.state.restartingPod && <i className="fa fa-spinner fa-spin" />}&nbsp;
+                      {!!this.state.restartingPod ? 'Restarting Pod' : this.state.restartConfirmAsked ? 'Are you sure? This is irreversible' : 'Restart Pod'}
+                    </button>
                   </div>
                   <div className="clearfix" />
                 </div>
               </div>
               <div className="col-lg-5 col-sm-6 d-flex flex-column">
-                <div
-                  className="card social-card share  full-width m-b-10 no-border"
-                  data-social="item"
-                >
+                <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
                   <div className="card-header clearfix">
-                    <h5 className="text-info pull-left fs-12">
-                      Network Config
-                    </h5>
+                    <h5 className="text-info pull-left fs-12">Network Config</h5>
                     <div className="clearfix" />
                   </div>
-                  <div className="card-description" >
-                    Location: <b>{thisLocation.locationCode}</b> <span style={{color: '#777', fontSize: '11px'}}>&nbsp;{thisLocation.locationName} </span><br />
+                  <div className="card-description">
+                    Location: <b>{thisLocation.locationCode}</b> <span style={{ color: '#777', fontSize: '11px' }}>&nbsp;{thisLocation.locationName} </span>
+                    <br />
                     Specs: <b>{this.getNetworkType(network.networkConfig)}</b>
                   </div>
                   <div className="clearfix" />
                 </div>
-                  {voucher &&
+                {voucher && (
                   <div>
-                    <div
-                  className="card social-card share  full-width m-b-10 no-border"
-                  data-social="item">
-                    <div className="card-header clearfix">
-                      <h5 className="text-primary pull-left fs-12">
-                        Voucher
-                      </h5>
+                    <div className="card social-card share  full-width m-b-10 no-border" data-social="item">
+                      <div className="card-header clearfix">
+                        <h5 className="text-primary pull-left fs-12">Voucher</h5>
+                        <div className="clearfix" />
+                      </div>
+                      <div className="card-description" style={{ fontSize: '0.8em', color: '#888' }}>
+                        <h5>
+                          {voucher.code}&nbsp;|&nbsp;<span style={{ fontSize: '0.8em', color: '#888' }}>{this.getNetworkType(voucher.networkConfig)}</span>
+                        </h5>
+                        {voucher.isDiskChangeable ? 'Disk configurable' : null}
+                        <p>Expires on: {moment(voucher.expiryDate).format('DD-MMM-YYYY')}</p>
+                      </div>
+
                       <div className="clearfix" />
                     </div>
-                    <div className="card-description"  style={{fontSize: '0.8em', color: '#888'}}>
-                      <h5>{voucher.code}&nbsp;|&nbsp;<span  style={{fontSize: '0.8em', color: '#888'}}>{this.getNetworkType(voucher.networkConfig)}</span></h5>
-                      {voucher.isDiskChangeable ? "Disk configurable" : null}
-                      <p>Expires on: {moment(voucher.expiryDate).format('DD-MMM-YYYY')}</p>
-                    </div>
-
-                    <div className="clearfix" />
                   </div>
-                </div>
-                }
+                )}
               </div>
             </div>
-              {!network.deletedAt && <div className="row">
+            {!network.deletedAt && (
+              <div className="row">
                 <div className="col-md-12">
                   <KubeDashboard instanceId={network.instanceId} networkId={network._id} />
                 </div>
-              </div>}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -358,6 +327,6 @@ class NetworkList extends Component {
 export default withTracker(() => {
   return {
     users: Meteor.users.find({}).fetch(),
-    subscriptions: [Meteor.subscribe("users.all", { page: 0 })]
+    subscriptions: [Meteor.subscribe('users.all', { page: 0 })],
   };
 })(withRouter(NetworkList));

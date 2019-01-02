@@ -74,7 +74,7 @@ export default withRouter(
 
     componentDidMount() {
       if (this.props.user && !localStorage.getItem('admin')) {
-        locationStorage.setItem('admin', this.props.user.admin);
+        localStorage.setItem('admin', this.props.user.admin);
       }
       this.pricingSubscription = Meteor.subscribe('pricing');
       window.addEventListener('RemoteConfigChanged', () => {

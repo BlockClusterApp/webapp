@@ -529,7 +529,7 @@ class ClientDetails extends Component {
 
                         <tr>
                           <td className="v-align-middle semi-bold">Created At</td>
-                          <td className="v-align-middle">{awsMetaData && awsMetaData.user && moment(awsMetaData.user.CreateDate).format('DD-MMM-YYYY HH:mm:SS')}</td>
+                          <td className="v-align-middle">{awsMetaData && awsMetaData.user && moment(awsMetaData.user.CreateDate).format('DD-MMM-YYYY kk:mm:ss')}</td>
                         </tr>
 
                         <tr>

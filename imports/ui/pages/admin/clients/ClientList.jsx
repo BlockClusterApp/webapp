@@ -157,7 +157,7 @@ getExpiryBadge = (client) => {
                                                       <td>{client.clientDetails.emailId}</td>
                                                       <td>{client.licenseDetails ? client.licenseDetails.licenseKey : '-'}</td>
                                                       <td>{this.getExpiryBadge(client)}</td>
-                                                      <td>{moment(client.createdAt).format('DD-MMM-YYYY HH:mm:SS')}</td>
+                                                      <td>{moment(client.createdAt).format('DD-MMM-YYYY kk:mm:ss')}</td>
                                                     </tr>
                                                   )
                                                 })

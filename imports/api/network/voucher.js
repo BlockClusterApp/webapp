@@ -157,8 +157,8 @@ Voucher.fetchBalanceCredits = async ({ userId }) => {
 
   const credits = Credits.find({ userId }).fetch();
   const balance = credits.reduce((sum, credit) => {
-    const currentBalance = sum + Number(credit.amount);
-    if (!creditinvoices) {
+    let currentBalance = sum + Number(credit.amount);
+    if (!credit.invoices) {
       return currentBalance;
     }
     credit.invoices.forEach(invoice => {

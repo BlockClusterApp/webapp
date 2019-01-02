@@ -35,7 +35,7 @@ class ClientMetrics extends Component {
             memory = Math.floor(memory / 1000);
           }
           graph.coordinates.push({
-            name: moment(entry.timestamp).format('mm:SS'),
+            name: moment(entry.timestamp).format('mm:ss'),
             cpu,
             memory,
           });
@@ -65,7 +65,7 @@ class ClientMetrics extends Component {
             memory = Math.floor(memory / 1000);
           }
           graph.coordinates.push({
-            name: moment(entry.timestamp).format('mm:SS'),
+            name: moment(entry.timestamp).format('mm:ss'),
             cpu,
             memory,
           });

@@ -5,25 +5,70 @@ import helpers from '../../../../modules/helpers';
 import { withRouter } from 'react-router-dom';
 import ReactHtmlParser from 'react-html-parser';
 import moment from 'moment';
+import querystring from 'querystring';
 
-const PAGE_LIMIT = 20;
+const PAGE_LIMIT = 10;
 class TicketList extends Component {
   constructor(props) {
     super(props);
 
+    this.pagination = {
+      limit: 10,
+    };
+    if (props.location.search) {
+      const query = querystring.parse(props.location.search.substr(1));
+      if (query.searchText) {
+        this.searchText = query.searchText;
+      }
+      delete query.searchText;
+      if (this.searchText) {
+        query.caseId = { $regex: `${this.searchText}*`, $options: 'i' };
+      }
+
+      if (query.page) {
+        this.page = Number(query.page);
+        this.pagination.skip = (this.page - 1) * PAGE_LIMIT;
+      }
+      delete query.page;
+
+      if (query.status) {
+        query.status = Number(query.status);
+      }
+      if (query.active === 'true') {
+        query.active = true;
+      } else if (query.active === 'false') {
+        query.active = false;
+      } else {
+        delete query.active;
+      }
+      this.query = query;
+    } else {
+      this.query = {};
+      this.page = 1;
+    }
+
     this.state = {
       page: 0,
-      support: [],
+      support: SupportTicket.find(this.query, this.pagination).fetch(),
     };
-
-    this.query = {};
   }
 
-  componentWillUnmount() {
-    this.props.subscriptions.forEach(s => {
-      s.stop();
+  updateRoute = () => {
+    const sanitizedQuery = { ...this.query };
+    delete sanitizedQuery.caseId;
+    delete sanitizedQuery.$or;
+    delete sanitizedQuery.page;
+    this.props.history.replace({
+      pathname: this.props.location.pathname,
+      search: `?${querystring.stringify({ ...sanitizedQuery, searchText: this.searchText, page: this.page })}`,
     });
-    this.supportSubscription.stop();
+  };
+
+  componentWillUnmount() {
+    // this.props.subscriptions.forEach(s => {
+    //   s.stop();
+    // });
+    // this.supportSubscription.stop();
   }
 
   componentDidMount() {
@@ -31,6 +76,14 @@ class TicketList extends Component {
   }
 
   search = () => {
+    this.updateRoute();
+    if (this.page) {
+      this.pagination.skip = (this.page - 1) * PAGE_LIMIT;
+    }
+    this.setState({
+      loading: true,
+    });
+    this.pagination.limit = PAGE_LIMIT;
     this.supportSubscription = Meteor.subscribe(
       'support.search',
       {
@@ -39,7 +92,8 @@ class TicketList extends Component {
       {
         onReady: () => {
           this.setState({
-            support: SupportTicket.find(this.query).fetch(),
+            support: SupportTicket.find(this.query, this.pagination).fetch(),
+            loading: false,
           });
         },
       }
@@ -47,29 +101,20 @@ class TicketList extends Component {
   };
 
   changePage = pageOffset => {
-    if (this.state.page + pageOffset < 0) {
+    if (this.page + pageOffset < 0) {
       return;
     }
-    this.supportSubscription.stop();
-    this.supportSubscription = Meteor.subscribe(
-      'support.all',
-      { query: this.query, page: this.state.page + pageOffset },
-      {
-        onReady: () => {
-          const page = this.state.page + pageOffset;
-          this.setState({
-            support: SupportTicket.find(this.query).fetch(),
-            page,
-          });
-        },
-      }
-    );
+    this.page = Number(this.page) + pageOffset;
+    this.search();
   };
 
   onSearch = e => {
     const searchQuery = e.target.value;
+    this.searchText = e.target.value;
     if (!searchQuery) {
       delete this.query.caseId;
+      this.searchText = '';
+      this.updateRoute();
       return this.changePage(0);
     }
     this.query.caseId = { $regex: `${searchQuery}*`, $options: 'i' };
@@ -91,6 +136,9 @@ class TicketList extends Component {
   };
 
   render() {
+    if (this.page < 1) {
+      this.page = 1;
+    }
     return (
       <div className="content supportList">
         <div className="m-t-20 container-fluid container-fixed-lg bg-white">
@@ -107,19 +155,33 @@ class TicketList extends Component {
                         <span className="input-group-addon">
                           <i className="fa fa-search" />
                         </span>
-                        <input type="text" placeholder="Case ID" className="form-control" onChange={this.onSearch} />
+                        <input type="text" placeholder="Case ID" defaultValue={this.searchText} className="form-control" onChange={this.onSearch} />
                       </div>
                     </div>
                     <div className="col-md-4">
                       <div className="form-group ">
                         <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onTicketStatusChange}>
-                          <option value="all">States: All</option>
-                          <option value="1">New</option>
-                          <option value="2">BlockCluster Action Pending</option>
-                          <option value="3">Customer Action Pending</option>
-                          <option value="4">Cancelled</option>
-                          <option value="5">Resolved</option>
-                          <option value="6">System Closed</option>
+                          <option value="all" selected={!this.query.status}>
+                            States: All
+                          </option>
+                          <option value="1" selected={this.query.status === 1}>
+                            New
+                          </option>
+                          <option value="2" selected={this.query.status === 2}>
+                            BlockCluster Action Pending
+                          </option>
+                          <option value="3" selected={this.query.status === 3}>
+                            Customer Action Pending
+                          </option>
+                          <option value="4" selected={this.query.status === 4}>
+                            Cancelled
+                          </option>
+                          <option value="5" selected={this.query.status === 5}>
+                            Resolved
+                          </option>
+                          <option value="6" selected={this.query.status === 6}>
+                            System Closed
+                          </option>
                         </select>
                       </div>
                     </div>
@@ -140,7 +202,7 @@ class TicketList extends Component {
                         {this.state.support.map((ticket, index) => {
                           return (
                             <tr key={index + 1} onClick={() => this.openSupportTicket(ticket._id)}>
-                              <td>{this.state.page * PAGE_LIMIT + index + 1}</td>
+                              <td>{this.state.loading ? <i className="fa fa-spin fa-circle-o-notch text-primary" /> : (this.page - 1) * PAGE_LIMIT + index + 1}</td>
                               <td>{ticket.subject}</td>
                               <td>{ticket.caseId}</td>
                               <td>{helpers.getSupportTicketStatus(ticket.status)}</td>
@@ -154,9 +216,11 @@ class TicketList extends Component {
                   <div className="pagination pull-right" style={{ marginTop: '5px' }}>
                     <nav aria-label="Page navigation example">
                       <ul className="pagination">
-                        <li className="page-item" onClick={() => this.changePage(-1)}>
-                          <a className="page-link">Previous</a>
-                        </li>
+                        {this.page && this.page > 1 && (
+                          <li className="page-item" onClick={() => this.changePage(-1)}>
+                            <a className="page-link">Previous</a>
+                          </li>
+                        )}
                         <li className="page-item" onClick={() => this.changePage(1)}>
                           <a className="page-link">Next</a>
                         </li>

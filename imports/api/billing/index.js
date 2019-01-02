@@ -290,8 +290,8 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         voucher: voucher,
         networkConfig,
         label,
-        timeperiod: `Started at: ${moment(network.createdOn).format('DD-MMM-YYYY HH:mm')} ${
-          network.deletedAt ? ` to ${moment(network.deletedAt).format('DD-MMM-YYYY HH:mm:SS')}` : 'and still running'
+        timeperiod: `Started at: ${moment(network.createdOn).format('DD-MMM-YYYY kk:mm')} ${
+          network.deletedAt ? ` to ${moment(network.deletedAt).format('DD-MMM-YYYY kk:mm:ss')}` : 'and still running'
         }`,
       };
     })
