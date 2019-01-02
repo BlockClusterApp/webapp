@@ -44,14 +44,22 @@ Meteor.publish('users.search', function({ query, limit, page }) {
     return [];
   }
   limit = limit || pageSize;
-  page = page || 0;
-  return Meteor.users.find(query, {
-    sort: {
-      createdAt: -1,
+  page = page || 1;
+  limit = limit * page;
+  return Meteor.users.find(
+    query,
+    {
+      sort: {
+        createdAt: -1,
+      },
+      limit: limit,
     },
-    limit: limit,
-    skip: page * pageSize,
-  });
+    {
+      fields: {
+        services: 0,
+      },
+    }
+  );
 });
 
 Meteor.publish('users.details', function({ userId }) {

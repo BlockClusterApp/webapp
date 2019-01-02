@@ -9,6 +9,7 @@ class UserList extends Component {
   constructor(props) {
     super(props);
 
+    this.pagination = {};
     if (props.location.search) {
       const query = querystring.parse(props.location.search.substr(1));
       if (query.searchText) {
@@ -28,16 +29,21 @@ class UserList extends Component {
       } else if (query['emails.verified'] === 'true') {
         query['emails.verified'] = true;
       }
+      if (query.page) {
+        this.page = Number(query.page);
+        this.pagination.skip = (this.page - 1) * PAGE_LIMIT;
+      }
       delete query.page;
       this.query = query;
     } else {
       this.query = {};
+      this.page = 1;
     }
 
     this.state = {
       locations: [],
       page: 0,
-      users: Meteor.users.find(this.query).fetch(),
+      users: Meteor.users.find(this.query, this.pagination).fetch(),
     };
   }
 
@@ -53,10 +59,8 @@ class UserList extends Component {
   }
   updateRoute = () => {
     const sanitizedQuery = { ...this.query };
-    this.page = sanitizedQuery.page || 1;
     delete this.query.page;
     delete sanitizedQuery.$or;
-    delete sanitizedQuery.page;
     this.props.history.replace({
       pathname: this.props.location.pathname,
       search: `?${querystring.stringify({ ...sanitizedQuery, searchText: this.searchText, page: this.page })}`,
@@ -65,15 +69,24 @@ class UserList extends Component {
 
   search = () => {
     this.updateRoute();
+    if (this.page) {
+      this.pagination.skip = (this.page - 1) * PAGE_LIMIT;
+    }
+    this.setState({
+      loading: true,
+    });
+    this.pagination.limit = PAGE_LIMIT;
     this.userSubscription = Meteor.subscribe(
       'users.search',
       {
         query: this.query,
+        page: this.page,
       },
       {
         onReady: () => {
           this.setState({
-            users: Meteor.users.find(this.query).fetch(),
+            users: Meteor.users.find(this.query, this.pagination).fetch(),
+            loading: false,
           });
         },
       }
@@ -117,26 +130,11 @@ class UserList extends Component {
   };
 
   changePage = pageOffset => {
-    if (this.state.page + pageOffset < 0) {
+    if (this.page + pageOffset < 0) {
       return;
     }
-    this.userSubscription = Meteor.subscribe(
-      'users.all',
-      { page: this.state.page + pageOffset },
-      {
-        onReady: () => {
-          const page = this.state.page + pageOffset;
-          this.setState({
-            users: Meteor.users
-              .find({
-                /*createdAt: {$ne: null}*/
-              })
-              .fetch(),
-            page,
-          });
-        },
-      }
-    );
+    this.page = Number(this.page) + pageOffset;
+    this.search();
   };
 
   openUser = userId => {
@@ -152,6 +150,9 @@ class UserList extends Component {
   };
 
   render() {
+    if (this.page < 1) {
+      this.page = 1;
+    }
     return (
       <div className="content networksList">
         <div className="m-t-20 container-fluid container-fixed-lg bg-white">
@@ -209,7 +210,7 @@ class UserList extends Component {
                         {this.state.users.map((user, index) => {
                           return (
                             <tr key={index + 1} onClick={() => this.openUser(user._id)}>
-                              <td>{this.state.page * PAGE_LIMIT + index + 1}</td>
+                              <td>{this.state.loading ? <i className="fa fa-spin fa-circle-o-notch text-primary" /> : (this.page - 1) * PAGE_LIMIT + index + 1}</td>
                               <td>
                                 {user.profile.firstName} {user.profile.lastName}
                               </td>
@@ -225,9 +226,11 @@ class UserList extends Component {
                   <div className="pagination pull-right" style={{ marginTop: '5px' }}>
                     <nav aria-label="Page navigation example">
                       <ul className="pagination">
-                        <li className="page-item" onClick={() => this.changePage(-1)}>
-                          <a className="page-link">Previous</a>
-                        </li>
+                        {this.page && this.page > 1 && (
+                          <li className="page-item" onClick={() => this.changePage(-1)}>
+                            <a className="page-link">Previous</a>
+                          </li>
+                        )}
                         <li className="page-item" onClick={() => this.changePage(1)}>
                           <a className="page-link">Next</a>
                         </li>
