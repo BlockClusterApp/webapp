@@ -7,11 +7,14 @@ import ReactHtmlParser from 'react-html-parser';
 import moment from 'moment';
 import querystring from 'querystring';
 
-const PAGE_LIMIT = 20;
+const PAGE_LIMIT = 10;
 class TicketList extends Component {
   constructor(props) {
     super(props);
 
+    this.pagination = {
+      limit: 10,
+    };
     if (props.location.search) {
       const query = querystring.parse(props.location.search.substr(1));
       if (query.searchText) {
@@ -20,6 +23,11 @@ class TicketList extends Component {
       delete query.searchText;
       if (this.searchText) {
         query.caseId = { $regex: `${this.searchText}*`, $options: 'i' };
+      }
+
+      if (query.page) {
+        this.page = Number(query.page);
+        this.pagination.skip = (this.page - 1) * PAGE_LIMIT;
       }
       delete query.page;
 
@@ -36,18 +44,17 @@ class TicketList extends Component {
       this.query = query;
     } else {
       this.query = {};
+      this.page = 1;
     }
 
     this.state = {
       page: 0,
-      support: SupportTicket.find(this.query).fetch(),
+      support: SupportTicket.find(this.query, this.pagination).fetch(),
     };
   }
 
   updateRoute = () => {
     const sanitizedQuery = { ...this.query };
-    this.page = sanitizedQuery.page || 1;
-    delete this.query.page;
     delete sanitizedQuery.caseId;
     delete sanitizedQuery.$or;
     delete sanitizedQuery.page;
@@ -70,6 +77,13 @@ class TicketList extends Component {
 
   search = () => {
     this.updateRoute();
+    if (this.page) {
+      this.pagination.skip = (this.page - 1) * PAGE_LIMIT;
+    }
+    this.setState({
+      loading: true,
+    });
+    this.pagination.limit = PAGE_LIMIT;
     this.supportSubscription = Meteor.subscribe(
       'support.search',
       {
@@ -78,7 +92,8 @@ class TicketList extends Component {
       {
         onReady: () => {
           this.setState({
-            support: SupportTicket.find(this.query).fetch(),
+            support: SupportTicket.find(this.query, this.pagination).fetch(),
+            loading: false,
           });
         },
       }
@@ -86,22 +101,11 @@ class TicketList extends Component {
   };
 
   changePage = pageOffset => {
-    if (this.state.page + pageOffset < 0) {
+    if (this.page + pageOffset < 0) {
       return;
     }
-    this.supportSubscription = Meteor.subscribe(
-      'support.all',
-      { query: this.query, page: this.state.page + pageOffset },
-      {
-        onReady: () => {
-          const page = this.state.page + pageOffset;
-          this.setState({
-            support: SupportTicket.find(this.query).fetch(),
-            page,
-          });
-        },
-      }
-    );
+    this.page = Number(this.page) + pageOffset;
+    this.search();
   };
 
   onSearch = e => {
@@ -195,7 +199,7 @@ class TicketList extends Component {
                         {this.state.support.map((ticket, index) => {
                           return (
                             <tr key={index + 1} onClick={() => this.openSupportTicket(ticket._id)}>
-                              <td>{this.state.page * PAGE_LIMIT + index + 1}</td>
+                              <td>{this.state.loading ? <i className="fa fa-spin fa-circle-o-notch text-primary" /> : (this.page - 1) * PAGE_LIMIT + index + 1}</td>
                               <td>{ticket.subject}</td>
                               <td>{ticket.caseId}</td>
                               <td>{helpers.getSupportTicketStatus(ticket.status)}</td>
@@ -209,9 +213,11 @@ class TicketList extends Component {
                   <div className="pagination pull-right" style={{ marginTop: '5px' }}>
                     <nav aria-label="Page navigation example">
                       <ul className="pagination">
-                        <li className="page-item" onClick={() => this.changePage(-1)}>
-                          <a className="page-link">Previous</a>
-                        </li>
+                        {this.page && this.page > 1 && (
+                          <li className="page-item" onClick={() => this.changePage(-1)}>
+                            <a className="page-link">Previous</a>
+                          </li>
+                        )}
                         <li className="page-item" onClick={() => this.changePage(1)}>
                           <a className="page-link">Next</a>
                         </li>

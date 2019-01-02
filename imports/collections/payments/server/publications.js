@@ -4,7 +4,7 @@ import UserCards from '../user-cards';
 import Invoice from '../invoice';
 import Credits from '../credits';
 
-const pageSize = 20;
+const pageSize = 10;
 const MIN_ADMIN_LEVEL = 1;
 Meteor.publish('userPayments', function() {
   return [
@@ -74,10 +74,10 @@ Meteor.publish('invoice.search', function({ query, limit, page }) {
     return [];
   }
   limit = limit || pageSize;
-  page = page || 0;
+  page = page || 1;
   return Invoice.find(query, {
     limit: pageSize,
-    skip: page * pageSize,
+    skip: (page - 1) * pageSize,
     fields: {
       items: 0,
     },

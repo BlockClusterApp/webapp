@@ -7,11 +7,12 @@ import ReactHtmlParser from 'react-html-parser';
 import moment from 'moment';
 import querystring from 'querystring';
 
-const PAGE_LIMIT = 20;
+const PAGE_LIMIT = 10;
 class NetworkList extends Component {
   constructor(props) {
     super(props);
 
+    this.pagination = {};
     if (props.location.search) {
       const query = querystring.parse(props.location.search.substr(1));
       if (query.searchText) {
@@ -25,6 +26,10 @@ class NetworkList extends Component {
           { _id: { $regex: `${this.search}*`, $options: 'i' } },
         ];
       }
+      if (query.page) {
+        this.page = Number(query.page);
+        this.pagination.skip = (this.page - 1) * PAGE_LIMIT;
+      }
       delete query.page;
 
       if (query.deletedAt === 'null') {
@@ -36,6 +41,7 @@ class NetworkList extends Component {
       this.query = {
         deletedAt: null,
       };
+      this.page = 1;
     }
 
     this.state = {
@@ -50,10 +56,7 @@ class NetworkList extends Component {
     if (this.query.deletedAt === null) {
       sanitizedQuery.deletedAt = 'null';
     }
-    this.page = sanitizedQuery.page || 1;
-    delete this.query.page;
     delete sanitizedQuery.$or;
-    delete sanitizedQuery.page;
     this.props.history.replace({
       pathname: this.props.location.pathname,
       search: `?${querystring.stringify({ ...sanitizedQuery, searchText: this.searchText, page: this.page })}`,
@@ -79,15 +82,24 @@ class NetworkList extends Component {
 
   search = () => {
     this.updateRoute();
+    if (this.page) {
+      this.pagination.skip = (this.page - 1) * PAGE_LIMIT;
+    }
+    this.setState({
+      loading: true,
+    });
+    this.pagination.limit = PAGE_LIMIT;
     this.networkSubscription = Meteor.subscribe(
       'networks.search',
       {
         query: this.query,
+        page: this.page,
       },
       {
         onReady: () => {
           this.setState({
-            networks: Networks.find(this.query).fetch(),
+            networks: Networks.find(this.query, this.pagination).fetch(),
+            loading: false,
           });
         },
       }
@@ -95,23 +107,11 @@ class NetworkList extends Component {
   };
 
   changePage = pageOffset => {
-    if (this.state.page + pageOffset < 0) {
+    if (this.page + pageOffset < 0) {
       return;
     }
-    this.networkSubscription.stop();
-    this.networkSubscription = Meteor.subscribe(
-      'networks.all',
-      { query: this.query, page: this.state.page + pageOffset },
-      {
-        onReady: () => {
-          const page = this.state.page + pageOffset;
-          this.setState({
-            networks: Networks.find(this.query).fetch(),
-            page,
-          });
-        },
-      }
-    );
+    this.page = Number(this.page) + pageOffset;
+    this.search();
   };
 
   onSearch = e => {
@@ -165,6 +165,9 @@ class NetworkList extends Component {
   };
 
   render() {
+    if (this.page < 1) {
+      this.page = 1;
+    }
     const locationOptions = this.state.locations.map(location => {
       return (
         <option value={location.locationCode} key={location.locationCode} selected={this.query.locationCode === location.locationCode}>
@@ -252,7 +255,7 @@ class NetworkList extends Component {
                         {this.state.networks.map((network, index) => {
                           return (
                             <tr key={index + 1} onClick={() => this.openNetwork(network._id)}>
-                              <td>{this.state.page * PAGE_LIMIT + index + 1}</td>
+                              <td>{this.state.loading ? <i className="fa fa-spin fa-circle-o-notch text-primary" /> : (this.page - 1) * PAGE_LIMIT + index + 1}</td>
                               <td>{network.name}</td>
                               <td>{network.instanceId}</td>
                               <td>
@@ -270,9 +273,11 @@ class NetworkList extends Component {
                   <div className="pagination pull-right" style={{ marginTop: '5px' }}>
                     <nav aria-label="Page navigation example">
                       <ul className="pagination">
-                        <li className="page-item" onClick={() => this.changePage(-1)}>
-                          <a className="page-link">Previous</a>
-                        </li>
+                        {this.page && this.page > 1 && (
+                          <li className="page-item" onClick={() => this.changePage(-1)}>
+                            <a className="page-link">Previous</a>
+                          </li>
+                        )}
                         <li className="page-item" onClick={() => this.changePage(1)}>
                           <a className="page-link">Next</a>
                         </li>

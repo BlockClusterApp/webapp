@@ -5,11 +5,14 @@ import { withRouter } from 'react-router-dom';
 import moment from 'moment';
 import querystring from 'querystring';
 
-const PAGE_LIMIT = 20;
+const PAGE_LIMIT = 10;
 class InvoiceList extends Component {
   constructor(props) {
     super(props);
 
+    this.pagination = {
+      limit: PAGE_LIMIT,
+    };
     if (props.location.search) {
       const query = querystring.parse(props.location.search.substr(1));
       if (query.searchText) {
@@ -26,6 +29,11 @@ class InvoiceList extends Component {
           { 'paymentLink.id': { $regex: `${this.searchText}*`, $options: 'i' } },
           { billingPeriodLabel: { $regex: `${this.searchText}*`, $options: 'i' } },
         ];
+      }
+
+      if (query.page) {
+        this.page = Number(query.page);
+        this.pagination.skip = (this.page - 1) * PAGE_LIMIT;
       }
       delete query.page;
 
@@ -49,17 +57,20 @@ class InvoiceList extends Component {
           .format('MMM-YYYY'),
         paymentStatus: 1,
       };
+      this.page = 1;
     }
 
     this.state = {
       page: 0,
-      invoices: Invoice.find(this.query).fetch(),
+      invoices: Invoice.find(this.query, this.pagination).fetch(),
     };
   }
 
   updateRoute = () => {
     const sanitizedQuery = { ...this.query };
-    this.page = sanitizedQuery.page || 1;
+    if (!sanitizedQuery.paymentStatus) {
+      delete sanitizedQuery.paymentStatus;
+    }
     delete this.query.page;
     delete sanitizedQuery.$or;
     delete sanitizedQuery.page;
@@ -82,15 +93,24 @@ class InvoiceList extends Component {
 
   search = () => {
     this.updateRoute();
+    if (this.page) {
+      this.pagination.skip = (this.page - 1) * PAGE_LIMIT;
+    }
+    this.setState({
+      loading: true,
+    });
+    this.pagination.limit = PAGE_LIMIT;
     this.invoiceSubscription = Meteor.subscribe(
       'invoice.search',
       {
         query: this.query,
+        page: this.page,
       },
       {
         onReady: () => {
           this.setState({
-            invoices: Invoice.find(this.query).fetch(),
+            invoices: Invoice.find(this.query, this.pagination).fetch(),
+            loading: false,
           });
         },
       }
@@ -115,22 +135,11 @@ class InvoiceList extends Component {
   };
 
   changePage = pageOffset => {
-    if (this.state.page + pageOffset < 0) {
+    if (this.page + pageOffset < 0) {
       return;
     }
-    this.invoiceSubscription = Meteor.subscribe(
-      'invoice.all',
-      { query: this.query, page: this.state.page + pageOffset },
-      {
-        onReady: () => {
-          const page = this.state.page + pageOffset;
-          this.setState({
-            networks: Invoice.find(this.query).fetch(),
-            page,
-          });
-        },
-      }
-    );
+    this.page = Number(this.page) + pageOffset;
+    this.search();
   };
 
   onSearch = e => {
@@ -140,13 +149,13 @@ class InvoiceList extends Component {
       this.searchText = '';
       this.updateRoute();
       delete this.query.$or;
-      return this.changePage(0);
+      return this.search();
     }
     if (searchQuery.length <= 3) {
       this.searchText = '';
       this.updateRoute();
       delete this.query.$or;
-      return this.changePage(0);
+      return this.search();
     }
     this.query.$or = [
       { _id: { $regex: `${searchQuery}*`, $options: 'i' } },
@@ -164,8 +173,10 @@ class InvoiceList extends Component {
     this.query.paymentStatus = e.target.value;
     if (this.query.status === 'all') {
       delete this.query.status;
+    } else {
+      this.query.paymentStatus = Number(this.query.paymentStatus);
     }
-    this.query.paymentStatus = Number(this.query.paymentStatus);
+
     this.search();
   };
 
@@ -174,6 +185,9 @@ class InvoiceList extends Component {
   };
 
   render() {
+    if (this.page < 1) {
+      this.page = 1;
+    }
     return (
       <div className="content networksList">
         <div className="m-t-20 container-fluid container-fixed-lg bg-white">
@@ -262,7 +276,7 @@ class InvoiceList extends Component {
                         {this.state.invoices.map((invoice, index) => {
                           return (
                             <tr key={index + 1} onClick={() => this.open(invoice._id)}>
-                              <td>{this.state.page * PAGE_LIMIT + index + 1}</td>
+                              <td>{this.state.loading ? <i className="fa fa-spin fa-circle-o-notch text-primary" /> : (this.page - 1) * PAGE_LIMIT + index + 1}</td>
                               <td>
                                 {invoice.user.name} | {invoice.user.email}
                               </td>
@@ -278,9 +292,11 @@ class InvoiceList extends Component {
                   <div className="pagination pull-right" style={{ marginTop: '5px' }}>
                     <nav aria-label="Page navigation example">
                       <ul className="pagination">
-                        <li className="page-item" onClick={() => this.changePage(-1)}>
-                          <a className="page-link">Previous</a>
-                        </li>
+                        {this.page && this.page > 1 && (
+                          <li className="page-item" onClick={() => this.changePage(-1)}>
+                            <a className="page-link">Previous</a>
+                          </li>
+                        )}
                         <li className="page-item" onClick={() => this.changePage(1)}>
                           <a className="page-link">Next</a>
                         </li>

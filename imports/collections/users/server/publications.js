@@ -45,6 +45,7 @@ Meteor.publish('users.search', function({ query, limit, page }) {
   }
   limit = limit || pageSize;
   page = page || 1;
+  skip = (page - 1) * pageSize;
   limit = limit * page;
   return Meteor.users.find(
     query,
@@ -53,6 +54,7 @@ Meteor.publish('users.search', function({ query, limit, page }) {
         createdAt: -1,
       },
       limit: limit,
+      skip,
     },
     {
       fields: {
