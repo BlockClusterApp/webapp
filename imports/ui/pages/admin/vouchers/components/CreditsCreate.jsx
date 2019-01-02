@@ -101,7 +101,7 @@ class CreditsCreate extends Component {
         'Usable For Everyone': i.availability.for_all ? 'YES' : 'NO',
         'Usable Only For': i.availability.for_all ? '-' : i.availability.email_ids.join(','),
         'Voucher Status': i.expiryDate < new Date() ? 'Expired' : i.voucher_status ? 'Active' : 'Inactive',
-        'Expiry Date': moment(i.expiryDate).format('DD-MMM-YYYY kk:ss'),
+        'Expiry Date': moment(i.expiryDate).format('DD-MMM-YYYY kk:mm:ss'),
       };
     });
   };

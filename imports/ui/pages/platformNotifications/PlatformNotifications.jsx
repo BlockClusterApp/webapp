@@ -91,7 +91,7 @@ class PlatformNotifications extends Component {
                       <br />
                       <b>Response code: {this.state.webhook.response && this.state.webhook.response.code}</b>
                       <br />
-                      Event time: {moment(this.state.webhook.createdAt).format('DD-MMM-YYYY kk:ss')}
+                      Event time: {moment(this.state.webhook.createdAt).format('DD-MMM-YYYY kk:mm:ss')}
                       <br />
                       <b>Type:</b>
                       {this.state.webhook.type}
@@ -202,7 +202,7 @@ class PlatformNotifications extends Component {
                                       }}
                                     >
                                       <td className="font-montserrat b-r b-dashed b-grey fs-12 w-40">{webhook.id}</td>
-                                      <td className="font-montserrat b-r b-dashed b-grey all-caps fs-12 w-30">{moment(webhook.createdAt).format('DD-MMM-YYYY kk:ss')}</td>
+                                      <td className="font-montserrat b-r b-dashed b-grey all-caps fs-12 w-30">{moment(webhook.createdAt).format('DD-MMM-YYYY kk:mm:ss')}</td>
                                       <td className="b-r b-dashed b-grey w-15" style={{ textAlign: 'center!important' }}>
                                         {this.getWebhookStatus(webhook.status)}
                                       </td>

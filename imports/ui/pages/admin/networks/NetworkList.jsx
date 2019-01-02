@@ -263,7 +263,7 @@ class NetworkList extends Component {
                                   helpers.convertStatusToTag(helpers.calculateNodeStatus(network.status), helpers.firstLetterCapital(helpers.calculateNodeStatus(network.status)))
                                 )}
                               </td>
-                              <td>{moment(network.createdAt).format('DD-MMM-YYYY kk:ss')}</td>
+                              <td>{moment(network.createdAt).format('DD-MMM-YYYY kk:mm:ss')}</td>
                             </tr>
                           );
                         })}

@@ -78,7 +78,7 @@ Network.fetchPodStatus =  (id) => {
           name: pod.metadata.name,
           namespace: pod.metadata.namespace,
           link: pod.metadata.selfLink,
-          createdAt: moment(pod.metadata.creationTimestamp).format('DD-MMM-YYYY kk:ss'),
+          createdAt: moment(pod.metadata.creationTimestamp).format('DD-MMM-YYYY kk:mm:ss'),
           labels: {
             app: pod.metadata.labels.app
           },
@@ -152,7 +152,7 @@ Network.fetchServiceStatus = async (id) => {
         name: service.metadata.name,
         namespace: service.metadata.namespace,
         selfLink: service.metadata.selfLink,
-        createdAt: moment(service.metadata.creationTimestamp).format('DD-MMM-YYYY kk:ss'),
+        createdAt: moment(service.metadata.creationTimestamp).format('DD-MMM-YYYY kk:mm:ss'),
         ports: service.spec.ports,
         type: service.spec.type,
         clusterIP: service.spec.clusterIP,
@@ -184,7 +184,7 @@ Network.fetchDeploymentStatus = async (id) => {
         name: deploy.metadata.name,
         namespace: deploy.metadata.namespace,
         selfLink: deploy.metadata.selfLink,
-        createdAt: moment(deploy.metadata.creationTimestamp).format('DD-MMM-YYYY kk:ss'),
+        createdAt: moment(deploy.metadata.creationTimestamp).format('DD-MMM-YYYY kk:mm:ss'),
         strategy: deploy.spec.strategy,
         revisionHistoryLimit: deploy.spec.revisionHistoryLimit,
         status: deploy.status
@@ -216,7 +216,7 @@ Network.fetchPVCStatus = async (id) => {
         namespace: pvc.metadata.namespace,
         selfLink: pvc.metadata.selfLink,
         provisioner: pvc.metadata.annotations['volume.beta.kubernetes.io/storage-provisioner'],
-        createdAt: moment(pvc.metadata.creationTimestamp).format('DD-MMM-YYYY kk:ss'),
+        createdAt: moment(pvc.metadata.creationTimestamp).format('DD-MMM-YYYY kk:mm:ss'),
         spec: pvc.spec,
         status: pvc.status
       }
@@ -249,7 +249,7 @@ Network.fetchIngressStatus = async (id) => {
         selfLink: ingress.metadata.selfLink,
         authSecret: ingress.metadata.annotations['nginx.ingress.kubernetes.io/auth-secret'],
         configuration: ingress.metadata.annotations['nginx.ingress.kubernetes.io/configuration-snippet'].replace(/\\n/g, "&#13;&#10;"),
-        createdAt: moment(ingress.metadata.creationTimestamp).format('DD-MMM-YYYY kk:ss'),
+        createdAt: moment(ingress.metadata.creationTimestamp).format('DD-MMM-YYYY kk:mm:ss'),
         rules: ingress.spec.rules,
         status: ingress.status
       }

@@ -678,8 +678,8 @@ class UserDetails extends Component {
                                 <td>{index + 1}</td>
                                 <td>{txn.amount}</td>
                                 <td className="fs-12">{txn.description}</td>
-                                <td className="fs-12" title={moment(txn.date).format('DD-MMM-YYYY kk')}>
-                                  {moment(txn.date).format('DD-MMM-YYYY kk')}
+                                <td className="fs-12" title={moment(txn.date).format('DD-MMM-YYYY kk:mm')}>
+                                  {moment(txn.date).format('DD-MMM-YYYY kk:mm')}
                                 </td>
                               </tr>
                             );
@@ -797,7 +797,7 @@ class UserDetails extends Component {
                                 <tr>
                                   <td className="font-montserrat fs-12 w-60">Vouchers</td>
                                   <td className="text-right b-r b-dashed b-grey w-45">
-                                    {hyperion.vouchers && hyperion.vouchers.map(v => `${v.code} : ${moment(v.appliedOn).format('DD-MMM-YYYY kk:ss')}`).join(', ')}
+                                    {hyperion.vouchers && hyperion.vouchers.map(v => `${v.code} : ${moment(v.appliedOn).format('DD-MMM-YYYY kk:mm:ss')}`).join(', ')}
                                   </td>
                                 </tr>
                                 <tr>
@@ -868,7 +868,7 @@ class UserDetails extends Component {
                                 <tr>
                                   <td className="font-montserrat fs-12 w-60">Vouchers</td>
                                   <td className="text-right b-r b-dashed b-grey w-45">
-                                    {paymeter.vouchers && paymeter.vouchers.map(v => `${v.code} : ${moment(v.appliedOn).format('DD-MMM-YYYY kk:ss')}`).join(', ')}
+                                    {paymeter.vouchers && paymeter.vouchers.map(v => `${v.code} : ${moment(v.appliedOn).format('DD-MMM-YYYY kk:mm:ss')}`).join(', ')}
                                   </td>
                                 </tr>
                                 <tr>

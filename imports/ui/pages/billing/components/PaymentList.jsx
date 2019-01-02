@@ -93,10 +93,10 @@ class PaymentDashboard extends Component {
                             payment.pgResponse && pgPayments.push(...payment.pgResponse.map(g => g.id));
                             const pgResponse = payment.pgResponse && payment.pgResponse.find(g => g.status === 'captured');
                             return (
-                              <tr key={payment._id} title={payment.paymentStatus === 3 ? `Refund initiated at ${moment(payment.refundedAt).format('DD-MMM-YY kk:ss')}` : null}>
+                              <tr key={payment._id} title={payment.paymentStatus === 3 ? `Refund initiated at ${moment(payment.refundedAt).format('DD-MMM-YY kk:mm:ss')}` : null}>
                                 <td>{payment._id}</td>
                                 <td>{Helpers.firstLetterCapital(payment.reason)}</td>
-                                <td>{moment(payment.createdAt).format('DD-MMM-YY kk:ss')}</td>
+                                <td>{moment(payment.createdAt).format('DD-MMM-YY kk:mm:ss')}</td>
                                 <td>
                                   {pgResponse && pgResponse.notes && pgResponse.notes.display_amount
                                     ? `${Helpers.getCurrencySymbol(pgResponse.notes.display_currency)} ${Number(pgResponse.notes.display_amount).toFixed(2)}`
@@ -116,7 +116,7 @@ class PaymentDashboard extends Component {
                               >
                                 <td>{payment.id}</td>
                                 <td>Monthly usage charges</td>
-                                <td>{moment(payment.created_at * 1000).format('DD-MMM-YY kk:ss')}</td>
+                                <td>{moment(payment.created_at * 1000).format('DD-MMM-YY kk:mm:ss')}</td>
                                 <td>INR {Number(payment.amount / 100).toFixed(2)}</td>
                                 <td>{this.convertRZStatusToTag(payment.status)}</td>
                               </tr>
