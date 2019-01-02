@@ -6,19 +6,49 @@ import { withRouter, Link } from 'react-router-dom';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import ReactHtmlParser from 'react-html-parser';
 import moment from 'moment';
+import querystring from 'querystring';
 
 const PAGE_LIMIT = 20;
 class VoucherList extends Component {
   constructor(props) {
     super(props);
 
-    this.query = {
-      type: props.type,
-    };
+    this.pagination = {};
+    if (props.location.search) {
+      const query = querystring.parse(props.location.search.substr(1));
+      if (query.searchText) {
+        this.searchText = query.searchText;
+      }
+      delete query.searchText;
+      if (this.searchText) {
+        query.$or = [{ code: { $regex: `${this.searchText}*`, $options: 'i' } }, { _id: { $regex: `${this.searchText}*`, $options: 'i' } }];
+      }
 
+      const booleanProperties = ['availability.for_all', 'active', 'usability.recurring'];
+
+      booleanProperties.forEach(prop => {
+        if (query[prop] === 'true') {
+          query[prop] = true;
+        } else if (query[prop] === 'false') {
+          query[prop] = false;
+        } else {
+          delete query[prop];
+        }
+      });
+
+      if (query.page) {
+        this.page = Number(query.page);
+        this.pagination.skip = (this.page - 1) * PAGE_LIMIT;
+      }
+      delete query.page;
+      this.query = query;
+    } else {
+      this.query = {};
+      this.page = 1;
+    }
     this.state = {
       page: 0,
-      vouchers: Vouchers.find(this.query).fetch(),
+      vouchers: Vouchers.find({ ...this.query, type: props.type }, this.pagination).fetch(),
     };
   }
 
@@ -33,7 +63,27 @@ class VoucherList extends Component {
     this.search();
   }
 
+  updateRoute = () => {
+    const sanitizedQuery = { ...this.query };
+    delete sanitizedQuery.caseId;
+    delete sanitizedQuery.$or;
+    delete sanitizedQuery.page;
+    delete sanitizedQuery.type;
+    this.props.history.replace({
+      pathname: this.props.location.pathname,
+      search: `?${querystring.stringify({ ...sanitizedQuery, searchText: this.searchText, page: this.page })}`,
+    });
+  };
+
   search = () => {
+    this.updateRoute();
+    if (this.page) {
+      this.pagination.skip = (this.page - 1) * PAGE_LIMIT;
+    }
+    this.setState({
+      loading: true,
+    });
+    this.pagination.limit = PAGE_LIMIT;
     this.voucherSubscription = Meteor.subscribe(
       'vouchers.search',
       {
@@ -50,7 +100,8 @@ class VoucherList extends Component {
             this.query.type = this.props.type;
           }
           this.setState({
-            vouchers: Vouchers.find(this.query).fetch(),
+            vouchers: Vouchers.find(this.query, this.pagination).fetch(),
+            loading: false,
           });
         },
       }
@@ -58,30 +109,16 @@ class VoucherList extends Component {
   };
 
   changePage = pageOffset => {
-    if (this.state.page + pageOffset < 0) {
+    if (this.page + pageOffset < 0) {
       return;
     }
-    this.voucherSubscription.stop();
-    this.voucherSubscription = Meteor.subscribe(
-      'vouchers.all',
-      { query: this.query, page: this.state.page + pageOffset, type: this.props.type },
-      {
-        onReady: () => {
-          const page = this.state.page + pageOffset;
-          this.setState({
-            vouchers: Vouchers.find(this.query, {
-              limit: PAGE_LIMIT,
-              skip: 10 * page,
-            }).fetch(),
-            page,
-          });
-        },
-      }
-    );
+    this.page = Number(this.page) + pageOffset;
+    this.search();
   };
 
   onSearch = e => {
     const searchQuery = e.target.value;
+    this.searchText = e.target.value;
     if (!searchQuery) {
       delete this.query.$or;
       return this.changePage(0);
@@ -92,14 +129,6 @@ class VoucherList extends Component {
     }
     this.query.$or = [{ code: { $regex: `${searchQuery}*`, $options: 'i' } }, { _id: { $regex: `${searchQuery}*`, $options: 'i' } }];
     this.query.type = this.props.type;
-    this.search();
-  };
-
-  onInstanceStateChange = e => {
-    this.query.status = e.target.value;
-    if (this.query.status === 'all') {
-      delete this.query.status;
-    }
     this.search();
   };
 
@@ -147,6 +176,9 @@ class VoucherList extends Component {
   };
 
   render() {
+    if (this.page < 1) {
+      this.page = 1;
+    }
     return (
       <div className="voucherList">
         <div className="m-t-20 container-fluid container-fixed-lg bg-white">
@@ -163,16 +195,24 @@ class VoucherList extends Component {
                         <span className="input-group-addon">
                           <i className="fa fa-search" />
                         </span>
-                        <input type="text" placeholder="Voucher code or Id" className="form-control" onChange={this.onSearch} />
+                        <input type="text" placeholder="Voucher code or Id" defaultValue={this.searchText} className="form-control" onChange={this.onSearch} />
                       </div>
                     </div>
                     <div className="col-md-3">
                       <div className="form-group ">
                         <select className="full-width select2-hidden-accessible" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" onChange={this.onClaimChange}>
-                          <option value="running">Show by: All</option>
-                          <option value="recurring">Recurring Vouchers</option>
-                          <option value="for_all">Accessible to all</option>
-                          <option value="not_for_all">Not accessible to all</option>
+                          <option value="running" selected={this.query['availability.for_all'] === undefined && !this.query['usability.recurring']}>
+                            Show by: All
+                          </option>
+                          <option value="recurring" selected={this.query['usability.recurring'] === true}>
+                            Recurring Vouchers
+                          </option>
+                          <option value="for_all" selected={this.query['availability.for_all'] === true}>
+                            Accessible to all
+                          </option>
+                          <option value="not_for_all" selected={this.query['availability.for_all'] === false}>
+                            Not accessible to all
+                          </option>
                         </select>
                       </div>
                     </div>
@@ -193,7 +233,7 @@ class VoucherList extends Component {
                         {this.state.vouchers.map((voucher, index) => {
                           return (
                             <tr key={index + 1} onClick={() => this.openVoucher(voucher._id)}>
-                              <td>{this.state.page * PAGE_LIMIT + index + 1}</td>
+                              <td>{this.state.loading ? <i className="fa fa-spin fa-circle-o-notch text-primary" /> : (this.page - 1) * PAGE_LIMIT + index + 1}</td>
                               <td>{voucher.code}</td>
                               <td>{voucher.voucher_claim_status ? voucher.voucher_claim_status.length : 0}</td>
                               <td>{this.getNetworkType(voucher.networkConfig)}</td>
@@ -208,9 +248,11 @@ class VoucherList extends Component {
                   <div className="pagination pull-right" style={{ marginTop: '5px' }}>
                     <nav aria-label="Page navigation example">
                       <ul className="pagination">
-                        <li className="page-item" onClick={() => this.changePage(-1)}>
-                          <a className="page-link">Previous</a>
-                        </li>
+                        {this.page && this.page > 1 && (
+                          <li className="page-item" onClick={() => this.changePage(-1)}>
+                            <a className="page-link">Previous</a>
+                          </li>
+                        )}
                         <li className="page-item" onClick={() => this.changePage(1)}>
                           <a className="page-link">Next</a>
                         </li>

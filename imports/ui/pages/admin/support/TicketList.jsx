@@ -136,6 +136,9 @@ class TicketList extends Component {
   };
 
   render() {
+    if (this.page < 1) {
+      this.page = 1;
+    }
     return (
       <div className="content supportList">
         <div className="m-t-20 container-fluid container-fixed-lg bg-white">
