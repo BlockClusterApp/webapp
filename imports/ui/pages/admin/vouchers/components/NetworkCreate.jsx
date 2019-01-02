@@ -113,7 +113,7 @@ class VoucherCreate extends Component {
               .add(30, 'days')
               .toDate(), //lets take by default 30days
           discountedDays: payload.discountedDays || 0,
-          type: 'paymeter',
+          type: 'network',
         };
 
         if (this.campaignId && this.campaignId !== 'None') {
@@ -207,7 +207,7 @@ class VoucherCreate extends Component {
           },
           {
             onReady: () => {
-              voucher = Vouchers.find({ code: this.state.code }).fetch()[0];
+              const voucher = Vouchers.find({ code: this.state.code }).fetch()[0];
               if (voucher) {
                 this.setState({
                   exist: true,

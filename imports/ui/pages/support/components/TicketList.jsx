@@ -44,7 +44,7 @@ class TicketList extends React.Component {
                         <td>{ticket.subject.substring(0, 50)}{ticket.subject.length > 70 ? '...': ''}</td>
                         <td>{ticket.caseId}</td>
                         <td>{helpers.getSupportTicketStatus(ticket.status)}</td>
-                        <td>{moment(ticket.createdAt).format('DD-MMM-YYYY hh:mm:SS A')}</td>
+                        <td>{moment(ticket.createdAt).format('DD-MMM-YYYY hh:mm:ss A')}</td>
                       </tr>
                     )
                   })

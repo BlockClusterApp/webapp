@@ -351,7 +351,6 @@ class CardsAndNewPayment extends Component {
         <div className="row padding-25 saved-cards">
           <div className="card card-transparent">{displayView}</div>
         </div>
-        <PromotionalCredits />
       </div>
     );
   }

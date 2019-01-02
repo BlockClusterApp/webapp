@@ -12,6 +12,7 @@ export default function(Collection) {
   });
 
   Collection.before.find((userId, selector, options) => {
+    selector = selector || {};
     if (selector.active === undefined) {
       selector.active = true;
     }
