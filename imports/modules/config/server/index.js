@@ -100,56 +100,21 @@ async function getPaymeterConnectionDetails(blockchain, network) {
   if (process.env.paymeter) {
     return process.env.paymeter;
   }
-
-  function getLocation() {
-    return new Promise((resolve, reject) => {
-      Meteor.call('getClusterLocations', (error, locations) => {
-        resolve(locations);
-      });
-    });
-  }
-
-  const locations = await getLocation();
-
-  //first location in the location list - assuming webapp is also running the first location
-  const locationCode = locations[0].locationCode;
-  return RemoteConfig.clusters[getNamespace()][locationCode].paymeter.blockchains[blockchain][network].url;
+  return RemoteConfig.paymeter[getNamespace()].blockchains[blockchain][network].url;
 }
 
 async function getCoinmarketcapAPIKey() {
   if (process.env.coinmarketcap_key) {
     return process.env.coinmarketcap_key;
   }
-
-  function getLocation() {
-    return new Promise((resolve, reject) => {
-      Meteor.call('getClusterLocations', (error, locations) => {
-        resolve(locations);
-      });
-    });
-  }
-
-  const locations = await getLocation();
-  const locationCode = locations[0].locationCode;
-  return RemoteConfig.clusters[getNamespace()][locationCode].paymeter.api_keys.coinmarketcap;
+  return RemoteConfig.paymeter[getNamespace()].api_keys.coinmarketcap;
 }
 
 async function getEthplorerAPIKey() {
   if (process.env.coinmarketcap_key) {
     return process.env.coinmarketcap_key;
   }
-
-  function getLocation() {
-    return new Promise((resolve, reject) => {
-      Meteor.call('getClusterLocations', (error, locations) => {
-        resolve(locations);
-      });
-    });
-  }
-
-  const locations = await getLocation();
-  const locationCode = locations[0].locationCode;
-  return RemoteConfig.clusters[getNamespace()][locationCode].paymeter.api_keys.ethplorer;
+  return RemoteConfig.clusters[getNamespace()][locationCode].api_keys.ethplorer;
 }
 
 function getDynamoWokerDomainName(locationCode) {

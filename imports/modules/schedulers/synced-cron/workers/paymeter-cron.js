@@ -8,7 +8,7 @@ import { Wallets } from '../../../../collections/wallets/wallets.js';
 import { Paymeter as PaymeterCollection } from '../../../../collections/paymeter/paymeter.js';
 import helpers from '../../../../modules/helpers';
 import Paymeter from '../../../../api/paymeter/index.js';
-import { ERC20 } from '../../../../collections/erc20/erc20.js';
+import { ERC20 } from '../../../../collections/ecorc20/erc20.js';
 import { CoinPrices } from '../../../../collections/coin-prices/coin-prices.js';
 import { getTopERC20List, getCryptosPrice, getTokenInfoFromAddress } from '../../../../modules/paymeter/index.js';
 import PaymeterPricing from '../../../../collections/pricing/paymeter';
@@ -17,11 +17,21 @@ import sleep from 'await-sleep';
 import BigNumber from 'bignumber.js';
 var Future = Npm.require('fibers/future');
 import { CRONjob } from 'meteor/ostrio:cron-jobs';
+const debug = require('debug')('schedulers:sync:paymeter-cron')
+import uuid from 'uuid/v4';
 
-const db = Meteor.users.rawDatabase();
+let prefix;
+// const db = Meteor.users.rawDatabase();
+// let prefix;
+// if (process.env.NODE_ENV === 'development') {
+//   prefix = `dev-${uuid()}`;
+// }
+
+// console.log('Sync cron prefix', prefix);
 
 const cron = new CRONjob({
   db: db,
+  prefix,
   autoClear: true,
   resetOnInit: true, //don't re-run pending tasks when restarted
 });
@@ -799,7 +809,7 @@ const scanEthTestnet = async ready => {
       block = await getBlock(latest_block_number, testnet_web3);
     }
 
-    console.log(block.number);
+    debug(block.number);
 
     let promises = [];
     if (block.transactions) {
