@@ -355,7 +355,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
 
             let erc20_instance = new web3.eth.Contract(erc20ABI, wallet.contractAddress);
 
-            let data = erc20_instance.methods.transfer(toAddress, web3.utils.toWei(amount, 'ether')).encodeABI();
+            let data = erc20_instance.methods.transfer(toAddress, web3.utils.toWei(new BigNumber(amount), 'ether')).encodeABI();
 
             web3.eth.estimateGas(
               {

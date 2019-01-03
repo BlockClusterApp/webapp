@@ -116,6 +116,7 @@ class NetworkList extends Component {
 
   onSearch = e => {
     const searchQuery = e.target.value;
+    this.searchText = searchQuery;
     if (!searchQuery) {
       this.searchText = '';
       this.updateRoute();
