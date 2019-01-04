@@ -17,11 +17,11 @@ import sleep from 'await-sleep';
 import BigNumber from 'bignumber.js';
 var Future = Npm.require('fibers/future');
 import { CRONjob } from 'meteor/ostrio:cron-jobs';
-const debug = require('debug')('schedulers:sync:paymeter-cron')
+const debug = require('debug')('schedulers:sync:paymeter-cron');
 import uuid from 'uuid/v4';
 
 let prefix;
-// const db = Meteor.users.rawDatabase();
+const db = Meteor.users.rawDatabase();
 // let prefix;
 // if (process.env.NODE_ENV === 'development') {
 //   prefix = `dev-${uuid()}`;
