@@ -8,7 +8,7 @@ import { Wallets } from '../../../../collections/wallets/wallets.js';
 import { Paymeter as PaymeterCollection } from '../../../../collections/paymeter/paymeter.js';
 import helpers from '../../../../modules/helpers';
 import Paymeter from '../../../../api/paymeter/index.js';
-import { ERC20 } from '../../../../collections/ecorc20/erc20.js';
+import { ERC20 } from '../../../../collections/erc20/erc20.js';
 import { CoinPrices } from '../../../../collections/coin-prices/coin-prices.js';
 import { getTopERC20List, getCryptosPrice, getTokenInfoFromAddress } from '../../../../modules/paymeter/index.js';
 import PaymeterPricing from '../../../../collections/pricing/paymeter';
