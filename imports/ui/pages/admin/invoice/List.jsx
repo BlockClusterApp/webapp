@@ -45,10 +45,18 @@ class InvoiceList extends Component {
         delete query.active;
       }
 
+      if (query.hideZeroes === 'true') {
+        this.hideZeroes = true;
+        this.query.totalAmount = { $nin: ['0.00'] };
+      } else {
+        this.hideZeroes = false;
+      }
+
       if (query.paymentStatus) {
         query.paymentStatus = Number(query.paymentStatus);
       }
 
+      delete query.hideZeroes;
       this.query = query;
     } else {
       this.query = {
@@ -57,7 +65,14 @@ class InvoiceList extends Component {
           .format('MMM-YYYY'),
         paymentStatus: 1,
       };
+      this.hideZeroes = false;
       this.page = 1;
+
+      if (this.hideZeroes) {
+        this.query.totalAmount = {
+          $gt: 0,
+        };
+      }
     }
 
     this.state = {
@@ -74,9 +89,10 @@ class InvoiceList extends Component {
     delete this.query.page;
     delete sanitizedQuery.$or;
     delete sanitizedQuery.page;
+    delete sanitizedQuery.totalAmount;
     this.props.history.replace({
       pathname: this.props.location.pathname,
-      search: `?${querystring.stringify({ ...sanitizedQuery, searchText: this.searchText, page: this.page })}`,
+      search: `?${querystring.stringify({ ...sanitizedQuery, searchText: this.searchText, page: this.page, hideZeroes: this.hideZeroes })}`,
     });
   };
 
@@ -99,6 +115,13 @@ class InvoiceList extends Component {
     this.setState({
       loading: true,
     });
+    if (this.hideZeroes) {
+      this.query.totalAmount = {
+        $nin: ['0.00'],
+      };
+    } else {
+      delete this.query.totalAmount;
+    }
     this.pagination.limit = PAGE_LIMIT;
     this.invoiceSubscription = Meteor.subscribe(
       'invoice.search',
@@ -199,7 +222,7 @@ class InvoiceList extends Component {
                 </div>
                 <div className="card-block">
                   <div className="row">
-                    <div className="col-md-7">
+                    <div className="col-md-5">
                       <div className="input-group transparent">
                         <span className="input-group-addon">
                           <i className="fa fa-search" />
@@ -256,7 +279,26 @@ class InvoiceList extends Component {
                             this.search();
                           }}
                         />
-                        <label htmlFor="checkbox2">Only previous month's</label>
+                        <label htmlFor="checkbox2">Only this month's</label>
+                      </div>
+                    </div>
+                    <div className="col-md-2">
+                      <div className="checkbox check-success">
+                        <input
+                          type="checkbox"
+                          value="2"
+                          defaultChecked={!!this.hideZeroes}
+                          id="checkbox3"
+                          onClick={e => {
+                            if (e.target.checked) {
+                              this.hideZeroes = true;
+                            } else {
+                              this.hideZeroes = false;
+                            }
+                            this.search();
+                          }}
+                        />
+                        <label htmlFor="checkbox3">Hide Zeroes</label>
                       </div>
                     </div>
                   </div>
