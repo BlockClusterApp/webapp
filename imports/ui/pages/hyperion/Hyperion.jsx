@@ -826,9 +826,9 @@ class HyperionComponent extends Component {
                                                 <span>
                                                   {helpers.getFlooredFixed(
                                                     (
-                                                      ((this.props.hyperion.size / 1024 / 1024 / 1024) * (helpers.hyperionGBCostPerDay() * helpers.daysInThisMonth())).toPrecision(
+                                                      (((this.props.hyperion.size || 0) / 1024 / 1024 / 1024) * (helpers.hyperionGBCostPerDay() * helpers.daysInThisMonth())).toPrecision(
                                                         2
-                                                      ) - this.props.hyperion.discount
+                                                      ) - (this.props.hyperion.discount || 0)
                                                     ).toPrecision(2),
                                                     2
                                                   )}
