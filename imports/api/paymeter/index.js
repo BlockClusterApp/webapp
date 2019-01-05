@@ -344,18 +344,24 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
             user: userId,
           });
 
+          if (!feeWallet) {
+            throw new Meteor.Error(400, 'Invalid fee wallet');
+          }
+
           let nonce = await getNonce(feeWallet.address, url);
           let gasPrice = Utilities.findOne({
             key: wallet.network + '-gasPrice',
           }).value;
 
           let currenct_balance = await getBalance(fromWalletId);
+
+          console.log('Amount', amount, currenct_balance);
           if (new BigNumber(amount).lte(currenct_balance)) {
             let fee = new BigNumber(gasPrice).multipliedBy(21000);
 
             let erc20_instance = new web3.eth.Contract(erc20ABI, wallet.contractAddress);
 
-            let data = erc20_instance.methods.transfer(toAddress, web3.utils.toWei(new BigNumber(amount), 'ether')).encodeABI();
+            let data = erc20_instance.methods.transfer(toAddress, web3.utils.toWei(String(amount), 'ether')).encodeABI();
 
             web3.eth.estimateGas(
               {
