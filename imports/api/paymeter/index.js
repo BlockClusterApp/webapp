@@ -417,13 +417,19 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                     from: wallet.address,
                   })
 
-                  let secondTxnGasLimit = await web3.eth.estimateGas({
-                    to: wallet.contractAddress,
-                    data: erc20_instance.methods.transfer(feeCollectWallet.address, web3.utils.toWei(String(new BigNumber(amountOfTokenToDeduct).toFixed(18).toString()), 'ether')).encodeABI(),
-                    from: wallet.address,
-                  })
+                  contractGasLimit = firstTxnGasLimit
 
-                  contractGasLimit = firstTxnGasLimit + secondTxnGasLimit;
+                  let secondTxnGasLimit = null;
+
+                  if(feeCollectWallet) {
+                    secondTxnGasLimit = await web3.eth.estimateGas({
+                      to: wallet.contractAddress,
+                      data: erc20_instance.methods.transfer(feeCollectWallet.address, web3.utils.toWei(String(new BigNumber(amountOfTokenToDeduct).toFixed(18).toString()), 'ether')).encodeABI(),
+                      from: wallet.address,
+                    })
+
+                    contractGasLimit = contractGasLimit + secondTxnGasLimit;
+                  }
 
                   let valueToTransfer = web3.utils.toHex(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString())
 
@@ -455,7 +461,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                       web3.eth.sendSignedTransaction(
                         '0x' + serializedTx.toString('hex'),
                         Meteor.bindEnvironment(async (err, hash) => {
-                          if (!error) {
+                          if (!err) {
                             WalletTransactions.insert({
                               fromWallet: feeWallet._id,
                               toAddress: wallet.address,
