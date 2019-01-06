@@ -445,9 +445,9 @@ JsonRoutes.add('get', '/api/hyperion/download', async (req, res, next) => {
       let ipfs_connection = Config.getHyperionConnectionDetails(req.query.location);
       const ipfs = ipfsAPI(ipfs_connection[0], ipfs_connection[1], { protocol: 'http' });
       var ipfsCluster = ipfsClusterAPI(ipfs_connection[0], ipfs_connection[2], { protocol: 'http' });
-      ipfs.files.get(hash, (err, files) => {
+      ipfs.files.get(hash, Meteor.bindEnvironment((err, files) => {
         if (files) {
-          files.forEach(file => {
+          files.forEach(  file => {
             if (file) {
               ChargeableAPI.insert({
                 url: req.url,
@@ -472,7 +472,7 @@ JsonRoutes.add('get', '/api/hyperion/download', async (req, res, next) => {
             },
           });
         }
-      });
+      }));
     } else {
       JsonRoutes.sendResult(res, {
         code: 401,

@@ -259,8 +259,6 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
       user: userId,
     });
 
-    
-
     if (wallet) {
       let coinType = wallet.coinType;
       if (coinType === 'ETH') {
