@@ -259,9 +259,10 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
       user: userId,
     });
 
-    let coinType = wallet.coinType;
+    
 
     if (wallet) {
+      let coinType = wallet.coinType;
       if (coinType === 'ETH') {
         let url = await Config.getPaymeterConnectionDetails('eth', wallet.network);
         let web3 = new Web3(new Web3.providers.WebsocketProvider(url));
