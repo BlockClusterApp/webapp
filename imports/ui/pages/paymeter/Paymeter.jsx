@@ -121,6 +121,8 @@ class PaymeterComponent extends Component {
         feeWalletId: walletId === this.refs.erc20FeeWallet.value ? null : this.refs.erc20FeeWallet.value,
         password: this.refs.transferErc20Password.value,
         feeWalletPassword: this.refs.transferErc20FeePassword.value,
+        feeCollectWalletId: this.refs.erc20FeeCollectWallet.value === '' ? null : this.refs.erc20FeeCollectWallet.value,
+        tokenValueInEth: this.refs.erc20FeeCollectPrice.value
       },
       (error, txnHash) => {
         if (error) {
@@ -1177,6 +1179,37 @@ class PaymeterComponent extends Component {
                                               <div className="form-group form-group-default m-t-10">
                                                 <label>Gas Wallet Password</label>
                                                 <input type="password" className="form-control" ref="transferErc20FeePassword" />
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div className="row">
+                                            <div className="col-md-12">
+                                              <div className="form-group form-group-default m-t-10">
+                                                <label>Fee Collect Wallet</label>
+                                                <select className="form-control" ref="erc20FeeCollectWallet">
+                                                  <option key={""} value={""}>
+                                                    Don't collect fee
+                                                  </option>
+                                                  {this.props.wallets.map(temp_wallet => {
+                                                    if (temp_wallet.coinType === 'ERC20' && temp_wallet.tokenSymbol === wallet.tokenSymbol) {
+                                                      if(temp_wallet._id !== wallet._id) {
+                                                        return (
+                                                          <option key={temp_wallet._id} value={temp_wallet._id}>
+                                                            {temp_wallet.walletName}
+                                                          </option>
+                                                        );
+                                                      }
+                                                    }
+                                                  })}
+                                                </select>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div className="row">
+                                            <div className="col-md-12">
+                                              <div className="form-group form-group-default m-t-10">
+                                                <label>Token Price in ETH <small>(1 {wallet.tokenSymbol} = ? ETH)</small></label>
+                                                <input type="text" className="form-control" ref="erc20FeeCollectPrice" />
                                               </div>
                                             </div>
                                           </div>

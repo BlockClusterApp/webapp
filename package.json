@@ -80,6 +80,7 @@
     "redis-jwt": "1.4.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
+    "secp256k1": "^3.6.1",
     "simpl-schema": "^1.5.0",
     "stringquery": "^1.0.8",
     "url": "^0.11.0",

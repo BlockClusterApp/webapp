@@ -79,6 +79,6 @@ Meteor.publish('vouchers.search', function({ query, limit, page, type }) {
       createdAt: -1,
     },
     limit: limit,
-    skip: page * pageSize,
+    skip: (page - 1) * pageSize,
   });
 });
