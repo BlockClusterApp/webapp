@@ -46,9 +46,17 @@ class VoucherList extends Component {
       this.query = {};
       this.page = 1;
     }
+
+    if (props.type === 'network') {
+      this.query.type = {
+        $in: [null, 'network'],
+      };
+    } else if (props.type) {
+      this.query.type = props.type;
+    }
     this.state = {
       page: 0,
-      vouchers: Vouchers.find({ ...this.query, type: props.type }, this.pagination).fetch(),
+      vouchers: Vouchers.find({ ...this.query }, this.pagination).fetch(),
     };
   }
 
@@ -83,6 +91,13 @@ class VoucherList extends Component {
     this.setState({
       loading: true,
     });
+    if (this.props.type === 'network') {
+      this.query.type = {
+        $in: [null, 'network'],
+      };
+    } else {
+      this.query.type = this.props.type;
+    }
     this.pagination.limit = PAGE_LIMIT;
     this.voucherSubscription = Meteor.subscribe(
       'vouchers.search',
@@ -92,13 +107,6 @@ class VoucherList extends Component {
       },
       {
         onReady: () => {
-          if (this.props.type === 'network') {
-            this.query.type = {
-              $in: [null, 'network'],
-            };
-          } else {
-            this.query.type = this.props.type;
-          }
           this.setState({
             vouchers: Vouchers.find(this.query, this.pagination).fetch(),
             loading: false,

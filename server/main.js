@@ -802,7 +802,7 @@ Meteor.methods({
       Bull.addJob('delete-network', {
         instanceId: network.instanceId,
         locationCode,
-        namespace: Config.namespace
+        namespace: Config.namespace,
       });
     } catch (err) {
       console.log('Kube delete error ', err);
@@ -2580,14 +2580,29 @@ spec:
   },
 });
 
-Meteor.startup(() => {
+function waitForLicence() {
+  return new Promise(resolve => {
+    if (global.isConfigFetched) {
+      console.log('Waiting for licence');
+      return resolve();
+    }
+    setTimeout(async () => {
+      await waitForLicence();
+      return resolve();
+    }, 20);
+  });
+}
+
+Meteor.startup(async () => {
+  console.log('Meteor starting up');
+  await waitForLicence();
+  console.log('Licence loaded');
   serverStartup();
 });
 
 const LOCK_FILE_PATH = '/tmp/webapp.lock';
 function serverStartup() {
   Migrations.migrateTo(Config.migrationVersion);
-  fs.writeFileSync(LOCK_FILE_PATH, `Server started at  ${new Date()}`);
 }
 
 function serverStop() {
