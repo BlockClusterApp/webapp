@@ -47,7 +47,7 @@ class InvoiceList extends Component {
 
       if (query.hideZeroes === 'true') {
         this.hideZeroes = true;
-        this.query.totalAmount = { $nin: ['0.00'] };
+        query.totalAmount = { $nin: ['0.00'] };
       } else {
         this.hideZeroes = false;
       }

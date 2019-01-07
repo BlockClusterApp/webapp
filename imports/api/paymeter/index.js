@@ -16,7 +16,7 @@ import Billing from '../../api/billing';
 import moment from 'moment';
 import Voucher from '../network/voucher';
 const Cryptr = require('cryptr');
-const secp256k1 = require('secp256k1')
+const secp256k1 = require('secp256k1');
 
 const erc20ABI = [
   { constant: true, inputs: [], name: 'name', outputs: [{ name: '', type: 'string' }], payable: false, stateMutability: 'view', type: 'function' },
@@ -290,7 +290,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
           const cryptr = new Cryptr(options.password);
           let privateKey_decrypted = cryptr.decrypt(wallet.privateKey);
 
-          if(secp256k1.privateKeyVerify(Buffer.from(privateKey_decrypted, 'hex'))) {
+          if (secp256k1.privateKeyVerify(Buffer.from(privateKey_decrypted, 'hex'))) {
             let tx = new EthereumTx(rawTx);
             const privateKey = Buffer.from(privateKey_decrypted, 'hex');
             tx.sign(privateKey);
@@ -327,7 +327,6 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                       },
                     }
                   );
-
                   resolve(return_id);
                 }
               })
@@ -349,7 +348,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
           });
 
           if (!feeWallet) {
-            reject("Invalid fee wallet")
+            reject('Invalid fee wallet');
             return;
           }
 
@@ -361,22 +360,21 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
           let currenct_balance = await getBalance(fromWalletId);
 
           if (new BigNumber(amount).lte(currenct_balance)) {
-
             let feeCollectWallet = null;
 
-            if(options.feeCollectWalletId) {
+            if (options.feeCollectWalletId) {
               //we need to collect fee in tokens
               feeCollectWallet = Wallets.findOne({
-                _id: options.feeCollectWalletId
-              })
+                _id: options.feeCollectWalletId,
+              });
 
-              if(!feeCollectWallet) {
-                reject("Invalid fee collect wallet")
+              if (!feeCollectWallet) {
+                reject('Invalid fee collect wallet');
                 return;
               }
 
-              if(!options.tokenValueInEth) {
-                reject("Please provide price of token")
+              if (!options.tokenValueInEth) {
+                reject('Please provide price of token');
                 return;
               }
             }
@@ -393,20 +391,28 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
               },
               Meteor.bindEnvironment(async (error, contractGasLimit) => {
                 if (!error) {
-
-                  let amountOfTokenToDeduct = '0'
-                  if(feeCollectWallet) {
-                    options.originalTokenValueInEth = options.tokenValueInEth
+                  let amountOfTokenToDeduct = '0';
+                  if (feeCollectWallet) {
+                    options.originalTokenValueInEth = options.tokenValueInEth;
                     options.tokenValueInEth = new BigNumber(1).dividedBy(options.tokenValueInEth); //1 ETH = ? TOKEN
-                    amountOfTokenToDeduct = web3.utils.fromWei((new BigNumber(21000).multipliedBy(gasPrice)).plus(new BigNumber(gasPrice).multipliedBy(contractGasLimit).multipliedBy(2)).toString(), 'ether');
-                    amountOfTokenToDeduct = new BigNumber(amountOfTokenToDeduct).multipliedBy(options.tokenValueInEth).toString()
+                    amountOfTokenToDeduct = web3.utils.fromWei(
+                      new BigNumber(21000)
+                        .multipliedBy(gasPrice)
+                        .plus(new BigNumber(gasPrice).multipliedBy(contractGasLimit).multipliedBy(2))
+                        .toString(),
+                      'ether'
+                    );
+                    amountOfTokenToDeduct = new BigNumber(amountOfTokenToDeduct).multipliedBy(options.tokenValueInEth).toString();
 
-                    if(new BigNumber((new BigNumber(amount).minus(amountOfTokenToDeduct)).toFixed(18)).lte(0)) {
-                      reject('Transfer amount is too less to cover fees')
+                    if (new BigNumber(new BigNumber(amount).minus(amountOfTokenToDeduct).toFixed(18)).lte(0)) {
+                      reject('Transfer amount is too less to cover fees');
                       return;
                     }
 
-                    amount = new BigNumber(amount).minus(amountOfTokenToDeduct).toFixed(18).toString()
+                    amount = new BigNumber(amount)
+                      .minus(amountOfTokenToDeduct)
+                      .toFixed(18)
+                      .toString();
                     data = erc20_instance.methods.transfer(toAddress, web3.utils.toWei(String(amount), 'ether')).encodeABI();
                   }
 
@@ -414,26 +420,33 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                     to: wallet.contractAddress,
                     data: erc20_instance.methods.transfer(toAddress, web3.utils.toWei(String(amount), 'ether')).encodeABI(),
                     from: wallet.address,
-                  })
+                  });
 
-                  contractGasLimit = firstTxnGasLimit
+                  contractGasLimit = firstTxnGasLimit;
 
                   let secondTxnGasLimit = null;
 
-                  if(feeCollectWallet) {
+                  if (feeCollectWallet) {
                     secondTxnGasLimit = await web3.eth.estimateGas({
                       to: wallet.contractAddress,
-                      data: erc20_instance.methods.transfer(feeCollectWallet.address, web3.utils.toWei(String(new BigNumber(amountOfTokenToDeduct).toFixed(18).toString()), 'ether')).encodeABI(),
+                      data: erc20_instance.methods
+                        .transfer(feeCollectWallet.address, web3.utils.toWei(String(new BigNumber(amountOfTokenToDeduct).toFixed(18).toString()), 'ether'))
+                        .encodeABI(),
                       from: wallet.address,
-                    })
+                    });
 
                     contractGasLimit = contractGasLimit + secondTxnGasLimit;
                   }
 
-                  let valueToTransfer = web3.utils.toHex(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString())
+                  let valueToTransfer = web3.utils.toHex(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString());
 
-                  if(feeCollectWallet) {
-                    valueToTransfer = web3.utils.toHex(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).multipliedBy(2).toString())
+                  if (feeCollectWallet) {
+                    valueToTransfer = web3.utils.toHex(
+                      new BigNumber(gasPrice)
+                        .multipliedBy(contractGasLimit.toString())
+                        .multipliedBy(2)
+                        .toString()
+                    );
                   }
 
                   let rawTx = {
@@ -451,7 +464,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                     let cryptr = new Cryptr(options.feeWalletPassword);
                     let privateKey_decrypted = cryptr.decrypt(feeWallet.privateKey);
 
-                    if(secp256k1.privateKeyVerify(Buffer.from(privateKey_decrypted, 'hex'))) {
+                    if (secp256k1.privateKeyVerify(Buffer.from(privateKey_decrypted, 'hex'))) {
                       let tx = new EthereumTx(rawTx);
                       let privateKey = Buffer.from(privateKey_decrypted, 'hex');
                       tx.sign(privateKey);
@@ -509,7 +522,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                             cryptr = new Cryptr(options.password);
                             privateKey_decrypted = cryptr.decrypt(wallet.privateKey);
 
-                            if(secp256k1.privateKeyVerify(Buffer.from(privateKey_decrypted, 'hex'))) {
+                            if (secp256k1.privateKeyVerify(Buffer.from(privateKey_decrypted, 'hex'))) {
                               let tx = new EthereumTx(rawTx);
                               const privateKey = Buffer.from(privateKey_decrypted, 'hex');
                               tx.sign(privateKey);
@@ -528,16 +541,18 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                                 rawTx: '0x' + serializedTx.toString('hex'),
                                 feeDepositWallet: options.feeWalletId,
                                 feeDepositTxnId: hash,
-                              }
+                              };
 
-                              if(options.originalTokenValueInEth) {
-                                obj.feeCollectPriceConversion = options.originalTokenValueInEth
+                              if (options.originalTokenValueInEth) {
+                                obj.feeCollectPriceConversion = options.originalTokenValueInEth;
                               }
 
                               const return_id = WalletTransactions.insert(obj);
 
-                              if(feeCollectWallet) {
-                                data = erc20_instance.methods.transfer(feeCollectWallet.address, web3.utils.toWei(String(new BigNumber(amountOfTokenToDeduct).toFixed(18).toString()), 'ether')).encodeABI();
+                              if (feeCollectWallet) {
+                                data = erc20_instance.methods
+                                  .transfer(feeCollectWallet.address, web3.utils.toWei(String(new BigNumber(amountOfTokenToDeduct).toFixed(18).toString()), 'ether'))
+                                  .encodeABI();
                                 rawTx = {
                                   gasPrice: web3.utils.toHex(gasPrice),
                                   gasLimit: web3.utils.toHex(secondTxnGasLimit.toString()),
@@ -565,11 +580,11 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                                   rawTx: '0x' + serializedTx.toString('hex'),
                                   feeDepositWallet: options.feeWalletId,
                                   feeDepositTxnId: hash,
-                                  feeCollectPriceConversion: options.originalTokenValueInEth
-                                }
+                                  feeCollectPriceConversion: options.originalTokenValueInEth,
+                                };
 
-                                if(options.originalTokenValueInEth) {
-                                  obj.feeCollectPriceConversion = options.originalTokenValueInEth
+                                if (options.originalTokenValueInEth) {
+                                  obj.feeCollectPriceConversion = options.originalTokenValueInEth;
                                 }
 
                                 WalletTransactions.insert(obj);
@@ -594,7 +609,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                             if (err.toString().includes('insufficient funds')) {
                               reject('Insufficient Ether for Fees');
                             } else {
-                              reject('Unknown Error');
+                              reject(err.toString().replace('Error: Returned error:', ''));
                             }
                           }
                         })

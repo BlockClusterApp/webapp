@@ -311,110 +311,110 @@ JsonRoutes.add(
           Meteor.bindEnvironment((err, file) => {
             if (err) {
               console.log(err);
-              JsonRoutes.sendResult(res, {
+              return JsonRoutes.sendResult(res, {
                 code: 401,
                 data: {
                   error: 'An unknown error occured',
                 },
               });
-            } else {
-              ipfsCluster.pin.add(
-                file[0].hash,
-                { 'replication-min': 2, 'replication-max': 3 },
-                Meteor.bindEnvironment(err => {
-                  if (!err) {
-                    if (
-                      Files.find({
+            }
+            ipfsCluster.pin.add(
+              file[0].hash,
+              { 'replication-min': 2, 'replication-max': 3 },
+              Meteor.bindEnvironment(err => {
+                if (!err) {
+                  if (
+                    Files.find({
+                      userId: req.userId,
+                      hash: file[0].hash,
+                      region: req.body.location || req.query.location,
+                    }).fetch().length == 0
+                  ) {
+                    Files.upsert(
+                      {
                         userId: req.userId,
                         hash: file[0].hash,
-                        region: req.body.location || req.query.location,
-                      }).fetch().length == 0
-                    ) {
-                      Files.upsert(
-                        {
-                          userId: req.userId,
-                          hash: file[0].hash,
+                      },
+                      {
+                        $set: {
+                          uploaded: Date.now(),
+                          fileName: req.file.originalname,
+                          mimetype: req.file.mimetype,
+                          size: req.file.size,
+                          region: req.body.location || req.query.location,
                         },
-                        {
-                          $set: {
-                            uploaded: Date.now(),
-                            fileName: req.file.originalname,
-                            mimetype: req.file.mimetype,
-                            size: req.file.size,
-                            region: req.body.location || req.query.location,
-                          },
-                        }
-                      );
+                      }
+                    );
 
-                      let totalDaysThisMonth = helpers.daysInThisMonth();
-                      let todayDay = new Date().getUTCDate();
-                      let daysRemaining = totalDaysThisMonth - (todayDay - 1);
-                      let daysIgnored = todayDay - 1;
+                    let totalDaysThisMonth = helpers.daysInThisMonth();
+                    let todayDay = new Date().getUTCDate();
+                    let daysRemaining = totalDaysThisMonth - (todayDay - 1);
+                    let daysIgnored = todayDay - 1;
 
-                      const hyperionPricing = HyperionPricing.find({ active: true }).fetch()[0];
-                      let costPerGBPerDay = helpers.hyperionGBCostPerDay(hyperionPricing.perGBCost);
-                      let fileSizeInGB = new BigNumber(req.file.size)
-                        .div(1024)
-                        .div(1024)
-                        .div(1024)
-                        .toNumber();
-                      let fileCostPerDay = new BigNumber(costPerGBPerDay).times(fileSizeInGB).toNumber();
-                      let costIgnored = new BigNumber(daysIgnored).times(fileCostPerDay).toNumber();
+                    const hyperionPricing = HyperionPricing.find({ active: true }).fetch()[0];
+                    let costPerGBPerDay = helpers.hyperionGBCostPerDay(hyperionPricing.perGBCost);
+                    let fileSizeInGB = new BigNumber(req.file.size)
+                      .div(1024)
+                      .div(1024)
+                      .div(1024)
+                      .toNumber();
+                    let fileCostPerDay = new BigNumber(costPerGBPerDay).times(fileSizeInGB).toNumber();
+                    let costIgnored = new BigNumber(daysIgnored).times(fileCostPerDay).toNumber();
 
-                      Hyperion.upsert(
-                        {
-                          userId: req.userId,
-                        },
-                        {
-                          $inc: {
-                            size: req.file.size,
-                            discount: costIgnored, //deduct this amount in monthly billing and reset to 0.
-                          },
-                        }
-                      );
-
-                      ChargeableAPI.insert({
-                        url: req.url,
+                    Hyperion.upsert(
+                      {
                         userId: req.userId,
-                        serviceType: 'hyperion',
-                        metadata: {
-                          type: 'UploadFile',
-                          fileSizeInGB: req.file.size / 1024 / 1024 / 1024,
-                          responseCode: 200,
-                          response: JSON.stringify({
-                            message: `${file[0].hash}`,
-                            success: true,
-                            method: 'POST',
-                          }),
+                      },
+                      {
+                        $inc: {
+                          size: req.file.size,
+                          discount: costIgnored, //deduct this amount in monthly billing and reset to 0.
                         },
-                      });
+                      }
+                    );
 
-                      res.end(
-                        JSON.stringify({
+                    ChargeableAPI.insert({
+                      url: req.url,
+                      userId: req.userId,
+                      serviceType: 'hyperion',
+                      metadata: {
+                        type: 'UploadFile',
+                        fileSizeInGB: req.file.size / 1024 / 1024 / 1024,
+                        responseCode: 200,
+                        response: JSON.stringify({
                           message: `${file[0].hash}`,
                           success: true,
-                        })
-                      );
-                    } else {
-                      JsonRoutes.sendResult(res, {
-                        code: 401,
-                        data: {
-                          error: 'File already exists',
-                        },
-                      });
-                    }
+                          method: 'POST',
+                        }),
+                      },
+                    });
+
+                    JsonRoutes.sendResult(res, {
+                      code: 200,
+                      data: {
+                        message: `${file[0].hash}`,
+                        success: true,
+                      },
+                    });
                   } else {
-                    console.log(err);
                     JsonRoutes.sendResult(res, {
                       code: 401,
                       data: {
-                        error: 'An unknown error occured',
+                        error: 'File already exists',
                       },
                     });
                   }
-                })
-              );
-            }
+                } else {
+                  console.log(err);
+                  JsonRoutes.sendResult(res, {
+                    code: 401,
+                    data: {
+                      error: 'An unknown error occured',
+                    },
+                  });
+                }
+              })
+            );
           })
         );
       } else {
@@ -445,34 +445,37 @@ JsonRoutes.add('get', '/api/hyperion/download', async (req, res, next) => {
       let ipfs_connection = Config.getHyperionConnectionDetails(req.query.location);
       const ipfs = ipfsAPI(ipfs_connection[0], ipfs_connection[1], { protocol: 'http' });
       var ipfsCluster = ipfsClusterAPI(ipfs_connection[0], ipfs_connection[2], { protocol: 'http' });
-      ipfs.files.get(hash, Meteor.bindEnvironment((err, files) => {
-        if (files) {
-          files.forEach(  file => {
-            if (file) {
-              ChargeableAPI.insert({
-                url: req.url,
-                userId: req.userId,
-                serviceType: 'hyperion',
-                metadata: {
-                  type: 'DownloadFile',
-                  fileHash: hash,
-                  size: file.content.length,
-                  method: 'GET',
-                },
-              });
-              res.end(file.content);
-              return;
-            }
-          });
-        } else {
-          JsonRoutes.sendResult(res, {
-            code: 401,
-            data: {
-              error: 'File not found',
-            },
-          });
-        }
-      }));
+      ipfs.files.get(
+        hash,
+        Meteor.bindEnvironment((err, files) => {
+          if (files) {
+            files.forEach(file => {
+              if (file) {
+                ChargeableAPI.insert({
+                  url: req.url,
+                  userId: req.userId,
+                  serviceType: 'hyperion',
+                  metadata: {
+                    type: 'DownloadFile',
+                    fileHash: hash,
+                    size: file.content.length,
+                    method: 'GET',
+                  },
+                });
+                res.end(file.content);
+                return;
+              }
+            });
+          } else {
+            JsonRoutes.sendResult(res, {
+              code: 401,
+              data: {
+                error: 'File not found',
+              },
+            });
+          }
+        })
+      );
     } else {
       JsonRoutes.sendResult(res, {
         code: 401,

@@ -8,6 +8,8 @@ const MIGRATION_VERSION = 9;
 global.RemoteConfig = {};
 global.LicenceError = 0;
 
+global.isConfigFetched = false;
+
 const CONFIG_URL = (function() {
   if (process.env.NODE_ENV === 'development') {
     if (process.env.CONFIG_URL) {
@@ -33,6 +35,10 @@ async function fetchNewConfig() {
       Ingress: {},
     };
   } else {
+    if (!global.isConfigFetched) {
+      console.log('Fetching licence information');
+    }
+    global.isConfigFetched = true;
     global.RemoteConfig = res;
     global.LicenceError = 0;
   }
@@ -63,6 +69,8 @@ setInterval(
   },
   process.env.NODE_ENV === 'development' ? 10 * 1000 : 1 * 60 * 1000
 );
+
+export { MIGRATION_VERSION };
 
 function getAPIHost() {
   if (RemoteConfig.apiHost) {
@@ -185,7 +193,6 @@ function getMongoConnectionString() {
 
   return `mongodb://${q.host}/admin`;
 }
-
 module.exports = {
   sendgridAPIKey: process.env.SENDGRID_API_KEY || defaults.sendgridApi,
   workerNodeIP: (locationCode = 'us-west-2') => {

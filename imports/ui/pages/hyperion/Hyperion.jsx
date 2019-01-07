@@ -561,7 +561,7 @@ class HyperionComponent extends Component {
                                   <div className="p-l-20">
                                     <h3 className="no-margin p-b-30 text-white ">
                                       {this.props.hyperion && (
-                                        <span>${Number((this.props.hyperion.size / (1024 * 1024 * 1024)) * (hyperionPricing && hyperionPricing.perGBCost)).toFixed(2)}</span>
+                                        <span>${Number(((this.props.hyperion.size || 0) / (1024 * 1024 * 1024)) * (hyperionPricing && hyperionPricing.perGBCost)).toFixed(2)}</span>
                                       )}
 
                                       {!this.props.hyperion && <span>$0</span>}
@@ -595,8 +595,9 @@ class HyperionComponent extends Component {
                                         <span>
                                           $
                                           {Math.max(
-                                            (this.props.hyperion.size / (1024 * 1024 * 1024)) * (hyperionPricing && hyperionPricing.perGBCost) - this.props.hyperion.discount,
-                                            this.props.hyperion.minimumFeeThisMonth
+                                            ((this.props.hyperion.size || 0) / (1024 * 1024 * 1024)) * (hyperionPricing ? hyperionPricing.perGBCost : 0) -
+                                              (this.props.hyperion.discount || 0),
+                                            Number(this.props.hyperion.minimumFeeThisMonth)
                                           ).toFixed(2)}
                                         </span>
                                       )}
@@ -826,9 +827,10 @@ class HyperionComponent extends Component {
                                                 <span>
                                                   {helpers.getFlooredFixed(
                                                     (
-                                                      (((this.props.hyperion.size || 0) / 1024 / 1024 / 1024) * (helpers.hyperionGBCostPerDay() * helpers.daysInThisMonth())).toPrecision(
-                                                        2
-                                                      ) - (this.props.hyperion.discount || 0)
+                                                      (
+                                                        ((this.props.hyperion.size || 0) / 1024 / 1024 / 1024) *
+                                                        (helpers.hyperionGBCostPerDay() * helpers.daysInThisMonth())
+                                                      ).toPrecision(2) - (this.props.hyperion.discount || 0)
                                                     ).toPrecision(2),
                                                     2
                                                   )}
