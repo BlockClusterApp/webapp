@@ -321,7 +321,9 @@ const processWithdrawls = async ready => {
   try {
     let pending_txns = WalletTransactions.find({
       $or: [{ status: 'pending' }, { status: 'processing' }],
-      type: 'withdrawal',
+      type: 'withdrawal'
+    }, {
+      sort: { nonce : 1 }
     }).fetch();
 
     for (let count = 0; count < pending_txns.length; count++) {
@@ -355,14 +357,17 @@ const processWithdrawls = async ready => {
               },
             }
           );
-        } else if (helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
+        } else if (helpers.minutesDifference(Date.now(), pending_txns[count].lastBroadcastedDate) >= 30) {
+          let url = await Config.getPaymeterConnectionDetails('eth', wallet.network);
+          let web3 = new Web3(new Web3.providers.WebsocketProvider(url));
+          await web3.eth.sendSignedTransaction(pending_txns[count].rawTx)
           WalletTransactions.update(
             {
               _id: pending_txns[count]._id,
             },
             {
               $set: {
-                status: 'cancelled',
+                lastBroadcastedDate: Date.now()
               },
             }
           );
@@ -374,7 +379,7 @@ const processWithdrawls = async ready => {
             {
               $set: {
                 confirmedBalance: await Paymeter.getBalance(wallet._id),
-              },
+              }
             }
           );
         }
@@ -402,28 +407,7 @@ const processWithdrawls = async ready => {
                       $set: {
                         status: 'pending',
                         txnId: hash,
-                      },
-                    }
-                  );
-
-                  Wallets.update(
-                    {
-                      _id: wallet._id,
-                    },
-                    {
-                      $set: {
-                        confirmedBalance: await Paymeter.getBalance(wallet._id),
-                      },
-                    }
-                  );
-                } else if (prev_nonce_txn.status === 'cancelled') {
-                  WalletTransactions.update(
-                    {
-                      _id: pending_txns[count]._id,
-                    },
-                    {
-                      $set: {
-                        status: 'cancelled',
+                        lastBroadcastedDate: Date.now()
                       },
                     }
                   );
@@ -451,6 +435,7 @@ const processWithdrawls = async ready => {
                     $set: {
                       status: 'pending',
                       txnId: hash,
+                      lastBroadcastedDate: Date.now()
                     },
                   }
                 );
@@ -466,28 +451,6 @@ const processWithdrawls = async ready => {
                   }
                 );
               }
-            } else if (helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
-              WalletTransactions.update(
-                {
-                  _id: pending_txns[count]._id,
-                },
-                {
-                  $set: {
-                    status: 'cancelled',
-                  },
-                }
-              );
-
-              Wallets.update(
-                {
-                  _id: wallet._id,
-                },
-                {
-                  $set: {
-                    confirmedBalance: await Paymeter.getBalance(wallet._id),
-                  },
-                }
-              );
             }
           } else {
             let url = `${await Config.getPaymeterConnectionDetails('eth', wallet.network)}`;
@@ -515,14 +478,15 @@ const processWithdrawls = async ready => {
                   },
                 }
               );
-            } else if (helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
+            } else if (helpers.minutesDifference(Date.now(), pending_txns[count].lastBroadcastedDate) >= 30) {
+              await sendRawTxn(pending_txns[count].rawTx, web3);
               WalletTransactions.update(
                 {
                   _id: pending_txns[count]._id,
                 },
                 {
                   $set: {
-                    status: 'cancelled',
+                    lastBroadcastedDate: Date.now(),
                   },
                 }
               );
@@ -558,28 +522,7 @@ const processWithdrawls = async ready => {
                     $set: {
                       status: 'pending',
                       txnId: hash,
-                    },
-                  }
-                );
-
-                Wallets.update(
-                  {
-                    _id: wallet._id,
-                  },
-                  {
-                    $set: {
-                      confirmedBalance: await Paymeter.getBalance(wallet._id),
-                    },
-                  }
-                );
-              } else if (prev_nonce_txn.status === 'cancelled') {
-                WalletTransactions.update(
-                  {
-                    _id: pending_txns[count]._id,
-                  },
-                  {
-                    $set: {
-                      status: 'cancelled',
+                      lastBroadcastedDate: Data.now()
                     },
                   }
                 );
@@ -621,14 +564,15 @@ const processWithdrawls = async ready => {
                   },
                 }
               );
-            } else if (helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
+            } else if (helpers.minutesDifference(Date.now(), pending_txns[count].lastBroadcastedDate) >= 1) {
+              await sendRawTxn(pending_txns[count].rawTx, web3);
               WalletTransactions.update(
                 {
                   _id: pending_txns[count]._id,
                 },
                 {
                   $set: {
-                    status: 'cancelled',
+                    lastBroadcastedDate: Date.now(),
                   },
                 }
               );
