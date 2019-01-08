@@ -595,6 +595,7 @@ const processWithdrawls = async ready => {
 
     ready();
   } catch (e) {
+    console.log(e)
     ready();
   }
 };
