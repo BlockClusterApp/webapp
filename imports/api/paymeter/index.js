@@ -136,10 +136,6 @@ function createWallet(coinType, walletName, userId, network, options) {
   });
 }
 
-Meteor.setTimeout(async () => {
-  console.log(await getBalance('LCd5P7Qdz67kYNBZN'))
-}, 10000)
-
 async function getBalance(walletId) {
   return new Promise(async (resolve, reject) => {
     let wallet = Wallets.findOne({
