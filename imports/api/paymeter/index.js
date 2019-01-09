@@ -136,10 +136,6 @@ function createWallet(coinType, walletName, userId, network, options) {
   });
 }
 
-Meteor.setTimeout(async () => {
-  console.log(await getBalance('rYuaWy7mRoKzz5qWt'))
-}, 10000)
-
 async function getBalance(walletId) {
   return new Promise(async (resolve, reject) => {
     let wallet = Wallets.findOne({
@@ -332,13 +328,14 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
               let hash = await web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex'))
 
               let isInternalTxn = false;
-
-              if(Wallets.findOne({
+              let internalWallet = Wallets.findOne({
                 address: toAddress,
                 coinType: {
                   $in: ['ETH', 'ERC20'],
                 }
-              })) {
+              })
+
+              if(internalWallet) {
                 isInternalTxn = true
               }
   
@@ -358,16 +355,38 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                 lastBroadcastedDate: Date.now()
               });
   
-              Wallets.update(
-                {
+              Wallets.update( {
                   _id: wallet._id,
-                },
-                {
+                }, {
                   $set: {
                     confirmedBalance: await getBalance(wallet._id),
                   },
                 }
               );
+
+              if(internalWallet) {
+                WalletTransactions.insert({
+                  toWallet: internalWallet._id,
+                  fromAddress: wallet.address,
+                  txnId: hash.transactionHash,
+                  type: 'deposit',
+                  createdAt: Date.now(),
+                  amount: final_amount,
+                  internalStatus: 'pending',
+                  status: 'completed',
+                  isInternalTxn: true
+                })
+
+                Wallets.update({
+                    _id: internalWallet._id,
+                  }, {
+                    $set: {
+                      confirmedBalance: await getBalance(wallet._id),
+                    },
+                  }
+                );
+              }
+
               resolve(return_id);
             } else {
               reject('Password invalid');
@@ -570,12 +589,13 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                     let serializedTx = tx.serialize();
 
                     let isInternalTxn = false;
-
-                    if(Wallets.findOne({
+                    let internalWallet = Wallets.findOne({
                       address: toAddress,
                       coinType: "ERC20",
                       tokenSymbol: wallet.tokenSymbol
-                    })) {
+                    })
+
+                    if(internalWallet) {
                       isInternalTxn = true
                     }
 
@@ -601,6 +621,29 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                     }
 
                     const return_id = WalletTransactions.insert(obj);
+
+                    if(internalWallet) {
+                      WalletTransactions.insert({
+                        toWallet: internalWallet._id,
+                        fromAddress: wallet.address,
+                        txnId: web3.utils.sha3('0x' + serializedTx.toString('hex'), { encoding: 'hex' }),
+                        type: 'deposit',
+                        createdAt: Date.now(),
+                        amount: amount,
+                        internalStatus: 'pending',
+                        status: 'completed',
+                        isInternalTxn: true
+                      })
+      
+                      Wallets.update({
+                          _id: internalWallet._id,
+                        }, {
+                          $set: {
+                            confirmedBalance: await getBalance(wallet._id),
+                          },
+                        }
+                      );
+                    }
 
                     if (feeCollectWallet) {
                       data = erc20_instance.methods
@@ -643,6 +686,29 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                       }
 
                       WalletTransactions.insert(obj);
+
+                      if(internalWallet) {
+                        WalletTransactions.insert({
+                          toWallet: feeCollectWallet._id,
+                          fromAddress: wallet.address,
+                          txnId: web3.utils.sha3('0x' + serializedTx.toString('hex'), { encoding: 'hex' }),
+                          type: 'deposit',
+                          createdAt: Date.now(),
+                          amount: amountOfTokenToDeduct,
+                          internalStatus: 'pending',
+                          status: 'completed',
+                          isInternalTxn: true
+                        })
+        
+                        Wallets.update({
+                            _id: feeCollectWallet._id,
+                          }, {
+                            $set: {
+                              confirmedBalance: await getBalance(wallet._id),
+                            },
+                          }
+                        );
+                      }
                     }
 
                     Wallets.update(
@@ -696,12 +762,13 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
               }).count();
 
               let isInternalTxn = false;
-
-              if(Wallets.findOne({
+              let internalWallet = Wallets.findOne({
                 address: toAddress,
                 coinType: "ERC20",
                 tokenSymbol: wallet.tokenSymbol
-              })) {
+              })
+
+              if(internalWallet) {
                 isInternalTxn = true
               }
 
@@ -724,8 +791,6 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                 const privateKey = Buffer.from(privateKey_decrypted, 'hex');
                 tx.sign(privateKey);
                 const serializedTx = tx.serialize();
-
-                
 
                 const return_id = WalletTransactions.insert({
                   fromWallet: wallet._id,
@@ -755,6 +820,29 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                     },
                   }
                 );
+
+                if(internalWallet) {
+                  WalletTransactions.insert({
+                    toWallet: internalWallet._id,
+                    fromAddress: wallet.address,
+                    txnId: web3.utils.sha3('0x' + serializedTx.toString('hex'), { encoding: 'hex' }),
+                    type: 'deposit',
+                    createdAt: Date.now(),
+                    amount: amount,
+                    internalStatus: 'pending',
+                    status: 'completed',
+                    isInternalTxn: true
+                  })
+  
+                  Wallets.update({
+                      _id: internalWallet._id,
+                    }, {
+                      $set: {
+                        confirmedBalance: await getBalance(wallet._id),
+                      },
+                    }
+                  );
+                }
 
                 resolve(return_id);
               } else {
@@ -807,6 +895,29 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                     },
                   }
                 );
+
+                if(internalWallet) {
+                  WalletTransactions.insert({
+                    toWallet: internalWallet._id,
+                    fromAddress: wallet.address,
+                    txnId: hash.transactionHash,
+                    type: 'deposit',
+                    createdAt: Date.now(),
+                    amount: amount,
+                    internalStatus: 'pending',
+                    status: 'completed',
+                    isInternalTxn: true
+                  })
+  
+                  Wallets.update({
+                      _id: internalWallet._id,
+                    }, {
+                      $set: {
+                        confirmedBalance: await getBalance(wallet._id),
+                      },
+                    }
+                  );
+                }
 
                 resolve(return_id);
               }
