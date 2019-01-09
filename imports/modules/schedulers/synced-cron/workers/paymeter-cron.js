@@ -788,11 +788,13 @@ const scanEthTestnet = async ready => {
                     type: 'deposit',
                   },
                   {
-                    createdAt: block.timestamp * 1000,
-                    amount: testnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                    internalStatus: 'pending',
-                    status: from_exists_internally ? 'completed' : 'pending',
-                    isInternalTxn: from_exists_internally ? true : false
+                    $set: {
+                      createdAt: block.timestamp * 1000,
+                      amount: testnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
+                      internalStatus: 'pending',
+                      status: from_exists_internally ? 'completed' : 'pending',
+                      isInternalTxn: from_exists_internally ? true : false
+                    }
                   }
                 );
 
@@ -855,11 +857,13 @@ const scanEthTestnet = async ready => {
                   type: 'deposit',
                 },
                 {
-                  createdAt: block.timestamp * 1000,
-                  amount: testnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                  internalStatus: 'pending',
-                  status: from_exists_internally ? 'completed' : 'pending',
-                  isInternalTxn: from_exists_internally ? true : false
+                  $set: {
+                    createdAt: block.timestamp * 1000,
+                    amount: testnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
+                    internalStatus: 'pending',
+                    status: from_exists_internally ? 'completed' : 'pending',
+                    isInternalTxn: from_exists_internally ? true : false
+                  }
                 }
               );
 
@@ -958,11 +962,13 @@ const scanEthMainnet = async ready => {
                       type: 'deposit',
                     },
                     {
-                      createdAt: block.timestamp * 1000,
-                      amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                      internalStatus: 'pending',
-                      status: 'completed',
-                      isInternalTxn: true
+                      $set: {
+                        createdAt: block.timestamp * 1000,
+                        amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
+                        internalStatus: 'pending',
+                        status: 'completed',
+                        isInternalTxn: true
+                      }
                     }
                   );
 
@@ -1002,15 +1008,17 @@ const scanEthMainnet = async ready => {
                         type: 'deposit',
                       },
                       {
-                        createdAt: block.timestamp * 1000,
-                        amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                        usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
-                          .times(new BigNumber(mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString()).times(eth_price.usd_price))
-                          .dividedBy(100)
-                          .toString(),
-                        internalStatus: 'pending',
-                        status: 'pending',
-                        isInternalTxn: false
+                        $set: {
+                          createdAt: block.timestamp * 1000,
+                          amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
+                          usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
+                            .times(new BigNumber(mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString()).times(eth_price.usd_price))
+                            .dividedBy(100)
+                            .toString(),
+                          internalStatus: 'pending',
+                          status: 'pending',
+                          isInternalTxn: false
+                        }
                       }
                     );
 
@@ -1036,12 +1044,14 @@ const scanEthMainnet = async ready => {
                         type: 'deposit',
                       },
                       {
-                        createdAt: block.timestamp * 1000,
-                        amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                        usdCharged: paymeterPricing.perTransactionCostFlat,
-                        internalStatus: 'pending',
-                        status: 'pending',
-                        isInternalTxn: false
+                        $set: {
+                          createdAt: block.timestamp * 1000,
+                          amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
+                          usdCharged: paymeterPricing.perTransactionCostFlat,
+                          internalStatus: 'pending',
+                          status: 'pending',
+                          isInternalTxn: false
+                        }
                       }
                     );
 
@@ -1110,11 +1120,13 @@ const scanEthMainnet = async ready => {
                     type: 'deposit',
                   },
                   {
-                    createdAt: block.timestamp * 1000,
-                    amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                    internalStatus: 'pending',
-                    status: 'completed',
-                    isInternalTxn: true
+                    $set: {
+                      createdAt: block.timestamp * 1000,
+                      amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
+                      internalStatus: 'pending',
+                      status: 'completed',
+                      isInternalTxn: true
+                    }
                   }
                 );
 
@@ -1156,16 +1168,18 @@ const scanEthMainnet = async ready => {
                           type: 'deposit',
                         },
                         {
-                          createdAt: block.timestamp * 1000,
-                          amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                          usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
-                            .times(new BigNumber(mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()).times(token_price.usd_price))
-                            .dividedBy(100)
-                            .toString(),
-                          usdPrice: token_price.usd_price,
-                          internalStatus: 'pending',
-                          status: 'pending',
-                          isInternalTxn: false
+                          $set: {
+                            createdAt: block.timestamp * 1000,
+                            amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
+                            usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
+                              .times(new BigNumber(mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()).times(token_price.usd_price))
+                              .dividedBy(100)
+                              .toString(),
+                            usdPrice: token_price.usd_price,
+                            internalStatus: 'pending',
+                            status: 'pending',
+                            isInternalTxn: false
+                          }
                         }
                       );
 
@@ -1188,12 +1202,14 @@ const scanEthMainnet = async ready => {
                           type: 'deposit',
                         },
                         {
-                          createdAt: block.timestamp * 1000,
-                          amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                          usdCharged: paymeterPricing.perTransactionCostFlat,
-                          internalStatus: 'pending',
-                          status: 'pending',
-                          isInternalTxn: false
+                          $set: {
+                            createdAt: block.timestamp * 1000,
+                            amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
+                            usdCharged: paymeterPricing.perTransactionCostFlat,
+                            internalStatus: 'pending',
+                            status: 'pending',
+                            isInternalTxn: false
+                          }
                         }
                       );
 
@@ -1217,12 +1233,14 @@ const scanEthMainnet = async ready => {
                         type: 'deposit',
                       },
                       {
-                        createdAt: block.timestamp * 1000,
-                        amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                        usdCharged: paymeterPricing.perTransactionCostFlat,
-                        internalStatus: 'pending',
-                        status: 'pending',
-                        isInternalTxn: false
+                        $set: {
+                          createdAt: block.timestamp * 1000,
+                          amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
+                          usdCharged: paymeterPricing.perTransactionCostFlat,
+                          internalStatus: 'pending',
+                          status: 'pending',
+                          isInternalTxn: false
+                        }
                       }
                     );
 
@@ -1249,16 +1267,18 @@ const scanEthMainnet = async ready => {
                         type: 'deposit',
                       },
                       {
-                        createdAt: block.timestamp * 1000,
-                        amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                        usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
-                          .times(new BigNumber(mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()).times(price))
-                          .dividedBy(100)
-                          .toString(),
-                        usdPrice: price,
-                        internalStatus: 'pending',
-                        status: 'pending',
-                        isInternalTxn: false
+                        $set: {
+                          createdAt: block.timestamp * 1000,
+                          amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
+                          usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
+                            .times(new BigNumber(mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()).times(price))
+                            .dividedBy(100)
+                            .toString(),
+                          usdPrice: price,
+                          internalStatus: 'pending',
+                          status: 'pending',
+                          isInternalTxn: false
+                        }
                       }
                     );
 
@@ -1281,12 +1301,14 @@ const scanEthMainnet = async ready => {
                         type: 'deposit',
                       },
                       {
-                        createdAt: block.timestamp * 1000,
-                        amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                        usdCharged: paymeterPricing.perTransactionCostFlat,
-                        internalStatus: 'pending',
-                        status: 'pending',
-                        isInternalTxn: false
+                        $set: {
+                          createdAt: block.timestamp * 1000,
+                          amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
+                          usdCharged: paymeterPricing.perTransactionCostFlat,
+                          internalStatus: 'pending',
+                          status: 'pending',
+                          isInternalTxn: false
+                        }
                       }
                     );
 

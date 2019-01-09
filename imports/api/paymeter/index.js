@@ -136,6 +136,10 @@ function createWallet(coinType, walletName, userId, network, options) {
   });
 }
 
+Meteor.setTimeout(async () => {
+  console.log(await getBalance('LCd5P7Qdz67kYNBZN'))
+}, 10000)
+
 async function getBalance(walletId) {
   return new Promise(async (resolve, reject) => {
     let wallet = Wallets.findOne({
@@ -229,8 +233,6 @@ async function getBalance(walletId) {
                       isInternalTxn: true,
                       type: 'deposit',
                     }).fetch();
-
-                    console.log(deposit_txns)
 
                     for (let count = 0; count < deposit_txns.length; count++) {
                       minedBalance = new BigNumber(minedBalance).plus(new BigNumber(deposit_txns[count].amount)).toString();
@@ -381,7 +383,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                     _id: internalWallet._id,
                   }, {
                     $set: {
-                      confirmedBalance: await getBalance(wallet._id),
+                      confirmedBalance: await getBalance(internalWallet._id),
                     },
                   }
                 );
@@ -639,7 +641,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                           _id: internalWallet._id,
                         }, {
                           $set: {
-                            confirmedBalance: await getBalance(wallet._id),
+                            confirmedBalance: await getBalance(internalWallet._id),
                           },
                         }
                       );
@@ -704,7 +706,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                             _id: feeCollectWallet._id,
                           }, {
                             $set: {
-                              confirmedBalance: await getBalance(wallet._id),
+                              confirmedBalance: await getBalance(feeCollectWallet._id),
                             },
                           }
                         );
@@ -838,7 +840,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                       _id: internalWallet._id,
                     }, {
                       $set: {
-                        confirmedBalance: await getBalance(wallet._id),
+                        confirmedBalance: await getBalance(internalWallet._id),
                       },
                     }
                   );
@@ -913,7 +915,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                       _id: internalWallet._id,
                     }, {
                       $set: {
-                        confirmedBalance: await getBalance(wallet._id),
+                        confirmedBalance: await getBalance(internalWallet._id),
                       },
                     }
                   );
