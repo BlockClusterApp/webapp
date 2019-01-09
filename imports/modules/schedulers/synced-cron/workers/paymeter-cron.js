@@ -343,7 +343,7 @@ const processWithdrawls = async ready => {
             {
               $set: {
                 internalStatus: 'completed',
-                sttaus: 'completed'
+                status: 'completed'
               },
             }
           );
@@ -607,7 +607,7 @@ const processDeposits = async ready => {
   try {
     let pending_txns = WalletTransactions.find({
       type: 'deposit',
-      status: 'pending',
+      internalStatus: 'pending',
     }).fetch();
 
     for (let count = 0; count < pending_txns.length; count++) {
@@ -626,7 +626,8 @@ const processDeposits = async ready => {
             },
             {
               $set: {
-                status: 'completed',
+                internalStatus: 'completed',
+                status: 'completed'
               },
             }
           );
@@ -679,7 +680,8 @@ const processDeposits = async ready => {
             },
             {
               $set: {
-                status: 'cancelled',
+                internalStatus: 'cancelled',
+                status: 'cancelled'
               },
             }
           );
@@ -757,8 +759,6 @@ const scanEthTestnet = async ready => {
       block = await getBlock(latest_block_number, testnet_web3);
     }
 
-    debug(block.number);
-
     let promises = [];
     if (block.transactions) {
       async function processTxn(txnHash) {
@@ -773,6 +773,12 @@ const scanEthTestnet = async ready => {
                 address: txn_details.to.toLowerCase(),
               });
 
+              let from_exists_internally = Wallets.findOne({
+                coinType: 'ETH',
+                network: 'testnet',
+                address: txn_details.from.toLowerCase(),
+              })
+
               if (to_exists_internally) {
                 WalletTransactions.upsert(
                   {
@@ -785,7 +791,9 @@ const scanEthTestnet = async ready => {
                   {
                     $setOnInsert: {
                       amount: testnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                      status: 'pending',
+                      internalStatus: 'pending',
+                      status: from_exists_internally ? 'completed' : 'pending',
+                      isInternalTxn: from_exists_internally ? true : false
                     },
                   }
                 );
@@ -822,6 +830,13 @@ const scanEthTestnet = async ready => {
               contractAddress: contractAddress,
             });
 
+            let from_exists_internally = Wallets.findOne({
+              coinType: 'ERC20',
+              network: 'testnet',
+              address: fromAddressOfEvent,
+              contractAddress: contractAddress,
+            })
+
             if (to_exists_internally) {
               WalletTransactions.upsert(
                 {
@@ -834,7 +849,9 @@ const scanEthTestnet = async ready => {
                 {
                   $setOnInsert: {
                     amount: testnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                    status: 'pending',
+                    internalStatus: 'pending',
+                    status: from_exists_internally ? 'completed' : 'pending',
+                    isInternalTxn: from_exists_internally ? true : false
                   },
                 }
               );
@@ -926,7 +943,9 @@ const scanEthMainnet = async ready => {
                     {
                       $setOnInsert: {
                         amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                        status: 'pending',
+                        internalStatus: 'pending',
+                        status: 'completed',
+                        isInternalTxn: true
                       },
                     }
                   );
@@ -963,7 +982,9 @@ const scanEthMainnet = async ready => {
                             .times(new BigNumber(mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString()).times(eth_price.usd_price))
                             .dividedBy(100)
                             .toString(),
+                          internalStatus: 'pending',
                           status: 'pending',
+                          isInternalTxn: false
                         },
                       }
                     );
@@ -983,7 +1004,9 @@ const scanEthMainnet = async ready => {
                         $setOnInsert: {
                           amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
                           usdCharged: paymeterPricing.perTransactionCostFlat,
+                          internalStatus: 'pending',
                           status: 'pending',
+                          isInternalTxn: false
                         },
                       }
                     );
@@ -1045,7 +1068,9 @@ const scanEthMainnet = async ready => {
                   {
                     $setOnInsert: {
                       amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                      status: 'pending',
+                      internalStatus: 'pending',
+                      status: 'completed',
+                      isInternalTxn: true
                     },
                   }
                 );
@@ -1085,7 +1110,9 @@ const scanEthMainnet = async ready => {
                               .dividedBy(100)
                               .toString(),
                             usdPrice: token_price.usd_price,
+                            internalStatus: 'pending',
                             status: 'pending',
+                            isInternalTxn: false
                           },
                         }
                       );
@@ -1102,7 +1129,9 @@ const scanEthMainnet = async ready => {
                           $setOnInsert: {
                             amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                             usdCharged: paymeterPricing.perTransactionCostFlat,
+                            internalStatus: 'pending',
                             status: 'pending',
+                            isInternalTxn: false
                           },
                         }
                       );
@@ -1120,7 +1149,9 @@ const scanEthMainnet = async ready => {
                         $setOnInsert: {
                           amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                           usdCharged: paymeterPricing.perTransactionCostFlat,
+                          internalStatus: 'pending',
                           status: 'pending',
+                          isInternalTxn: false
                         },
                       }
                     );
@@ -1145,7 +1176,9 @@ const scanEthMainnet = async ready => {
                             .dividedBy(100)
                             .toString(),
                           usdPrice: price,
+                          internalStatus: 'pending',
                           status: 'pending',
+                          isInternalTxn: false
                         },
                       }
                     );
@@ -1162,7 +1195,9 @@ const scanEthMainnet = async ready => {
                         $setOnInsert: {
                           amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                           usdCharged: paymeterPricing.perTransactionCostFlat,
+                          internalStatus: 'pending',
                           status: 'pending',
+                          isInternalTxn: false
                         },
                       }
                     );
