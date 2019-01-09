@@ -784,12 +784,12 @@ const scanEthTestnet = async ready => {
                   {
                     toWallet: to_exists_internally._id,
                     fromAddress: txn_details.from.toLowerCase(),
-                    createdAt: block.timestamp * 1000,
                     txnId: txnHash,
                     type: 'deposit',
                   },
                   {
                     $setOnInsert: {
+                      createdAt: block.timestamp * 1000,
                       amount: testnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
                       internalStatus: 'pending',
                       status: from_exists_internally ? 'completed' : 'pending',
@@ -853,12 +853,12 @@ const scanEthTestnet = async ready => {
                 {
                   toWallet: to_exists_internally._id,
                   fromAddress: fromAddressOfEvent,
-                  createdAt: block.timestamp * 1000,
                   txnId: logs[iii].transactionHash,
                   type: 'deposit',
                 },
                 {
                   $setOnInsert: {
+                    createdAt: block.timestamp * 1000,
                     amount: testnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                     internalStatus: 'pending',
                     status: from_exists_internally ? 'completed' : 'pending',
@@ -958,12 +958,12 @@ const scanEthMainnet = async ready => {
                     {
                       toWallet: to_exists_internally._id,
                       fromAddress: txn_details.from.toLowerCase(),
-                      createdAt: block.timestamp * 1000,
                       txnId: txnHash,
                       type: 'deposit',
                     },
                     {
                       $setOnInsert: {
+                        createdAt: block.timestamp * 1000,
                         amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
                         internalStatus: 'pending',
                         status: 'completed',
@@ -1004,12 +1004,12 @@ const scanEthMainnet = async ready => {
                       {
                         toWallet: to_exists_internally._id,
                         fromAddress: txn_details.from.toLowerCase(),
-                        createdAt: block.timestamp * 1000,
                         txnId: txnHash,
                         type: 'deposit',
                       },
                       {
                         $setOnInsert: {
+                          createdAt: block.timestamp * 1000,
                           amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
                           usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
                             .times(new BigNumber(mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString()).times(eth_price.usd_price))
@@ -1040,12 +1040,12 @@ const scanEthMainnet = async ready => {
                       {
                         toWallet: to_exists_internally._id,
                         fromAddress: txn_details.from.toLowerCase(),
-                        createdAt: block.timestamp * 1000,
                         txnId: txnHash,
                         type: 'deposit',
                       },
                       {
                         $setOnInsert: {
+                          createdAt: block.timestamp * 1000,
                           amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
                           usdCharged: paymeterPricing.perTransactionCostFlat,
                           internalStatus: 'pending',
@@ -1116,12 +1116,12 @@ const scanEthMainnet = async ready => {
                   {
                     toWallet: to_exists_internally._id,
                     fromAddress: fromAddressOfEvent.toLowerCase(),
-                    createdAt: block.timestamp * 1000,
                     txnId: logs[iii].transactionHash,
                     type: 'deposit',
                   },
                   {
                     $setOnInsert: {
+                      createdAt: block.timestamp * 1000,
                       amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                       internalStatus: 'pending',
                       status: 'completed',
@@ -1164,12 +1164,12 @@ const scanEthMainnet = async ready => {
                         {
                           toWallet: to_exists_internally._id,
                           fromAddress: fromAddressOfEvent.toLowerCase(),
-                          createdAt: block.timestamp * 1000,
                           txnId: logs[iii].transactionHash,
                           type: 'deposit',
                         },
                         {
                           $setOnInsert: {
+                            createdAt: block.timestamp * 1000,
                             amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                             usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
                               .times(new BigNumber(mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()).times(token_price.usd_price))
@@ -1198,12 +1198,12 @@ const scanEthMainnet = async ready => {
                         {
                           toWallet: to_exists_internally._id,
                           fromAddress: fromAddressOfEvent.toLowerCase(),
-                          createdAt: block.timestamp * 1000,
                           txnId: logs[iii].transactionHash,
                           type: 'deposit',
                         },
                         {
                           $setOnInsert: {
+                            createdAt: block.timestamp * 1000,
                             amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                             usdCharged: paymeterPricing.perTransactionCostFlat,
                             internalStatus: 'pending',
@@ -1229,12 +1229,12 @@ const scanEthMainnet = async ready => {
                       {
                         toWallet: to_exists_internally._id,
                         fromAddress: fromAddressOfEvent.toLowerCase(),
-                        createdAt: block.timestamp * 1000,
                         txnId: logs[iii].transactionHash,
                         type: 'deposit',
                       },
                       {
                         $setOnInsert: {
+                          createdAt: block.timestamp * 1000,
                           amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                           usdCharged: paymeterPricing.perTransactionCostFlat,
                           internalStatus: 'pending',
@@ -1263,12 +1263,12 @@ const scanEthMainnet = async ready => {
                       {
                         toWallet: to_exists_internally._id,
                         fromAddress: fromAddressOfEvent.toLowerCase(),
-                        createdAt: block.timestamp * 1000,
                         txnId: logs[iii].transactionHash,
                         type: 'deposit',
                       },
                       {
                         $setOnInsert: {
+                          createdAt: block.timestamp * 1000,
                           amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                           usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
                             .times(new BigNumber(mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()).times(price))
@@ -1297,12 +1297,12 @@ const scanEthMainnet = async ready => {
                       {
                         toWallet: to_exists_internally._id,
                         fromAddress: fromAddressOfEvent.toLowerCase(),
-                        createdAt: block.timestamp * 1000,
                         txnId: logs[iii].transactionHash,
                         type: 'deposit',
                       },
                       {
                         $setOnInsert: {
+                          createdAt: block.timestamp * 1000,
                           amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                           usdCharged: paymeterPricing.perTransactionCostFlat,
                           internalStatus: 'pending',

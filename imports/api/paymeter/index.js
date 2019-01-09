@@ -136,6 +136,10 @@ function createWallet(coinType, walletName, userId, network, options) {
   });
 }
 
+Meteor.setTimeout(async () => {
+  console.log(await getBalance('rYuaWy7mRoKzz5qWt'))
+}, 10000)
+
 async function getBalance(walletId) {
   return new Promise(async (resolve, reject) => {
     let wallet = Wallets.findOne({
@@ -229,6 +233,8 @@ async function getBalance(walletId) {
                       isInternalTxn: true,
                       type: 'deposit',
                     }).fetch();
+
+                    console.log(deposit_txns)
 
                     for (let count = 0; count < deposit_txns.length; count++) {
                       minedBalance = new BigNumber(minedBalance).plus(new BigNumber(deposit_txns[count].amount)).toString();
