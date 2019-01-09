@@ -183,7 +183,7 @@ async function getBalance(walletId) {
                       minedBalance = new BigNumber(minedBalance).plus(new BigNumber(deposit_txns[count].amount)).toString();
                     }
 
-                    resolve(new BigNumber(minedBalance).toNumber().toString());
+                    resolve(new BigNumber(minedBalance).toFixed(18).toString());
                   } else {
                     reject('An error occured');
                   }
@@ -234,7 +234,7 @@ async function getBalance(walletId) {
                       minedBalance = new BigNumber(minedBalance).plus(new BigNumber(deposit_txns[count].amount)).toString();
                     }
 
-                    resolve(new BigNumber(minedBalance).toNumber().toString());
+                    resolve(new BigNumber(minedBalance).toFixed(18).toString());
                   } else {
                     reject('An error occured');
                   }
