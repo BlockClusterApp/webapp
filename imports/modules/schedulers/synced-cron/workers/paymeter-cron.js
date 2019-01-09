@@ -320,7 +320,7 @@ const addSymbolToContracts = async ready => {
 const processWithdrawls = async ready => {
   try {
     let pending_txns = WalletTransactions.find({
-      $or: [{ status: 'pending' }, { status: 'processing' }],
+      $or: [{ internalStatus: 'pending' }, { internalStatus: 'processing' }],
       type: 'withdrawal'
     }, {
       sort: { nonce : 1 }
@@ -342,7 +342,7 @@ const processWithdrawls = async ready => {
             },
             {
               $set: {
-                status: 'completed',
+                internalStatus: 'completed',
               },
             }
           );
@@ -387,7 +387,7 @@ const processWithdrawls = async ready => {
         let url = `${await Config.getPaymeterConnectionDetails('eth', wallet.network)}`;
         let web3 = new Web3(new Web3.providers.WebsocketProvider(url));
         if (pending_txns[count].feeDepositWallet) {
-          if (pending_txns[count].status === 'processing') {
+          if (pending_txns[count].internalStatus === 'processing') {
             let confirmations = await getEthTxnConfirmations(url, pending_txns[count].feeDepositTxnId);
             if (confirmations >= 15) {
               let prev_nonce_txn = WalletTransactions.findOne({
@@ -396,7 +396,7 @@ const processWithdrawls = async ready => {
               });
 
               if (prev_nonce_txn) {
-                if (prev_nonce_txn.status === 'pending' || prev_nonce_txn.status === 'completed') {
+                if (prev_nonce_txn.internalStatus === 'pending' || prev_nonce_txn.internalStatus === 'completed') {
                   let hash = await sendRawTxn(pending_txns[count].rawTx, web3);
 
                   WalletTransactions.update(
@@ -405,7 +405,7 @@ const processWithdrawls = async ready => {
                     },
                     {
                       $set: {
-                        status: 'pending',
+                        internalStatus: 'pending',
                         txnId: hash,
                         lastBroadcastedDate: Date.now()
                       },
@@ -433,7 +433,7 @@ const processWithdrawls = async ready => {
                   },
                   {
                     $set: {
-                      status: 'pending',
+                      internalStatus: 'pending',
                       txnId: hash,
                       lastBroadcastedDate: Date.now()
                     },
@@ -463,7 +463,7 @@ const processWithdrawls = async ready => {
                 },
                 {
                   $set: {
-                    status: 'completed',
+                    internalStatus: 'completed',
                   },
                 }
               );
@@ -504,7 +504,7 @@ const processWithdrawls = async ready => {
             }
           }
         } else {
-          if (pending_txns[count].status === 'processing') {
+          if (pending_txns[count].internalStatus === 'processing') {
             //check if previous nonce is broadcasted
             let prev_nonce_txn = WalletTransactions.findOne({
               fromWallet: wallet._id,
@@ -512,7 +512,7 @@ const processWithdrawls = async ready => {
             });
 
             if (prev_nonce_txn) {
-              if (prev_nonce_txn.status === 'pending' || prev_nonce_txn.status === 'completed') {
+              if (prev_nonce_txn.internalStatus === 'pending' || prev_nonce_txn.internalStatus === 'completed') {
                 let hash = await sendRawTxn(pending_txns[count].rawTx, web3);
                 WalletTransactions.update(
                   {
@@ -520,7 +520,7 @@ const processWithdrawls = async ready => {
                   },
                   {
                     $set: {
-                      status: 'pending',
+                      internalStatus: 'pending',
                       txnId: hash,
                       lastBroadcastedDate: Data.now()
                     },
@@ -549,7 +549,7 @@ const processWithdrawls = async ready => {
                 },
                 {
                   $set: {
-                    status: 'completed',
+                    internalStatus: 'completed',
                   },
                 }
               );

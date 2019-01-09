@@ -160,7 +160,7 @@ async function getBalance(walletId) {
 
                     let withdraw_txns = WalletTransactions.find({
                       fromWallet: walletId,
-                      status: {
+                      internalStatus: {
                         $in: ['pending', 'processing'],
                       },
                       type: 'withdrawal',
@@ -198,7 +198,7 @@ async function getBalance(walletId) {
 
                     let withdraw_txns = WalletTransactions.find({
                       fromWallet: walletId,
-                      status: {
+                      internalStatus: {
                         $in: ['pending', 'processing'],
                       },
                       type: 'withdrawal',
@@ -304,7 +304,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                 toAddress: toAddress,
                 amount: final_amount,
                 createdAt: Date.now(),
-                status: 'pending',
+                internalStatus: 'pending',
                 txnId: hash.transactionHash,
                 type: 'withdrawal',
                 fee: web3.utils.fromWei(fee.toString(), 'ether'),
@@ -470,7 +470,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                     toAddress: wallet.address,
                     amount: web3.utils.fromWei(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString(), 'ether'),
                     createdAt: Date.now(),
-                    status: 'pending',
+                    internalStatus: 'pending',
                     txnId: hash.transactionHash,
                     type: 'withdrawal',
                     fee: web3.utils.fromWei(fee.toString(), 'ether'),
@@ -494,7 +494,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
 
                   let processing_txns = WalletTransactions.find({
                     fromWallet: wallet._id,
-                    status: 'processing',
+                    internalStatus: 'processing',
                   }).count();
 
                   nonce = await getNonce(wallet.address, url);
@@ -527,8 +527,8 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                       toAddress: toAddress,
                       amount: amount,
                       createdAt: Date.now(),
-                      status: 'processing',
-                      txnId: null,
+                      internalStatus: 'processing',
+                      txnId: web3.utils.sha3('0x' + serializedTx.toString('hex'), { encoding: 'hex' }),
                       type: 'withdrawal',
                       fee: web3.utils.fromWei(total_fee, 'ether'),
                       nonce: nonce,
@@ -566,8 +566,8 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                         toAddress: feeCollectWallet.address,
                         amount: amountOfTokenToDeduct,
                         createdAt: Date.now(),
-                        status: 'processing',
-                        txnId: null,
+                        internalStatus: 'processing',
+                        txnId: web3.utils.sha3('0x' + serializedTx.toString('hex'), { encoding: 'hex' }),
                         type: 'withdrawal',
                         fee: web3.utils.fromWei(total_fee, 'ether'),
                         nonce: nonce + 1,
@@ -631,7 +631,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
 
               let processing_txns = WalletTransactions.find({
                 fromWallet: fromWalletId,
-                status: 'processing',
+                internalStatus: 'processing',
               }).count();
 
               if (processing_txns > 0) {
@@ -659,14 +659,13 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                   toAddress: toAddress,
                   amount: amount,
                   createdAt: Date.now(),
-                  status: 'processing',
-                  txnId: null,
+                  internalStatus: 'processing',
+                  txnId: web3.utils.sha3('0x' + serializedTx.toString('hex'), { encoding: 'hex' }),
                   type: 'withdrawal',
                   fee: web3.utils.fromWei(new BigNumber(gasPrice).multipliedBy(gasLimit).toString(), 'ether'),
                   nonce: nonce,
                   rawTx: '0x' + serializedTx.toString('hex'),
                   feeDepositWallet: null,
-                  feeDepositStatus: null,
                   feeDepositTxnId: null,
                   feeDepositGasPrice: null, //both txns should go with same gas price
                 });
@@ -709,7 +708,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                   toAddress: toAddress,
                   amount: amount,
                   createdAt: Date.now(),
-                  status: 'pending',
+                  internalStatus: 'pending',
                   txnId: hash.transactionHash,
                   nonce: nonce,
                   type: 'withdrawal',
@@ -717,7 +716,6 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                   lastBroadcastedDate: Date.now(),
                   rawTx: '0x' + serializedTx.toString('hex'),
                   feeDepositWallet: null,
-                  feeDepositStatus: null,
                   feeDepositTxnId: null,
                   feeDepositGasPrice: null, //both txns should go with same gas price
                 });
@@ -1073,3 +1071,4 @@ module.exports = {
   getWalletTransactions,
   getBill: paymeter_getAndResetUserBill,
 };
+
