@@ -343,6 +343,7 @@ const processWithdrawls = async ready => {
             {
               $set: {
                 internalStatus: 'completed',
+                sttaus: 'completed'
               },
             }
           );
@@ -464,6 +465,7 @@ const processWithdrawls = async ready => {
                 {
                   $set: {
                     internalStatus: 'completed',
+                    status: 'completed'
                   },
                 }
               );
@@ -550,6 +552,7 @@ const processWithdrawls = async ready => {
                 {
                   $set: {
                     internalStatus: 'completed',
+                    status: 'completed'
                   },
                 }
               );

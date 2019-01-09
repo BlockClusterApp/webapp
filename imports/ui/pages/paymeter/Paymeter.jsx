@@ -983,7 +983,7 @@ class PaymeterComponent extends Component {
                                             <td className="v-align-middle">{item.amount} ETH</td>
                                             <td className="v-align-middle">{item.fee} ETH</td>
                                             <td className="v-align-middle">{item.toAddress}</td>
-                                            <td className="v-align-middle">{ReactHtmlParser(helpers.convertStatusToTag(item.internalStatus, helpers.firstLetterCapital(item.internalStatus)))}</td>
+                                            <td className="v-align-middle">{ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}</td>
                                           </tr>
                                         );
                                       })}
@@ -1019,7 +1019,7 @@ class PaymeterComponent extends Component {
                                             <td className="v-align-middle">{item.amount} ETH</td>
                                             <td className="v-align-middle">${item.usdCharged || '0.00'}</td>
                                             <td className="v-align-middle">{item.fromAddress}</td>
-                                            <td className="v-align-middle">{ReactHtmlParser(helpers.convertStatusToTag(item.internalStatus, helpers.firstLetterCapital(item.internalStatus)))}</td>
+                                            <td className="v-align-middle">{ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}</td>
                                           </tr>
                                         );
                                       })}
@@ -1262,7 +1262,7 @@ class PaymeterComponent extends Component {
                                             </td>
                                             <td className="v-align-middle">{item.fee} ETH</td>
                                             <td className="v-align-middle">{item.toAddress}</td>
-                                            <td className="v-align-middle">{ReactHtmlParser(helpers.convertStatusToTag(item.internalStatus, helpers.firstLetterCapital(item.internalStatus)))}</td>
+                                            <td className="v-align-middle">{ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}</td>
                                           </tr>
                                         );
                                       })}
@@ -1300,7 +1300,7 @@ class PaymeterComponent extends Component {
                                             </td>
                                             <td className="v-align-middle">${item.usdCharged || '0.00'}</td>
                                             <td className="v-align-middle">{item.fromAddress}</td>
-                                            <td className="v-align-middle">{ReactHtmlParser(helpers.convertStatusToTag(item.internalStatus, helpers.firstLetterCapital(item.internalStatus)))}</td>
+                                            <td className="v-align-middle">{ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}</td>
                                           </tr>
                                         );
                                       })}

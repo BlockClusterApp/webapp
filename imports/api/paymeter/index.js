@@ -298,6 +298,17 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
               const serializedTx = tx.serialize();
   
               let hash = await web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex'))
+
+              let isInternalTxn = false;
+
+              if(Wallets.findOne({
+                address: toAddress,
+                coinType: {
+                  $in: ['ETH', 'ERC20'],
+                }
+              })) {
+                isInternalTxn = true
+              }
   
               const return_id = WalletTransactions.insert({
                 fromWallet: wallet._id,
@@ -305,6 +316,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                 amount: final_amount,
                 createdAt: Date.now(),
                 internalStatus: 'pending',
+                status: isInternalTxn ? 'completed' : 'pending',
                 txnId: hash.transactionHash,
                 type: 'withdrawal',
                 fee: web3.utils.fromWei(fee.toString(), 'ether'),
@@ -471,6 +483,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                     amount: web3.utils.fromWei(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString(), 'ether'),
                     createdAt: Date.now(),
                     internalStatus: 'pending',
+                    status: 'completed',
                     txnId: hash.transactionHash,
                     type: 'withdrawal',
                     fee: web3.utils.fromWei(fee.toString(), 'ether'),
@@ -522,12 +535,23 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                     tx.sign(privateKey);
                     let serializedTx = tx.serialize();
 
+                    let isInternalTxn = false;
+
+                    if(Wallets.findOne({
+                      address: toAddress,
+                      coinType: "ERC20",
+                      tokenSymbol: wallet.tokenSymbol
+                    })) {
+                      isInternalTxn = true
+                    }
+
                     let obj = {
                       fromWallet: wallet._id,
                       toAddress: toAddress,
                       amount: amount,
                       createdAt: Date.now(),
                       internalStatus: 'processing',
+                      status: isInternalTxn ? 'completed' : 'pending',
                       txnId: web3.utils.sha3('0x' + serializedTx.toString('hex'), { encoding: 'hex' }),
                       type: 'withdrawal',
                       fee: web3.utils.fromWei(total_fee, 'ether'),
@@ -567,6 +591,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                         amount: amountOfTokenToDeduct,
                         createdAt: Date.now(),
                         internalStatus: 'processing',
+                        status: 'completed',
                         txnId: web3.utils.sha3('0x' + serializedTx.toString('hex'), { encoding: 'hex' }),
                         type: 'withdrawal',
                         fee: web3.utils.fromWei(total_fee, 'ether'),
@@ -634,6 +659,16 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                 internalStatus: 'processing',
               }).count();
 
+              let isInternalTxn = false;
+
+              if(Wallets.findOne({
+                address: toAddress,
+                coinType: "ERC20",
+                tokenSymbol: wallet.tokenSymbol
+              })) {
+                isInternalTxn = true
+              }
+
               if (processing_txns > 0) {
                 nonce = nonce + processing_txns;
                 var rawTx = {
@@ -654,12 +689,15 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                 tx.sign(privateKey);
                 const serializedTx = tx.serialize();
 
+                
+
                 const return_id = WalletTransactions.insert({
                   fromWallet: wallet._id,
                   toAddress: toAddress,
                   amount: amount,
                   createdAt: Date.now(),
                   internalStatus: 'processing',
+                  status: isInternalTxn ? 'completed' : 'pending',
                   txnId: web3.utils.sha3('0x' + serializedTx.toString('hex'), { encoding: 'hex' }),
                   type: 'withdrawal',
                   fee: web3.utils.fromWei(new BigNumber(gasPrice).multipliedBy(gasLimit).toString(), 'ether'),
@@ -709,6 +747,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                   amount: amount,
                   createdAt: Date.now(),
                   internalStatus: 'pending',
+                  status: isInternalTxn ? 'completed' : 'pending',
                   txnId: hash.transactionHash,
                   nonce: nonce,
                   type: 'withdrawal',
@@ -1071,4 +1110,3 @@ module.exports = {
   getWalletTransactions,
   getBill: paymeter_getAndResetUserBill,
 };
-
