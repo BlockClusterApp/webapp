@@ -176,7 +176,7 @@ async function getBalance(walletId) {
                         $in: ['pending'],
                       },
                       isInternalTxn: true,
-                      type: 'withdrawal',
+                      type: 'deposit',
                     }).fetch();
 
                     for (let count = 0; count < deposit_txns.length; count++) {
@@ -219,6 +219,19 @@ async function getBalance(walletId) {
 
                     for (let count = 0; count < withdraw_txns.length; count++) {
                       minedBalance = new BigNumber(minedBalance).minus(new BigNumber(withdraw_txns[count].amount)).toString();
+                    }
+
+                    let deposit_txns = WalletTransactions.find({
+                      toWallet: walletId,
+                      internalStatus: {
+                        $in: ['pending'],
+                      },
+                      isInternalTxn: true,
+                      type: 'deposit',
+                    }).fetch();
+
+                    for (let count = 0; count < deposit_txns.length; count++) {
+                      minedBalance = new BigNumber(minedBalance).plus(new BigNumber(deposit_txns[count].amount)).toString();
                     }
 
                     resolve(new BigNumber(minedBalance).toNumber().toString());
