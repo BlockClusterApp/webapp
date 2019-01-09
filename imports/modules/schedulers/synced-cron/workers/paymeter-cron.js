@@ -320,8 +320,10 @@ const addSymbolToContracts = async ready => {
 const processWithdrawls = async ready => {
   try {
     let pending_txns = WalletTransactions.find({
-      $or: [{ status: 'pending' }, { status: 'processing' }],
-      type: 'withdrawal',
+      $or: [{ internalStatus: 'pending' }, { internalStatus: 'processing' }],
+      type: 'withdrawal'
+    }, {
+      sort: { nonce : 1 }
     }).fetch();
 
     for (let count = 0; count < pending_txns.length; count++) {
@@ -340,7 +342,8 @@ const processWithdrawls = async ready => {
             },
             {
               $set: {
-                status: 'completed',
+                internalStatus: 'completed',
+                status: 'completed'
               },
             }
           );
@@ -355,14 +358,17 @@ const processWithdrawls = async ready => {
               },
             }
           );
-        } else if (helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
+        } else if (helpers.minutesDifference(Date.now(), pending_txns[count].lastBroadcastedDate) >= 30) {
+          let url = await Config.getPaymeterConnectionDetails('eth', wallet.network);
+          let web3 = new Web3(new Web3.providers.WebsocketProvider(url));
+          await web3.eth.sendSignedTransaction(pending_txns[count].rawTx)
           WalletTransactions.update(
             {
               _id: pending_txns[count]._id,
             },
             {
               $set: {
-                status: 'cancelled',
+                lastBroadcastedDate: Date.now()
               },
             }
           );
@@ -374,7 +380,7 @@ const processWithdrawls = async ready => {
             {
               $set: {
                 confirmedBalance: await Paymeter.getBalance(wallet._id),
-              },
+              }
             }
           );
         }
@@ -382,7 +388,7 @@ const processWithdrawls = async ready => {
         let url = `${await Config.getPaymeterConnectionDetails('eth', wallet.network)}`;
         let web3 = new Web3(new Web3.providers.WebsocketProvider(url));
         if (pending_txns[count].feeDepositWallet) {
-          if (pending_txns[count].status === 'processing') {
+          if (pending_txns[count].internalStatus === 'processing') {
             let confirmations = await getEthTxnConfirmations(url, pending_txns[count].feeDepositTxnId);
             if (confirmations >= 15) {
               let prev_nonce_txn = WalletTransactions.findOne({
@@ -391,7 +397,7 @@ const processWithdrawls = async ready => {
               });
 
               if (prev_nonce_txn) {
-                if (prev_nonce_txn.status === 'pending' || prev_nonce_txn.status === 'completed') {
+                if (prev_nonce_txn.internalStatus === 'pending' || prev_nonce_txn.internalStatus === 'completed') {
                   let hash = await sendRawTxn(pending_txns[count].rawTx, web3);
 
                   WalletTransactions.update(
@@ -400,30 +406,9 @@ const processWithdrawls = async ready => {
                     },
                     {
                       $set: {
-                        status: 'pending',
+                        internalStatus: 'pending',
                         txnId: hash,
-                      },
-                    }
-                  );
-
-                  Wallets.update(
-                    {
-                      _id: wallet._id,
-                    },
-                    {
-                      $set: {
-                        confirmedBalance: await Paymeter.getBalance(wallet._id),
-                      },
-                    }
-                  );
-                } else if (prev_nonce_txn.status === 'cancelled') {
-                  WalletTransactions.update(
-                    {
-                      _id: pending_txns[count]._id,
-                    },
-                    {
-                      $set: {
-                        status: 'cancelled',
+                        lastBroadcastedDate: Date.now()
                       },
                     }
                   );
@@ -449,8 +434,9 @@ const processWithdrawls = async ready => {
                   },
                   {
                     $set: {
-                      status: 'pending',
+                      internalStatus: 'pending',
                       txnId: hash,
+                      lastBroadcastedDate: Date.now()
                     },
                   }
                 );
@@ -466,28 +452,6 @@ const processWithdrawls = async ready => {
                   }
                 );
               }
-            } else if (helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
-              WalletTransactions.update(
-                {
-                  _id: pending_txns[count]._id,
-                },
-                {
-                  $set: {
-                    status: 'cancelled',
-                  },
-                }
-              );
-
-              Wallets.update(
-                {
-                  _id: wallet._id,
-                },
-                {
-                  $set: {
-                    confirmedBalance: await Paymeter.getBalance(wallet._id),
-                  },
-                }
-              );
             }
           } else {
             let url = `${await Config.getPaymeterConnectionDetails('eth', wallet.network)}`;
@@ -500,7 +464,8 @@ const processWithdrawls = async ready => {
                 },
                 {
                   $set: {
-                    status: 'completed',
+                    internalStatus: 'completed',
+                    status: 'completed'
                   },
                 }
               );
@@ -515,14 +480,15 @@ const processWithdrawls = async ready => {
                   },
                 }
               );
-            } else if (helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
+            } else if (helpers.minutesDifference(Date.now(), pending_txns[count].lastBroadcastedDate) >= 30) {
+              await sendRawTxn(pending_txns[count].rawTx, web3);
               WalletTransactions.update(
                 {
                   _id: pending_txns[count]._id,
                 },
                 {
                   $set: {
-                    status: 'cancelled',
+                    lastBroadcastedDate: Date.now(),
                   },
                 }
               );
@@ -540,7 +506,7 @@ const processWithdrawls = async ready => {
             }
           }
         } else {
-          if (pending_txns[count].status === 'processing') {
+          if (pending_txns[count].internalStatus === 'processing') {
             //check if previous nonce is broadcasted
             let prev_nonce_txn = WalletTransactions.findOne({
               fromWallet: wallet._id,
@@ -548,7 +514,7 @@ const processWithdrawls = async ready => {
             });
 
             if (prev_nonce_txn) {
-              if (prev_nonce_txn.status === 'pending' || prev_nonce_txn.status === 'completed') {
+              if (prev_nonce_txn.internalStatus === 'pending' || prev_nonce_txn.internalStatus === 'completed') {
                 let hash = await sendRawTxn(pending_txns[count].rawTx, web3);
                 WalletTransactions.update(
                   {
@@ -556,30 +522,9 @@ const processWithdrawls = async ready => {
                   },
                   {
                     $set: {
-                      status: 'pending',
+                      internalStatus: 'pending',
                       txnId: hash,
-                    },
-                  }
-                );
-
-                Wallets.update(
-                  {
-                    _id: wallet._id,
-                  },
-                  {
-                    $set: {
-                      confirmedBalance: await Paymeter.getBalance(wallet._id),
-                    },
-                  }
-                );
-              } else if (prev_nonce_txn.status === 'cancelled') {
-                WalletTransactions.update(
-                  {
-                    _id: pending_txns[count]._id,
-                  },
-                  {
-                    $set: {
-                      status: 'cancelled',
+                      lastBroadcastedDate: Data.now()
                     },
                   }
                 );
@@ -606,7 +551,8 @@ const processWithdrawls = async ready => {
                 },
                 {
                   $set: {
-                    status: 'completed',
+                    internalStatus: 'completed',
+                    status: 'completed'
                   },
                 }
               );
@@ -621,14 +567,15 @@ const processWithdrawls = async ready => {
                   },
                 }
               );
-            } else if (helpers.daysDifference(Date.now(), pending_txns[count].createdAt) >= 1) {
+            } else if (helpers.minutesDifference(Date.now(), pending_txns[count].lastBroadcastedDate) >= 1) {
+              await sendRawTxn(pending_txns[count].rawTx, web3);
               WalletTransactions.update(
                 {
                   _id: pending_txns[count]._id,
                 },
                 {
                   $set: {
-                    status: 'cancelled',
+                    lastBroadcastedDate: Date.now(),
                   },
                 }
               );
@@ -651,6 +598,7 @@ const processWithdrawls = async ready => {
 
     ready();
   } catch (e) {
+    console.log(e)
     ready();
   }
 };
@@ -659,7 +607,7 @@ const processDeposits = async ready => {
   try {
     let pending_txns = WalletTransactions.find({
       type: 'deposit',
-      status: 'pending',
+      internalStatus: 'pending',
     }).fetch();
 
     for (let count = 0; count < pending_txns.length; count++) {
@@ -678,7 +626,8 @@ const processDeposits = async ready => {
             },
             {
               $set: {
-                status: 'completed',
+                internalStatus: 'completed',
+                status: 'completed'
               },
             }
           );
@@ -731,7 +680,8 @@ const processDeposits = async ready => {
             },
             {
               $set: {
-                status: 'cancelled',
+                internalStatus: 'cancelled',
+                status: 'cancelled'
               },
             }
           );
@@ -809,8 +759,6 @@ const scanEthTestnet = async ready => {
       block = await getBlock(latest_block_number, testnet_web3);
     }
 
-    debug(block.number);
-
     let promises = [];
     if (block.transactions) {
       async function processTxn(txnHash) {
@@ -825,19 +773,38 @@ const scanEthTestnet = async ready => {
                 address: txn_details.to.toLowerCase(),
               });
 
+              let from_exists_internally = Wallets.findOne({
+                coinType: 'ETH',
+                network: 'testnet',
+                address: txn_details.from.toLowerCase(),
+              })
+
               if (to_exists_internally) {
                 WalletTransactions.upsert(
                   {
                     toWallet: to_exists_internally._id,
                     fromAddress: txn_details.from.toLowerCase(),
-                    createdAt: block.timestamp * 1000,
                     txnId: txnHash,
                     type: 'deposit',
                   },
                   {
-                    $setOnInsert: {
+                    $set: {
+                      createdAt: block.timestamp * 1000,
                       amount: testnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                      status: 'pending',
+                      internalStatus: 'pending',
+                      status: from_exists_internally ? 'completed' : 'pending',
+                      isInternalTxn: from_exists_internally ? true : false
+                    }
+                  }
+                );
+
+                Wallets.update(
+                  {
+                    _id: to_exists_internally._id,
+                  },
+                  {
+                    $set: {
+                      confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
                     },
                   }
                 );
@@ -874,19 +841,39 @@ const scanEthTestnet = async ready => {
               contractAddress: contractAddress,
             });
 
+            let from_exists_internally = Wallets.findOne({
+              coinType: 'ERC20',
+              network: 'testnet',
+              address: fromAddressOfEvent,
+              contractAddress: contractAddress,
+            })
+
             if (to_exists_internally) {
               WalletTransactions.upsert(
                 {
                   toWallet: to_exists_internally._id,
                   fromAddress: fromAddressOfEvent,
-                  createdAt: block.timestamp * 1000,
                   txnId: logs[iii].transactionHash,
                   type: 'deposit',
                 },
                 {
-                  $setOnInsert: {
+                  $set: {
+                    createdAt: block.timestamp * 1000,
                     amount: testnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                    status: 'pending',
+                    internalStatus: 'pending',
+                    status: from_exists_internally ? 'completed' : 'pending',
+                    isInternalTxn: from_exists_internally ? true : false
+                  }
+                }
+              );
+
+              Wallets.update(
+                {
+                  _id: to_exists_internally._id,
+                },
+                {
+                  $set: {
+                    confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
                   },
                 }
               );
@@ -971,14 +958,27 @@ const scanEthMainnet = async ready => {
                     {
                       toWallet: to_exists_internally._id,
                       fromAddress: txn_details.from.toLowerCase(),
-                      createdAt: block.timestamp * 1000,
                       txnId: txnHash,
                       type: 'deposit',
                     },
                     {
-                      $setOnInsert: {
+                      $set: {
+                        createdAt: block.timestamp * 1000,
                         amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
-                        status: 'pending',
+                        internalStatus: 'pending',
+                        status: 'completed',
+                        isInternalTxn: true
+                      }
+                    }
+                  );
+
+                  Wallets.update(
+                    {
+                      _id: to_exists_internally._id,
+                    },
+                    {
+                      $set: {
+                        confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
                       },
                     }
                   );
@@ -1004,18 +1004,31 @@ const scanEthMainnet = async ready => {
                       {
                         toWallet: to_exists_internally._id,
                         fromAddress: txn_details.from.toLowerCase(),
-                        createdAt: block.timestamp * 1000,
                         txnId: txnHash,
                         type: 'deposit',
                       },
                       {
-                        $setOnInsert: {
+                        $set: {
+                          createdAt: block.timestamp * 1000,
                           amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
                           usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
                             .times(new BigNumber(mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString()).times(eth_price.usd_price))
                             .dividedBy(100)
                             .toString(),
+                          internalStatus: 'pending',
                           status: 'pending',
+                          isInternalTxn: false
+                        }
+                      }
+                    );
+
+                    Wallets.update(
+                      {
+                        _id: to_exists_internally._id,
+                      },
+                      {
+                        $set: {
+                          confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
                         },
                       }
                     );
@@ -1027,15 +1040,28 @@ const scanEthMainnet = async ready => {
                       {
                         toWallet: to_exists_internally._id,
                         fromAddress: txn_details.from.toLowerCase(),
-                        createdAt: block.timestamp * 1000,
                         txnId: txnHash,
                         type: 'deposit',
                       },
                       {
-                        $setOnInsert: {
+                        $set: {
+                          createdAt: block.timestamp * 1000,
                           amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
                           usdCharged: paymeterPricing.perTransactionCostFlat,
+                          internalStatus: 'pending',
                           status: 'pending',
+                          isInternalTxn: false
+                        }
+                      }
+                    );
+
+                    Wallets.update(
+                      {
+                        _id: to_exists_internally._id,
+                      },
+                      {
+                        $set: {
+                          confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
                         },
                       }
                     );
@@ -1090,14 +1116,27 @@ const scanEthMainnet = async ready => {
                   {
                     toWallet: to_exists_internally._id,
                     fromAddress: fromAddressOfEvent.toLowerCase(),
-                    createdAt: block.timestamp * 1000,
                     txnId: logs[iii].transactionHash,
                     type: 'deposit',
                   },
                   {
-                    $setOnInsert: {
+                    $set: {
+                      createdAt: block.timestamp * 1000,
                       amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
-                      status: 'pending',
+                      internalStatus: 'pending',
+                      status: 'completed',
+                      isInternalTxn: true
+                    }
+                  }
+                );
+
+                Wallets.update(
+                  {
+                    _id: to_exists_internally._id,
+                  },
+                  {
+                    $set: {
+                      confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
                     },
                   }
                 );
@@ -1125,19 +1164,32 @@ const scanEthMainnet = async ready => {
                         {
                           toWallet: to_exists_internally._id,
                           fromAddress: fromAddressOfEvent.toLowerCase(),
-                          createdAt: block.timestamp * 1000,
                           txnId: logs[iii].transactionHash,
                           type: 'deposit',
                         },
                         {
-                          $setOnInsert: {
+                          $set: {
+                            createdAt: block.timestamp * 1000,
                             amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                             usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
                               .times(new BigNumber(mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()).times(token_price.usd_price))
                               .dividedBy(100)
                               .toString(),
                             usdPrice: token_price.usd_price,
+                            internalStatus: 'pending',
                             status: 'pending',
+                            isInternalTxn: false
+                          }
+                        }
+                      );
+
+                      Wallets.update(
+                        {
+                          _id: to_exists_internally._id,
+                        },
+                        {
+                          $set: {
+                            confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
                           },
                         }
                       );
@@ -1146,15 +1198,28 @@ const scanEthMainnet = async ready => {
                         {
                           toWallet: to_exists_internally._id,
                           fromAddress: fromAddressOfEvent.toLowerCase(),
-                          createdAt: block.timestamp * 1000,
                           txnId: logs[iii].transactionHash,
                           type: 'deposit',
                         },
                         {
-                          $setOnInsert: {
+                          $set: {
+                            createdAt: block.timestamp * 1000,
                             amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                             usdCharged: paymeterPricing.perTransactionCostFlat,
+                            internalStatus: 'pending',
                             status: 'pending',
+                            isInternalTxn: false
+                          }
+                        }
+                      );
+
+                      Wallets.update(
+                        {
+                          _id: to_exists_internally._id,
+                        },
+                        {
+                          $set: {
+                            confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
                           },
                         }
                       );
@@ -1164,15 +1229,28 @@ const scanEthMainnet = async ready => {
                       {
                         toWallet: to_exists_internally._id,
                         fromAddress: fromAddressOfEvent.toLowerCase(),
-                        createdAt: block.timestamp * 1000,
                         txnId: logs[iii].transactionHash,
                         type: 'deposit',
                       },
                       {
-                        $setOnInsert: {
+                        $set: {
+                          createdAt: block.timestamp * 1000,
                           amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                           usdCharged: paymeterPricing.perTransactionCostFlat,
+                          internalStatus: 'pending',
                           status: 'pending',
+                          isInternalTxn: false
+                        }
+                      }
+                    );
+
+                    Wallets.update(
+                      {
+                        _id: to_exists_internally._id,
+                      },
+                      {
+                        $set: {
+                          confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
                         },
                       }
                     );
@@ -1185,19 +1263,32 @@ const scanEthMainnet = async ready => {
                       {
                         toWallet: to_exists_internally._id,
                         fromAddress: fromAddressOfEvent.toLowerCase(),
-                        createdAt: block.timestamp * 1000,
                         txnId: logs[iii].transactionHash,
                         type: 'deposit',
                       },
                       {
-                        $setOnInsert: {
+                        $set: {
+                          createdAt: block.timestamp * 1000,
                           amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                           usdCharged: new BigNumber(paymeterPricing.perTransactionCost)
                             .times(new BigNumber(mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString()).times(price))
                             .dividedBy(100)
                             .toString(),
                           usdPrice: price,
+                          internalStatus: 'pending',
                           status: 'pending',
+                          isInternalTxn: false
+                        }
+                      }
+                    );
+
+                    Wallets.update(
+                      {
+                        _id: to_exists_internally._id,
+                      },
+                      {
+                        $set: {
+                          confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
                         },
                       }
                     );
@@ -1206,15 +1297,28 @@ const scanEthMainnet = async ready => {
                       {
                         toWallet: to_exists_internally._id,
                         fromAddress: fromAddressOfEvent.toLowerCase(),
-                        createdAt: block.timestamp * 1000,
                         txnId: logs[iii].transactionHash,
                         type: 'deposit',
                       },
                       {
-                        $setOnInsert: {
+                        $set: {
+                          createdAt: block.timestamp * 1000,
                           amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                           usdCharged: paymeterPricing.perTransactionCostFlat,
+                          internalStatus: 'pending',
                           status: 'pending',
+                          isInternalTxn: false
+                        }
+                      }
+                    );
+
+                    Wallets.update(
+                      {
+                        _id: to_exists_internally._id,
+                      },
+                      {
+                        $set: {
+                          confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
                         },
                       }
                     );
