@@ -797,6 +797,17 @@ const scanEthTestnet = async ready => {
                     },
                   }
                 );
+
+                Wallets.update(
+                  {
+                    _id: to_exists_internally._id,
+                  },
+                  {
+                    $set: {
+                      confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
+                    },
+                  }
+                );
               }
             }
 
@@ -852,6 +863,17 @@ const scanEthTestnet = async ready => {
                     internalStatus: 'pending',
                     status: from_exists_internally ? 'completed' : 'pending',
                     isInternalTxn: from_exists_internally ? true : false
+                  },
+                }
+              );
+
+              Wallets.update(
+                {
+                  _id: to_exists_internally._id,
+                },
+                {
+                  $set: {
+                    confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
                   },
                 }
               );
@@ -949,6 +971,17 @@ const scanEthMainnet = async ready => {
                       },
                     }
                   );
+
+                  Wallets.update(
+                    {
+                      _id: to_exists_internally._id,
+                    },
+                    {
+                      $set: {
+                        confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
+                      },
+                    }
+                  );
                 }
               }
             } else {
@@ -988,6 +1021,17 @@ const scanEthMainnet = async ready => {
                         },
                       }
                     );
+
+                    Wallets.update(
+                      {
+                        _id: to_exists_internally._id,
+                      },
+                      {
+                        $set: {
+                          confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
+                        },
+                      }
+                    );
                   } else {
                     //this may happen when coinmarketcap API not working or txn detected before price update on DB (i.e., old price in DB)
                     //in this case we just charge $paymeterPricing.perTransactionCostFlat,
@@ -1007,6 +1051,17 @@ const scanEthMainnet = async ready => {
                           internalStatus: 'pending',
                           status: 'pending',
                           isInternalTxn: false
+                        },
+                      }
+                    );
+
+                    Wallets.update(
+                      {
+                        _id: to_exists_internally._id,
+                      },
+                      {
+                        $set: {
+                          confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
                         },
                       }
                     );
@@ -1074,6 +1129,17 @@ const scanEthMainnet = async ready => {
                     },
                   }
                 );
+
+                Wallets.update(
+                  {
+                    _id: to_exists_internally._id,
+                  },
+                  {
+                    $set: {
+                      confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
+                    },
+                  }
+                );
               }
             } else {
               let to_exists_internally = Wallets.findOne({
@@ -1116,6 +1182,17 @@ const scanEthMainnet = async ready => {
                           },
                         }
                       );
+
+                      Wallets.update(
+                        {
+                          _id: to_exists_internally._id,
+                        },
+                        {
+                          $set: {
+                            confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
+                          },
+                        }
+                      );
                     } else {
                       WalletTransactions.upsert(
                         {
@@ -1132,6 +1209,17 @@ const scanEthMainnet = async ready => {
                             internalStatus: 'pending',
                             status: 'pending',
                             isInternalTxn: false
+                          },
+                        }
+                      );
+
+                      Wallets.update(
+                        {
+                          _id: to_exists_internally._id,
+                        },
+                        {
+                          $set: {
+                            confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
                           },
                         }
                       );
@@ -1152,6 +1240,17 @@ const scanEthMainnet = async ready => {
                           internalStatus: 'pending',
                           status: 'pending',
                           isInternalTxn: false
+                        },
+                      }
+                    );
+
+                    Wallets.update(
+                      {
+                        _id: to_exists_internally._id,
+                      },
+                      {
+                        $set: {
+                          confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
                         },
                       }
                     );
@@ -1182,6 +1281,17 @@ const scanEthMainnet = async ready => {
                         },
                       }
                     );
+
+                    Wallets.update(
+                      {
+                        _id: to_exists_internally._id,
+                      },
+                      {
+                        $set: {
+                          confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
+                        },
+                      }
+                    );
                   } catch (e) {
                     WalletTransactions.upsert(
                       {
@@ -1198,6 +1308,17 @@ const scanEthMainnet = async ready => {
                           internalStatus: 'pending',
                           status: 'pending',
                           isInternalTxn: false
+                        },
+                      }
+                    );
+
+                    Wallets.update(
+                      {
+                        _id: to_exists_internally._id,
+                      },
+                      {
+                        $set: {
+                          confirmedBalance: await Paymeter.getBalance(to_exists_internally._id),
                         },
                       }
                     );

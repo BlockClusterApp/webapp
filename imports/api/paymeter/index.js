@@ -170,6 +170,19 @@ async function getBalance(walletId) {
                       minedBalance = new BigNumber(minedBalance).minus(new BigNumber(withdraw_txns[count].amount).plus(withdraw_txns[count].fee)).toString();
                     }
 
+                    let deposit_txns = WalletTransactions.find({
+                      toWallet: walletId,
+                      internalStatus: {
+                        $in: ['pending'],
+                      },
+                      isInternalTxn: true,
+                      type: 'withdrawal',
+                    }).fetch();
+
+                    for (let count = 0; count < deposit_txns.length; count++) {
+                      minedBalance = new BigNumber(minedBalance).plus(new BigNumber(deposit_txns[count].amount)).toString();
+                    }
+
                     resolve(new BigNumber(minedBalance).toNumber().toString());
                   } else {
                     reject('An error occured');
