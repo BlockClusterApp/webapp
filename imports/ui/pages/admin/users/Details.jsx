@@ -21,6 +21,7 @@ import Voucher from '../../../../collections/vouchers/voucher';
 import Invoice from '../../../../collections/payments/invoice';
 import notifications from '../../../../modules/notifications';
 import LoadButton from './components/LoadButton';
+import ConfirmationButton from '../../../components/Buttons/ConfirmationButton';
 
 function calculateBalanceCredits(credits) {
   let totalSum = 0;
@@ -284,6 +285,27 @@ class UserDetails extends Component {
     });
   };
 
+  refresh = type => {
+    const userId = this.props.match.params.id;
+    const states = {
+      networks: Networks.find({ user: userId, deletedAt: null }).fetch(),
+      oldNetworks: Networks.find({ user: userId, deletedAt: { $ne: null } }).fetch(),
+      invitations: UserInvitation.find({ inviteFrom: userId }).fetch(),
+      cards: UserCards.find({ userId }).fetch(),
+      payments: PaymentRequests.find({ userId }).fetch(),
+      vouchers: Voucher.find({ claimedBy: userId }).fetch(),
+      invoices: Invoice.find({ userId }).fetch(),
+      paymentLinks: RZPaymentLink.find({ userId }).fetch(),
+      hyperion: Hyperion.findOne({ userId }),
+      paymeter: Paymeter.findOne({ userId }),
+      credits: Credits.find({ userId }).fetch(),
+    };
+    if (type) {
+      this.subscriptionTypes.push(type);
+    }
+    this.setState({ ...this.state, ...states });
+  };
+
   loadComponents = type => {
     if (this.subscriptionTypes.includes(type)) {
       return true;
@@ -293,22 +315,7 @@ class UserDetails extends Component {
       { userId: this.props.match.params.id },
       {
         onReady: () => {
-          const userId = this.props.match.params.id;
-          const states = {
-            networks: Networks.find({ user: userId, deletedAt: null }).fetch(),
-            oldNetworks: Networks.find({ user: userId, deletedAt: { $ne: null } }).fetch(),
-            invitations: UserInvitation.find({ inviteFrom: userId }).fetch(),
-            cards: UserCards.find({ userId }).fetch(),
-            payments: PaymentRequests.find({ userId }).fetch(),
-            vouchers: Voucher.find({ claimedBy: userId }).fetch(),
-            invoices: Invoice.find({ userId }).fetch(),
-            paymentLinks: RZPaymentLink.find({ userId }).fetch(),
-            hyperion: Hyperion.findOne({ userId }),
-            paymeter: Paymeter.findOne({ userId }),
-            credits: Credits.find({ userId }).fetch(),
-          };
-          this.subscriptionTypes.push(type);
-          this.setState({ ...this.state, ...states });
+          this.refresh(type);
         },
       }
     );
@@ -328,6 +335,22 @@ class UserDetails extends Component {
       if (err) {
         return notifications.error(err.reason);
       }
+      return notifications.success('Successful');
+    });
+  };
+
+  deleteCard = cardId => {
+    const s = {};
+    const { user } = this.props;
+    s[`deleting_${cardId}`] = true;
+    this.setState(s);
+    Meteor.call('adminDeleteCard', { cardId, userId: user._id }, (err, res) => {
+      s[`deleting_${cardId}`] = false;
+      this.setState(s);
+      if (err) {
+        return notifications.error(err.reason);
+      }
+      this.refresh();
       return notifications.success('Successful');
     });
   };
@@ -584,6 +607,19 @@ class UserDetails extends Component {
                             <h5 className="small hint-text no-margin">{card.network}</h5>
                             <h5 className="m-b-0">
                               {card.name} | {helpers.firstLetterCapital(card.type)}
+                            </h5>
+                            <h5>
+                              <ConfirmationButton
+                                onConfirm={this.deleteCard.bind(this, card.id)}
+                                className="btn btn-danger"
+                                completed={card.active === false}
+                                completedText="Already removed"
+                                loadingText="Deleting"
+                                confirmationText="Irreversible..!!"
+                                cooldown={1500}
+                                loading={this.state[`deleting_${card.id}`]}
+                                actionText="Remove card"
+                              />
                             </h5>
                           </div>
                         );
