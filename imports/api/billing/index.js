@@ -185,37 +185,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       }
       let cost = Number(time.hours * ratePerHour + (time.minutes % 60) * ratePerMinute).toFixed(2);
 
-      if (voucher && voucher._id && !isMicroNode && vouchar_usable) {
-        const hoursFree = voucher.discountedDays * 24;
-        const paidHours = Math.max(time.hours - hoursFree, 0);
-        const paidMinutes = time.hours > 0 && paidHours < 1 ? time.minutes % 60 : 0;
-        cost = Number(paidHours * ratePerHour + paidMinutes * ratePerMinute).toFixed(2);
 
-        let discount = voucher.discount.value || 0;
-        if (voucher.discount.percent) {
-          //in this case discout value will be percentage of discount.
-          cost = cost * ((100 - discount) / 100);
-        } else {
-          cost = cost - discount;
-        }
-
-        //so that we can track record how many times he used.
-        //and also helps to validate if next time need to consider voucher or not.
-        if (!isFromFrontend) {
-          Networks.update(
-            { _id: network._id },
-            {
-              $push: {
-                'metadata.voucher.voucher_claim_status': {
-                  claimedBy: userId,
-                  claimedOn: new Date(),
-                  claimed: true,
-                },
-              },
-            }
-          );
-        }
-      }
       let label = voucher ? voucher.code : null;
 
       // if(isMicroNode && network.active){
@@ -234,7 +204,10 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             .toDate()
             .getTime() - billingStartDate.getTime()
         );
-        const freeHoursLeft = 0;
+        let freeHoursLeft = 0;
+        if (voucher && voucher._id && vouchar_usable) {
+          freeHoursLeft= voucher.discountedDays * 24
+        }
         let paidHours = 0,
           paidMinutes = 0;
         if (freeHoursLeft < usedTime.hours) {
@@ -245,8 +218,37 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         }
 
         paidHours = Math.max(0, paidHours);
+        if (voucher && voucher._id && vouchar_usable) {
 
+          cost = Number(paidHours * ratePerHour + paidMinutes * ratePerMinute).toFixed(2);
+
+          let discount = voucher.discount.value || 0;
+          if (voucher.discount.percent) {
+            //in this case discout value will be percentage of discount.
+            cost = cost * ((100 - discount) / 100);
+          } else {
+            cost = cost - discount;
+          }
+
+          //so that we can track record how many times he used.
+          //and also helps to validate if next time need to consider voucher or not.
+          if (!isFromFrontend) {
+            Networks.update(
+              { _id: network._id },
+              {
+                $push: {
+                  'metadata.voucher.voucher_claim_status': {
+                    claimedBy: userId,
+                    claimedOn: new Date(),
+                    claimed: true,
+                  },
+                },
+              }
+            );
+          }
+        }else{
         cost = Number(paidHours * ratePerHour + paidMinutes * ratePerMinute).toFixed(2);
+        }
 
         const runtimeStart = moment(network.createdOn);
         const runtime = convertMilliseconds(
@@ -257,6 +259,32 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         nodeUsageCountMinutes.Micro += runtime.hours * 60;
         nodeUsageCountMinutes.Micro += runtime.minutes % 60;
       } else {
+        if (voucher && voucher._id && vouchar_usable) {
+          let discount = voucher.discount.value || 0;
+          if (voucher.discount.percent) {
+            //in this case discout value will be percentage of discount.
+            cost = cost * ((100 - discount) / 100);
+          } else {
+            cost = cost - discount;
+          }
+
+          //so that we can track record how many times he used.
+          //and also helps to validate if next time need to consider voucher or not.
+          if (!isFromFrontend) {
+            Networks.update(
+              { _id: network._id },
+              {
+                $push: {
+                  'metadata.voucher.voucher_claim_status': {
+                    claimedBy: userId,
+                    claimedOn: new Date(),
+                    claimed: true,
+                  },
+                },
+              }
+            );
+          }
+        }
         if (network.networkConfig.disk > 200) {
           extraDiskStorage = Math.max(network.networkConfig.disk - POWER_NODE_INCLUDED_STORAGE, 0);
           extraDiskAmount = Price.extraDisk * extraDiskStorage;
