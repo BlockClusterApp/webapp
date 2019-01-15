@@ -102,7 +102,9 @@ class CardsAndNewPayment extends Component {
   render() {
     const { user } = this.props;
 
-    const cards = this.props.userCard ? this.props.userCard.cards : [];
+    let cards = this.props.userCard ? this.props.userCard.cards : [];
+
+    cards = cards.filter(card => card.active !== false);
 
     const cardsView = [];
     let currentRow = [];

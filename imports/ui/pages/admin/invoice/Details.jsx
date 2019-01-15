@@ -113,6 +113,10 @@ class InvoiceDetails extends Component {
     let creditsView = null;
 
     const { invoice } = this.props;
+    if (!invoice) {
+      return null;
+    }
+
     const { user } = invoice;
 
     if (invoice && invoice.items) {

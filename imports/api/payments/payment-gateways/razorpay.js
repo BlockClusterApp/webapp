@@ -487,8 +487,8 @@ RazorPay.createPaymentLink = async ({ amount, description, user, paymentRequest 
 };
 
 RazorPay.cancelPaymentLink = async ({ paymentLinkId, reason, userId }) => {
-  if(!reason) {
-    throw new Meteor.Error("bad-request", "Cannot cancel link without reason");
+  if (!reason) {
+    throw new Meteor.Error('bad-request', 'Cannot cancel link without reason');
   }
   const rzPaymentLink = RZPaymentLink.find({
     _id: paymentLinkId,
@@ -499,26 +499,32 @@ RazorPay.cancelPaymentLink = async ({ paymentLinkId, reason, userId }) => {
     throw new Meteor.Error('bad-request', 'Payment link not valid');
   }
 
-  try{
-    const cancelResponse =  await RazorPayInstance.invoices.cancel(rzPaymentLink.id);
+  try {
+    const cancelResponse = await RazorPayInstance.invoices.cancel(rzPaymentLink.id);
     debug('Cancel Payment Link | Success', cancelResponse);
-    Invoice.update({
-      "paymentLink.id": paymentLinkId
-    }, {
-      $set: {
-        "paymentLink.expired": true
+    Invoice.update(
+      {
+        'paymentLink.id': paymentLinkId,
+      },
+      {
+        $set: {
+          'paymentLink.expired': true,
+        },
       }
-    });
-    RZPaymentLink.update({
-      _id: rzPaymentLink._id
-    }, {
-      $set: {
-        status: 'cancelled',
-        cancelledBy: userId
+    );
+    RZPaymentLink.update(
+      {
+        _id: rzPaymentLink._id,
+      },
+      {
+        $set: {
+          status: 'cancelled',
+          cancelledBy: userId,
+        },
       }
-    });
+    );
     return true;
-  }catch(err){
+  } catch (err) {
     RavenLogger.log(err);
     debug('Cancel Payment Link | Error', err);
     return false;
@@ -539,7 +545,7 @@ Meteor.methods({
   },
   capturePaymentRazorPay: RazorPay.capturePayment,
   applyRZCardVerification: RazorPay.applyCardVerification,
-  cancelPaymentLink: RazorPay.cancelPaymentLink
+  cancelPaymentLink: RazorPay.cancelPaymentLink,
 });
 
 export default RazorPay;

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import SupportTickets from '../../../../collections/support-ticket';
 import { Networks } from '../../../../collections/networks/networks';
-import { withRouter } from 'react-router-dom';
+import { withRouter, Link } from 'react-router-dom';
 import { withTracker } from 'meteor/react-meteor-data';
 import helpers from '../../../../modules/helpers';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
@@ -124,7 +124,7 @@ class Support extends Component {
                       <p>
                         <span className="case-label">Created By:</span>
                         &nbsp;
-                        {this.state.createdBy ? `${this.state.createdBy.emails[0].address}` : null}
+                        {this.state.createdBy ? <Link to={`/app/admin/users/${this.state.createdBy._id}`}>{this.state.createdBy.emails[0].address}</Link> : null}
                       </p>
                       {ticket.supportObject ? (
                         <p>
