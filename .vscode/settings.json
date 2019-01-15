@@ -3,5 +3,6 @@
 		"editor.autoIndent": true,
 		"editor.wordWrap": "on",
 		"editor.wordWrapColumn": 180
-	}
+  },
+  "editor.formatOnSave": true
 }

@@ -420,8 +420,13 @@ Billing.isPaymentMethodVerified = async function(userId) {
 
   let userCards = UserCards.find({ userId: userId }).fetch()[0];
   if (userCards) {
-    userCards = userCards.cards && userCards.cards[0];
+    userCards = userCards.cards.find(c => c.active !== false);
   }
+
+  if (!userCards) {
+    return false;
+  }
+
   const verificationPlan = RZPlan.find({ identifier: 'verification' }).fetch()[0];
   const userRZSubscription = RZSubscription.find({ userId: userId, plan_id: verificationPlan.id, bc_status: 'active' }).fetch()[0];
 

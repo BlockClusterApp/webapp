@@ -107,7 +107,7 @@ Support.addCustomerReply = async ({ id, description }) => {
   }
 
   const history = {
-    description,
+    description: description.replace(/\r?\n/g, '<br />'),
   };
   const updateResult = SupportTicket.update(
     {
@@ -144,7 +144,7 @@ Support.addBlockclusterReply = async ({ id, description }) => {
   }
 
   const history = {
-    description,
+    description: description.replace(/\r?\n/g, '<br />'),
     isFromBlockcluster: true,
     status: SupportTicket.StatusMapping.CustomerActionPending,
   };

@@ -62,10 +62,40 @@ User.verifyEmail = async ({ userId, email, verified }) => {
   return true;
 };
 
+User.removeCard = async ({ cardId, userId }) => {
+  if (Meteor.user().admin <= ADMIN_LEVEL) {
+    return reject(new Meteor.Error('Unauthorized'));
+  }
+
+  ElasticLogger.log('Admin remove card', {
+    userId,
+    cardId,
+    by: Meteor.user()._id,
+  });
+
+  UserCards.update(
+    {
+      userId,
+      'cards.id': cardId,
+      active: {
+        $nin: [false],
+      },
+    },
+    {
+      $set: {
+        'cards.$.active': false,
+      },
+    }
+  );
+
+  return true;
+};
+
 Meteor.methods({
   fetchAdminDashboardDetails: User.fetchAdminDashboardDetails,
   updateUserAdmin: User.updateAdmin,
   adminVerifyEmail: User.verifyEmail,
+  adminDeleteCard: User.removeCard,
 });
 
 export default User;
