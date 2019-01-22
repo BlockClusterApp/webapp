@@ -117,6 +117,8 @@ class BillingDashboard extends Component {
       case 1:
       case 4:
         return <span className="label label-danger">Unpaid</span>;
+      case 6:
+        return <span className="label label-info">Refunded</span>;
       default:
         return null;
     }
