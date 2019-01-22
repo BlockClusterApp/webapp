@@ -1,8 +1,5 @@
 module.exports = `
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
-
-
   <title>Registration Successful</title>
   <style type="text/css">
     .ReadMsgBody {width: 100%; background-color: #ffffff;}
@@ -391,7 +388,7 @@ module.exports = `
                         <td class="img" style="font-size:0pt; line-height:0pt; text-align:left" width="10"></td>
                         <td>
                           <div class="text-footer" style="color:#b7b5b5; font-family:Arial; font-size:14px; line-height:22px; text-align:center"><a href="https://blockcluster.io/" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><span class="link-footer" style="color:#605f5d; text-decoration:none">Blockcluster</span></a>                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                            <a href="https://nonceblox.com/blockcluster_emails/emails/lists/registration_success.html" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><span class="link-footer" style="color:#605f5d; text-decoration:none">Pricing</span></a>                            <span class="mobile-block"><span class="hide-for-mobile">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>  <a href="https://www.blockcluster.io/terms" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><span class="link-footer" style="color:#605f5d; text-decoration:none">T&amp;Cs</span></a></div>
+                            <a href="https://www.blockcluster.io/pricing" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><span class="link-footer" style="color:#605f5d; text-decoration:none">Pricing</span></a>                            <span class="mobile-block"><span class="hide-for-mobile">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>  <a href="https://www.blockcluster.io/terms" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><span class="link-footer" style="color:#605f5d; text-decoration:none">T&amp;Cs</span></a></div>
                           <table width="100%" border="0" cellspacing="0" cellpadding="0" class="spacer" style="font-size:0pt; line-height:0pt; text-align:center; width:100%; min-width:100%">
                             <tbody>
                               <tr>
@@ -402,9 +399,7 @@ module.exports = `
 
 
                           <div class="text-footer2" style="color:#605f5d; font-family:Arial; font-size:12px; line-height:20px; text-align:center">
-                            You have received this email as a registered user of <a href="https://blockcluster.io/" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><strong class="link-footer" style="color:#605f5d; text-decoration:none">Blockcluster.io</strong></a>
-                            <!-- <br>You can unsubscribe from these emails <a href="https://nonceblox.com/blockcluster_emails/emails/lists/registration_success.html#" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><strong class="link-footer" style="color:#605f5d; text-decoration:none">here</strong></a> (Don't worry, we won't take it personally). -->
-                            <br>© BlockCluster 2018. All rights reserved.<br><br>
+                            You have received this email as a registered user of <a href="https://blockcluster.io/" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><strong class="link-footer" style="color:#605f5d; text-decoration:none">Blockcluster.io</strong></a>                            <br>© BlockCluster 2018. All rights reserved.<br><br>
                           </div>
                           <table width="100%" border="0" cellspacing="0" cellpadding="0" class="spacer" style="font-size:0pt; line-height:0pt; text-align:center; width:100%; min-width:100%">
                             <tbody>
