@@ -115,7 +115,7 @@ Voucher.applyPromotionalCode = async function({ code, userId }) {
     });
     // Apply credits
     creditsId = Credits.insert({
-      amount: voucher.discount.value,
+      amount: Number(voucher.discount.value),
       userId,
       code,
       metadata: {
