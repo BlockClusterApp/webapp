@@ -337,7 +337,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                 isInternalTxn = true;
               }
 
-              const return_id = WalletTransactions.upsert({
+              const return_id = WalletTransactions.insert({
                 fromWallet: wallet._id,
                 toAddress: toAddress,
                 amount: final_amount,
@@ -373,11 +373,13 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                     type: 'deposit',
                   },
                   {
-                    createdAt: Date.now(),
-                    amount: final_amount,
-                    internalStatus: 'pending',
-                    status: 'completed',
-                    isInternalTxn: true,
+                    $set: {
+                      createdAt: Date.now(),
+                      amount: final_amount,
+                      internalStatus: 'pending',
+                      status: 'completed',
+                      isInternalTxn: true,
+                    },
                   }
                 );
 
@@ -637,11 +639,13 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                           type: 'deposit',
                         },
                         {
-                          createdAt: Date.now(),
-                          amount: amount,
-                          internalStatus: 'pending',
-                          status: 'completed',
-                          isInternalTxn: true,
+                          $set: {
+                            createdAt: Date.now(),
+                            amount: amount,
+                            internalStatus: 'pending',
+                            status: 'completed',
+                            isInternalTxn: true,
+                          },
                         }
                       );
 
@@ -708,11 +712,13 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                             type: 'deposit',
                           },
                           {
-                            createdAt: Date.now(),
-                            amount: amountOfTokenToDeduct,
-                            internalStatus: 'pending',
-                            status: 'completed',
-                            isInternalTxn: true,
+                            $set: {
+                              createdAt: Date.now(),
+                              amount: amountOfTokenToDeduct,
+                              internalStatus: 'pending',
+                              status: 'completed',
+                              isInternalTxn: true,
+                            },
                           }
                         );
 
@@ -847,11 +853,13 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                       type: 'deposit',
                     },
                     {
-                      createdAt: Date.now(),
-                      amount: amount,
-                      internalStatus: 'pending',
-                      status: 'completed',
-                      isInternalTxn: true,
+                      $set: {
+                        createdAt: Date.now(),
+                        amount: amount,
+                        internalStatus: 'pending',
+                        status: 'completed',
+                        isInternalTxn: true,
+                      },
                     }
                   );
 
@@ -928,11 +936,13 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                       type: 'deposit',
                     },
                     {
-                      createdAt: Date.now(),
-                      amount: amount,
-                      internalStatus: 'pending',
-                      status: 'completed',
-                      isInternalTxn: true,
+                      $set: {
+                        createdAt: Date.now(),
+                        amount: amount,
+                        internalStatus: 'pending',
+                        status: 'completed',
+                        isInternalTxn: true,
+                      },
                     }
                   );
 
