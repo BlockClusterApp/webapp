@@ -158,6 +158,8 @@ async function getBalance(walletId) {
                   if (!error) {
                     minedBalance = web3.utils.fromWei(minedBalance, 'ether').toString();
 
+                    console.log('Wallet mined balance', wallet, minedBalance);
+
                     let withdraw_txns = WalletTransactions.find({
                       fromWallet: walletId,
                       internalStatus: {
@@ -165,6 +167,8 @@ async function getBalance(walletId) {
                       },
                       type: 'withdrawal',
                     }).fetch();
+
+                    console.log('Pending withdrawal transactions', walletId, withdraw_txns);
 
                     for (let count = 0; count < withdraw_txns.length; count++) {
                       minedBalance = new BigNumber(minedBalance).minus(new BigNumber(withdraw_txns[count].amount).plus(withdraw_txns[count].fee)).toString();
@@ -178,6 +182,8 @@ async function getBalance(walletId) {
                       isInternalTxn: true,
                       type: 'deposit',
                     }).fetch();
+
+                    console.log('Pending deposit transactions', walletId, deposit_txns);
 
                     for (let count = 0; count < deposit_txns.length; count++) {
                       minedBalance = new BigNumber(minedBalance).plus(new BigNumber(deposit_txns[count].amount)).toString();
@@ -333,6 +339,8 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                 },
               });
 
+              console.log('Internal wallet', internalWallet, toAddress, { final_amount, fromWallet: wallet._id, txnId: hash.transactionHash });
+
               if (internalWallet) {
                 isInternalTxn = true;
               }
@@ -353,13 +361,17 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                 lastBroadcastedDate: Date.now(),
               });
 
+              const newConfirmedBalance = await getBalance(wallet._id);
+
+              console.log('New confirmed balance, from wallet', newConfirmedBalance);
+
               Wallets.update(
                 {
                   _id: wallet._id,
                 },
                 {
                   $set: {
-                    confirmedBalance: await getBalance(wallet._id),
+                    confirmedBalance: newConfirmedBalance,
                   },
                 }
               );
@@ -383,13 +395,17 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                   }
                 );
 
+                const toWalletNewConfirmedBalance = await getBalance(internalWallet._id);
+
+                console.log('New confirmed balance, to wallet', toWalletNewConfirmedBalance);
+
                 Wallets.update(
                   {
                     _id: internalWallet._id,
                   },
                   {
                     $set: {
-                      confirmedBalance: await getBalance(internalWallet._id),
+                      confirmedBalance: toWalletNewConfirmedBalance,
                     },
                   }
                 );
