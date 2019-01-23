@@ -122,7 +122,7 @@ class PaymeterComponent extends Component {
         password: this.refs.transferErc20Password.value,
         feeWalletPassword: this.refs.transferErc20FeePassword.value,
         feeCollectWalletId: this.refs.erc20FeeCollectWallet.value === '' ? null : this.refs.erc20FeeCollectWallet.value,
-        tokenValueInEth: this.refs.erc20FeeCollectPrice.value
+        tokenValueInEth: this.refs.erc20FeeCollectPrice.value,
       },
       (error, txnHash) => {
         if (error) {
@@ -431,7 +431,12 @@ class PaymeterComponent extends Component {
                             }}
                           >
                             {wallet.coinType === 'ETH' && (
-                              <div data-index="0" className="company-stat-box m-t-15 active padding-20 wallet-box-bg">
+                              <div
+                                data-index="0"
+                                className={`company-stat-box m-t-15 active padding-20 wallet-box-bg ${
+                                  this.state.secondBoxData && this.state.secondBoxData.walletId === wallet._id ? 'wallet-box-bg-selected' : ''
+                                }`}
+                              >
                                 <div>
                                   <p className="company-name pull-left text-uppercase bold no-margin">
                                     {wallet.network === 'testnet' && <span className="fa fa-circle text-warning fs-11" />}
@@ -474,7 +479,12 @@ class PaymeterComponent extends Component {
                             }}
                           >
                             {wallet.coinType === 'ERC20' && (
-                              <div data-index="0" className="company-stat-box m-t-15 active padding-20 wallet-box-bg">
+                              <div
+                                data-index="0"
+                                className={`company-stat-box m-t-15 active padding-20 wallet-box-bg ${
+                                  this.state.secondBoxData && this.state.secondBoxData.walletId === wallet._id ? 'wallet-box-bg-selected' : ''
+                                }`}
+                              >
                                 <div>
                                   <p className="company-name pull-left text-uppercase bold no-margin">
                                     {wallet.network === 'testnet' && <span className="fa fa-circle text-warning fs-11" />}
@@ -1187,12 +1197,12 @@ class PaymeterComponent extends Component {
                                               <div className="form-group form-group-default m-t-10">
                                                 <label>Fee Collect Wallet</label>
                                                 <select className="form-control" ref="erc20FeeCollectWallet">
-                                                  <option key={""} value={""}>
+                                                  <option key={''} value={''}>
                                                     Don't collect fee
                                                   </option>
                                                   {this.props.wallets.map(temp_wallet => {
                                                     if (temp_wallet.coinType === 'ERC20' && temp_wallet.tokenSymbol === wallet.tokenSymbol) {
-                                                      if(temp_wallet._id !== wallet._id) {
+                                                      if (temp_wallet._id !== wallet._id) {
                                                         return (
                                                           <option key={temp_wallet._id} value={temp_wallet._id}>
                                                             {temp_wallet.walletName}
@@ -1208,7 +1218,9 @@ class PaymeterComponent extends Component {
                                           <div className="row">
                                             <div className="col-md-12">
                                               <div className="form-group form-group-default m-t-10">
-                                                <label>Token Price in ETH <small>(1 {wallet.tokenSymbol} = ? ETH)</small></label>
+                                                <label>
+                                                  Token Price in ETH <small>(1 {wallet.tokenSymbol} = ? ETH)</small>
+                                                </label>
                                                 <input type="text" className="form-control" ref="erc20FeeCollectPrice" />
                                               </div>
                                             </div>
