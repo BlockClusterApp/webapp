@@ -7,7 +7,7 @@
     cursor: pointer;
 
     .wallet-box-bg:hover {
-      background-color: #f0f0f0
+      background-color: #f0f0f0;
     }
   }
 
@@ -15,7 +15,7 @@
     margin-right: 0px !important;
     margin-left: 0px !important;
     margin-bottom: 20px;
-    
+
     .btn-group {
       padding: 20px;
 
@@ -26,14 +26,18 @@
   }
 
   .deposit-box {
-    text-align: center
+    text-align: center;
   }
 
   .no-hidden-text {
-    white-space: normal !important
+    white-space: normal !important;
   }
 
   .paymeter h5 {
     word-break: break-word;
+  }
+
+  .wallet-box-bg-selected {
+    background-color: #d6d6d6;
   }
 }

@@ -75,6 +75,9 @@ JsonRoutes.Middleware.use(
     if (logObject && logObject.url === '/ping') {
       return undefined;
     }
+    if (process.env.NODE_ENV === 'development') {
+      return undefined;
+    }
     ElasticLogger.log('ApiRequest', logObject);
 
     return undefined;
