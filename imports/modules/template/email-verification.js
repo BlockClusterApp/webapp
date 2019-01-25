@@ -1,8 +1,5 @@
 module.exports = `
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
-
-
     <title>Verify Email</title>
     <style type="text/css">
       .ReadMsgBody {width: 100%; background-color: #ffffff;}
@@ -76,58 +73,8 @@ module.exports = `
 
           }
     </style>
-  <style type="text/css">.backpack.dropzone {
-    font-family: 'SF UI Display', 'Segoe UI';
-    font-size: 15px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 250px;
-    height: 150px;
-    font-weight: lighter;
-    color: white;
-    will-change: right;
-    z-index: 2147483647;
-    bottom: 20%;
-    background: #333;
-    position: fixed;
-    user-select: none;
-    transition: left .5s, right .5s;
-    right: 0px; }
-    .backpack.dropzone .animation {
-      height: 80px;
-      width: 250px;
-      background: url("chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/assets/backpack/dropzone/hoverstate.png") left center; }
-    .backpack.dropzone .title::before {
-      content: 'Save to'; }
-    .backpack.dropzone.closed {
-      right: -250px; }
-    .backpack.dropzone.hover .animation {
-      animation: sxt-play-anim-hover 0.91s steps(21);
-      animation-fill-mode: forwards;
-      background: url("chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/assets/backpack/dropzone/hoverstate.png") left center; }
+  <style type="text/css">
 
-  @keyframes sxt-play-anim-hover {
-    from {
-      background-position: 0px; }
-    to {
-      background-position: -5250px; } }
-    .backpack.dropzone.saving .title::before {
-      content: 'Saving to'; }
-    .backpack.dropzone.saving .animation {
-      background: url("chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/assets/backpack/dropzone/saving_loop.png") left center;
-      animation: sxt-play-anim-saving steps(59) 2.46s infinite; }
-
-  @keyframes sxt-play-anim-saving {
-    100% {
-      background-position: -14750px; } }
-    .backpack.dropzone.saved .title::before {
-      content: 'Saved to'; }
-    .backpack.dropzone.saved .animation {
-      background: url("chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/assets/backpack/dropzone/saved.png") left center;
-      animation: sxt-play-anim-saved steps(20) 0.83s forwards; }
 
   @keyframes sxt-play-anim-saved {
     100% {
@@ -289,7 +236,7 @@ module.exports = `
                             <p style="line-height:22px;font-family: arial, sans-serif; font-size: 13px; color: #4d4d4d;">
                               <span style="color:#999;font-size: 17px;font-family: &#39;arial&#39;;line-height: 24px;text-align: center;">Hi,  <span style="color: #09759c;font-weight: bold;">
                                 <%= user.name %>
-                            </span> You have been Successfully Registered on <a href="https://blockcluster.io/">blockcluster.io</a>
+                            </span> You have successfully registered on <a href="https://blockcluster.io/">blockcluster.io</a>
                              click and verify your email to complete the registration process.<br><br></span>
                             </p>
                             <div width="200;height:20px;"></div>
@@ -329,7 +276,7 @@ module.exports = `
                 </tr>
                 <tr>
                   <!--BLOCK 3 -->
-                  <td align="center" style="font-size: 0;" bgcolor="#effaff">
+                  <!-- <td align="center" style="font-size: 0;" bgcolor="#effaff">
                     <table width="468" border="0" cellpadding="0" cellspacing="0" align="center" class="mobile-hidden" bgcolor="#ffffff">
                       <tbody>
                         <tr>
@@ -350,7 +297,7 @@ module.exports = `
 
                       </tbody>
                     </table>
-                  </td>
+                  </td> -->
                   <!--END BLOCK 3 -->
                 </tr>
 
