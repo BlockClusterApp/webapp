@@ -7,24 +7,28 @@ then
   export CLUSTER_PREFIX="production-ap-south-1b";
   export ROOT_URL="app.blockcluster.io";
   export API_HOST="enterprise-api.blockcluster.io";
+  export MONGO_URL="${PROD_MONGO_URL}"
 elif [ "$CIRCLE_TAG" = "staging" ] || [ "$CIRCLE_BRANCH"  = "staging" ];
 then
   export NODE_ENV=staging
   export CLUSTER_PREFIX="dev";
   export ROOT_URL="staging.blockcluster.io";
   export API_HOST ="https://enterprise-api-staging.blockcluster.io";
+  export MONGO_URL="mongodb://35.161.9.16:31972"
 elif [ "$CIRCLE_TAG" = "test" ] || [ "$CIRCLE_BRANCH" = "test" ] || [ "$IS_TEST" = "1" ];
 then
   export NODE_ENV=test
   export CLUSTER_PREFIX="dev";
   export ROOT_URL="test.blockcluster.io";
   export API_HOST="https://enterprise-api-dev.blockcluster.io";
+  export MONGO_URL="mongodb://35.161.9.16:32153"
 elif [ "$CIRCLE_TAG" = "dev" ] ||  [ "$CIRCLE_BRANCH" = "dev" ];
 then
   export NODE_ENV=dev
   export CLUSTER_PREFIX="dev";
   export ROOT_URL="dev.blockcluster.io";
   export API_HOST="https://enterprise-api-dev.blockcluster.io";
+  export MONGO_URL="mongodb://35.161.9.16:32153"
 fi
 
 
