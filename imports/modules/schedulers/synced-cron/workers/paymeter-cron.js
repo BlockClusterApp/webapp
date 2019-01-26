@@ -319,12 +319,15 @@ const addSymbolToContracts = async ready => {
 
 const processWithdrawls = async ready => {
   try {
-    let pending_txns = WalletTransactions.find({
-      $or: [{ internalStatus: 'pending' }, { internalStatus: 'processing' }],
-      type: 'withdrawal'
-    }, {
-      sort: { nonce : 1 }
-    }).fetch();
+    let pending_txns = WalletTransactions.find(
+      {
+        $or: [{ internalStatus: 'pending' }, { internalStatus: 'processing' }],
+        type: 'withdrawal',
+      },
+      {
+        sort: { nonce: 1 },
+      }
+    ).fetch();
 
     for (let count = 0; count < pending_txns.length; count++) {
       let wallet_id = pending_txns[count].fromWallet;
@@ -333,56 +336,85 @@ const processWithdrawls = async ready => {
       });
 
       if (wallet.coinType === 'ETH') {
-        let url = `${await Config.getPaymeterConnectionDetails('eth', wallet.network)}`;
-        let confirmations = await getEthTxnConfirmations(url, pending_txns[count].txnId);
-        if (confirmations >= 15) {
-          WalletTransactions.update(
-            {
-              _id: pending_txns[count]._id,
-            },
-            {
-              $set: {
-                internalStatus: 'completed',
-                status: 'completed'
+        if (pending_txns[count].internalStatus === 'pending') {
+          let url = `${await Config.getPaymeterConnectionDetails('eth', wallet.network)}`;
+          let confirmations = await getEthTxnConfirmations(url, pending_txns[count].txnId);
+          if (confirmations >= 15) {
+            WalletTransactions.update(
+              {
+                _id: pending_txns[count]._id,
               },
-            }
-          );
+              {
+                $set: {
+                  internalStatus: 'completed',
+                  status: 'completed',
+                },
+              }
+            );
 
-          Wallets.update(
-            {
-              _id: wallet._id,
-            },
-            {
-              $set: {
-                confirmedBalance: await Paymeter.getBalance(wallet._id),
+            Wallets.update(
+              {
+                _id: wallet._id,
               },
-            }
-          );
-        } else if (helpers.minutesDifference(Date.now(), pending_txns[count].lastBroadcastedDate) >= 30) {
-          let url = await Config.getPaymeterConnectionDetails('eth', wallet.network);
-          let web3 = new Web3(new Web3.providers.WebsocketProvider(url));
-          await web3.eth.sendSignedTransaction(pending_txns[count].rawTx)
-          WalletTransactions.update(
-            {
-              _id: pending_txns[count]._id,
-            },
-            {
-              $set: {
-                lastBroadcastedDate: Date.now()
+              {
+                $set: {
+                  confirmedBalance: await Paymeter.getBalance(wallet._id),
+                },
+              }
+            );
+          } else if (helpers.minutesDifference(Date.now(), pending_txns[count].lastBroadcastedDate) >= 30) {
+            let url = await Config.getPaymeterConnectionDetails('eth', wallet.network);
+            let web3 = new Web3(new Web3.providers.WebsocketProvider(url));
+            await web3.eth.sendSignedTransaction(pending_txns[count].rawTx);
+            WalletTransactions.update(
+              {
+                _id: pending_txns[count]._id,
               },
-            }
-          );
+              {
+                $set: {
+                  lastBroadcastedDate: Date.now(),
+                },
+              }
+            );
 
-          Wallets.update(
-            {
-              _id: wallet._id,
-            },
-            {
-              $set: {
-                confirmedBalance: await Paymeter.getBalance(wallet._id),
+            Wallets.update(
+              {
+                _id: wallet._id,
+              },
+              {
+                $set: {
+                  confirmedBalance: await Paymeter.getBalance(wallet._id),
+                },
+              }
+            );
+          }
+        } else if (pending_txns[count].internalStatus === 'processing') {
+          let detected_balance = await getEthDetectedBalance(wallet._id);
+
+          if (new BigNumber(pending_txns[count].amount).plus(pending_txns[count].fee).lte(detected_balance)) {
+            try {
+              let url = await Config.getPaymeterConnectionDetails('eth', wallet.network);
+              let web3 = new Web3(new Web3.providers.WebsocketProvider(url));
+              await sendRawTxn(pending_txns[count].rawTx, web3);
+
+              WalletTransactions.update(
+                {
+                  _id: pending_txns[count]._id,
+                },
+                {
+                  $set: {
+                    internalStatus: 'pending',
+                    lastBroadcastedDate: Date.now(),
+                  },
+                }
+              );
+            } catch (err) {
+              if (err.toString().includes('insufficient funds')) {
+              } else {
+                throw err;
               }
             }
-          );
+          }
         }
       } else if (wallet.coinType === 'ERC20') {
         let url = `${await Config.getPaymeterConnectionDetails('eth', wallet.network)}`;
@@ -408,7 +440,7 @@ const processWithdrawls = async ready => {
                       $set: {
                         internalStatus: 'pending',
                         txnId: hash,
-                        lastBroadcastedDate: Date.now()
+                        lastBroadcastedDate: Date.now(),
                       },
                     }
                   );
@@ -436,7 +468,7 @@ const processWithdrawls = async ready => {
                     $set: {
                       internalStatus: 'pending',
                       txnId: hash,
-                      lastBroadcastedDate: Date.now()
+                      lastBroadcastedDate: Date.now(),
                     },
                   }
                 );
@@ -465,7 +497,7 @@ const processWithdrawls = async ready => {
                 {
                   $set: {
                     internalStatus: 'completed',
-                    status: 'completed'
+                    status: 'completed',
                   },
                 }
               );
@@ -524,7 +556,7 @@ const processWithdrawls = async ready => {
                     $set: {
                       internalStatus: 'pending',
                       txnId: hash,
-                      lastBroadcastedDate: Data.now()
+                      lastBroadcastedDate: Data.now(),
                     },
                   }
                 );
@@ -552,7 +584,7 @@ const processWithdrawls = async ready => {
                 {
                   $set: {
                     internalStatus: 'completed',
-                    status: 'completed'
+                    status: 'completed',
                   },
                 }
               );
@@ -598,7 +630,7 @@ const processWithdrawls = async ready => {
 
     ready();
   } catch (e) {
-    console.log(e)
+    console.log(e);
     ready();
   }
 };
@@ -627,7 +659,7 @@ const processDeposits = async ready => {
             {
               $set: {
                 internalStatus: 'completed',
-                status: 'completed'
+                status: 'completed',
               },
             }
           );
@@ -681,7 +713,7 @@ const processDeposits = async ready => {
             {
               $set: {
                 internalStatus: 'cancelled',
-                status: 'cancelled'
+                status: 'cancelled',
               },
             }
           );
@@ -777,7 +809,7 @@ const scanEthTestnet = async ready => {
                 coinType: 'ETH',
                 network: 'testnet',
                 address: txn_details.from.toLowerCase(),
-              })
+              });
 
               if (to_exists_internally) {
                 WalletTransactions.upsert(
@@ -793,8 +825,8 @@ const scanEthTestnet = async ready => {
                       amount: testnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
                       internalStatus: 'pending',
                       status: from_exists_internally ? 'completed' : 'pending',
-                      isInternalTxn: from_exists_internally ? true : false
-                    }
+                      isInternalTxn: from_exists_internally ? true : false,
+                    },
                   }
                 );
 
@@ -846,7 +878,7 @@ const scanEthTestnet = async ready => {
               network: 'testnet',
               address: fromAddressOfEvent,
               contractAddress: contractAddress,
-            })
+            });
 
             if (to_exists_internally) {
               WalletTransactions.upsert(
@@ -862,8 +894,8 @@ const scanEthTestnet = async ready => {
                     amount: testnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                     internalStatus: 'pending',
                     status: from_exists_internally ? 'completed' : 'pending',
-                    isInternalTxn: from_exists_internally ? true : false
-                  }
+                    isInternalTxn: from_exists_internally ? true : false,
+                  },
                 }
               );
 
@@ -967,8 +999,8 @@ const scanEthMainnet = async ready => {
                         amount: mainnet_web3.utils.fromWei(txn_details.value, 'ether').toString(),
                         internalStatus: 'pending',
                         status: 'completed',
-                        isInternalTxn: true
-                      }
+                        isInternalTxn: true,
+                      },
                     }
                   );
 
@@ -1017,8 +1049,8 @@ const scanEthMainnet = async ready => {
                             .toString(),
                           internalStatus: 'pending',
                           status: 'pending',
-                          isInternalTxn: false
-                        }
+                          isInternalTxn: false,
+                        },
                       }
                     );
 
@@ -1050,8 +1082,8 @@ const scanEthMainnet = async ready => {
                           usdCharged: paymeterPricing.perTransactionCostFlat,
                           internalStatus: 'pending',
                           status: 'pending',
-                          isInternalTxn: false
-                        }
+                          isInternalTxn: false,
+                        },
                       }
                     );
 
@@ -1125,8 +1157,8 @@ const scanEthMainnet = async ready => {
                       amount: mainnet_web3.utils.fromWei(amountOfEvent, 'ether').toString(),
                       internalStatus: 'pending',
                       status: 'completed',
-                      isInternalTxn: true
-                    }
+                      isInternalTxn: true,
+                    },
                   }
                 );
 
@@ -1178,8 +1210,8 @@ const scanEthMainnet = async ready => {
                             usdPrice: token_price.usd_price,
                             internalStatus: 'pending',
                             status: 'pending',
-                            isInternalTxn: false
-                          }
+                            isInternalTxn: false,
+                          },
                         }
                       );
 
@@ -1208,8 +1240,8 @@ const scanEthMainnet = async ready => {
                             usdCharged: paymeterPricing.perTransactionCostFlat,
                             internalStatus: 'pending',
                             status: 'pending',
-                            isInternalTxn: false
-                          }
+                            isInternalTxn: false,
+                          },
                         }
                       );
 
@@ -1239,8 +1271,8 @@ const scanEthMainnet = async ready => {
                           usdCharged: paymeterPricing.perTransactionCostFlat,
                           internalStatus: 'pending',
                           status: 'pending',
-                          isInternalTxn: false
-                        }
+                          isInternalTxn: false,
+                        },
                       }
                     );
 
@@ -1277,8 +1309,8 @@ const scanEthMainnet = async ready => {
                           usdPrice: price,
                           internalStatus: 'pending',
                           status: 'pending',
-                          isInternalTxn: false
-                        }
+                          isInternalTxn: false,
+                        },
                       }
                     );
 
@@ -1307,8 +1339,8 @@ const scanEthMainnet = async ready => {
                           usdCharged: paymeterPricing.perTransactionCostFlat,
                           internalStatus: 'pending',
                           status: 'pending',
-                          isInternalTxn: false
-                        }
+                          isInternalTxn: false,
+                        },
                       }
                     );
 
