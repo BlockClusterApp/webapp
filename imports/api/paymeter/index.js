@@ -1352,6 +1352,7 @@ Meteor.methods({
 module.exports = {
   createWallet,
   getBalance,
+  getEthDetectedBalance,
   getBalanceCallback: async (_id, func) => {
     try {
       let balance = await getBalance(_id);

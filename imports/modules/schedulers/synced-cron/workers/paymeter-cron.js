@@ -389,7 +389,7 @@ const processWithdrawls = async ready => {
             );
           }
         } else if (pending_txns[count].internalStatus === 'processing') {
-          let detected_balance = await getEthDetectedBalance(wallet._id);
+          let detected_balance = await Paymeter.getEthDetectedBalance(wallet._id);
 
           if (new BigNumber(pending_txns[count].amount).plus(pending_txns[count].fee).lte(detected_balance)) {
             try {
