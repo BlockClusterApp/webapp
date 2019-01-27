@@ -10,7 +10,6 @@ class ConfigList extends Component {
 
     this.state = {
       page: 0,
-      invoices: [],
     };
   }
 
@@ -62,7 +61,7 @@ class ConfigList extends Component {
 
 export default withTracker(() => {
   return {
-    configs: NetworkConfiguration.find({active: true}).fetch(),
+    configs: NetworkConfiguration.find({ active: true }).fetch(),
     subscriptions: [Meteor.subscribe('networkConfig.all')],
   };
 })(withRouter(ConfigList));

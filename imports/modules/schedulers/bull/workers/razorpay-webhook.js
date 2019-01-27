@@ -150,6 +150,7 @@ async function updateRZPaymentToUser(user, payment) {
         userCards.cards.find(
           c => c.id === paymentCard.id || (c.last4 === paymentCard.last4 && c.issuer === paymentCard.issuer && c.name === paymentCard.name && c.network === paymentCard.network)
         );
+      console.log('Does card exists', doesCardExists);
       if (!doesCardExists) {
         UserCards.update(
           {

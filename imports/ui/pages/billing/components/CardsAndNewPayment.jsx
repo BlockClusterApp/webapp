@@ -1,16 +1,16 @@
 import React, { Component } from 'react';
 import UserCards from '../../../../collections/payments/user-cards';
-import RZSubscription from '../../../../collections/razorpay/subscription'
+import RZSubscription from '../../../../collections/razorpay/subscription';
 import Invoice from '../../../../collections/payments/invoice';
 import Card from './Card.jsx';
-import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
+import PromotionalCredits from './PromotionalCredits';
 import moment from 'moment';
 import RazorPay from '../../../components/Razorpay/Razorpay';
 
 import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
 
-const html2pdf = require("html2pdf.js")
+const html2pdf = require('html2pdf.js');
 
 import './CardsAndNewPayment.scss';
 
@@ -83,29 +83,39 @@ class CardsAndNewPayment extends Component {
 
   downloadInvoice = () => {
     Meteor.call('generateInvoiceHTML', this.props.invoice._id, (err, res) => {
-      if(err){
+      if (err) {
         console.log(err);
         RavenLogger.log('Generate Invoice HTML err', {
           invoice: this.props.invoice._id,
-          res
+          res,
         });
         alert('Error downloading', err.reason);
         return false;
       }
-      html2pdf().from(res).set({jsPDF:{ unit: 'in', format: 'a4', orientation: 'landscape' }, margin: [0.5, 1]}).save();
+      html2pdf()
+        .from(res)
+        .set({ jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }, margin: [0.5, 1] })
+        .save();
     });
-  }
+  };
 
   render() {
     const { user } = this.props;
 
-    const cards = this.props.userCard ? this.props.userCard.cards : [];
+    let cards = this.props.userCard ? this.props.userCard.cards : [];
+
+    cards = cards.filter(card => card.active !== false);
 
     const cardsView = [];
     let currentRow = [];
 
     let paymentDisplay = null;
-    if (this.props.invoice && this.props.invoice.paymentStatus !== 2 && !(this.props.rzSubscription && this.props.rzSubscription.bc_status === 'active') && (this.props.user && !this.props.user.demoUser)) {
+    if (
+      this.props.invoice &&
+      ![2, undefined].includes(this.props.invoice.paymentStatus) &&
+      !(this.props.rzSubscription && this.props.rzSubscription.bc_status === 'active') &&
+      (this.props.user && !this.props.user.demoUser)
+    ) {
       paymentDisplay = Number(this.props.invoice.totalAmount) !== 0 && (
         <div className="alert alert-warning col-md-12">
           <div className="col-md-12 b-r b-dashed b-grey sm-b-b">
@@ -114,17 +124,65 @@ class CardsAndNewPayment extends Component {
             &nbsp; is pending. Kindly pay it before 10
             <sup>th</sup> of this month to avoid node deletions.
             <br />
-            <div className="row" style={{padding: '15px'}}>
-                <button className="btn btn-primary" onClick={this.downloadInvoice}>Download Invoice</button>&nbsp;&nbsp;
-                <RazorPay
-                  buttonText={`Pay $${this.props.invoice.totalAmount}`}
-                  buttonIcon="fa-open"
-                  loading={this.state.loading || (this.state.waitingForCards && cards.length === 0)}
-                  preTriggerPaymentListener={this.invoicePrePaymentTrigger}
-                  paymentHandler={this.invoicePaymentHandler}
-                  modalDismissListener={this.modalDismissListener}
-                />
+            <div className="row" style={{ padding: '15px' }}>
+              <button className="btn btn-primary" onClick={this.downloadInvoice}>
+                Download Invoice
+              </button>
+              &nbsp;&nbsp;
+              <RazorPay
+                buttonText={`Pay $${this.props.invoice.totalAmount}`}
+                buttonIcon="fa-open"
+                loading={this.state.loading || (this.state.waitingForCards && cards.length === 0)}
+                preTriggerPaymentListener={this.invoicePrePaymentTrigger}
+                paymentHandler={this.invoicePaymentHandler}
+                modalDismissListener={this.modalDismissListener}
+              />
             </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (user && user.paymentPending && this.props.invoice) {
+      paymentDisplay = (
+        <div className="alert alert-danger col-md-12">
+          <div className="col-md-12 b-r b-dashed b-grey sm-b-b">
+            <i className="fa fa-danger" /> <h3>Account suspended</h3>
+            <br />
+            <br />
+            <p>
+              Your account has been suspended due to non payment of invoice. All the functionalities have been disabled temporarily. If the payment is not made by 30th of this
+              month, all your data will be deleted which would be an irreversible process.
+            </p>
+            <br />
+            <div className="row" style={{ padding: '15px' }}>
+              <button className="btn btn-primary" onClick={this.downloadInvoice}>
+                Download Invoice
+              </button>
+              &nbsp;&nbsp;
+              <RazorPay
+                buttonText={`Pay $${this.props.invoice.totalAmount}`}
+                buttonIcon="fa-open"
+                loading={this.state.loading || (this.state.waitingForCards && cards.length === 0)}
+                preTriggerPaymentListener={this.invoicePrePaymentTrigger}
+                paymentHandler={this.invoicePaymentHandler}
+                modalDismissListener={this.modalDismissListener}
+              />
+            </div>
+            <div className="bottom" style={{ fontSize: '8px' }}>
+              If you think this is an error, kindly raise a support ticket.
+            </div>
+          </div>
+        </div>
+      );
+    } else if (user && user.paymentPending) {
+      paymentDisplay = (
+        <div className="alert alert-danger col-md-12">
+          <div className="col-md-12 b-r b-dashed b-grey sm-b-b">
+            <i className="fa fa-danger" /> <h3>Account suspended</h3>
+            <p>
+              Your account has been suspended by admin. Kindly raise a support ticket for details. Your data is safe but will be deleted on 30th of this month if no disputes arise.
+            </p>
           </div>
         </div>
       );
@@ -142,7 +200,9 @@ class CardsAndNewPayment extends Component {
               <i className="fa fa-credit-card fa-2x hint-text" />
               <h2>Your card is verified</h2>
 
-              {!(this.props.rzSubscription && this.props.rzSubscription.bc_status === 'active') && <p>You will receive invoice on 1st of every month and bill amount will be auto deducted from your card on 5th of every month.</p>}
+              {!(this.props.rzSubscription && this.props.rzSubscription.bc_status === 'active') && (
+                <p>You will receive invoice on 1st of every month and bill amount will be auto deducted from your card on 5th of every month.</p>
+              )}
 
               {!!(this.props.rzSubscription && this.props.rzSubscription.bc_status === 'active') && (
                 <p>Bill will be generated on 1st of every month and sent via email. The invoice would have to be cleared before 10th of the month to prevent deletion of nodes.</p>
@@ -207,12 +267,11 @@ class CardsAndNewPayment extends Component {
                 <h2>Hey {user.profile.firstName}, Just one more thing...</h2>
                 <p>We would need you to verify your payment method. Your card will be charged an initial amount of ~$1 which would be refunded with 5 working days</p>
                 <p className="small hint-text">If you are facing issues while adding your card then please raise a support ticket.</p>
-                {this.state.waitingForCards &&
-                  cards.length === 0 && (
-                    <div className="alert alert-info" style={{ textAlign: 'center', marginTop: '15px' }}>
-                      <i className="fa fa-spin fa-spinner" /> Fetching your card details. Hold on a minute...
-                    </div>
-                  )}
+                {this.state.waitingForCards && cards.length === 0 && (
+                  <div className="alert alert-info" style={{ textAlign: 'center', marginTop: '15px' }}>
+                    <i className="fa fa-spin fa-spinner" /> Fetching your card details. Hold on a minute...
+                  </div>
+                )}
               </div>
             </div>
             <div className="col-md-7">
@@ -290,8 +349,10 @@ class CardsAndNewPayment extends Component {
     }
 
     return (
-      <div className="row padding-25 saved-cards">
-        <div className="card card-transparent">{displayView}</div>
+      <div>
+        <div className="row padding-25 saved-cards">
+          <div className="card card-transparent">{displayView}</div>
+        </div>
       </div>
     );
   }
@@ -302,7 +363,7 @@ export default withTracker(() => {
     userCard: UserCards.find({ userId: Meteor.userId() }).fetch()[0],
     user: Meteor.user(),
     invoice: Invoice.find({ userId: Meteor.userId(), billingPeriodLabel: billingLabel, paymentStatus: 1 }).fetch()[0],
-    rzSubscription: RZSubscription.find({userId: Meteor.userId()}).fetch()[0],
+    rzSubscription: RZSubscription.find({ userId: Meteor.userId() }).fetch()[0],
     subscriptions: [Meteor.subscribe('userCards'), Meteor.subscribe('pending-invoice', billingLabel), Meteor.subscribe('rzp-subscription')],
   };
 })(withRouter(CardsAndNewPayment));

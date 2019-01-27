@@ -20,6 +20,18 @@ if (Meteor.isServer) {
       unique: true,
     }
   );
+  NetworkCollection._ensureIndex({
+    userId: 1,
+  });
+  NetworkCollection._ensureIndex(
+    {
+      instanceId: 1,
+      userId: 1,
+    },
+    {
+      unique: true,
+    }
+  );
 }
 
 export const Networks = NetworkCollection;

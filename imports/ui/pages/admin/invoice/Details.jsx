@@ -56,6 +56,8 @@ class InvoiceDetails extends Component {
         return <span className="label label-danger">Failed</span>;
       case 5:
         return <span className="label label-danger">Waived Off</span>;
+      case 6:
+        return <span className="label label-danger">Refunded</span>;
       default:
         return null;
     }
@@ -110,8 +112,13 @@ class InvoiceDetails extends Component {
 
   render() {
     let billView = null;
+    let creditsView = null;
 
     const { invoice } = this.props;
+    if (!invoice) {
+      return null;
+    }
+
     const { user } = invoice;
 
     if (invoice && invoice.items) {
@@ -127,6 +134,19 @@ class InvoiceDetails extends Component {
             <td>
               $ {network.cost} {this.convertCostToTag(network.label)}{' '}
             </td>
+          </tr>
+        );
+      });
+    }
+    if (invoice && invoice.creditClaims) {
+      creditsView = invoice.creditClaims.map((claim, index) => {
+        return (
+          <tr key={`p${index + 1}`}>
+            <td>Promotional Credit Redemption</td>
+            <td>{claim.code}</td>
+            <td />
+            <td />
+            <td>$ -{Number(claim.amount).toFixed(2)}</td>
           </tr>
         );
       });
@@ -214,22 +234,24 @@ class InvoiceDetails extends Component {
                 <h5>Emails</h5>
                 <ConfirmationButton
                   loading={this.state.loading}
-                  completed={!(invoice && invoice.emailsSent && invoice.emailsSent.includes(1)) || this.state.disableReminder || [2, 5].includes(invoice.paymentStatus)}
+                  completed={!(invoice && invoice.emailsSent && invoice.emailsSent.includes(1)) || this.state.disableReminder || [2, 5, 6].includes(invoice.paymentStatus)}
                   onConfirm={this.sendInvoiceReminder.bind(this, invoice._id)}
                   loadingText="Sending email"
                   completedText={
-                    invoice.paymentStatus !== 2
+                    invoice.paymentStatus === 6
+                      ? 'Send Reminder: Refunded'
+                      : invoice.paymentStatus !== 2
                       ? this.state.disableReminder
                         ? 'Reminder sent'
                         : invoice.paymentStatus !== 5
-                          ? 'Send Invoice: Created mail not sent yet'
-                          : 'Send Invoice: Invoice waived off'
-                      : 'Send Invoice: Invoice already paid'
+                        ? 'Send Reminder: Created mail not sent yet'
+                        : 'Send Reminder: Invoice waived off'
+                      : 'Send Reminder: Invoice already paid'
                   }
                   actionText="Send Invoice Reminder"
                 />
                 <br />
-                {invoice.paymentStatus !== 2 && (
+                {![2, 6].includes(invoice.paymentStatus) && (
                   <div>
                     <h5>Waive Off </h5>
                     <div className="row">
@@ -254,11 +276,13 @@ class InvoiceDetails extends Component {
                       <div className="col-md-5">
                         <ConfirmationButton
                           loading={this.state.loading}
-                          completed={[2, 3, 5].includes(invoice.paymentStatus) || this.state.disableWaiveOff}
+                          completed={[2, 3, 5, 6].includes(invoice.paymentStatus) || this.state.disableWaiveOff}
                           onConfirm={this.waiveOffReasonAction.bind(this, invoice._id)}
                           loadingText="Waiving off invoice"
                           completedText={
-                            invoice.paymentStatus !== 2
+                            invoice.paymentStatus === 6
+                              ? 'WaiveOff: Refunded'
+                              : invoice.paymentStatus !== 2
                               ? invoice.paymentStatus === 5
                                 ? 'Already waived off'
                                 : this.state.disableWaiveOff && 'WaiveOff: Disabled'
@@ -285,7 +309,10 @@ class InvoiceDetails extends Component {
                   <th style={{ width: '19%' }}>Cost</th>
                 </tr>
               </thead>
-              <tbody>{billView}</tbody>
+              <tbody>
+                {billView}
+                {creditsView}
+              </tbody>
               <tfoot>
                 <tr>
                   <td colSpan="4" style={{ textAlign: 'right' }}>

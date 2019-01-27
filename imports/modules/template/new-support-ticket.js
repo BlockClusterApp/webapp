@@ -1,4 +1,4 @@
-module.exports = `<!-- saved from url=(0080)https://nonceblox.com/blockcluster_emails/emails/lists/registration_success.html -->
+module.exports = `
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 
@@ -76,63 +76,7 @@ module.exports = `<!-- saved from url=(0080)https://nonceblox.com/blockcluster_e
 
           }
     </style>
-  <style type="text/css">.backpack.dropzone {
-    font-family: 'SF UI Display', 'Segoe UI';
-    font-size: 15px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 250px;
-    height: 150px;
-    font-weight: lighter;
-    color: white;
-    will-change: right;
-    z-index: 2147483647;
-    bottom: 20%;
-    background: #333;
-    position: fixed;
-    user-select: none;
-    transition: left .5s, right .5s;
-    right: 0px; }
-    .backpack.dropzone .animation {
-      height: 80px;
-      width: 250px;
-      background: url("chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/assets/backpack/dropzone/hoverstate.png") left center; }
-    .backpack.dropzone .title::before {
-      content: 'Save to'; }
-    .backpack.dropzone.closed {
-      right: -250px; }
-    .backpack.dropzone.hover .animation {
-      animation: sxt-play-anim-hover 0.91s steps(21);
-      animation-fill-mode: forwards;
-      background: url("chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/assets/backpack/dropzone/hoverstate.png") left center; }
-
-  @keyframes sxt-play-anim-hover {
-    from {
-      background-position: 0px; }
-    to {
-      background-position: -5250px; } }
-    .backpack.dropzone.saving .title::before {
-      content: 'Saving to'; }
-    .backpack.dropzone.saving .animation {
-      background: url("chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/assets/backpack/dropzone/saving_loop.png") left center;
-      animation: sxt-play-anim-saving steps(59) 2.46s infinite; }
-
-  @keyframes sxt-play-anim-saving {
-    100% {
-      background-position: -14750px; } }
-    .backpack.dropzone.saved .title::before {
-      content: 'Saved to'; }
-    .backpack.dropzone.saved .animation {
-      background: url("chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/assets/backpack/dropzone/saved.png") left center;
-      animation: sxt-play-anim-saved steps(20) 0.83s forwards; }
-
-  @keyframes sxt-play-anim-saved {
-    100% {
-      background-position: -5000px; } }
-  </style></head>
+</head>
 
   <body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" yahoo="fix" style="font-family: arial, sans-serif">
 
@@ -366,7 +310,7 @@ module.exports = `<!-- saved from url=(0080)https://nonceblox.com/blockcluster_e
                           <td class="img" style="font-size:0pt; line-height:0pt; text-align:left" width="10"></td>
                           <td>
                             <div class="text-footer" style="color:#b7b5b5; font-family:Arial; font-size:14px; line-height:22px; text-align:center"><a href="https://blockcluster.io/" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><span class="link-footer" style="color:#605f5d; text-decoration:none">Blockcluster</span></a>                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                              <a href="https://nonceblox.com/blockcluster_emails/emails/lists/registration_success.html" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><span class="link-footer" style="color:#605f5d; text-decoration:none">Pricing</span></a>                            <span class="mobile-block"><span class="hide-for-mobile">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>  <a href="https://www.blockcluster.io/terms" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><span class="link-footer" style="color:#605f5d; text-decoration:none">T&amp;Cs</span></a></div>
+                              <a href="https://www.blockcluster.io/pricing" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><span class="link-footer" style="color:#605f5d; text-decoration:none">Pricing</span></a>                            <span class="mobile-block"><span class="hide-for-mobile">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>  <a href="https://www.blockcluster.io/terms" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><span class="link-footer" style="color:#605f5d; text-decoration:none">T&amp;Cs</span></a></div>
                             <table width="100%" border="0" cellspacing="0" cellpadding="0" class="spacer" style="font-size:0pt; line-height:0pt; text-align:center; width:100%; min-width:100%">
                               <tbody>
                                 <tr>
@@ -378,7 +322,6 @@ module.exports = `<!-- saved from url=(0080)https://nonceblox.com/blockcluster_e
 
                             <div class="text-footer2" style="color:#605f5d; font-family:Arial; font-size:12px; line-height:20px; text-align:center">
                               You have received this email as a registered user of <a href="https://blockcluster.io/" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><strong class="link-footer" style="color:#605f5d; text-decoration:none">Blockcluster.io</strong></a>
-                              <!-- <br>You can unsubscribe from these emails <a href="https://nonceblox.com/blockcluster_emails/emails/lists/registration_success.html#" class="link-footer" style="color:#605f5d; text-decoration:none" target="_blank"><strong class="link-footer" style="color:#605f5d; text-decoration:none">here</strong></a> (Don't worry, we won't take it personally). -->
                               <br>© BlockCluster 2018. All rights reserved.<br><br>
                             </div>
                             <table width="100%" border="0" cellspacing="0" cellpadding="0" class="spacer" style="font-size:0pt; line-height:0pt; text-align:center; width:100%; min-width:100%">

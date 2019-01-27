@@ -87,7 +87,7 @@ export default class KubeDashboard extends Component {
         <div className="col-md-4 padding-25  d-flex flex-column" id={`${containerName}`} key={containerName}>
           <h5>{helpers.firstLetterCapital(containerName)}</h5>
           <p className="hint-text all-caps font-montserrat small no-margin text-success " ><b>{helpers.firstLetterCapital(Object.keys(containerStatus.state)[0])}</b></p>
-          <p className="font-montserrat  no-margin fs-12">Since {moment(Object.values(containerStatus.state)[0].startedAt).format('DD-MMM-YY HH:mm:SS')}</p>
+          <p className="font-montserrat  no-margin fs-12">Since {moment(Object.values(containerStatus.state)[0].startedAt).format('DD-MMM-YY kk:mm:ss')}</p>
           <br />
           {containerSpec.resources && containerSpec.resources.requests && <div><p className="hint-text font-montserrat small no-margin  all-caps fs-14">Resources</p>
           <p className="no-margin text-primary ">Requests</p>

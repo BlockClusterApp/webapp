@@ -75,6 +75,9 @@ JsonRoutes.Middleware.use(
     if (logObject && logObject.url === '/ping') {
       return undefined;
     }
+    if (process.env.NODE_ENV === 'development') {
+      return undefined;
+    }
     ElasticLogger.log('ApiRequest', logObject);
 
     return undefined;
@@ -98,6 +101,7 @@ require('../../collections/network-configuration/server/publications');
 require('../../collections/api-keys/server/publications');
 require('../../collections/webhooks/server/publications');
 require('../../collections/paymeter/server/publications');
+require('../../collections/pricing/server/publications');
 require('../../api/payments');
 require('../../api/billing');
 

@@ -11,7 +11,8 @@ Invoice.PaymentStatusMapping = {
   Paid: 2,
   DemoUser: 3,
   Failed: 4,
-  WaivedOff: 5
+  WaivedOff: 5,
+  Refunded: 6,
 };
 
 Invoice.EmailMapping = {
@@ -46,6 +47,11 @@ Invoice.schema = new SimpleSchema({
     type: String,
   },
   totalAmount: {
+    // Amount after applying credits
+    type: Number,
+  },
+  billingAmount: {
+    // Total bill
     type: Number,
   },
   rzAddOnId: {
@@ -66,6 +72,19 @@ Invoice.schema = new SimpleSchema({
   'emailsSent.$': {
     type: Number,
   },
+  creditClaims: {
+    type: Array,
+  },
+  'creditClaims.$': {
+    type: {
+      id: {
+        type: String,
+      },
+      amount: {
+        type: Number,
+      },
+    },
+  },
   paymentLink: {
     type: {
       id: {
@@ -75,8 +94,24 @@ Invoice.schema = new SimpleSchema({
         type: String,
       },
       expired: {
-        type: Boolean
-      }
+        type: Boolean,
+      },
+    },
+  },
+  userId: {
+    type: String,
+  },
+  paymentFailedStatus: {
+    type: Array,
+  },
+  'paymentFailedStatus.$': {
+    type: {
+      status: {
+        type: String,
+      },
+      on: {
+        type: Date,
+      },
     },
   },
 });

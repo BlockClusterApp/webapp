@@ -8,6 +8,8 @@ const MIGRATION_VERSION = 9;
 global.RemoteConfig = {};
 global.LicenceError = 0;
 
+global.isConfigFetched = false;
+
 const CONFIG_URL = (function() {
   if (process.env.NODE_ENV === 'development') {
     if (process.env.CONFIG_URL) {
@@ -20,12 +22,8 @@ const CONFIG_URL = (function() {
 })();
 
 async function fetchNewConfig() {
-  const migrationDBVersion = Migrations.getVersion();
-  const response = await request.get(
-    `${CONFIG_URL}/config?webAppVersion=${WEB_APP_VERSION}&migrationVersion=${MIGRATION_VERSION}&migrationStatus=${
-      migrationDBVersion === MIGRATION_VERSION ? 'unlocked' : 'locked'
-    }`
-  );
+  // const migrationDBVersion = Migrations.getVersion();
+  const response = await request.get(`${CONFIG_URL}/config?webAppVersion=${WEB_APP_VERSION}&migrationVersion=${MIGRATION_VERSION}`);
   const res = JSON.parse(response);
   if (res.errorCode && res.errorCode === 404) {
     global.LicenceError += 1;
@@ -33,6 +31,10 @@ async function fetchNewConfig() {
       Ingress: {},
     };
   } else {
+    if (!global.isConfigFetched) {
+      console.log('Fetching licence information');
+    }
+    global.isConfigFetched = true;
     global.RemoteConfig = res;
     global.LicenceError = 0;
   }
@@ -63,6 +65,8 @@ setInterval(
   },
   process.env.NODE_ENV === 'development' ? 10 * 1000 : 1 * 60 * 1000
 );
+
+export { MIGRATION_VERSION };
 
 function getAPIHost() {
   if (RemoteConfig.apiHost) {
@@ -100,56 +104,21 @@ async function getPaymeterConnectionDetails(blockchain, network) {
   if (process.env.paymeter) {
     return process.env.paymeter;
   }
-
-  function getLocation() {
-    return new Promise((resolve, reject) => {
-      Meteor.call('getClusterLocations', (error, locations) => {
-        resolve(locations);
-      });
-    });
-  }
-
-  const locations = await getLocation();
-
-  //first location in the location list - assuming webapp is also running the first location
-  const locationCode = locations[0].locationCode;
-  return RemoteConfig.clusters[getNamespace()][locationCode].paymeter.blockchains[blockchain][network].url;
+  return RemoteConfig.paymeter[getNamespace()].blockchains[blockchain][network].url;
 }
 
 async function getCoinmarketcapAPIKey() {
   if (process.env.coinmarketcap_key) {
     return process.env.coinmarketcap_key;
   }
-
-  function getLocation() {
-    return new Promise((resolve, reject) => {
-      Meteor.call('getClusterLocations', (error, locations) => {
-        resolve(locations);
-      });
-    });
-  }
-
-  const locations = await getLocation();
-  const locationCode = locations[0].locationCode;
-  return RemoteConfig.clusters[getNamespace()][locationCode].paymeter.api_keys.coinmarketcap;
+  return RemoteConfig.paymeter[getNamespace()].api_keys.coinmarketcap;
 }
 
 async function getEthplorerAPIKey() {
   if (process.env.coinmarketcap_key) {
     return process.env.coinmarketcap_key;
   }
-
-  function getLocation() {
-    return new Promise((resolve, reject) => {
-      Meteor.call('getClusterLocations', (error, locations) => {
-        resolve(locations);
-      });
-    });
-  }
-
-  const locations = await getLocation();
-  const locationCode = locations[0].locationCode;
-  return RemoteConfig.clusters[getNamespace()][locationCode].paymeter.api_keys.ethplorer;
+  return RemoteConfig.clusters[getNamespace()][locationCode].api_keys.ethplorer;
 }
 
 function getDynamoWokerDomainName(locationCode) {
@@ -220,7 +189,6 @@ function getMongoConnectionString() {
 
   return `mongodb://${q.host}/admin`;
 }
-
 module.exports = {
   sendgridAPIKey: process.env.SENDGRID_API_KEY || defaults.sendgridApi,
   workerNodeIP: (locationCode = 'us-west-2') => {

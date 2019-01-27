@@ -20,6 +20,12 @@ class Navbar extends Component {
     $.Pages.init();
   }
 
+  componentWillReceiveProps(newProps, oldProps) {
+    if (newProps.user && !localStorage.getItem('admin')) {
+      localStorage.setItem('admin', newProps.user.admin);
+    }
+  }
+
   componentDidUpdate() {
     $.Pages.init();
   }
@@ -142,6 +148,14 @@ class Navbar extends Component {
                   )}
                   {features.Invoice && (
                     <li>
+                      <Link to="/app/payments/credits">Credits</Link>
+                      <span className="icon-thumbnail">
+                        <i className="fa fa-money" />
+                      </span>
+                    </li>
+                  )}
+                  {features.Invoice && (
+                    <li>
                       <Link to="/app/billing">Bills</Link>
                       <span className="icon-thumbnail">
                         <i className="fa fa-list-alt" />
@@ -208,6 +222,14 @@ class Navbar extends Component {
                       <Link to="/app/admin/support">Support</Link>
                       <span className="icon-thumbnail">
                         <i className="fa fa-ticket" />
+                      </span>
+                    </li>
+                  )}
+                  {(features.Paymeter || features.Hyperion) && (
+                    <li>
+                      <Link to="/app/admin/pricing">Pricing</Link>
+                      <span className="icon-thumbnail">
+                        <i className="fa fa-money" />
                       </span>
                     </li>
                   )}

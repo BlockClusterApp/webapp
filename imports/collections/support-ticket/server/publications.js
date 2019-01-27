@@ -2,7 +2,7 @@ import SupportTicket from '../index';
 import { Networks } from '../../networks/networks';
 
 const MIN_ADMIN_LEVEL = 0;
-const pageSize = 20;
+const pageSize = 10;
 Meteor.publish('support.user', function() {
   return SupportTicket.find({
     createdBy: Meteor.userId(),
@@ -21,7 +21,6 @@ Meteor.publish('support.id', function(id) {
   if (!support) {
     return [];
   }
-
 
   const result = [];
   if (support.supportObject && support.supportObject.serviceType === 'network') {
@@ -128,12 +127,12 @@ Meteor.publish('support.search', function({ query, limit, page }) {
     return [];
   }
   limit = limit || pageSize;
-  page = page || 0;
+  page = page || 1;
   return SupportTicket.find(query, {
     sort: {
       createdAt: 1,
     },
     limit: limit,
-    skip: page * pageSize,
+    skip: (page - 1) * pageSize,
   });
 });

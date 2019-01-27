@@ -30,11 +30,6 @@ class BillingDashboard extends Component {
   };
 
   componentDidMount() {
-    // Meteor.call("getClusterLocations", (err, res) => {
-    //   this.setState({
-    //     locations: res
-    //   });
-    // });
     this.updateBilling();
   }
 
@@ -122,6 +117,8 @@ class BillingDashboard extends Component {
       case 1:
       case 4:
         return <span className="label label-danger">Unpaid</span>;
+      case 6:
+        return <span className="label label-info">Refunded</span>;
       default:
         return null;
     }
@@ -129,6 +126,7 @@ class BillingDashboard extends Component {
 
   render() {
     let billView = undefined;
+    let creditsView = undefined;
 
     if (this.state.bill && this.state.bill.networks) {
       billView = this.state.bill.networks.map((network, index) => {
@@ -141,6 +139,20 @@ class BillingDashboard extends Component {
             <td>
               $ {network.cost} {this.convertCostToTag(network.label)}{' '}
             </td>
+          </tr>
+        );
+      });
+    }
+
+    if (this.state.bill && this.state.bill.creditClaims) {
+      creditsView = this.state.bill.creditClaims.map((claim, index) => {
+        return (
+          <tr key={`p${index + 1}`}>
+            <td>Promotional Credit Redemption</td>
+            <td>{claim.code}</td>
+            <td />
+            <td />
+            <td>$ -{Number(claim.amount).toFixed(2)}</td>
           </tr>
         );
       });
@@ -163,7 +175,7 @@ class BillingDashboard extends Component {
                           Free micro node usage:&nbsp;
                           {this.state.bill && this.state.bill.totalFreeMicroHours
                             ? `${this.state.bill.totalFreeMicroHours.hours}:${this.state.bill.totalFreeMicroHours.minutes % 60} `
-                            : '0'}{' '}
+                            : '0'}
                           / {1490 * 2} hrs
                         </p>
                       </div>
@@ -217,6 +229,9 @@ class BillingDashboard extends Component {
                             <option value="2018" selected={moment().year() === 2018}>
                               2018
                             </option>
+                            <option value="2019" selected={moment().year() === 2019}>
+                              2019
+                            </option>
                           </select>
                         </div>
                       </div>
@@ -263,7 +278,10 @@ class BillingDashboard extends Component {
                           <th style={{ width: '19%' }}>Cost</th>
                         </tr>
                       </thead>
-                      <tbody>{billView}</tbody>
+                      <tbody>
+                        {billView}
+                        {creditsView}
+                      </tbody>
                       <tfoot>
                         <tr>
                           <td colSpan="4" style={{ textAlign: 'right' }}>

@@ -15,7 +15,7 @@ User.fetchAdminDashboardDetails = async userId => {
   }
   const result = await Bluebird.props({
     details: Meteor.users.find({ _id: userId }, { fields: { services: 0 } }).fetch()[0],
-    bill: Billing.generateBill(userId),
+    bill: Billing.generateBill({ userId, isFromFrontend: true }),
   });
 
   return result;
@@ -44,25 +44,58 @@ User.updateAdmin = async (userId, updateQuery) => {
   return true;
 };
 
-User.verifyEmail = async ({userId, email, verified}) => {
+User.verifyEmail = async ({ userId, email, verified }) => {
   if ((Meteor.userId() === userId && updateQuery.admin !== undefined) || Meteor.user().admin <= ADMIN_LEVEL) {
     return false;
   }
-  const result = Meteor.users.update({
-    _id: userId,
-    "emails.address": email
-  }, {
-    $set: {
-      "emails.$.verified": verified
+  const result = Meteor.users.update(
+    {
+      _id: userId,
+      'emails.address': email,
+    },
+    {
+      $set: {
+        'emails.$.verified': verified,
+      },
     }
-  });
+  );
   return true;
-}
+};
+
+User.removeCard = async ({ cardId, userId }) => {
+  if (Meteor.user().admin <= ADMIN_LEVEL) {
+    return reject(new Meteor.Error('Unauthorized'));
+  }
+
+  ElasticLogger.log('Admin remove card', {
+    userId,
+    cardId,
+    by: Meteor.user()._id,
+  });
+
+  UserCards.update(
+    {
+      userId,
+      'cards.id': cardId,
+      active: {
+        $nin: [false],
+      },
+    },
+    {
+      $set: {
+        'cards.$.active': false,
+      },
+    }
+  );
+
+  return true;
+};
 
 Meteor.methods({
   fetchAdminDashboardDetails: User.fetchAdminDashboardDetails,
   updateUserAdmin: User.updateAdmin,
-  adminVerifyEmail: User.verifyEmail
+  adminVerifyEmail: User.verifyEmail,
+  adminDeleteCard: User.removeCard,
 });
 
 export default User;

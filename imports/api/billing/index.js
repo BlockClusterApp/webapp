@@ -5,6 +5,11 @@ import moment, { invalid } from 'moment';
 import Invoice from '../../collections/payments/invoice';
 import helpers from '../../modules/helpers';
 import { Hyperion } from '../../collections/hyperion/hyperion';
+import HyperionPricing from '../../collections/pricing/hyperion';
+import HyperionApis from '../hyperion.js';
+import PaymeterApis from '../paymeter/index.js';
+import ChargeableAPI from '../../collections/chargeable-apis';
+import InvoiceApis from './invoice';
 
 const Billing = {};
 
@@ -47,6 +52,24 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
     calculationEndDate = currentTime.toDate();
   }
 
+  const result = {
+    totalAmount: 0,
+  };
+  if (!(selectedMonth.month() === moment().month() && selectedMonth.year() === moment().year()) && isFromFrontend) {
+    const prevMonthInvoice = Invoice.find({
+      userId: userId,
+      billingPeriodLabel: selectedMonth.format('MMM-YYYY'),
+    }).fetch()[0];
+    if (prevMonthInvoice) {
+      result.networks = prevMonthInvoice.items;
+      result.totalAmount = prevMonthInvoice.totalAmount;
+      result.invoiceStatus = prevMonthInvoice.paymentStatus;
+      result.invoiceId = prevMonthInvoice._id;
+      result.creditClaims = prevMonthInvoice.creditClaims;
+      return result;
+    }
+  }
+
   const userNetworks = Networks.find({
     user: userId,
     createdAt: {
@@ -65,9 +88,6 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
     ],
   }).fetch();
 
-  const result = {
-    totalAmount: 0,
-  };
   const nodeTypeCount = {
     Micro: 0,
   };
@@ -98,20 +118,12 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       if (network.metadata && network.metadata.networkConfig && network.metadata.networkConfig.cost) {
         price = Number(network.metadata.networkConfig.cost.hourly);
       }
-      if (
-        network.metadata &&
-        network.metadata.voucher &&
-        network.metadata.voucher &&
-        network.metadata.voucher.metadata &&
-        network.metadata.voucher.metadata.networkConfig &&
-        network.metadata.voucher.metadata.networkConfig.cost
-      ) {
-        price = Number(network.metadata.voucher.metadata.networkConfig.cost.hourly);
+      if (network.metadata && network.metadata.voucher && network.metadata.voucher.metadata && network.metadata.networkConfig && network.metadata.networkConfig.cost) {
+        price = Number(network.metadata.networkConfig.cost.hourly);
       }
 
       const time = convertMilliseconds(thisCalculationEndDate.getTime() - billingStartDate.getTime());
       const rate = price; // per month
-      let rateString = `$ ${rate} / hr`;
       const ratePerHour = rate;
       const ratePerMinute = ratePerHour / 60;
 
@@ -173,37 +185,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       }
       let cost = Number(time.hours * ratePerHour + (time.minutes % 60) * ratePerMinute).toFixed(2);
 
-      if (voucher && voucher._id && !isMicroNode && vouchar_usable && voucher_expired) {
-        const hoursFree = voucher.discountedDays * 24;
-        const paidHours = Math.max(time.hours - hoursFree, 0);
-        const paidMinutes = time.hours > 0 && paidHours < 1 ? time.minutes % 60 : 0;
-        cost = Number(paidHours * ratePerHour + paidMinutes * ratePerMinute).toFixed(2);
 
-        let discount = voucher.discount.value || 0;
-        if (voucher.discount.percent) {
-          //in this case discout value will be percentage of discount.
-          cost = cost * ((100 - discount) / 100);
-        } else {
-          cost = cost - discount;
-        }
-
-        //so that we can track record how many times he used.
-        //and also helps to validate if next time need to consider voucher or not.
-        if (!isFromFrontend) {
-          Networks.update(
-            { _id: network._id },
-            {
-              $push: {
-                voucher_claim_status: {
-                  claimedBy: userId,
-                  claimedOn: new Date(),
-                  claimed: true,
-                },
-              },
-            }
-          );
-        }
-      }
       let label = voucher ? voucher.code : null;
 
       // if(isMicroNode && network.active){
@@ -222,7 +204,10 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             .toDate()
             .getTime() - billingStartDate.getTime()
         );
-        const freeHoursLeft = 0;
+        let freeHoursLeft = 0;
+        if (voucher && voucher._id && vouchar_usable) {
+          freeHoursLeft= voucher.discountedDays * 24
+        }
         let paidHours = 0,
           paidMinutes = 0;
         if (freeHoursLeft < usedTime.hours) {
@@ -233,8 +218,37 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         }
 
         paidHours = Math.max(0, paidHours);
+        if (voucher && voucher._id && vouchar_usable) {
 
+          cost = Number(paidHours * ratePerHour + paidMinutes * ratePerMinute).toFixed(2);
+
+          let discount = voucher.discount.value || 0;
+          if (voucher.discount.percent) {
+            //in this case discout value will be percentage of discount.
+            cost = cost * ((100 - discount) / 100);
+          } else {
+            cost = cost - discount;
+          }
+
+          //so that we can track record how many times he used.
+          //and also helps to validate if next time need to consider voucher or not.
+          if (!isFromFrontend) {
+            Networks.update(
+              { _id: network._id },
+              {
+                $push: {
+                  'metadata.voucher.voucher_claim_status': {
+                    claimedBy: userId,
+                    claimedOn: new Date(),
+                    claimed: true,
+                  },
+                },
+              }
+            );
+          }
+        }else{
         cost = Number(paidHours * ratePerHour + paidMinutes * ratePerMinute).toFixed(2);
+        }
 
         const runtimeStart = moment(network.createdOn);
         const runtime = convertMilliseconds(
@@ -244,8 +258,33 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         );
         nodeUsageCountMinutes.Micro += runtime.hours * 60;
         nodeUsageCountMinutes.Micro += runtime.minutes % 60;
-        label = label || 'light';
       } else {
+        if (voucher && voucher._id && vouchar_usable) {
+          let discount = voucher.discount.value || 0;
+          if (voucher.discount.percent) {
+            //in this case discout value will be percentage of discount.
+            cost = cost * ((100 - discount) / 100);
+          } else {
+            cost = cost - discount;
+          }
+
+          //so that we can track record how many times he used.
+          //and also helps to validate if next time need to consider voucher or not.
+          if (!isFromFrontend) {
+            Networks.update(
+              { _id: network._id },
+              {
+                $push: {
+                  'metadata.voucher.voucher_claim_status': {
+                    claimedBy: userId,
+                    claimedOn: new Date(),
+                    claimed: true,
+                  },
+                },
+              }
+            );
+          }
+        }
         if (network.networkConfig.disk > 200) {
           extraDiskStorage = Math.max(network.networkConfig.disk - POWER_NODE_INCLUDED_STORAGE, 0);
           extraDiskAmount = Price.extraDisk * extraDiskStorage;
@@ -262,11 +301,16 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         return undefined;
       }
       result.totalAmount += Number(cost);
+      function floorFigure(figure, decimals) {
+        if (!decimals) decimals = 3;
+        var d = Math.pow(10, decimals);
+        return (parseInt(figure * d) / d).toFixed(decimals);
+      }
       return {
         name: network.name,
         instanceId: network.instanceId,
         createdOn: new Date(network.createdOn),
-        rate: rateString,
+        rate: ` $ ${floorFigure(rate, 3)} / hr `, //taking upto 3 decimals , as shown in pricing page
         runtime: `${time.hours}:${time.minutes % 60 < 10 ? `0${time.minutes % 60}` : time.minutes % 60} hrs | ${extraDiskStorage} GB extra`,
         cost,
         time,
@@ -274,8 +318,8 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         voucher: voucher,
         networkConfig,
         label,
-        timeperiod: `Started at: ${moment(network.createdOn).format('DD-MMM-YYYY HH:mm')} ${
-          network.deletedAt ? ` to ${moment(network.deletedAt).format('DD-MMM-YYYY HH:mm:SS')}` : 'and still running'
+        timeperiod: `Started at: ${moment(network.createdOn).format('DD-MMM-YYYY kk:mm')} ${
+          network.deletedAt ? ` to ${moment(network.deletedAt).format('DD-MMM-YYYY kk:mm:ss')}` : 'and still running'
         }`,
       };
     })
@@ -289,25 +333,8 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
   }).fetch();
 
   if (hyperion_stats.length === 1) {
-    const totalDaysThisMonth = helpers.daysInThisMonth();
-    const costPerGBPerDay = helpers.hyperionGBCostPerDay();
-    const fileSizeInGB = hyperion_stats[0].size / 1024 / 1024 / 1024;
-    const fileCostPerDay = costPerGBPerDay * fileSizeInGB;
-    total_hyperion_cost = totalDaysThisMonth * fileCostPerDay;
-    total_hyperion_cost = (total_hyperion_cost - hyperion_stats[0].discount).toPrecision(2);
-
-    if (!isFromFrontend) {
-      Hyperion.update(
-        {
-          userId: userId,
-        },
-        {
-          $set: {
-            discount: 0, //reset discount
-          },
-        }
-      );
-    }
+    const hyperionPricing = HyperionPricing.find({ active: true }).fetch()[0];
+    total_hyperion_cost = await HyperionApis.getBill({ userId, isFromFrontEnd: isFromFrontend, selectedMonth });
     result.networks = result.networks || [];
     result.networks.push({
       name: 'Hyperion Cost',
@@ -320,14 +347,71 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             .subtract(1, 'month')
             .startOf('month')
             .toDate(),
-      rate: `$ ${helpers.hyperionGBCostPerDay()} / GB-month `,
-      runtime: `${Number(fileSizeInGB).toFixed(5)} GB`,
-      cost: total_hyperion_cost,
+      rate: `$ ${hyperionPricing.perGBCost} / GB-month `,
+      runtime: '',
+      cost: Number(total_hyperion_cost).toFixed(2),
     });
-
     result.totalAmount += Number(total_hyperion_cost);
+
+    if (hyperionPricing.perApiCost) {
+      const apiCalls = ChargeableAPI.find({
+        userId,
+        createdAt: {
+          $gte: selectedMonth.toDate(),
+          $lte: calculationEndDate,
+        },
+      }).fetch();
+
+      const totalApiCallCost = hyperionPricing.perApiCost * apiCalls.length;
+      result.networks.push({
+        name: 'Hyperion API Cost',
+        instanceId: '',
+        createdOn: isFromFrontend
+          ? moment()
+              .startOf('month')
+              .toDate()
+          : moment()
+              .subtract(1, 'month')
+              .startOf('month')
+              .toDate(),
+        rate: `$ ${hyperionPricing.perApiCost} / request`,
+        runtime: `${apiCalls.length} requests`,
+        cost: totalApiCallCost,
+      });
+
+      result.totalAmount += Number(totalApiCallCost);
+    }
   }
-  //end
+
+  const paymeterCost = await PaymeterApis.getBill({ userId, isFromFrontEnd: isFromFrontend, selectedMonth });
+  // if (Math.floor(Number(paymeterCost)) > 0) {
+  result.networks = result.networks || [];
+  result.networks.push({
+    name: 'Paymeter Cost',
+    instanceId: '',
+    createdOn: '',
+    rate: '',
+    runtime: '',
+    cost: Number(paymeterCost).toFixed(2),
+  });
+
+  result.totalAmount += Number(paymeterCost);
+  // }
+
+  // Fetch redeemable credits
+  if (isFromFrontend) {
+    const { eligibleCredits } = await InvoiceApis.fetchCreditsRedemption({ userId, totalAmount: result.totalAmount });
+    eligibleCredits.forEach(ec => {
+      result.networks.push({
+        name: `Credit Redemption`,
+        instanceId: ec.credit.code,
+        createdOn: '',
+        rate: `$ ${ec.credit.amount}`,
+        cost: `-${ec.amount}`,
+      });
+      result.totalAmount -= ec.amount;
+    });
+  }
 
   if (!(selectedMonth.month() === moment().month() && selectedMonth.year() === moment().year()) && isFromFrontend) {
     const prevMonthInvoice = Invoice.find({
@@ -342,10 +426,12 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       result.totalAmount = prevMonthInvoice.totalAmount;
       result.invoiceStatus = prevMonthInvoice.paymentStatus;
       result.invoiceId = prevMonthInvoice._id;
+      result.creditClaims = prevMonthInvoice.creditClaims;
     }
   }
 
   result.totalFreeMicroHours = convertMilliseconds(nodeUsageCountMinutes.Micro * 60 * 1000);
+  result.totalAmount = Math.max(result.totalAmount, 0);
 
   return result;
 };
@@ -362,8 +448,13 @@ Billing.isPaymentMethodVerified = async function(userId) {
 
   let userCards = UserCards.find({ userId: userId }).fetch()[0];
   if (userCards) {
-    userCards = userCards.cards && userCards.cards[0];
+    userCards = userCards.cards.find(c => c.active !== false);
   }
+
+  if (!userCards) {
+    return false;
+  }
+
   const verificationPlan = RZPlan.find({ identifier: 'verification' }).fetch()[0];
   const userRZSubscription = RZSubscription.find({ userId: userId, plan_id: verificationPlan.id, bc_status: 'active' }).fetch()[0];
 

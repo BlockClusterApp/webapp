@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import SupportTickets from '../../../../collections/support-ticket';
 import { Networks } from '../../../../collections/networks/networks';
-import { withRouter } from 'react-router-dom';
+import { withRouter, Link } from 'react-router-dom';
 import { withTracker } from 'meteor/react-meteor-data';
 import helpers from '../../../../modules/helpers';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
@@ -14,22 +14,26 @@ class Support extends Component {
   }
 
   componentDidMount() {
-    this.subscriptions = [Meteor.subscribe('support.id', this.props.match.params.id, {
-      onReady: () => {
-        const support = SupportTickets.find({ _id: this.props.match.params.id }).fetch()[0];
-        const user = Meteor.users.find({
-          _id: support.createdBy
-        }).fetch()[0];
-        const network = Networks.find({
-          _id: support.serviceType === 'network' && support.serviceTypeId,
-        }).fetch()[0];
+    this.subscriptions = [
+      Meteor.subscribe('support.id', this.props.match.params.id, {
+        onReady: () => {
+          const support = SupportTickets.find({ _id: this.props.match.params.id }).fetch()[0];
+          const user = Meteor.users
+            .find({
+              _id: support.createdBy,
+            })
+            .fetch()[0];
+          const network = Networks.find({
+            _id: support.serviceType === 'network' && support.serviceTypeId,
+          }).fetch()[0];
 
-        this.setState({
-          createdBy: user,
-          network
-        });
-      },
-    })]
+          this.setState({
+            createdBy: user,
+            network,
+          });
+        },
+      }),
+    ];
   }
 
   componentWillUnmount() {
@@ -120,7 +124,7 @@ class Support extends Component {
                       <p>
                         <span className="case-label">Created By:</span>
                         &nbsp;
-                        {this.state.createdBy ? `${this.state.createdBy.emails[0].address}` : null}
+                        {this.state.createdBy ? <Link to={`/app/admin/users/${this.state.createdBy._id}`}>{this.state.createdBy.emails[0].address}</Link> : null}
                       </p>
                       {ticket.supportObject ? (
                         <p>
@@ -179,11 +183,18 @@ class Support extends Component {
                     </div>
                   )}
                   {ticket.history &&
-                    ticket.history.sort((h1, h2) => new Date(h2.createdAt).getTime() - new Date(h1.createdAt).getTime()).map((history, index) => {
-                      return (
-                        <Conversation key={`history_${index}`} isCustomerMessage={!history.isFromBlockcluster} message={history.description} extra={{ time: history.createdAt }} />
-                      );
-                    })}
+                    ticket.history
+                      .sort((h1, h2) => new Date(h2.createdAt).getTime() - new Date(h1.createdAt).getTime())
+                      .map((history, index) => {
+                        return (
+                          <Conversation
+                            key={`history_${index}`}
+                            isCustomerMessage={!history.isFromBlockcluster}
+                            message={history.description}
+                            extra={{ time: history.createdAt }}
+                          />
+                        );
+                      })}
                 </div>
               </div>
             </div>

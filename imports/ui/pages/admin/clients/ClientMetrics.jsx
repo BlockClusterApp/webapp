@@ -26,7 +26,7 @@ class ClientMetrics extends Component {
           coordinates: [],
         };
         nodes[node].forEach(entry => {
-          const cpu = Number(entry.usage.cpu.replace('n', ''));
+          let cpu = Number(entry.usage.cpu.replace('n', ''));
           if (!isNaN(cpu)) {
             cpu = Math.floor(cpu / (1000 * 1000));
           }
@@ -35,7 +35,7 @@ class ClientMetrics extends Component {
             memory = Math.floor(memory / 1000);
           }
           graph.coordinates.push({
-            name: moment(entry.timestamp).format('mm:SS'),
+            name: moment(entry.timestamp).format('mm:ss'),
             cpu,
             memory,
           });
@@ -56,7 +56,7 @@ class ClientMetrics extends Component {
           coordinates: [],
         };
         pods[pod].forEach(entry => {
-          const cpu = Number(entry.usage.cpu.replace('n', ''));
+          let cpu = Number(entry.usage.cpu.replace('n', ''));
           if (!isNaN(cpu)) {
             cpu = Math.floor(cpu / (1000 * 1000));
           }
@@ -65,7 +65,7 @@ class ClientMetrics extends Component {
             memory = Math.floor(memory / 1000);
           }
           graph.coordinates.push({
-            name: moment(entry.timestamp).format('mm:SS'),
+            name: moment(entry.timestamp).format('mm:ss'),
             cpu,
             memory,
           });
@@ -101,9 +101,7 @@ class ClientMetrics extends Component {
     if (!(this.state.tableData && this.state.tableData && this.state.tableData.nodes.length > 0)) {
       return (
         <div className="content">
-          <div className="m-t-20 container-fluid container-fixed-lg">
-            {LoadingView }
-          </div>
+          <div className="m-t-20 container-fluid container-fixed-lg">{LoadingView}</div>
         </div>
       );
     }
@@ -123,7 +121,9 @@ class ClientMetrics extends Component {
                 <li className="breadcrumb-item">
                   <Link to={`/app/admin/clients/details/${this.props.match.params.id}`}>{this.props.match.params.id}</Link>
                 </li>
-                <li className="breadcrumb-item active">metrics&nbsp;<i className="fa fa-spinner fa-pulse"></i> </li>
+                <li className="breadcrumb-item active">
+                  metrics&nbsp;<i className="fa fa-spinner fa-pulse" />{' '}
+                </li>
               </ol>
             </div>
           </div>

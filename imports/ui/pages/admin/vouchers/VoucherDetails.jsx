@@ -3,6 +3,7 @@ import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter, Link } from 'react-router-dom';
 import Vouchers from '../../../../collections/vouchers/voucher';
 import moment from 'moment';
+import Campaign from '../../../../collections/vouchers/campaign';
 
 class VoucherDetails extends Component {
   constructor(props) {
@@ -12,6 +13,15 @@ class VoucherDetails extends Component {
       formattedData: [],
     };
     this.query = {};
+  }
+
+  componentWillUnmount() {
+    if (this.voucherSubscription) {
+      this.voucherSubscription.stop();
+    }
+    if (this.campaignSubscription) {
+      this.campaignSubscription.stop();
+    }
   }
 
   componentWillMount() {
@@ -32,9 +42,8 @@ class VoucherDetails extends Component {
         onReady: () => {
           const i = Vouchers.find(this.query, { limit: 1, skip: 0 }).fetch()[0];
           const formattedData = {
+            'Valid for': i.type || 'Networks',
             'Voucher Code': i.code,
-            'Network Config\n(CPU,RAM,DISK)': `${i.networkConfig.cpu}C,${i.networkConfig.ram}G,${i.networkConfig.disk}G`,
-            'Disk Changebale': i.isDiskChangeable ? 'YES' : 'NO',
             'Discount Type': i.discount.percent ? 'In Percentage' : 'Flat',
             'Discount Amount': i.discount.percent ? i.discount.value + '%' : i.discount.value,
             'Discounted Days': i.discountedDays,
@@ -48,6 +57,20 @@ class VoucherDetails extends Component {
             'Voucher Status': i.expiryDate < new Date() ? 'Expired' : i.voucher_status ? 'Active' : 'Inactive',
             'Expiry Date': new Date(i.expiryDate).toLocaleDateString() + ' ' + new Date(i.expiryDate).toLocaleTimeString(),
           };
+          if (i.type === 'network') {
+            formattedData['Network Config\n(CPU,RAM,DISK)'] = `${i.networkConfig.cpu}C,${i.networkConfig.ram}G,${i.networkConfig.disk}G`;
+            formattedData['Disk Changebale'] = i.isDiskChangeable ? 'YES' : 'NO';
+          }
+          if (i.campaignId && i.campaignId !== 'None') {
+            this.campaignSubscription = Meteor.subscribe('campaign.all', {
+              onReady: () => {
+                const campaign = Campaign.findOne({ _id: i.campaignId });
+                this.setState({
+                  campaign,
+                });
+              },
+            });
+          }
           const updatedData = Object.keys(formattedData).map(i => {
             return { [i]: formattedData[i] };
           });
@@ -56,11 +79,9 @@ class VoucherDetails extends Component {
               formattedData: updatedData,
             },
             () => {
-              console.log(this.state.formattedData);
               debugger;
             }
           );
-          console.log(this.state.formattedData);
           debugger;
         },
       }
@@ -69,27 +90,26 @@ class VoucherDetails extends Component {
 
   render() {
     return (
-       <div className="page-content-wrapper">
-        <div className="content sm-gutter" style={{paddingBottom: '0'}}>
+      <div className="page-content-wrapper">
+        <div className="content sm-gutter" style={{ paddingBottom: '0' }}>
           <div data-pages="parallax">
             {/* <div className="container-fluid p-l-25 p-r-25 sm-p-l-0 sm-p-r-0"> */}
-              <div className="inner">
-                <ol className="breadcrumb sm-p-b-5">
-                  <li className="breadcrumb-item">
-                    <Link to="/app/admin">Admin</Link>
-                  </li>
-                  <li className="breadcrumb-item">
-                    <Link to="/app/admin/vouchers">Vouchers</Link>
-                  </li>
-                  <li className="breadcrumb-item active">{this.state.voucherId}</li>
-                </ol>
+            <div className="inner">
+              <ol className="breadcrumb sm-p-b-5">
+                <li className="breadcrumb-item">
+                  <Link to="/app/admin">Admin</Link>
+                </li>
+                <li className="breadcrumb-item">
+                  <Link to="/app/admin/vouchers">Vouchers</Link>
+                </li>
+                <li className="breadcrumb-item active">{this.state.voucherId}</li>
+              </ol>
               {/* </div> */}
             </div>
-          </div></div>
-          <div className="content voucherDetails" style={{paddingTop: '0'}}>
-           <div
-          className="m-t-20 container-fluid container-fixed-lg bg-white"
-        >
+          </div>
+        </div>
+        <div className="content voucherDetails" style={{ paddingTop: '0' }}>
+          <div className="m-t-20 container-fluid container-fixed-lg bg-white">
             <div className="card-block">
               <div className="table-responsive">
                 <table className="table table-hover table-condensed" id="condensedTable">
@@ -110,12 +130,19 @@ class VoucherDetails extends Component {
                         </tr>
                       );
                     })}
+                    {this.state.campaign && (
+                      <tr>
+                        <td className="v-align-middle semi-bold">Campaign</td>
+                        <td className="v-align-middle">{this.state.campaign.description}</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
-        </div></div>
+        </div>
+      </div>
     );
   }
 }

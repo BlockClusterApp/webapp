@@ -4,6 +4,7 @@
   "scripts": {
     "start": "./shell-scripts/docker-login.sh && ./shell-scripts/docker-start.sh",
     "test": "MONGO_URL=mongodb://localhost:27017/admin meteor test --once --driver-package meteortesting:mocha",
+    "debug": "MONGO_URL=mongodb://35.161.9.16:32153 meteor run --inspect",
     "ui-test": "jest"
   },
   "dependencies": {
@@ -80,6 +81,7 @@
     "redis-jwt": "1.4.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
+    "secp256k1": "^3.6.1",
     "simpl-schema": "^1.5.0",
     "stringquery": "^1.0.8",
     "url": "^0.11.0",
