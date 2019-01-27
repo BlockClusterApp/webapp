@@ -366,6 +366,10 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
 
               if (new BigNumber(amount).lte(detected_balance)) {
                 sendTxnNow = true;
+
+                if (WalletTransactions.find({ fromWallet: wallet._id, internalStatus: 'processing' }).count() > 0) {
+                  sendTxnNow = false;
+                }
               }
 
               let hash = null;
@@ -595,6 +599,10 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
 
                   if (new BigNumber(amount).lte(fee_wallet_detected_balance)) {
                     sendTxnNow = true;
+
+                    if (WalletTransactions.find({ fromWallet: feeWallet._id, internalStatus: 'processing' }).count() > 0) {
+                      sendTxnNow = false;
+                    }
                   }
 
                   let hash = null;
