@@ -23,15 +23,7 @@ blockcluster-app
 {{- end -}}
 
 {{- define "server.monogUrl" -}}
-{{- if eq .Values.NODE_ENV "production" -}}
-mongodb://webapp:QUyQsaJ6fkSshWDN@ds259861-a0.xqd11.fleet.mlab.com:59861,ds259861-a1.xqd11.fleet.mlab.com:59861/webapp?replicaSet=rs-ds259861&ssl=true
-{{- else if eq .Values.NODE_ENV "staging" -}}
-mongodb://35.161.9.16:31972
-{{- else if eq .Values.NODE_ENV "test" -}}
-mongodb://35.161.9.16:32153
-{{- else if eq .Values.NODE_ENV "dev" -}}
-mongodb://35.161.9.16:32153
-{{- end -}}
+{{ .Values.MONGO_URL }}
 {{- end -}}
 
 {{- define "server.host" -}}
