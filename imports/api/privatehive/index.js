@@ -3,6 +3,7 @@ const debug = require('debug')('api:privatehive');
 
 const PrivateHive = {};
 
+/* Add functions in this namespace so that it can be directly called when giving privatehive API endpoints for API access */
 PrivateHive.createPrivateHiveNetwork = async ({ details, userId }) => {
   const { id, domain, locationCode, kafkaDiskSpace, efsServer, ordererDiskSpace } = details;
 
@@ -13,6 +14,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ details, userId }) => {
     throw new Meteor.Error('bad-request', 'Some fields are missing');
   }
 
+  /* This invokes the CreatePrivateHive method in the privatehive server. No HTTP calls or endpoints to look for. Same function names to be used here and that server */
   PrivateHiveServer.CreatePrivateHive(
     {
       id,
@@ -21,6 +23,8 @@ PrivateHive.createPrivateHiveNetwork = async ({ details, userId }) => {
       kafkaDiskSpace,
       efsServer,
       ordererDiskSpace,
+      organizations,
+      domains,
     },
     (err, response) => {
       if (err) {
@@ -32,6 +36,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ details, userId }) => {
   );
 };
 
+/* Meteor methods so that our frontend can call these function without using HTTP calls. Although I would prefer to use HTTP instead of meteor method. */
 Meteor.methods({
   createPrivateHiveNetwork: PrivateHive.createPrivateHiveNetwork,
 });

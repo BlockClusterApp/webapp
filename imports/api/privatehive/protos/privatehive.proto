@@ -2,6 +2,14 @@ syntax="proto3";
 
 package privatehive;
 
+
+/* 
+----------------  IMPORTANT --------------------
+Do not change this file manually. This file should be same in the service and client for them to communicate. I'll setup a sync between server and client proto defs 
+----------------  IMPORTANT --------------------
+*/
+
+/* These are the methods exposed by the privatehive service. You need to directly call these using PrivateHiveServer.<functionName>(<required arguments>) */
 service PrivateHiveService {
   rpc CreatePrivateHive(PrivateHiveCreateRequest) returns (PrivateHiveCreateResponse) {};
   rpc JoinPrivateHive(PrivateHiveJoinRequest) returns (PrivateHiveJoinResponse) {};
@@ -9,6 +17,7 @@ service PrivateHiveService {
   rpc DeletePrivateHiveOrg(PrivateHiveDeleteOrgRequest) returns (PrivateHiveDeleteResponse) {}
 }
 
+/* These are the data types */
 message PrivateHiveCreateRequest {
   string id = 1;
   string domain = 2;
