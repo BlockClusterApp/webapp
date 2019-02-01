@@ -339,6 +339,22 @@ class UserDetails extends Component {
     });
   };
 
+  generateBill = () => {
+    const { user } = this.props;
+    this.setState({
+      generatingBill: true,
+    });
+    Meteor.call('adminGenerateBill', { userId: user._id }, (err, res) => {
+      this.setState({
+        generatingBill: false,
+      });
+      if (err) {
+        return notifications.error(err.reason);
+      }
+      return notifications.success('Successful');
+    });
+  };
+
   deleteCard = cardId => {
     const s = {};
     const { user } = this.props;
@@ -645,6 +661,17 @@ class UserDetails extends Component {
                     <div className="clearfix" />
                   </div>
                   <div className="card-description">
+                    <ConfirmationButton
+                      onConfirm={this.generateBill}
+                      className="btn btn-danger"
+                      loadingText="Generating Bill"
+                      confirmationText="Are you sure?"
+                      cooldown={2500}
+                      loading={this.state.generatingBill}
+                      actionText="Generate last month bill"
+                    />
+                    <br />
+                    <br />
                     <LaddaButton
                       loading={this.state.userFunctionLoading}
                       data-size={S}
