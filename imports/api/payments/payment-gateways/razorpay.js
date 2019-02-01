@@ -465,7 +465,7 @@ RazorPay.createPaymentLink = async ({ amount, description, user, paymentRequest 
       description,
       expire_by: Math.floor(
         moment()
-          .add(20, 'days')
+          .add(30, 'days')
           .toDate()
           .getTime() / 1000
       ),
