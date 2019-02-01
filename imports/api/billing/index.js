@@ -39,7 +39,7 @@ function convertMilliseconds(ms) {
 }
 
 Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
-  month = month || moment().month();
+  month = month === undefined ? moment().month() : month;
   year = year || moment().year();
 
   const selectedMonth = moment()
@@ -185,7 +185,6 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       }
       let cost = Number(time.hours * ratePerHour + (time.minutes % 60) * ratePerMinute).toFixed(2);
 
-
       let label = voucher ? voucher.code : null;
 
       // if(isMicroNode && network.active){
@@ -206,7 +205,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         );
         let freeHoursLeft = 0;
         if (voucher && voucher._id && vouchar_usable) {
-          freeHoursLeft= voucher.discountedDays * 24
+          freeHoursLeft = voucher.discountedDays * 24;
         }
         let paidHours = 0,
           paidMinutes = 0;
@@ -219,7 +218,6 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
 
         paidHours = Math.max(0, paidHours);
         if (voucher && voucher._id && vouchar_usable) {
-
           cost = Number(paidHours * ratePerHour + paidMinutes * ratePerMinute).toFixed(2);
 
           let discount = voucher.discount.value || 0;
@@ -246,8 +244,8 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
               }
             );
           }
-        }else{
-        cost = Number(paidHours * ratePerHour + paidMinutes * ratePerMinute).toFixed(2);
+        } else {
+          cost = Number(paidHours * ratePerHour + paidMinutes * ratePerMinute).toFixed(2);
         }
 
         const runtimeStart = moment(network.createdOn);

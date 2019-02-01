@@ -3,7 +3,7 @@ const request = require('request-promise');
 const debug = require('debug')('RemoteConfig');
 
 const WEB_APP_VERSION = '1.0';
-const MIGRATION_VERSION = 9;
+const MIGRATION_VERSION = 10;
 
 global.RemoteConfig = {};
 global.LicenceError = 0;
