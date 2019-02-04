@@ -4,3 +4,6 @@
 [submodule "packages/meteor-raven"]
 	path = packages/meteor-raven
 	url = git@github.com:BlockClusterApp/meteor-raven.git
+[submodule "imports/api/privatehive/protos"]
+	path = imports/api/privatehive/protos
+	url = git@github.com:BlockClusterApp/privatehive-protos.git
