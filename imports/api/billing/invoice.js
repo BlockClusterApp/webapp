@@ -130,7 +130,6 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   invoiceObject.items = items;
 
   const conversion = await Payment.getConversionToINRRate({});
-  invoiceObject.totalAmountINR = Math.max(Math.floor(Number(totalAmount) * 100 * conversion), 0);
 
   invoiceObject.conversionRate = conversion;
 
@@ -138,6 +137,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   let creditClaims = [];
 
   totalAmount = _totalAmount;
+  invoiceObject.totalAmountINR = Math.max(Math.floor(Number(totalAmount) * 100 * conversion), 0);
 
   eligibleCredits.forEach(ec => {
     const { credit } = ec;
