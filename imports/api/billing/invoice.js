@@ -226,6 +226,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     paymentStatus: {
       $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Settled],
     },
+    billingMonthLabel,
   };
   if (rzSubscriptionId) {
     selector.rzSubscriptionId = rzSubscriptionId;
@@ -260,7 +261,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
 
   if (invoice.paymentStatus === Invoice.PaymentStatusMapping.Settled) {
     ElasticLogger.log('Invoice already settled', {
-      invoiceId,
+      invoiceId: invoice._id,
       id: spanId,
     });
     return invoice._id;
