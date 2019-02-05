@@ -300,7 +300,7 @@ async function insertOrUpdateSubscription(event, { user, subscription, payment }
     const rzInvoiceId = await Invoice.settleInvoice({
       rzSubscriptionId: rzSubscription.id,
       rzCustomerId: subscription.customer_id,
-      billingMonth: moment(subscription.charge_at * 1000)
+      billingMonth: moment(subscription.current_start * 1000)
         .subtract(1, 'month')
         .toDate(),
       rzPayment: payment,
