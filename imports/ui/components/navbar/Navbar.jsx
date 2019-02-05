@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { withTracker } from 'meteor/react-meteor-data';
 import Config from '../../../modules/config/client';
 
+import './Navbar.scss';
+
 class Navbar extends Component {
   constructor(props) {
     super(props);
@@ -77,13 +79,22 @@ class Navbar extends Component {
         </div>
         <div className="sidebar-menu">
           <ul className="menu-items">
-            <li className="m-t-30 ">
+            <li className={`m-t-30`}>
               <Link to={'/app/networks'} className="detailed">
                 <span className="title">Networks</span>
                 <span className="details">Dynamo Management</span>
               </Link>
               <span className="icon-thumbnail">
                 <i className="fa fa-list" />
+              </span>
+            </li>
+            <li>
+              <Link to="/app/privatehive" className="detailed">
+                <span className="title">Private Hive</span>
+                <span className="details">Hyperledger fabric</span>
+              </Link>
+              <span className="icon-thumbnail">
+                <i className="fa fa-snowflake-o" />
               </span>
             </li>
             {features.Paymeter && (

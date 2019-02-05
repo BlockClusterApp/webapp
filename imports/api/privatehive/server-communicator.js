@@ -1,11 +1,9 @@
 const grpc = require('grpc');
-const path = require('path');
 const protoLoader = require('@grpc/proto-loader');
 
-const PROTO_ROOT_PATH = path.join(__dirname, 'protos');
-const PRIVATEHIVE_PROTO = path.join(PROTO_ROOT_PATH, 'privatehive.proto');
+console.log('Proto file path', Assets.absoluteFilePath('protos/privatehive.proto'));
 
-const packageDefinition = protoLoader.loadSync(PRIVATEHIVE_PROTO, {
+const packageDefinition = protoLoader.loadSync(Assets.absoluteFilePath('protos/privatehive/privatehive.proto'), {
   keepCase: true,
   longs: String,
   enums: String,
@@ -14,6 +12,10 @@ const packageDefinition = protoLoader.loadSync(PRIVATEHIVE_PROTO, {
 });
 const packageDescriptor = grpc.loadPackageDefinition(packageDefinition);
 const { privatehive } = packageDescriptor;
+
+if (process.env.NODE_ENV === 'development') {
+  process.env.PRIVATEHIVE_SERVICE_GRPC_URL = process.env.PRIVATEHIVE_SERVICE_GRPC_URL || 'localhost:19596';
+}
 
 if (!(process.env.PRIVATEHIVE_SERVICE_GRPC_URL || process.env.NO_PRIVATEHIVE)) {
   throw new Error('PRIVATEHIVE_SERVICE_GRPC_URL env is required for privatehive to start');

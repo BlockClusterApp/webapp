@@ -57,6 +57,7 @@ import ClientMetrics from '../../pages/admin/clients/ClientMetrics';
 import ConfigList from '../../pages/admin/network-config/List';
 import PlatformAPIKeys from '../../pages/platformApis/PlatformAPIKeys.jsx';
 import AdminPricingDashboard from '../../pages/admin/pricing/Dashboard.jsx';
+import PrivateHiveDashboard from '../../pages/privatehive/Dashboard';
 
 export default withRouter(
   class Main extends Component {
@@ -139,6 +140,8 @@ export default withRouter(
               <Route exact path="/app/networks/:id/sc/management" render={props => this.showFailedBillingWarning(SmartContractsManagement, props)} />
               <Route exact path="/app/platform-apis" render={props => this.showFailedBillingWarning(PlatformAPIKeys, props)} />
 
+              <Route path="/app/privatehive" component={PrivateHiveDashboard} />
+
               {features.Payments && <Route path="/app/payments" component={Payments} />}
               {features.Invoice && <Route exact path="/app/billing" component={BillingDashboard} />}
               {features.SupportTicket && <Route exact path="/app/support" component={SupportContainer} />}
@@ -158,6 +161,7 @@ export default withRouter(
                   <Route exact path="/app/admin/networks" component={NetworkList} />
                   <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
                   <Route exact path="/app/admin/network-configs" component={ConfigList} />
+
                   {features.Vouchers && <Route path="/app/admin/vouchers" component={VoucherList} />}
                   {features.Vouchers && <Route exact path="/app/admin/voucher/details/:id" component={VoucherDetails} />}
                   {features.Vouchers && <Route path="/app/admin/voucher/create" component={VoucherCreate} />}
