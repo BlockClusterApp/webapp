@@ -3,7 +3,7 @@ import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import LocationSelector from '../../../components/Selectors/LocationSelector.jsx';
-import NetworkConfigSelector from '../../../components/Selectors/NetworkConfigSelector.jsx';
+import PrivateHiveNetworkConfigSelector from '../../../components/Selectors/PrivateHiveNetworkConfigSelector.jsx';
 import CardVerification from '../../billing/components/CardVerification.jsx';
 
 import moment from 'moment';
@@ -87,7 +87,7 @@ class PaymentDashboard extends Component {
                   </div>
                   <br />
                   <p>Node Configuration</p>
-                  <NetworkConfigSelector
+                  <PrivateHiveNetworkConfigSelector
                     configChangeListener={config => {
                       this.config = config;
                       if (config.diskSpace > 16000) {

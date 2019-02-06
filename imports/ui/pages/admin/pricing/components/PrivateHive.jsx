@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
-import NetworkConfiguration from '../../../../collections/network-configuration/network-configuration';
-import ConfigCard from './components/ConfigCard';
+import NetworkConfiguration from '../../../../../collections/network-configuration/network-configuration';
+import PrivateHiveConfigCard from './PrivateHiveConfigCard';
 
 class ConfigList extends Component {
   constructor(props) {
@@ -23,7 +23,7 @@ class ConfigList extends Component {
         }
         currentRowObjects.push(
           <div className="col-md-6" key={`config_${i}`}>
-            <ConfigCard config={this.props.configs[i]} />
+            <PrivateHiveConfigCard config={this.props.configs[i]} />
           </div>
         );
         if (i % 2 === 1 || i === this.props.configs.length - 1) {
@@ -39,7 +39,7 @@ class ConfigList extends Component {
     views.push(
       <div className="row" key="add_config">
         <div className="col-md-12">
-          <ConfigCard config={{}} isInEditMode={true} />
+          <PrivateHiveConfigCard config={{}} isInEditMode={true} />
         </div>
       </div>
     );
@@ -49,7 +49,7 @@ class ConfigList extends Component {
         <div className="m-t-20 container-fluid container-fixed-lg">
           <div className="row">
             <div className="col-md-12">
-              <h3 className="pull-left">Dynamo Network Configuration</h3>
+              <h3 className="pull-left">Private Hive Network Configuration</h3>
             </div>
           </div>
           {views}
@@ -61,7 +61,7 @@ class ConfigList extends Component {
 
 export default withTracker(() => {
   return {
-    configs: NetworkConfiguration.find({ active: true, for: 'dynamo' }).fetch(),
+    configs: NetworkConfiguration.find({ active: true, for: 'privatehive' }).fetch(),
     subscriptions: [Meteor.subscribe('networkConfig.all')],
   };
 })(withRouter(ConfigList));

@@ -71,6 +71,7 @@ JsonRoutes.add('post', '/api/platform/networks', function(req, res, next) {
 
   const _networkConfig = NetworkConfiguration.find({
     _id: networkConfigId,
+    for: 'dynamo',
   }).fetch()[0];
 
   if (!_networkConfig) {
@@ -244,6 +245,7 @@ JsonRoutes.add('post', '/api/platform/networks/join', function(req, res) {
 
   const _networkConfig = NetworkConfiguration.find({
     _id: networkConfigId,
+    for: 'dynamo',
   }).fetch()[0];
   if (!_networkConfig) {
     return JsonRoutes.sendResult(res, {

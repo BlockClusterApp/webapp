@@ -41,6 +41,9 @@ NetworkConfiguration.schema = new SimpleSchema({
       hourly: String,
     },
   },
+  for: {
+    type: String,
+  },
 });
 
 export default NetworkConfiguration;

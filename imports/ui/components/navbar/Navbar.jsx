@@ -214,12 +214,12 @@ class Navbar extends Component {
                       <i className="fa fa-desktop" />
                     </span>
                   </li>
-                  <li>
+                  {/* <li>
                     <Link to="/app/admin/network-configs">Network Configs</Link>
                     <span className="icon-thumbnail">
                       <i className="fa fa-sliders" />
                     </span>
-                  </li>
+                  </li> */}
                   {features.Vouchers && (
                     <li>
                       <Link to="/app/admin/vouchers">Vouchers</Link>

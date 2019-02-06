@@ -1,9 +1,7 @@
 const grpc = require('grpc');
 const protoLoader = require('@grpc/proto-loader');
 
-console.log('Proto file path', Assets.absoluteFilePath('protos/privatehive.proto'));
-
-const packageDefinition = protoLoader.loadSync(Assets.absoluteFilePath('protos/privatehive/privatehive.proto'), {
+const packageDefinition = protoLoader.loadSync(Assets.absoluteFilePath('privatehive/protos/privatehive.proto'), {
   keepCase: true,
   longs: String,
   enums: String,

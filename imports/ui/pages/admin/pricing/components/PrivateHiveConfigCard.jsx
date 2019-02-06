@@ -1,7 +1,7 @@
 import React from 'react';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 
-export default class ConfigCard extends React.Component {
+export default class PrivateHiveConfigCard extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -20,30 +20,29 @@ export default class ConfigCard extends React.Component {
       loading: true,
     });
 
-    Meteor.call(
-      'upsertNetworkConfig',
-      {
-        params: {
-          _id: this.config._id,
-          cpu: this.configCpu.value,
-          name: this.configName.value,
-          ram: this.configRam.value,
-          disk: this.configDisk.value,
-          isDiskChangeable: this.configDiskChangeable,
-          'cost.monthly': this.configMonthlyCost.value,
-          'cost.hourly': this.state.costHourly,
-          showInNetworkSelection: this.showInNetworkSelection,
-        },
-        userId: Meteor.userId(),
-        type: 'dynamo',
-      },
-      () => {
-        this.setState({
-          loading: false,
-          isInEditMode: false,
-        });
-      }
-    );
+    // Meteor.call(
+    //   'upsertNetworkConfig',
+    //   {
+    //     params: {
+    //       _id: this.config._id,
+    //       cpu: this.configCpu.value,
+    //       name: this.configName.value,
+    //       ram: this.configRam.value,
+    //       disk: this.configDisk.value,
+    //       isDiskChangeable: this.configDiskChangeable,
+    //       'cost.monthly': this.configMonthlyCost.value,
+    //       'cost.hourly': this.state.costHourly,
+    //       showInNetworkSelection: this.showInNetworkSelection,
+    //     },
+    //     userId: Meteor.userId(),
+    //   },
+    //   () => {
+    //     this.setState({
+    //       loading: false,
+    //       isInEditMode: false,
+    //     });
+    //   }
+    // );
   };
 
   delete = () => {

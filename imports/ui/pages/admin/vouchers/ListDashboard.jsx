@@ -52,7 +52,7 @@ class VoucherDashboard extends Component {
                 <Link to={'/app/admin/vouchers/networks'}>
                   <span className="title">
                     <i className="fa fa-cube" />
-                    Networks
+                    Dynamo
                   </span>
                 </Link>
               </li>
