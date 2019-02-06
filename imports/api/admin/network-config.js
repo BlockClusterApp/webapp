@@ -6,7 +6,9 @@ Apis.createNetworkConfig = async ({ userId, params, type }) => {
   userId = userId || Meteor.userId();
   type = type || 'dynamo';
 
-  params.type = type;
+  params.for = type;
+
+  delete params.type;
 
   const user = Meteor.users.find({ _id: userId }).fetch()[0];
 
@@ -62,9 +64,56 @@ Apis.deleteNetworkConfig = async config => {
   );
 };
 
+Apis.createPrivateHiveConfig = async ({ userId, params, type }) => {
+  userId = userId || Meteor.userId();
+  type = type || 'privatehive';
+
+  params.for = type;
+
+  const user = Meteor.users.find({ _id: userId }).fetch()[0];
+
+  if (user.admin < 2) {
+    throw new Meteor.Error('Unauthorized to create network config');
+  }
+
+  const allowedFields = ['kafka', 'orderer', 'peer', 'cost.monthly', 'cost.hourly', '_id', 'name', 'data', 'for', 'fabric', 'showInNetworkSelection'];
+
+  Object.keys(params).forEach(key => {
+    if (!allowedFields.includes(key)) {
+      delete params[key];
+    }
+  });
+
+  delete params.type;
+
+  if (!params._id) {
+    params.cost = {
+      monthly: params['cost.monthly'],
+      hourly: params['cost.hourly'],
+    };
+    delete params['cost.monthly'];
+    delete params['cost.hourly'];
+    NetworkConfiguration.insert(params);
+  } else {
+    NetworkConfiguration.update(
+      {
+        _id: params._id,
+      },
+      {
+        $set: {
+          ...params,
+        },
+      }
+    );
+  }
+
+  return true;
+};
+
 Meteor.methods({
   upsertNetworkConfig: Apis.createNetworkConfig,
   deleteNetworkConfig: Apis.deleteNetworkConfig,
+  upsertPrivateHiveNetworkConfig: Apis.createPrivateHiveConfig,
 });
 
 export default Apis;

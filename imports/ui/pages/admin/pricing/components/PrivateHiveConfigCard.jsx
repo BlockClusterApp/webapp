@@ -6,6 +6,9 @@ export default class PrivateHiveConfigCard extends React.Component {
     super(props);
     this.state = {
       isInEditMode: props.isInEditMode || false,
+      peerCount: 2,
+      ordererCount: 3,
+      version: '1.1',
     };
   }
 
@@ -20,29 +23,51 @@ export default class PrivateHiveConfigCard extends React.Component {
       loading: true,
     });
 
-    // Meteor.call(
-    //   'upsertNetworkConfig',
-    //   {
-    //     params: {
-    //       _id: this.config._id,
-    //       cpu: this.configCpu.value,
-    //       name: this.configName.value,
-    //       ram: this.configRam.value,
-    //       disk: this.configDisk.value,
-    //       isDiskChangeable: this.configDiskChangeable,
-    //       'cost.monthly': this.configMonthlyCost.value,
-    //       'cost.hourly': this.state.costHourly,
-    //       showInNetworkSelection: this.showInNetworkSelection,
-    //     },
-    //     userId: Meteor.userId(),
-    //   },
-    //   () => {
-    //     this.setState({
-    //       loading: false,
-    //       isInEditMode: false,
-    //     });
-    //   }
-    // );
+    Meteor.call(
+      'upsertPrivateHiveNetworkConfig',
+      {
+        params: {
+          _id: this.config._id,
+          fabric: {
+            orderers: this.ordererCount.value,
+            peers: this.peerCount.value,
+            version: this.version.value,
+          },
+          kafka: {
+            cpu: this.kafkaCpu.value,
+            ram: this.kafkaRAM.value,
+            disk: this.kafkaDiskSpace.value,
+            isDiskChangeable: this.isKafkaDiskChangeable,
+          },
+          orderer: {
+            cpu: this.ordererCpu.value,
+            ram: this.ordererRAM.value,
+            disk: this.ordererDiskSpace.value,
+            isDiskChangeable: this.isOrdererDiskChangeable,
+          },
+          peer: {
+            cpu: this.peerCpu.value,
+            ram: this.peerRAM.value,
+          },
+          data: {
+            disk: this.dataDiskSpace.value,
+            isDiskChangeable: this.isDataDiskChangeable,
+          },
+          name: this.configName.value,
+          'cost.monthly': this.configMonthlyCost.value,
+          'cost.hourly': this.state.costHourly,
+          showInNetworkSelection: this.showInNetworkSelection,
+        },
+        userId: Meteor.userId(),
+        type: 'privatehive',
+      },
+      () => {
+        this.setState({
+          loading: false,
+          isInEditMode: false,
+        });
+      }
+    );
   };
 
   delete = () => {
@@ -91,27 +116,118 @@ export default class PrivateHiveConfigCard extends React.Component {
         </div>
         <div className="card-block">
           <div className="row">
+            <div className="col-md-12" style={{ fontWeight: 'bold', fontSize: '16px', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+              Fabric Core configs
+            </div>
+          </div>
+          <div className="row p-t-10">
             <div className="col-md-4">
               <i className="fa fa-joomla" />
-              &nbsp;{config.cpu} vCPU
+              &nbsp;Orderers &nbsp;
+              <input type="number" className="form-control" placeholder="orderer" defaultValue={this.state.ordererCount} ref={input => (this.ordererCount = input)} disabled />
+              <br />
             </div>
             <div className="col-md-4">
               <i className="fa fa-keyboard-o" />
-              &nbsp;{config.ram} GB Memory
+              &nbsp;Peers &nbsp;
+              <input type="number" className="form-control" placeholder="peers" defaultValue={this.state.peerCount} ref={input => (this.peerCount = input)} disabled />
+            </div>
+            <div className="col-md-4">
+              <i className="fa fa-keyboard-o" />
+              &nbsp;Version &nbsp;
+              <input type="text" className="form-control" placeholder="peers" defaultValue={this.state.version} ref={input => (this.version = input)} disabled />
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-md-12" style={{ fontWeight: 'bold', fontSize: '16px', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+              Resource Allocation
+            </div>
+          </div>
+          <div className="row p-t-10">
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Kafka CPU (vCPUs)&nbsp;
+              <input type="number" className="form-control" placeholder="Kafka CPU" defaultValue={config.kafkaCpu} ref={input => (this.kafkaCpu = input)} />
             </div>
             <div className="col-md-4">
               <i className="fa fa-save" />
-              &nbsp;{config.disk} GB Disk
+              &nbsp;Orderer CPU (vCPUs)&nbsp;
+              <input type="number" className="form-control" placeholder="Orderer CPU" defaultValue={config.ordererCpu} ref={input => (this.ordererCpu = input)} />
+            </div>
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Peer CPU (vCPUs) &nbsp;
+              <input type="number" className="form-control" placeholder="Peer CPU" defaultValue={config.peerCpu} ref={input => (this.peerCpu = input)} />
+            </div>
+          </div>
+          <div className="row p-t-10">
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Kafka RAM (GB)&nbsp;
+              <input type="number" className="form-control" placeholder="Kafka RAM" defaultValue={config.kafkaRAM} ref={input => (this.kafkaRAM = input)} />
+            </div>
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Orderer RAM (GB)&nbsp;
+              <input type="number" className="form-control" placeholder="Orderer RAM" defaultValue={config.ordererRAM} ref={input => (this.ordererRAM = input)} />
+            </div>
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Peer RAM (GB) &nbsp;
+              <input type="number" className="form-control" placeholder="Peer RAM" defaultValue={config.peerRAM} ref={input => (this.peerRAM = input)} />
+            </div>
+          </div>
+          <div className="row p-t-10">
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Kafka Disk Space (GB)&nbsp;
+              <input type="number" className="form-control" placeholder="Kafka Disk Space" defaultValue={config.kafkaDiskSpace} ref={input => (this.kafkaDiskSpace = input)} />
               <br />
-              {config.isDiskChangeable ? (
-                <p>
-                  <small>
-                    <i>Disk Changeable</i>
-                  </small>
-                </p>
-              ) : (
-                <p>&nbsp;</p>
-              )}
+              <label htmlFor="kafkaDiskChangeable">Changeable?</label>&nbsp;
+              <input
+                type="checkbox"
+                name={`kafkaDiskChangeable_${config._id}`}
+                defaultChecked={config.isKafkaDiskChangeable}
+                onClick={e => {
+                  this.isKafkaDiskChangeable = e.target.checked;
+                }}
+              />
+            </div>
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Orderer Disk Space (GB)&nbsp;
+              <input
+                type="number"
+                className="form-control"
+                placeholder="Orderer Disk Space"
+                defaultValue={config.ordererDiskSpace}
+                ref={input => (this.ordererDiskSpace = input)}
+              />
+              <br />
+              <label htmlFor="ordererDiskChangeable">Changeable?</label>&nbsp;
+              <input
+                type="checkbox"
+                name={`ordererDiskChangeable_${config._id}`}
+                defaultChecked={config.isOrdererDiskChangeable}
+                onClick={e => {
+                  this.isOrdererDiskChangeable = e.target.checked;
+                }}
+              />
+            </div>
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Data Disk Space (GB)&nbsp;
+              <input type="number" className="form-control" placeholder="Data Disk Space" defaultValue={config.dataDiskSpace} ref={input => (this.dataDiskSpace = input)} />
+              <br />
+              <label htmlFor="dataDiskChangeable">Changeable?</label>&nbsp;
+              <input
+                type="checkbox"
+                name={`dataDiskChangeable_${config._id}`}
+                defaultChecked={config.isDataDiskChangeable}
+                onClick={e => {
+                  this.isDataDiskChangeable = e.target.checked;
+                }}
+              />
             </div>
           </div>
         </div>
@@ -130,10 +246,24 @@ export default class PrivateHiveConfigCard extends React.Component {
         <div className="card-header ">
           <div className="card-title full-width">
             <div className="row">
-              <div className={`${this.props.isInEditMode ? 'col-md-12' : 'col-md-10'}`}>
+              <div className={`${this.props.isInEditMode ? 'col-md-10' : 'col-md-18'}`}>
                 <h5 className="text-primary m-b-0 m-t-0" style={{ display: 'inline' }}>
-                  <input type="text" className="form-control" placeholder="Node Type" defaultValue={config.name} ref={input => (this.configName = input)} />
+                  <input type="text" className="form-control" placeholder="Config name" defaultValue={config.name} ref={input => (this.configName = input)} />
                 </h5>
+              </div>
+              <div className="col-md-2">
+                <label htmlFor="showInNetworkSelection" style={{ textTransform: 'none' }}>
+                  Public
+                </label>
+                &nbsp;
+                <input
+                  type="checkbox"
+                  name={`public_${config._id}`}
+                  defaultChecked={config.showInNetworkSelection}
+                  onClick={e => {
+                    this.showInNetworkSelection = e.target.checked;
+                  }}
+                />
               </div>
               {!this.props.isInEditMode && (
                 <div className="col-md-1">
@@ -157,38 +287,116 @@ export default class PrivateHiveConfigCard extends React.Component {
         </div>
         <div className="card-block">
           <div className="row">
+            <div className="col-md-12" style={{ fontWeight: 'bold', fontSize: '16px', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+              Fabric Core configs
+            </div>
+          </div>
+          <div className="row p-t-10">
             <div className="col-md-4">
               <i className="fa fa-joomla" />
-              &nbsp;vCPU &nbsp;
-              <input type="number" className="form-control" placeholder="vCPUs" defaultValue={config.cpu} ref={input => (this.configCpu = input)} />
+              &nbsp;Orderers &nbsp;
+              <input type="number" className="form-control" placeholder="orderer" defaultValue={this.state.ordererCount} ref={input => (this.ordererCount = input)} disabled />
               <br />
-              <label for="showInNetworkSelection">Public</label>&nbsp;
+            </div>
+            <div className="col-md-4">
+              <i className="fa fa-keyboard-o" />
+              &nbsp;Peers &nbsp;
+              <input type="number" className="form-control" placeholder="peers" defaultValue={this.state.peerCount} ref={input => (this.peerCount = input)} disabled />
+            </div>
+            <div className="col-md-4">
+              <i className="fa fa-keyboard-o" />
+              &nbsp;Version &nbsp;
+              <input type="text" className="form-control" placeholder="peers" defaultValue={this.state.version} ref={input => (this.version = input)} disabled />
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-md-12" style={{ fontWeight: 'bold', fontSize: '16px', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+              Resource Allocation
+            </div>
+          </div>
+          <div className="row p-t-10">
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Kafka CPU (vCPUs)&nbsp;
+              <input type="number" className="form-control" placeholder="Kafka CPU" defaultValue={config.kafkaCpu} ref={input => (this.kafkaCpu = input)} />
+            </div>
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Orderer CPU (vCPUs)&nbsp;
+              <input type="number" className="form-control" placeholder="Orderer CPU" defaultValue={config.ordererCpu} ref={input => (this.ordererCpu = input)} />
+            </div>
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Peer CPU (vCPUs) &nbsp;
+              <input type="number" className="form-control" placeholder="Peer CPU" defaultValue={config.peerCpu} ref={input => (this.peerCpu = input)} />
+            </div>
+          </div>
+          <div className="row p-t-10">
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Kafka RAM (GB)&nbsp;
+              <input type="number" className="form-control" placeholder="Kafka RAM" defaultValue={config.kafkaRAM} ref={input => (this.kafkaRAM = input)} />
+            </div>
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Orderer RAM (GB)&nbsp;
+              <input type="number" className="form-control" placeholder="Orderer RAM" defaultValue={config.ordererRAM} ref={input => (this.ordererRAM = input)} />
+            </div>
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Peer RAM (GB) &nbsp;
+              <input type="number" className="form-control" placeholder="Peer RAM" defaultValue={config.peerRAM} ref={input => (this.peerRAM = input)} />
+            </div>
+          </div>
+          <div className="row p-t-10">
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Kafka Disk Space (GB)&nbsp;
+              <input type="number" className="form-control" placeholder="Kafka Disk Space" defaultValue={config.kafkaDiskSpace} ref={input => (this.kafkaDiskSpace = input)} />
+              <br />
+              <label htmlFor="kafkaDiskChangeable">Changeable?</label>&nbsp;
               <input
                 type="checkbox"
-                name={`public_${config._id}`}
-                defaultChecked={config.showInNetworkSelection}
+                name={`kafkaDiskChangeable_${config._id}`}
+                defaultChecked={config.isKafkaDiskChangeable}
                 onClick={e => {
-                  this.showInNetworkSelection = e.target.checked;
+                  this.isKafkaDiskChangeable = e.target.checked;
                 }}
               />
             </div>
             <div className="col-md-4">
-              <i className="fa fa-keyboard-o" />
-              &nbsp;GB Memory &nbsp;
-              <input type="number" className="form-control" placeholder="GB RAM" defaultValue={config.ram} ref={input => (this.configRam = input)} />
+              <i className="fa fa-save" />
+              &nbsp;Orderer Disk Space (GB)&nbsp;
+              <input
+                type="number"
+                className="form-control"
+                placeholder="Orderer Disk Space"
+                defaultValue={config.ordererDiskSpace}
+                ref={input => (this.ordererDiskSpace = input)}
+              />
+              <br />
+              <label htmlFor="ordererDiskChangeable">Changeable?</label>&nbsp;
+              <input
+                type="checkbox"
+                name={`ordererDiskChangeable_${config._id}`}
+                defaultChecked={config.isOrdererDiskChangeable}
+                onClick={e => {
+                  this.isOrdererDiskChangeable = e.target.checked;
+                }}
+              />
             </div>
             <div className="col-md-4">
               <i className="fa fa-save" />
-              &nbsp;GB Disk Space &nbsp;
-              <input type="number" className="form-control" placeholder="Disk Space" defaultValue={config.disk} ref={input => (this.configDisk = input)} />
+              &nbsp;Data Disk Space (GB)&nbsp;
+              <input type="number" className="form-control" placeholder="Data Disk Space" defaultValue={config.dataDiskSpace} ref={input => (this.dataDiskSpace = input)} />
               <br />
-              <label for="diskChangeable">Disk Changeable</label>&nbsp;
+              <label htmlFor="dataDiskChangeable">Changeable?</label>&nbsp;
               <input
                 type="checkbox"
-                name={`diskChangeable_${config._id}`}
-                defaultChecked={config.isDiskChangeable}
+                name={`dataDiskChangeable_${config._id}`}
+                defaultChecked={config.isDataDiskChangeable}
                 onClick={e => {
-                  this.configDiskChangeable = e.target.checked;
+                  this.isDataDiskChangeable = e.target.checked;
                 }}
               />
             </div>
