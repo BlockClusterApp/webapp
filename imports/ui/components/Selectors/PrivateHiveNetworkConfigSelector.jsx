@@ -14,16 +14,17 @@ class PrivateHiveNetworkConfigSelector extends Component {
       remoteConfig: window.RemoteConfig,
       isDiskChangeable: true,
       networkConfig: {
-        name: 'Light',
-        cpu: 0.5,
-        ram: 1,
-        disk: 5,
+        kafka: {},
+        fabric: {},
+        orderer: {},
+        data: {},
+        peer: {},
       },
     };
   }
 
   componentDidMount() {
-    Meteor.call('getConfigs', (err, res) => {
+    Meteor.call('getConfigs', { type: 'privatehive' }, (err, res) => {
       this.setState({
         configs: res,
       });
@@ -39,18 +40,16 @@ class PrivateHiveNetworkConfigSelector extends Component {
     }
     const config = this.state.configs[this.config.value];
 
-    if (!skipDefault) {
-      this.diskSpace.value = config.disk;
-    }
-
     if (!this.voucherDetails) {
+      this.ordererDiskSpace.value = config.orderer.disk;
+      this.kafkaDiskSpace.value = config.kafka.disk;
+      this.dataDiskSpace.value = config.data.disk;
       this.setState({
         networkConfig: config,
-        isDiskChangeable: config.isDiskChangeable,
       });
     }
     if (this.props && this.props.configChangeListener) {
-      this.props.configChangeListener({ config, diskSpace: Number(this.diskSpace.value) });
+      this.props.configChangeListener({ config });
     }
   }
 
@@ -62,7 +61,7 @@ class PrivateHiveNetworkConfigSelector extends Component {
         status: undefined,
       },
     });
-    Meteor.call('validateVoucher', { voucherCode, type: 'network' }, (err, reply) => {
+    Meteor.call('validateVoucher', { voucherCode, type: 'privatehive' }, (err, reply) => {
       if (err) {
         return this.setState({
           voucherLoading: false,
@@ -152,29 +151,124 @@ class PrivateHiveNetworkConfigSelector extends Component {
             <div className="form-group-attached">
               <div className="row clearfix">
                 <div className="col-md-12">{dropDown}</div>
-                <div className="col-md-4">
-                  <div className="form-group form-group-default required">
-                    <label>CPU (vCPUs)</label>
-                    <input type="text" className="form-control" name="projectName" value={this.state.networkConfig.cpu} disabled />
+              </div>
+              <div className="row clearfix">
+                <div className="col-md-4 col-sm-4">
+                  <div className="form-group form-group-default ">
+                    <label>Version</label>
+                    <input type="text" className="form-control" name="projectName" value={this.state.networkConfig.fabric.version} disabled />
                   </div>
                 </div>
-                <div className="col-md-4">
+                <div className="col-md-4 col-sm-4">
+                  <div className="form-group form-group-default ">
+                    <label>Orderers</label>
+                    <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.fabric.orderers} disabled />
+                  </div>
+                </div>
+                <div className="col-md-4 col-sm-4">
+                  <div className="form-group form-group-default ">
+                    <label>Peers</label>
+                    <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.fabric.peers} disabled />
+                  </div>
+                </div>
+              </div>
+              <div className="row clearfix">
+                <div className="col-md-3 col-sm-12">
+                  <h5 className="form-group form-group-default m-t-0" style={{ textTransform: 'uppercase', paddingTop: '14px' }}>
+                    Kafka
+                  </h5>
+                </div>
+                <div className="col-md-3 col-sm-4">
+                  <div className="form-group form-group-default ">
+                    <label>CPU (vCPUs)</label>
+                    <input type="text" className="form-control" name="projectName" value={this.state.networkConfig.kafka.cpu} disabled />
+                  </div>
+                </div>
+                <div className="col-md-3 col-sm-4">
                   <div className="form-group form-group-default ">
                     <label>RAM (GB)</label>
-                    <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.ram} disabled />
+                    <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.kafka.ram} disabled />
                   </div>
                 </div>
-
-                <div className="col-md-4">
+                <div className="col-md-3 col-sm-4">
                   <div className="form-group form-group-default ">
                     <label>Disk Space (GB)</label>
                     <input
                       type="number"
                       className="form-control"
-                      name="firstName"
-                      required
-                      ref={input => (this.diskSpace = input)}
-                      disabled={!this.state.isDiskChangeable}
+                      name="ordererDiskSpace"
+                      ref={input => (this.kafkaDiskSpace = input)}
+                      disabled={!this.state.networkConfig.kafka.isDiskChangeable}
+                      onChange={this.onConfigChange.bind(this, true)}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="row clearfix">
+                <div className="col-md-3 col-sm-12">
+                  <h5 className="form-group form-group-default m-t-0" style={{ textTransform: 'uppercase', paddingTop: '14px' }}>
+                    Orderer
+                  </h5>
+                </div>
+                <div className="col-md-3 col-sm-4">
+                  <div className="form-group form-group-default ">
+                    <label>CPU (vCPUs)</label>
+                    <input type="text" className="form-control" name="projectName" value={this.state.networkConfig.orderer.cpu} disabled />
+                  </div>
+                </div>
+                <div className="col-md-3 col-sm-4">
+                  <div className="form-group form-group-default ">
+                    <label>RAM (GB)</label>
+                    <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.orderer.ram} disabled />
+                  </div>
+                </div>
+                <div className="col-md-3 col-sm-4">
+                  <div className="form-group form-group-default ">
+                    <label>Disk Space (GB)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      ref={input => (this.ordererDiskSpace = input)}
+                      disabled={!this.state.networkConfig.orderer.isDiskChangeable}
+                      onChange={this.onConfigChange.bind(this, true)}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="row clearfix">
+                <div className="col-md-3 col-sm-12">
+                  <h5 className="form-group form-group-default m-t-0" style={{ textTransform: 'uppercase', paddingTop: '14px' }}>
+                    Peer
+                  </h5>
+                </div>
+                <div className="col-md-3 col-sm-6">
+                  <div className="form-group form-group-default ">
+                    <label>CPU (vCPUs)</label>
+                    <input type="text" className="form-control" name="projectName" value={this.state.networkConfig.peer.cpu} disabled />
+                  </div>
+                </div>
+                <div className="col-md-6 col-sm-6">
+                  <div className="form-group form-group-default ">
+                    <label>RAM (GB)</label>
+                    <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.peer.ram} disabled />
+                  </div>
+                </div>
+              </div>
+              <div className="row clearfix">
+                <div className="col-md-3 col-sm-12">
+                  <h5 className="form-group form-group-default m-t-0" style={{ textTransform: 'uppercase', paddingTop: '14px' }}>
+                    Data
+                  </h5>
+                </div>
+                <div className="col-md-9 col-sm-12">
+                  <div className="form-group form-group-default ">
+                    <label>Disk Space (GB)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      name="ordererDiskSpace"
+                      ref={input => (this.dataDiskSpace = input)}
+                      disabled={!this.state.networkConfig.data.isDiskChangeable}
                       onChange={this.onConfigChange.bind(this, true)}
                     />
                   </div>

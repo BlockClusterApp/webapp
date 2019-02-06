@@ -46,7 +46,7 @@ JsonRoutes.Middleware.use('/api/platform', authMiddleware);
 
 // Fetch Network Types for this user
 JsonRoutes.add('get', '/api/platform/networks/types', async function(req, res) {
-  const configs = await NetworkConfig.getConfigs();
+  const configs = await NetworkConfig.getConfigs({ type: 'dynamo' });
   return JsonRoutes.sendResult(res, {
     code: 200,
     data: Object.values(configs),

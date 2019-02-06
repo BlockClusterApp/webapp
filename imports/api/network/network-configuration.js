@@ -2,8 +2,8 @@ import NetworkConfiguration from '../../collections/network-configuration/networ
 
 const NetworkConfig = {};
 
-NetworkConfig.getConfigs = async function() {
-  const configs = NetworkConfiguration.find({ active: true, showInNetworkSelection: true, for: 'dynamo' });
+NetworkConfig.getConfigs = async function({ type }) {
+  const configs = NetworkConfiguration.find({ active: true, showInNetworkSelection: true, for: type });
 
   const result = {};
   configs.forEach(config => {

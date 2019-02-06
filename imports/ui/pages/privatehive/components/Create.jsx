@@ -57,7 +57,7 @@ class PaymentDashboard extends Component {
                   <p>Basic Information</p>
                   <div className="form-group-attached">
                     <div className="row clearfix">
-                      <div className="col-md-6">
+                      <div className="col-md-12">
                         <div className="form-group form-group-default required">
                           <label>Network name</label>
                           <input
@@ -69,12 +69,6 @@ class PaymentDashboard extends Component {
                               this.networkName = input;
                             }}
                           />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group form-group-default ">
-                          <label>Node Type</label>
-                          <input type="text" className="form-control" name="firstName" required disabled value="Validator" />
                         </div>
                       </div>
                     </div>

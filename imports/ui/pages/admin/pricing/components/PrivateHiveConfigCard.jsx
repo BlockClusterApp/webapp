@@ -143,8 +143,9 @@ export default class PrivateHiveConfigCard extends React.Component {
             <h5 className="text-primary m-b-0 m-t-0" style={{ display: 'inline' }}>
               {config.name}
             </h5>
-            <i className="fa fa-pencil pull-right p-t-5 fs-16" style={{ cursor: 'pointer' }} onClick={() => this.setState({ isFolded: false, isInEditMode: true })} />
+
             <i className="fa fa-close pull-right p-t-5 fs-16" style={{ cursor: 'pointer' }} onClick={() => this.setState({ isFolded: true, isInEditMode: false })} />
+            <i className="fa fa-pencil pull-right p-t-5 fs-16" style={{ cursor: 'pointer' }} onClick={() => this.setState({ isFolded: false, isInEditMode: true })} />
           </div>
         </div>
         <div className="card-block">
