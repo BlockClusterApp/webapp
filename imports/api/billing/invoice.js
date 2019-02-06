@@ -130,7 +130,6 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   invoiceObject.items = items;
 
   const conversion = await Payment.getConversionToINRRate({});
-  invoiceObject.totalAmountINR = Math.max(Math.floor(Number(totalAmount) * 100 * conversion), 0);
 
   invoiceObject.conversionRate = conversion;
 
@@ -138,6 +137,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   let creditClaims = [];
 
   totalAmount = _totalAmount;
+  invoiceObject.totalAmountINR = Math.max(Math.floor(Number(totalAmount) * 100 * conversion), 0);
 
   eligibleCredits.forEach(ec => {
     const { credit } = ec;
@@ -226,6 +226,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     paymentStatus: {
       $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Settled],
     },
+    billingMonthLabel,
   };
   if (rzSubscriptionId) {
     selector.rzSubscriptionId = rzSubscriptionId;
@@ -260,7 +261,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
 
   if (invoice.paymentStatus === Invoice.PaymentStatusMapping.Settled) {
     ElasticLogger.log('Invoice already settled', {
-      invoiceId,
+      invoiceId: invoice._id,
       id: spanId,
     });
     return invoice._id;

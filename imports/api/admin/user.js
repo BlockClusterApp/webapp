@@ -5,6 +5,7 @@ import PaymentRequests from '../../collections/payments/payment-requests';
 import Voucher from '../../collections/vouchers/voucher';
 import Billing from '../billing';
 import Bluebird from 'bluebird';
+import Bull from '../../modules/schedulers/bull';
 
 const User = {};
 const ADMIN_LEVEL = 0;
@@ -62,6 +63,26 @@ User.verifyEmail = async ({ userId, email, verified }) => {
   return true;
 };
 
+User.generateBill = async ({ userId }) => {
+  if (Meteor.user().admin <= ADMIN_LEVEL) {
+    return reject(new Meteor.Error('Unauthorized'));
+  }
+  ElasticLogger.log('Manual bill triggered', {
+    for: userId,
+    by: Meteor.userId(),
+    at: new Date(),
+  });
+  Bull.addJob(
+    'generate-bill-user',
+    {
+      userId,
+    },
+    {
+      attempts: 5,
+    }
+  );
+};
+
 User.removeCard = async ({ cardId, userId }) => {
   if (Meteor.user().admin <= ADMIN_LEVEL) {
     return reject(new Meteor.Error('Unauthorized'));
@@ -96,6 +117,7 @@ Meteor.methods({
   updateUserAdmin: User.updateAdmin,
   adminVerifyEmail: User.verifyEmail,
   adminDeleteCard: User.removeCard,
+  adminGenerateBill: User.generateBill,
 });
 
 export default User;
