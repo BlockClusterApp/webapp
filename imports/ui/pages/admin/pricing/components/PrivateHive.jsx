@@ -62,6 +62,6 @@ class ConfigList extends Component {
 export default withTracker(() => {
   return {
     configs: NetworkConfiguration.find({ active: true, for: 'privatehive' }).fetch(),
-    subscriptions: [Meteor.subscribe('networkConfig.all')],
+    subscriptions: [Meteor.subscribe('networkConfig.privatehive')],
   };
 })(withRouter(ConfigList));

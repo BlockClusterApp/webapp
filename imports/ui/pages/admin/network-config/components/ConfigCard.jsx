@@ -163,7 +163,7 @@ export default class ConfigCard extends React.Component {
               &nbsp;vCPU &nbsp;
               <input type="number" className="form-control" placeholder="vCPUs" defaultValue={config.cpu} ref={input => (this.configCpu = input)} />
               <br />
-              <label for="showInNetworkSelection">Public</label>&nbsp;
+              <label htmlFor="showInNetworkSelection">Public</label>&nbsp;
               <input
                 type="checkbox"
                 name={`public_${config._id}`}
@@ -183,7 +183,7 @@ export default class ConfigCard extends React.Component {
               &nbsp;GB Disk Space &nbsp;
               <input type="number" className="form-control" placeholder="Disk Space" defaultValue={config.disk} ref={input => (this.configDisk = input)} />
               <br />
-              <label for="diskChangeable">Disk Changeable</label>&nbsp;
+              <label htmlFor="diskChangeable">Disk Changeable</label>&nbsp;
               <input
                 type="checkbox"
                 name={`diskChangeable_${config._id}`}
