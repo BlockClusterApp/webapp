@@ -5,6 +5,7 @@ import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import LocationSelector from '../../../components/Selectors/LocationSelector.jsx';
 import PrivateHiveNetworkConfigSelector from '../../../components/Selectors/PrivateHiveNetworkConfigSelector.jsx';
 import CardVerification from '../../billing/components/CardVerification.jsx';
+import notification from '../../../../modules/notifications';
 
 class PaymentDashboard extends Component {
   constructor(props) {
@@ -22,7 +23,26 @@ class PaymentDashboard extends Component {
     });
   }
 
-  componentDidMount() {}
+  createPrivateHiveNetwork = () => {
+    const name = this.networkName.value;
+    this.setState({
+      loading: true,
+    });
+    if (!name) {
+      return this.setState({
+        formSubmitError: 'Name cannot be empty',
+      });
+    }
+    Meteor.call('initializePrivateHiveNetwork', { name, networkConfig: this.config, locationCode: this.locationCode }, (err, res) => {
+      this.setState({
+        loading: false,
+      });
+      if (err) {
+        return notification.error(err.reason);
+      }
+      notification.success('Network Creating');
+    });
+  };
 
   render() {
     return (
@@ -82,14 +102,10 @@ class PaymentDashboard extends Component {
                   <PrivateHiveNetworkConfigSelector
                     configChangeListener={config => {
                       this.config = config;
-                      if (config.diskSpace > 16000) {
-                        // 16TiB
-                        return this.setState({
-                          formSubmitError: 'Disk space cannot exceed 16000 GB',
-                        });
-                      }
+                      console.log(config);
                       this.setState({
                         formSubmitError: '',
+                        error: config.error,
                         showCreditCardAlert: this.state.showSubmitAlert && (config && config.voucher ? false : true),
                       });
                     }}
@@ -109,13 +125,13 @@ class PaymentDashboard extends Component {
                     <CardVerification cardVerificationListener={this.cardVerificationListener} />
                   </div>
                   <LaddaButton
-                    disabled={this.state.showCreditCardAlert && !this.state.cardVerified}
+                    disabled={(this.state.showCreditCardAlert && !this.state.cardVerified) || this.state.error || this.state.formSubmitError || this.state.loading}
                     loading={this.state.loading}
                     data-size={S}
                     data-style={SLIDE_UP}
                     data-spinner-size={30}
                     data-spinner-lines={12}
-                    onClick={this.onSubmit}
+                    onClick={this.createPrivateHiveNetwork}
                     className="btn btn-success"
                     type="submit"
                   >

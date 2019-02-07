@@ -12,7 +12,7 @@ const packageDescriptor = grpc.loadPackageDefinition(packageDefinition);
 const { privatehive } = packageDescriptor;
 
 if (process.env.NODE_ENV === 'development') {
-  process.env.PRIVATEHIVE_SERVICE_GRPC_URL = process.env.PRIVATEHIVE_SERVICE_GRPC_URL || 'localhost:19596';
+  process.env.PRIVATEHIVE_SERVICE_GRPC_URL = process.env.PRIVATEHIVE_SERVICE_GRPC_URL || 'localhost:3010';
 }
 
 if (!(process.env.PRIVATEHIVE_SERVICE_GRPC_URL || process.env.NO_PRIVATEHIVE)) {

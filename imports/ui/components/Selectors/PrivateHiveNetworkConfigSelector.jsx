@@ -38,21 +38,49 @@ class PrivateHiveNetworkConfigSelector extends Component {
     if (!this.config) {
       return;
     }
+
+    let error;
     const config = this.state.configs[this.config.value];
 
     if (!this.voucherDetails) {
       if (!this.props.isJoin) {
-        this.ordererDiskSpace.value = config.orderer.disk;
-        this.kafkaDiskSpace.value = config.kafka.disk;
+        if (!this.ordererDiskSpace.value) {
+          this.ordererDiskSpace.value = config.orderer.disk;
+          this.kafkaDiskSpace.value = config.kafka.disk;
+        } else {
+          config.orderer.disk = this.ordererDiskSpace.value;
+          config.kafka.disk = this.kafkaDiskSpace.value;
+          if (Number(config.orderer.disk) <= 0) {
+            error = 'Orderer Disk space should be greater than 0';
+          }
+          if (Number(config.kafka.disk) <= 0) {
+            error = 'Kafka disk space should be greater than 0';
+          }
+        }
       }
 
-      this.dataDiskSpace.value = config.data.disk;
-      this.setState({
-        networkConfig: config,
-      });
+      if (!this.dataDiskSpace.value) {
+        this.dataDiskSpace.value = config.data.disk;
+      } else {
+        config.data.disk = this.dataDiskSpace.value;
+        if (Number(config.data.disk) <= 0) {
+          error = 'Data disk space should be greater than 0';
+        }
+      }
+
+      const newState = { networkConfig: config };
+
+      if (error) {
+        newState.error = error;
+      } else {
+        newState.error = '';
+      }
+
+      this.setState(newState);
     }
+
     if (this.props && this.props.configChangeListener) {
-      this.props.configChangeListener({ config });
+      this.props.configChangeListener({ config, error: error ? true : false });
     }
   }
 
@@ -301,6 +329,17 @@ class PrivateHiveNetworkConfigSelector extends Component {
                         <input type="text" className="form-control" name="projectName" ref={input => (this.voucher = input)} />
                       </div>
                       {voucherActionButton}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {this.state.error && (
+                <div className="row clearfix">
+                  <div className="col-md-12">
+                    <div className="form-group form-group-default">
+                      <div className="form-input-group">
+                        <span className="text-danger fs-14">{this.state.error}</span>
+                      </div>
                     </div>
                   </div>
                 </div>

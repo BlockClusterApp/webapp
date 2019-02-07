@@ -83,14 +83,9 @@ class Join extends Component {
                     isJoin={true}
                     configChangeListener={config => {
                       this.config = config;
-                      if (config.diskSpace > 16000) {
-                        // 16TiB
-                        return this.setState({
-                          formSubmitError: 'Disk space cannot exceed 16000 GB',
-                        });
-                      }
                       this.setState({
                         formSubmitError: '',
+                        error: config.error,
                         showCreditCardAlert: this.state.showSubmitAlert && (config && config.voucher ? false : true),
                       });
                     }}
@@ -110,7 +105,7 @@ class Join extends Component {
                     <CardVerification cardVerificationListener={this.cardVerificationListener} />
                   </div>
                   <LaddaButton
-                    disabled={this.state.showCreditCardAlert && !this.state.cardVerified}
+                    disabled={(this.state.showCreditCardAlert && !this.state.cardVerified) || this.state.error}
                     loading={this.state.loading}
                     data-size={S}
                     data-style={SLIDE_UP}

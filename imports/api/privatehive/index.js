@@ -172,11 +172,12 @@ PrivateHive.initializeNetwork = async ({ name, networkConfig, voucherId, locatio
         isJoined: false,
         properties: {},
         nfs: {},
+        status: 'initializing',
       },
     }
   );
 
-  Bull.addJob('create-privatehive-node', { _id });
+  // Bull.addJob('create-privatehive-node', { _id });
   return true;
 };
 
