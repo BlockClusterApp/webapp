@@ -6,7 +6,10 @@ import LocationSelector from '../../../components/Selectors/LocationSelector.jsx
 import PrivateHiveNetworkConfigSelector from '../../../components/Selectors/PrivateHiveNetworkConfigSelector.jsx';
 import CardVerification from '../../billing/components/CardVerification.jsx';
 
-class PaymentDashboard extends Component {
+import moment from 'moment';
+import Helpers from '../../../../modules/helpers';
+
+class Join extends Component {
   constructor(props) {
     super(props);
 
@@ -32,7 +35,7 @@ class PaymentDashboard extends Component {
             <div className="col-md-5">
               <div className="card card-transparent">
                 <div className="card-block">
-                  <h3>Create Your Hyperledeger Fabric Network</h3>
+                  <h3>Join a Hyperledeger Fabric Network</h3>
                   <p>Lorem ipsum</p>
                   <ul>
                     <li>
@@ -40,9 +43,6 @@ class PaymentDashboard extends Component {
                     </li>
                     <li>
                       <i>Node Type</i>: select either development or production grade node i.e., light or power node
-                    </li>
-                    <li>
-                      <i>Impulse URL</i>: add the impulse server URL of the network you want to join to achieve privacy features
                     </li>
                   </ul>
                 </div>
@@ -80,6 +80,7 @@ class PaymentDashboard extends Component {
                   <br />
                   <p>Node Configuration</p>
                   <PrivateHiveNetworkConfigSelector
+                    isJoin={true}
                     configChangeListener={config => {
                       this.config = config;
                       if (config.diskSpace > 16000) {
@@ -137,4 +138,4 @@ export default withTracker(() => {
   return {
     subscriptions: [],
   };
-})(withRouter(PaymentDashboard));
+})(withRouter(Join));

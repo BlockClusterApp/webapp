@@ -41,8 +41,11 @@ class PrivateHiveNetworkConfigSelector extends Component {
     const config = this.state.configs[this.config.value];
 
     if (!this.voucherDetails) {
-      this.ordererDiskSpace.value = config.orderer.disk;
-      this.kafkaDiskSpace.value = config.kafka.disk;
+      if (!this.props.isJoin) {
+        this.ordererDiskSpace.value = config.orderer.disk;
+        this.kafkaDiskSpace.value = config.kafka.disk;
+      }
+
       this.dataDiskSpace.value = config.data.disk;
       this.setState({
         networkConfig: config,
@@ -153,88 +156,94 @@ class PrivateHiveNetworkConfigSelector extends Component {
                 <div className="col-md-12">{dropDown}</div>
               </div>
               <div className="row clearfix">
-                <div className="col-md-4 col-sm-4">
+                <div className={this.props.isJoin ? 'col-md-6' : 'col-md-4'}>
                   <div className="form-group form-group-default ">
                     <label>Version</label>
                     <input type="text" className="form-control" name="projectName" value={this.state.networkConfig.fabric.version} disabled />
                   </div>
                 </div>
-                <div className="col-md-4 col-sm-4">
-                  <div className="form-group form-group-default ">
-                    <label>Orderers</label>
-                    <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.fabric.orderers} disabled />
+                {!this.props.isJoin && (
+                  <div className="col-md-4">
+                    <div className="form-group form-group-default ">
+                      <label>Orderers</label>
+                      <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.fabric.orderers} disabled />
+                    </div>
                   </div>
-                </div>
-                <div className="col-md-4 col-sm-4">
+                )}
+                <div className={this.props.isJoin ? 'col-md-6' : 'col-md-4'}>
                   <div className="form-group form-group-default ">
                     <label>Peers</label>
                     <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.fabric.peers} disabled />
                   </div>
                 </div>
               </div>
-              <div className="row clearfix">
-                <div className="col-md-3 col-sm-12">
-                  <h5 className="form-group form-group-default m-t-0" style={{ textTransform: 'uppercase', paddingTop: '14px' }}>
-                    Kafka
-                  </h5>
-                </div>
-                <div className="col-md-3 col-sm-4">
-                  <div className="form-group form-group-default ">
-                    <label>CPU (vCPUs)</label>
-                    <input type="text" className="form-control" name="projectName" value={this.state.networkConfig.kafka.cpu} disabled />
+              {!this.props.isJoin && (
+                <div className="row clearfix">
+                  <div className="col-md-3 col-sm-12">
+                    <h5 className="form-group form-group-default m-t-0" style={{ textTransform: 'uppercase', paddingTop: '14px' }}>
+                      Kafka
+                    </h5>
+                  </div>
+                  <div className="col-md-3 col-sm-4">
+                    <div className="form-group form-group-default ">
+                      <label>CPU (vCPUs)</label>
+                      <input type="text" className="form-control" name="projectName" value={this.state.networkConfig.kafka.cpu} disabled />
+                    </div>
+                  </div>
+                  <div className="col-md-3 col-sm-4">
+                    <div className="form-group form-group-default ">
+                      <label>RAM (GB)</label>
+                      <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.kafka.ram} disabled />
+                    </div>
+                  </div>
+                  <div className="col-md-3 col-sm-4">
+                    <div className="form-group form-group-default ">
+                      <label>Disk Space (GB)</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="ordererDiskSpace"
+                        ref={input => (this.kafkaDiskSpace = input)}
+                        disabled={!this.state.networkConfig.kafka.isDiskChangeable}
+                        onChange={this.onConfigChange.bind(this, true)}
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="col-md-3 col-sm-4">
-                  <div className="form-group form-group-default ">
-                    <label>RAM (GB)</label>
-                    <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.kafka.ram} disabled />
+              )}
+              {!this.props.isJoin && (
+                <div className="row clearfix">
+                  <div className="col-md-3 col-sm-12">
+                    <h5 className="form-group form-group-default m-t-0" style={{ textTransform: 'uppercase', paddingTop: '14px' }}>
+                      Orderer
+                    </h5>
+                  </div>
+                  <div className="col-md-3 col-sm-4">
+                    <div className="form-group form-group-default ">
+                      <label>CPU (vCPUs)</label>
+                      <input type="text" className="form-control" name="projectName" value={this.state.networkConfig.orderer.cpu} disabled />
+                    </div>
+                  </div>
+                  <div className="col-md-3 col-sm-4">
+                    <div className="form-group form-group-default ">
+                      <label>RAM (GB)</label>
+                      <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.orderer.ram} disabled />
+                    </div>
+                  </div>
+                  <div className="col-md-3 col-sm-4">
+                    <div className="form-group form-group-default ">
+                      <label>Disk Space (GB)</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        ref={input => (this.ordererDiskSpace = input)}
+                        disabled={!this.state.networkConfig.orderer.isDiskChangeable}
+                        onChange={this.onConfigChange.bind(this, true)}
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="col-md-3 col-sm-4">
-                  <div className="form-group form-group-default ">
-                    <label>Disk Space (GB)</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      name="ordererDiskSpace"
-                      ref={input => (this.kafkaDiskSpace = input)}
-                      disabled={!this.state.networkConfig.kafka.isDiskChangeable}
-                      onChange={this.onConfigChange.bind(this, true)}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="row clearfix">
-                <div className="col-md-3 col-sm-12">
-                  <h5 className="form-group form-group-default m-t-0" style={{ textTransform: 'uppercase', paddingTop: '14px' }}>
-                    Orderer
-                  </h5>
-                </div>
-                <div className="col-md-3 col-sm-4">
-                  <div className="form-group form-group-default ">
-                    <label>CPU (vCPUs)</label>
-                    <input type="text" className="form-control" name="projectName" value={this.state.networkConfig.orderer.cpu} disabled />
-                  </div>
-                </div>
-                <div className="col-md-3 col-sm-4">
-                  <div className="form-group form-group-default ">
-                    <label>RAM (GB)</label>
-                    <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.orderer.ram} disabled />
-                  </div>
-                </div>
-                <div className="col-md-3 col-sm-4">
-                  <div className="form-group form-group-default ">
-                    <label>Disk Space (GB)</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      ref={input => (this.ordererDiskSpace = input)}
-                      disabled={!this.state.networkConfig.orderer.isDiskChangeable}
-                      onChange={this.onConfigChange.bind(this, true)}
-                    />
-                  </div>
-                </div>
-              </div>
+              )}
               <div className="row clearfix">
                 <div className="col-md-3 col-sm-12">
                   <h5 className="form-group form-group-default m-t-0" style={{ textTransform: 'uppercase', paddingTop: '14px' }}>

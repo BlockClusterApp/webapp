@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { withRouter, Link, Redirect, Route } from 'react-router-dom';
 
 import Create from './components/Create';
+import Join from './components/Join';
+import Invite from './components/Invite';
 
 class PrivateHiveDashboard extends Component {
   constructor() {
@@ -26,6 +28,16 @@ class PrivateHiveDashboard extends Component {
                   </Link>
                 </li>
                 <li className="nav-item">
+                  <Link to="/app/privatehive/join" className={`${this.props.location.pathname === '/app/privatehive/join' ? 'active' : ''}`}>
+                    Join
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link to="/app/privatehive/invite" className={`${this.props.location.pathname === '/app/privatehive/invite' ? 'active' : ''}`}>
+                    Invite
+                  </Link>
+                </li>
+                <li className="nav-item">
                   <Link to="/app/privatehive/networks" className={`${this.props.location.pathname === '/app/privatehive/networks' ? 'active' : ''}`}>
                     List
                   </Link>
@@ -35,6 +47,8 @@ class PrivateHiveDashboard extends Component {
                 <div className="tab-pane active" id="history">
                   <Route exact path="/app/privatehive/" render={() => <Redirect to="/app/privatehive/create" />} />
                   <Route exact path="/app/privatehive/create" component={Create} />
+                  <Route exact path="/app/privatehive/join" component={Join} />
+                  <Route exact path="/app/privatehive/invite" component={Invite} />
                 </div>
               </div>
             </div>

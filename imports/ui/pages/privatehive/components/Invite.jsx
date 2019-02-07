@@ -2,17 +2,14 @@ import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
-import LocationSelector from '../../../components/Selectors/LocationSelector.jsx';
-import PrivateHiveNetworkConfigSelector from '../../../components/Selectors/PrivateHiveNetworkConfigSelector.jsx';
-import CardVerification from '../../billing/components/CardVerification.jsx';
 
-class PaymentDashboard extends Component {
+class Join extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
       locations: [],
-      formSubmitError: '',
+      inviteFormSubmitError: '',
     };
   }
 
@@ -32,7 +29,7 @@ class PaymentDashboard extends Component {
             <div className="col-md-5">
               <div className="card card-transparent">
                 <div className="card-block">
-                  <h3>Create Your Hyperledeger Fabric Network</h3>
+                  <h3>Invite to a Hyperledeger Fabric Network</h3>
                   <p>Lorem ipsum</p>
                   <ul>
                     <li>
@@ -41,89 +38,79 @@ class PaymentDashboard extends Component {
                     <li>
                       <i>Node Type</i>: select either development or production grade node i.e., light or power node
                     </li>
-                    <li>
-                      <i>Impulse URL</i>: add the impulse server URL of the network you want to join to achieve privacy features
-                    </li>
                   </ul>
                 </div>
               </div>
             </div>
             <div className="col-md-7">
               <div className="card card-transparent">
-                <div className="card-block">
-                  {/* <form id="form-project" role="form" onSubmit={this.onSubmit} autoComplete="off"> */}
+                <form id="form-project" role="form" onSubmit={this.onInviteSubmit} autoComplete="off">
                   <p>Basic Information</p>
                   <div className="form-group-attached">
                     <div className="row clearfix">
                       <div className="col-md-12">
                         <div className="form-group form-group-default required">
                           <label>Network name</label>
-                          <input
-                            type="text"
+                          <select
                             className="form-control"
-                            name="projectName"
-                            required
                             ref={input => {
-                              this.networkName = input;
+                              this.networkNameInvite = input;
                             }}
+                          >
+                            {this.props.networks.map((item, index) => {
+                              return (
+                                <option value={item.instanceId} key={item.instanceId}>
+                                  {item.name}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="row clearfix">
+                      <div className="col-md-12">
+                        <div className="form-group form-group-default required">
+                          <label>User Email</label>
+                          <input
+                            ref={input => {
+                              this.email = input;
+                            }}
+                            type="email"
+                            className="form-control"
+                            name="firstName"
+                            required
+                            placeholder="admin@blockcluster.io"
                           />
                         </div>
                       </div>
                     </div>
-
-                    <div className="row clearfix">
-                      <div className="col-md-12">
-                        <LocationSelector locationChangeListener={locationCode => (this.locationCode = locationCode)} />
-                      </div>
-                    </div>
                   </div>
                   <br />
-                  <p>Node Configuration</p>
-                  <PrivateHiveNetworkConfigSelector
-                    configChangeListener={config => {
-                      this.config = config;
-                      if (config.diskSpace > 16000) {
-                        // 16TiB
-                        return this.setState({
-                          formSubmitError: 'Disk space cannot exceed 16000 GB',
-                        });
-                      }
-                      this.setState({
-                        formSubmitError: '',
-                        showCreditCardAlert: this.state.showSubmitAlert && (config && config.voucher ? false : true),
-                      });
-                    }}
-                  />
-                  <br />
-                  {this.state.formSubmitError != '' && (
+                  {this.state.inviteFormSubmitError != '' && (
                     <div className="row">
                       <div className="col-md-12">
                         <div className="m-b-20 alert alert-danger m-b-0" role="alert">
                           <button className="close" data-dismiss="alert" />
-                          {this.state.formSubmitError}
+                          {this.state.inviteFormSubmitError}
                         </div>
                       </div>
                     </div>
                   )}
-                  <div className="verificationWrapper" style={{ display: this.state.showCreditCardAlert ? 'block' : 'none' }}>
-                    <CardVerification cardVerificationListener={this.cardVerificationListener} />
-                  </div>
+
                   <LaddaButton
-                    disabled={this.state.showCreditCardAlert && !this.state.cardVerified}
-                    loading={this.state.loading}
+                    loading={this.state.inviteLoading}
                     data-size={S}
                     data-style={SLIDE_UP}
                     data-spinner-size={30}
                     data-spinner-lines={12}
-                    onClick={this.onSubmit}
                     className="btn btn-success"
                     type="submit"
                   >
                     <i className="fa fa-plus-circle" aria-hidden="true" />
-                    &nbsp;&nbsp;Create
+                    &nbsp;&nbsp;Invite
                   </LaddaButton>
-                  {/* </form> */}
-                </div>
+                </form>
               </div>
             </div>
           </div>
@@ -135,6 +122,7 @@ class PaymentDashboard extends Component {
 
 export default withTracker(() => {
   return {
+    networks: [],
     subscriptions: [],
   };
-})(withRouter(PaymentDashboard));
+})(withRouter(Join));
