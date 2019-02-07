@@ -31,18 +31,23 @@ class PaymentDashboard extends Component {
     if (!name) {
       return this.setState({
         formSubmitError: 'Name cannot be empty',
-      });
-    }
-    Meteor.call('initializePrivateHiveNetwork', { name, networkConfig: this.config, locationCode: this.locationCode }, (err, res) => {
-      this.setState({
         loading: false,
       });
-      if (err) {
-        return notification.error(err.reason);
+    }
+    Meteor.call(
+      'initializePrivateHiveNetwork',
+      { name, networkConfig: this.config, locationCode: this.locationCode, voucherId: this.selectedVoucher ? this.selectedVoucher._id : undefined },
+      (err, res) => {
+        this.setState({
+          loading: false,
+        });
+        if (err) {
+          return notification.error(err.reason);
+        }
+        this.props.history.push(`/app/privatehive/list`);
+        notification.success('Network Creating');
       }
-      this.props.history.push(`/app/privatehive/list`);
-      notification.success('Network Creating');
-    });
+    );
   };
 
   render() {
@@ -102,8 +107,10 @@ class PaymentDashboard extends Component {
                   <p>Node Configuration</p>
                   <PrivateHiveNetworkConfigSelector
                     configChangeListener={config => {
+                      const voucher = config.voucher;
+                      delete config.voucher;
                       this.config = config;
-                      console.log(config);
+                      this.selectedVoucher = voucher;
                       this.setState({
                         formSubmitError: '',
                         error: config.error,

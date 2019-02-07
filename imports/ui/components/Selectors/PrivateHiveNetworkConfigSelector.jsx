@@ -80,7 +80,7 @@ class PrivateHiveNetworkConfigSelector extends Component {
     }
 
     if (this.props && this.props.configChangeListener) {
-      this.props.configChangeListener({ config, error: error ? true : false });
+      this.props.configChangeListener({ config, error: error ? true : false, voucher: this.voucherDetails });
     }
   }
 
@@ -110,12 +110,13 @@ class PrivateHiveNetworkConfigSelector extends Component {
           status: 'success',
           networkConfig: reply.networkConfig,
         },
-        isDiskChangeable: reply.isDiskChangeable,
         networkConfig: reply.networkConfig,
       });
-      this.diskSpace.value = reply.networkConfig.disk;
+      this.dataDiskSpace.value = reply.networkConfig.data.disk;
+      this.ordererDiskSpace.value = reply.networkConfig.orderer.disk;
+      this.kafkaDiskSpace.value = reply.networkConfig.kafka.disk;
       if (this.props && this.props.configChangeListener) {
-        this.props.configChangeListener({ config: reply.networkConfig, diskSpace: Number(this.diskSpace.value), voucher: reply });
+        this.props.configChangeListener({ config: reply.networkConfig, voucher: reply });
       }
     });
   };
@@ -129,7 +130,11 @@ class PrivateHiveNetworkConfigSelector extends Component {
       networkConfig: this.defaultConfig,
     });
     this.voucher.value = '';
-    this.diskSpace.value = 5;
+
+    this.dataDiskSpace.value = this.defaultConfig.networkConfig.data.disk;
+    this.ordererDiskSpace.value = this.defaultConfig.networkConfig.orderer.disk;
+    this.kafkaDiskSpace.value = this.defaultConfig.networkConfig.kafka.disk;
+
     this.voucherDetails = undefined;
     this.onConfigChange();
   };

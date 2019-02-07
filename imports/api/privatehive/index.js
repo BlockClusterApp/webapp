@@ -4,6 +4,7 @@ import PrivateHiveCollection from '../../collections/privatehive';
 import Voucher from '../../collections/vouchers/voucher';
 import Bull from '../../modules/schedulers/bull';
 import PrivateHiveServer from './server-communicator';
+import NetworkConfiguration from '../../collections/network-configuration/network-configuration';
 
 const debug = require('debug')('api:privatehive');
 
@@ -149,12 +150,25 @@ PrivateHive._createPrivateHiveNetwork = ({ id, domain, locationCode, kafka, orde
 };
 
 PrivateHive.initializeNetwork = async ({ name, networkConfig, voucherId, locationCode, userId }) => {
+  networkConfig = networkConfig.config;
   userId = userId || Meteor.userId();
   const _id = await PrivateHive.Helpers.generateInstance();
 
   let voucher;
+  const oldNetworkConfig = { ...networkConfig };
   if (voucherId) {
-    voucher = Voucher.find({ _id: voucher }).fetch()[0];
+    voucher = Voucher.find({ _id: voucherId }).fetch()[0];
+    networkConfig = NetworkConfiguration.find({ _id: voucher.networkConfig._id }).fetch()[0];
+    if (networkConfig.orderer.isDiskChangeable) networkConfig.orderer.disk = oldNetworkConfig.orderer.disk;
+    if (networkConfig.kafka.isDiskChangeable) networkConfig.kafka.disk = oldNetworkConfig.kafka.disk;
+    if (networkConfig.data.isDiskChangeable) networkConfig.data.disk = oldNetworkConfig.data.disk;
+
+    const tempVoucher = { ...voucher };
+    delete tempVoucher.networkConfig;
+    delete tempVoucher.voucher_claim_status;
+    delete tempVoucher.availability;
+
+    voucher = tempVoucher;
   }
 
   PrivateHiveCollection.update(
@@ -189,6 +203,7 @@ PrivateHive.getPrivateHiveNetworkCount = async () => {
 /* Meteor methods so that our frontend can call these function without using HTTP calls. Although I would prefer to use HTTP instead of meteor method. */
 Meteor.methods({
   initializePrivateHiveNetwork: PrivateHive.initializeNetwork,
+  getPrivateHiveNetworkCount: PrivateHive.getPrivateHiveNetworkCount,
 });
 
 export default PrivateHive;

@@ -234,7 +234,7 @@ Voucher.create = async function(payload) {
   voucher_codes.forEach(voucher => {
     const obj = {
       usability: {
-        recurring: payload.usablity.recurring,
+        recurring: payload.usablity.recurring || false,
         no_months: payload.usablity.no_months || 0,
         once_per_user: payload.usablity.once_per_user,
         no_times_per_user: payload.usablity.no_times_per_user || 1,
@@ -253,8 +253,8 @@ Voucher.create = async function(payload) {
       expiryDate: payload.expiryDate
         ? new Date(payload.expiryDate)
         : moment()
-            .add(30, 'days')
-            .toDate(), //lets take by default 30days
+            .add(100, 'years')
+            .toDate(), //lets take by default 30years
       discountedDays: payload.discountedDays || payload.usablity.no_months * 30,
       voucher_claim_status: [],
       campaignId: payload.campaignId,
@@ -266,6 +266,8 @@ Voucher.create = async function(payload) {
         networkConfig: payload.networkConfig,
       };
       obj.isDiskChangeable = payload.networkConfig.isDiskChangeable;
+    } else if (payload.type === 'privatehive') {
+      obj.networkConfig = { ...payload.networkConfig };
     }
     savabl_doc.push(obj);
   });
