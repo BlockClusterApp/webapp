@@ -15,10 +15,24 @@ class NetworksList extends Component {
   }
 
   componentWillUnmount() {
-    this.props.subscriptions.forEach(s => {
-      s.stop();
-    });
+    // this.props.subscriptions.forEach(s => {
+    //   s.stop();
+    // });
   }
+
+  convertStatusToTag = status => {
+    if (!status) {
+      return null;
+    }
+    if (status === 'initializing' || status === 'pending') {
+      return <span class="label label-inverse">{helpers.firstLetterCapital(status)}</span>;
+    } else if (status === 'running' || status === 'completed') {
+      return <span class="label label-success">{helpers.firstLetterCapital(status)}</span>;
+    } else if (status === 'down' || status === 'cancelled') {
+      return <span class="label label-important">{helpers.firstLetterCapital(status)}</span>;
+    }
+    return <span class="label label-inverse">{helpers.firstLetterCapital(status)}</span>;
+  };
 
   componentWillMount() {
     Meteor.call('getClusterLocations', (err, res) => {
@@ -30,10 +44,18 @@ class NetworksList extends Component {
         });
       }
     });
+    Meteor.call('getPrivateHiveNetworkCount', (err, res) => {
+      console.log('Count', res);
+      if (!err) {
+        if (res <= 0) {
+          this.props.history.push(`/app/privatehive/create`);
+        }
+      }
+    });
   }
 
   openNetwork = networkId => {
-    this.props.history.push('/app/privatehive/' + networkId);
+    this.props.history.push(`/app/privatehive/${networkId}/details`);
   };
 
   getLocationName = locationCode => {
@@ -73,9 +95,9 @@ class NetworksList extends Component {
                             <tr key={item._id} onClick={() => this.openNetwork(item.instanceId)}>
                               <td className="v-align-middle ">{item.name}</td>
                               <td className="v-align-middle">{item.instanceId}</td>
-                              <td className="v-align-middle">{item.isJoined}</td>
+                              <td className="v-align-middle">{item.isJoined ? 'Peer only' : 'Orderer Network'}</td>
                               <td className="v-align-middle">{this.getLocationName(item.locationCode)}</td>
-                              <td className="v-align-middle">{item.status}</td>
+                              <td className="v-align-middle">{this.convertStatusToTag(item.status)}</td>
                               <td className="v-align-middle">{moment(item.createdOn).format('DD-MMM-YYYY kk:mm')}</td>
                             </tr>
                           );

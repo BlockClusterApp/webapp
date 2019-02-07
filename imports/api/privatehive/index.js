@@ -181,6 +181,11 @@ PrivateHive.initializeNetwork = async ({ name, networkConfig, voucherId, locatio
   return true;
 };
 
+PrivateHive.getPrivateHiveNetworkCount = async () => {
+  const userId = Meteor.userId();
+  return PrivateHiveCollection.find({ active: true, deletedAt: null, userId }).count();
+};
+
 /* Meteor methods so that our frontend can call these function without using HTTP calls. Although I would prefer to use HTTP instead of meteor method. */
 Meteor.methods({
   initializePrivateHiveNetwork: PrivateHive.initializeNetwork,

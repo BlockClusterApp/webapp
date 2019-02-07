@@ -40,6 +40,7 @@ class PaymentDashboard extends Component {
       if (err) {
         return notification.error(err.reason);
       }
+      this.props.history.push(`/app/privatehive/list`);
       notification.success('Network Creating');
     });
   };

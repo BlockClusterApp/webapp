@@ -115,71 +115,74 @@ export default withRouter(
           <div className="page-container">
             <Header />
             <div className={`page-content-wrapper ${fullHeight}`}>
-              <Route exact path="/app/networks" render={props => this.showFailedBillingWarning(NetworksList, props)} />
-              <Route exact path="/app/notifications" render={props => this.showFailedBillingWarning(PlatformNotifications, props)} />
-              <Route exact path="/app/createNetwork" render={props => this.showFailedBillingWarning(CreateNetwork, props)} />
-              <Route exact path="/app/networks/:id/settings" render={props => this.showFailedBillingWarning(ViewEditNetwork, props)} />
-              <Route exact path="/app/networks/:id/impulse" render={props => this.showFailedBillingWarning(ViewEditImpulse, props)} />
-              <Route exact path="/app/networks/:id" render={props => this.showFailedBillingWarning(ViewNetwork, props)} />
-              <Route exact path="/app/join/networks" render={props => this.showFailedBillingWarning(JoinNetwork, props)} />
-              <Route exact path="/app/invites" render={props => this.showFailedBillingWarning(Invites, props)} />
-              <Route exact path="/app/networks/:id/security/peers" render={props => this.showFailedBillingWarning(Peers, props)} />
-              <Route exact path="/app/networks/:id/events" render={props => this.showFailedBillingWarning(NodeEvents, props)} />
-              <Route exact path="/app/networks/:id/explorer" render={props => this.showFailedBillingWarning(Explorer, props)} />
-              <Route exact path="/app/networks/:id/assets/search" render={props => this.showFailedBillingWarning(AssetsSearch, props)} />
-              <Route exact path="/app/networks/:id/assets/exchange" render={props => this.showFailedBillingWarning(AssetsExchange, props)} />
-              <Route exact path="/app/networks/:id/assets/create" render={props => this.showFailedBillingWarning(CreateAssetType, props)} />
-              <Route exact path="/app/networks/:id/assets/stats" render={props => this.showFailedBillingWarning(AssetsStats, props)} />
-              <Route exact path="/app/networks/:id/assets/management" render={props => this.showFailedBillingWarning(AssetsManagement, props)} />
-              <Route exact path="/app/networks/:id/assets/audit" render={props => this.showFailedBillingWarning(AssetsAudit, props)} />
-              <Route exact path="/app/networks/:id/streams/create" render={props => this.showFailedBillingWarning(CreateStream, props)} />
-              <Route exact path="/app/networks/:id/streams/publish" render={props => this.showFailedBillingWarning(PublishStream, props)} />
-              <Route exact path="/app/networks/:id/streams/access-control" render={props => this.showFailedBillingWarning(AccessControlStreams, props)} />
-              <Route exact path="/app/networks/:id/bc-accounts" render={props => this.showFailedBillingWarning(BCAccountsView, props)} />
-              <Route exact path="/app/networks/:id/security/apis" render={props => this.showFailedBillingWarning(APIsCreds, props)} />
-              <Route exact path="/app/networks/:id/sc/management" render={props => this.showFailedBillingWarning(SmartContractsManagement, props)} />
-              <Route exact path="/app/platform-apis" render={props => this.showFailedBillingWarning(PlatformAPIKeys, props)} />
+              <Switch>
+                <Route exact path="/app/networks" render={props => this.showFailedBillingWarning(NetworksList, props)} />
+                <Route exact path="/app/notifications" render={props => this.showFailedBillingWarning(PlatformNotifications, props)} />
+                <Route exact path="/app/createNetwork" render={props => this.showFailedBillingWarning(CreateNetwork, props)} />
+                <Route exact path="/app/networks/:id/settings" render={props => this.showFailedBillingWarning(ViewEditNetwork, props)} />
+                <Route exact path="/app/networks/:id/impulse" render={props => this.showFailedBillingWarning(ViewEditImpulse, props)} />
+                <Route exact path="/app/networks/:id" render={props => this.showFailedBillingWarning(ViewNetwork, props)} />
+                <Route exact path="/app/join/networks" render={props => this.showFailedBillingWarning(JoinNetwork, props)} />
+                <Route exact path="/app/invites" render={props => this.showFailedBillingWarning(Invites, props)} />
+                <Route exact path="/app/networks/:id/security/peers" render={props => this.showFailedBillingWarning(Peers, props)} />
+                <Route exact path="/app/networks/:id/events" render={props => this.showFailedBillingWarning(NodeEvents, props)} />
+                <Route exact path="/app/networks/:id/explorer" render={props => this.showFailedBillingWarning(Explorer, props)} />
+                <Route exact path="/app/networks/:id/assets/search" render={props => this.showFailedBillingWarning(AssetsSearch, props)} />
+                <Route exact path="/app/networks/:id/assets/exchange" render={props => this.showFailedBillingWarning(AssetsExchange, props)} />
+                <Route exact path="/app/networks/:id/assets/create" render={props => this.showFailedBillingWarning(CreateAssetType, props)} />
+                <Route exact path="/app/networks/:id/assets/stats" render={props => this.showFailedBillingWarning(AssetsStats, props)} />
+                <Route exact path="/app/networks/:id/assets/management" render={props => this.showFailedBillingWarning(AssetsManagement, props)} />
+                <Route exact path="/app/networks/:id/assets/audit" render={props => this.showFailedBillingWarning(AssetsAudit, props)} />
+                <Route exact path="/app/networks/:id/streams/create" render={props => this.showFailedBillingWarning(CreateStream, props)} />
+                <Route exact path="/app/networks/:id/streams/publish" render={props => this.showFailedBillingWarning(PublishStream, props)} />
+                <Route exact path="/app/networks/:id/streams/access-control" render={props => this.showFailedBillingWarning(AccessControlStreams, props)} />
+                <Route exact path="/app/networks/:id/bc-accounts" render={props => this.showFailedBillingWarning(BCAccountsView, props)} />
+                <Route exact path="/app/networks/:id/security/apis" render={props => this.showFailedBillingWarning(APIsCreds, props)} />
+                <Route exact path="/app/networks/:id/sc/management" render={props => this.showFailedBillingWarning(SmartContractsManagement, props)} />
+                <Route exact path="/app/platform-apis" render={props => this.showFailedBillingWarning(PlatformAPIKeys, props)} />
 
-              <Route path="/app/privatehive" component={PrivateHiveDashboard} />
+                <Route exact path="/app/privatehive/:id/details" render={props => this.showFailedBillingWarning(Payments, props)} />
+                <Route path="/app/privatehive" render={props => this.showFailedBillingWarning(PrivateHiveDashboard, props)} />
 
-              {features.Payments && <Route path="/app/payments" component={Payments} />}
-              {features.Invoice && <Route exact path="/app/billing" component={BillingDashboard} />}
-              {features.SupportTicket && <Route exact path="/app/support" component={SupportContainer} />}
-              {features.SupportTicket && <Route exact path="/app/support/:id" component={SupportDetails} />}
-              {features.Hyperion && <Route exact path="/app/hyperion" render={props => this.showFailedBillingWarning(Hyperion, props)} />}
-              {features.Paymeter && (
-                <div className="full-height">
-                  <Route exact path="/app/paymeter" render={props => this.showFailedBillingWarning(Paymeter, props)} />
-                  <Route exact path="/app/paymeter/notifications" render={props => this.showFailedBillingWarning(WalletNotifications, props)} />
-                </div>
-              )}
-              {features.Admin && (
-                <div>
-                  <Route exact path="/app/admin" render={() => <Redirect to="/app/admin/users" />} />
-                  <Route exact path="/app/admin/users" component={UserList} />
-                  <Route exact path="/app/admin/users/:id" component={UserDetails} />
-                  <Route exact path="/app/admin/networks" component={NetworkList} />
-                  <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
-                  <Route exact path="/app/admin/network-configs" component={ConfigList} />
+                {features.Payments && <Route path="/app/payments" component={Payments} />}
+                {features.Invoice && <Route exact path="/app/billing" component={BillingDashboard} />}
+                {features.SupportTicket && <Route exact path="/app/support" component={SupportContainer} />}
+                {features.SupportTicket && <Route exact path="/app/support/:id" component={SupportDetails} />}
+                {features.Hyperion && <Route exact path="/app/hyperion" render={props => this.showFailedBillingWarning(Hyperion, props)} />}
+                {features.Paymeter && (
+                  <div className="full-height">
+                    <Route exact path="/app/paymeter" render={props => this.showFailedBillingWarning(Paymeter, props)} />
+                    <Route exact path="/app/paymeter/notifications" render={props => this.showFailedBillingWarning(WalletNotifications, props)} />
+                  </div>
+                )}
+                {features.Admin && (
+                  <div>
+                    <Route exact path="/app/admin" render={() => <Redirect to="/app/admin/users" />} />
+                    <Route exact path="/app/admin/users" component={UserList} />
+                    <Route exact path="/app/admin/users/:id" component={UserDetails} />
+                    <Route exact path="/app/admin/networks" component={NetworkList} />
+                    <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
+                    <Route exact path="/app/admin/network-configs" component={ConfigList} />
 
-                  {features.Vouchers && <Route path="/app/admin/vouchers" component={VoucherList} />}
-                  {features.Vouchers && <Route exact path="/app/admin/voucher/details/:id" component={VoucherDetails} />}
-                  {features.Vouchers && <Route path="/app/admin/voucher/create" component={VoucherCreate} />}
+                    {features.Vouchers && <Route path="/app/admin/vouchers" component={VoucherList} />}
+                    {features.Vouchers && <Route exact path="/app/admin/voucher/details/:id" component={VoucherDetails} />}
+                    {features.Vouchers && <Route path="/app/admin/voucher/create" component={VoucherCreate} />}
 
-                  {features.SupportTicket && <Route exact path="/app/admin/support" component={AdminSupport} />}
-                  {features.SupportTicket && <Route exact path="/app/admin/support/:id" component={AdminSupportDetails} />}
+                    {features.SupportTicket && <Route exact path="/app/admin/support" component={AdminSupport} />}
+                    {features.SupportTicket && <Route exact path="/app/admin/support/:id" component={AdminSupportDetails} />}
 
-                  {features.Invoice && <Route exact path="/app/admin/invoices" component={AdminInvoiceList} />}
-                  {features.Invoice && <Route exact path="/app/admin/invoices/:id" component={AdminInvoiceDetails} />}
+                    {features.Invoice && <Route exact path="/app/admin/invoices" component={AdminInvoiceList} />}
+                    {features.Invoice && <Route exact path="/app/admin/invoices/:id" component={AdminInvoiceDetails} />}
 
-                  {(features.Paymeter || features.Hyperion) && <Route path="/app/admin/pricing" component={AdminPricingDashboard} />}
+                    {(features.Paymeter || features.Hyperion) && <Route path="/app/admin/pricing" component={AdminPricingDashboard} />}
 
-                  {features.ClientDashboard && <Route exact path="/app/admin/clients" component={ClientList} />}
-                  {features.ClientDashboard && <Route exact path="/app/admin/clients/details/:id" component={ClientDetails} />}
-                  {features.ClientDashboard && <Route exact path="/app/admin/clients/details/:id/metrics" component={ClientMetrics} />}
-                  {features.ClientDashboard && <Route exact path="/app/admin/clients/create" component={ClientCreate} />}
-                </div>
-              )}
+                    {features.ClientDashboard && <Route exact path="/app/admin/clients" component={ClientList} />}
+                    {features.ClientDashboard && <Route exact path="/app/admin/clients/details/:id" component={ClientDetails} />}
+                    {features.ClientDashboard && <Route exact path="/app/admin/clients/details/:id/metrics" component={ClientMetrics} />}
+                    {features.ClientDashboard && <Route exact path="/app/admin/clients/create" component={ClientCreate} />}
+                  </div>
+                )}
+              </Switch>
             </div>
           </div>
           <Footer />
