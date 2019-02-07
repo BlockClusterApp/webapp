@@ -5,7 +5,8 @@
     "start": "./shell-scripts/docker-login.sh && ./shell-scripts/docker-start.sh",
     "test": "MONGO_URL=mongodb://localhost:27017/admin meteor test --once --driver-package meteortesting:mocha",
     "debug": "MONGO_URL=mongodb://35.161.9.16:32153 meteor run --inspect",
-    "ui-test": "jest"
+    "ui-test": "jest",
+    "pull-submodules": "git submodule foreach git pull origin master"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.0-14",
