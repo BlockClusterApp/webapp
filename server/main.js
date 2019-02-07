@@ -80,6 +80,8 @@ function getNodeConfig(networkConfig, userId) {
 
     if (_voucher) {
       nodeConfig.voucherId = _voucher._id;
+      delete _voucher.voucher_claim_status;
+      delete _voucher.availability;
       nodeConfig.voucher = _voucher;
       finalNetworkConfig = _voucher.networkConfig;
       if (_voucher.isDiskChangeable) {

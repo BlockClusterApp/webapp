@@ -33,6 +33,7 @@ bullSystem.initBull = function() {
   bullSystem.bullJobs = queue;
   bullSystem.volumeJobs = volumeJobs;
 
+  // Delay in ms
   bullSystem.addJob = (name, data, { attempts = 3, delay = 0, timeout = 120000, backOffDelay = 10000, jobId } = {}) => {
     const jobOptions = {
       attempts,
