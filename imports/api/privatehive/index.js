@@ -118,20 +118,6 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
   const result = {
     totalAmount: 0,
   };
-  if (!(selectedMonth.month() === moment().month() && selectedMonth.year() === moment().year()) && isFromFrontend) {
-    const prevMonthInvoice = Invoice.find({
-      userId: userId,
-      billingPeriodLabel: selectedMonth.format('MMM-YYYY'),
-    }).fetch()[0];
-    if (prevMonthInvoice) {
-      result.networks = prevMonthInvoice.items;
-      result.totalAmount = prevMonthInvoice.totalAmount;
-      result.invoiceStatus = prevMonthInvoice.paymentStatus;
-      result.invoiceId = prevMonthInvoice._id;
-      result.creditClaims = prevMonthInvoice.creditClaims;
-      return result;
-    }
-  }
 
   const userNetworks = PrivateHiveCollection.find({
     userId: userId,
