@@ -34,7 +34,7 @@ class NetworksList extends Component {
     return <span className="label label-inverse">{helpers.firstLetterCapital(status)}</span>;
   };
 
-  componentWillMount() {
+  componentDidMount() {
     Meteor.call('getClusterLocations', (err, res) => {
       if (err) {
         console.log(err);

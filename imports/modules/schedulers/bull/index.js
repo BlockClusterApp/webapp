@@ -20,13 +20,13 @@ if (env === 'production') {
 } else if (env === 'dev') {
   bullPrefix = '{bull-dev}';
 } else {
-  bullPrefix = '{bull-dev}';
+  bullPrefix = '{bull-development}';
 }
 
 const bullSystem = {};
 
 bullSystem.initBull = function() {
-  console.log('Bull redis', `redis://${Config.redisHost}:${Config.redisPort}`);
+  console.log('Bull redis', `redis://${Config.redisHost}:${Config.redisPort} @ ${bullPrefix}`);
   const queue = new Bull('queue', `redis://${Config.redisHost}:${Config.redisPort}`, { prefix: bullPrefix });
   const volumeJobs = new Bull('volume', `redis://${Config.redisHost}:${Config.redisPort}`, { prefix: bullPrefix });
 

@@ -55,6 +55,15 @@ PrivateHive.Helpers.generateInstance = async () => {
 
 PrivateHive.Helpers.createAWS_EFSDrive = ({ instanceId, locationCode }) => {
   return new Promise((resolve, reject) => {
+    if (['development'].includes(process.env.NODE_ENV)) {
+      return resolve({
+        instanceId,
+        CreationTime: new Date(),
+        FileSystemId: locationCode === 'us-west-2' ? 'fs-3fdead97' : '',
+        LifeCycleState: 'available',
+        OwnerId: '402432300121',
+      });
+    }
     const params = {
       CreationToken: instanceId,
       PerformanceMode: 'generalPurpose',
@@ -77,11 +86,12 @@ PrivateHive.Helpers.createAWS_EFSDrive = ({ instanceId, locationCode }) => {
   });
 };
 
-PrivateHive.Helpers.isAWS_EFSDriveReady = async ({ FileSystemId }) => {
+PrivateHive.Helpers.isAWS_EFSDriveReady = async ({ FileSystemId, locationCode }) => {
   return new Promise((resolve, reject) => {
     const params = { FileSystemId };
     const EFS = new AWS.EFS({ ...EFSParams, region: locationCode });
     EFS.describeFileSystems(params, (err, data) => {
+      data = data.FileSystems;
       debug('Describe NFS', FileSystemId, err, data);
       if (err) {
         ElasticLogger.log('Describe EFS drive failed', err);
@@ -395,7 +405,8 @@ PrivateHive.initializeNetwork = async ({ name, networkConfig, voucherId, locatio
     }
   );
 
-  // Bull.addJob('create-privatehive-node', { _id });
+  debug('Adding bull job');
+  Bull.addJob('create-privatehive-node', { _id });
   return true;
 };
 

@@ -8,11 +8,17 @@ const CONCURRENCY = 3;
 module.exports = bullSystem => {
   const processFunction = job => {
     return new Promise(async resolve => {
+      debug('Starting create privatehive worker', job.data);
       const { _id } = job.data;
 
       const network = PrivateHiveCollection.find({ _id }).fetch()[0];
 
-      if (!network.nfs.fileSystem) {
+      if (!network) {
+        ElasticLogger.log('Privatehive: Network deleted before creating artifacts', { _id });
+        return resolve();
+      }
+
+      if (!network.nfs.FileSystemId) {
         // NFS Server does not exists. Create one
         try {
           const efs = await PrivateHiveApis.Helpers.createAWS_EFSDrive({ instanceId: network.instanceId, locationCode: network.locationCode });
@@ -23,15 +29,16 @@ module.exports = bullSystem => {
             {
               $set: {
                 nfs: {
-                  fileSystem: efs.FileSystemId,
-                  createdAt: efs.CreationTime,
-                  status: efs.LifeCycleState,
+                  FileSystemId: efs.FileSystemId,
+                  CreationTime: efs.CreationTime,
+                  LifeCycleState: efs.LifeCycleState,
                   url: `${efs.FileSystemId}.efs.${network.locationCode}.amazonaws.com`,
                 },
               },
             }
           );
           // Wait for 10 seconds for the file system to boot up
+          debug('Wait 10 seconds for file system to boot up');
           bullSystem.addJob(
             'create-privatehive-node',
             {
@@ -60,10 +67,11 @@ module.exports = bullSystem => {
 
       // NFS exists. Check if it is up and running
       try {
-        const isNFSReady = await PrivateHiveApis.Helpers.isAWS_EFSDriveReady({ FileSystemId: network.nfs.FileSystemId });
+        const isNFSReady = await PrivateHiveApis.Helpers.isAWS_EFSDriveReady({ FileSystemId: network.nfs.FileSystemId, locationCode: network.locationCode });
         debug('isNFSReady', isNFSReady);
         if (!isNFSReady) {
           // Wait for 10 more seconds for the file system to boot up
+          debug('NFS not ready. Waiting 10 more seconds', { _id: network._id, FileSystemId: network.nfs.FileSystemId });
           return bullSystem.addJob(
             'create-privatehive-node',
             {
@@ -93,9 +101,10 @@ module.exports = bullSystem => {
         throw new Error('Error checking NFS. Rerun after backoff');
       }
 
+      debug('Creating privatehive');
       await PrivateHiveApis._createPrivateHiveNetwork({
         id: network.instanceId,
-        domain: instanceId,
+        domain: network.instanceId,
         locationCode: network.locationCode,
         kafka: network.networkConfig.kafka,
         orderer: network.networkConfig.orderer,
@@ -109,5 +118,5 @@ module.exports = bullSystem => {
     });
   };
 
-  bullSystem.bullJobs.process('create-privatehive-node', CONCURRENCY, processFunction);
+  bullSystem.bullJobs.process('create-privatehive-node', processFunction);
 };
