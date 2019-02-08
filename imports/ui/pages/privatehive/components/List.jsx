@@ -25,13 +25,13 @@ class NetworksList extends Component {
       return null;
     }
     if (status === 'initializing' || status === 'pending') {
-      return <span class="label label-inverse">{helpers.firstLetterCapital(status)}</span>;
+      return <span className="label label-inverse">{helpers.firstLetterCapital(status)}</span>;
     } else if (status === 'running' || status === 'completed') {
-      return <span class="label label-success">{helpers.firstLetterCapital(status)}</span>;
+      return <span className="label label-success">{helpers.firstLetterCapital(status)}</span>;
     } else if (status === 'down' || status === 'cancelled') {
-      return <span class="label label-important">{helpers.firstLetterCapital(status)}</span>;
+      return <span className="label label-important">{helpers.firstLetterCapital(status)}</span>;
     }
-    return <span class="label label-inverse">{helpers.firstLetterCapital(status)}</span>;
+    return <span className="label label-inverse">{helpers.firstLetterCapital(status)}</span>;
   };
 
   componentWillMount() {
@@ -98,7 +98,7 @@ class NetworksList extends Component {
                               <td className="v-align-middle">{item.isJoined ? 'Peer only' : 'Orderer Network'}</td>
                               <td className="v-align-middle">{this.getLocationName(item.locationCode)}</td>
                               <td className="v-align-middle">{this.convertStatusToTag(item.status)}</td>
-                              <td className="v-align-middle">{moment(item.createdOn).format('DD-MMM-YYYY kk:mm')}</td>
+                              <td className="v-align-middle">{moment(item.createdAt).format('DD-MMM-YYYY kk:mm')}</td>
                             </tr>
                           );
                         })}

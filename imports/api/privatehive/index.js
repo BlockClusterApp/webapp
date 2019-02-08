@@ -1,4 +1,5 @@
 import AWS from 'aws-sdk';
+import moment from 'moment';
 
 import PrivateHiveCollection from '../../collections/privatehive';
 import Voucher from '../../collections/vouchers/voucher';
@@ -10,6 +11,8 @@ const debug = require('debug')('api:privatehive');
 
 const EFS_AWS_ACCESS_KEY_ID = 'AKIAIYQD6G6A45MN3GJA';
 const EFS_AWS_SECRET_ACCESS_KEY = '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';
+
+const EXTRA_STORAGE_COST = 0.5 / (30 * 24); // 0.5 per GB per month
 
 const allowedChars = 'abcdefghijklmnpqrstuvwxyz';
 const ID_LENGTH = 10;
@@ -23,6 +26,15 @@ const EFSParams = {
 const PrivateHive = {};
 
 PrivateHive.Helpers = {};
+
+function convertMilliseconds(ms) {
+  const seconds = Math.round(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  return { seconds, minutes, hours, days };
+}
 
 PrivateHive.Helpers.generateInstance = async () => {
   const result = ['ph-'];
@@ -88,6 +100,212 @@ PrivateHive.Helpers.isAWS_EFSDriveReady = async ({ FileSystemId }) => {
       return resolve(false);
     });
   });
+};
+
+PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
+  month = month === undefined ? moment().month() : month;
+  year = year || moment().year();
+  const selectedMonth = moment()
+    .year(year)
+    .month(month);
+  const currentTime = moment();
+
+  let calculationEndDate = selectedMonth.endOf('month').toDate();
+  if (currentTime.isBefore(selectedMonth)) {
+    calculationEndDate = currentTime.toDate();
+  }
+
+  const result = {
+    totalAmount: 0,
+  };
+  if (!(selectedMonth.month() === moment().month() && selectedMonth.year() === moment().year()) && isFromFrontend) {
+    const prevMonthInvoice = Invoice.find({
+      userId: userId,
+      billingPeriodLabel: selectedMonth.format('MMM-YYYY'),
+    }).fetch()[0];
+    if (prevMonthInvoice) {
+      result.networks = prevMonthInvoice.items;
+      result.totalAmount = prevMonthInvoice.totalAmount;
+      result.invoiceStatus = prevMonthInvoice.paymentStatus;
+      result.invoiceId = prevMonthInvoice._id;
+      result.creditClaims = prevMonthInvoice.creditClaims;
+      return result;
+    }
+  }
+
+  const userNetworks = PrivateHiveCollection.find({
+    userId: userId,
+    createdAt: {
+      $lt: calculationEndDate,
+    },
+    $or: [
+      { deletedAt: null },
+      {
+        deletedAt: {
+          $gte: selectedMonth
+            .startOf('month')
+            .toDate()
+            .getDate(),
+        },
+      },
+    ],
+  }).fetch();
+
+  result.networks = userNetworks
+    .map(network => {
+      let thisCalculationEndDate = calculationEndDate;
+      if (network.deletedAt && moment(network.deletedAt).isBefore(calculationEndDate.getTime())) {
+        thisCalculationEndDate = new Date(network.deletedAt);
+      }
+
+      let billingStartDate = selectedMonth.startOf('month').toDate();
+      if (moment(billingStartDate).isBefore(moment(network.createdAt))) {
+        billingStartDate = moment(network.createdAt).toDate();
+      }
+
+      const price = Number(network.networkConfig.cost.hourly);
+
+      const time = convertMilliseconds(thisCalculationEndDate.getTime() - billingStartDate.getTime());
+      const rate = price; // per month
+      const ratePerHour = rate;
+      const ratePerMinute = ratePerHour / 60;
+
+      const voucher = network.voucher;
+
+      /**
+       * First Time inside Voucher Object voucher_claim_status array is of length 0.
+       * when we generate bill after month check if recurring type voucher of not.
+       * if recurring type voucher:
+       *         check the `voucher.usability.no_months` field conatins value for recurring.
+       *         now on applying voucher insert a doc in voucher.voucher_claim_status.
+       *         and every time before applying voucher in bill, check this if `voucher.usability.no_months` is less than
+       *         the inserted docs in `voucher_claim_status` or not.
+       *          if not then understad, limit of recurring is over, dont consider.
+       * if not recuring:
+       *         after applying voucher we are inserting a doc in the same voucher_claim_status field.
+       *         and also every time before applying ,checking if voucher_claim_status legth is 0 or more.
+       *         if 0 then that means first time, good to go. if there is any. then dont consider to apply.
+       *
+       * And Also check for expiry date.
+       */
+      let voucher_usable;
+      let voucher_expired;
+      if (voucher) {
+        if (!voucher.usability) {
+          voucher.usability = {
+            recurring: false,
+            no_months: 0,
+            once_per_user: true,
+            no_times_per_user: 1,
+          };
+        }
+        if (!voucher.availability) {
+          voucher.availability = {
+            card_vfctn_needed: true,
+            for_all: false,
+            email_ids: [],
+          };
+        }
+        if (!voucher.discount) {
+          voucher.discount = {
+            value: 0,
+            percent: false,
+          };
+        }
+
+        voucher_usable =
+          voucher.usability.recurring == true
+            ? voucher.usability.no_months > (voucher.voucher_claim_status ? voucher.voucher_claim_status.length : 0)
+              ? true
+              : false
+            : (voucher.voucher_claim_status
+              ? voucher.voucher_claim_status.length
+              : false)
+            ? false
+            : true;
+
+        voucher_expired = voucher.expiryDate ? new Date(voucher.expiryDate) <= new Date() : false;
+      }
+      let cost = Number(time.hours * ratePerHour + (time.minutes % 60) * ratePerMinute).toFixed(2);
+
+      let label = voucher ? voucher.code : null;
+
+      if (voucher && voucher._id && voucher_usable) {
+        let discount = voucher.discount.value || 0;
+        if (voucher.discount.percent) {
+          //in this case discout value will be percentage of discount.
+          cost = cost * ((100 - discount) / 100);
+        } else {
+          cost = Math.max(cost - discount, 0);
+        }
+
+        //so that we can track record how many times he used.
+        //and also helps to validate if next time need to consider voucher or not.
+        if (!isFromFrontend) {
+          PrivateHiveCollection.update(
+            { _id: network._id },
+            {
+              $push: {
+                'voucher.voucher_claim_status': {
+                  claimedBy: userId,
+                  claimedOn: new Date(),
+                  claimed: true,
+                },
+              },
+            }
+          );
+        }
+      }
+
+      let extraDiskStorage = 0;
+
+      const actualNetworkConfig = NetworkConfiguration.find({ _id: network.networkConfig._id, active: { $in: [true, false, null] } }).fetch()[0];
+
+      if (network.networkConfig.orderer.disk > actualNetworkConfig.orderer.disk) {
+        extraDiskStorage += Math.max(network.networkConfig.orderer.disk - actualNetworkConfig.orderer.disk, 0);
+      }
+      if (network.networkConfig.kafka.disk > actualNetworkConfig.kafka.disk) {
+        extraDiskStorage += Math.max(network.networkConfig.kafka.disk - actualNetworkConfig.kafka.disk, 0);
+      }
+      if (network.networkConfig.data.disk > actualNetworkConfig.data.disk) {
+        extraDiskStorage += Math.max(network.networkConfig.data.disk - actualNetworkConfig.data.disk, 0);
+      }
+
+      const extraDiskAmount = extraDiskStorage * (EXTRA_STORAGE_COST * time.hours);
+
+      // Just a precaution
+      if (network.deletedAt && moment(network.deletedAt).isBefore(selectedMonth.startOf('month'))) {
+        return undefined;
+      }
+
+      result.totalAmount += Number(cost);
+      function floorFigure(figure, decimals) {
+        if (!decimals) decimals = 3;
+        var d = Math.pow(10, decimals);
+        return (parseInt(figure * d) / d).toFixed(decimals);
+      }
+      return {
+        name: network.name,
+        instanceId: network.instanceId,
+        createdOn: new Date(network.createdAt),
+        rate: ` $ ${floorFigure(rate, 3)} / hr `, //taking upto 3 decimals , as shown in pricing page
+        runtime: `${time.hours}:${time.minutes % 60 < 10 ? `0${time.minutes % 60}` : time.minutes % 60} hrs | ${extraDiskStorage} GB extra`,
+        cost,
+        time,
+        deletedAt: network.deletedAt,
+        voucher: voucher,
+        networkConfig: network.networkConfig,
+        label,
+        timeperiod: `Started at: ${moment(network.createdOn).format('DD-MMM-YYYY kk:mm')} ${
+          network.deletedAt ? ` to ${moment(network.deletedAt).format('DD-MMM-YYYY kk:mm:ss')}` : 'and still running'
+        }`,
+      };
+    })
+    .filter(n => !!n);
+
+  result.totalAmount = Math.max(result.totalAmount, 0);
+
+  return result;
 };
 
 /* Add functions in this namespace so that it can be directly called when giving privatehive API endpoints for API access */

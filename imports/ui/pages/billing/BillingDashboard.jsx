@@ -67,6 +67,9 @@ class BillingDashboard extends Component {
   };
 
   showBill = () => {
+    this.setState({
+      loading: true,
+    });
     Meteor.call('fetchBilling', { userId: Meteor.userId(), month: this.selectedMonth, year: this.selectedYear, isFromFrontend: true }, (err, reply) => {
       this.setState({
         bill: reply,
@@ -81,7 +84,6 @@ class BillingDashboard extends Component {
     });
     Meteor.call('generateInvoiceHTML', this.state.bill.invoiceId, (err, res) => {
       if (err) {
-        console.log(err);
         RavenLogger.log('Generate Invoice HTML err', {
           invoice: this.props.invoice._id,
           res,
@@ -241,6 +243,7 @@ class BillingDashboard extends Component {
                           data-style={SLIDE_UP}
                           data-spinner-size={30}
                           data-spinner-lines={12}
+                          loading={this.state.loading}
                           className="btn btn-success m-t-10"
                           onClick={this.showBill}
                           style={{ marginTop: 0 }}

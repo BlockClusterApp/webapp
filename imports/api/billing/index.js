@@ -10,6 +10,7 @@ import HyperionApis from '../hyperion.js';
 import PaymeterApis from '../paymeter/index.js';
 import ChargeableAPI from '../../collections/chargeable-apis';
 import InvoiceApis from './invoice';
+import PrivateHive from '../privatehive';
 
 const Billing = {};
 
@@ -225,7 +226,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             //in this case discout value will be percentage of discount.
             cost = cost * ((100 - discount) / 100);
           } else {
-            cost = cost - discount;
+            cost = Math.max(cost - discount, 0);
           }
 
           //so that we can track record how many times he used.
@@ -347,6 +348,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             .toDate(),
       rate: `$ ${hyperionPricing.perGBCost} / GB-month `,
       runtime: '',
+      type: 'dynamo',
       cost: Number(total_hyperion_cost).toFixed(2),
     });
     result.totalAmount += Number(total_hyperion_cost);
@@ -427,6 +429,11 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       result.creditClaims = prevMonthInvoice.creditClaims;
     }
   }
+
+  const privatehiveBill = await PrivateHive.generateBill({ userId, month, year, isFromFrontend });
+
+  result.totalAmount += privatehiveBill.totalAmount;
+  result.networks = [...result.networks, ...privatehiveBill.networks];
 
   result.totalFreeMicroHours = convertMilliseconds(nodeUsageCountMinutes.Micro * 60 * 1000);
   result.totalAmount = Math.max(result.totalAmount, 0);
