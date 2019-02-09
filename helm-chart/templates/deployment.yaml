@@ -51,6 +51,8 @@ spec:
           value: {{ template "envs.redisPort" . }}
         - name: NAMESPACE
           value: {{ template "server.namespace" . }}
+        - name: PRIVATEHIVE_SERVICE_GRPC_URL
+          value: {{ template "envs.privatehiveServiceHost" . }}
         - name: IS_BLOCKCLUSTER_CLOUD
           value: "1"
         - name: NETWORK_UPDATE_ID
