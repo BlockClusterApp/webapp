@@ -314,6 +314,8 @@ PrivateHive._createPrivateHiveNetwork = ({ id, domain, locationCode, kafka, orde
     throw new Meteor.Error('bad-request', 'NFS server not specified');
   }
 
+  id = id.split('-')[1];
+
   const numbericObjects = [kafka, orderer, peer, data];
   numbericObjects.forEach(obj => {
     Object.keys(obj).forEach(key => {
@@ -347,7 +349,7 @@ PrivateHive._createPrivateHiveNetwork = ({ id, domain, locationCode, kafka, orde
       },
       (err, response) => {
         if (err) {
-          debug('GRPC CreatePrivateHiveNetwork', { id, nfs, err });
+          debug('GRPC CreatePrivateHiveNetwork', { id, nfsServer, err });
           ElasticLogger.log('GRPC Create PrivateHive Error', {
             id,
             nfs,
