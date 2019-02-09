@@ -315,6 +315,7 @@ PrivateHive._createPrivateHiveNetwork = ({ id, domain, locationCode, kafka, orde
   }
 
   id = id.split('-')[1];
+  domain = domain.split('-')[1];
 
   const numbericObjects = [kafka, orderer, peer, data];
   numbericObjects.forEach(obj => {
@@ -407,7 +408,6 @@ PrivateHive.initializeNetwork = async ({ name, networkConfig, voucherId, locatio
     }
   );
 
-  debug('Adding bull job');
   Bull.addJob('create-privatehive-node', { _id });
   return true;
 };
@@ -417,10 +417,31 @@ PrivateHive.getPrivateHiveNetworkCount = async () => {
   return PrivateHiveCollection.find({ active: true, deletedAt: null, userId }).count();
 };
 
+// Async used else meteor blocks further requests till this is completed
+PrivateHive.deleteNetwork = async ({ instanceId, userId }) => {
+  return new Promise((resolve, reject) => {
+    userId = userId || Meteor.userId();
+
+    const network = PrivateHiveCollection.find({ instanceId, userId }).fetch()[0];
+
+    if (!network) {
+      throw new Meteor.Error('bad-request', 'Invalid network to delete');
+    }
+
+    PrivateHiveServer.DeletePrivateHiveOrderer({
+      id: instanceId.split('-')[1],
+      domain: instanceId.split('-')[1],
+      locationCode: network.locationCode,
+      nfsServer: network.nfs.url,
+    });
+  });
+};
+
 /* Meteor methods so that our frontend can call these function without using HTTP calls. Although I would prefer to use HTTP instead of meteor method. */
 Meteor.methods({
   initializePrivateHiveNetwork: PrivateHive.initializeNetwork,
   getPrivateHiveNetworkCount: PrivateHive.getPrivateHiveNetworkCount,
+  deletePrivateHiveNetwork: PrivateHive.deleteNetwork,
 });
 
 export default PrivateHive;
