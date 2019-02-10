@@ -96,7 +96,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
           $gte: selectedMonth
             .startOf('month')
             .toDate()
-            .getDate(),
+            .getTime(),
         },
       },
     ],

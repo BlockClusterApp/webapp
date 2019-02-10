@@ -138,10 +138,7 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
       { deletedAt: null },
       {
         deletedAt: {
-          $gte: selectedMonth
-            .startOf('month')
-            .toDate()
-            .getDate(),
+          $gte: selectedMonth.startOf('month').toDate(),
         },
       },
     ],
@@ -348,12 +345,13 @@ PrivateHive._createPrivateHiveNetwork = ({ id, domain, locationCode, kafka, orde
         organizations,
         domains,
       },
+      { deadline: new Date().setSeconds(new Date().getSeconds() + 2) },
       (err, response) => {
         if (err) {
           debug('GRPC CreatePrivateHiveNetwork', { id, nfsServer, err });
           ElasticLogger.log('GRPC Create PrivateHive Error', {
             id,
-            nfs,
+            nfsServer,
             locationCode,
             err,
           });
@@ -417,24 +415,95 @@ PrivateHive.getPrivateHiveNetworkCount = async () => {
   return PrivateHiveCollection.find({ active: true, deletedAt: null, userId }).count();
 };
 
-// Async used else meteor blocks further requests till this is completed
-PrivateHive.deleteNetwork = async ({ instanceId, userId }) => {
+PrivateHive._deletePrivateHiveNetwork = ({ id, domain, locationCode, nfsServer }) => {
   return new Promise((resolve, reject) => {
-    userId = userId || Meteor.userId();
-
-    const network = PrivateHiveCollection.find({ instanceId, userId }).fetch()[0];
-
-    if (!network) {
-      throw new Meteor.Error('bad-request', 'Invalid network to delete');
-    }
-
-    PrivateHiveServer.DeletePrivateHiveOrderer({
-      id: instanceId.split('-')[1],
-      domain: instanceId.split('-')[1],
-      locationCode: network.locationCode,
-      nfsServer: network.nfs.url,
-    });
+    PrivateHiveServer.DeletePrivateHiveOrderer(
+      {
+        id,
+        domain,
+        locationCode,
+        nfsServer,
+      },
+      { deadline: new Date().setSeconds(new Date().getSeconds() + 2) },
+      Meteor.bindEnvironment((err, res) => {
+        if (err) {
+          console.log(err);
+          ElasticLogger.log(`Error deleting privatehive network`, { err, id });
+          return reject(err);
+        } else {
+          debug(res);
+          PrivateHiveCollection.update(
+            {
+              instanceId: `ph-${id}`,
+            },
+            {
+              $set: {
+                status: 'deleting',
+                deletedAt: new Date(),
+              },
+            }
+          );
+        }
+        return resolve();
+      })
+    );
   });
+};
+
+// Async used else meteor blocks further requests till this is completed
+PrivateHive.deleteNetwork = async ({ id, userId }) => {
+  userId = userId || Meteor.userId();
+
+  ElasticLogger.log(`PrivateHive network deletion`, { id, userId });
+
+  const network = PrivateHiveCollection.find({ _id: id, userId }).fetch()[0];
+
+  if (!network) {
+    throw new Meteor.Error('bad-request', 'Invalid network to delete');
+  }
+
+  PrivateHiveCollection.update(
+    {
+      _id: network._id,
+    },
+    {
+      $set: {
+        status: 'Prepare delete',
+      },
+    }
+  );
+
+  Bull.addJob('delete-privatehive-node', {
+    _id: network._id,
+  });
+
+  return true;
+};
+
+PrivateHive.changeName = async ({ id, newName }) => {
+  const user = Meteor.user();
+
+  ElasticLogger.log('Privatehive name change', { id, newName, userId: user._id });
+
+  const network = PrivateHiveCollection.find({ instanceId: id, userId: user._id }).fetch()[0];
+
+  if (!network) {
+    throw new Meteor.Error('bad-request', 'Invalid network id');
+  }
+
+  PrivateHiveCollection.update(
+    {
+      _id: network._id,
+      userId: network.userId,
+    },
+    {
+      $set: {
+        name: newName,
+      },
+    }
+  );
+
+  return true;
 };
 
 /* Meteor methods so that our frontend can call these function without using HTTP calls. Although I would prefer to use HTTP instead of meteor method. */
@@ -442,6 +511,7 @@ Meteor.methods({
   initializePrivateHiveNetwork: PrivateHive.initializeNetwork,
   getPrivateHiveNetworkCount: PrivateHive.getPrivateHiveNetworkCount,
   deletePrivateHiveNetwork: PrivateHive.deleteNetwork,
+  changePrivateHiveNodeName: PrivateHive.changeName,
 });
 
 export default PrivateHive;

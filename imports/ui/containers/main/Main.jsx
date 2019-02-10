@@ -59,6 +59,7 @@ import PlatformAPIKeys from '../../pages/platformApis/PlatformAPIKeys.jsx';
 import AdminPricingDashboard from '../../pages/admin/pricing/Dashboard.jsx';
 import PrivateHiveDashboard from '../../pages/privatehive/Dashboard';
 import PrivateHiveNetworkManage from '../../pages/privatehive/Manage';
+import PrivateHiveNetworkSettings from '../../pages/privatehive/Settings';
 
 export default withRouter(
   class Main extends Component {
@@ -143,6 +144,7 @@ export default withRouter(
 
               <Switch>
                 <Route exact path="/app/privatehive/:id/details" render={props => this.showFailedBillingWarning(PrivateHiveNetworkManage, props)} />
+                <Route exact path="/app/privatehive/:id/settings" render={props => this.showFailedBillingWarning(PrivateHiveNetworkSettings, props)} />
                 <Route path="/app/privatehive" render={props => this.showFailedBillingWarning(PrivateHiveDashboard, props)} />
               </Switch>
 

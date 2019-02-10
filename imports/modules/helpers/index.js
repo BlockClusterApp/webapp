@@ -35,7 +35,7 @@ export default {
       return `<span class="label label-inverse">${text}</span>`;
     } else if (status === 'running' || status === 'completed') {
       return `<span class="label label-success">${text}</span>`;
-    } else if (status === 'down' || status === 'cancelled') {
+    } else if (status === 'down' || status === 'cancelled' || status.includes('delete')) {
       return `<span class="label label-important">${text}</span>`;
     } else {
       return `<span class="label">${text}</span>`;

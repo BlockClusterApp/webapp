@@ -28,7 +28,7 @@ class NetworksList extends Component {
       return <span className="label label-inverse">{helpers.firstLetterCapital(status)}</span>;
     } else if (status === 'running' || status === 'completed') {
       return <span className="label label-success">{helpers.firstLetterCapital(status)}</span>;
-    } else if (status === 'down' || status === 'cancelled') {
+    } else if (status === 'down' || status === 'cancelled' || status.includes('delete')) {
       return <span className="label label-important">{helpers.firstLetterCapital(status)}</span>;
     }
     return <span className="label label-inverse">{helpers.firstLetterCapital(status)}</span>;
