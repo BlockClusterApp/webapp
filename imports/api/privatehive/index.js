@@ -506,12 +506,97 @@ PrivateHive.changeName = async ({ id, newName }) => {
   return true;
 };
 
+PrivateHive._joinPrivateHiveNetwork = async ({ id, domain, locationCode, peer, fabric, data, nfsServer, orderer }) => {
+  return new Promise((resolve, reject) => {
+    /* This invokes the CreatePrivateHive method in the privatehive server. No HTTP calls or endpoints to look for. Same function names to be used here and that server */
+    PrivateHiveServer.JoinPrivateHive(
+      {
+        id,
+        domain,
+        locationCode,
+        peer,
+        data,
+        fabric,
+        nfsServer,
+        orderer,
+      },
+      { deadline: new Date().setSeconds(new Date().getSeconds() + 5) },
+      (err, response) => {
+        if (err) {
+          debug('GRPC JoinPrivateHive', { id, nfsServer, err });
+          ElasticLogger.log('GRPC Join PrivateHive Error', {
+            id,
+            nfsServer,
+            locationCode,
+            err,
+          });
+          return reject(new Error('bad-request', err));
+        }
+        debug('Response from privatehive server', response);
+        return resolve(true);
+      }
+    );
+  });
+};
+
+PrivateHive.join = async ({ ordererId, name, networkConfig, voucherId, locationCode, userId }) => {
+  networkConfig = networkConfig.config;
+  userId = userId || Meteor.userId();
+  const _id = await PrivateHive.Helpers.generateInstance();
+
+  let voucher;
+  const oldNetworkConfig = { ...networkConfig };
+  if (voucherId) {
+    voucher = Voucher.find({ _id: voucherId }).fetch()[0];
+    networkConfig = NetworkConfiguration.find({ _id: voucher.networkConfig._id }).fetch()[0];
+    if (networkConfig.data.isDiskChangeable) networkConfig.data.disk = oldNetworkConfig.data.disk;
+
+    const tempVoucher = { ...voucher };
+    delete tempVoucher.networkConfig;
+    delete tempVoucher.voucher_claim_status;
+    delete tempVoucher.availability;
+
+    voucher = tempVoucher;
+  }
+
+  const orderer = PrivateHiveCollection.find({ _id: ordererId, deletedAt: null }).fetch()[0];
+
+  if (!orderer) {
+    throw new Meteor.Error('bad-request', 'Invalid orderer id');
+  }
+
+  PrivateHiveCollection.update(
+    {
+      _id,
+    },
+    {
+      $set: {
+        name,
+        networkConfig,
+        voucher,
+        locationCode,
+        createdAt: new Date(),
+        userId,
+        isJoined: true,
+        properties: {},
+        nfs: {},
+        status: 'initializing',
+        ordererId,
+      },
+    }
+  );
+
+  Bull.addJob('join-privatehive-node', { _id });
+  return true;
+};
+
 /* Meteor methods so that our frontend can call these function without using HTTP calls. Although I would prefer to use HTTP instead of meteor method. */
 Meteor.methods({
   initializePrivateHiveNetwork: PrivateHive.initializeNetwork,
   getPrivateHiveNetworkCount: PrivateHive.getPrivateHiveNetworkCount,
   deletePrivateHiveNetwork: PrivateHive.deleteNetwork,
   changePrivateHiveNodeName: PrivateHive.changeName,
+  joinPrivateHiveNetwork: PrivateHive.join,
 });
 
 export default PrivateHive;
