@@ -33,11 +33,11 @@ class PrivateHiveDashboard extends Component {
                     Create
                   </Link>
                 </li>
-                <li className="nav-item">
+                {/* <li className="nav-item">
                   <Link to="/app/privatehive/join" className={`${this.props.location.pathname === '/app/privatehive/join' ? 'active' : ''}`}>
                     Join
                   </Link>
-                </li>
+                </li> */}
                 <li className="nav-item">
                   <Link to="/app/privatehive/invite" className={`${this.props.location.pathname === '/app/privatehive/invite' ? 'active' : ''}`}>
                     Invite

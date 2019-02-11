@@ -439,7 +439,6 @@ PrivateHive._deletePrivateHiveNetwork = ({ id, domain, locationCode, nfsServer }
             {
               $set: {
                 status: 'deleting',
-                deletedAt: new Date(),
               },
             }
           );
