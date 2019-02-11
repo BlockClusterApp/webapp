@@ -424,14 +424,13 @@ PrivateHive._deletePrivateHiveNetwork = ({ id, domain, locationCode, nfsServer }
         locationCode,
         nfsServer,
       },
-      { deadline: new Date().setSeconds(new Date().getSeconds() + 2) },
+      { deadline: new Date().setSeconds(new Date().getSeconds() + 20) },
       Meteor.bindEnvironment((err, res) => {
+        debug(err, res);
         if (err) {
-          console.log(err);
           ElasticLogger.log(`Error deleting privatehive network`, { err, id });
           return reject(err);
         } else {
-          debug(res);
           PrivateHiveCollection.update(
             {
               instanceId: `ph-${id}`,
@@ -472,7 +471,7 @@ PrivateHive.deleteNetwork = async ({ id, userId }) => {
     }
   );
 
-  Bull.addJob('delete-privatehive-node', {
+  Bull.addJob('delete-privatehive-node1', {
     _id: network._id,
   });
 

@@ -18,7 +18,12 @@ module.exports = bullSystem => {
         return resolve();
       }
 
-      debug('Deleting privatehive');
+      debug('Deleting privatehive', {
+        id: network.instanceId.split('-')[1],
+        domain: network.instanceId.split('-')[1],
+        locationCode: network.locationCode,
+        nfsServer: network.nfs.url,
+      });
       await PrivateHiveApis._deletePrivateHiveNetwork({
         id: network.instanceId.split('-')[1],
         domain: network.instanceId.split('-')[1],
@@ -30,5 +35,5 @@ module.exports = bullSystem => {
     });
   };
 
-  bullSystem.bullJobs.process('delete-privatehive-node', processFunction);
+  bullSystem.bullJobs.process('delete-privatehive-node1', processFunction);
 };
