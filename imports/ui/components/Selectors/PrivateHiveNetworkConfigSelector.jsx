@@ -113,8 +113,11 @@ class PrivateHiveNetworkConfigSelector extends Component {
         networkConfig: reply.networkConfig,
       });
       this.dataDiskSpace.value = reply.networkConfig.data.disk;
-      this.ordererDiskSpace.value = reply.networkConfig.orderer.disk;
-      this.kafkaDiskSpace.value = reply.networkConfig.kafka.disk;
+      if (!this.props.isJoin) {
+        this.ordererDiskSpace.value = reply.networkConfig.orderer.disk;
+        this.kafkaDiskSpace.value = reply.networkConfig.kafka.disk;
+      }
+
       if (this.props && this.props.configChangeListener) {
         this.props.configChangeListener({ config: reply.networkConfig, voucher: reply });
       }

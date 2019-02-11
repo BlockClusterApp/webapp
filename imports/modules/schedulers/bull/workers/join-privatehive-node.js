@@ -130,5 +130,5 @@ module.exports = bullSystem => {
     });
   };
 
-  bullSystem.bullJobs.process('create-privatehive-node', processFunction);
+  bullSystem.bullJobs.process('join-privatehive-node', processFunction);
 };

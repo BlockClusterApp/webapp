@@ -15,4 +15,5 @@ module.exports = bullSystem => {
   require('./enable-ingress')(bullSystem);
   require('./create-privatehive-node')(bullSystem);
   require('./delete-privatehive-node')(bullSystem);
+  require('./join-privatehive-node')(bullSystem);
 };

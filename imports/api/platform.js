@@ -166,7 +166,7 @@ JsonRoutes.add('post', '/api/platform/networks/invite', function(req, res, next)
   let user = req.user;
   let { inviteToEmail, networkId, networkType } = req.body;
 
-  Meteor.call('inviteUserToNetwork', networkId, networkType, inviteToEmail, user._id, (error, inviteId) => {
+  Meteor.call('inviteUserToNetwork', { instanceId: networkId, nodeType: networkType, email: inviteToEmail, userId: user._id }, (error, inviteId) => {
     if (error) {
       JsonRoutes.sendResult(res, {
         code: 401,
@@ -352,7 +352,7 @@ JsonRoutes.add('post', '/api/platform/networks/invite/accept', function(req, res
     networkConfig.diskSpace = Math.floor(Number(diskSpace));
   }
 
-  Meteor.call('acceptInvitation', inviteId, locationCode, networkConfig, req.user._id, (error, instanceId) => {
+  Meteor.call('acceptInvitation', { inviteId, locationCode, networkConfig, userId: req.user._id }, (error, instanceId) => {
     if (error) {
       JsonRoutes.sendResult(res, {
         code: 401,

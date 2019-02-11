@@ -2,6 +2,30 @@ import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
+import PrivateHive from '../../../../collections/privatehive';
+import notification from '../../../../modules/notifications';
+
+const invalidChars = ['!', '#', '$', '%', '^', '&', '*', '(', ')', '-', ' ', '{', '}', '|', '~', '`', ','];
+function isEmailValid(email) {
+  if (!email) {
+    return false;
+  }
+  if (!email.includes('@')) {
+    return false;
+  }
+  const firstHalf = email.split('@')[0];
+  const secondHalf = email.split('@')[1];
+
+  if (firstHalf.includes('@') || secondHalf.includes('@')) {
+    return false;
+  }
+  let isError = false;
+  invalidChars.forEach(char => {
+    isError = isError || firstHalf.includes(char) || secondHalf.includes(char);
+  });
+
+  return !isError;
+}
 
 class Join extends Component {
   constructor(props) {
@@ -20,6 +44,43 @@ class Join extends Component {
   }
 
   componentDidMount() {}
+
+  inviteUser = () => {
+    let error = '';
+    if (!this.networkNameInvite.value) {
+      error = 'Select the network for which invite is to be sent';
+    }
+    if (!isEmailValid(this.email.value)) {
+      error = 'Invalid email id';
+    }
+
+    if (error) {
+      return this.setState({
+        inviteFormSubmitError: error,
+      });
+    }
+    this.setState({
+      inviteFormSubmitError: '',
+      inviteLoading: true,
+    });
+
+    Meteor.call('inviteUserToNetwork', { instanceId: this.networkNameInvite.value, nodeType: '', email: this.email.value, userId: Meteor.userId(), type: 'privatehive' }, err => {
+      if (!err) {
+        this.setState({
+          inviteFormSubmitError: '',
+          inviteLoading: false,
+        });
+
+        this.props.history.push('/app/privatehive/list');
+        notifications.success('Invited Successfully');
+      } else {
+        this.setState({
+          inviteFormSubmitError: err.reason,
+          inviteLoading: false,
+        });
+      }
+    });
+  };
 
   render() {
     return (
@@ -52,6 +113,11 @@ class Join extends Component {
                         <div className="form-group form-group-default required">
                           <label>Network name</label>
                           <select
+                            onChange={() => {
+                              this.setState({
+                                inviteFormSubmitError: '',
+                              });
+                            }}
                             className="form-control"
                             ref={input => {
                               this.networkNameInvite = input;
@@ -60,7 +126,7 @@ class Join extends Component {
                             {this.props.networks.map((item, index) => {
                               return (
                                 <option value={item.instanceId} key={item.instanceId}>
-                                  {item.name}
+                                  {item.name} - {item.instanceId}
                                 </option>
                               );
                             })}
@@ -76,9 +142,14 @@ class Join extends Component {
                             ref={input => {
                               this.email = input;
                             }}
+                            onChange={() => {
+                              this.setState({
+                                inviteFormSubmitError: '',
+                              });
+                            }}
                             type="email"
                             className="form-control"
-                            name="firstName"
+                            name="email"
                             required
                             placeholder="admin@blockcluster.io"
                           />
@@ -100,12 +171,13 @@ class Join extends Component {
 
                   <LaddaButton
                     loading={this.state.inviteLoading}
+                    disabled={!!this.state.inviteFormSubmitError}
                     data-size={S}
                     data-style={SLIDE_UP}
                     data-spinner-size={30}
                     data-spinner-lines={12}
                     className="btn btn-success"
-                    type="submit"
+                    onClick={this.inviteUser}
                   >
                     <i className="fa fa-plus-circle" aria-hidden="true" />
                     &nbsp;&nbsp;Invite
@@ -122,7 +194,7 @@ class Join extends Component {
 
 export default withTracker(() => {
   return {
-    networks: [],
-    subscriptions: [],
+    networks: PrivateHive.find({ userId: Meteor.userId(), deletedAt: null, active: true, status: 'running', isJoin: { $ne: true } }).fetch(),
+    subscriptions: [Meteor.subscribe('privatehive')],
   };
 })(withRouter(Join));

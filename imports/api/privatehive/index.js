@@ -345,7 +345,7 @@ PrivateHive._createPrivateHiveNetwork = ({ id, domain, locationCode, kafka, orde
         organizations,
         domains,
       },
-      { deadline: new Date().setSeconds(new Date().getSeconds() + 2) },
+      { deadline: new Date().setSeconds(new Date().getSeconds() + 10) },
       (err, response) => {
         if (err) {
           debug('GRPC CreatePrivateHiveNetwork', { id, nfsServer, err });
@@ -519,8 +519,9 @@ PrivateHive._joinPrivateHiveNetwork = async ({ id, domain, locationCode, peer, f
         fabric,
         nfsServer,
         orderer,
+        peerOrgs: [orderer.id, id],
       },
-      { deadline: new Date().setSeconds(new Date().getSeconds() + 5) },
+      { deadline: new Date().setSeconds(new Date().getSeconds() + 20) },
       (err, response) => {
         if (err) {
           debug('GRPC JoinPrivateHive', { id, nfsServer, err });
@@ -586,8 +587,16 @@ PrivateHive.join = async ({ ordererId, name, networkConfig, voucherId, locationC
     }
   );
 
-  Bull.addJob('join-privatehive-node', { _id });
-  return true;
+  debug('Adding join privatehive', {
+    _id,
+    name,
+    networkConfig,
+    voucher,
+    locationCode,
+    ordererId,
+  });
+  Bull.addJob('join-privatehive-node', { _id, ordererId: orderer._id });
+  return _id;
 };
 
 /* Meteor methods so that our frontend can call these function without using HTTP calls. Although I would prefer to use HTTP instead of meteor method. */

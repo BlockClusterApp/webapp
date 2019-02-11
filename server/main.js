@@ -1381,8 +1381,8 @@ spec:
 
     return myFuture.wait();
   },
-  inviteUserToNetwork: async function(networkId, nodeType, email, userId) {
-    return UserFunctions.inviteUserToNetwork(networkId, nodeType, email, userId || Meteor.userId());
+  inviteUserToNetwork: async function({instanceId, nodeType, email, userId, type}) {
+    return UserFunctions.inviteUserToNetwork({instanceId, nodeType, email, userId: userId || Meteor.userId(), type});
   },
   createAssetType: function(instanceId, assetName, assetType, assetIssuer, reissuable, parts) {
     this.unblock();
