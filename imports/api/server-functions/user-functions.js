@@ -386,7 +386,6 @@ NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkC
     });
 
     if (type === 'privatehive') {
-      console.log('Joining privatehive', { inviteId, locationCode, networkConfig, userId, type, network, userId });
       const res = await PrivateHiveApis.join({
         ordererId: network._id,
         name: network.name,

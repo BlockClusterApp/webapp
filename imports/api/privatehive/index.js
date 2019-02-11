@@ -355,7 +355,7 @@ PrivateHive._createPrivateHiveNetwork = ({ id, domain, locationCode, kafka, orde
             locationCode,
             err,
           });
-          return reject(new Error('bad-request', err));
+          return reject(new Error(err));
         }
         debug('Response from privatehive server', response);
         return resolve(true);

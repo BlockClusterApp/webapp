@@ -110,23 +110,26 @@ module.exports = bullSystem => {
         return resolve();
       }
       debug('Joining privatehive');
-      await PrivateHiveApis._joinPrivateHiveNetwork({
-        id: network.instanceId.split('-')[1],
-        domain: network.instanceId.split('-')[1],
-        locationCode: network.locationCode,
-        peer: network.networkConfig.peer,
-        fabric: network.networkConfig.fabric,
-        data: network.networkConfig.data,
-        nfsServer: network.nfs.url,
-        orderer: {
-          id: orderer.instanceId.split('-')[1],
-          domain: orderer.instanceId.split('-')[1],
-          locationCode: orderer.locationCode,
-          nfsServer: orderer.nfs.url,
-        },
-      });
-
-      return resolve(true);
+      try {
+        await PrivateHiveApis._joinPrivateHiveNetwork({
+          id: network.instanceId.split('-')[1],
+          domain: network.instanceId.split('-')[1],
+          locationCode: network.locationCode,
+          peer: network.networkConfig.peer,
+          fabric: network.networkConfig.fabric,
+          data: network.networkConfig.data,
+          nfsServer: network.nfs.url,
+          orderer: {
+            id: orderer.instanceId.split('-')[1],
+            domain: orderer.instanceId.split('-')[1],
+            locationCode: orderer.locationCode,
+            nfsServer: orderer.nfs.url,
+          },
+        });
+        return resolve(true);
+      } catch (err) {
+        throw new Error(err);
+      }
     });
   };
 
