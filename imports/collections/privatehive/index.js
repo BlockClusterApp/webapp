@@ -35,7 +35,7 @@ PrivateHive.schema = new SimpleSchema({
   userId: {
     type: String,
   },
-  isJoined: {
+  isJoin: {
     // If joined network then true
     type: Boolean,
   },

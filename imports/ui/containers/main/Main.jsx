@@ -60,6 +60,8 @@ import AdminPricingDashboard from '../../pages/admin/pricing/Dashboard.jsx';
 import PrivateHiveDashboard from '../../pages/privatehive/Dashboard';
 import PrivateHiveNetworkManage from '../../pages/privatehive/Manage';
 import PrivateHiveNetworkSettings from '../../pages/privatehive/Settings';
+import PrivateHiveAdminList from '../../pages/admin/privatehive/NetworkList';
+import PrivateHiveAdminDetails from '../../pages/admin/privatehive/Details';
 
 export default withRouter(
   class Main extends Component {
@@ -166,7 +168,9 @@ export default withRouter(
                   <Route exact path="/app/admin/users/:id" component={UserDetails} />
                   <Route exact path="/app/admin/networks" component={NetworkList} />
                   <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
-                  <Route exact path="/app/admin/network-configs" component={ConfigList} />
+
+                  <Route exact path="/app/admin/privatehive" component={PrivateHiveAdminList} />
+                  <Route exact path="/app/admin/privatehive/:id" component={PrivateHiveAdminDetails} />
 
                   {features.Vouchers && <Route path="/app/admin/vouchers" component={VoucherList} />}
                   {features.Vouchers && <Route exact path="/app/admin/voucher/details/:id" component={VoucherDetails} />}

@@ -31,7 +31,7 @@ export default {
     return str.charAt(0).toUpperCase() + str.slice(1);
   },
   convertStatusToTag: function(status, text) {
-    if (status === 'initializing' || status === 'pending') {
+    if (status === 'initializing' || status === 'pending' || status === 'testing') {
       return `<span class="label label-inverse">${text}</span>`;
     } else if (status === 'running' || status === 'completed') {
       return `<span class="label label-success">${text}</span>`;

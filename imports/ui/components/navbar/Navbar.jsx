@@ -209,7 +209,13 @@ class Navbar extends Component {
                     </li>
                   )}
                   <li>
-                    <Link to="/app/admin/networks">Networks</Link>
+                    <Link to="/app/admin/networks">Dynamo</Link>
+                    <span className="icon-thumbnail">
+                      <i className="fa fa-desktop" />
+                    </span>
+                  </li>
+                  <li>
+                    <Link to="/app/admin/privatehive">Private Hive</Link>
                     <span className="icon-thumbnail">
                       <i className="fa fa-desktop" />
                     </span>

@@ -2,6 +2,7 @@ import { Networks } from '../../collections/networks/networks';
 import Voucher from '../../collections/vouchers/voucher';
 import LocationApi from '../locations';
 import NetworkConfig from '../../collections/network-configuration/network-configuration';
+import PrivateHive from '../../collections/privatehive';
 import Config from '../../modules/config/server';
 import moment from 'moment';
 
@@ -51,6 +52,46 @@ Network.fetchNetworkForAdmin = async networkId => {
   //   bill = await Billing.generateBill(user._id);
   // }
   return { network, user, locations, voucher, networkType, bill: bill ? bill.networks.find(i => i._id === networkId) : null };
+};
+
+Network.fetchPrivateHiveNetworkForAdmin = async networkId => {
+  if (Meteor.user().admin <= 0) {
+    return new Meteor.Error('Unauthorized');
+  }
+
+  let network = PrivateHive.find({ _id: networkId }).fetch()[0];
+  if (!network) {
+    network = PrivateHive.find({ instanceId: networkId }).fetch()[0];
+    if (!network) {
+      return { network };
+    }
+  }
+  const user = Meteor.users
+    .find(
+      { _id: network.userId },
+      {
+        fields: {
+          profile: 1,
+          _id: 1,
+          emails: 1,
+          admin: 1,
+          createdAt: 1,
+        },
+      }
+    )
+    .fetch()[0];
+  const locations = LocationApi.getLocations();
+  let voucher, networkType;
+  if (network.voucher) {
+    voucher = Voucher.find({
+      _id: network.voucher._id,
+    }).fetch()[0];
+  }
+
+  if (network.networkConfig) {
+    networkType = NetworkConfig.find({ _id: network.networkConfig._id, for: 'privatehive' }).fetch()[0];
+  }
+  return { network, user, locations, voucher, networkType };
 };
 
 Network.fetchPodStatus = id => {
@@ -267,6 +308,7 @@ Meteor.methods({
   fetchDeploymentStatus: Network.fetchDeploymentStatus,
   fetchPVCStatus: Network.fetchPVCStatus,
   fetchIngressStatus: Network.fetchIngressStatus,
+  fetchPrivateHiveNetworkForAdmin: Network.fetchPrivateHiveNetworkForAdmin,
 });
 
 export default Network;

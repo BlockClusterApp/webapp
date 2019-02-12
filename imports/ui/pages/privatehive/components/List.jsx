@@ -95,7 +95,7 @@ class NetworksList extends Component {
                             <tr key={item._id} onClick={() => this.openNetwork(item.instanceId)}>
                               <td className="v-align-middle ">{item.name}</td>
                               <td className="v-align-middle">{item.instanceId}</td>
-                              <td className="v-align-middle">{item.isJoined ? 'Peer' : 'Authority'}</td>
+                              <td className="v-align-middle">{item.isJoin ? 'Peer' : 'Authority'}</td>
                               <td className="v-align-middle">{this.getLocationName(item.locationCode)}</td>
                               <td className="v-align-middle">{this.convertStatusToTag(item.status)}</td>
                               <td className="v-align-middle">{moment(item.createdAt).format('DD-MMM-YYYY kk:mm')}</td>
