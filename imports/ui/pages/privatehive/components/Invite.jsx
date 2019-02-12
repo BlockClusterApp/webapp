@@ -91,15 +91,7 @@ class Join extends Component {
               <div className="card card-transparent">
                 <div className="card-block">
                   <h3>Invite to a Hyperledeger Fabric Network</h3>
-                  <p>Lorem ipsum</p>
-                  <ul>
-                    <li>
-                      <i>Voucher Code</i>: enter voucher code if you have one to get discount and other benefits
-                    </li>
-                    <li>
-                      <i>Node Type</i>: select either development or production grade node i.e., light or power node
-                    </li>
-                  </ul>
+                  <p>Here you can invite an another organisation to join the network. </p>
                 </div>
               </div>
             </div>

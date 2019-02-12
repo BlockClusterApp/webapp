@@ -215,26 +215,21 @@ class PrivateHiveNetworkConfigSelector extends Component {
               </div>
               {!this.props.isJoin && (
                 <div className="row clearfix">
-                  <div className="col-md-3 col-sm-12">
-                    <h5 className="form-group form-group-default m-t-0" style={{ textTransform: 'uppercase', paddingTop: '14px' }}>
-                      Kafka
-                    </h5>
-                  </div>
-                  <div className="col-md-3 col-sm-4">
+                  <div className="col-md-4 col-sm-4">
                     <div className="form-group form-group-default ">
-                      <label>CPU (vCPUs)</label>
+                      <label>Kafka CPU (vCPUs)</label>
                       <input type="text" className="form-control" name="projectName" value={this.state.networkConfig.kafka.cpu} disabled />
                     </div>
                   </div>
-                  <div className="col-md-3 col-sm-4">
+                  <div className="col-md-4 col-sm-4">
                     <div className="form-group form-group-default ">
-                      <label>RAM (GB)</label>
+                      <label>Kafka RAM (GB)</label>
                       <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.kafka.ram} disabled />
                     </div>
                   </div>
-                  <div className="col-md-3 col-sm-4">
+                  <div className="col-md-4 col-sm-4">
                     <div className="form-group form-group-default ">
-                      <label>Disk Space (GB)</label>
+                      <label>Kafka Disk Space (GB)</label>
                       <input
                         type="number"
                         className="form-control"
@@ -249,26 +244,21 @@ class PrivateHiveNetworkConfigSelector extends Component {
               )}
               {!this.props.isJoin && (
                 <div className="row clearfix">
-                  <div className="col-md-3 col-sm-12">
-                    <h5 className="form-group form-group-default m-t-0" style={{ textTransform: 'uppercase', paddingTop: '14px' }}>
-                      Orderer
-                    </h5>
-                  </div>
-                  <div className="col-md-3 col-sm-4">
+                  <div className="col-md-4 col-sm-4">
                     <div className="form-group form-group-default ">
-                      <label>CPU (vCPUs)</label>
+                      <label>Orderer CPU (vCPUs)</label>
                       <input type="text" className="form-control" name="projectName" value={this.state.networkConfig.orderer.cpu} disabled />
                     </div>
                   </div>
-                  <div className="col-md-3 col-sm-4">
+                  <div className="col-md-4 col-sm-4">
                     <div className="form-group form-group-default ">
-                      <label>RAM (GB)</label>
+                      <label>Orderer RAM (GB)</label>
                       <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.orderer.ram} disabled />
                     </div>
                   </div>
-                  <div className="col-md-3 col-sm-4">
+                  <div className="col-md-4 col-sm-4">
                     <div className="form-group form-group-default ">
-                      <label>Disk Space (GB)</label>
+                      <label> Orderer Disk Space (GB)</label>
                       <input
                         type="number"
                         className="form-control"
@@ -281,33 +271,21 @@ class PrivateHiveNetworkConfigSelector extends Component {
                 </div>
               )}
               <div className="row clearfix">
-                <div className="col-md-3 col-sm-12">
-                  <h5 className="form-group form-group-default m-t-0" style={{ textTransform: 'uppercase', paddingTop: '14px' }}>
-                    Peer
-                  </h5>
-                </div>
-                <div className="col-md-3 col-sm-6">
+                <div className="col-md-4 col-sm-4">
                   <div className="form-group form-group-default ">
-                    <label>CPU (vCPUs)</label>
+                    <label>Peer CPU (vCPUs)</label>
                     <input type="text" className="form-control" name="projectName" value={this.state.networkConfig.peer.cpu} disabled />
                   </div>
                 </div>
-                <div className="col-md-6 col-sm-6">
+                <div className="col-md-4 col-sm-4">
                   <div className="form-group form-group-default ">
-                    <label>RAM (GB)</label>
+                    <label>Peer RAM (GB)</label>
                     <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.peer.ram} disabled />
                   </div>
                 </div>
-              </div>
-              <div className="row clearfix">
-                <div className="col-md-3 col-sm-12">
-                  <h5 className="form-group form-group-default m-t-0" style={{ textTransform: 'uppercase', paddingTop: '14px' }}>
-                    Data
-                  </h5>
-                </div>
-                <div className="col-md-9 col-sm-12">
+                <div className="col-md-4 col-sm-4">
                   <div className="form-group form-group-default ">
-                    <label>Disk Space (GB)</label>
+                    <label>Peer Disk Space (GB)</label>
                     <input
                       type="number"
                       className="form-control"

@@ -52,7 +52,7 @@ class ViewNetwork extends Component {
                             }}
                           >
                             <p className="no-margin text-black bold text-uppercase fs-12">Create Channels</p>
-                            <p className="no-margin fs-12" />
+                            <p className="no-margin fs-12">Private Subnet</p>
                           </div>
                           <div
                             className="clickable"
@@ -61,7 +61,7 @@ class ViewNetwork extends Component {
                             }}
                           >
                             <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Manage Channels</p>
-                            <p className="no-margin fs-12" />
+                            <p className="no-margin fs-12">Add/Remove Members</p>
                           </div>
                           <div
                             className="clickable"
@@ -70,12 +70,12 @@ class ViewNetwork extends Component {
                             }}
                           >
                             <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Stats</p>
-                            <p className="no-margin fs-12">Total Units</p>
+                            <p className="no-margin fs-12">List and Analytics</p>
                           </div>
                         </div>
                       </div>
                       <br />
-                      <p className="small hint-text" />
+                      <p className="small hint-text">Create mini blockchains for communicating privately between other peer organizations</p>
                     </div>
                     <div className="col-lg-3">
                       <p>Chaincodes</p>
@@ -92,8 +92,8 @@ class ViewNetwork extends Component {
                               this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/streams/create') : '';
                             }}
                           >
-                            <p className="no-margin text-black bold text-uppercase fs-12">Create Chaincode</p>
-                            <p className="no-margin fs-12" />
+                            <p className="no-margin text-black bold text-uppercase fs-12">Upload Chaincode</p>
+                            <p className="no-margin fs-12">Install and Initiate</p>
                           </div>
                           <div
                             className="clickable"
@@ -101,8 +101,8 @@ class ViewNetwork extends Component {
                               this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/streams/publish') : '';
                             }}
                           >
-                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Manage Chaincodes</p>
-                            <p className="no-margin fs-12" />
+                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Upgrade Chaincodes</p>
+                            <p className="no-margin fs-12">Version Control</p>
                           </div>
                           <div
                             className="clickable"
@@ -110,17 +110,14 @@ class ViewNetwork extends Component {
                               this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/streams/access-control') : '';
                             }}
                           >
-                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Stats</p>
-                            <p className="no-margin fs-12" />
+                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">APIs</p>
+                            <p className="no-margin fs-12">Integrate Chaincode</p>
                           </div>
                         </div>
                       </div>
                       <br />
-                      <p className="small hint-text" />
+                      <p className="small hint-text">Write, deploy and generate APIs for smart contracts using JavaScript, Java and Golang</p>
                     </div>
-                  </div>
-                  <hr />
-                  <div className="row ">
                     <div className="col-lg-3">
                       <p>Settings</p>
                       <div className="row m-l-5 m-t-10">
@@ -137,7 +134,7 @@ class ViewNetwork extends Component {
                             }}
                           >
                             <p className="no-margin text-black bold text-uppercase fs-12">Node Info and Settings</p>
-                            <p className="no-margin fs-12">Node Authorities and IPs</p>
+                            <p className="no-margin fs-12">Network and Hardware</p>
                           </div>
 
                           <div
@@ -146,8 +143,8 @@ class ViewNetwork extends Component {
                               this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/security/peers') : '';
                             }}
                           >
-                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Node Peers</p>
-                            <p className="no-margin fs-12">Add or Remove Peers</p>
+                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Explorer</p>
+                            <p className="no-margin fs-12">Audit</p>
                           </div>
                           <div
                             className="clickable"
@@ -155,8 +152,8 @@ class ViewNetwork extends Component {
                               this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/security/apis') : '';
                             }}
                           >
-                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">APIs</p>
-                            <p className="no-margin fs-12">Credentials and Docs</p>
+                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Notifications</p>
+                            <p className="no-margin fs-12">Events and Alerts</p>
                           </div>
                         </div>
                       </div>

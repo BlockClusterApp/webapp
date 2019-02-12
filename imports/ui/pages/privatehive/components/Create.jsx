@@ -59,16 +59,13 @@ class PaymentDashboard extends Component {
               <div className="card card-transparent">
                 <div className="card-block">
                   <h3>Create Your Hyperledeger Fabric Network</h3>
-                  <p>Lorem ipsum</p>
+                  <p>Here you can create your own production grade HLF network</p>
                   <ul>
                     <li>
-                      <i>Voucher Code</i>: enter voucher code if you have one to get discount and other benefits
+                      <i>Orderer</i>: Orderer is responsible for creating blocks. The authority of the network should be the creator of the network and is who hosts the orderer.
                     </li>
                     <li>
-                      <i>Node Type</i>: select either development or production grade node i.e., light or power node
-                    </li>
-                    <li>
-                      <i>Impulse URL</i>: add the impulse server URL of the network you want to join to achieve privacy features
+                      <i>Kafka and Zookeeper</i>: These are internal components of Orderer, which enable orderer to handle large TPS.
                     </li>
                   </ul>
                 </div>

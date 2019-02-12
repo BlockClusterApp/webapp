@@ -145,36 +145,35 @@ class ViewEditNetwork extends Component {
                       <b className="value-valign-middle-status">{this.getLocationName(network.locationCode)}</b>
                     </div>
                   </div>
+
                   <div className="form-group row">
-                    <label className="col-md-3 control-label">Resource Configuration</label>
+                    <label className="col-md-3 control-label">HLF Version</label>
+                    <div className="col-md-9">{network.networkConfig.fabric.version}</div>
+                  </div>
+
+                  <div className="form-group row">
+                    <label className="col-md-3 control-label">Total Orderers</label>
+                    <div className="col-md-9">{network.networkConfig.fabric.orderers}</div>
+                  </div>
+
+                  <div className="form-group row">
+                    <label className="col-md-3 control-label">Orderer Configuration</label>
                     <div className="col-md-9">
-                      <span className="value-valign-middle-status">
-                        Fabric: Version <b>{network.networkConfig.fabric.version}</b> | <b>{network.networkConfig.fabric.orderers}</b> Orderers |&nbsp;
-                        <b>{network.networkConfig.fabric.peers}</b> Peers
-                        <br />
-                        Orderers: <b>{network.networkConfig.orderer.cpu}</b> vCPUs | <b>{network.networkConfig.orderer.ram}</b> GB RAM |&nbsp;
-                        <b>
-                          {network.networkConfig.orderer.disk}
-                          {network.networkConfig.orderer.isDiskChangeable ? '*' : ''}
-                        </b>
-                        &nbsp; GB Disk
-                        <br />
-                        Kafka: <b>{network.networkConfig.kafka.cpu}</b> vCPUs | <b>{network.networkConfig.kafka.ram}</b> GB RAM |&nbsp;
-                        <b>
-                          {network.networkConfig.kafka.disk}
-                          {network.networkConfig.kafka.isDiskChangeable ? '*' : ''}
-                        </b>
-                        &nbsp; GB Disk
-                        <br />
-                        Peer: <b>{network.networkConfig.orderer.cpu}</b> vCPUs | <b>{network.networkConfig.orderer.ram}</b> GB RAM
-                        <br />
-                        Data:&nbsp;
-                        <b>
-                          {network.networkConfig.data.disk}
-                          {network.networkConfig.data.isDiskChangeable ? '*' : ''}
-                        </b>
-                        &nbsp; GB Disk
-                      </span>
+                      {network.networkConfig.orderer.cpu} vCPUs - {network.networkConfig.orderer.ram} GB RAM - {network.networkConfig.orderer.disk}
+                      {network.networkConfig.orderer.isDiskChangeable ? '*' : ''} GD Disk Space
+                    </div>
+                  </div>
+
+                  <div className="form-group row">
+                    <label className="col-md-3 control-label">Total Peers</label>
+                    <div className="col-md-9">{network.networkConfig.fabric.peers}</div>
+                  </div>
+
+                  <div className="form-group row">
+                    <label className="col-md-3 control-label">Peer Configuration</label>
+                    <div className="col-md-9">
+                      {network.networkConfig.orderer.cpu} vCPUs - {network.networkConfig.orderer.ram} GB RAM - {network.networkConfig.orderer.disk}
+                      {network.networkConfig.orderer.isDiskChangeable ? '*' : ''} GD Disk Space
                     </div>
                   </div>
                   <div className="form-group row">
