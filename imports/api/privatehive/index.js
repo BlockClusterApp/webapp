@@ -471,7 +471,7 @@ PrivateHive.deleteNetwork = async ({ id, userId }) => {
     }
   );
 
-  Bull.addJob('delete-privatehive-node1', {
+  Bull.addJob('delete-privatehive-node', {
     _id: network._id,
   });
 

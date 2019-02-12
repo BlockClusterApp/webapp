@@ -67,6 +67,9 @@ class PaymentDashboard extends Component {
                     <li>
                       <i>Kafka and Zookeeper</i>: These are internal components of Orderer, which enable orderer to handle large TPS.
                     </li>
+                    <li>
+                      <i>Data Disk Space</i>: This space will hold all your CA certs, chaincodes, channel config files, channel blocks and other generated artifacts.
+                    </li>
                   </ul>
                 </div>
               </div>

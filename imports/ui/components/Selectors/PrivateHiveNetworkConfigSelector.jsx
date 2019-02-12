@@ -285,7 +285,7 @@ class PrivateHiveNetworkConfigSelector extends Component {
                 </div>
                 <div className="col-md-4 col-sm-4">
                   <div className="form-group form-group-default ">
-                    <label>Peer Disk Space (GB)</label>
+                    <label>Data Disk Space (GB)</label>
                     <input
                       type="number"
                       className="form-control"

@@ -159,8 +159,7 @@ class ViewEditNetwork extends Component {
                   <div className="form-group row">
                     <label className="col-md-3 control-label">Orderer Configuration</label>
                     <div className="col-md-9">
-                      {network.networkConfig.orderer.cpu} vCPUs - {network.networkConfig.orderer.ram} GB RAM - {network.networkConfig.orderer.disk}
-                      {network.networkConfig.orderer.isDiskChangeable ? '*' : ''} GD Disk Space
+                      {network.networkConfig.orderer.cpu} vCPUs - {network.networkConfig.orderer.ram} GB RAM - {network.networkConfig.orderer.disk} GB Disk Space
                     </div>
                   </div>
 
@@ -172,9 +171,13 @@ class ViewEditNetwork extends Component {
                   <div className="form-group row">
                     <label className="col-md-3 control-label">Peer Configuration</label>
                     <div className="col-md-9">
-                      {network.networkConfig.orderer.cpu} vCPUs - {network.networkConfig.orderer.ram} GB RAM - {network.networkConfig.orderer.disk}
-                      {network.networkConfig.orderer.isDiskChangeable ? '*' : ''} GD Disk Space
+                      {network.networkConfig.peer.cpu} vCPUs - {network.networkConfig.peer.ram} GB RAM
                     </div>
+                  </div>
+
+                  <div className="form-group row">
+                    <label className="col-md-3 control-label">Data Disk Space</label>
+                    <div className="col-md-9">{network.networkConfig.data.disk} GB Disk Space</div>
                   </div>
                   <div className="form-group row">
                     <label className="col-md-3 control-label">Created At</label>

@@ -35,5 +35,5 @@ module.exports = bullSystem => {
     });
   };
 
-  bullSystem.bullJobs.process('delete-privatehive-node1', processFunction);
+  bullSystem.bullJobs.process('delete-privatehive-node', processFunction);
 };
