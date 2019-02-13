@@ -453,11 +453,17 @@ PrivateHive._deletePrivateHiveNetwork = ({ id, domain, locationCode, nfsServer }
 PrivateHive.deleteNetwork = async ({ id, userId }) => {
   userId = userId || Meteor.userId();
 
+  const user = Meteor.users.find({ _id: userId }).fetch()[0];
+
   ElasticLogger.log(`PrivateHive network deletion`, { id, userId });
 
-  const network = PrivateHiveCollection.find({ _id: id, userId }).fetch()[0];
+  const network = PrivateHiveCollection.find({ _id: id }).fetch()[0];
 
   if (!network) {
+    throw new Meteor.Error('bad-request', 'Invalid network to delete');
+  }
+
+  if (user.admin < 2 && network.userId !== userId) {
     throw new Meteor.Error('bad-request', 'Invalid network to delete');
   }
 

@@ -115,8 +115,11 @@ class NetworkList extends Component {
         deleteConfirmAsked: true,
       });
     }
+    this.setState({
+      deleteDisabled: true,
+    });
 
-    Meteor.call('adminPrivateHiveDeleteNetwork', this.state.network.network.instanceId, (err, res) => {
+    Meteor.call('adminPrivateHiveDeleteNetwork', this.state.network.network._id, (err, res) => {
       if (!err) {
         this.setState({
           deleteDisabled: true,
@@ -124,6 +127,9 @@ class NetworkList extends Component {
         this.fetchNetwork();
         notifications.success('Network deleted successfully');
       } else {
+        this.setState({
+          deleteDisabled: false,
+        });
         notifications.error(err.reason);
       }
     });
@@ -290,10 +296,10 @@ class NetworkList extends Component {
                       {!!network.deletedAt ? 'Already deleted' : this.state.deleteConfirmAsked ? 'Are you sure? This is irreversible' : 'Delete Node'}
                     </button>
                     &nbsp;
-                    <button className="btn btn-danger" style={{ marginBottom: '5px' }} onClick={this.restartPod} disabled={this.state.restartingPod}>
+                    {/* <button className="btn btn-danger" style={{ marginBottom: '5px' }} onClick={this.restartPod} disabled={this.state.restartingPod}>
                       {this.state.restartingPod && <i className="fa fa-spinner fa-spin" />}&nbsp;
                       {!!this.state.restartingPod ? 'Restarting Pod' : this.state.restartConfirmAsked ? 'Are you sure? This is irreversible' : 'Restart Pod'}
-                    </button>
+                    </button> */}
                   </div>
                   <div className="clearfix" />
                 </div>
@@ -334,7 +340,9 @@ class NetworkList extends Component {
             </div>
             {!network.deletedAt && (
               <div className="row">
-                <div className="col-md-12">{/* <KubeDashboard instanceId={network.instanceId} networkId={network._id} /> */}</div>
+                <div className="col-md-12">
+                  <KubeDashboard instanceId={network.instanceId} networkId={network._id} />
+                </div>
               </div>
             )}
           </div>
