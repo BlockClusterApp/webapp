@@ -2,7 +2,13 @@
 
 . ./.circleci/export-env-vars.sh
 
-aws s3 cp s3://bc-kubeconfig/config ~/.kube/config
+if [ "$NODE_ENV" = "production" ]; then
+  aws s3 cp s3://bc-kubeconfig/config ~/.kube/config
+  export KUBECONTEXT="k8s-${CLUSTER_PREFIX}.blockcluster.io";
+else
+  aws s3 cp s3://bc-kubeconfig/k8s-dev-do.blockcluster.io.yaml ~/.kube/config
+  export KUBECONTEXT="do-lon1-do-dev-blockclusterio"
+fi
 
 helm init --client-only
 
@@ -12,7 +18,7 @@ releaseName="blockcluster-app-${NODE_ENV}"
 echo $setVariables
 
 helm --debug \
-  --kube-context "k8s-${CLUSTER_PREFIX}.blockcluster.io" \
+  --kube-context "$KUBECONTEXT" \
   upgrade \
   --install \
   --set ${setVariables} \

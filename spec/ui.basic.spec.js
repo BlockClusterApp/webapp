@@ -111,7 +111,7 @@ describe('Asset Management', () => {
   };
 
   const network = {
-    instanceId: 'qqcrtfvm',
+    instanceId: 'lemeqvay',
   };
 
   const asset = {
