@@ -72,6 +72,7 @@ redis-master.{{ template "server.namespace" . }}.svc.cluster.local
 {{- end -}}
 
 {{- define "server.nodeAffinities" }}
+{{- if eq .Values.NODE_ENV "production" -}}
 affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
@@ -81,4 +82,16 @@ affinity:
           operator: In
           values:
           - compute
+{{- else -}}
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+          - key: optimizedFor
+            operator: In
+            values:
+            - compute
+{{- end -}}
 {{- end -}}
