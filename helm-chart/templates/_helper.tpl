@@ -82,7 +82,7 @@ affinity:
           operator: In
           values:
           - compute
-{{- else -}}
+{{- else }}
 affinity:
   nodeAffinity:
     preferredDuringSchedulingIgnoredDuringExecution:
