@@ -3,6 +3,7 @@ import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
 import NetworkConfiguration from '../../../../collections/network-configuration/network-configuration';
 import ConfigCard from './components/ConfigCard';
+import ServiceLocation from '../../../components/Selectors/ServiceLocation';
 
 class ConfigList extends Component {
   constructor(props) {
@@ -47,6 +48,7 @@ class ConfigList extends Component {
     return (
       <div className="content networksList">
         <div className="m-t-20 container-fluid container-fixed-lg">
+          <ServiceLocation service="dynamo" />
           <div className="row">
             <div className="col-md-12">
               <h3 className="pull-left">Network Configuration</h3>
