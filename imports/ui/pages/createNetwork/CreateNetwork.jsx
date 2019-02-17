@@ -108,9 +108,15 @@ class CreateNetwork extends Component {
                   <h3>Create Your Blockchain Network</h3>
                   <p>This will create a private and permissioned blockchain network. Technically it will create a single node network.</p>
                   <ul>
-                      <li><i>Voucher Code</i>: enter voucher code if you have one to get discount and other benefits</li>
-                      <li><i>Node Type</i>: select either development or production grade node i.e., light or power node</li>
-                      <li><i>Impulse URL</i>: add the impulse server URL of the network you want to join to achieve privacy features</li>
+                    <li>
+                      <i>Voucher Code</i>: enter voucher code if you have one to get discount and other benefits
+                    </li>
+                    <li>
+                      <i>Node Type</i>: select either development or production grade node i.e., light or power node
+                    </li>
+                    <li>
+                      <i>Impulse URL</i>: add the impulse server URL of the network you want to join to achieve privacy features
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -146,16 +152,24 @@ class CreateNetwork extends Component {
 
                     <div className="row clearfix">
                       <div className="col-md-12">
-                        <LocationSelector locationChangeListener={locationCode => (this.locationCode = locationCode)} />
+                        <LocationSelector
+                          locationChangeListener={locationCode => {
+                            this.locationCode = locationCode;
+                            this.setState({});
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
                   <br />
                   <p>Node Configuration</p>
                   <NetworkConfigSelector
+                    locationCode={this.locationCode}
+                    key={this.locationCode}
                     configChangeListener={config => {
                       this.config = config;
-                      if(config.diskSpace > 16000) { // 16TiB
+                      if (config.diskSpace > 16000) {
+                        // 16TiB
                         return this.setState({
                           formSubmitError: 'Disk space cannot exceed 16000 GB',
                         });

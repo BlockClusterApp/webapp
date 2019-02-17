@@ -11,8 +11,17 @@ class ConfigList extends Component {
 
     this.state = {
       page: 0,
+      locations: [],
     };
   }
+
+  componentDidMount = () => {
+    Meteor.call('getClusterLocations', {}, (err, res) => {
+      this.setState({
+        locations: res,
+      });
+    });
+  };
 
   render() {
     const views = [];
@@ -24,7 +33,7 @@ class ConfigList extends Component {
         }
         currentRowObjects.push(
           <div className="col-md-6" key={`config_${i}`}>
-            <ConfigCard config={this.props.configs[i]} />
+            <ConfigCard config={this.props.configs[i]} locations={this.state.locations} />
           </div>
         );
         if (i % 2 === 1 || i === this.props.configs.length - 1) {
@@ -40,7 +49,7 @@ class ConfigList extends Component {
     views.push(
       <div className="row" key="add_config">
         <div className="col-md-12">
-          <ConfigCard config={{}} isInEditMode={true} />
+          <ConfigCard config={{}} isInEditMode={true} locations={this.state.locations} />
         </div>
       </div>
     );
