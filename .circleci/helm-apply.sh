@@ -5,6 +5,9 @@
 if [ "$NODE_ENV" = "production" ]; then
   aws s3 cp s3://bc-kubeconfig/config ~/.kube/config
   export KUBECONTEXT="k8s-${CLUSTER_PREFIX}.blockcluster.io";
+elif [ "$NODE_ENV" = "test" ] ; then
+  aws s3 cp s3://bc-kubeconfig/blr-dev-kubeconfig.yaml ~/.kube/config
+  export KUBECONTEXT="do-blr1-blr-dev"
 else
   aws s3 cp s3://bc-kubeconfig/k8s-dev-do.blockcluster.io.yaml ~/.kube/config
   export KUBECONTEXT="do-lon1-do-dev-blockclusterio"
