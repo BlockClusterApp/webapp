@@ -63,12 +63,16 @@ https://{{ .Values.ROOT_URL }}
 {{- if eq .Values.NODE_ENV "production" -}}
 web-production.vyqym8.ng.0001.aps1.cache.amazonaws.com
 {{- else -}}
-redis-master.{{ template "server.namespace" . }}.svc.cluster.local
+"159.65.85.3"
 {{- end -}}
 {{- end -}}
 
 {{- define "envs.redisPort" -}}
+{{- if eq .Values.NODE_ENV "production" -}}
 "6379"
+{{- else -}}
+"6379"
+{{- end -}}
 {{- end -}}
 
 {{- define "server.nodeAffinities" }}
