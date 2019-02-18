@@ -99,6 +99,12 @@ NetworkConfiguration.schema = new SimpleSchema({
   for: {
     type: String,
   },
+  locations: {
+    type: Array,
+  },
+  'locations.$': {
+    type: String,
+  },
 });
 
 export default NetworkConfiguration;

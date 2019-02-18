@@ -103,6 +103,7 @@ require('../../collections/webhooks/server/publications');
 require('../../collections/paymeter/server/publications');
 require('../../collections/pricing/server/publications');
 require('../../collections/privatehive/server/publications');
+require('../../collections/locations/server/publications');
 require('../../api/payments');
 require('../../api/billing');
 

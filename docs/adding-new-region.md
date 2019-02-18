@@ -67,20 +67,28 @@ rules:
     resources:
       - 'pods'
       - 'cronjobs'
+      - 'jobs'
     verbs: ['get', 'list', 'watch', 'delete', 'create', 'update']
   - apiGroups: ['', 'apps', 'extensions']
     resources:
       - 'deployments'
       - 'ingresses'
       - 'replicasets'
+      - 'namespaces'
     verbs: ['get', 'delete', 'update', 'patch', 'list', 'watch', 'create']
-  - apiGroups: ['']
+  - apiGroups: ['', 'rbac.authorization.k8s.io']
     resources:
       - 'services'
       - 'horizontalpodautoscalers'
       - 'statefulsets'
       - 'persistentvolumeclaims'
       - 'ingresses'
+      - 'clusterroles'
+      - 'clusterrolebindings'
+      - 'persistentvolumes'
+      - 'roles'
+      - 'rolebindings'
+      - 'configmaps'
     verbs: ['get', 'delete', 'update', 'patch', 'list', 'watch', 'create']
   - apiGroups: ['']
     resources:

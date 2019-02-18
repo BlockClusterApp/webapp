@@ -38,7 +38,7 @@ Network.fetchNetworkForAdmin = async networkId => {
       }
     )
     .fetch()[0];
-  const locations = LocationApi.getLocations();
+  const locations = await LocationApi.getLocations({ service: 'dynamo', userId: network.user });
   let voucher, networkType;
   if (network.voucherId) {
     voucher = Voucher.find({
@@ -82,7 +82,7 @@ Network.fetchPrivateHiveNetworkForAdmin = async networkId => {
       }
     )
     .fetch()[0];
-  const locations = LocationApi.getLocations();
+  const locations = LocationApi.getLocations({ service: 'privatehive', userId: network.userId });
   let voucher, networkType;
   if (network.voucher) {
     voucher = Voucher.find({

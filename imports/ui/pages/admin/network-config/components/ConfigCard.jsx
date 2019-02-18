@@ -7,6 +7,8 @@ export default class ConfigCard extends React.Component {
     this.state = {
       isInEditMode: props.isInEditMode || false,
     };
+
+    this.locationMapping = {};
   }
 
   edit = () => {
@@ -33,6 +35,7 @@ export default class ConfigCard extends React.Component {
           'cost.monthly': this.configMonthlyCost.value,
           'cost.hourly': this.state.costHourly,
           showInNetworkSelection: this.showInNetworkSelection,
+          locationMapping: this.locationMapping,
         },
         userId: Meteor.userId(),
         type: 'dynamo',
@@ -67,7 +70,7 @@ export default class ConfigCard extends React.Component {
   };
 
   render() {
-    let { config } = this.props;
+    let { config, locations } = this.props;
     const isInEditMode = this.props.isInEditMode || this.state.isInEditMode;
 
     if (!config) {
@@ -76,6 +79,55 @@ export default class ConfigCard extends React.Component {
 
     if (!config.cost) {
       config.cost = {};
+    }
+
+    let locationEditView = [];
+    let locationsEnabled = [];
+    if (!config.locations) {
+      locations.forEach(loc => {
+        locationsEnabled.push(loc.locationCode);
+        this.locationMapping[loc.locationCode] = true;
+        locationEditView.push(
+          <div className="col-md-4 col-lg-3 col-sm-6">
+            <label htmlFor={`label_${loc.locationCode}`} style={{ cursor: 'pointer' }}>
+              {loc.locationCode}
+            </label>
+            &nbsp;
+            <input
+              type="checkbox"
+              id={`label_${loc.locationCode}`}
+              defaultChecked={true}
+              onClick={e => {
+                this.locationMapping[loc.locationCode] = e.target.checked;
+              }}
+            />
+          </div>
+        );
+      });
+    } else {
+      locations.forEach(loc => {
+        const isChecked = config.locations.includes(loc.locationCode);
+        this.locationMapping[loc.locationCode] = isChecked;
+        if (isChecked) {
+          locationsEnabled.push(loc.locationCode);
+        }
+        locationEditView.push(
+          <div className="col-md-4 col-lg-3 col-sm-6">
+            <label htmlFor={`label_${loc.locationCode}`} style={{ cursor: 'pointer' }}>
+              {loc.locationCode}
+            </label>
+            &nbsp;
+            <input
+              type="checkbox"
+              id={`label_${loc.locationCode}`}
+              defaultChecked={isChecked}
+              onClick={e => {
+                this.locationMapping[loc.locationCode] = e.target.checked;
+              }}
+            />
+          </div>
+        );
+      });
     }
 
     this.config = config;
@@ -113,6 +165,11 @@ export default class ConfigCard extends React.Component {
               ) : (
                 <p>&nbsp;</p>
               )}
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-md-12">
+              <b>Available in: </b> {locationsEnabled.join(', ')}
             </div>
           </div>
         </div>
@@ -193,6 +250,10 @@ export default class ConfigCard extends React.Component {
                 }}
               />
             </div>
+          </div>
+          <div className="row">
+            <div className="col-md-12 bold">Availibility:</div>
+            {locationEditView}
           </div>
         </div>
         <div className="card-footer clearfix">

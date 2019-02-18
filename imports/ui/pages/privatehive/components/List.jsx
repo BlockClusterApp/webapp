@@ -35,7 +35,7 @@ class NetworksList extends Component {
   };
 
   componentDidMount() {
-    Meteor.call('getClusterLocations', (err, res) => {
+    Meteor.call('getClusterLocations', {}, (err, res) => {
       if (err) {
         console.log(err);
       } else {

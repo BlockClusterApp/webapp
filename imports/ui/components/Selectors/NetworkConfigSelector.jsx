@@ -27,7 +27,7 @@ class NetworkConfigSelector extends Component {
       this.setState({
         configs: res,
       });
-      this.defaultConfig = Object.values(res)[0];
+      this.defaultConfig = Object.values(res).filter(i => (i.locations ? i.locations.includes(this.props.locationCode) : true))[0];
       if (this.config) this.config.value = this.defaultConfig.name;
       this.onConfigChange();
     });
@@ -38,6 +38,10 @@ class NetworkConfigSelector extends Component {
       return;
     }
     const config = this.state.configs[this.config.value];
+
+    if (!config) {
+      return;
+    }
 
     if (!skipDefault) {
       this.diskSpace.value = config.disk;
@@ -105,11 +109,18 @@ class NetworkConfigSelector extends Component {
   };
 
   render() {
-    const configList = Object.values(this.state.configs).map(config => (
-      <option value={config.name} key={config._id}>
-        {config.name}
-      </option>
-    ));
+    const configList = [];
+
+    Object.values(this.state.configs).forEach(config => {
+      if (this.props.locationCode && config.locations && !config.locations.includes(this.props.locationCode)) {
+        return;
+      }
+      configList.push(
+        <option value={config.name} key={config._id}>
+          {config.name}
+        </option>
+      );
+    });
     const dropDown = (
       <div className="form-group form-group-default ">
         <label>Node Type</label>

@@ -75,15 +75,20 @@ privatehive-dev.blockcluster.io
 {{- if eq .Values.NODE_ENV "production" -}}
 web-production.vyqym8.ng.0001.aps1.cache.amazonaws.com
 {{- else -}}
-redis-master.{{ template "server.namespace" . }}.svc.cluster.local
+"159.65.85.3"
 {{- end -}}
 {{- end -}}
 
 {{- define "envs.redisPort" -}}
+{{- if eq .Values.NODE_ENV "production" -}}
 "6379"
+{{- else -}}
+"6379"
+{{- end -}}
 {{- end -}}
 
 {{- define "server.nodeAffinities" }}
+{{- if eq .Values.NODE_ENV "production" }}
 affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
@@ -93,4 +98,16 @@ affinity:
           operator: In
           values:
           - compute
+{{- else }}
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+          - key: optimizedFor
+            operator: In
+            values:
+            - compute
+{{- end -}}
 {{- end -}}

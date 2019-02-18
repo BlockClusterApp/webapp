@@ -80,7 +80,7 @@ class NetworkList extends Component {
   }
 
   componentDidMount() {
-    Meteor.call('getClusterLocations', (err, res) => {
+    Meteor.call('getClusterLocations', {}, (err, res) => {
       this.setState({
         locations: res,
       });

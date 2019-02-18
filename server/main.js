@@ -570,7 +570,7 @@ Meteor.methods({
                         ],
                         imagePullSecrets: [
                           {
-                            name: 'regsecret',
+                            name: 'blockcluster-regsecret',
                           },
                         ],
                       },
@@ -969,7 +969,7 @@ spec:
           persistentVolumeClaim:
             claimName: ${instanceId}-pvc
       imagePullSecrets:
-      - name: regsecret`;
+      - name: blockcluster-regsecret`;
           } else {
             var content = `apiVersion: apps/v1beta1
 kind: Deployment
@@ -1058,7 +1058,7 @@ spec:
           persistentVolumeClaim:
             claimName: ${instanceId}-pvc
       imagePullSecrets:
-      - name: regsecret`;
+      - name: blockcluster-regsecret`;
           }
           HTTP.call('POST', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims`, {
             content: JSON.stringify({

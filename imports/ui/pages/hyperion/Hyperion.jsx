@@ -185,7 +185,7 @@ class HyperionComponent extends Component {
   }
 
   componentDidMount() {
-    Meteor.call('getClusterLocations', (err, res) => {
+    Meteor.call('getClusterLocations', { service: 'hyperion' }, (err, res) => {
       let ips = [];
       res.forEach(item => {
         ips.push(item.workerNodeIP);
@@ -423,7 +423,7 @@ class HyperionComponent extends Component {
                         <div className="card-block" style={{ paddingBottom: '0px' }}>
                           <div className="form-group-attached">
                             <form role="form">
-                              <LocationSelector locationChangeListener={locationCode => (this.locationCode = locationCode)} />
+                              <LocationSelector locationChangeListener={locationCode => (this.locationCode = locationCode)} service="hyperion" />
                               <br />
                               <Gallery uploader={this.uploader} />
                             </form>

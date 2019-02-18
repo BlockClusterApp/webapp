@@ -16,11 +16,22 @@ Apis.createNetworkConfig = async ({ userId, params, type }) => {
     throw new Meteor.Error('Unauthorized to create network config');
   }
 
-  const allowedFields = ['name', 'cpu', 'ram', 'disk', 'isDiskChangeable', 'cost.monthly', 'cost.hourly', '_id', 'showInNetworkSelection'];
+  const allowedFields = ['name', 'cpu', 'ram', 'disk', 'isDiskChangeable', 'cost.monthly', 'cost.hourly', '_id', 'showInNetworkSelection', 'locationMapping'];
 
   Object.keys(params).forEach(key => {
     if (!allowedFields.includes(key)) {
       delete params[key];
+    }
+  });
+
+  const locationMapping = params.locationMapping;
+  const locations = [];
+
+  delete params.locationMapping;
+
+  Object.keys(locationMapping).forEach(loc => {
+    if (locationMapping[loc]) {
+      locations.push(loc);
     }
   });
 
@@ -40,6 +51,7 @@ Apis.createNetworkConfig = async ({ userId, params, type }) => {
       {
         $set: {
           ...params,
+          locations,
         },
       }
     );
