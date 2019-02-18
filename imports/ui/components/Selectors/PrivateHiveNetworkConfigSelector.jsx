@@ -5,6 +5,8 @@ class PrivateHiveNetworkConfigSelector extends Component {
   constructor(props) {
     super(props);
 
+    this.locationCode = props.locationCode;
+
     this.state = {
       configs: {},
       voucherLoading: false,
@@ -28,7 +30,7 @@ class PrivateHiveNetworkConfigSelector extends Component {
       this.setState({
         configs: res,
       });
-      this.defaultConfig = Object.values(res)[0];
+      this.defaultConfig = Object.values(res).filter(i => (i.locations ? i.locations.includes(this.props.locationCode) : true))[0];
       if (this.config) this.config.value = this.defaultConfig.name;
       this.onConfigChange();
     });

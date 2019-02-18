@@ -42,7 +42,7 @@ Apis.createNetworkConfig = async ({ userId, params, type }) => {
     };
     delete params['cost.monthly'];
     delete params['cost.hourly'];
-    NetworkConfiguration.insert(params);
+    NetworkConfiguration.insert({ ...params, locations });
   } else {
     NetworkConfiguration.update(
       {
@@ -88,11 +88,22 @@ Apis.createPrivateHiveConfig = async ({ userId, params, type }) => {
     throw new Meteor.Error('Unauthorized to create network config');
   }
 
-  const allowedFields = ['kafka', 'orderer', 'peer', 'cost.monthly', 'cost.hourly', '_id', 'name', 'data', 'for', 'fabric', 'showInNetworkSelection'];
+  const allowedFields = ['kafka', 'orderer', 'peer', 'cost.monthly', 'cost.hourly', '_id', 'name', 'data', 'for', 'fabric', 'showInNetworkSelection', 'locationMapping'];
 
   Object.keys(params).forEach(key => {
     if (!allowedFields.includes(key)) {
       delete params[key];
+    }
+  });
+
+  const locationMapping = params.locationMapping;
+  const locations = [];
+
+  delete params.locationMapping;
+
+  Object.keys(locationMapping).forEach(loc => {
+    if (locationMapping[loc]) {
+      locations.push(loc);
     }
   });
 
@@ -105,7 +116,7 @@ Apis.createPrivateHiveConfig = async ({ userId, params, type }) => {
     };
     delete params['cost.monthly'];
     delete params['cost.hourly'];
-    NetworkConfiguration.insert(params);
+    NetworkConfiguration.insert({ ...params, locations });
   } else {
     NetworkConfiguration.update(
       {
@@ -114,6 +125,7 @@ Apis.createPrivateHiveConfig = async ({ userId, params, type }) => {
       {
         $set: {
           ...params,
+          locations,
         },
       }
     );

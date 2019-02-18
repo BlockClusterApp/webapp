@@ -99,13 +99,21 @@ class PaymentDashboard extends Component {
 
                     <div className="row clearfix">
                       <div className="col-md-12">
-                        <LocationSelector locationChangeListener={locationCode => (this.locationCode = locationCode)} />
+                        <LocationSelector
+                          locationChangeListener={locationCode => {
+                            this.locationCode = locationCode;
+                            this.setState({});
+                          }}
+                          service="privatehive"
+                        />
                       </div>
                     </div>
                   </div>
                   <br />
                   <p>Node Configuration</p>
                   <PrivateHiveNetworkConfigSelector
+                    locationCode={this.locationCode}
+                    key={this.locationCode}
                     configChangeListener={config => {
                       const voucher = config.voucher;
                       delete config.voucher;

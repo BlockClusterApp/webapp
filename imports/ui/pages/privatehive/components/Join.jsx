@@ -73,7 +73,12 @@ class Join extends Component {
 
                     <div className="row clearfix">
                       <div className="col-md-12">
-                        <LocationSelector locationChangeListener={locationCode => (this.locationCode = locationCode)} />
+                        <LocationSelector
+                          locationChangeListener={locationCode => {
+                            this.locationCode = locationCode;
+                            this.setState({});
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -81,6 +86,8 @@ class Join extends Component {
                   <p>Node Configuration</p>
                   <PrivateHiveNetworkConfigSelector
                     isJoin={true}
+                    key={this.locationCode}
+                    locationCode={this.locationCode}
                     configChangeListener={config => {
                       this.config = config;
                       this.setState({
