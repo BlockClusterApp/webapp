@@ -168,7 +168,6 @@ class HyperionComponent extends Component {
               });
             }
 
-            console.log('Uploading to ', this.state.locationCode);
             await setUploaderURL(Meteor.userId(), this.state.locationCode, this.uploader);
           },
           onError: (id, fileName, reason, d) => {
