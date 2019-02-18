@@ -137,12 +137,7 @@ class HyperionComponent extends Component {
       searchLoading: false,
     };
 
-    this.downloadFile = this.downloadFile.bind(this);
-    this.searchFile = this.searchFile.bind(this);
-  }
-
-  getUploader() {
-    return new FineUploaderTraditional({
+    this.uploader = new FineUploaderTraditional({
       options: {
         chunking: {
           enabled: false,
@@ -173,17 +168,22 @@ class HyperionComponent extends Component {
               });
             }
 
-            await setUploaderURL(Meteor.userId(), this.locationCode, this.getUploader.bind(this));
+            await setUploaderURL(Meteor.userId(), this.state.locationCode, this.uploader);
           },
           onError: (id, fileName, reason, d) => {
             notifications.error(reason);
           },
-          onTotalProgress: (a, b) => {
-            console.log(a, b);
-          },
+          onTotalProgress: (a, b) => {},
         },
       },
     });
+
+    this.downloadFile = this.downloadFile.bind(this);
+    this.searchFile = this.searchFile.bind(this);
+  }
+
+  getUploader() {
+    return;
   }
 
   componentDidMount() {
@@ -428,12 +428,14 @@ class HyperionComponent extends Component {
                               <LocationSelector
                                 locationChangeListener={locationCode => {
                                   this.locationCode = locationCode;
-                                  this.setState({});
+                                  this.setState({
+                                    locationCode,
+                                  });
                                 }}
                                 service="hyperion"
                               />
                               <br />
-                              <Gallery key={this.locationCode} uploader={this.getUploader.bind(this)} />
+                              <Gallery key={this.locationCode} uploader={this.uploader} />
                             </form>
                           </div>
                         </div>

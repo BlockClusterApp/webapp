@@ -23,6 +23,7 @@ Meteor.publish('networks.all', function({ page }) {
         createdOn: 1,
         locationCode: 1,
         status: 1,
+        metadata: 1,
         createdAt: 1,
         deletedAt: 1,
         networkConfig: 1,
