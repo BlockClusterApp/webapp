@@ -89,6 +89,9 @@ VoucherCollection.schema = new SimpleSchema({
   paymeter: {
     type: Object,
   },
+  locationMapping: {
+    type: Object,
+  },
 });
 
 if (Meteor.isServer) {

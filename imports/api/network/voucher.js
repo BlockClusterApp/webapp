@@ -259,6 +259,7 @@ Voucher.create = async function(payload) {
       voucher_claim_status: [],
       campaignId: payload.campaignId,
       type: payload.type,
+      locationMapping: payload.locationMapping,
     };
     if (payload.type === 'network') {
       obj.networkConfig = { cpu: payload.networkConfig.cpu, ram: payload.networkConfig.ram, disk: payload.networkConfig.disk };

@@ -77,6 +77,18 @@ class NetworkConfigSelector extends Component {
         });
       }
 
+      if (reply.locationMapping) {
+        if (!reply.locationMapping[this.props.locationCode]) {
+          return this.setState({
+            voucherLoading: false,
+            voucher: {
+              status: 'error',
+              error: 'Not applicable for this location',
+            },
+          });
+        }
+      }
+
       this.voucherDetails = reply;
       this.setState({
         voucherLoading: false,
