@@ -71,7 +71,7 @@ class NetworkList extends Component {
   }
 
   componentDidMount() {
-    Meteor.call('getClusterLocations', { service: 'dynamo' }, (err, res) => {
+    Meteor.call('getClusterLocations', { service }, (err, res) => {
       this.setState({
         locations: res,
       });

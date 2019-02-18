@@ -18,6 +18,8 @@ class VoucherCreate extends Component {
   constructor(props) {
     super(props);
 
+    this.locationMapping = {};
+
     this.campaignId = undefined;
 
     this.state = {
@@ -47,6 +49,7 @@ class VoucherCreate extends Component {
       enable_download: false,
     };
   }
+
   resetForm = () => {
     this.setState(
       {
@@ -87,6 +90,7 @@ class VoucherCreate extends Component {
       () => {
         let payload = this.state;
         const _doc_voucher = {
+          locationMapping: this.locationMapping,
           code: this.state.customCode ? payload.code : null,
           noOfVouchers: payload.noOfVouchers,
           voucher_code_size: payload.voucher_code_size,
@@ -241,11 +245,35 @@ class VoucherCreate extends Component {
 
   render() {
     const configs = this.props.configs;
+    const locations = this.props.locations;
+
+    let locationEditView = [];
+    locations.forEach(loc => {
+      this.locationMapping[loc.locationCode] = this.locationMapping[loc.locationCode] === false ? false : true;
+      locationEditView.push(
+        <div className="col-md-3 col-lg-2 col-sm-3">
+          <label htmlFor={`label_${loc.locationCode}`} style={{ cursor: 'pointer' }}>
+            {loc.locationCode}
+          </label>
+          &nbsp;
+          <input
+            type="checkbox"
+            id={`label_${loc.locationCode}`}
+            defaultChecked={true}
+            onClick={e => {
+              this.locationMapping[loc.locationCode] = e.target.checked;
+            }}
+          />
+        </div>
+      );
+    });
+
     let networks = null;
     if (configs && configs.length > 0) {
       const configList = configs.map(config => (
         <option value={JSON.stringify(config)} key={config._id}>
-          {config.name} - {config.cpu} vCPU | {config.ram} GB RAM | {config.disk} GB Disk | $ {config.cost.monthly} / month
+          {config.name} - {config.cpu} vCPU | {config.ram} GB RAM | {config.disk} GB Disk | $ {config.cost.monthly} / month | Availability:{' '}
+          {config.locations ? config.locations.join(', ') : ''}
         </option>
       ));
       networks = (
@@ -365,42 +393,10 @@ class VoucherCreate extends Component {
                 <label>Network Configuration </label>
                 <div className="row">
                   <div className="col-md-12">{networks}</div>
-                  {/* <div className="col-md-4 form-input-group">
-                    <label>CPU</label>
-                    <input
-                      name="cpu"
-                      type="number"
-                      placeholder="e.g 0.5 vCPU"
-                      className="form-control"
-                      onChange={this.handleChanges.bind(this)}
-                      required
-                      // value={this.state.networkConfig.cpu}
-                    />
-                  </div>
-                  <div className="col-md-4 form-input-group">
-                    <label>RAM</label>
-                    <input
-                      name="ram"
-                      type="number"
-                      placeholder="e.g 1 GB"
-                      className="form-control"
-                      onChange={this.handleChanges.bind(this)}
-                      required
-                      // value={this.state.networkConfig.ram}
-                    />
-                  </div>
-                  <div className="col-md-4 form-input-group">
-                    <label>DISK</label>
-                    <input
-                      name="disk"
-                      type="number"
-                      placeholder="e.g 5 GB"
-                      className="form-control"
-                      onChange={this.handleChanges.bind(this)}
-                      required
-                      // value={this.state.networkConfig.disk}
-                    />
-                  </div> */}
+                </div>
+                <div className="row">
+                  <div className="col-md-2">Availability:</div>
+                  {locationEditView}
                 </div>
                 <br />
                 <label>Usability</label>
