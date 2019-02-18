@@ -28,7 +28,7 @@ class NetworksList extends Component {
   };
 
   componentWillMount() {
-    Meteor.call('getClusterLocations', { service: 'dynamo' }, (err, res) => {
+    Meteor.call('getClusterLocations', {}, (err, res) => {
       if (err) {
         console.log(err);
       } else {
