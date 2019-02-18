@@ -137,9 +137,6 @@ class HyperionComponent extends Component {
       searchLoading: false,
     };
 
-    this.downloadFile = this.downloadFile.bind(this);
-    this.searchFile = this.searchFile.bind(this);
-
     this.uploader = new FineUploaderTraditional({
       options: {
         chunking: {
@@ -171,17 +168,23 @@ class HyperionComponent extends Component {
               });
             }
 
-            await setUploaderURL(Meteor.userId(), this.locationCode, this.uploader);
+            console.log('Uploading to ', this.state.locationCode);
+            await setUploaderURL(Meteor.userId(), this.state.locationCode, this.uploader);
           },
           onError: (id, fileName, reason, d) => {
             notifications.error(reason);
           },
-          onTotalProgress: (a, b) => {
-            console.log(a, b);
-          },
+          onTotalProgress: (a, b) => {},
         },
       },
     });
+
+    this.downloadFile = this.downloadFile.bind(this);
+    this.searchFile = this.searchFile.bind(this);
+  }
+
+  getUploader() {
+    return;
   }
 
   componentDidMount() {
@@ -423,9 +426,17 @@ class HyperionComponent extends Component {
                         <div className="card-block" style={{ paddingBottom: '0px' }}>
                           <div className="form-group-attached">
                             <form role="form">
-                              <LocationSelector locationChangeListener={locationCode => (this.locationCode = locationCode)} service="hyperion" />
+                              <LocationSelector
+                                locationChangeListener={locationCode => {
+                                  this.locationCode = locationCode;
+                                  this.setState({
+                                    locationCode,
+                                  });
+                                }}
+                                service="hyperion"
+                              />
                               <br />
-                              <Gallery uploader={this.uploader} />
+                              <Gallery key={this.locationCode} uploader={this.uploader} />
                             </form>
                           </div>
                         </div>
@@ -624,7 +635,12 @@ class HyperionComponent extends Component {
                         <div className="card-block">
                           <div className="form-group-attached">
                             <form role="form" onSubmit={e => this.searchFile(e)}>
-                              <LocationSelector locationChangeListener={locationCode => (this.locationCode = locationCode)} />
+                              <LocationSelector
+                                locationChangeListener={locationCode => {
+                                  (this.locationCode = locationCode), this.setState({});
+                                }}
+                                service="hyperion"
+                              />
                               <div className="form-group form-group-default m-t-10">
                                 <label>Enter File Hash</label>
                                 <input

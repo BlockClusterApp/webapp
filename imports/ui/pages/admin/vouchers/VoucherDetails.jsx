@@ -56,6 +56,11 @@ class VoucherDetails extends Component {
             'Usable Only For': i.availability.for_all ? '-' : i.availability.email_ids.join(','),
             'Voucher Status': i.expiryDate < new Date() ? 'Expired' : i.voucher_status ? 'Active' : 'Inactive',
             'Expiry Date': new Date(i.expiryDate).toLocaleDateString() + ' ' + new Date(i.expiryDate).toLocaleTimeString(),
+            Locations: i.locationMapping
+              ? Object.keys(i.locationMapping)
+                  .filter(loc => !!i.locationMapping[loc])
+                  .join(', ')
+              : '',
           };
           if (i.type === 'network') {
             formattedData['Network Config\n(CPU,RAM,DISK)'] = `${i.networkConfig.cpu}C,${i.networkConfig.ram}G,${i.networkConfig.disk}G`;

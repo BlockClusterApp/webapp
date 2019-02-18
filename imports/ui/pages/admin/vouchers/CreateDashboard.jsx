@@ -16,8 +16,17 @@ class VoucherDashboard extends Component {
     this.state = {
       page: 0,
       invoices: [],
+      locations: [],
     };
   }
+
+  componentDidMount = () => {
+    Meteor.call('getClusterLocations', {}, (err, res) => {
+      this.setState({
+        locations: res,
+      });
+    });
+  };
 
   create = () => {
     this.props.history.push('/app/admin/vouchers/');
@@ -93,11 +102,11 @@ class VoucherDashboard extends Component {
           </nav>
           <div className="inner-content full-height">
             <Route exact path="/app/admin/voucher/create" render={() => <Redirect to="/app/admin/voucher/create/campaign" />} />
-            <Route exact path="/app/admin/voucher/create/campaign" component={Campaign} />
-            <Route exact path="/app/admin/voucher/create/credits" component={CreditsCreate} />
-            <Route exact path="/app/admin/voucher/create/networks" component={Network} />
-            <Route exact path="/app/admin/voucher/create/hyperion" component={Hyperion} />
-            <Route exact path="/app/admin/voucher/create/paymeter" component={Paymeter} />
+            <Route exact path="/app/admin/voucher/create/campaign" render={props => <Campaign locations={this.state.locations} {...props} />} />
+            <Route exact path="/app/admin/voucher/create/credits" render={props => <CreditsCreate locations={this.state.locations} {...props} />} />
+            <Route exact path="/app/admin/voucher/create/networks" render={props => <Network locations={this.state.locations} {...props} />} />
+            <Route exact path="/app/admin/voucher/create/hyperion" render={props => <Hyperion locations={this.state.locations} {...props} />} />
+            <Route exact path="/app/admin/voucher/create/paymeter" render={props => <Paymeter locations={this.state.locations} {...props} />} />
           </div>
         </div>
       </div>
