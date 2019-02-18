@@ -71,7 +71,7 @@ class NetworkList extends Component {
   }
 
   componentDidMount() {
-    Meteor.call('getClusterLocations', { service }, (err, res) => {
+    Meteor.call('getClusterLocations', {}, (err, res) => {
       this.setState({
         locations: res,
       });
@@ -245,10 +245,11 @@ class NetworkList extends Component {
                       <thead>
                         <tr>
                           <th style={{ width: '5%' }}>S.No</th>
-                          {/* <th style={{width: "15%"}}>Id</th> */}
-                          <th style={{ width: '30%' }}>Name</th>
-                          <th style={{ width: '25%' }}>Instance id</th>
-                          <th style={{ width: '20%' }}>Status</th>
+                          <th style={{ width: '25%' }}>Name</th>
+                          <th style={{ width: '10%' }}>Instance id</th>
+                          <th style={{ width: '10%' }}>Location</th>
+                          <th style={{ width: '20%' }}>Type</th>
+                          <th style={{ width: '10%' }}>Status</th>
                           <th style={{ width: '20%' }}>Created At</th>
                         </tr>
                       </thead>
@@ -259,6 +260,16 @@ class NetworkList extends Component {
                               <td>{this.state.loading ? <i className="fa fa-spin fa-circle-o-notch text-primary" /> : (this.page - 1) * PAGE_LIMIT + index + 1}</td>
                               <td>{network.name}</td>
                               <td>{network.instanceId}</td>
+                              <td>{network.locationCode}</td>
+                              <td>
+                                {network.metadata
+                                  ? network.metadata.networkConfig
+                                    ? network.metadata.networkConfig.name
+                                    : network.metadata.voucher
+                                    ? network.metadata.voucher.code
+                                    : `${network.networkConfig.cpu} vCPU | ${network.networkConfig.ram} GB RAM | ${network.networkConfig.disk} GB disk`
+                                  : ''}
+                              </td>
                               <td>
                                 {ReactHtmlParser(
                                   helpers.convertStatusToTag(helpers.calculateNodeStatus(network.status), helpers.firstLetterCapital(helpers.calculateNodeStatus(network.status)))
