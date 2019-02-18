@@ -35,7 +35,7 @@ Network.fetchNetworkForAdmin = async networkId => {
       }
     )
     .fetch()[0];
-  const locations = await LocationApi.getLocations({ service: 'dynamo', userId: network.user });
+  const locations = await LocationApi.getLocations({});
   let voucher, networkType;
   if (network.voucherId) {
     voucher = Voucher.find({
