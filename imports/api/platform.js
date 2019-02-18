@@ -55,7 +55,7 @@ JsonRoutes.add('get', '/api/platform/networks/types', async function(req, res) {
 
 // Fetch All locations for this user
 JsonRoutes.add('get', '/api/platform/networks/locations', async function(req, res) {
-  const locations = LocationApi.getLocations();
+  const locations = await LocationApi.getLocations({ service: 'dynamo', userId: req.userId });
   locations.forEach(loc => {
     delete loc.workerNodeIP;
   });
@@ -66,7 +66,7 @@ JsonRoutes.add('get', '/api/platform/networks/locations', async function(req, re
 });
 
 // Creates a network
-JsonRoutes.add('post', '/api/platform/networks', function(req, res, next) {
+JsonRoutes.add('post', '/api/platform/networks', async function(req, res, next) {
   const { networkConfigId, locationCode, networkName, diskSpace } = req.body;
 
   const _networkConfig = NetworkConfiguration.find({
@@ -83,7 +83,7 @@ JsonRoutes.add('post', '/api/platform/networks', function(req, res, next) {
     });
   }
 
-  const locations = LocationApi.getLocations();
+  const locations = await LocationApi.getLocations({ service: dynamo, userId: req.userId });
   if (!locations.map(i => i.locationCode).includes(locationCode)) {
     return JsonRoutes.sendResult(res, {
       code: 400,
@@ -184,7 +184,7 @@ JsonRoutes.add('post', '/api/platform/networks/invite', function(req, res, next)
 });
 
 // Joins a network with custom params
-JsonRoutes.add('post', '/api/platform/networks/join', function(req, res) {
+JsonRoutes.add('post', '/api/platform/networks/join', async function(req, res) {
   const {
     networkName,
     nodeType,
@@ -231,7 +231,7 @@ JsonRoutes.add('post', '/api/platform/networks/join', function(req, res) {
     return;
   }
 
-  const locations = LocationApi.getLocations();
+  const locations = await LocationApi.getLocations({ service: 'dynamo', userId: req.userId });
   if (!locations.map(i => i.locationCode).includes(locationCode)) {
     return JsonRoutes.sendResult(res, {
       code: 400,
