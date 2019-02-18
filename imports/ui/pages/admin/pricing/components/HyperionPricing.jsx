@@ -5,6 +5,7 @@ import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 
 import HyperionPricing from '../../../../../collections/pricing/hyperion';
 import notifications from '../../../../../modules/notifications';
+import ServiceLocation from '../../../../components/Selectors/ServiceLocation';
 
 class Pricing extends Component {
   constructor(props) {
@@ -61,6 +62,7 @@ class Pricing extends Component {
                 </div>
 
                 <div className="card-block">
+                  <ServiceLocation service="hyperion" />
                   <div className="row" style={{ marginTop: '10px' }}>
                     <div className="col-md-12">
                       <i className="fa fa-joomla" />

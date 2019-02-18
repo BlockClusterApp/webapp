@@ -41,6 +41,12 @@ NetworkConfiguration.schema = new SimpleSchema({
       hourly: String,
     },
   },
+  locations: {
+    type: Array,
+  },
+  'locations.$': {
+    type: String,
+  },
 });
 
 export default NetworkConfiguration;
