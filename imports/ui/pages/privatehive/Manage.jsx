@@ -57,7 +57,7 @@ class ViewNetwork extends Component {
                           <div
                             className="clickable"
                             onClick={() => {
-                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/assets/management') : '';
+                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/channels/manage') : '';
                             }}
                           >
                             <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Manage Channels</p>
@@ -66,11 +66,11 @@ class ViewNetwork extends Component {
                           <div
                             className="clickable"
                             onClick={() => {
-                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/assets/stats') : '';
+                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/channels/explorer') : '';
                             }}
                           >
-                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Stats</p>
-                            <p className="no-margin fs-12">List and Analytics</p>
+                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Explorer</p>
+                            <p className="no-margin fs-12">Audit the blockchain</p>
                           </div>
                         </div>
                       </div>
