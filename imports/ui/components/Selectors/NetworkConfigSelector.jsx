@@ -28,6 +28,9 @@ class NetworkConfigSelector extends Component {
         configs: res,
       });
       this.defaultConfig = Object.values(res).filter(i => (i.locations ? i.locations.includes(this.props.locationCode) : true))[0];
+      if (!this.defaultConfig) {
+        return;
+      }
       if (this.config) this.config.value = this.defaultConfig.name;
       this.onConfigChange();
     });
@@ -75,6 +78,18 @@ class NetworkConfigSelector extends Component {
             error: err.error,
           },
         });
+      }
+
+      if (reply.locationMapping) {
+        if (!reply.locationMapping[this.props.locationCode]) {
+          return this.setState({
+            voucherLoading: false,
+            voucher: {
+              status: 'error',
+              error: 'Not applicable for this location',
+            },
+          });
+        }
       }
 
       this.voucherDetails = reply;

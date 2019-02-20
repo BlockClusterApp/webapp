@@ -195,6 +195,10 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             ? false
             : true;
 
+        if (voucher.locationMapping) {
+          vouchar_usable = vouchar_usable && !!voucher.locationMapping[network.locationCode];
+        }
+
         voucher_expired = voucher.expiryDate ? new Date(voucher.expiryDate) <= new Date() : false;
       }
       let cost = Number(time.hours * ratePerHour + (time.minutes % 60) * ratePerMinute).toFixed(2);
