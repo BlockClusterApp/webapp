@@ -142,7 +142,7 @@ class Explorer extends Component {
             const latestBlockNumber = data.height.low;
             if (this.state.blocks.length < 15) {
               const blocks = [];
-              let number = latestBlockNumber;
+              let number = latestBlockNumber - 1;
               while (blocks.length < 15) {
                 blocks.push({
                   number,

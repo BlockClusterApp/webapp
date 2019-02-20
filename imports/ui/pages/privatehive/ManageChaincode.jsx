@@ -4,12 +4,12 @@ import PrivateHive from '../../../collections/privatehive';
 import { withRouter } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 
-class ManageChannels extends Component {
+class ManageChaincode extends Component {
   constructor() {
     super();
 
     this.state = {
-      channels: [],
+      chaincodes: [],
     };
 
     this.getAssetTypes = this.getAssetTypes.bind(this);
@@ -32,7 +32,7 @@ class ManageChannels extends Component {
 
   getAssetTypes() {
     const { network } = this.props;
-    let url = `http://${network.properties.apiEndPoint}/channels`;
+    let url = `http://${network.properties.apiEndPoint}/chaincode/installed`;
     HTTP.get(
       url,
       {
@@ -43,7 +43,7 @@ class ManageChannels extends Component {
       (err, res) => {
         if (!err) {
           this.setState({
-            channels: res.data.data.channels,
+            chaincodes: res.data.data.chaincodes,
           });
         }
       }
@@ -75,15 +75,22 @@ class ManageChannels extends Component {
                             <table className="table table-hover" id="basicTable">
                               <thead>
                                 <tr>
-                                  <th style={{ width: '50%' }}>Channel Name</th>
-                                  <th style={{ width: '50%' }}>Action</th>
+                                  <th style={{ width: '25%' }}>Chaincode Name</th>
+                                  <th style={{ width: '55%' }}>Details</th>
+                                  <th style={{ width: '20%' }}>Actions</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {this.state.channels.map(channel => {
+                                {this.state.chaincodes.map(cc => {
                                   return (
-                                    <tr key={channel.channel_id}>
-                                      <td className="v-align-middle ">{channel.channel_id}</td>
+                                    <tr key={cc.name}>
+                                      <td className="v-align-middle ">{cc.name}</td>
+                                      <td className="v-align-middle">
+                                        <b> Version:</b> {cc.version} <br />
+                                        <b> Path:</b> {cc.path}
+                                        <br />
+                                        <b> Id:</b> {cc.id}
+                                      </td>
                                       <td />
                                     </tr>
                                   );
@@ -122,4 +129,4 @@ export default withTracker(props => {
       ),
     ],
   };
-})(withRouter(ManageChannels));
+})(withRouter(ManageChaincode));

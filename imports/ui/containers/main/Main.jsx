@@ -64,6 +64,7 @@ import PrivateHiveAdminList from '../../pages/admin/privatehive/NetworkList';
 import PrivateHiveAdminDetails from '../../pages/admin/privatehive/Details';
 import PrivateHiveChannelExplorer from '../../pages/privatehive/Explorer.jsx';
 import PrivateHiveChannelManagement from '../../pages/privatehive/ManageChannels';
+import PrivateHiveChaincodeManagement from '../../pages/privatehive/ManageChaincode';
 
 export default withRouter(
   class Main extends Component {
@@ -151,6 +152,7 @@ export default withRouter(
                 <Route exact path="/app/privatehive/:id/settings" render={props => this.showFailedBillingWarning(PrivateHiveNetworkSettings, props)} />
                 <Route exact path="/app/privatehive/:id/channels/explorer" render={props => this.showFailedBillingWarning(PrivateHiveChannelExplorer, props)} />
                 <Route exact path="/app/privatehive/:id/channels/manage" render={props => this.showFailedBillingWarning(PrivateHiveChannelManagement, props)} />
+                <Route exact path="/app/privatehive/:id/chaincode/manage" render={props => this.showFailedBillingWarning(PrivateHiveChaincodeManagement, props)} />
                 <Route path="/app/privatehive" render={props => this.showFailedBillingWarning(PrivateHiveDashboard, props)} />
               </Switch>
 

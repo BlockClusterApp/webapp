@@ -89,25 +89,25 @@ class ViewNetwork extends Component {
                           <div
                             className="clickable"
                             onClick={() => {
-                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/streams/create') : '';
+                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/chaincode/create') : '';
                             }}
                           >
-                            <p className="no-margin text-black bold text-uppercase fs-12">Upload Chaincode</p>
+                            <p className="no-margin text-black bold text-uppercase fs-12">Create Chaincode</p>
                             <p className="no-margin fs-12">Install and Initiate</p>
                           </div>
                           <div
                             className="clickable"
                             onClick={() => {
-                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/streams/publish') : '';
+                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/chaincode/manage') : '';
                             }}
                           >
-                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Upgrade Chaincodes</p>
-                            <p className="no-margin fs-12">Version Control</p>
+                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Manage Chaincodes</p>
+                            <p className="no-margin fs-12">Management</p>
                           </div>
                           <div
                             className="clickable"
                             onClick={() => {
-                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/streams/access-control') : '';
+                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/chaincode/access-control') : '';
                             }}
                           >
                             <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">APIs</p>
