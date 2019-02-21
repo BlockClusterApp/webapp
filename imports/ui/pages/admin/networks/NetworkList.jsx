@@ -154,14 +154,16 @@ class NetworkList extends Component {
   };
 
   fetchNetworkType(network) {
-    if (network.metadata) {
-      if (network.metadata.networkConfig) {
-        return network.metadata.networkConfig.name;
-      } else if (network.metadata.voucher) {
-        return network.metadata.voucher.code;
-      }
-    }
-    return `${network.networkConfig.cpu} vCPU | ${network.networkConfig.ram} GB RAM | ${network.networkConfig.disk} GB disk`;
+    // if (network.metadata) {
+    //   if (network.metadata.networkConfig) {
+    //     return network.metadata.networkConfig.name;
+    //   } else if (network.metadata.voucher) {
+    //     return network.metadata.voucher.code;
+    //   }
+    // }
+    return `${network.networkConfig.cpu > 20 ? network.networkConfig.cpu / 1000 : network.networkConfig.cpu} vCPU | ${network.networkConfig.ram} GB RAM | ${
+      network.networkConfig.disk
+    } GB disk`;
   }
 
   openNetwork = networkId => {
@@ -272,7 +274,9 @@ class NetworkList extends Component {
                               <td>{network.name}</td>
                               <td>{network.instanceId}</td>
                               <td>{network.locationCode}</td>
-                              <td>{this.fetchNetworkType(network)}</td>
+                              <td>
+                                <small>{this.fetchNetworkType(network)}</small>
+                              </td>
                               <td>
                                 {ReactHtmlParser(
                                   helpers.convertStatusToTag(helpers.calculateNodeStatus(network.status), helpers.firstLetterCapital(helpers.calculateNodeStatus(network.status)))
