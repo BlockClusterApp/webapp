@@ -114,7 +114,7 @@ class CardsAndNewPayment extends Component {
       this.props.invoice &&
       ![2, undefined].includes(this.props.invoice.paymentStatus) &&
       !(this.props.rzSubscription && this.props.rzSubscription.bc_status === 'active') &&
-      (this.props.user && !this.props.user.demoUser)
+      (this.props.user && !this.props.user.demoUser && !this.props.user.offlineUser)
     ) {
       paymentDisplay = Number(this.props.invoice.totalAmount) !== 0 && (
         <div className="alert alert-warning col-md-12">

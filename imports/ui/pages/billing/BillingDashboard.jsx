@@ -114,6 +114,8 @@ class BillingDashboard extends Component {
         return <span className="label label-success">Paid</span>;
       case 3:
         return <span className="label label-info">Demo User</span>;
+      case 7:
+        return <span className="label label-success">Offline payment</span>;
       case 1:
       case 4:
         return <span className="label label-danger">Unpaid</span>;

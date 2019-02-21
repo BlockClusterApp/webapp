@@ -4,11 +4,12 @@ import { withRouter, Link } from 'react-router-dom';
 import Invoice from '../../../../collections/payments/invoice';
 import ConfirmationButton from '../../../components/Buttons/ConfirmationButton';
 import notifications from '../../../../modules/notifications';
+import moment from 'moment';
 
 const EmailsMapping = {
   1: 'Invoice Created',
-  2: 'Reminder on 4th',
-  3: 'Reminder on 9th',
+  2: 'Reminder',
+  3: 'Reminder',
   4: 'Node Deletion warning',
 };
 
@@ -48,6 +49,8 @@ class InvoiceDetails extends Component {
     switch (Number(paymentStatus)) {
       case 2:
         return <span className="label label-success">Paid</span>;
+      case 7:
+        return <span className="label label-success">Offline Payment</span>;
       case 3:
         return <span className="label label-info">Demo User</span>;
       case 1:
@@ -98,6 +101,33 @@ class InvoiceDetails extends Component {
           notifications.success('Invoice Waived off');
           return this.setState({
             disableWaiveOff: true,
+            loading: false,
+          });
+        } else {
+          this.setState({
+            loading: false,
+          });
+          notifications.error(err.reason);
+        }
+      }
+    );
+  };
+
+  convertToOffline = invoiceId => {
+    this.setState({
+      loading: true,
+    });
+    Meteor.call(
+      'changeToOfflinePayment',
+      {
+        invoiceId,
+      },
+      (err, call) => {
+        if (!err) {
+          notifications.success('Invoice Waived off');
+          return this.setState({
+            disableWaiveOff: true,
+            disableOffline: true,
             loading: false,
           });
         } else {
@@ -217,7 +247,12 @@ class InvoiceDetails extends Component {
                   <div className="clearfix" />
                 </div>
                 <div className="card-description">
-                  <ol>{invoice.emailsSent && invoice.emailsSent.map(es => <li>{EmailsMapping[es]}</li>)}</ol>
+                  <ol>
+                    {invoice.emailsSent &&
+                      invoice.emailsSent.map(es => (
+                        <li>{typeof es === 'number' ? EmailsMapping[es] : `${EmailsMapping[es.reminderCode]} @ ${moment(es.at).format('DD-MMM-YYYY kk:mm:ss')}`}</li>
+                      ))}
+                  </ol>
                 </div>
                 <div className="clearfix" />
               </div>
@@ -234,7 +269,7 @@ class InvoiceDetails extends Component {
                 <h5>Emails</h5>
                 <ConfirmationButton
                   loading={this.state.loading}
-                  completed={!(invoice && invoice.emailsSent && invoice.emailsSent.includes(1)) || this.state.disableReminder || [2, 5, 6].includes(invoice.paymentStatus)}
+                  completed={!(invoice && invoice.emailsSent && invoice.emailsSent.includes(1)) || this.state.disableReminder || [2, 5, 6, 7].includes(invoice.paymentStatus)}
                   onConfirm={this.sendInvoiceReminder.bind(this, invoice._id)}
                   loadingText="Sending email"
                   completedText={
@@ -251,11 +286,29 @@ class InvoiceDetails extends Component {
                   actionText="Send Invoice Reminder"
                 />
                 <br />
-                {![2, 6].includes(invoice.paymentStatus) && (
+                {![2, 6, 7].includes(invoice.paymentStatus) && (
                   <div>
-                    <h5>Waive Off </h5>
+                    <h5>Change Status / Waive Off</h5>
                     <div className="row">
-                      <div className="col-md-7">
+                      <div className="col-md-3 b-r b-grey">
+                        <ConfirmationButton
+                          loading={this.state.loading}
+                          completed={[2, 3, 6, 7].includes(invoice.paymentStatus) || this.state.disableOffline}
+                          onConfirm={this.convertToOffline.bind(this, invoice._id)}
+                          loadingText="Loading"
+                          completedText={
+                            invoice.paymentStatus === 6
+                              ? 'Offline: Refunded'
+                              : invoice.paymentStatus !== 2
+                              ? invoice.paymentStatus === 5
+                                ? 'Already waived off'
+                                : this.state.disableOffline && 'Offline: Disabled'
+                              : 'Offline: Already Paid.'
+                          }
+                          actionText="Convert to Offline Payment"
+                        />
+                      </div>
+                      <div className="col-md-6">
                         <div className="form-group form-group-default required">
                           <label>Reason</label>
                           {![5].includes(invoice.paymentStatus) ? (
@@ -273,10 +326,10 @@ class InvoiceDetails extends Component {
                           )}
                         </div>
                       </div>
-                      <div className="col-md-5">
+                      <div className="col-md-3">
                         <ConfirmationButton
                           loading={this.state.loading}
-                          completed={[2, 3, 5, 6].includes(invoice.paymentStatus) || this.state.disableWaiveOff}
+                          completed={[2, 3, 5, 6, 7].includes(invoice.paymentStatus) || this.state.disableWaiveOff}
                           onConfirm={this.waiveOffReasonAction.bind(this, invoice._id)}
                           loadingText="Waiving off invoice"
                           completedText={

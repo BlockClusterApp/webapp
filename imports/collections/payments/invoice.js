@@ -13,6 +13,7 @@ Invoice.PaymentStatusMapping = {
   Failed: 4,
   WaivedOff: 5,
   Refunded: 6,
+  OfflineUser: 7,
 };
 
 Invoice.EmailMapping = {

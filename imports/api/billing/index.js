@@ -448,6 +448,11 @@ Billing.isPaymentMethodVerified = async function(userId) {
     return false;
   }
 
+  const user = Meteor.users.find({ _id: userId }).fetch()[0];
+  if (user.offlineUser || user.demoUser) {
+    return true;
+  }
+
   let userCards = UserCards.find({ userId: userId }).fetch()[0];
   if (userCards) {
     userCards = userCards.cards.find(c => c.active !== false);
