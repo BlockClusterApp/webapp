@@ -268,7 +268,7 @@ class Invites extends Component {
                       <br />
                       <p>Select Node Configuration</p>
                       <NetworkConfigSelector
-                        locationCode={this.locationCode}
+                        locationCode={this.inviteLocationMapping[this.state.modalInviteId]}
                         key={this.locationCode}
                         configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)}
                       />
