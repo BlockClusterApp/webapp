@@ -208,6 +208,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       // if(isMicroNode && network.active){
       //   nodeTypeCount.Micro += 1;
       // }
+      let discountValue = 0;
       let extraDiskAmount = 0;
       let extraDiskStorage = 0;
       if (isMicroNode) {
@@ -284,6 +285,8 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             cost = cost - discount;
           }
 
+          discountValue = discount;
+
           //so that we can track record how many times he used.
           //and also helps to validate if next time need to consider voucher or not.
           if (!isFromFrontend) {
@@ -338,6 +341,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         networkConfig,
         label,
         type: 'dynamo',
+        discount: Number(discountValue).toFixed(2),
         timeperiod: `Started at: ${moment(network.createdOn).format('DD-MMM-YYYY kk:mm')} ${
           network.deletedAt ? ` to ${moment(network.deletedAt).format('DD-MMM-YYYY kk:mm:ss')}` : 'and still running'
         }`,
@@ -369,11 +373,12 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       rate: `$ ${hyperionPricing.minimumMonthlyCost} / month `,
       runtime: '',
       type: 'hyperion',
-      cost: Number(total_hyperion_cost).toFixed(2),
+      discount: Number(total_hyperion_cost.discount).toFixed(2),
+      cost: Number(total_hyperion_cost.bill).toFixed(2),
     });
-    total_hyperion_cost = Number(Number(total_hyperion_cost).toFixed(2));
-    result.totalAmount += total_hyperion_cost;
-    result.totals.hyperion += total_hyperion_cost;
+    total_hyperion_cost.bill = Number(Number(total_hyperion_cost.bill).toFixed(2));
+    result.totalAmount += Number(total_hyperion_cost.bill);
+    result.totals.hyperion += Number(total_hyperion_cost.bill);
 
     const apiCalls = ChargeableAPI.find({
       userId,
@@ -398,6 +403,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       type: 'hyperion',
       rate: `$ ${hyperionPricing.perApiCost} / request`,
       runtime: `${apiCalls.length} requests`,
+      discount: '0.00',
       cost: totalApiCallCost,
     });
 
@@ -407,7 +413,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
 
   const paymeterCost = await PaymeterApis.getBill({ userId, isFromFrontEnd: isFromFrontend, selectedMonth });
   const paymeterPricing = PaymeterPricing.find({ active: true }).fetch()[0];
-  const cost = Number(Number(paymeterCost).toFixed(2));
+  const cost = Number(Number(paymeterCost.bill).toFixed(2));
   result.paymeters.push({
     name: 'Monthly Subscription',
     instanceId: '',
@@ -415,7 +421,8 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
     rate: `$ ${paymeterPricing.minimumMonthlyCost} / month`,
     runtime: '',
     type: 'paymeter',
-    cost,
+    discount: Number(paymeterCost.discount).toFixed(2),
+    cost: Number(cost).toFixed(2),
   });
 
   result.totalAmount += cost;
@@ -478,6 +485,11 @@ Billing.isPaymentMethodVerified = async function(userId) {
 
   if (!userId) {
     return false;
+  }
+
+  const user = Meteor.users.find({ _id: userId }).fetch()[0];
+  if (user.offlineUser || user.demoUser) {
+    return true;
   }
 
   let userCards = UserCards.find({ userId: userId }).fetch()[0];

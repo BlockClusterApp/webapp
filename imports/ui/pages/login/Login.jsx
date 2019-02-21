@@ -11,40 +11,40 @@ export default class Login extends Component {
     };
   }
   alertHandler = () => {
-    this.setState(
-      {
-        formSubmitError: '',
-      }
-    );
+    this.setState({
+      formSubmitError: '',
+    });
   };
   login = e => {
     e.preventDefault();
-    this.setState({
-      login_formloading:true
-    },()=>{
-      Meteor.loginWithPassword(this.email.value, this.pass.value, error => {
-      if (error && error.reason) {
-        
-        this.setState({
-          login_formloading:false,
-          formSubmitError: error.reason,
-        });
-      } else if (error && !error.reason){
-        this.setState({
-          login_formloading:false,
-          formSubmitError: "An error occured.please try again.",
-        });
-      }else {
-        if (window.location.search.includes('action=join-network')) {
-          window.open('/app/invites', '_self');
-        }
-        this.setState({
-          login_formloading:false,
-          formSubmitError: '',
+    this.setState(
+      {
+        login_formloading: true,
+      },
+      () => {
+        Meteor.loginWithPassword(this.email.value, this.pass.value, error => {
+          if (error && error.reason) {
+            this.setState({
+              login_formloading: false,
+              formSubmitError: error.reason,
+            });
+          } else if (error && !error.reason) {
+            this.setState({
+              login_formloading: false,
+              formSubmitError: 'An error occured.please try again.',
+            });
+          } else {
+            if (window.location.search.includes('action=join-network')) {
+              window.open('/app/invites', '_self');
+            }
+            this.setState({
+              login_formloading: false,
+              formSubmitError: '',
+            });
+          }
         });
       }
-    });
-  });
+    );
   };
 
   render() {
@@ -145,7 +145,7 @@ export default class Login extends Component {
                 </div>
                 <div className="col-sm-9 no-padding m-t-10">
                   <p>
-                    <small>All work copyright of respective owner, otherwise © 2017-2018 BlockCluster.</small>
+                    <small>All work copyright of respective owner, otherwise © 2017-2019 BlockCluster.</small>
                   </p>
                 </div>
               </div>

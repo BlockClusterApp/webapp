@@ -152,6 +152,8 @@ class BillingDashboard extends Component {
         return <span className="label label-success">Paid</span>;
       case 3:
         return <span className="label label-info">Demo User</span>;
+      case 7:
+        return <span className="label label-success">Offline payment</span>;
       case 1:
       case 4:
         return <span className="label label-danger">Unpaid</span>;
@@ -174,6 +176,7 @@ class BillingDashboard extends Component {
           <td>{network.instanceId}</td>
           <td>{network.rate}</td>
           <td>{network.runtime}</td>
+          <td>$ {network.discount}</td>
           <td>
             $ {network.cost} {network.deletedAt ? '' : this.convertCostToTag('Running')} {this.convertCostToTag(network.label)}{' '}
           </td>
@@ -188,6 +191,7 @@ class BillingDashboard extends Component {
           <td>{network.instanceId}</td>
           <td>{network.rate}</td>
           <td>{network.runtime}</td>
+          <td>$ {network.discount}</td>
           <td>
             $ {network.cost} {this.convertCostToTag(network.label)}{' '}
           </td>
@@ -200,6 +204,7 @@ class BillingDashboard extends Component {
         <tr key={index + 1}>
           <td>{hyperion.name}</td>
           <td>{hyperion.rate}</td>
+          <td>$ {hyperion.discount}</td>
           <td>$ {hyperion.cost}</td>
         </tr>
       );
@@ -210,6 +215,7 @@ class BillingDashboard extends Component {
         <tr key={index + 1}>
           <td>{pm.name}</td>
           <td>{pm.rate}</td>
+          <td>$ {pm.discount}</td>
           <td>$ {pm.cost}</td>
         </tr>
       );
@@ -235,23 +241,10 @@ class BillingDashboard extends Component {
               <td>{network.instanceId}</td>
               <td>{network.rate}</td>
               <td>{network.runtime}</td>
+              <td>$ {network.discount || '0.00'}</td>
               <td>
                 $ {network.cost} {this.convertCostToTag(network.label)}{' '}
               </td>
-            </tr>
-          );
-        });
-      }
-
-      if (this.state.bill && this.state.bill.creditClaims) {
-        creditsView = this.state.bill.creditClaims.map((claim, index) => {
-          return (
-            <tr key={`p${index + 1}`}>
-              <td>Promotional Credit Redemption</td>
-              <td>{claim.code}</td>
-              <td />
-              <td />
-              <td>$ -{Number(claim.amount).toFixed(2)}</td>
             </tr>
           );
         });
@@ -370,7 +363,8 @@ class BillingDashboard extends Component {
                             <th style={{ width: '15%' }}>Instance ID</th>
                             <th style={{ width: '15%' }}>Rate</th>
                             <th style={{ width: '18%' }}>Runtime</th>
-                            <th style={{ width: '19%' }}>Cost</th>
+                            <th style={{ width: '20%' }}>Discount</th>
+                            <th style={{ width: '14%' }}>Cost</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -420,7 +414,8 @@ class BillingDashboard extends Component {
                                     <th style={{ width: '15%' }}>Instance ID</th>
                                     <th style={{ width: '15%' }}>Rate</th>
                                     <th style={{ width: '18%' }}>Runtime</th>
-                                    <th style={{ width: '19%' }}>Cost</th>
+                                    <th style={{ width: '20%' }}>Discount</th>
+                                    <th style={{ width: '14%' }}>Cost</th>
                                   </tr>
                                 </thead>
                                 <tbody>{dynamoView}</tbody>
@@ -451,7 +446,8 @@ class BillingDashboard extends Component {
                                     <th style={{ width: '15%' }}>Instance ID</th>
                                     <th style={{ width: '15%' }}>Rate</th>
                                     <th style={{ width: '18%' }}>Runtime</th>
-                                    <th style={{ width: '19%' }}>Cost</th>
+                                    <th style={{ width: '20%' }}>Discount</th>
+                                    <th style={{ width: '14%' }}>Cost</th>
                                   </tr>
                                 </thead>
                                 <tbody>{privateHiveView}</tbody>
@@ -478,8 +474,9 @@ class BillingDashboard extends Component {
                               <table className="table table-hover" id="basicTable">
                                 <thead>
                                   <tr>
-                                    <th style={{ width: '50%' }}>Charge Name</th>
-                                    <th style={{ width: '25%' }}>Rate</th>
+                                    <th style={{ width: '35%' }}>Charge Name</th>
+                                    <th style={{ width: '20%' }}>Rate</th>
+                                    <th style={{ width: '20%' }}>Discount</th>
                                     <th style={{ width: '25%' }}>Cost</th>
                                   </tr>
                                 </thead>
@@ -507,8 +504,9 @@ class BillingDashboard extends Component {
                               <table className="table table-hover" id="basicTable">
                                 <thead>
                                   <tr>
-                                    <th style={{ width: '50%' }}>Charge Name</th>
-                                    <th style={{ width: '25%' }}>Rate</th>
+                                    <th style={{ width: '35%' }}>Charge Name</th>
+                                    <th style={{ width: '20%' }}>Rate</th>
+                                    <th style={{ width: '20%' }}>Discount</th>
                                     <th style={{ width: '25%' }}>Cost</th>
                                   </tr>
                                 </thead>

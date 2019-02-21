@@ -92,7 +92,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
       billingAddress: '',
     },
     rzCustomerId: user.rzCustomerId,
-    paymentStatus: user.demoUser ? Invoice.PaymentStatusMapping.DemoUser : Invoice.PaymentStatusMapping.Pending,
+    paymentStatus: user.demoUser ? Invoice.PaymentStatusMapping.DemoUser : user.offlineUser ? Invoice.PaymentStatusMapping.OfflineUser : Invoice.PaymentStatusMapping.Pending,
     billingPeriod: billingMonth,
     billingPeriodLabel: moment(billingMonth).format('MMM-YYYY'),
     billingAmount: totalAmount,
@@ -109,7 +109,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
       rzSubscriptionId: invoiceObject.rzSubscriptionId,
     }).fetch()[0];
     if (existingInvoice) {
-      console.log(`Bill already exists for ${invoiceObject.rzSubscriptionId} for ${invoiceObject.billingPeriodLabel}`);
+      ElasticLogger.log(`Bill already exists`, { ...invoiceObject });
       return true;
     }
   } else {
@@ -118,14 +118,13 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
       userId,
     }).fetch()[0];
     if (existingInvoice) {
-      console.log(`Bill already exists for ${invoiceObject.userId} for ${invoiceObject.billingPeriodLabel}`);
+      ElasticLogger.log(`Bill already exists`, { ...invoiceObject });
       return true;
     }
   }
 
   // Credits application
   const { _totalAmount, eligibleCredits } = await InvoiceObj.fetchCreditsRedemption({ userId, totalAmount, invoiceObject });
-  console.log('Eligible credits', eligibleCredits);
 
   const items = bill.networks;
 
@@ -160,7 +159,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
     creditClaims.push({ id, code: credit.code, amount: ec.amount });
   });
 
-  if (!user.demoUser && Math.round(invoiceObject.totalAmountINR) > 100 && !user.byPassOnlinePayment && rzSubscription && rzSubscription.bc_status === 'active') {
+  if (!user.demoUser && !user.offlineUser && Math.round(invoiceObject.totalAmountINR) > 100 && rzSubscription && rzSubscription.bc_status === 'active') {
     RZPTAddon.insert({
       subscriptionId: rzSubscription.id,
       addOn: {
@@ -205,9 +204,10 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
     {
       $set: {
         paymentLink: {
-          id: rzPaymentLink._id,
-          link: rzPaymentLink.short_url,
+          id: rzPaymentLink ? rzPaymentLink._id : '',
+          link: rzPaymentLink ? rzPaymentLink.short_url : '',
         },
+        totalAmountINR: invoiceObject.totalAmountINR,
         creditClaims,
       },
     }
@@ -261,10 +261,11 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     return true;
   }
 
-  if (invoice.paymentStatus === Invoice.PaymentStatusMapping.Settled) {
+  if (invoice.paymentStatus === Invoice.PaymentStatusMapping.Settled || invoice.paymentStatus === Invoice.Payment.OfflineUser) {
     ElasticLogger.log('Invoice already settled', {
       invoiceId: invoice._id,
       id: spanId,
+      status: invoice.paymentStatus,
     });
     return invoice._id;
   }
@@ -343,10 +344,16 @@ InvoiceObj.generateHTML = async invoiceId => {
         uom: 'Time (Hours)',
         discount: '$ 0.00',
         cost: `$ ${item.cost}`,
-        duration: `${item.runtime.split('|')[0].trim()}${item.runtime.split('|')[1].trim() === '0 GB extra' ? '' : ' | ' + item.runtime.split('|')[1].trim()}`,
+        discount: `$ ${Number(item.discount || 0).toFixed(2)}`,
+        duration: `${item.runtime && item.runtime.split('|')[0].trim()}${item.runtime.split('|')[1].trim() === '0 GB extra' ? '' : ' | ' + item.runtime.split('|')[1].trim()}`,
+      };
+    } else {
+      return {
+        ...item,
+        cost: `$ ${item.cost}`,
+        discount: `$ ${Number(item.discount || 0).toFixed(2)}`,
       };
     }
-    return item;
   });
 
   if (invoice.creditClaims) {
@@ -388,7 +395,7 @@ InvoiceObj.generateHTML = async invoiceId => {
   });
   var fut = new Future();
 
-  var fileName = 'blockcluster-bill-report.pdf';
+  var fileName = `blockcluster-bill-report-${invoiceId}.pdf`;
 
   var options = {
     //renderDelay: 2000,
@@ -403,18 +410,30 @@ InvoiceObj.generateHTML = async invoiceId => {
   // Commence Webshot
   // console.log("Commencing webshot...");
 
-  pdf.create(finalHTML, { format: 'Tabloid', orientation: 'landscape', timeout: '100000' }).toFile(fileName, function(err, res) {
-    if (err) return console.log(err);
-    console.log(res);
-    fs.readFile(fileName, function(err, data) {
-      if (err) {
-        return console.log(err);
-      }
+  pdf
+    .create(finalHTML, {
+      format: 'Tabloid',
+      orientation: 'landscape',
+      timeout: '100000',
+      border: {
+        top: '0.5in', // default is 0, units: mm, cm, in, px
+        right: '0in',
+        bottom: '0.5in',
+        left: '0in',
+      },
+    })
+    .toFile(fileName, function(err, res) {
+      if (err) return console.log(err);
+      console.log(res);
+      fs.readFile(fileName, function(err, data) {
+        if (err) {
+          return console.log(err);
+        }
 
-      fs.unlinkSync(fileName);
-      fut.return(data);
+        fs.unlink(fileName);
+        fut.return(data);
+      });
     });
-  });
   // webshot(finalHTML, fileName, options, function(error,success) {
   //   if(error){
   //     return console.log(error);
@@ -505,7 +524,7 @@ InvoiceObj.sendInvoicePending = async (invoice, reminderCode) => {
     },
     {
       $push: {
-        emailsSent: reminderCode,
+        emailsSent: { reminderCode, at: new Date() },
       },
     }
   );
@@ -576,10 +595,41 @@ InvoiceObj.waiveOffInvoice = async ({ invoiceId, reason, userId, user }) => {
   return true;
 };
 
+InvoiceObj.changeToOfflinePayment = async ({ invoiceId }) => {
+  const user = Meteor.user();
+  if (!(user && user.admin >= 2)) {
+    throw new Meteor.Error('Unauthorized', 'Unauthorized');
+  }
+
+  const invoice = Invoice.find({ _id: invoiceId }).fetch()[0];
+
+  if ([Invoice.PaymentStatusMapping.Paid, Invoice.PaymentStatusMapping.Refunded, Invoice.PaymentStatusMapping.OfflineUser].includes(invoice.paymentStatus)) {
+    throw new Meteor.Error('bad-request', 'Cannot make paid/refunded/offline invoice offline');
+  }
+
+  ElasticLogger.log('Changing invoice to Offline payment', { invoiceId, user: { email: user.emails[0].address, _id: user._id } });
+
+  Invoice.update(
+    {
+      _id: invoiceId,
+    },
+    {
+      $set: {
+        paymentStatus: Invoice.PaymentStatusMapping.OfflineUser,
+        offlinePaymentMarkedBy: user._id,
+        offlinePaymentMarkedAt: new Date(),
+      },
+    }
+  );
+
+  return true;
+};
+
 Meteor.methods({
   generateInvoiceHTML: InvoiceObj.generateHTML,
   sendInvoiceReminder: InvoiceObj.adminSendInvoiceReminder,
   waiveOffInvoice: InvoiceObj.waiveOffInvoice,
+  changeToOfflinePayment: InvoiceObj.changeToOfflinePayment,
 });
 
 export default InvoiceObj;

@@ -1165,7 +1165,7 @@ async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMo
 
       const history = PaymeterBillHistory.find({ billingPeriodLabel, userId }).fetch()[0];
       if (history) {
-        return history.bill;
+        return { bill: history.bill, discount: history.totalDiscountGiven };
       } else if (!isFromFrontEnd) {
         delete paymeter_userData.subscriptions;
         delete paymeter_userData.userId;
@@ -1193,12 +1193,12 @@ async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMo
           }
         );
       }
-      return new BigNumber(bill);
+      return { bill: new BigNumber(bill), discount };
     } else {
-      return 0;
+      return { bill: 0, discount: 0 };
     }
   } else {
-    return 0;
+    return { bill: 0, discount: 0 };
   }
 }
 

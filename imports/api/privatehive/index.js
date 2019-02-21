@@ -217,8 +217,14 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
             ? false
             : true;
 
+        if (voucher.locationMapping) {
+          vouchar_usable = vouchar_usable && !!voucher.locationMapping[network.locationCode];
+        }
+
         voucher_expired = voucher.expiryDate ? new Date(voucher.expiryDate) <= new Date() : false;
       }
+
+      let discountValue = 0;
       let cost = Number(time.hours * ratePerHour + (time.minutes % 60) * ratePerMinute).toFixed(2);
 
       let label = voucher ? voucher.code : null;
@@ -231,6 +237,7 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
         } else {
           cost = Math.max(cost - discount, 0);
         }
+        discountValue = discount;
 
         //so that we can track record how many times he used.
         //and also helps to validate if next time need to consider voucher or not.
@@ -288,6 +295,7 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
         deletedAt: network.deletedAt,
         voucher: voucher,
         networkConfig: network.networkConfig,
+        discount: Number(discountValue || 0).toFixed(2),
         label,
         timeperiod: `Started at: ${moment(network.createdOn).format('DD-MMM-YYYY kk:mm')} ${
           network.deletedAt ? ` to ${moment(network.deletedAt).format('DD-MMM-YYYY kk:mm:ss')}` : 'and still running'

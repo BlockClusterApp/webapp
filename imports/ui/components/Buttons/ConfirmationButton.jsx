@@ -4,7 +4,9 @@ export default class ConfirmationButton extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {};
+    this.state = {
+      countdown: 0,
+    };
     this.timeout = props.timeout || 5000;
     this.cooldown = props.cooldown || 3000;
   }
@@ -15,9 +17,17 @@ export default class ConfirmationButton extends Component {
         confirmationAsked: true,
         cooldown: true,
       });
+
+      this.interval = setInterval(() => {
+        this.setState({
+          countdown: this.state.countdown + 1,
+        });
+      }, 1000);
       this.timer = setTimeout(() => {
+        clearInterval(this.interval);
         this.setState({
           cooldown: false,
+          countdown: 0,
         });
         this.timer = setTimeout(() => {
           this.setState({
@@ -39,6 +49,9 @@ export default class ConfirmationButton extends Component {
     if (this.timer) {
       clearTimeout(this.timer);
     }
+    if (this.interval) {
+      clearInterval(this.interval);
+    }
   }
 
   render() {
@@ -55,10 +68,10 @@ export default class ConfirmationButton extends Component {
         {this.props.loading
           ? this.props.loadingText || 'Processing'
           : this.props.completed
-            ? this.props.completedText
-            : this.state.confirmationAsked
-              ? this.props.confirmationText || 'Are you sure? This is irreversible'
-              : this.props.actionText || 'Delete Node'}
+          ? this.props.completedText
+          : this.state.confirmationAsked
+          ? `${this.props.confirmationText || 'Are you sure? This is irreversible'} ${this.state.cooldown ? `(${this.cooldown / 1000 - this.state.countdown})` : ''}`
+          : this.props.actionText || 'Delete Node'}
       </button>
     );
   }

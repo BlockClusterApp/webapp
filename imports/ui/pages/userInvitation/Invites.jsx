@@ -51,6 +51,7 @@ class Invites extends Component {
 
   locationChangeListener = (inviteId, location) => {
     this.inviteLocationMapping[inviteId] = location;
+    this.setState({});
   };
 
   configChangeListener = (inviteId, config) => {
@@ -281,9 +282,18 @@ class Invites extends Component {
                       <br />
                       <p>Select Node Configuration</p>
                       {this.state.modalInvite.type === 'privatehive' ? (
-                        <PrivateHiveNetworkConfigSelector isJoin={true} configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)} />
+                        <PrivateHiveNetworkConfigSelector
+                          locationCode={this.inviteLocationMapping[this.state.modalInviteId]}
+                          key={this.inviteLocationMapping[this.state.modalInviteId]}
+                          isJoin={true}
+                          configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)}
+                        />
                       ) : (
-                        <NetworkConfigSelector configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)} />
+                        <NetworkConfigSelector
+                          locationCode={this.inviteLocationMapping[this.state.modalInviteId]}
+                          key={this.inviteLocationMapping[this.state.modalInviteId]}
+                          configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)}
+                        />
                       )}
                       {!isVoucherAlertShown ? null : <CardVerification cardVerificationListener={this.cardVerificationListener} />}
                     </form>
