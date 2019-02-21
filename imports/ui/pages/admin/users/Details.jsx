@@ -188,6 +188,8 @@ class UserDetails extends Component {
       return <span className="label label-info">Pending</span>;
     } else if (statusCode === 3) {
       return <span className="label label-success">Demo User</span>;
+    } else if (statusCode === 7) {
+      return <span className="label label-success">Offline Payment</span>;
     } else if (statusCode === 4) {
       return <span className="label label-danger">Failed</span>;
     }
@@ -489,6 +491,25 @@ class UserDetails extends Component {
                             updateQuery.demo = 1;
                           } else {
                             updateQuery.demo = 0;
+                          }
+                          Meteor.call('updateUserAdmin', user._id, updateQuery);
+                        }}
+                      />
+                    </div>
+                    <div className="col-xs-height col-bottom fs-12" style={{ paddingLeft: '16px', paddingRight: '16px', paddingBottom: '10px' }}>
+                      Offline User&nbsp;&nbsp;
+                      <input
+                        type="checkbox"
+                        value="1"
+                        defaultChecked={user.offlineUser > 0 ? 'checked' : ''}
+                        id="checkbox4"
+                        onClick={e => {
+                          let offlineUser = e.target.checked;
+                          const updateQuery = {};
+                          if (offlineUser) {
+                            updateQuery.offlineUser = 1;
+                          } else {
+                            updateQuery.offlineUser = 0;
                           }
                           Meteor.call('updateUserAdmin', user._id, updateQuery);
                         }}

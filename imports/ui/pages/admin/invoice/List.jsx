@@ -144,6 +144,8 @@ class InvoiceList extends Component {
     switch (Number(paymentStatus)) {
       case 2:
         return <span className="label label-success">Paid</span>;
+      case 7:
+        return <span className="label label-success">Offline Payment</span>;
       case 3:
         return <span className="label label-info">Demo User</span>;
       case 1:
@@ -249,6 +251,9 @@ class InvoiceList extends Component {
                           </option>
                           <option value="2" selected={this.query.paymentStatus === 2}>
                             Paid
+                          </option>
+                          <option value="7" selected={this.query.paymentStatus === 7}>
+                            Offline Payment
                           </option>
                           <option value="3" selected={this.query.paymentStatus === 3}>
                             Demo User

@@ -223,7 +223,7 @@ function hyperion_getAndResetUserBill({ userId, isFromFrontEnd, selectedMonth })
 
       const history = HyperionBillHistory.find({ billingPeriodLabel, userId }).fetch()[0];
       if (history) {
-        return history.bill;
+        return { bill: history.bill, discount: history.totalDiscountGiven };
       } else if (!isFromFrontEnd) {
         delete hyperion_stats.subscriptions;
         delete hyperion_stats.userId;
@@ -251,12 +251,12 @@ function hyperion_getAndResetUserBill({ userId, isFromFrontEnd, selectedMonth })
           }
         );
       }
-      return Number(total_hyperion_cost).toFixed(2);
+      return { bill: Number(total_hyperion_cost).toFixed(2), discount };
     } else {
-      return 0;
+      return { bill: 0, discount: 0 };
     }
   } else {
-    return 0;
+    return { bill: 0, discount: 0 };
   }
 }
 

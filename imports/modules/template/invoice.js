@@ -79,13 +79,13 @@ module.exports = `<!DOCTYPE html>
                   src="https://app.blockcluster.io/assets/img/logo/blockcluster.png"
                 />
                 <address class="m-t-10">
-                  <strong>Byzantine Technologies Pvt Ltd. </strong><br />
-                  WZ-23, Rattan Park, New Delhi
+                  <strong>Byzantine Technologies Corp.</strong><br />
+                  55 East, 3rd Avenue, San Mateo, CA 94401, USA
                 </address>
               </div>
               <div class="pull-right sm-m-t-20 text-right">
                 <h2 class="font-montserrat all-caps hint-text" style="margin-bottom:  0px;">Invoice</h2>
-                CIN :  U7200DL2018PTC331594 <br />
+                <!-- CIN :  U7200DL2018PTC331594 --><br />
               </div>
               <div class="clearfix"></div>
             </div>
@@ -192,7 +192,7 @@ module.exports = `<!DOCTYPE html>
                   </p>
                 </td>
                 <td style="text-align: right;">
-                    <div style="text-align:right"><p>Byzantine Technologies Pvt Ltd</p>
+                    <div style="text-align:right"><p>Byzantine Technologies Corp.</p>
                     <img
                       width="150"
                       height="58"
