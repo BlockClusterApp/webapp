@@ -162,6 +162,9 @@ class InvoiceDetails extends Component {
             <td>{network.rate}</td>
             <td>{network.runtime}</td>
             <td>
+              $ {network.discount || '0.00'} {this.convertCostToTag(network.label)}
+            </td>
+            <td>
               $ {network.cost} {this.convertCostToTag(network.label)}{' '}
             </td>
           </tr>
@@ -359,7 +362,8 @@ class InvoiceDetails extends Component {
                   <th style={{ width: '15%' }}>Instance ID</th>
                   <th style={{ width: '15%' }}>Rate</th>
                   <th style={{ width: '18%' }}>Runtime</th>
-                  <th style={{ width: '19%' }}>Cost</th>
+                  <th style={{ width: '20%' }}>Discount</th>
+                  <th style={{ width: '14%' }}>Cost</th>
                 </tr>
               </thead>
               <tbody>

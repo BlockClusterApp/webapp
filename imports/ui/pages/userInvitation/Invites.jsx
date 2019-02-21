@@ -50,6 +50,7 @@ class Invites extends Component {
 
   locationChangeListener = (inviteId, location) => {
     this.inviteLocationMapping[inviteId] = location;
+    this.setState({});
   };
 
   configChangeListener = (inviteId, config) => {
@@ -266,7 +267,11 @@ class Invites extends Component {
                       <LocationSelector locationChangeListener={this.locationChangeListener.bind(this, this.state.modalInviteId)} />
                       <br />
                       <p>Select Node Configuration</p>
-                      <NetworkConfigSelector configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)} />
+                      <NetworkConfigSelector
+                        locationCode={this.locationCode}
+                        key={this.locationCode}
+                        configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)}
+                      />
                       {!isVoucherAlertShown ? null : <CardVerification cardVerificationListener={this.cardVerificationListener} />}
                     </form>
                     <button

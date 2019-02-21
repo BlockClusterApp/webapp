@@ -139,8 +139,9 @@ class BillingDashboard extends Component {
             <td>{network.rate}</td>
             <td>{network.runtime}</td>
             <td>
-              $ {network.cost} {this.convertCostToTag(network.label)}{' '}
+              $ {network.discount || '0.00'} {this.convertCostToTag(network.label)}
             </td>
+            <td>$ {network.cost}</td>
           </tr>
         );
       });
@@ -152,6 +153,7 @@ class BillingDashboard extends Component {
           <tr key={`p${index + 1}`}>
             <td>Promotional Credit Redemption</td>
             <td>{claim.code}</td>
+            <td />
             <td />
             <td />
             <td>$ -{Number(claim.amount).toFixed(2)}</td>
@@ -277,7 +279,8 @@ class BillingDashboard extends Component {
                           <th style={{ width: '15%' }}>Instance ID</th>
                           <th style={{ width: '15%' }}>Rate</th>
                           <th style={{ width: '18%' }}>Runtime</th>
-                          <th style={{ width: '19%' }}>Cost</th>
+                          <th style={{ width: '20%' }}>Discount</th>
+                          <th style={{ width: '14%' }}>Cost</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -289,7 +292,7 @@ class BillingDashboard extends Component {
                           <td colSpan="4" style={{ textAlign: 'right' }}>
                             Total Amount
                           </td>
-                          <td>
+                          <td colSpan="2">
                             {this.state.bill && this.state.bill.totalAmount ? `$ ${Number(this.state.bill.totalAmount).toFixed(2)}` : '0'}{' '}
                             {this.getInvoicePaidStatus(this.state.bill && this.state.bill.invoiceStatus)}
                           </td>

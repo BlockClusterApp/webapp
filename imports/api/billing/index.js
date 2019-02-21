@@ -194,6 +194,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       // if(isMicroNode && network.active){
       //   nodeTypeCount.Micro += 1;
       // }
+      let discountValue = 0;
       let extraDiskAmount = 0;
       let extraDiskStorage = 0;
       if (isMicroNode) {
@@ -270,6 +271,8 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             cost = cost - discount;
           }
 
+          discountValue = discount;
+
           //so that we can track record how many times he used.
           //and also helps to validate if next time need to consider voucher or not.
           if (!isFromFrontend) {
@@ -320,6 +323,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         voucher: voucher,
         networkConfig,
         label,
+        discount: Number(discountValue).toFixed(2),
         timeperiod: `Started at: ${moment(network.createdOn).format('DD-MMM-YYYY kk:mm')} ${
           network.deletedAt ? ` to ${moment(network.deletedAt).format('DD-MMM-YYYY kk:mm:ss')}` : 'and still running'
         }`,
@@ -351,9 +355,10 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             .toDate(),
       rate: `$ ${hyperionPricing.perGBCost} / GB-month `,
       runtime: '',
-      cost: Number(total_hyperion_cost).toFixed(2),
+      discount: Number(total_hyperion_cost.discount).toFixed(2),
+      cost: Number(total_hyperion_cost.bill).toFixed(2),
     });
-    result.totalAmount += Number(total_hyperion_cost);
+    result.totalAmount += Number(total_hyperion_cost.bill);
 
     if (hyperionPricing.perApiCost) {
       const apiCalls = ChargeableAPI.find({
@@ -394,10 +399,11 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
     createdOn: '',
     rate: '',
     runtime: '',
-    cost: Number(paymeterCost).toFixed(2),
+    discount: Number(paymeterCost.discount).toFixed(2),
+    cost: Number(paymeterCost.bill).toFixed(2),
   });
 
-  result.totalAmount += Number(paymeterCost);
+  result.totalAmount += Number(paymeterCost.bill);
   // }
 
   // Fetch redeemable credits

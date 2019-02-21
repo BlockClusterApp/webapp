@@ -342,10 +342,16 @@ InvoiceObj.generateHTML = async invoiceId => {
         uom: 'Time (Hours)',
         discount: '$ 0.00',
         cost: `$ ${item.cost}`,
-        duration: `${item.runtime.split('|')[0].trim()}${item.runtime.split('|')[1].trim() === '0 GB extra' ? '' : ' | ' + item.runtime.split('|')[1].trim()}`,
+        discount: `$ ${Number(item.discount || 0).toFixed(2)}`,
+        duration: `${item.runtime && item.runtime.split('|')[0].trim()}${item.runtime.split('|')[1].trim() === '0 GB extra' ? '' : ' | ' + item.runtime.split('|')[1].trim()}`,
+      };
+    } else {
+      return {
+        ...item,
+        cost: `$ ${item.cost}`,
+        discount: `$ ${Number(item.discount || 0).toFixed(2)}`,
       };
     }
-    return item;
   });
 
   if (invoice.creditClaims) {
@@ -387,7 +393,7 @@ InvoiceObj.generateHTML = async invoiceId => {
   });
   var fut = new Future();
 
-  var fileName = 'blockcluster-bill-report.pdf';
+  var fileName = `blockcluster-bill-report-${invoiceId}.pdf`;
 
   var options = {
     //renderDelay: 2000,
@@ -402,18 +408,30 @@ InvoiceObj.generateHTML = async invoiceId => {
   // Commence Webshot
   // console.log("Commencing webshot...");
 
-  pdf.create(finalHTML, { format: 'Tabloid', orientation: 'landscape', timeout: '100000' }).toFile(fileName, function(err, res) {
-    if (err) return console.log(err);
-    console.log(res);
-    fs.readFile(fileName, function(err, data) {
-      if (err) {
-        return console.log(err);
-      }
+  pdf
+    .create(finalHTML, {
+      format: 'Tabloid',
+      orientation: 'landscape',
+      timeout: '100000',
+      border: {
+        top: '0.5in', // default is 0, units: mm, cm, in, px
+        right: '0in',
+        bottom: '0.5in',
+        left: '0in',
+      },
+    })
+    .toFile(fileName, function(err, res) {
+      if (err) return console.log(err);
+      console.log(res);
+      fs.readFile(fileName, function(err, data) {
+        if (err) {
+          return console.log(err);
+        }
 
-      fs.unlink(fileName);
-      fut.return(data);
+        fs.unlink(fileName);
+        fut.return(data);
+      });
     });
-  });
   // webshot(finalHTML, fileName, options, function(error,success) {
   //   if(error){
   //     return console.log(error);
