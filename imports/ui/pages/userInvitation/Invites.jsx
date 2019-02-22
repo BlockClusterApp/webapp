@@ -269,7 +269,7 @@ class Invites extends Component {
                       <p>Select Node Configuration</p>
                       <NetworkConfigSelector
                         locationCode={this.inviteLocationMapping[this.state.modalInviteId]}
-                        key={this.locationCode}
+                        key={this.inviteLocationMapping[this.state.modalInviteId]}
                         configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)}
                       />
                       {!isVoucherAlertShown ? null : <CardVerification cardVerificationListener={this.cardVerificationListener} />}
