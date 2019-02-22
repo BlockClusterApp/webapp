@@ -1,5 +1,4 @@
-module.exports = `
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+module.exports = `<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 
 
@@ -229,7 +228,10 @@ module.exports = `
                         <tr>
                           <td align="center" style="font-size: 0;padding:0 75px 15px 75px;">
                             <p style="line-height:22px;font-family: arial, sans-serif; font-size: 13px; color: #4d4d4d;">
-                              <span style="color:#999;font-size: 17px;font-family: &#39;arial&#39;;line-height: 24px;text-align: center;">Hi,  <span style="color: #09759c;font-weight: bold;"><%= user.name %></span> Hope you are enjoying the blockcluster platform.Seems you have received an update on the support ticket raised by you.<br><br></span>
+                              <span style="color:#999;font-size: 17px;font-family: &#39;arial&#39;;line-height: 24px;text-align: center;">Hi,  <span style="color: #09759c;font-weight: bold;"><%= user.name %></span> Hope you are enjoying the blockcluster platform.You have received an update on the support ticket<br><br></span>
+                              <span style="color:#666;font-size: 17px;font-family: &#39;arial&#39;;line-height: 24px;text-align: center;">
+                                <%- description %>
+                              </span>
                             </p>
                             <div width="200;height:20px;"></div>
                             <table border="0" cellpadding="0" cellspacing="0" style="Margin:0 auto;">
@@ -238,7 +240,7 @@ module.exports = `
                                         </tr>
                                       </tbody></table>
                               <div width="200;height:20px;"></div>
-                              <p style="line-height:22px;font-family: arial, sans-serif; font-size: 15px; color: #4d4d4d;">or copy the URL in browser. <%= link %> in your browser</p>
+                              <p style="line-height:22px;font-family: arial, sans-serif; font-size: 12px; color: #4d4d4d;">or copy the URL in browser. <%= link %> in your browser. You can reply to this email to update your response.</p>
                           </td>
                         </tr>
                         <tr>

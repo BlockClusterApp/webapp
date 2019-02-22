@@ -140,7 +140,7 @@ Support.addBlockclusterReply = async ({ id, description }) => {
     _id: id,
   }).fetch()[0];
   if (!support) {
-    throw new Meteor.Error('Invaid support ticket id for the user');
+    throw new Meteor.Error('Invalid support ticket id for the user');
   }
 
   const history = {
@@ -179,7 +179,7 @@ Support.addBlockclusterReply = async ({ id, description }) => {
     },
     link: getSupportURL(support.caseId),
     support,
-    description,
+    description: description.replace(/\r?\n/g, '<br>'),
     updatedBy: {
       name: `${createdBy.profile.firstName} ${createdBy.profile.lastName}`,
       email: createdBy.emails[0].address,
@@ -192,7 +192,7 @@ Support.addBlockclusterReply = async ({ id, description }) => {
       name: 'Blockcluster',
     },
     to: user.emails[0].address,
-    subject: `[BlockCluster] Support case #${support.caseId}`,
+    subject: `[BlockCluster] Support case #${support.caseId}: ${support.subject}`,
     text: `Your support ticket #${support.caseId} has been updated.`,
     html: finalHTML,
   };
@@ -313,35 +313,35 @@ Support.closeTicketByAdmin = async id => {
     }
   );
 
-  const ejsTemplate = await getEJSTemplate({
-    fileName: 'updated-support-ticket.ejs',
-  });
-  const finalHTML = ejsTemplate({
-    user: {
-      email: user.emails[0].address,
-      name: `${user.profile.firstName}`,
-    },
-    link: getSupportURL(support.caseId),
-    support,
-    description,
-    updatedBy: {
-      name: `${admin.profile.firstName} ${admin.profile.lastName}`,
-      email: admin.emails[0].address,
-    },
-  });
+  // const ejsTemplate = await getEJSTemplate({
+  //   fileName: 'updated-support-ticket.ejs',
+  // });
+  // const finalHTML = ejsTemplate({
+  //   user: {
+  //     email: user.emails[0].address,
+  //     name: `${user.profile.firstName}`,
+  //   },
+  //   link: getSupportURL(support.caseId),
+  //   support,
+  //   description,
+  //   updatedBy: {
+  //     name: `${admin.profile.firstName} ${admin.profile.lastName}`,
+  //     email: admin.emails[0].address,
+  //   },
+  // });
 
-  const emailProps = {
-    from: {
-      email: getSupportFromEmail(support.caseId),
-      name: 'Blockcluster',
-    },
-    to: user.emails[0].address,
-    subject: `[BlockCluster] Support case #${support.caseId}`,
-    text: `Your support ticket #${support.caseId} has been closed.`,
-    html: finalHTML,
-  };
+  // const emailProps = {
+  //   from: {
+  //     email: getSupportFromEmail(support.caseId),
+  //     name: 'Blockcluster',
+  //   },
+  //   to: user.emails[0].address,
+  //   subject: `[BlockCluster] Support case #${support.caseId}`,
+  //   text: `Your support ticket #${support.caseId} has been closed.`,
+  //   html: finalHTML,
+  // };
 
-  await sendEmail(emailProps);
+  // await sendEmail(emailProps);
 
   return true;
 };
@@ -407,7 +407,7 @@ Support.reopenTicketByAdmin = async id => {
       name: 'Blockcluster',
     },
     to: user.emails[0].address,
-    subject: `[BlockCluster] Support case #${support.caseId}`,
+    subject: `[BlockCluster] Support case #${support.caseId}: ${support.subject}`,
     text: `Your support ticket #${support.caseId} has been reopened.`,
     html: finalHTML,
   };
