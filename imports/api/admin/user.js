@@ -33,6 +33,9 @@ User.updateAdmin = async (userId, updateQuery) => {
   if (updateQuery.demo !== undefined) {
     update.demoUser = updateQuery.demo;
   }
+  if (updateQuery.offlineUser !== undefined) {
+    update.offlineUser = updateQuery.offlineUser;
+  }
   ElasticLogger.log('Updating admin', { userId, updateQuery });
   Meteor.users.update(
     {

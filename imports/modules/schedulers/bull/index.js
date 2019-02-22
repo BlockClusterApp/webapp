@@ -20,7 +20,7 @@ if (env === 'production') {
 } else if (env === 'dev') {
   bullPrefix = '{bull-dev}';
 } else {
-  bullPrefix = '{bull-dev}';
+  bullPrefix = '{bull-development}';
 }
 
 const bullSystem = {};
