@@ -32,7 +32,7 @@ class ManageChannels extends Component {
 
   getAssetTypes() {
     const { network } = this.props;
-    let url = `http://${network.properties.apiEndPoint}/channels`;
+    let url = `https://${network.properties.apiEndPoint}/channels`;
     HTTP.get(
       url,
       {
@@ -59,7 +59,7 @@ class ManageChannels extends Component {
               <div className="card card-transparent">
                 <div className="card-header ">
                   <div className="card-title">
-                    <Link to={'/app/privatehive/' + this.props.match.params.id}>
+                    <Link to={`/app/privatehive/${this.props.match.params.id}/details`}>
                       {' '}
                       Control Panel <i className="fa fa-angle-right" />
                     </Link>{' '}

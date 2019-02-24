@@ -96,7 +96,7 @@ class Explorer extends Component {
       return;
     }
 
-    const url = `http://${network.properties.apiEndPoint}/chaincode/installed`;
+    const url = `https://${network.properties.apiEndPoint}/chaincode/installed`;
     HTTP.get(
       url,
       {
@@ -128,7 +128,7 @@ class Explorer extends Component {
     let password = null;
 
     if (status == 'running') {
-      let url = `http://${network.properties.apiEndPoint}/blocks/${this.state.channel}/latestInfo`;
+      let url = `https://${network.properties.apiEndPoint}/blocks/${this.state.channel}/latestInfo`;
       HTTP.get(
         url,
         {
@@ -177,7 +177,7 @@ class Explorer extends Component {
       });
     }
     let action = null;
-    let url = `http://${network.properties.apiEndPoint}/blocks/${this.state.channel}`;
+    let url = `https://${network.properties.apiEndPoint}/blocks/${this.state.channel}`;
 
     if (value.length > 10) {
       action = 'txn';
@@ -218,7 +218,7 @@ class Explorer extends Component {
             <div className="col-lg-8 col-sm-12">
               <div className="row">
                 <div className="col-lg-12 m-b-10">
-                  <Link to={'/app/networks/' + this.props.match.params.id}>
+                  <Link to={`/app/privatehive/${this.props.match.params.id}/details`}>
                     {' '}
                     Control Panel <i className="fa fa-angle-right" />
                   </Link>{' '}
