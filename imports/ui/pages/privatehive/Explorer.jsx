@@ -36,24 +36,15 @@ class Explorer extends Component {
       channels: [],
       channel_id: query.channel_id || 'mychannel',
     };
-
-    // this.addLatestBlocks = this.addLatestBlocks.bind(this);
-    // this.loadMoreBlocks = this.loadMoreBlocks.bind(this);
-    // this.refreshTxpool = this.refreshTxpool.bind(this);
-    // this.refreshConfig = this.refreshConfig.bind(this);
-    this.fetchBlockOrTxn = this.fetchBlockOrTxn.bind(this);
-    this.refreshLatestTxns = this.refreshLatestTxns.bind(this);
   }
 
   componentDidMount() {
-    this.setState({
-      // addLatestBlocksTimer: setTimeout(this.addLatestBlocks, REFRESH_INTERVAL), // 5 seconds refresh. Not frequently generated block
-      // refreshTxpoolTimer: setTimeout(this.refreshTxpool, REFRESH_INTERVAL),
-      // refreshConfigTimer: setTimeout(this.refreshConfig, REFRESH_INTERVAL),
-      refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, REFRESH_INTERVAL),
-    });
-    this.chaincodeTimer = setInterval(() => this.fetchChainCodeCount(), REFRESH_INTERVAL);
-
+    this.chaincodeTimer = setInterval(() => {
+      this.fetchChainCodeCount();
+    }, REFRESH_INTERVAL);
+    this.latestBlockTimer = setInterval(() => {
+      this.refreshLatestTxns();
+    }, REFRESH_INTERVAL);
     setTimeout(() => this.getChannels(), 1000);
   }
 
@@ -71,6 +62,7 @@ class Explorer extends Component {
         if (!err) {
           this.setState({
             channels: res.data.data.channels,
+            channel: res.data.data.channels[0] ? res.data.data.channels[0].channel_id : '',
           });
         }
       }
@@ -81,12 +73,8 @@ class Explorer extends Component {
     this.props.subscriptions.forEach(s => {
       s.stop();
     });
-
-    // clearTimeout(this.state.addLatestBlocksTimer);
-    // clearTimeout(this.state.refreshTxpoolTimer);
-    // clearTimeout(this.state.refreshConfigTimer);
-    clearTimeout(this.state.refreshLatestTxnsTimer);
     clearInterval(this.chaincodeTimer);
+    clearInterval(this.latestBlockTimer);
   }
 
   selectNetwork(e) {
@@ -121,9 +109,7 @@ class Explorer extends Component {
   fetchChainCodeCount = () => {
     const { network } = this.props;
     if (!network) {
-      return this.setState({
-        refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, REFRESH_INTERVAL),
-      });
+      return true;
     }
     if (network.status !== 'running') {
       return;
@@ -148,12 +134,10 @@ class Explorer extends Component {
     );
   };
 
-  refreshLatestTxns() {
+  refreshLatestTxns = () => {
     const { network } = this.props;
     if (!network) {
-      return this.setState({
-        refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, REFRESH_INTERVAL),
-      });
+      return true;
     }
     // let rpc = null;
     let status = network.status;
@@ -189,20 +173,14 @@ class Explorer extends Component {
                 blocks,
               });
             }
-            this.setState({
-              refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, REFRESH_INTERVAL),
-            });
           }
         }
       );
     } else {
-      this.setState({
-        refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, REFRESH_INTERVAL),
-      });
     }
-  }
+  };
 
-  fetchBlockOrTxn(value) {
+  fetchBlockOrTxn = value => {
     const { network } = this.props;
     if (!network.status === 'running') {
       return this.setState({
@@ -238,7 +216,7 @@ class Explorer extends Component {
         });
       }
     );
-  }
+  };
 
   channelChangeListener = () => {
     this.setState(
@@ -246,9 +224,6 @@ class Explorer extends Component {
         channel: this.channel.value,
       },
       () => {
-        this.setState({
-          refreshLatestTxnsTimer: setTimeout(() => this.refreshLatestTxns(), REFRESH_INTERVAL),
-        });
         this.refreshLatestTxns();
       }
     );
@@ -362,7 +337,7 @@ class Explorer extends Component {
                     </div>
                   </div>
                 </div>
-                <div className="col-lg-9 m-t-10">
+                <div className="col-lg-12 m-t-10">
                   <div className="card no-border no-margin details">
                     <hr className="no-margin" />
                     <div className="">
@@ -387,40 +362,6 @@ class Explorer extends Component {
                     </div>
                     <div className="padding-15 json-output">
                       <pre>{this.state.blockOrTxnOutput}</pre>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-lg-3 m-t-10">
-                  <div className="widget-9  widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch details">
-                    <div className="padding-25">
-                      <div className="pull-left">
-                        <h2 className="text-success no-margin">Latest Txns</h2>
-                        <p className="no-margin">Descending Order</p>
-                      </div>
-                      <h3 className="pull-right semi-bold">
-                        <sup>
-                          <small className="semi-bold">#</small>
-                        </sup>{' '}
-                        {this.state.totalTransactions}
-                      </h3>
-                      <div className="clearfix" />
-                    </div>
-                    <div className="auto-overflow widget-11-2-table-2">
-                      <table className="table table-condensed table-hover">
-                        <tbody>
-                          {this.state.latestTxns.map((item, index) => {
-                            return (
-                              <tr key={item.txnHash}>
-                                <td className="font-montserrat all-caps fs-12 break-word">{item.txnHash}</td>
-                                <td className="text-right b-r b-dashed b-grey w-0" />
-                                <td className="w-25">
-                                  <span className="font-montserrat fs-18">{helpers.firstLetterCapital(item.type)}</span>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
                     </div>
                   </div>
                 </div>
@@ -451,7 +392,7 @@ class Explorer extends Component {
                     <sup>
                       <small className="semi-bold">#</small>
                     </sup>{' '}
-                    {this.state.totalBlocksScanned}
+                    {this.state.blocks && this.state.blocks.length}
                   </h3>
                   <div className="clearfix" />
                 </div>
