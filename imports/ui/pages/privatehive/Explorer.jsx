@@ -7,15 +7,24 @@ import { withRouter } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import Config from '../../../modules/config/client';
 
+import querystring from 'querystring';
+
 import './Explorer.scss';
 
 const REFRESH_INTERVAL = 5000;
 
 class Explorer extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
+    let query = {};
+    if (props.location.search) {
+      query = querystring.parse(props.location.search.substr(1));
+    }
+
+    this.query = query;
+
     this.state = {
-      channel: 'mychannel',
+      channel: query.channel_id || 'mychannel',
       latestBlock: null,
       oldestBlock: null,
       blocks: [],
@@ -24,6 +33,8 @@ class Explorer extends Component {
       blocks: [],
       blockOrTxnOutput: '',
       chainCodeCount: 0,
+      channels: [],
+      channel_id: query.channel_id || 'mychannel',
     };
 
     // this.addLatestBlocks = this.addLatestBlocks.bind(this);
@@ -42,6 +53,28 @@ class Explorer extends Component {
       refreshLatestTxnsTimer: setTimeout(this.refreshLatestTxns, REFRESH_INTERVAL),
     });
     this.chaincodeTimer = setInterval(() => this.fetchChainCodeCount(), REFRESH_INTERVAL);
+
+    setTimeout(() => this.getChannels(), 1000);
+  }
+
+  getChannels() {
+    const { network } = this.props;
+    let url = `https://${network.properties.apiEndPoint}/channels`;
+    HTTP.get(
+      url,
+      {
+        headers: {
+          // Authorization: 'Basic ' + new Buffer(`${this.props.network[0].instanceId}:${this.props.network[0]['api-password']}`).toString('base64'),
+        },
+      },
+      (err, res) => {
+        if (!err) {
+          this.setState({
+            channels: res.data.data.channels,
+          });
+        }
+      }
+    );
   }
 
   componentWillUnmount() {
@@ -207,9 +240,28 @@ class Explorer extends Component {
     );
   }
 
+  channelChangeListener = () => {
+    this.setState(
+      {
+        channel: this.channel.value,
+      },
+      () => {
+        this.setState({
+          refreshLatestTxnsTimer: setTimeout(() => this.refreshLatestTxns(), REFRESH_INTERVAL),
+        });
+        this.refreshLatestTxns();
+      }
+    );
+  };
+
   render() {
-    let nodeStatus = null;
-    nodeStatus = this.nodeStatusIcon();
+    const channelOptions = this.state.channels.map(channel => {
+      return (
+        <option value={location.channel_id} key={channel.channel_id} selected={this.query.channel_id === channel.channel_id}>
+          {channel.channel_id}
+        </option>
+      );
+    });
 
     return (
       <div className="content explorer sm-gutter">
@@ -266,7 +318,7 @@ class Explorer extends Component {
                     </div>
                   </div>
                 </div>
-                <div className="col-lg-4">
+                <div className="col-lg-3">
                   <div className="widget-9 card no-border bg-success no-margin widget-loader-bar">
                     <div className="full-height d-flex flex-column">
                       <div className="card-header ">
@@ -291,27 +343,21 @@ class Explorer extends Component {
                     </div>
                   </div>
                 </div>
-                <div className="col-lg-4">
+                <div className="col-lg-5">
                   <div className="widget-9 card no-border bg-primary no-margin widget-loader-bar">
                     <div className="full-height d-flex flex-column">
                       <div className="card-header ">
                         <div className="card-title text-black">
                           <span className="font-montserrat fs-11 all-caps text-white">
-                            Size of Blockchain <i className="fa fa-chevron-right" />
+                            Select Channel <i className="fa fa-chevron-right" />
                           </span>
                         </div>
-                        <div className="card-controls">
-                          <ul>
-                            <li>
-                              <a href="#" className="card-refresh" data-toggle="refresh">
-                                <i className="card-icon card-icon-refresh text-white" />
-                              </a>
-                            </li>
-                          </ul>
-                        </div>
+                        <div className="card-controls" />
                       </div>
-                      <div className="p-l-20">
-                        <h3 className="no-margin p-b-30 text-white ">{this.state.diskSize}</h3>
+                      <div className="p-l-20 p-r-20 p-b-20 ">
+                        <select className="full-width select2-hidden-accessible bg-white" ref={input => (this.channel = input)} onChange={this.channelChangeListener}>
+                          {channelOptions}
+                        </select>
                       </div>
                     </div>
                   </div>

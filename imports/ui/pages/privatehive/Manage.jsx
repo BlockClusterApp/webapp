@@ -48,7 +48,7 @@ class ViewNetwork extends Component {
                           <div
                             className="clickable"
                             onClick={() => {
-                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/assets/create') : '';
+                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/channels/create') : '';
                             }}
                           >
                             <p className="no-margin text-black bold text-uppercase fs-12">Create Channels</p>
