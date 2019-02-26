@@ -28,7 +28,7 @@ class CreateChannel extends Component {
       url,
       {
         headers: {
-          // Authorization: 'Basic ' + new Buffer(`${this.props.network[0].instanceId}:${this.props.network[0]['api-password']}`).toString('base64'),
+          'x-access-key': network.properties.token ? network.properties.tokens[0] : undefined,
         },
         data: {
           channelName: this.channelName.value,

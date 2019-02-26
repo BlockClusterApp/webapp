@@ -37,6 +37,7 @@ class ManageChannels extends Component {
       url,
       {
         headers: {
+          'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
           // Authorization: 'Basic ' + new Buffer(`${this.props.network[0].instanceId}:${this.props.network[0]['api-password']}`).toString('base64'),
         },
       },

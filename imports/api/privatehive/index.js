@@ -612,6 +612,88 @@ PrivateHive.join = async ({ ordererId, name, networkConfig, voucherId, locationC
   return _id;
 };
 
+async function generatePrivateHiveToken({ instanceId }) {
+  const network = PrivateHiveCollection.find({
+    instanceId,
+    userId: Meteor.userId(),
+  }).fetch()[0];
+
+  if (!network) {
+    throw new Meteor.Error(400, 'Invalid network id');
+  }
+
+  return new Promise((resolve, reject) => {
+    const endpoint = `https://${network.properties.apiEndPoint}/auth/generate`;
+    HTTP.call(
+      'POST',
+      endpoint,
+      {
+        headers: {
+          'x-access-key': network.properties.tokens
+            ? network.properties.tokens[0]
+              ? network.properties.tokens[0]
+              : network.properties.externalPeers[1]
+            : network.properties.externalPeers[1],
+        },
+      },
+      (err, res) => {
+        if (err) {
+          return reject(err);
+        }
+        PrivateHiveCollection.update(
+          { instanceId },
+          {
+            $push: {
+              'properties.tokens': res.data.data,
+            },
+          }
+        );
+        return resolve(res.data.data);
+      }
+    );
+  });
+}
+
+async function revokePrivateHiveToken({ instanceId, token }) {
+  const network = PrivateHiveCollection.find({
+    instanceId,
+    userId: Meteor.userId(),
+  }).fetch()[0];
+
+  if (!network) {
+    throw new Meteor.Error(400, 'Invalid network id');
+  }
+  const endpoint = `https://${network.properties.apiEndPoint}/auth`;
+  HTTP.call(
+    'DELETE',
+    endpoint,
+    {
+      headers: {
+        'x-access-key': token,
+      },
+      npmRequestOptions: {
+        rejectUnauthorized: false,
+      },
+    },
+    (err, res) => {
+      console.log('Revoke token response', err, res);
+    }
+  );
+
+  PrivateHiveCollection.update(
+    {
+      instanceId,
+    },
+    {
+      $pull: {
+        'properties.tokens': token,
+      },
+    }
+  );
+
+  return true;
+}
+
 /* Meteor methods so that our frontend can call these function without using HTTP calls. Although I would prefer to use HTTP instead of meteor method. */
 Meteor.methods({
   initializePrivateHiveNetwork: PrivateHive.initializeNetwork,
@@ -619,6 +701,8 @@ Meteor.methods({
   deletePrivateHiveNetwork: PrivateHive.deleteNetwork,
   changePrivateHiveNodeName: PrivateHive.changeName,
   joinPrivateHiveNetwork: PrivateHive.join,
+  generatePrivateHiveToken,
+  revokePrivateHiveToken,
 });
 
 export default PrivateHive;

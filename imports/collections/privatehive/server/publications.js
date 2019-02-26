@@ -8,6 +8,7 @@ Meteor.publish('privatehive', () => {
 });
 
 Meteor.publish('privatehive.one', query => {
+  query = query || {};
   return PrivateHive.find({ active: true, deletedAt: null, userId: Meteor.userId(), ...query });
 });
 

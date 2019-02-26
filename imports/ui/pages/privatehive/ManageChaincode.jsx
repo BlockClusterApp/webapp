@@ -37,7 +37,7 @@ class ManageChaincode extends Component {
       url,
       {
         headers: {
-          // Authorization: 'Basic ' + new Buffer(`${this.props.network[0].instanceId}:${this.props.network[0]['api-password']}`).toString('base64'),
+          'x-access-key': network.properties.token ? network.properties.tokens[0] : undefined,
         },
       },
       (err, res) => {
@@ -63,7 +63,7 @@ class ManageChaincode extends Component {
                       {' '}
                       Control Panel <i className="fa fa-angle-right" />
                     </Link>{' '}
-                    Channel Management
+                    Chaincode Management
                   </div>
                 </div>
                 <div className="card-block">
