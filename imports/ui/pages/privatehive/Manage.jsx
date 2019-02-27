@@ -92,7 +92,7 @@ class ViewNetwork extends Component {
                               this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/chaincode/create') : '';
                             }}
                           >
-                            <p className="no-margin text-black bold text-uppercase fs-12">Create Chaincode</p>
+                            <p className="no-margin text-black bold text-uppercase fs-12">Install Chaincode</p>
                             <p className="no-margin fs-12">Install and Initiate</p>
                           </div>
                           <div

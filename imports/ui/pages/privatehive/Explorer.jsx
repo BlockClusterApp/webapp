@@ -3,8 +3,7 @@ import { withTracker } from 'meteor/react-meteor-data';
 import PrivateHive from '../../../collections/privatehive';
 import helpers from '../../../modules/helpers';
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from 'react-html-parser';
-import { withRouter } from 'react-router-dom';
-import { Link } from 'react-router-dom';
+import { withRouter, Link } from 'react-router-dom';
 import Config from '../../../modules/config/client';
 
 import querystring from 'querystring';
