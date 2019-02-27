@@ -2,66 +2,16 @@ import React, { Component } from 'react';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import { withTracker } from 'meteor/react-meteor-data';
 import notifications from '../../../modules/notifications';
-import FineUploaderTraditional from 'fine-uploader-wrappers';
-import Gallery from 'react-fine-uploader';
 import { withRouter, Link } from 'react-router-dom';
+import PrivateHive from '../../../collections/privatehive';
 
 import 'react-fine-uploader/gallery/gallery.css';
-
-import moment from 'moment';
-
-const wrapperStyles = {
-  width: '100%',
-  maxWidth: 2500,
-  marginTop: '20px',
-};
 
 class CreateChannelCode extends Component {
   constructor() {
     super();
 
     this.state = {};
-
-    this.uploader = new FineUploaderTraditional({
-      options: {
-        chunking: {
-          enabled: false,
-        },
-        request: {
-          endpoint: ``,
-          inputName: 'file',
-        },
-        deleteFile: {
-          enabled: false,
-        },
-        retry: {
-          enableAuto: false,
-        },
-        callbacks: {
-          onSubmit: async (id, fileName) => {
-            function setUploaderURL(userId, locationCode, uploader) {
-              return new Promise((resolve, reject) => {
-                Meteor.call('getHyperionToken', { userId: userId }, (err, token) => {
-                  if (!err) {
-                    uploader.methods._endpointStore.set(`${window.location.origin}/api/hyperion/upload?location=${locationCode}&token=${token}`, id);
-
-                    resolve();
-                  } else {
-                    reject();
-                  }
-                });
-              });
-            }
-
-            await setUploaderURL(Meteor.userId(), this.state.locationCode, this.uploader);
-          },
-          onError: (id, fileName, reason, d) => {
-            notifications.error(reason);
-          },
-          onTotalProgress: (a, b) => {},
-        },
-      },
-    });
   }
 
   componentDidMount() {}
@@ -71,6 +21,93 @@ class CreateChannelCode extends Component {
       s.stop();
     });
   }
+
+  installChaincode = () => {
+    if (!this.chaincodeName.value) {
+      return this.setState({
+        error: 'Name is required',
+      });
+    }
+    if (!this.chainCodeVersion.value) {
+      return this.setState({
+        error: 'Version is required',
+      });
+    }
+
+    if (!this.chaincodePath.value) {
+      return this.setState({
+        error: 'Path is required',
+      });
+    }
+
+    if (!this.chaincodeFile.files[0]) {
+      return this.setState({
+        error: 'Chaincode file is required',
+      });
+    }
+
+    this.setState({
+      error: '',
+      loading: true,
+    });
+
+    const { network } = this.props;
+
+    console.log('Chaincodes', this.chaincodeFile.files[0]);
+
+    const form = new FormData();
+    form.append('chaincode', this.chaincodeFile.files[0]);
+    form.append('name', this.chaincodeName.value);
+    form.append('type', this.chaincodeType.value);
+    form.append('version', this.chainCodeVersion.value);
+    form.append('ccPath', this.chaincodePath.value);
+
+    fetch(`https://${network.properties.apiEndPoint}/chaincode/install`, {
+      method: 'POST',
+      headers: {
+        'x-access-key': network.properties.token ? network.properties.tokens[0] : undefined,
+      },
+      body: form,
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log('Uploaded chaincode', data);
+        if (data.success) {
+          notifications.success('Installed chaincode');
+        } else {
+          notifications.error(data.error);
+        }
+        this.setState({
+          loading: false,
+        });
+      })
+      .catch(err => {
+        notifications.error(err.toString());
+        this.setState({
+          loading: false,
+        });
+      });
+    // HTTP.call(
+    //   'POST',
+    //   url,
+    //   {
+    //     headers: {
+    //
+    //     },
+    //     data: {
+    //       channelName: this.channelName.value,
+    //       externalBroker: network.properties.externalKafkaBroker,
+    //       ordererOrg: network.isJoin ? '' : network.instanceId.replace('ph-', ''),
+    //     },
+    //   },
+    //   (err, res) => {
+    //     if (err) {
+    //       return notifications.error(err.reason);
+    //     }
+    //     return notifications.success('Proposal sent');
+    //   }
+    // );
+  };
 
   render() {
     return (
@@ -207,25 +244,35 @@ class CreateChannelCode extends Component {
                     </select>
                   </div>
                 </div>
+              </div>
 
+              {this.state.error && (
                 <div className="row">
                   <div className="col-md-12">
-                    <div className="form-group p-l-15">
-                      <LaddaButton
-                        data-size={S}
-                        data-style={SLIDE_UP}
-                        data-spinner-size={30}
-                        data-spinner-lines={12}
-                        onClick={this.onSubmit}
-                        className="btn btn-success"
-                        onClick={() => {
-                          this.installChaincode();
-                        }}
-                      >
-                        <i className="fa fa-save" aria-hidden="true" />
-                        &nbsp;&nbsp;Install Chaincode
-                      </LaddaButton>
-                    </div>
+                    <div className="alert alert-danger">{this.state.error}</div>
+                  </div>
+                </div>
+              )}
+
+              <div className="row">
+                <div className="col-md-12">
+                  <div className="form-group p-l-15">
+                    <LaddaButton
+                      loading={this.state.loading}
+                      disabled={this.state.loading}
+                      data-size={S}
+                      data-style={SLIDE_UP}
+                      data-spinner-size={30}
+                      data-spinner-lines={12}
+                      onClick={this.onSubmit}
+                      className="btn btn-success"
+                      onClick={() => {
+                        this.installChaincode();
+                      }}
+                    >
+                      <i className="fa fa-save" aria-hidden="true" />
+                      &nbsp;&nbsp;Install Chaincode
+                    </LaddaButton>
                   </div>
                 </div>
               </div>
@@ -239,6 +286,19 @@ class CreateChannelCode extends Component {
 
 export default withTracker(props => {
   return {
-    subscriptions: [],
+    network: PrivateHive.find({ instanceId: props.match.params.id, active: true }).fetch()[0],
+    subscriptions: [
+      Meteor.subscribe(
+        'privatehive.one',
+        { instanceId: props.match.params.id, active: true },
+        {
+          onReady: function() {
+            if (PrivateHive.find({ instanceId: props.match.params.id, active: true }).fetch().length !== 1) {
+              props.history.push('/app/privatehive');
+            }
+          },
+        }
+      ),
+    ],
   };
 })(withRouter(CreateChannelCode));
