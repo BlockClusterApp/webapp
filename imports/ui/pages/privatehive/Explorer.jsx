@@ -24,7 +24,7 @@ class Explorer extends Component {
     this.query = query;
 
     this.state = {
-      channel: query.channel_id || 'mychannel',
+      channel: query.channel || 'mychannel',
       latestBlock: null,
       oldestBlock: null,
       blocks: [],
@@ -34,7 +34,7 @@ class Explorer extends Component {
       blockOrTxnOutput: '',
       chainCodeCount: 0,
       channels: [],
-      channel_id: query.channel_id || 'mychannel',
+      channel_id: query.channel || 'mychannel',
     };
   }
 
@@ -55,14 +55,18 @@ class Explorer extends Component {
       url,
       {
         headers: {
-          'x-access-key': network.properties.token ? network.properties.tokens[0] : undefined,
+          'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
         },
       },
       (err, res) => {
         if (!err) {
+          let channel = res.data.data.channels[0] ? res.data.data.channels[0].channel_id : '';
+          if (this.query && this.query.channel) {
+            channel = this.query.channel;
+          }
           this.setState({
             channels: res.data.data.channels,
-            channel: res.data.data.channels[0] ? res.data.data.channels[0].channel_id : '',
+            channel,
           });
         }
       }
@@ -120,7 +124,7 @@ class Explorer extends Component {
       url,
       {
         headers: {
-          'x-access-key': network.properties.token ? network.properties.tokens[0] : undefined,
+          'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
         },
       },
       (err, res) => {
@@ -150,7 +154,7 @@ class Explorer extends Component {
         url,
         {
           headers: {
-            'x-access-key': network.properties.token ? network.properties.tokens[0] : undefined,
+            'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
           },
         },
         (err, res) => {
@@ -187,14 +191,11 @@ class Explorer extends Component {
         blockOrTxnOutput: 'Wait for network to start running',
       });
     }
-    let action = null;
     let url = `https://${network.properties.apiEndPoint}/blocks/${this.state.channel}`;
 
     if (value.length > 10) {
-      action = 'txn';
       url = `${url}/txn/${value}`;
     } else if (!Number.isNaN(parseInt(value))) {
-      action = 'block';
       url = `${url}/block/${value}`;
     } else {
       return;
@@ -204,11 +205,12 @@ class Explorer extends Component {
       url,
       {
         headers: {
-          'x-access-key': network.properties.token ? network.properties.tokens[0] : undefined,
+          'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
         },
       },
       (err, res) => {
         if (err) {
+          setTimeout(() => this.fetchBlockOrTxn(value), 3000);
           return this.setState({ blockOrTxnOutput: err.toString() });
         }
         return this.setState({
@@ -219,9 +221,11 @@ class Explorer extends Component {
   };
 
   channelChangeListener = () => {
+    this.txnBlock.value = '';
     this.setState(
       {
         channel: this.channel.value,
+        blockOrTxnOutput: '',
       },
       () => {
         this.refreshLatestTxns();
@@ -232,7 +236,7 @@ class Explorer extends Component {
   render() {
     const channelOptions = this.state.channels.map(channel => {
       return (
-        <option value={location.channel_id} key={channel.channel_id} selected={this.query.channel_id === channel.channel_id}>
+        <option value={location.channel_id} key={channel.channel_id} selected={this.query.channel === channel.channel_id}>
           {channel.channel_id}
         </option>
       );
@@ -349,6 +353,7 @@ class Explorer extends Component {
                               type="text"
                               className="form-control"
                               placeholder="0x...."
+                              ref={input => (this.txnBlock = input)}
                               onChange={e => {
                                 this.fetchBlockOrTxn(e.target.value);
                               }}
@@ -401,8 +406,16 @@ class Explorer extends Component {
                     <tbody>
                       {this.state.blocks.map((item, index) => {
                         return (
-                          <tr key={item.number}>
-                            <td className="font-montserrat all-caps fs-12 w-50">Block #{item.number}</td>
+                          <tr
+                            key={item.number}
+                            onClick={() => {
+                              this.txnBlock.value = item.number;
+                              this.fetchBlockOrTxn(item.number);
+                            }}
+                          >
+                            <td className="font-montserrat all-caps fs-12 w-50" style={{ cursor: 'pointer' }}>
+                              Block #{item.number}
+                            </td>
                             <td className="text-right hidden-lg">{/* <span className="hint-text small">dewdrops</span> */}</td>
                             {/* <td className="text-right b-r b-dashed b-grey w-25"> */}
                             {/* <span className="hint-text small">{item.transactions.length} Txns</span> */}
@@ -415,19 +428,6 @@ class Explorer extends Component {
                       })}
                     </tbody>
                   </table>
-                </div>
-                <div className="padding-25 mt-auto">
-                  <p className="small no-margin">
-                    <a
-                      href="#"
-                      onClick={e => {
-                        this.loadMoreBlocks(e);
-                      }}
-                    >
-                      <i className="fa fs-16 fa-arrow-circle-o-down text-success m-r-10" />
-                    </a>
-                    <span className="hint-text ">Show older blocks</span>
-                  </p>
                 </div>
               </div>
             </div>

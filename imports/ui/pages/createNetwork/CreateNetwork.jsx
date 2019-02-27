@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import { withRouter } from 'react-router-dom';
-import { Networks } from '../../../collections/networks/networks.js';
 import notifications from '../../../modules/notifications';
 import LocationSelector from '../../components/Selectors/LocationSelector.jsx';
 import NetworkConfigSelector from '../../components/Selectors/NetworkConfigSelector.jsx';

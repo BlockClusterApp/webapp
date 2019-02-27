@@ -677,17 +677,18 @@ async function revokePrivateHiveToken({ instanceId, token }) {
     },
     (err, res) => {
       console.log('Revoke token response', err, res);
-    }
-  );
-
-  PrivateHiveCollection.update(
-    {
-      instanceId,
-    },
-    {
-      $pull: {
-        'properties.tokens': token,
-      },
+      if (!err) {
+        PrivateHiveCollection.update(
+          {
+            instanceId,
+          },
+          {
+            $pull: {
+              'properties.tokens': token,
+            },
+          }
+        );
+      }
     }
   );
 

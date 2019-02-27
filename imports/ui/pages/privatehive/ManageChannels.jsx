@@ -3,6 +3,7 @@ import { withTracker } from 'meteor/react-meteor-data';
 import PrivateHive from '../../../collections/privatehive';
 import { withRouter } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 
 class ManageChannels extends Component {
   constructor() {
@@ -85,7 +86,22 @@ class ManageChannels extends Component {
                                   return (
                                     <tr key={channel.channel_id}>
                                       <td className="v-align-middle ">{channel.channel_id}</td>
-                                      <td />
+                                      <td>
+                                        <LaddaButton
+                                          data-size={S}
+                                          data-style={SLIDE_UP}
+                                          data-spinner-size={30}
+                                          data-spinner-lines={12}
+                                          onClick={this.onSubmit}
+                                          className="btn btn-primary"
+                                          onClick={() => {
+                                            this.props.history.push(`/app/privatehive/${this.props.match.params.id}/channels/explorer?channel=${channel.channel_id}`);
+                                          }}
+                                        >
+                                          <i className="fa fa-eye" aria-hidden="true" />
+                                          &nbsp;&nbsp;Audit
+                                        </LaddaButton>
+                                      </td>
                                     </tr>
                                   );
                                 })}
