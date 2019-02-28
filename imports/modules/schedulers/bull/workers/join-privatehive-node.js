@@ -124,6 +124,7 @@ module.exports = bullSystem => {
             domain: orderer.instanceId.split('-')[1],
             locationCode: orderer.locationCode,
             nfsServer: orderer.nfs.url,
+            ordererHost: orderer.properties.externalOrderers[0].split(':')[0],
           },
         });
         return resolve(true);

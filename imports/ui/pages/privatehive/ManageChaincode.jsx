@@ -37,7 +37,7 @@ class ManageChaincode extends Component {
       url,
       {
         headers: {
-          'x-access-key': network.properties.token ? network.properties.tokens[0] : undefined,
+          'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
         },
       },
       (err, res) => {

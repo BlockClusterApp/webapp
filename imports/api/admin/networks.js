@@ -82,7 +82,7 @@ Network.fetchPrivateHiveNetworkForAdmin = async networkId => {
       }
     )
     .fetch()[0];
-  const locations = LocationApi.getLocations({ service: 'privatehive', userId: network.userId });
+  const locations = await LocationApi.getLocations({ service: 'privatehive', userId: network.userId });
   let voucher, networkType;
   if (network.voucher) {
     voucher = Voucher.find({

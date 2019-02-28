@@ -65,13 +65,12 @@ class CreateChannelCode extends Component {
     fetch(`https://${network.properties.apiEndPoint}/chaincode/install`, {
       method: 'POST',
       headers: {
-        'x-access-key': network.properties.token ? network.properties.tokens[0] : undefined,
+        'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
       },
       body: form,
     })
       .then(res => res.json())
       .then(data => {
-        console.log('Uploaded chaincode', data);
         if (data.success) {
           notifications.success('Installed chaincode');
         } else {

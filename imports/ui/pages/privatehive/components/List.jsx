@@ -45,7 +45,6 @@ class NetworksList extends Component {
       }
     });
     Meteor.call('getPrivateHiveNetworkCount', (err, res) => {
-      console.log('Count', res);
       if (!err) {
         if (res <= 0) {
           this.props.history.push(`/app/privatehive/create`);
