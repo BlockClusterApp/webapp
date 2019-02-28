@@ -185,25 +185,49 @@ class ViewEditNetwork extends Component {
                       <span className="value-valign-middle">{moment(network.createdAt).format('DD-MMM-YYYY kk:mm:ss')}</span>
                     </div>
                   </div>
-                  <div className="form-group row">
-                    <label className="col-md-3 control-label">External Orderer Addresses</label>
-                    <div className="col-md-9">
-                      <b className="value-valign-middle">
-                        {(network.properties.externalOrderers || []).map((orderer, index) => {
-                          return <li key={`${network.instanceId}_orderers_${index}`}>{orderer}</li>;
-                        })}
-                      </b>
+                  {!network.isJoin && (
+                    <div className="form-group row">
+                      <label className="col-md-3 control-label">External Orderer Addresses</label>
+                      <div className="col-md-9">
+                        <b className="value-valign-middle">
+                          {(network.properties.externalOrderers || []).map((orderer, index) => {
+                            return <li key={`${network.instanceId}_orderers_${index}`}>{orderer}</li>;
+                          })}
+                        </b>
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {!network.isJoin && (
+                    <div className="form-group row">
+                      <label className="col-md-3 control-label">Anchor Peer External Addresses</label>
+                      <div className="col-md-9">
+                        <b className="value-valign-middle">
+                          {(network.properties.externalAnchorPeers || []).map((peer, index) => {
+                            return <li key={`${network.instanceId}_anchor_peer_${index}`}>{peer}</li>;
+                          })}
+                        </b>
+                      </div>
+                    </div>
+                  )}
+
+                  {network.isJoin && (
+                    <div className="form-group row">
+                      <label className="col-md-3 control-label">External Addresses</label>
+                      <div className="col-md-9">
+                        <b className="value-valign-middle">
+                          {(network.properties.externalPeers || []).map((peer, index) => {
+                            return <li key={`${network.instanceId}_anchor_peer_${index}`}>{peer}</li>;
+                          })}
+                        </b>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="form-group row">
-                    <label className="col-md-3 control-label">Anchor Peer External Addresses</label>
+                    <label className="col-md-3 control-label">MSP Id</label>
                     <div className="col-md-9">
-                      <b className="value-valign-middle">
-                        {(network.properties.externalAnchorPeers || []).map((peer, index) => {
-                          return <li key={`${network.instanceId}_anchor_peer_${index}`}>{peer}</li>;
-                        })}
-                      </b>
+                      <b className="value-valign-middle">{network.instanceId.replace('ph-', '')}MSP</b>
                     </div>
                   </div>
 
