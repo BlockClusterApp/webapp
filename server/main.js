@@ -1260,6 +1260,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1292,6 +1293,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1326,6 +1328,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1362,6 +1365,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1404,6 +1408,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1441,6 +1446,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1478,8 +1484,10 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
+
         if (error) {
           myFuture.throw(error);
         } else {
@@ -1515,6 +1523,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1552,6 +1561,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1586,6 +1596,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1620,6 +1631,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1672,6 +1684,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1708,6 +1721,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1744,6 +1758,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1779,6 +1794,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1838,6 +1854,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1888,6 +1905,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1923,6 +1941,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1962,6 +1981,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -1993,6 +2013,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -2148,6 +2169,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -2182,6 +2204,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -2216,6 +2239,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -2250,6 +2274,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -2284,6 +2309,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
@@ -2322,6 +2348,7 @@ spec:
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 4000,
       },
       function(error, response) {
         if (error) {
