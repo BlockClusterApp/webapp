@@ -115,6 +115,8 @@ export default {
       return 'down';
     } else if (status === 'running') {
       return 'running';
+    } else if (status === 'testing') {
+      return 'testing';
     } else {
       return 'unknown';
     }
