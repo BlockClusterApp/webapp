@@ -16,7 +16,7 @@ module.exports = function(agenda) {
 
       const reminderCode = moment().get('date') <= 5 ? Invoice.PaymentStatusMapping.Reminder1 : Invoice.PaymentStatusMapping.Reminder2;
       const pendingInvoices = Invoice.find({
-        billingMonthLabel,
+        billingPeriodLabel: billingMonthLabel,
         totalAmount: {
           $gt: 0,
         },
