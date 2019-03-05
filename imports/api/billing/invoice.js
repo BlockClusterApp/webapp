@@ -226,7 +226,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     paymentStatus: {
       $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Settled],
     },
-    billingMonthLabel,
+    billingPeriodLabel: billingMonthLabel,
   };
   if (rzSubscriptionId) {
     selector.rzSubscriptionId = rzSubscriptionId;
@@ -235,7 +235,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   if (invoiceId) {
     selector = {
       _id: invoiceId,
-      billingMonthLabel,
+      billingPeriodLabel: billingMonthLabel,
     };
   }
 
