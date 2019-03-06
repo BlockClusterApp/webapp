@@ -22,13 +22,16 @@ class CreateChannel extends Component {
     if (!this.channelName.value) {
       return '';
     }
+    this.setState({
+      loading: true,
+    });
     let url = `https://${network.properties.apiEndPoint}/channels`;
     HTTP.call(
       'POST',
       url,
       {
         headers: {
-          'x-access-key': network.properties.token ? network.properties.tokens[0] : undefined,
+          'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
         },
         data: {
           channelName: this.channelName.value,
@@ -37,6 +40,9 @@ class CreateChannel extends Component {
         },
       },
       (err, res) => {
+        this.setState({
+          loading: false,
+        });
         if (err) {
           return notifications.error(err.reason);
         }

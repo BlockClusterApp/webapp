@@ -55,7 +55,6 @@ class Invites extends Component {
   };
 
   configChangeListener = (inviteId, config) => {
-    console.log('New config', config);
     this.inviteConfigMapping[inviteId] = config;
     this.setState({});
   };

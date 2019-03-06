@@ -4,6 +4,7 @@ import PrivateHive from '../../../collections/privatehive';
 import { withRouter } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
+import notifications from '../../../modules/notifications';
 
 class ManageChannels extends Component {
   constructor() {
@@ -11,6 +12,7 @@ class ManageChannels extends Component {
 
     this.state = {
       channels: [],
+      modalChannel: {},
     };
 
     this.getAssetTypes = this.getAssetTypes.bind(this);
@@ -52,7 +54,138 @@ class ManageChannels extends Component {
     );
   }
 
+  showAddOrgModal = channelName => {
+    return this.setState(
+      {
+        showModal: true,
+        modalChannel: {
+          name: channelName,
+        },
+      },
+      () => {
+        $('#channel_details_modal').modal('show');
+      }
+    );
+  };
+
+  addOrgToChannel = () => {
+    if (!this.orgEndpoint.value) {
+      return this.setState({
+        modalError: 'Endpoint is required',
+      });
+    }
+    this.setState({
+      loading: true,
+    });
+    Meteor.call(
+      'addOrgToChannel',
+      {
+        channelName: this.state.modalChannel.name,
+        organizationId: this.props.network.instanceId,
+        newOrgEndpoint: this.orgEndpoint.value,
+      },
+      (err, res) => {
+        this.setState({
+          loading: false,
+        });
+        if (err) {
+          return notifications.error(err.reason);
+        }
+        return notifications.success('Proposal sent');
+      }
+    );
+    // const url = `https://${network.properties.apiEndPoint}/channels`;
+    // HTTP.call(
+    //   'POST',
+    //   url,
+    //   {
+    //     headers: {
+    //       'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
+    //     },
+    //     data: {
+    //       channelName: this.channelName.value,
+    //       externalBroker: network.properties.externalKafkaBroker,
+    //       ordererOrg: network.isJoin ? '' : network.instanceId.replace('ph-', ''),
+    //     },
+    //   },
+    //   (err, res) => {
+    //     this.setState({
+    //       loading: false,
+    //       showModal: false
+    //     });
+    //     if (err) {
+    //       return notifications.error(err.reason);
+    //     }
+    //     return notifications.success('Proposal sent');
+    //   }
+    // );
+  };
+
   render() {
+    const Modal = this.state.showModal && (
+      <div className="modal fade slide-right" id="channel_details_modal" tabIndex="-1" role="dialog" aria-hidden="true">
+        <div className="modal-dialog modal-md">
+          <div className="modal-content-wrapper">
+            <div className="modal-content">
+              <button type="button" className="close" data-dismiss="modal" aria-hidden="true">
+                <i className="pg-close fs-14" />
+              </button>
+              <div className="container-md-height full-height">
+                <div className="row-md-height">
+                  <div className="modal-body col-md-height col-middle">
+                    <h3>
+                      Add new org to <b>{this.state.modalChannel.name}</b>
+                    </h3>
+                    <br />
+                    <p>
+                      <b>Note:</b> You can only add peers created using blockcluster platform using this interface
+                    </p>
+                    <br />
+                    <br />
+                    <div className="row clearfix">
+                      <div className="col-md-12">
+                        <div className="form-group form-group-default input-group">
+                          <div className="form-input-group">
+                            <label>Organization API-Client Endpoint</label>
+                            <input type="text" className="form-control" name="projectName" ref={input => (this.orgEndpoint = input)} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <br />
+                    <LaddaButton
+                      loading={this.state.loading}
+                      data-size={S}
+                      data-style={SLIDE_UP}
+                      data-spinner-size={30}
+                      data-spinner-lines={12}
+                      className="btn btn-success"
+                      onClick={this.addOrgToChannel}
+                    >
+                      <i className="fa fa-circle-plus" aria-hidden="true" />
+                      &nbsp;&nbsp;Add Org
+                    </LaddaButton>
+                    &nbsp;
+                    <button
+                      type="button"
+                      className="btn btn-default"
+                      data-dismiss="modal"
+                      onClick={() => {
+                        $('#channel_details_modal').modal('hide');
+                        setTimeout(this.setState({ showModal: false }), 1000);
+                      }}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
     return (
       <div className="assetsStats content">
         <div className="m-t-20 container-fluid container-fixed-lg bg-white">
@@ -92,7 +225,6 @@ class ManageChannels extends Component {
                                           data-style={SLIDE_UP}
                                           data-spinner-size={30}
                                           data-spinner-lines={12}
-                                          onClick={this.onSubmit}
                                           className="btn btn-primary"
                                           onClick={() => {
                                             this.props.history.push(`/app/privatehive/${this.props.match.params.id}/channels/explorer?channel=${channel.channel_id}`);
@@ -100,6 +232,18 @@ class ManageChannels extends Component {
                                         >
                                           <i className="fa fa-eye" aria-hidden="true" />
                                           &nbsp;&nbsp;Audit
+                                        </LaddaButton>
+                                        &nbsp;&nbsp;
+                                        <LaddaButton
+                                          data-size={S}
+                                          data-style={SLIDE_UP}
+                                          data-spinner-size={30}
+                                          data-spinner-lines={12}
+                                          className="btn btn-success"
+                                          onClick={this.showAddOrgModal.bind(this, channel.channel_id)}
+                                        >
+                                          <i className="fa fa-circle-plus" aria-hidden="true" />
+                                          &nbsp;&nbsp;Add Org
                                         </LaddaButton>
                                       </td>
                                     </tr>
@@ -117,6 +261,7 @@ class ManageChannels extends Component {
             </div>
           </div>
         </div>
+        {Modal}
       </div>
     );
   }

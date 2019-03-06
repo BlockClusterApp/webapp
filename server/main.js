@@ -427,7 +427,7 @@ Meteor.methods({
                         containers: [
                           {
                             name: 'mongo',
-                            image: `mongo:3.4.18`,
+                            image: `mongo:3.6.9`,
                             imagePullPolicy: 'IfNotPresent',
                             ports: [
                               {

@@ -7,6 +7,7 @@ import Bull from '../../modules/schedulers/bull';
 import PrivateHiveServer from './server-communicator';
 import NetworkConfiguration from '../../collections/network-configuration/network-configuration';
 
+require('./network-operations');
 const debug = require('debug')('api:privatehive');
 
 const EFS_AWS_ACCESS_KEY_ID = 'AKIAIYQD6G6A45MN3GJA';
