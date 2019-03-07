@@ -46,7 +46,7 @@ NetworkOperations.addOrgToChannel = async ({ channelName, organizationId, newOrg
   console.log('Sending vote request to ', { requestVoteEndPoints, channelName, organizationId });
 
   await Bluebird.map(
-    requestVoteEndPoints,
+    [{ url: ordererOrg.properties.apiEndPoint, token: ordererOrg.properties.tokens && ordererOrg.properties.tokens[0] }], // requestVoteEndPoints,
     Meteor.bindEnvironment(endPoint => {
       return new Promise(
         Meteor.bindEnvironment((resolve, reject) => {
@@ -62,9 +62,10 @@ NetworkOperations.addOrgToChannel = async ({ channelName, organizationId, newOrg
                 initiatorOrg: requestingOrg.instanceId.replace('ph-', ''),
                 ordererOrg: ordererOrg.instanceId.replace('ph-', ''),
                 ordererAPIClientHost: ordererOrg.properties.apiEndPoint,
-                allPeers: requestVoteEndPoints.map(r => ({ apiEndPoint: r.url })),
+                allPeers: requestVoteEndPoints,
                 newOrg: newOrgId,
                 ordererOrgHost: ordererOrg.properties.externalOrderers[0].split(':')[0],
+                newOrgEndPoint: newOrgNetwork.properties.apiEndPoint,
               },
             },
             (err, res) => {
