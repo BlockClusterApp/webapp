@@ -205,7 +205,7 @@ async function attachPaymentToRequest(payment) {
 }
 
 async function insertOrUpdatePayment(user, payment) {
-  if (payment.notes.paymentRequestId) {
+  if (payment.notes && payment.notes.paymentRequestId) {
     try {
       await attachPaymentToRequest(payment);
     } catch (err) {
