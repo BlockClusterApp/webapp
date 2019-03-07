@@ -18,6 +18,7 @@ import { RZPaymentLink } from '../../collections/razorpay';
 import RZPTAddon from '../../collections/razorpay/trasient-addon';
 import Credits from '../../collections/payments/credits';
 import User from '../server-functions/user';
+import Communication from '../communication/slack';
 
 const InvoiceObj = {};
 
@@ -249,7 +250,19 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   const invoice = Invoice.find(selector).fetch()[0];
 
   if (!invoice) {
-    await RazorPay.refundPayment(rzPayment.id, { noPaymentRequest: true, amount: rzPayment.amount });
+    Communication.sendNotification({
+      type: 'refund-required',
+      message: `Refund required for payment ${rzPayment.id}. Reason: Invoice does not exists \n\nDetails:\n${JSON.stringify(
+        {
+          invoiceId,
+          rzPaymentId: rzPayment.id,
+          id: spanId,
+        },
+        null,
+        2
+      )}`,
+    });
+    // await RazorPay.refundPayment(rzPayment.id, { noPaymentRequest: true, amount: rzPayment.amount });
     ElasticLogger.log('Refunded not existing invoice', {
       invoiceId,
       rzPaymentId: rzPayment.id,
@@ -269,7 +282,19 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   }
 
   if ([Invoice.PaymentStatusMapping.WaivedOff].includes(invoice.paymentStatus) || invoice.totalAmount <= 0) {
-    await RazorPay.refundPayment(rzPayment.id, { noPaymentRequest: true, amount: rzPayment.amount });
+    Communication.sendNotification({
+      type: 'refund-required',
+      message: `Refund required for payment ${rzPayment.id}. Reason: Invoice already waivedOff. \n\nDetails:\n${JSON.stringify(
+        {
+          invoiceId,
+          rzPaymentId: rzPayment.id,
+          id: spanId,
+        },
+        null,
+        2
+      )}`,
+    });
+    // await RazorPay.refundPayment(rzPayment.id, { noPaymentRequest: true, amount: rzPayment.amount });
     ElasticLogger.log('Refunded waived off invoice', {
       invoiceId,
       rzPaymentId: rzPayment.id,
