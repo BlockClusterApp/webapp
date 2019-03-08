@@ -26,11 +26,11 @@ function fetchApplicableAmount(credit, totalAmount) {
   if (!credit.invoices) {
     return Math.min(credit.amount, totalAmount);
   }
-  const usedAmount = credit.invoices.reduce((sum, invoice) => sum + invoice, 0);
-  const usableAmount = Math.min(credit.amount - usedAmount, totalAmount);
+  const usedAmount = credit.invoices.reduce((sum, invoice) => Number(sum) + Number(invoice.amount), 0);
+  const usableAmount = Math.min(Number(credit.amount) - Number(usedAmount), totalAmount);
 
   if (usableAmount <= 0) {
-    return null;
+    return 0;
   }
 
   return usableAmount;
@@ -44,11 +44,13 @@ function fetchEligibleCredits(credits, totalAmount) {
     if (amount <= 0) {
       return;
     }
-    result.push({
-      credit,
-      amount: Number(Number(usableAmount).toFixed(2)),
-    });
-    amount = amount - usableAmount;
+    if (usableAmount > 0) {
+      result.push({
+        credit,
+        amount: Number(Number(usableAmount).toFixed(2)),
+      });
+      amount = amount - usableAmount;
+    }
   });
   return { credits: result.filter(r => !!r.amount), remainingAmount: amount };
 }
@@ -272,7 +274,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     return true;
   }
 
-  if (invoice.paymentStatus === Invoice.PaymentStatusMapping.Settled || invoice.paymentStatus === Invoice.Payment.OfflineUser) {
+  if (invoice.paymentStatus === Invoice.PaymentStatusMapping.Settled || invoice.paymentStatus === Invoice.PaymentStatusMapping.OfflineUser) {
     ElasticLogger.log('Invoice already settled', {
       invoiceId: invoice._id,
       id: spanId,
