@@ -25,6 +25,10 @@ class CreateChannel extends Component {
     this.setState({
       loading: true,
     });
+    let ordererNetwork = network;
+    if (network.isJoin) {
+      ordererNetwork = PrivateHive.find({ _id: network.ordererId }).fetch()[0];
+    }
     let url = `https://${network.properties.apiEndPoint}/channels`;
     HTTP.call(
       'POST',
@@ -35,8 +39,11 @@ class CreateChannel extends Component {
         },
         data: {
           channelName: this.channelName.value,
-          externalBroker: network.properties.externalKafkaBroker,
-          ordererOrg: network.isJoin ? '' : network.instanceId.replace('ph-', ''),
+          externalBroker: ordererNetwork.properties.externalKafkaBroker,
+          ordererOrg: ordererNetwork.instanceId.replace('ph-', ''),
+          ordererGrpcHost: ordererNetwork.properties.externalOrderers[0],
+          ordererApiClientHost: ordererNetwork.properties.apiEndPoint,
+          orgApiEndpoint: network.properties.apiEndPoint,
         },
       },
       (err, res) => {

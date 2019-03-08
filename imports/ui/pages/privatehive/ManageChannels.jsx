@@ -215,40 +215,42 @@ class ManageChannels extends Component {
                                 </tr>
                               </thead>
                               <tbody>
-                                {this.state.channels.map(channel => {
-                                  return (
-                                    <tr key={channel.channel_id}>
-                                      <td className="v-align-middle ">{channel.channel_id}</td>
-                                      <td>
-                                        <LaddaButton
-                                          data-size={S}
-                                          data-style={SLIDE_UP}
-                                          data-spinner-size={30}
-                                          data-spinner-lines={12}
-                                          className="btn btn-primary"
-                                          onClick={() => {
-                                            this.props.history.push(`/app/privatehive/${this.props.match.params.id}/channels/explorer?channel=${channel.channel_id}`);
-                                          }}
-                                        >
-                                          <i className="fa fa-eye" aria-hidden="true" />
-                                          &nbsp;&nbsp;Audit
-                                        </LaddaButton>
-                                        &nbsp;&nbsp;
-                                        <LaddaButton
-                                          data-size={S}
-                                          data-style={SLIDE_UP}
-                                          data-spinner-size={30}
-                                          data-spinner-lines={12}
-                                          className="btn btn-success"
-                                          onClick={this.showAddOrgModal.bind(this, channel.channel_id)}
-                                        >
-                                          <i className="fa fa-circle-plus" aria-hidden="true" />
-                                          &nbsp;&nbsp;Add Org
-                                        </LaddaButton>
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
+                                {this.state.channels
+                                  .sort((a, b) => (a.channel_id < b.channel_id ? -1 : 1))
+                                  .map(channel => {
+                                    return (
+                                      <tr key={channel.channel_id}>
+                                        <td className="v-align-middle ">{channel.channel_id}</td>
+                                        <td>
+                                          <LaddaButton
+                                            data-size={S}
+                                            data-style={SLIDE_UP}
+                                            data-spinner-size={30}
+                                            data-spinner-lines={12}
+                                            className="btn btn-primary"
+                                            onClick={() => {
+                                              this.props.history.push(`/app/privatehive/${this.props.match.params.id}/channels/explorer?channel=${channel.channel_id}`);
+                                            }}
+                                          >
+                                            <i className="fa fa-eye" aria-hidden="true" />
+                                            &nbsp;&nbsp;Audit
+                                          </LaddaButton>
+                                          &nbsp;&nbsp;
+                                          <LaddaButton
+                                            data-size={S}
+                                            data-style={SLIDE_UP}
+                                            data-spinner-size={30}
+                                            data-spinner-lines={12}
+                                            className="btn btn-success"
+                                            onClick={this.showAddOrgModal.bind(this, channel.channel_id)}
+                                          >
+                                            <i className="fa fa-circle-plus" aria-hidden="true" />
+                                            &nbsp;&nbsp;Add Org
+                                          </LaddaButton>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
                               </tbody>
                             </table>
                           </div>

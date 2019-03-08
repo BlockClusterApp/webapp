@@ -89,18 +89,28 @@ class NetworksList extends Component {
                         </tr>
                       </thead>
                       <tbody>
-                        {this.props.networks.map((item, index) => {
-                          return (
-                            <tr key={item._id} onClick={() => this.openNetwork(item.instanceId)}>
-                              <td className="v-align-middle ">{item.name}</td>
-                              <td className="v-align-middle">{item.instanceId}</td>
-                              <td className="v-align-middle">{item.isJoin ? 'Peer' : 'Authority'}</td>
-                              <td className="v-align-middle">{this.getLocationName(item.locationCode)}</td>
-                              <td className="v-align-middle">{this.convertStatusToTag(item.status)}</td>
-                              <td className="v-align-middle">{moment(item.createdAt).format('DD-MMM-YYYY kk:mm')}</td>
-                            </tr>
-                          );
-                        })}
+                        {this.props.networks
+                          .sort(
+                            (a, b) =>
+                              moment(a.createdAt)
+                                .toDate()
+                                .getTime() -
+                              moment(b.createdAt)
+                                .toDate()
+                                .getTime()
+                          )
+                          .map((item, index) => {
+                            return (
+                              <tr key={item._id} onClick={() => this.openNetwork(item.instanceId)}>
+                                <td className="v-align-middle ">{item.name}</td>
+                                <td className="v-align-middle">{item.instanceId}</td>
+                                <td className="v-align-middle">{item.isJoin ? 'Peer' : 'Authority'}</td>
+                                <td className="v-align-middle">{this.getLocationName(item.locationCode)}</td>
+                                <td className="v-align-middle">{this.convertStatusToTag(item.status)}</td>
+                                <td className="v-align-middle">{moment(item.createdAt).format('DD-MMM-YYYY kk:mm')}</td>
+                              </tr>
+                            );
+                          })}
                       </tbody>
                     </table>
                   </div>

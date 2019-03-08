@@ -9,7 +9,15 @@ Meteor.publish('privatehive', () => {
 
 Meteor.publish('privatehive.one', query => {
   query = query || {};
-  return PrivateHive.find({ active: true, deletedAt: null, userId: Meteor.userId(), ...query });
+  const networks = PrivateHive.find({ active: true, deletedAt: null, userId: Meteor.userId(), ...query }).fetch();
+  const orderers = networks.reduce((co, network) => {
+    if (!co.includes(network.ordererId) && network.ordererId) {
+      co.push(network.ordererId);
+    }
+    return co;
+  }, []);
+  console.log('Orderers', orderers);
+  return [PrivateHive.find({ active: true, deletedAt: null, $or: [{ userId: Meteor.userId(), ...query }, { _id: { $in: orderers } }] })];
 });
 
 Meteor.publish('privatehive.all', function({ page }) {
