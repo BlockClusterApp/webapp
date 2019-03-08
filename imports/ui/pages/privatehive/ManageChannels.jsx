@@ -5,6 +5,9 @@ import { withRouter } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import notifications from '../../../modules/notifications';
+import moment from 'moment';
+
+import './Explorer.scss';
 
 class ManageChannels extends Component {
   constructor() {
@@ -57,13 +60,13 @@ class ManageChannels extends Component {
   showAddOrgModal = channelName => {
     return this.setState(
       {
-        showModal: true,
+        showAddOrgModal: true,
         modalChannel: {
           name: channelName,
         },
       },
       () => {
-        $('#channel_details_modal').modal('show');
+        $('#channel_add_org_details').modal('show');
       }
     );
   };
@@ -94,36 +97,43 @@ class ManageChannels extends Component {
         return notifications.success('Proposal sent');
       }
     );
-    // const url = `https://${network.properties.apiEndPoint}/channels`;
-    // HTTP.call(
-    //   'POST',
-    //   url,
-    //   {
-    //     headers: {
-    //       'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
-    //     },
-    //     data: {
-    //       channelName: this.channelName.value,
-    //       externalBroker: network.properties.externalKafkaBroker,
-    //       ordererOrg: network.isJoin ? '' : network.instanceId.replace('ph-', ''),
-    //     },
-    //   },
-    //   (err, res) => {
-    //     this.setState({
-    //       loading: false,
-    //       showModal: false
-    //     });
-    //     if (err) {
-    //       return notifications.error(err.reason);
-    //     }
-    //     return notifications.success('Proposal sent');
-    //   }
-    // );
+  };
+
+  getChannelInfo = channelName => {
+    this.setState(
+      {
+        showChannelInfoModal: true,
+      },
+      () => {
+        $('#channel_info_modal').modal('show');
+      }
+    );
+    const { network } = this.props;
+    const url = `https://${network.properties.apiEndPoint}/channels/${channelName}/info`;
+    HTTP.get(
+      url,
+      {
+        headers: {
+          'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
+        },
+      },
+      (err, res) => {
+        if (err) {
+          return notifications.error(err);
+        }
+        if (!res.data.success) {
+          return notifications.error(res.data.error);
+        }
+        this.setState({
+          channelInfo: res.data.data,
+        });
+      }
+    );
   };
 
   render() {
-    const Modal = this.state.showModal && (
-      <div className="modal fade slide-right" id="channel_details_modal" tabIndex="-1" role="dialog" aria-hidden="true">
+    let Modal = this.state.showAddOrgModal && (
+      <div className="modal fade slide-right" id="channel_add_org_details" tabIndex="-1" role="dialog" aria-hidden="true">
         <div className="modal-dialog modal-md">
           <div className="modal-content-wrapper">
             <div className="modal-content">
@@ -171,8 +181,8 @@ class ManageChannels extends Component {
                       className="btn btn-default"
                       data-dismiss="modal"
                       onClick={() => {
-                        $('#channel_details_modal').modal('hide');
-                        setTimeout(this.setState({ showModal: false }), 1000);
+                        $('#channel_add_org_details').modal('hide');
+                        setTimeout(this.setState({ showAddOrgModal: false }), 1000);
                       }}
                     >
                       Close
@@ -185,6 +195,92 @@ class ManageChannels extends Component {
         </div>
       </div>
     );
+
+    if (this.state.showChannelInfoModal) {
+      Modal = (
+        <div className="modal fade slide-right" id="channel_info_modal" tabIndex="-1" role="dialog" aria-hidden="true">
+          <div className="modal-dialog modal-md">
+            <div className="modal-content-wrapper">
+              <div className="modal-content">
+                <button type="button" className="close" data-dismiss="modal" aria-hidden="true">
+                  <i className="pg-close fs-14" />
+                </button>
+                <div className="container-md-height full-height">
+                  <div className="row-md-height">
+                    {this.state.channelInfo && (
+                      <div className="modal-body col-md-height col-middle">
+                        <h3>
+                          Channel <b>{this.state.channelInfo.name}</b>
+                        </h3>
+                        <br />
+                        <br />
+                        <table className="table table-hover" id="basicTable">
+                          <thead>
+                            <tr>
+                              <th style={{ width: '25%' }}>Details</th>
+                              <th style={{ width: '75%' }}>&nbsp;</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td className="v-align-middle ">Created At</td>
+                              <td>{moment(this.state.channelInfo.createdAt).format('DD-MMM-YYYY kk:mm:ss')}</td>
+                            </tr>
+                            <tr>
+                              <td className="v-align-middle ">Updated At</td>
+                              <td>{moment(this.state.channelInfo.updatedAt).format('DD-MMM-YYYY kk:mm:ss')}</td>
+                            </tr>
+                            <tr>
+                              <td className="v-align-middle ">Members</td>
+                              <td>
+                                {this.state.channelInfo.members.map(member => {
+                                  return (
+                                    <li>
+                                      <div className="p-l-10 p-b-10" style={{ display: 'inline-table' }}>
+                                        <b>Org:</b>&nbsp;{member.org}
+                                        <br />
+                                        <b>API Host:</b>&nbsp;{member.apiClientHost}
+                                        <br />
+                                        <b>Joined at:</b>&nbsp;{moment(member.joinedOn).format('DD-MMM-YYYY kk:mm:ss')}
+                                        <br />
+                                      </div>
+                                    </li>
+                                  );
+                                })}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <br />
+                        &nbsp;
+                        <button
+                          type="button"
+                          className="btn btn-default"
+                          data-dismiss="modal"
+                          onClick={() => {
+                            $('#channel_info').modal('hide');
+                            setTimeout(this.setState({ showAddOrgModal: false }), 1000);
+                          }}
+                        >
+                          Close
+                        </button>
+                      </div>
+                    )}
+                    {!this.state.channelInfo && (
+                      <div className="d-flex justify-content-center flex-column full-height ">
+                        <div id="loader" />
+                        <br />
+                        <p style={{ textAlign: 'center', fontSize: '1.2em' }}>Fetching info...</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="assetsStats content">
@@ -220,7 +316,9 @@ class ManageChannels extends Component {
                                   .map(channel => {
                                     return (
                                       <tr key={channel.channel_id}>
-                                        <td className="v-align-middle ">{channel.channel_id}</td>
+                                        <td className="v-align-middle " onClick={this.getChannelInfo.bind(this, channel.channel_id)} style={{ cursor: 'pointer' }}>
+                                          {channel.channel_id}
+                                        </td>
                                         <td>
                                           <LaddaButton
                                             data-size={S}

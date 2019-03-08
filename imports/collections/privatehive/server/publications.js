@@ -16,7 +16,6 @@ Meteor.publish('privatehive.one', query => {
     }
     return co;
   }, []);
-  console.log('Orderers', orderers);
   return [PrivateHive.find({ active: true, deletedAt: null, $or: [{ userId: Meteor.userId(), ...query }, { _id: { $in: orderers } }] })];
 });
 
