@@ -6,7 +6,7 @@ String.prototype.toPascalCase = function() {
 };
 
 Meteor.methods({
-  createPrivatehiveNetwork: _ => {
+  createPrivatehiveOrderer: _ => {
     const locationCode = 'us-west-2';
     const instanceId = helpers.instanceIDGenerate();
     HTTP.call(
@@ -112,7 +112,7 @@ Meteor.methods({
                               containers: [
                                 {
                                   name: 'privatehive-api',
-                                  image: '402432300121.dkr.ecr.ap-south-1.amazonaws.com/privatehive-api:latest',
+                                  image: '402432300121.dkr.ecr.ap-south-1.amazonaws.com/privatehive-orderer-api:latest',
                                   ports: [
                                     {
                                       containerPort: 3000,
@@ -124,16 +124,29 @@ Meteor.methods({
                                       value: `${instanceId.toPascalCase()}`,
                                     },
                                     {
-                                      name: 'MODE',
-                                      value: 'orderer',
-                                    },
-                                    {
                                       name: 'SHARE_FILE_DIR',
                                       value: '/etc/hyperledger/privatehive',
                                     },
                                     {
                                       name: 'ORDERER_ADDRESS',
                                       value: workerNodeIP + ':' + ordererNodePort,
+                                    },
+                                    {
+                                      name: 'PEER_ORG_NAME',
+                                      //fetch dynamically whatever is the peer org name in the network
+                                      value: 'Suvsidof',
+                                    },
+                                    {
+                                      name: 'PEER_ORG_ADMIN_CERT',
+                                      //this will be fetched dynamically. Th org's network peer details will be fetched and passed to the orderer.
+                                      value:
+                                        '-----BEGIN CERTIFICATE-----\nMIICGzCCAcKgAwIBAgIQIz4lZFWBeucza7PJM+aOzzAKBggqhkjOPQQDAjB1MQsw\nCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy\nYW5jaXNjbzEaMBgGA1UEChMRcGVlci5zdXZzaWRvZi5jb20xHTAbBgNVBAMTFGNh\nLnBlZXIuc3V2c2lkb2YuY29tMB4XDTE5MDMxMDIyNTAwMFoXDTI5MDMwNzIyNTAw\nMFowXDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcT\nDVNhbiBGcmFuY2lzY28xIDAeBgNVBAMMF0FkbWluQHBlZXIuc3V2c2lkb2YuY29t\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1b5PXSSH4vSrmi8/y/dYB/NMYD7D\nL3BhQEzHiuIA1tO4R6KxonRzy7Nx7zSZFO2MHsEDP5JmlGShaK7Yqxs7VaNNMEsw\nDgYDVR0PAQH/BAQDAgeAMAwGA1UdEwEB/wQCMAAwKwYDVR0jBCQwIoAgi0piLp4U\nqYzJSyXkiWlY/vMEcrkM+qUq1iPVKLz49T8wCgYIKoZIzj0EAwIDRwAwRAIgNu2T\nlpXiptu/Q0qXtn/rco4KkdEVylrbheEj/73swtACID4Xz7P3KjjBLZbk3Zay8lV5\n01WxU+pbtQA1R7ti9XKk\n-----END CERTIFICATE-----\n',
+                                    },
+                                    {
+                                      name: 'PEER_ORG_CA_CERT',
+                                      //same like above
+                                      value:
+                                        '-----BEGIN CERTIFICATE-----\nMIICRzCCAe2gAwIBAgIQE8SdQJ5rmrq9cGasXeg2XTAKBggqhkjOPQQDAjB1MQsw\nCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy\nYW5jaXNjbzEaMBgGA1UEChMRcGVlci5zdXZzaWRvZi5jb20xHTAbBgNVBAMTFGNh\nLnBlZXIuc3V2c2lkb2YuY29tMB4XDTE5MDMxMDIyNTAwMFoXDTI5MDMwNzIyNTAw\nMFowdTELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcT\nDVNhbiBGcmFuY2lzY28xGjAYBgNVBAoTEXBlZXIuc3V2c2lkb2YuY29tMR0wGwYD\nVQQDExRjYS5wZWVyLnN1dnNpZG9mLmNvbTBZMBMGByqGSM49AgEGCCqGSM49AwEH\nA0IABNsEXvZTChdwlFaqRE6v+45H1fPRsmtHwQklhz0lqDC0SdJ8Ti4eTElplBWt\nYa2TVmdKttYLWf21KQRA5MycpgGjXzBdMA4GA1UdDwEB/wQEAwIBpjAPBgNVHSUE\nCDAGBgRVHSUAMA8GA1UdEwEB/wQFMAMBAf8wKQYDVR0OBCIEIItKYi6eFKmMyUsl\n5IlpWP7zBHK5DPqlKtYj1Si8+PU/MAoGCCqGSM49BAMCA0gAMEUCIQDlkb/wXjtf\njbjY5d0iVaAJR5Y9DKcf6W+M9NBB9NdX0QIgRXLySAQiX68ImW3e0C6z6IP5WNIS\nrdii51h99FwiZGM=\n-----END CERTIFICATE-----\n',
                                     },
                                     {
                                       name: 'GOPATH',
@@ -224,87 +237,11 @@ Meteor.methods({
                                   ],
                                 },
                                 {
-                                  name: 'peer',
-                                  image: 'hyperledger/fabric-peer',
-                                  args: ['peer', 'node', 'start'],
+                                  name: 'nginx',
+                                  image: 'nginx:1.7.9',
                                   ports: [
                                     {
-                                      containerPort: 7051,
-                                      containerPort: 7053,
-                                    },
-                                  ],
-                                  workingDir: '/opt/gopath/src/github.com/hyperledger/fabric/peer',
-                                  env: [
-                                    {
-                                      name: 'CORE_VM_ENDPOINT',
-                                      value: 'unix:///host/var/run/docker.sock',
-                                    },
-                                    {
-                                      name: 'CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE',
-                                      value: 'artifacts_default',
-                                    },
-                                    {
-                                      name: 'CORE_LOGGING_LEVEL',
-                                      value: 'DEBUG',
-                                    },
-                                    {
-                                      name: 'CORE_PEER_MSPCONFIGPATH',
-                                      value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${instanceId.toLowerCase()}.com/peers/peer0.peer.${instanceId.toLowerCase()}.com/msp`,
-                                    },
-                                    {
-                                      name: 'CORE_PEER_TLS_ENABLED',
-                                      value: 'false',
-                                    },
-                                    {
-                                      name: 'CORE_PEER_ID',
-                                      value: `peer0.peer.${instanceId.toLowerCase()}.com`,
-                                    },
-                                    {
-                                      name: 'CORE_PEER_LOCALMSPID',
-                                      value: `${instanceId.toPascalCase()}`,
-                                    },
-                                    {
-                                      name: 'CORE_PEER_ADDRESS',
-                                      value: `localhost:7051`,
-                                    },
-                                  ],
-                                  volumeMounts: [
-                                    {
-                                      name: 'privatehive-dir',
-                                      mountPath: '/etc/hyperledger/privatehive',
-                                    },
-                                  ],
-                                },
-                                {
-                                  name: 'ca',
-                                  image: 'hyperledger/fabric-ca',
-                                  command: ['sh'],
-                                  args: ['-c', 'fabric-ca-server start -b admin:adminpw -d'],
-                                  ports: [
-                                    {
-                                      containerPort: 7051,
-                                    },
-                                  ],
-                                  env: [
-                                    {
-                                      name: 'FABRIC_CA_HOME',
-                                      value: '/etc/hyperledger/fabric-ca-server',
-                                    },
-                                    {
-                                      name: 'FABRIC_CA_SERVER_CA_NAME',
-                                      value: `ca-${instanceId.toLowerCase()}`,
-                                    },
-                                    {
-                                      name: 'FABRIC_CA_SERVER_CA_CERTFILE',
-                                      value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${instanceId.toLowerCase()}.com/ca/ca.peer.${instanceId.toLowerCase()}.com-cert.pem`,
-                                    },
-                                    {
-                                      name: 'FABRIC_CA_SERVER_CA_KEYFILE',
-                                      value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${instanceId.toLowerCase()}.com/ca/privateKey`,
-                                    },
-                                    {
-                                      name: 'FABRIC_CA_SERVER_TLS_ENABLED',
-                                      value: 'false',
+                                      containerPort: 80,
                                     },
                                   ],
                                   volumeMounts: [
@@ -345,7 +282,7 @@ Meteor.methods({
       }
     );
   },
-  joinPrivateHiveNetwork: ordererAddress => {
+  createPrivatehivePeer: ordererAddress => {
     const locationCode = 'us-west-2';
     const instanceId = helpers.instanceIDGenerate();
     HTTP.call(
@@ -400,6 +337,11 @@ Meteor.methods({
                       targetPort: 7054,
                       name: 'ca',
                     },
+                    {
+                      port: 3000,
+                      targetPort: 3000,
+                      name: 'privatehive-api',
+                    },
                   ],
                   selector: {
                     app: `${instanceId}-privatehive`,
@@ -438,7 +380,7 @@ Meteor.methods({
                           containers: [
                             {
                               name: 'privatehive-api',
-                              image: '402432300121.dkr.ecr.ap-south-1.amazonaws.com/privatehive-api:latest',
+                              image: '402432300121.dkr.ecr.ap-south-1.amazonaws.com/privatehive-peer-api:latest',
                               ports: [
                                 {
                                   containerPort: 3000,
@@ -450,16 +392,8 @@ Meteor.methods({
                                   value: `${instanceId.toPascalCase()}`,
                                 },
                                 {
-                                  name: 'MODE',
-                                  value: 'peer',
-                                },
-                                {
                                   name: 'SHARE_FILE_DIR',
                                   value: '/etc/hyperledger/privatehive',
-                                },
-                                {
-                                  name: 'ORDERER_ADDRESS',
-                                  value: ordererAddress,
                                 },
                                 {
                                   name: 'GOPATH',
@@ -625,6 +559,7 @@ Meteor.methods({
 
 //Note: At application layer we have to maintain a unique id for every network. Otherwise when inviting to channel we don't
 //know which network to send invite to.
+//When creating network or joining network, just create a peer node. Orderers will be added dynamically.
 
-//Meteor.call('createPrivatehiveNetwork');
-//Meteor.call('joinPrivateHiveNetwork');
+//Meteor.call('createPrivatehiveOrderer');
+//Meteor.call('createPrivatehivePeer');
