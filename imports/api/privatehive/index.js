@@ -351,4 +351,4 @@ Meteor.methods({
   },
 });
 
-Meteor.call('createPrivatehiveNetwork', 'blockcluster');
+//Meteor.call('createPrivatehiveNetwork', 'blockcluster');
