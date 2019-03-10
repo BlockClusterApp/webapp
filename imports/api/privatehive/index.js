@@ -6,7 +6,7 @@ String.prototype.toPascalCase = function() {
 };
 
 Meteor.methods({
-  createPrivatehiveNetwork: orgName => {
+  createPrivatehiveNetwork: _ => {
     const locationCode = 'us-west-2';
     const instanceId = helpers.instanceIDGenerate();
     HTTP.call(
@@ -121,7 +121,7 @@ Meteor.methods({
                                   env: [
                                     {
                                       name: 'ORG_NAME',
-                                      value: `${orgName.toPascalCase()}`,
+                                      value: `${instanceId.toPascalCase()}`,
                                     },
                                     {
                                       name: 'MODE',
@@ -132,12 +132,8 @@ Meteor.methods({
                                       value: '/etc/hyperledger/privatehive',
                                     },
                                     {
-                                      name: 'WORKER_NODE_IP',
-                                      value: workerNodeIP,
-                                    },
-                                    {
-                                      name: 'ORDERER_PORT',
-                                      value: ordererNodePort.toString(),
+                                      name: 'ORDERER_ADDRESS',
+                                      value: workerNodeIP + ':' + ordererNodePort,
                                     },
                                     {
                                       name: 'GOPATH',
@@ -161,11 +157,11 @@ Meteor.methods({
                                     },
                                     {
                                       name: 'CORE_PEER_LOCALMSPID',
-                                      value: `${orgName.toPascalCase()}`,
+                                      value: `${instanceId.toPascalCase()}`,
                                     },
                                     {
                                       name: 'CORE_PEER_MSPCONFIGPATH',
-                                      value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/crypto-config/peer.${orgName.toLowerCase()}.com/users/Admin@peer.${orgName.toLowerCase()}.com/msp`,
+                                      value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/crypto-config/peer.${instanceId.toLowerCase()}.com/users/Admin@peer.${instanceId.toLowerCase()}.com/msp`,
                                     },
                                     {
                                       name: 'CORE_CHAINCODE_KEEPALIVE',
@@ -209,11 +205,11 @@ Meteor.methods({
                                     },
                                     {
                                       name: 'ORDERER_GENERAL_LOCALMSPID',
-                                      value: `${orgName.toPascalCase()}Orderer`,
+                                      value: `${instanceId.toPascalCase()}Orderer`,
                                     },
                                     {
                                       name: 'ORDERER_GENERAL_LOCALMSPDIR',
-                                      value: `/etc/hyperledger/privatehive/crypto-config/ordererOrganizations/orderer.${orgName.toLowerCase()}.com/users/Admin@orderer.${orgName.toLowerCase()}.com/msp`,
+                                      value: `/etc/hyperledger/privatehive/crypto-config/ordererOrganizations/orderer.${instanceId.toLowerCase()}.com/users/Admin@orderer.${instanceId.toLowerCase()}.com/msp`,
                                     },
                                     {
                                       name: 'ORDERER_GENERAL_TLS_ENABLED',
@@ -253,7 +249,7 @@ Meteor.methods({
                                     },
                                     {
                                       name: 'CORE_PEER_MSPCONFIGPATH',
-                                      value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${orgName.toLowerCase()}.com/peers/peer0.peer.${orgName.toLowerCase()}.com/msp`,
+                                      value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${instanceId.toLowerCase()}.com/peers/peer0.peer.${instanceId.toLowerCase()}.com/msp`,
                                     },
                                     {
                                       name: 'CORE_PEER_TLS_ENABLED',
@@ -261,11 +257,11 @@ Meteor.methods({
                                     },
                                     {
                                       name: 'CORE_PEER_ID',
-                                      value: `peer0.peer.${orgName.toLowerCase()}.com`,
+                                      value: `peer0.peer.${instanceId.toLowerCase()}.com`,
                                     },
                                     {
                                       name: 'CORE_PEER_LOCALMSPID',
-                                      value: `${orgName.toPascalCase()}`,
+                                      value: `${instanceId.toPascalCase()}`,
                                     },
                                     {
                                       name: 'CORE_PEER_ADDRESS',
@@ -296,15 +292,15 @@ Meteor.methods({
                                     },
                                     {
                                       name: 'FABRIC_CA_SERVER_CA_NAME',
-                                      value: `ca-${orgName.toLowerCase()}`,
+                                      value: `ca-${instanceId.toLowerCase()}`,
                                     },
                                     {
                                       name: 'FABRIC_CA_SERVER_CA_CERTFILE',
-                                      value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${orgName.toLowerCase()}.com/ca/ca.peer.${orgName.toLowerCase()}.com-cert.pem`,
+                                      value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${instanceId.toLowerCase()}.com/ca/ca.peer.${instanceId.toLowerCase()}.com-cert.pem`,
                                     },
                                     {
                                       name: 'FABRIC_CA_SERVER_CA_KEYFILE',
-                                      value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${orgName.toLowerCase()}.com/ca/privateKey`,
+                                      value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${instanceId.toLowerCase()}.com/ca/privateKey`,
                                     },
                                     {
                                       name: 'FABRIC_CA_SERVER_TLS_ENABLED',
@@ -349,6 +345,286 @@ Meteor.methods({
       }
     );
   },
+  joinPrivateHiveNetwork: ordererAddress => {
+    const locationCode = 'us-west-2';
+    const instanceId = helpers.instanceIDGenerate();
+    HTTP.call(
+      'POST',
+      `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/persistentvolumeclaims`,
+      {
+        content: JSON.stringify({
+          apiVersion: 'v1',
+          kind: 'PersistentVolumeClaim',
+          metadata: {
+            name: `${instanceId}-pvc`,
+          },
+          spec: {
+            accessModes: ['ReadWriteOnce'],
+            resources: {
+              requests: {
+                storage: `50Gi`,
+              },
+            },
+            storageClassName: 'gp2-storage-class',
+          },
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+      (err, response) => {
+        if (err) {
+          console.log('Error allocating storage');
+        } else {
+          console.log('PV created successfully');
+          HTTP.call(
+            'POST',
+            `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${Config.namespace}/services`,
+            {
+              content: JSON.stringify({
+                apiVersion: 'v1',
+                kind: 'Service',
+                metadata: {
+                  name: `${instanceId}-privatehive`,
+                },
+                spec: {
+                  type: 'NodePort',
+                  ports: [
+                    {
+                      port: 7051,
+                      targetPort: 7051,
+                      name: 'peer',
+                    },
+                    {
+                      port: 7054,
+                      targetPort: 7054,
+                      name: 'ca',
+                    },
+                  ],
+                  selector: {
+                    app: `${instanceId}-privatehive`,
+                  },
+                },
+              }),
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            },
+            (err, response) => {
+              if (err) {
+                console.log('Error occured while creating service');
+              } else {
+                console.log('Service created successfully');
+                HTTP.call('POST', `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${Config.namespace}/deployments`, {
+                  content: JSON.stringify({
+                    apiVersion: 'apps/v1beta1',
+                    kind: 'Deployment',
+                    metadata: {
+                      name: `${instanceId}-privatehive`,
+                      labels: {
+                        app: `${instanceId}-privatehive`,
+                      },
+                    },
+                    spec: {
+                      replicas: 1,
+                      template: {
+                        metadata: {
+                          labels: {
+                            app: `${instanceId}-privatehive`,
+                            appType: 'privatehive',
+                          },
+                        },
+                        spec: {
+                          containers: [
+                            {
+                              name: 'privatehive-api',
+                              image: '402432300121.dkr.ecr.ap-south-1.amazonaws.com/privatehive-api:latest',
+                              ports: [
+                                {
+                                  containerPort: 3000,
+                                },
+                              ],
+                              env: [
+                                {
+                                  name: 'ORG_NAME',
+                                  value: `${instanceId.toPascalCase()}`,
+                                },
+                                {
+                                  name: 'MODE',
+                                  value: 'peer',
+                                },
+                                {
+                                  name: 'SHARE_FILE_DIR',
+                                  value: '/etc/hyperledger/privatehive',
+                                },
+                                {
+                                  name: 'ORDERER_ADDRESS',
+                                  value: ordererAddress,
+                                },
+                                {
+                                  name: 'GOPATH',
+                                  value: '/opt/gopath',
+                                },
+                                {
+                                  name: 'CORE_VM_ENDPOINT',
+                                  value: 'unix:///host/var/run/docker.sock',
+                                },
+                                {
+                                  name: 'CORE_LOGGING_LEVEL',
+                                  value: 'info',
+                                },
+                                {
+                                  name: 'CORE_PEER_ID',
+                                  value: 'cli',
+                                },
+                                {
+                                  name: 'CORE_PEER_ADDRESS',
+                                  value: 'localhost:7051',
+                                },
+                                {
+                                  name: 'CORE_PEER_LOCALMSPID',
+                                  value: `${instanceId.toPascalCase()}`,
+                                },
+                                {
+                                  name: 'CORE_PEER_MSPCONFIGPATH',
+                                  value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/crypto-config/peer.${instanceId.toLowerCase()}.com/users/Admin@peer.${instanceId.toLowerCase()}.com/msp`,
+                                },
+                                {
+                                  name: 'CORE_CHAINCODE_KEEPALIVE',
+                                  value: `10`,
+                                },
+                              ],
+                              volumeMounts: [
+                                {
+                                  name: 'privatehive-dir',
+                                  mountPath: '/etc/hyperledger/privatehive',
+                                },
+                              ],
+                            },
+                            {
+                              name: 'peer',
+                              image: 'hyperledger/fabric-peer',
+                              args: ['peer', 'node', 'start'],
+                              ports: [
+                                {
+                                  containerPort: 7051,
+                                  containerPort: 7053,
+                                },
+                              ],
+                              workingDir: '/opt/gopath/src/github.com/hyperledger/fabric/peer',
+                              env: [
+                                {
+                                  name: 'CORE_VM_ENDPOINT',
+                                  value: 'unix:///host/var/run/docker.sock',
+                                },
+                                {
+                                  name: 'CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE',
+                                  value: 'artifacts_default',
+                                },
+                                {
+                                  name: 'CORE_LOGGING_LEVEL',
+                                  value: 'DEBUG',
+                                },
+                                {
+                                  name: 'CORE_PEER_MSPCONFIGPATH',
+                                  value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${instanceId.toLowerCase()}.com/peers/peer0.peer.${instanceId.toLowerCase()}.com/msp`,
+                                },
+                                {
+                                  name: 'CORE_PEER_TLS_ENABLED',
+                                  value: 'false',
+                                },
+                                {
+                                  name: 'CORE_PEER_ID',
+                                  value: `peer0.peer.${instanceId.toLowerCase()}.com`,
+                                },
+                                {
+                                  name: 'CORE_PEER_LOCALMSPID',
+                                  value: `${instanceId.toPascalCase()}`,
+                                },
+                                {
+                                  name: 'CORE_PEER_ADDRESS',
+                                  value: `localhost:7051`,
+                                },
+                              ],
+                              volumeMounts: [
+                                {
+                                  name: 'privatehive-dir',
+                                  mountPath: '/etc/hyperledger/privatehive',
+                                },
+                              ],
+                            },
+                            {
+                              name: 'ca',
+                              image: 'hyperledger/fabric-ca',
+                              command: ['sh'],
+                              args: ['-c', 'fabric-ca-server start -b admin:adminpw -d'],
+                              ports: [
+                                {
+                                  containerPort: 7051,
+                                },
+                              ],
+                              env: [
+                                {
+                                  name: 'FABRIC_CA_HOME',
+                                  value: '/etc/hyperledger/fabric-ca-server',
+                                },
+                                {
+                                  name: 'FABRIC_CA_SERVER_CA_NAME',
+                                  value: `ca-${instanceId.toLowerCase()}`,
+                                },
+                                {
+                                  name: 'FABRIC_CA_SERVER_CA_CERTFILE',
+                                  value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${instanceId.toLowerCase()}.com/ca/ca.peer.${instanceId.toLowerCase()}.com-cert.pem`,
+                                },
+                                {
+                                  name: 'FABRIC_CA_SERVER_CA_KEYFILE',
+                                  value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${instanceId.toLowerCase()}.com/ca/privateKey`,
+                                },
+                                {
+                                  name: 'FABRIC_CA_SERVER_TLS_ENABLED',
+                                  value: 'false',
+                                },
+                              ],
+                              volumeMounts: [
+                                {
+                                  name: 'privatehive-dir',
+                                  mountPath: '/etc/hyperledger/privatehive',
+                                },
+                              ],
+                            },
+                          ],
+                          volumes: [
+                            {
+                              name: 'privatehive-dir',
+                              persistentVolumeClaim: {
+                                claimName: `${instanceId}-pvc`,
+                              },
+                            },
+                          ],
+                          imagePullSecrets: [
+                            {
+                              name: 'blockcluster-regsecret',
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  }),
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                });
+              }
+            }
+          );
+        }
+      }
+    );
+  },
 });
 
-//Meteor.call('createPrivatehiveNetwork', 'blockcluster');
+//Note: At application layer we have to maintain a unique id for every network. Otherwise when inviting to channel we don't
+//know which network to send invite to.
+
+//Meteor.call('createPrivatehiveNetwork');
+//Meteor.call('joinPrivateHiveNetwork');
