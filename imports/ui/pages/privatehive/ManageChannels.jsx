@@ -103,6 +103,7 @@ class ManageChannels extends Component {
     this.setState(
       {
         showChannelInfoModal: true,
+        channelInfo: null,
       },
       () => {
         $('#channel_info_modal').modal('show');
@@ -223,6 +224,10 @@ class ManageChannels extends Component {
                           </thead>
                           <tbody>
                             <tr>
+                              <td className="v-align-middle ">Created By</td>
+                              <td>{this.state.channelInfo.createdByOrg}</td>
+                            </tr>
+                            <tr>
                               <td className="v-align-middle ">Created At</td>
                               <td>{moment(this.state.channelInfo.createdAt).format('DD-MMM-YYYY kk:mm:ss')}</td>
                             </tr>
@@ -236,7 +241,7 @@ class ManageChannels extends Component {
                                 {this.state.channelInfo.members.map(member => {
                                   return (
                                     <li>
-                                      <div className="p-l-10 p-b-10" style={{ display: 'inline-table' }}>
+                                      <div className="p-l-10 m-b-10" style={{ display: 'inline-table' }}>
                                         <b>Org:</b>&nbsp;{member.org}
                                         <br />
                                         <b>API Host:</b>&nbsp;{member.apiClientHost}
