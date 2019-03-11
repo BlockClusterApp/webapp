@@ -385,7 +385,7 @@ InvoiceObj.generateHTML = async invoiceId => {
     invoice.creditClaims.forEach(claim => {
       items.push({
         name: 'Promotional Credits Redemption',
-        instanceId: claim.code,
+        instanceId: claim.code === 'BLOCKCLUSTER' ? 'Welcome Bonus' : claim.code,
         duration: '',
         rate: '',
         discount: '',
