@@ -14,7 +14,7 @@ class RedemptionHistory extends Component {
     this.props.credits.forEach(credit => {
       txns.push({
         amount: `+ $${credit.amount}`,
-        description: `Redeemed using code ${credit.code}`,
+        description: credit.code === 'BLOCKCLUSTER' ? 'Welcome Bonus' : `Redeemed using code ${credit.code}`,
         date: credit.createdAt,
       });
       if (credit.metadata && credit.invoices) {

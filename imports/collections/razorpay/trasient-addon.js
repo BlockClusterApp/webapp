@@ -1,47 +1,49 @@
-import { Mongo } from "meteor/mongo";
-import SimpleSchema from "simpl-schema";
+import { Mongo } from 'meteor/mongo';
+import SimpleSchema from 'simpl-schema';
 
-import AttachBaseHooks from "../../modules/helpers/model-helpers";
+import AttachBaseHooks from '../../modules/helpers/model-helpers';
 
-const RZPTAddon = new Mongo.Collection("transientRazorpayAddons");
+const RZPTAddon = new Mongo.Collection('transientRazorpayAddons');
 
 AttachBaseHooks(RZPTAddon);
 
-
 RZPTAddon.Schema = new SimpleSchema({
   subscriptionId: {
-    type: String
+    type: String,
   },
   addOn: {
     type: {
       name: {
-        type: String
+        type: String,
       },
       description: {
-        type: String
+        type: String,
       },
       amount: {
-        type: Number
+        type: Number,
       },
       currency: {
-        type: String
-      }
-    }
+        type: String,
+      },
+    },
   },
   userId: {
-    type: String
+    type: String,
   },
   invoiceId: {
-    type: String
+    type: String,
   },
   billingPeriodLabel: {
-    type: String
-  }
+    type: String,
+  },
+  pendingInvoiceId: {
+    type: String,
+  },
 });
 
-if(Meteor.isServer) {
+if (Meteor.isServer) {
   RZPTAddon._ensureIndex({
-    invoiceId: 1
+    invoiceId: 1,
   });
 }
 
