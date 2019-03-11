@@ -7,6 +7,7 @@ import fs from 'fs';
 import Future from 'fibers/future';
 import atob from 'atob';
 import pdf from 'html-pdf';
+import Bluebird from 'bluebird';
 
 const uuidv4 = require('uuid/v4');
 
@@ -135,6 +136,15 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
 
   invoiceObject.conversionRate = conversion;
 
+  const previousInvoices = Invoice.find({ userId, paymentStatus: { $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed] } }).fetch();
+
+  const previousPendingInvoiceIds = [];
+  previousInvoices.forEach(pi => {
+    previousPendingInvoiceIds.push(pi._id);
+  });
+
+  invoiceObject.previousPendingInvoiceIds = previousPendingInvoiceIds;
+
   const invoiceId = Invoice.insert(invoiceObject);
   let creditClaims = [];
 
@@ -159,6 +169,29 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
     );
     creditClaims.push({ id, code: credit.code, amount: ec.amount });
   });
+
+  await Bluebird.map(
+    previousInvoices,
+    async pi => {
+      RZPTAddon.insert({
+        subscriptionId: rzSubscription.id,
+        addOn: {
+          name: `Pending dues for ${pi.billingPeriodLabel}`,
+          description: 'Pending Invoice',
+          amount: Number(pi.totalAmountINR),
+          currency: 'INR',
+        },
+        userId,
+        invoiceId,
+        billingPeriodLabel: invoiceObject.billingPeriodLabel,
+        pendingInvoiceId: pi._id,
+      });
+      return true;
+    },
+    {
+      concurrency: 2,
+    }
+  );
 
   if (!user.demoUser && !user.offlineUser && Math.round(invoiceObject.totalAmountINR) > 100 && rzSubscription && rzSubscription.bc_status === 'active') {
     RZPTAddon.insert({
@@ -318,12 +351,41 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     },
   });
 
+  if (invoice.previousPendingInvoiceIds && invoice.previousPendingInvoiceIds.length > 0) {
+    await Bluebird.map(
+      previousPendingInvoiceIds,
+      async pid => {
+        Invoice.update(
+          { _id: pid },
+          {
+            $set: {
+              paymentStatus: Invoice.PaymentStatusMapping.Settled,
+              paymentId: rzPayment.id,
+              paidAmount: rzPayment.amount,
+            },
+            $unset: {
+              paymentPending: '',
+              paymentPendingForInvoiceId: '',
+              paymentPendingOn: '',
+            },
+          }
+        );
+        return true;
+      },
+      {
+        concurrency: 2,
+      }
+    );
+  } else {
+    invoice.previousPendingInvoiceIds = [];
+  }
+
   ElasticLogger.log('Settled invoice', { invoiceId: invoice._id, id: spanId });
 
   try {
     Invoice.update(
       {
-        _id: invoice._id,
+        _id: { $in: [invoice._id, ...invoice.previousPendingInvoiceIds] },
         'paymentFailedStatus.status': {
           $in: ['failed-warning'],
         },
@@ -338,6 +400,9 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
             on: new Date(),
           },
         },
+      },
+      {
+        multi: true,
       }
     );
 

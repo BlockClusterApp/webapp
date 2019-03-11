@@ -1,6 +1,7 @@
 import Invoice from '../../../../collections/payments/invoice';
 import Razorpay from '../../../../api/payments/payment-gateways/razorpay';
 import RZPTAddon from '../../../../collections/razorpay/trasient-addon';
+import Bluebird from 'bluebird';
 
 const debug = require('debug')('scheduler:bull:attach-razorpay-addons');
 
@@ -18,7 +19,7 @@ module.exports = bullSystem => {
           $in: [Invoice.PaymentStatusMapping.Pending],
         },
       }).fetch()[0];
-      debug("Attaching addon to ", invoiceId);
+      debug('Attaching addon to ', invoiceId);
       if (!invoice) {
         ElasticLogger.log(`Invoice already has razorpay addon attached. Cannot attach again`, {
           invoiceId,
@@ -41,46 +42,58 @@ module.exports = bullSystem => {
         });
         return resolve();
       }
-      const totalAmount = addons.reduce((total, addon) => !console.log(addon.addOn) && total + Number(addon.addOn.amount), 0);
 
-      if (totalAmount <= 100) {
-        ElasticLogger.log(`Amount < 100`, {
-          totalAmount,
-          invoiceId: invoice._id,
-          userId: invoice.userId,
-        });
-        Invoice.update(
-          { _id: invoice._id },
-          {
-            $set: {
-              paymentStatus: Invoice.PaymentStatusMapping.Settled,
+      const addOns = [];
+      await Bluebird.map(
+        addons,
+        async addon => {
+          const rzAddOn = await Razorpay.createAddOn({
+            subscriptionId: invoice.rzSubscriptionId,
+            addOn: {
+              name: addon.name,
+              description: addon.description,
+              amount: addon.totalAmount,
+              currency: 'INR',
             },
-          }
-        );
-        return resolve();
-      }
-
-      const rzAddOn = await Razorpay.createAddOn({
-        subscriptionId: invoice.rzSubscriptionId,
-        addOn: {
-          name: `Bill for ${invoice.billingPeriodLabel}`,
-          description: `Platform usage charges`,
-          amount: totalAmount, //  Since we are already charging Rs 1 for subscription so deduct Rs 1 from final here
-          currency: 'INR',
+            userId: invoice.userId,
+          });
+          addOns.push(rzAddOn);
+          return true;
         },
-        userId: invoice.userId,
-      });
+        {
+          concurrency: 2,
+        }
+      );
+
+      // const totalAmount = addons.reduce((total, addon) => !console.log(addon.addOn) && total + Number(addon.addOn.amount), 0);
+
+      // if (totalAmount <= 100) {
+      //   ElasticLogger.log(`Amount < 100`, {
+      //     totalAmount,
+      //     invoiceId: invoice._id,
+      //     userId: invoice.userId,
+      //   });
+      //   Invoice.update(
+      //     { _id: invoice._id },
+      //     {
+      //       $set: {
+      //         paymentStatus: Invoice.PaymentStatusMapping.Settled,
+      //       },
+      //     }
+      //   );
+      //   return resolve();
+      // }
 
       ElasticLogger.log('Updating invoice with addon', {
         invoiceId,
         userId: invoice.userId,
-        rzAddon: rzAddOn._id,
+        rzAddon: addOns.map(a => a._id),
       });
       Invoice.update(
         { _id: invoice._id },
         {
           $set: {
-            rzAddOnId: rzAddOn._id,
+            rzAddOnId: addOns.map(a => a._id),
           },
         }
       );
