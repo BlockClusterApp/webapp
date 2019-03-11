@@ -6,6 +6,8 @@ import Voucher from '../../collections/vouchers/voucher';
 import Billing from '../billing';
 import Bluebird from 'bluebird';
 import Bull from '../../modules/schedulers/bull';
+import { RZSubscription } from '../../collections/razorpay';
+import RazorPay from '../payments/payment-gateways/razorpay';
 
 const User = {};
 const ADMIN_LEVEL = 0;
@@ -111,6 +113,21 @@ User.removeCard = async ({ cardId, userId }) => {
       },
     }
   );
+
+  const rzSubscription = RZSubscription.find({ userId }).fetch();
+  if (rzSubscription) {
+    await RazorPay.cancelSubscription({ rzSubscription });
+    RZSubscription.update(
+      {
+        _id: rzSubscription._id,
+      },
+      {
+        $set: {
+          bc_status: 'cancelled',
+        },
+      }
+    );
+  }
 
   return true;
 };

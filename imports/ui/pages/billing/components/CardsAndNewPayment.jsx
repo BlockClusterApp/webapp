@@ -120,7 +120,7 @@ class CardsAndNewPayment extends Component {
         <div className="alert alert-warning col-md-12">
           <div className="col-md-12 b-r b-dashed b-grey sm-b-b">
             <i className="fa fa-warning" /> Your bill for the month of&nbsp;
-            {billingLabel}
+            {this.props.invoice.billingPeriodLabel}
             &nbsp; is pending. Kindly pay it before 10
             <sup>th</sup> of this month to avoid node deletions.
             <br />
@@ -362,7 +362,7 @@ export default withTracker(() => {
   return {
     userCard: UserCards.find({ userId: Meteor.userId() }).fetch()[0],
     user: Meteor.user(),
-    invoice: Invoice.find({ userId: Meteor.userId(), billingPeriodLabel: billingLabel, paymentStatus: 1 }).fetch()[0],
+    invoice: Invoice.find({ userId: Meteor.userId(), paymentStatus: 1 }).fetch()[0],
     rzSubscription: RZSubscription.find({ userId: Meteor.userId() }).fetch()[0],
     subscriptions: [Meteor.subscribe('userCards'), Meteor.subscribe('pending-invoice', billingLabel), Meteor.subscribe('rzp-subscription')],
   };

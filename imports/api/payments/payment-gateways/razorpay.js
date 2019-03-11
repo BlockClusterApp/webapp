@@ -11,6 +11,7 @@ import Payments from '../';
 import bullSystem from '../../../modules/schedulers/bull';
 import Invoice from '../../../collections/payments/invoice';
 import Forex from '../../../collections/payments/forex';
+import Vouchers from '../../network/voucher';
 
 const debug = require('debug')('api:razorpay');
 
@@ -400,22 +401,42 @@ RazorPay.applyCardVerification = async pgResponse => {
         return new Meteor.Error('Payment method was not card');
       }
 
-      UserCards.update(
-        {
+      let userCards = UserCards.find({ userId: Meteor.userId() }).fetch()[0];
+
+      if (!userCards) {
+        UserCards.insert({
           userId: Meteor.userId(),
-        },
-        {
-          $push: {
-            cards: cardUsed,
+          cards: [cardUsed],
+          updatedAt: new Date(),
+        });
+      } else if (userCards && !userCards.cards.map(c => c.id).includes(cardUsed.id)) {
+        UserCards.update(
+          {
+            userId: Meteor.userId(),
           },
-          $set: {
-            updatedAt: new Date(),
+          {
+            $push: {
+              cards: cardUsed,
+            },
+            $set: {
+              updatedAt: new Date(),
+            },
           },
-        },
-        {
-          upsert: true,
+          {
+            upsert: true,
+          }
+        );
+      }
+
+      userCards = UserCards.findOne({ userId: Meteor.userId() });
+      if (userCards.cards.length === 1) {
+        // Credit $200
+        try {
+          await Vouchers.applyPromotionalCode({ code: 'BLOCKCLUSTER', userId: Meteor.userId() });
+        } catch (err) {
+          // Already claimed. Ignore
         }
-      );
+      }
 
       return true;
     } catch (err) {
