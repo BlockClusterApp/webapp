@@ -115,6 +115,12 @@ Invoice.schema = new SimpleSchema({
       },
     },
   },
+  previousPendingInvoiceIds: {
+    type: Array,
+  },
+  'previousPendingInvoiceIds.$': {
+    type: String,
+  },
 });
 
 if (!Meteor.isClient) {

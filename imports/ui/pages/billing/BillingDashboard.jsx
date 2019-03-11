@@ -135,7 +135,7 @@ class BillingDashboard extends Component {
         return (
           <tr title={network.timeperiod} key={index + 1}>
             <td>{network.name}</td>
-            <td>{network.instanceId}</td>
+            <td>{network.instanceId === 'BLOCKCLUSTER' ? 'Welcome Bonus' : network.instanceId}</td>
             <td>{network.rate}</td>
             <td>{network.runtime}</td>
             <td>
@@ -152,7 +152,7 @@ class BillingDashboard extends Component {
         return (
           <tr key={`p${index + 1}`}>
             <td>Promotional Credit Redemption</td>
-            <td>{claim.code}</td>
+            <td>{claim.code === 'BLOCKCLUSTER' ? 'Welcome Bonus' : claim.code}</td>
             <td />
             <td />
             <td />
