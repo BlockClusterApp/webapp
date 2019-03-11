@@ -50,9 +50,9 @@ module.exports = bullSystem => {
           const rzAddOn = await Razorpay.createAddOn({
             subscriptionId: invoice.rzSubscriptionId,
             addOn: {
-              name: addon.name,
-              description: addon.description,
-              amount: addon.totalAmount,
+              name: addon.addOn.name,
+              description: addon.addOn.description,
+              amount: addon.addOn.amount,
               currency: 'INR',
             },
             userId: invoice.userId,
