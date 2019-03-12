@@ -20,6 +20,8 @@ import RZPTAddon from '../../collections/razorpay/trasient-addon';
 import Credits from '../../collections/payments/credits';
 import User from '../server-functions/user';
 import Communication from '../communication/slack';
+import Stripe from '../payments/payment-gateways/stripe';
+import StripeCustomer from '../../collections/stripe/customer';
 
 const InvoiceObj = {};
 
@@ -77,7 +79,7 @@ InvoiceObj.fetchCreditsRedemption = async ({ userId, totalAmount, invoiceObject 
   return { _totalAmount: totalAmount, eligibleCredits };
 };
 
-InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription }) => {
+InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription, stripeCustomer }) => {
   let totalAmount = Number(bill.totalAmount).toFixed(2);
   const user = Meteor.users
     .find({
@@ -94,6 +96,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
       billingAddress: '',
     },
     rzCustomerId: user.rzCustomerId,
+    stripeCustomerId: user.stripeCustomerId,
     paymentStatus: user.demoUser ? Invoice.PaymentStatusMapping.DemoUser : user.offlineUser ? Invoice.PaymentStatusMapping.OfflineUser : Invoice.PaymentStatusMapping.Pending,
     billingPeriod: billingMonth,
     billingPeriodLabel: moment(billingMonth).format('MMM-YYYY'),
@@ -170,28 +173,30 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
     creditClaims.push({ id, code: credit.code, amount: ec.amount });
   });
 
-  await Bluebird.map(
-    previousInvoices,
-    async pi => {
-      RZPTAddon.insert({
-        subscriptionId: rzSubscription.id,
-        addOn: {
-          name: `Pending dues for ${pi.billingPeriodLabel}`,
-          description: 'Pending Invoice',
-          amount: Number(pi.totalAmountINR),
-          currency: 'INR',
-        },
-        userId,
-        invoiceId,
-        billingPeriodLabel: invoiceObject.billingPeriodLabel,
-        pendingInvoiceId: pi._id,
-      });
-      return true;
-    },
-    {
-      concurrency: 2,
-    }
-  );
+  if (rzSubscription && rzSubscription.bc_status === 'active') {
+    await Bluebird.map(
+      previousInvoices,
+      async pi => {
+        RZPTAddon.insert({
+          subscriptionId: rzSubscription.id,
+          addOn: {
+            name: `Pending dues for ${pi.billingPeriodLabel}`,
+            description: 'Pending Invoice',
+            amount: Number(pi.totalAmountINR),
+            currency: 'INR',
+          },
+          userId,
+          invoiceId,
+          billingPeriodLabel: invoiceObject.billingPeriodLabel,
+          pendingInvoiceId: pi._id,
+        });
+        return true;
+      },
+      {
+        concurrency: 2,
+      }
+    );
+  }
 
   if (!user.demoUser && !user.offlineUser && Math.round(invoiceObject.totalAmountINR) > 100 && rzSubscription && rzSubscription.bc_status === 'active') {
     RZPTAddon.insert({
@@ -221,31 +226,45 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
     );
     return true;
   }
-  const linkId = await RazorPay.createPaymentLink({
-    amount: invoiceObject.totalAmountINR,
-    description: `Bill for ${invoiceObject.billingPeriodLabel}`,
-    user,
-  });
 
-  const rzPaymentLink = RZPaymentLink.find({
-    _id: linkId,
-  }).fetch()[0];
+  if (!stripeCustomer) {
+    const linkId = await RazorPay.createPaymentLink({
+      amount: invoiceObject.totalAmountINR,
+      description: `Bill for ${invoiceObject.billingPeriodLabel}`,
+      user,
+    });
 
-  debug('RZPaymentLink', rzPaymentLink);
+    const rzPaymentLink = RZPaymentLink.find({
+      _id: linkId,
+    }).fetch()[0];
+    debug('RZPaymentLink', rzPaymentLink);
 
-  Invoice.update(
-    { _id: invoiceId },
-    {
-      $set: {
-        paymentLink: {
-          id: rzPaymentLink ? rzPaymentLink._id : '',
-          link: rzPaymentLink ? rzPaymentLink.short_url : '',
+    Invoice.update(
+      { _id: invoiceId },
+      {
+        $set: {
+          paymentLink: {
+            id: rzPaymentLink ? rzPaymentLink._id : '',
+            link: rzPaymentLink ? rzPaymentLink.short_url : '',
+          },
+          totalAmountINR: invoiceObject.totalAmountINR,
+          totalAmount,
+          creditClaims,
         },
-        totalAmountINR: invoiceObject.totalAmountINR,
-        creditClaims,
-      },
-    }
-  );
+      }
+    );
+  } else {
+    Invoice.update(
+      { _id: invoiceId },
+      {
+        $set: {
+          totalAmountINR: invoiceObject.totalAmountINR,
+          totalAmount,
+          creditClaims,
+        },
+      }
+    );
+  }
 
   BullSystem.addJob('invoice-created-email', {
     invoiceId,
@@ -564,7 +583,7 @@ InvoiceObj.sendInvoiceCreatedEmail = async invoice => {
   const ejsTemplate = await getEJSTemplate({ fileName: 'invoice-created.ejs' });
   const finalHTML = ejsTemplate({
     invoice,
-    paymentLink: invoice.paymentLink.link,
+    paymentLink: invoice.paymentLink ? invoice.paymentLink.link : 'https://app.blockcluster.io/app/payments/cards',
   });
 
   const emailProps = {
@@ -715,11 +734,45 @@ InvoiceObj.changeToOfflinePayment = async ({ invoiceId }) => {
   return true;
 };
 
+InvoiceObj.adminChargeStripeInvoice = async ({ invoiceId }) => {
+  if (Meteor.user().admin < 2) {
+    throw new Meteor.Error(401, 'Unauthorized');
+  }
+  const invoice = Invoice.find({ _id: invoiceId }).fetch()[0];
+  const stripeCustomer = StripeCustomer.find({ userId: invoice.userId }).fetch()[0];
+  if (!invoice) {
+    throw new Meteor.Error(403, 'Invalid invoiceid');
+  }
+
+  if (!invoice.stripeCustomerId || !stripeCustomer) {
+    throw new Meteor.Error(403, 'Cannot charge this invoice');
+  }
+
+  if (![Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed].includes(invoice.paymentStatus)) {
+    throw new Meteor.Error(403, 'Bad request');
+  }
+
+  const response = await Stripe.chargeCustomer({
+    customerId: stripeCustomer.id,
+    amountInDollars: invoice.totalAmount,
+    description: 'Admin charge invoice',
+    idempotencyKey: invoiceId,
+  });
+
+  ElasticLogger.log('Admin charge invoice', {
+    response,
+    invoiceId,
+  });
+
+  return true;
+};
+
 Meteor.methods({
   generateInvoiceHTML: InvoiceObj.generateHTML,
   sendInvoiceReminder: InvoiceObj.adminSendInvoiceReminder,
   waiveOffInvoice: InvoiceObj.waiveOffInvoice,
   changeToOfflinePayment: InvoiceObj.changeToOfflinePayment,
+  adminChargeStripeInvoice: InvoiceObj.adminChargeStripeInvoice,
 });
 
 export default InvoiceObj;

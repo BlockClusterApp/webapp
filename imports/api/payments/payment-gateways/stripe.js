@@ -61,7 +61,7 @@ Stripe.createCustomer = async ({ userId, token }) => {
     email: user.emails[0].address,
   });
 
-  console.log('Stripe customer', customer);
+  debug('Stripe customer', customer);
   const card = {
     id: token.card.id,
     entity: 'card',
@@ -100,7 +100,40 @@ Stripe.createCustomer = async ({ userId, token }) => {
     ...customer,
   });
 
+  Meteor.users.update(
+    {
+      _id: userId,
+    },
+    {
+      $set: {
+        stripeCustomerId: customer.id,
+      },
+    }
+  );
+
   return true;
+};
+
+Stripe.chargeCustomer = async ({ customerId, amountInDollars, idempotencyKey, description }) => {
+  if (!(customerId && amountInDollars && idempotencyKey)) {
+    throw new Meteor.Error(400, 'CustomerID, amountInDollars and idempotencyKey is required');
+  }
+
+  const response = await stripe.charges.create(
+    {
+      amount: amountInDollars * 100,
+      currency: 'usd',
+      customer: customerId,
+      description,
+    },
+    {
+      idempotency_key: idempotencyKey,
+    }
+  );
+
+  debug('Stripe charged customer', response);
+
+  return response;
 };
 
 export default Stripe;

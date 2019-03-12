@@ -6,4 +6,5 @@ module.exports = agenda => {
   require('./attach-razorpay-addons')(agenda);
   require('./handle-failed-billing-warning')(agenda);
   require('./delete-user-data')(agenda);
+  require('./charge-stripe-invoices')(agenda);
 };
