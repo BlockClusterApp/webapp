@@ -1,6 +1,7 @@
 import StripeCustomer from '../../../collections/stripe/customer';
 import { Meteor } from 'meteor/meteor';
 import UserCards from '../../../collections/payments/user-cards';
+import StripePayment from '../../../collections/stripe/payments';
 
 const stripToken = process.env.STRIPE_TOKEN || 'sk_test_DhE17qCC4NfY1A1SUygZWMkh';
 const stripe = require('stripe')(stripToken);
@@ -114,9 +115,9 @@ Stripe.createCustomer = async ({ userId, token }) => {
   return true;
 };
 
-Stripe.chargeCustomer = async ({ customerId, amountInDollars, idempotencyKey, description }) => {
-  if (!(customerId && amountInDollars && idempotencyKey)) {
-    throw new Meteor.Error(400, 'CustomerID, amountInDollars and idempotencyKey is required');
+Stripe.chargeCustomer = async ({ customerId, amountInDollars, idempotencyKey, description, userId }) => {
+  if (!(customerId && amountInDollars && idempotencyKey && userId)) {
+    throw new Meteor.Error(400, 'CustomerID, amountInDollars, userId and idempotencyKey is required');
   }
 
   const response = await stripe.charges.create(
@@ -130,6 +131,11 @@ Stripe.chargeCustomer = async ({ customerId, amountInDollars, idempotencyKey, de
       idempotency_key: idempotencyKey,
     }
   );
+
+  StripePayment.insert({
+    userId,
+    ...response,
+  });
 
   debug('Stripe charged customer', response);
 

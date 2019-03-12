@@ -21,6 +21,9 @@ const SupportTicketCodes = {
 
 export default {
   getCurrencySymbol: function(currencyCode) {
+    if (!currencyCode) {
+      return null;
+    }
     currencyCode = currencyCode.toUpperCase();
     if (currencyCode === 'USD') {
       return '$';

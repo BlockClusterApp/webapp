@@ -273,7 +273,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   return invoiceId;
 };
 
-InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth, billingMonthLabel, invoiceId, rzPayment }) => {
+InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth, billingMonthLabel, invoiceId, rzPayment, stripePayment }) => {
   const spanId = uuidv4();
   billingMonthLabel = billingMonthLabel || moment(billingMonth).format('MMM-YYYY');
 
@@ -294,7 +294,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     };
   }
 
-  ElasticLogger.log('Trying to settle invoice', { selector, billingMonth, billingMonthLabel, rzPayment, id: spanId });
+  ElasticLogger.log('Trying to settle invoice', { selector, billingMonth, billingMonthLabel, rzPayment, stripePayment, id: spanId });
 
   if (!selector._id && !selector.rzSubscriptionId && !selector.rzCustomerId && !selector._id) {
     RavenLogger.log('Trying to settle unspecific', { ...selector });
@@ -319,7 +319,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     // await RazorPay.refundPayment(rzPayment.id, { noPaymentRequest: true, amount: rzPayment.amount });
     ElasticLogger.log('Refunded not existing invoice', {
       invoiceId,
-      rzPaymentId: rzPayment.id,
+      paymentId: rzPayment ? rzPayment.id : stripePayment ? stripePayment.id : null,
       id: spanId,
     });
     RavenLogger.log(`Error settling invoice: Does not exists`, { ...selector, at: new Date() });
@@ -357,11 +357,20 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     return invoice._id;
   }
 
+  const payment = (() => {
+    if (rzPayment) {
+      return { id: rzPayment.id, source: 'razorpay', amount: rzPayment.amount, currency: 'INR' };
+    }
+    if (stripePayment) {
+      return { id: stripePayment.id, source: 'stripe', amount: stripePayment.amount, currency: 'USD' };
+    }
+    return {};
+  })();
+
   Invoice.update(selector, {
     $set: {
       paymentStatus: Invoice.PaymentStatusMapping.Settled,
-      paymentId: rzPayment.id,
-      paidAmount: rzPayment.amount,
+      payment,
     },
     $unset: {
       paymentPending: '',
@@ -370,7 +379,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     },
   });
 
-  if (invoice.previousPendingInvoiceIds && invoice.previousPendingInvoiceIds.length > 0) {
+  if (invoice.previousPendingInvoiceIds && invoice.previousPendingInvoiceIds.length > 0 && rzPayment) {
     await Bluebird.map(
       previousPendingInvoiceIds,
       async pid => {
@@ -755,14 +764,17 @@ InvoiceObj.adminChargeStripeInvoice = async ({ invoiceId }) => {
   const response = await Stripe.chargeCustomer({
     customerId: stripeCustomer.id,
     amountInDollars: invoice.totalAmount,
-    description: 'Admin charge invoice',
-    idempotencyKey: invoiceId,
+    description: `Platform usage charges for ${invoice.billingPeriodLabel}`,
+    idempotencyKey: `${invoiceId}_${invoice.userId}`,
+    userId: invoice.userId,
   });
 
   ElasticLogger.log('Admin charge invoice', {
     response,
     invoiceId,
   });
+
+  await InvoiceObj.settleInvoice({ billingMonthLabel: invoice.billingPeriodLabel, invoiceId: invoice._id });
 
   return true;
 };

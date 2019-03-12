@@ -1,4 +1,5 @@
 import PaymentRequests from '../payment-requests';
+import StripePayments from '../../stripe/payments';
 import { RZPayment, RZPlan, RZSubscription } from '../../razorpay';
 import UserCards from '../user-cards';
 import Invoice from '../invoice';
@@ -17,6 +18,9 @@ Meteor.publish('userPayments', function() {
       }
     ),
     RZPayment.find({
+      userId: Meteor.userId(),
+    }),
+    StripePayments.find({
       userId: Meteor.userId(),
     }),
   ];

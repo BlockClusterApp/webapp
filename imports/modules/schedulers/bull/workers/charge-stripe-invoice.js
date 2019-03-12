@@ -38,6 +38,7 @@ module.exports = bullSystem => {
         amountInDollars: invoice.totalAmount,
         idempotencyKey: invoice._id,
         description: `Bill for ${invoice.billingPeriodLabel}`,
+        userId: invoice.userId,
       });
 
       debug('Stripe charge result', result);
