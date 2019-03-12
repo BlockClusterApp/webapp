@@ -17,8 +17,6 @@ class Checkout extends React.Component {
     };
   }
 
-  handleSubmit = () => {};
-
   render() {
     return (
       <div className="stripe-wrapper" style={{ display: 'flex' }}>
@@ -39,7 +37,7 @@ class Checkout extends React.Component {
               <div className="stripe-form" style={{ background: '#fff', padding: '50px', borderRadius: '10px' }}>
                 <StripeProvider apiKey={API_KEY}>
                   <Elements>
-                    <CardVerification />
+                    <CardVerification user={this.state.user} />
                   </Elements>
                 </StripeProvider>
               </div>

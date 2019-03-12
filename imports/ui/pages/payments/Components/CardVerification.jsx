@@ -1,8 +1,34 @@
 import React from 'react';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import { CardElement, injectStripe } from 'react-stripe-elements';
+import notifications from '../../../../modules/notifications';
 
 class CardForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {};
+  }
+
+  handleSubmit = e => {
+    e.preventDefault();
+    this.setState({
+      loading: true,
+    });
+    this.props.stripe.createToken({ name: this.props.user.name, email: this.props.user.email }).then(token => {
+      Meteor.call('captureStripeCustomer', { token: token.token }, (err, data) => {
+        this.setState({
+          loading: false,
+        });
+        console.log(err, data);
+        if (err) {
+          return notifications.error(err.reason);
+        }
+        notifications.success('Verified');
+        setTimeout(() => window.close(), 1000);
+      });
+    });
+  };
+
   render() {
     return (
       <form onSubmit={this.handleSubmit}>
@@ -38,6 +64,7 @@ class CardForm extends React.Component {
           <div className="col-md-4" />
           <div className="col-md-4">
             <LaddaButton
+              loading={this.state.loading}
               data-size={S}
               data-style={SLIDE_UP}
               data-spinner-size={30}
@@ -46,8 +73,7 @@ class CardForm extends React.Component {
               style={{ fontSize: '20px', padding: '15px' }}
               type="submit"
             >
-              <i className="fa fa-upload" aria-hidden="true" />
-              &nbsp;&nbsp;Verify
+              Verify
             </LaddaButton>
           </div>
           <div className="col-md-4" />

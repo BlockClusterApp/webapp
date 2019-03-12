@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import UserCards from '../../../../collections/payments/user-cards';
 import RZSubscription from '../../../../collections/razorpay/subscription';
 import Invoice from '../../../../collections/payments/invoice';
@@ -97,6 +98,17 @@ class CardsAndNewPayment extends Component {
         .set({ jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }, margin: [0.5, 1] })
         .save();
     });
+  };
+
+  verifyCard = () => {
+    const user = {
+      name: `${this.props.user.profile.firstName} ${this.props.user.profile.lastName}`,
+      email: this.props.user.emails[0].address,
+    };
+
+    localStorage.setItem('user', JSON.stringify(user));
+
+    window.open(`${window.location.origin}/payments/card-verification`);
   };
 
   render() {
@@ -325,14 +337,25 @@ class CardsAndNewPayment extends Component {
                         )*/}
                   </div>
                   <div className="col-md-12">
-                    <RazorPay
+                    <LaddaButton
+                      loading={this.state.loading || (this.state.waitingForCards && cards.length === 0)}
+                      data-size={S}
+                      data-style={SLIDE_UP}
+                      data-spinner-size={30}
+                      data-spinner-lines={12}
+                      className="btn btn-success  btn-cons m-t-10 full-width"
+                      onClick={this.verifyCard}
+                    >
+                      &nbsp;&nbsp;Verify
+                    </LaddaButton>
+                    {/* <RazorPay
                       buttonText="Add Card"
                       buttonIcon="fa-plus"
                       loading={this.state.loading || (this.state.waitingForCards && cards.length === 0)}
                       preTriggerPaymentListener={this.preTriggerPaymentListener}
                       paymentHandler={this.rzPaymentHandler}
                       modalDismissListener={this.modalDismissListener}
-                    />
+                    /> */}
                   </div>
                 </div>
               </div>

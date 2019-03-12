@@ -4,6 +4,7 @@ import Invoice from '../../collections/payments/invoice';
 import InvoiceFunctions from '../../api/billing/invoice';
 import PaymentRequests from '../../collections/payments/payment-requests';
 import { RZSubscription, RZPlan, RZPaymentLink } from '../../collections/razorpay';
+import Stripe from './payment-gateways/stripe';
 const debug = require('debug')('api:payments');
 
 const Payments = {};
@@ -167,52 +168,61 @@ Payments.captureInvoicePayment = async pgResponse => {
   return true;
 };
 
-Payments.createPaymentLink = async ({reason, amount, amountInPaisa, amountInUSD, userId, invoiceId}) => {
-  if(Meteor.user().admin < 2) {
-    throw new Meteor.Error("unauthorized", "Unauthorized to perform this");
+Payments.createPaymentLink = async ({ reason, amount, amountInPaisa, amountInUSD, userId, invoiceId }) => {
+  if (Meteor.user().admin < 2) {
+    throw new Meteor.Error('unauthorized', 'Unauthorized to perform this');
   }
 
   let user;
 
-  if(invoiceId) {
-    const invoice = Invoice.find({id: _id}).fetch()[0];
-    if(invoice.paymentLink && invoice.paymentLink.link && !invoice.paymentLink.expired) {
+  if (invoiceId) {
+    const invoice = Invoice.find({ id: _id }).fetch()[0];
+    if (invoice.paymentLink && invoice.paymentLink.link && !invoice.paymentLink.expired) {
       return invoice.paymentLink;
     }
     amountInPaisa = invoice.totalAmountINR;
-    reason = reason || `Bill for ${invoice.billingPeriodLabel}`
-    user = Meteor.users.find({_id: invoice.userId}).fetch()[0];
+    reason = reason || `Bill for ${invoice.billingPeriodLabel}`;
+    user = Meteor.users.find({ _id: invoice.userId }).fetch()[0];
   }
 
-  if(!(reason && reason.length > 10)){
-    throw new Meteor.Error("bad-request", "Cannot create payment link without a valid reason. This reason would be sent in mail. Minimum of 10 characters needed")
+  if (!(reason && reason.length > 10)) {
+    throw new Meteor.Error('bad-request', 'Cannot create payment link without a valid reason. This reason would be sent in mail. Minimum of 10 characters needed');
   }
 
-  if(!amountInPaisa && amountInUSD) {
-    const conversionFactor = await Payments.getConversionToINRRate({currencyCode: 'usd'});
+  if (!amountInPaisa && amountInUSD) {
+    const conversionFactor = await Payments.getConversionToINRRate({ currencyCode: 'usd' });
     amount = amountInUSD * conversionFactor;
     amountInPaisa = Math.round(amount * 100);
   }
 
-  if(!user) {
-    user = Meteor.users.find({
-      _id: userId
-    }).fetch()[0];
+  if (!user) {
+    user = Meteor.users
+      .find({
+        _id: userId,
+      })
+      .fetch()[0];
   }
 
-  const paymentLinkId = await RazorPay.createPaymentLink({amount: amountInPaisa, user, description: reason });
+  const paymentLinkId = await RazorPay.createPaymentLink({ amount: amountInPaisa, user, description: reason });
 
   return RZPaymentLink.find({
-    _id: paymentLinkId
+    _id: paymentLinkId,
   }).fetch()[0];
-}
+};
+
+Payments.createStripeCustomer = async ({ token }) => {
+  const userId = Meteor.userId();
+
+  return Stripe.createCustomer({ userId, token });
+};
 
 Meteor.methods({
   createPaymentRequest: Payments.createRequest,
   refundPayment: Payments.refundAmount,
   createRequestForInvoice: Payments.createRequestForInvoice,
   captureInvoicePayment: Payments.captureInvoicePayment,
-  createPaymentLink: Payments.createPaymentLink
+  createPaymentLink: Payments.createPaymentLink,
+  captureStripeCustomer: Payments.createStripeCustomer,
 });
 
 export default Payments;
