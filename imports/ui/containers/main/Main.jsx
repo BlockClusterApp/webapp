@@ -38,6 +38,8 @@ import SupportDetails from '../../pages/support/Support.jsx';
 import SmartContractsManagement from '../../pages/smartContractsManagement/SmartContractsManagement.jsx';
 import WalletNotifications from '../../pages/paymeter/Notifications.jsx';
 
+import Profile from '../../pages/profile/Profile';
+
 import UserList from '../../pages/admin/users/UserList.jsx';
 import UserDetails from '../../pages/admin/users/Details.jsx';
 import NetworkList from '../../pages/admin/networks/NetworkList.jsx';
@@ -64,7 +66,7 @@ export default withRouter(
       super(props);
       this.state = {
         remoteConfig: window.RemoteConfig,
-        pathsWithFullHeight: ['/app/paymeter'],
+        pathsWithFullHeight: ['/app/paymeter', '/app/profile'],
       };
     }
 
@@ -115,6 +117,7 @@ export default withRouter(
             <Header />
             <div className={`page-content-wrapper ${fullHeight}`}>
               <Route exact path="/app/networks" render={props => this.showFailedBillingWarning(NetworksList, props)} />
+              <Route exact path="/app/profile" component={Profile} />
               <Route exact path="/app/notifications" render={props => this.showFailedBillingWarning(PlatformNotifications, props)} />
               <Route exact path="/app/createNetwork" render={props => this.showFailedBillingWarning(CreateNetwork, props)} />
               <Route exact path="/app/networks/:id/settings" render={props => this.showFailedBillingWarning(ViewEditNetwork, props)} />
