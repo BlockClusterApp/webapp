@@ -1,4 +1,5 @@
 import Invoice from '../../collections/payments/invoice';
+import PaymentRequest from '../../collections/payments/payment-requests';
 import RazorPay from '../../api/payments/payment-gateways/razorpay';
 import Payment from '../../api/payments/';
 import Email from '../emails/email-sender';
@@ -743,8 +744,8 @@ InvoiceObj.changeToOfflinePayment = async ({ invoiceId }) => {
   return true;
 };
 
-InvoiceObj.adminChargeStripeInvoice = async ({ invoiceId }) => {
-  if (Meteor.user().admin < 2) {
+InvoiceObj.adminChargeStripeInvoice = async ({ invoiceId, adminUserId }) => {
+  if (!adminUserId && Meteor.user().admin < 2) {
     throw new Meteor.Error(401, 'Unauthorized');
   }
   const invoice = Invoice.find({ _id: invoiceId }).fetch()[0];
@@ -761,20 +762,65 @@ InvoiceObj.adminChargeStripeInvoice = async ({ invoiceId }) => {
     throw new Meteor.Error(403, 'Bad request');
   }
 
-  const response = await Stripe.chargeCustomer({
-    customerId: stripeCustomer.id,
-    amountInDollars: invoice.totalAmount,
-    description: `Platform usage charges for ${invoice.billingPeriodLabel}`,
-    idempotencyKey: `${invoiceId}_${invoice.userId}`,
+  const paymentRequest = await Payment.createRequest({
+    paymentGateway: 'stripe',
+    reason: `Platform usage charges for ${invoice.billingPeriodLabel}`,
+    amount: Number(invoice.totalAmount),
     userId: invoice.userId,
+    metadata: {
+      from: 'admin',
+      by: adminUserId || Meteor.userId(),
+      invoiceId: invoice._id,
+    },
   });
+  try {
+    const response = await Stripe.chargeCustomer({
+      customerId: stripeCustomer.id,
+      amountInDollars: invoice.totalAmount,
+      description: `Platform usage charges for ${invoice.billingPeriodLabel}`,
+      idempotencyKey: `${invoiceId}_${invoice.userId}${process.env.NODE_ENV === 'development' ? `${new Date().getTime()}` : ''}`,
+      userId: invoice.userId,
+    });
+    await InvoiceObj.settleInvoice({ billingMonthLabel: invoice.billingPeriodLabel, invoiceId: invoice._id });
+    ElasticLogger.log(adminUserId ? 'System Charge Stripe' : 'Admin charge invoice', {
+      response,
+      invoiceId,
+      paymentRequest,
+    });
+    PaymentRequest.update(
+      {
+        _id: paymentRequest.paymentRequestId,
+      },
+      {
+        $push: {
+          pgResponse: response,
+        },
+        $set: {
+          status: PaymentRequest.StatusMapping.Approved,
+          paymentStatus: PaymentRequest.StatusMapping.Approved,
+        },
+      }
+    );
+  } catch (err) {
+    ElasticLogger.log(adminUserId ? 'System Charge Stripe' : 'Admin charge invoice', {
+      error: err.toString(),
+      invoiceId,
+      paymentRequest,
+    });
 
-  ElasticLogger.log('Admin charge invoice', {
-    response,
-    invoiceId,
-  });
-
-  await InvoiceObj.settleInvoice({ billingMonthLabel: invoice.billingPeriodLabel, invoiceId: invoice._id });
+    PaymentRequest.update(
+      {
+        _id: paymentRequest.paymentRequestId,
+      },
+      {
+        $set: {
+          paymentStatus: PaymentRequest.StatusMapping.Failed,
+          failedReason: err.toString().replace('Error: ', ''),
+        },
+      }
+    );
+    throw new Meteor.Error(403, err.toString());
+  }
 
   return true;
 };
@@ -784,7 +830,7 @@ Meteor.methods({
   sendInvoiceReminder: InvoiceObj.adminSendInvoiceReminder,
   waiveOffInvoice: InvoiceObj.waiveOffInvoice,
   changeToOfflinePayment: InvoiceObj.changeToOfflinePayment,
-  adminChargeStripeInvoice: InvoiceObj.adminChargeStripeInvoice,
+  adminChargeStripeInvoice: async ({ invoiceId }) => InvoiceObj.adminChargeStripeInvoice({ invoiceId }),
 });
 
 export default InvoiceObj;

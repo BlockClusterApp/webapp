@@ -13,59 +13,74 @@ Payments.createRequest = async ({ paymentGateway, reason, amount, amountInPaisa,
   let insertResult;
   let subscription;
   paymentGateway = paymentGateway || 'razorpay';
-  const conversionFactor = await Payments.getConversionToINRRate({ currencyCode: 'usd' });
-  if (mode === 'credit') {
-    amount = 5;
-    const rzPlan = RZPlan.find({ identifier: 'verification' }).fetch()[0];
-    subscription = RZSubscription.find({
-      userId: Meteor.userId(),
-      plan_id: rzPlan.id,
-      bc_status: 'active',
-    }).fetch()[0];
-    if (!subscription) {
-      subscription = await RazorPay.createSubscription({
-        rzPlan,
-        type: 'verification',
+  if (paymentGateway === 'razorpay') {
+    const conversionFactor = await Payments.getConversionToINRRate({ currencyCode: 'usd' });
+    if (mode === 'credit') {
+      amount = 5;
+      const rzPlan = RZPlan.find({ identifier: 'verification' }).fetch()[0];
+      subscription = RZSubscription.find({
+        userId: Meteor.userId(),
+        plan_id: rzPlan.id,
+        bc_status: 'active',
+      }).fetch()[0];
+      if (!subscription) {
+        subscription = await RazorPay.createSubscription({
+          rzPlan,
+          type: 'verification',
+        });
+      }
+      insertResult = PaymentRequests.insert({
+        userId: Meteor.userId(),
+        paymentGateway,
+        reason,
+        amount: amount * 100,
+        rzSubscriptionId: subscription._id,
+        conversionFactor,
       });
+    } else if (mode === 'debit') {
+      amount = conversionFactor;
+      insertResult = PaymentRequests.insert({
+        userId: Meteor.userId(),
+        paymentGateway,
+        reason,
+        amount: Math.round(amount * 100),
+        conversionFactor,
+      });
+      const returnValue = { paymentRequestId: insertResult, amount: Math.round(amount * 100), display_amount: 1, display_currency: 'USD' };
+      debug('Payment create request | Debit RZP Options', returnValue);
+      return returnValue;
+    } else {
+      const request = PaymentRequests.insert({
+        userId: userId || Meteor.userId(),
+        paymentGateway: 'razorpay',
+        reason,
+        metadata,
+        amount: amountInPaisa || Math.round(amount * 100),
+        conversionFactor: metadata.conversionFactor,
+      });
+
+      return { paymentRequestId: request, amount: amountInPaisa || Math.round(amount * 100), display_amount, display_currency: 'USD', conversionFactor };
     }
-    insertResult = PaymentRequests.insert({
-      userId: Meteor.userId(),
-      paymentGateway,
-      reason,
-      amount: amount * 100,
-      rzSubscriptionId: subscription._id,
-      conversionFactor,
-    });
-  } else if (mode === 'debit') {
-    amount = conversionFactor;
-    insertResult = PaymentRequests.insert({
-      userId: Meteor.userId(),
-      paymentGateway,
-      reason,
-      amount: Math.round(amount * 100),
-      conversionFactor,
-    });
-    const returnValue = { paymentRequestId: insertResult, amount: Math.round(amount * 100), display_amount: 1, display_currency: 'USD' };
-    debug('Payment create request | Debit RZP Options', returnValue);
+    display_amount = Number(amount / conversionFactor).toFixed(2);
+
+    const returnValue = { paymentRequestId: insertResult, rzSubscriptionId: subscription.id, amount: amount * 100, display_amount, display_currency: 'USD' };
+    debug('Payment create request | Credit RZP Options', returnValue);
     return returnValue;
-  } else {
-    const request = PaymentRequests.insert({
+  } else if (paymentGateway === 'stripe') {
+    const insertResult = PaymentRequests.insert({
       userId: userId || Meteor.userId(),
-      paymentGateway: 'razorpay',
+      paymentGateway: 'stripe',
       reason,
       metadata,
-      amount: amountInPaisa || Math.round(amount * 100),
-      conversionFactor: metadata.conversionFactor,
+      amount,
+      currency: 'usd',
     });
-
-    return { paymentRequestId: request, amount: amountInPaisa || Math.round(amount * 100), display_amount, display_currency: 'USD', conversionFactor };
+    const returnValue = { paymentRequestId: insertResult, amount };
+    debug('Payment create request | Stripe', returnValue);
+    return returnValue;
+  } else {
+    throw new Error('Payment gateway not supported');
   }
-
-  display_amount = Number(amount / conversionFactor).toFixed(2);
-
-  const returnValue = { paymentRequestId: insertResult, rzSubscriptionId: subscription.id, amount: amount * 100, display_amount, display_currency: 'USD' };
-  debug('Payment create request | Credit RZP Options', returnValue);
-  return returnValue;
 };
 
 Payments.getConversionToINRRate = async ({ currencyCode }) => {

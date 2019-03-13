@@ -9,40 +9,6 @@ const debug = require('debug')('api:stripe');
 
 const Stripe = {};
 
-/*
-card: {
-  address_city: null
-  address_country: null
-  address_line1: null
-  address_line1_check: null
-  address_line2: null
-  address_state: null
-  address_zip: null
-  address_zip_check: null
-  brand: "MasterCard"
-  country: "IN"
-  cvc_check: "unchecked"
-  dynamic_last4: null
-  exp_month: 1
-  exp_year: 2021
-  funding: "credit"
-  id: "card_1ED72sG3zAADSv7BchxzlZN9"
-  last4: "7689"
-  metadata: {}
-  name: "Jibin Mathews"
-  object: "card"
-  tokenization_method: null
-}
-client_ip: "49.207.54.118"
-created: 1552383434
-email: "jibin.mathews@blockcluster.io"
-id: "tok_1ED72sG3zAADSv7B1lSZ3E2m"
-livemode: false
-object: "token"
-type: "card"
-used: false
-*/
-
 Stripe.createCustomer = async ({ userId, token }) => {
   if (!(userId && token)) {
     throw new Meteor.Error(400, 'Userid and token required');
@@ -57,17 +23,21 @@ Stripe.createCustomer = async ({ userId, token }) => {
   //   throw new Meteor.Error(400, 'Already verified');
   // }
   let customer;
-  if (!stripeCustomer) {
-    customer = await stripe.customers.create({
-      description: userId,
-      source: token.id,
-      email: user.emails[0].address,
-    });
-  } else {
-    await stripe.customers.update(stripeCustomer.id, {
-      source: token.id,
-    });
-    customer = await stripe.customers.retrieve(stripeCustomer.id);
+  try {
+    if (!stripeCustomer) {
+      customer = await stripe.customers.create({
+        description: userId,
+        source: token.id,
+        email: user.emails[0].address,
+      });
+    } else {
+      await stripe.customers.update(stripeCustomer.id, {
+        source: token.id,
+      });
+      customer = await stripe.customers.retrieve(stripeCustomer.id);
+    }
+  } catch (err) {
+    throw new Meteor.Error(400, err.toString().replace('Error: ', ''));
   }
 
   debug('Stripe customer', customer);
@@ -109,7 +79,7 @@ Stripe.createCustomer = async ({ userId, token }) => {
     );
   }
 
-  StripeCustomer.insert(
+  StripeCustomer.update(
     {
       userId,
     },
@@ -137,7 +107,7 @@ Stripe.createCustomer = async ({ userId, token }) => {
   return true;
 };
 
-Stripe.chargeCustomer = async ({ customerId, amountInDollars, idempotencyKey, description, userId }) => {
+Stripe.chargeCustomer = async ({ customerId, amountInDollars, idempotencyKey, description, userId, metadata }) => {
   if (!(customerId && amountInDollars && idempotencyKey && userId)) {
     throw new Meteor.Error(400, 'CustomerID, amountInDollars, userId and idempotencyKey is required');
   }
@@ -148,20 +118,34 @@ Stripe.chargeCustomer = async ({ customerId, amountInDollars, idempotencyKey, de
       currency: 'usd',
       customer: customerId,
       description,
+      metadata: metadata || {},
     },
     {
       idempotency_key: idempotencyKey,
     }
   );
 
-  StripePayment.insert({
-    userId,
-    ...response,
-  });
+  const id = response.id;
+  delete response.id;
+
+  StripePayment.update(
+    {
+      id,
+    },
+    {
+      $set: {
+        userId,
+        ...response,
+      },
+    },
+    {
+      upsert: true,
+    }
+  );
 
   debug('Stripe charged customer', response);
 
-  return response;
+  return { ...response, id };
 };
 
 export default Stripe;

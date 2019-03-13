@@ -1,82 +1,82 @@
-import { Mongo } from "meteor/mongo";
+import { Mongo } from 'meteor/mongo';
 
 import AttachBaseHooks from '../../modules/helpers/model-helpers';
 
-const PaymentRequests = new Mongo.Collection("paymentRequests");
+const PaymentRequests = new Mongo.Collection('paymentRequests');
 
 AttachBaseHooks(PaymentRequests);
 
 PaymentRequests.paymentGateways = {
-    RazorPay: 'razorpay'
+  RazorPay: 'razorpay',
+  Stripe: 'stripe',
 };
 
-
 PaymentRequests.StatusMapping = {
-    Pending: 1,
-    Approved: 2,
-    Refunded: 3,
-    Failed: 4
-}
+  Pending: 1,
+  Approved: 2,
+  Refunded: 3,
+  Failed: 4,
+};
 
 PaymentRequests.before.insert((userId, doc) => {
-    doc.createdAt = new Date();
-    doc.active = true;
+  doc.createdAt = new Date();
+  doc.active = true;
 
-    if(!doc.userId) {
-        throw new Error("Payment requests should belong to a user");
-    }
+  if (!doc.userId) {
+    throw new Error('Payment requests should belong to a user');
+  }
 
-    if(!doc.paymentGateway) {
-        throw new Error("Payment gateway required for payment request");
-    }
-    if(!Object.values(PaymentRequests.paymentGateways).includes(doc.paymentGateway)) {
-        throw new Error(`${doc.paymentGateway} is not a valid payment gateway.`)
-    }
+  if (!doc.paymentGateway) {
+    throw new Error('Payment gateway required for payment request');
+  }
+  if (!Object.values(PaymentRequests.paymentGateways).includes(doc.paymentGateway)) {
+    throw new Error(`${doc.paymentGateway} is not a valid payment gateway.`);
+  }
 
-    if(!doc.paymentStatus) {
-      doc.paymentStatus = PaymentRequests.StatusMapping.Pending;
-    }
+  if (!doc.paymentStatus) {
+    doc.paymentStatus = PaymentRequests.StatusMapping.Pending;
+  }
 });
 
 PaymentRequests.schema = new SimpleSchema({
   createdAt: {
-    type: Date
+    type: Date,
   },
   updatedAt: {
-    type: Date
+    type: Date,
   },
   userId: {
-    type: String
+    type: String,
   },
   paymentGateway: {
-      type: String
+    type: String,
   },
   paymentStatus: {
-    type: Number
+    type: Number,
   },
   amount: {
-    type: Number
+    type: Number,
   },
   pgReference: {
-    type: String
+    type: String,
   },
   pgResponse: {
-    type: Array
+    type: Array,
   },
-  "pgResponse.$": {
-    type: Object
+  'pgResponse.$': {
+    type: Object,
   },
   refundedAt: {
-    type: Date
+    type: Date,
   },
   rzSubscription: {
-    type: Object
-  }
+    type: Object,
+  },
 });
 
-if(!Meteor.isClient) {
+if (!Meteor.isClient) {
   PaymentRequests._ensureIndex({
-    userId: 1
+    userId: 1,
   });
 }
 

@@ -1,5 +1,6 @@
 import Invoice from '../../../../collections/payments/invoice';
 import Stripe from '../../../../api/payments/payment-gateways/stripe';
+import InvoiceObj from '../../../../api/billing/invoice';
 
 const debug = require('debug')('scheduler:bull:charge-stripe-users');
 
@@ -26,27 +27,7 @@ module.exports = bullSystem => {
         return resolve();
       }
 
-      ElasticLogger.log(`Charging Stripe invoice`, {
-        invoiceId: invoice._id,
-        billingPeriodLabel: invoice.billingPeriodLabel,
-        totalAmount: invoice.totalAmount,
-        status: invoice.paymentStatus,
-      });
-
-      const result = await Stripe.chargeCustomer({
-        customerId: invoice.stripeCustomerId,
-        amountInDollars: invoice.totalAmount,
-        idempotencyKey: invoice._id,
-        description: `Bill for ${invoice.billingPeriodLabel}`,
-        userId: invoice.userId,
-      });
-
-      debug('Stripe charge result', result);
-
-      ElasticLogger.log('Strip payment charged', {
-        result,
-        invoiceId,
-      });
+      await InvoiceObj.adminChargeStripeInvoice({ invoiceId: invoice._id, adminUserId: 'system' });
 
       return resolve(invoiceId);
     });
