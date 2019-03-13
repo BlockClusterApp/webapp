@@ -84,6 +84,9 @@ class CardsAndNewPayment extends Component {
   };
 
   downloadInvoice = () => {
+    this.setState({
+      downloading: true,
+    });
     Meteor.call('generateInvoiceHTML', this.props.invoice._id, (err, res) => {
       this.setState({
         downloading: false,
@@ -99,7 +102,7 @@ class CardsAndNewPayment extends Component {
       }
       let a = document.createElement('a');
       a.href = 'data:application/octet-stream;base64,' + res;
-      a.download = `BlockclusterBill-${this.state.bill.invoiceId}.pdf`;
+      a.download = `BlockclusterBill-${this.props.invoice._id}.pdf`;
       a.click();
     });
   };
@@ -168,9 +171,17 @@ class CardsAndNewPayment extends Component {
             <sup>th</sup> of this month to avoid node deletions.
             <br />
             <div className="row" style={{ padding: '15px', paddingBottom: '5px' }}>
-              <button className="btn btn-primary" onClick={this.downloadInvoice}>
-                Download Invoice
-              </button>
+              <LaddaButton
+                loading={this.state.downloading}
+                data-size={S}
+                data-style={SLIDE_UP}
+                data-spinner-size={30}
+                data-spinner-lines={12}
+                className="btn btn-primary"
+                onClick={this.downloadInvoice}
+              >
+                &nbsp;&nbsp;Download Invoice
+              </LaddaButton>
               &nbsp;&nbsp;
               <LaddaButton
                 loading={this.state.loading || (this.state.waitingForCards && cards.length === 0)}
@@ -178,7 +189,7 @@ class CardsAndNewPayment extends Component {
                 data-style={SLIDE_UP}
                 data-spinner-size={30}
                 data-spinner-lines={12}
-                className="btn btn-success  btn-cons m-t-10 p-t-5 p-b-5"
+                className="btn btn-success"
                 onClick={this.makePayment}
               >
                 &nbsp;&nbsp;Pay ${this.props.invoice.totalAmount}
@@ -338,13 +349,15 @@ class CardsAndNewPayment extends Component {
             </div>
             <div className="col-md-7">
               <div className="padding-30 sm-padding-5">
-                <h5>Select Card Type</h5>
+                <h5>Payment Method</h5>
                 <div className="row">
-                  <div className="col-lg-7 col-md-6">
-                    <p className="no-margin">Select a type of card you would like to add. </p>
-                    <p className="small hint-text">We support all major card brands for both credit and debit cards.</p>
+                  <div className="col-lg-12 col-md-12">
+                    <p className="no-margin">
+                      We will try to auto debit the bill from your payment method on 5th of every month. Incase the payment fails or if your card does not support auto debit, you
+                      would have to clear the invoice before 10<sup>th</sup> of that month to avoid account suspension and data deletion.
+                    </p>
                   </div>
-                  <div className="col-lg-5 col-md-6">
+                  {/* <div className="col-lg-5 col-md-6">
                     <div className="btn-group" data-toggle="buttons">
                       <label className="btn btn-default active" onClick={e => this.setState({ paymentMethod: 'credit' })}>
                         <input type="radio" name="options" id="option1" selected /> <span className="fs-16">Credit Card</span>
@@ -353,7 +366,7 @@ class CardsAndNewPayment extends Component {
                         <input type="radio" name="options" id="option2" /> <span className="fs-16">Debit Card</span>
                       </label>
                     </div>
-                  </div>
+                </div> */}
                   {/* <div className="col-md-12">
                     {this.state.paymentMethod === 'debit' && (
                       <div className="card card-default bg-warning">

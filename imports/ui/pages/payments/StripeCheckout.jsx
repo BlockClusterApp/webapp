@@ -5,7 +5,12 @@ import moment from 'moment';
 
 import './Components/Styles.scss';
 
-const API_KEY = 'pk_test_M9GRhEchj7TJtLXAgFXRL9kO';
+const API_KEY = (() => {
+  if (window.location.origin.includes('app.blockcluster.io')) {
+    return 'pk_live_hF3K5iZix2h0QBG5Suyj7eHY';
+  }
+  return 'pk_test_M9GRhEchj7TJtLXAgFXRL9kO';
+})();
 
 import CardVerification from './Components/CardVerification';
 import Collect from './Components/CollectPayment';
