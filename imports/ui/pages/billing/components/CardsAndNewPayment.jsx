@@ -359,6 +359,17 @@ class CardsAndNewPayment extends Component {
                       We will try to auto debit the bill from your payment method on 5th of every month. Incase the payment fails or if your card does not support auto debit, you
                       would have to clear the invoice before 10<sup>th</sup> of that month to avoid account suspension and data deletion.
                     </p>
+                    <br />
+                    <div className="card card-default bg-primary" data-pages="card">
+                      <div className="card-block">
+                        <h3 className="text-white">
+                          <span className="semi-bold">$200</span> credit to get started!
+                        </h3>
+                        <p className="text-white">
+                          For successfully adding your payment method you will receive a credit $200. This credits can be utilized for any apps or services provided by BlockCluster
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   {/* <div className="col-lg-5 col-md-6">
                     <div className="btn-group" data-toggle="buttons">
