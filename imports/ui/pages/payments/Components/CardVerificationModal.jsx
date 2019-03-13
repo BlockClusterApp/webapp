@@ -17,7 +17,7 @@ class CardForm extends React.Component {
     this.setState({
       loading: true,
     });
-    this.props.stripe.createToken({ name: this.props.user.profile.firstName, email: this.props.user.email }).then(token => {
+    this.props.stripe.createToken({ name: this.props.user.profile.firstName, email: this.props.user.emails[0].address }).then(token => {
       if (!(token && token.token)) {
         this.setState({
           loading: false,
@@ -95,7 +95,7 @@ class CardForm extends React.Component {
               style={{ fontSize: '16px', padding: '8px' }}
               type="submit"
             >
-              Verify
+              {/* <i className="fa fa-cc-stripe" />&nbsp;&nbsp;*/} Verify
             </LaddaButton>
           </div>
         </div>

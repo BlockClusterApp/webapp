@@ -1,6 +1,7 @@
 import React from 'react';
 import { StripeProvider, Elements } from 'react-stripe-elements';
 import CardVerificationModal from './Components/CardVerificationModal';
+import CollectPayment from './Components/CollectPaymentModal';
 
 const API_KEY = (() => {
   if (window.location.origin.includes('app.blockcluster.io')) {
@@ -49,7 +50,12 @@ class StripeCheckoutModal extends React.Component {
                   <div className="modal-body col-xs-height col-middle ">
                     <StripeProvider apiKey={API_KEY} betas={['payment_intent_beta_3']}>
                       <Elements>
-                        <CardVerificationModal user={this.state.user} completeListener={this.completeListener} />
+                        <div>
+                          {this.props.type === 'card-verification' && <CardVerificationModal user={this.state.user} completeListener={this.completeListener} />}
+                          {this.props.type === 'collect' && (
+                            <CollectPayment user={this.state.user} completeListener={this.completeListener} paymentRequestId={this.props.paymentRequestId} />
+                          )}
+                        </div>
                       </Elements>
                     </StripeProvider>
                   </div>
