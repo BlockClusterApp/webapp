@@ -291,7 +291,6 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   if (invoiceId) {
     selector = {
       _id: invoiceId,
-      billingPeriodLabel: billingMonthLabel,
     };
   }
 

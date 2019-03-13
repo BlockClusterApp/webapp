@@ -5,6 +5,8 @@ import InvoiceFunctions from '../../api/billing/invoice';
 import PaymentRequests from '../../collections/payments/payment-requests';
 import { RZSubscription, RZPlan, RZPaymentLink } from '../../collections/razorpay';
 import Stripe from './payment-gateways/stripe';
+import StripePaymentIntent from '../../collections/stripe/intents';
+import InvoiceObj from '../../api/billing/invoice';
 const debug = require('debug')('api:payments');
 
 const Payments = {};
@@ -231,6 +233,85 @@ Payments.createStripeCustomer = async ({ token }) => {
   return Stripe.createCustomer({ userId, token });
 };
 
+Payments.initiateStripePayment = async ({ invoiceId }) => {
+  if (!invoiceId) {
+    throw new Meteor.Error(403, 'Required params missins');
+  }
+  const invoice = Invoice.find({
+    _id: invoiceId,
+    paymentStatus: {
+      $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed],
+    },
+    userId: Meteor.userId(),
+  }).fetch()[0];
+  if (!invoice) {
+    throw new Meteor.Error(403, 'Invalid invoice');
+  }
+
+  const request = await Payments.createRequest({
+    paymentGateway: 'stripe',
+    reason: `Platform charges for ${invoice.billingPeriodLabel}`,
+    amount: invoice.totalAmount,
+    userId: Meteor.userId(),
+    metadata: {
+      from: 'system',
+      by: Meteor.userId(),
+      invoiceId,
+    },
+  });
+
+  return request;
+};
+
+Payments.initiateStripePaymentIntent = async ({ paymentRequestId }) => {
+  const request = PaymentRequests.find({ _id: paymentRequestId, userId: Meteor.userId() }).fetch()[0];
+
+  if (!request) {
+    throw new Meteor.Error(403, 'Invalid request');
+  }
+
+  return Stripe.createPaymentIntent({ paymentRequest: request });
+};
+
+Payments.recordStripePayment = async ({ intent }) => {
+  const newIntent = { ...intent };
+  delete newIntent;
+  StripePaymentIntent.update(
+    { id: intent.id },
+    {
+      $set: {
+        ...newIntent,
+      },
+    }
+  );
+  const stripeIntent = StripePaymentIntent.find({ id: intent.id }).fetch()[0];
+  const paymentRequest = PaymentRequests.find({ _id: stripeIntent.paymentRequestId }).fetch()[0];
+
+  if (!paymentRequest) {
+    throw new Meteor.Error(403, 'Bad request');
+  }
+  if (paymentRequest.metadata && paymentRequest.metadata.invoiceId) {
+    await InvoiceObj.settleInvoice({ invoiceId: paymentRequest.metadata.invoiceId, stripePayment: stripeIntent });
+  }
+
+  PaymentRequests.update(
+    {
+      _id: paymentRequest._id,
+    },
+    {
+      $set: {
+        paymentStatus: PaymentRequests.StatusMapping.Approved,
+        status: PaymentRequests.StatusMapping.Approved,
+      },
+      $push: {
+        pgResponse: intent,
+      },
+    }
+  );
+
+  return true;
+};
+
 Meteor.methods({
   createPaymentRequest: Payments.createRequest,
   refundPayment: Payments.refundAmount,
@@ -238,6 +319,8 @@ Meteor.methods({
   captureInvoicePayment: Payments.captureInvoicePayment,
   createPaymentLink: Payments.createPaymentLink,
   captureStripeCustomer: Payments.createStripeCustomer,
+  initiateStripePayment: Payments.initiateStripePayment,
+  initiateStripePaymentIntent: Payments.initiateStripePaymentIntent,
 });
 
 export default Payments;

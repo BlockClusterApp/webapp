@@ -2,6 +2,10 @@ import StripeCustomer from '../../../collections/stripe/customer';
 import { Meteor } from 'meteor/meteor';
 import UserCards from '../../../collections/payments/user-cards';
 import StripePayment from '../../../collections/stripe/payments';
+import PaymentIntent from '../../../collections/stripe/intents';
+import RazorPaySubscription from '../../../collections/razorpay/subscription';
+import Bluebird from 'bluebird';
+import RazorPay from './razorpay';
 
 const stripToken = process.env.STRIPE_TOKEN || 'sk_test_DhE17qCC4NfY1A1SUygZWMkh';
 const stripe = require('stripe')(stripToken);
@@ -19,9 +23,6 @@ Stripe.createCustomer = async ({ userId, token }) => {
   }
 
   const stripeCustomer = StripeCustomer.find({ userId }).fetch()[0];
-  // if (stripeCustomer) {
-  //   throw new Meteor.Error(400, 'Already verified');
-  // }
   let customer;
   try {
     if (!stripeCustomer) {
@@ -77,32 +78,62 @@ Stripe.createCustomer = async ({ userId, token }) => {
         upsert: true,
       }
     );
+    const userCards = UserCards.findOne({ userId: Meteor.userId() });
+    if (userCards.cards.length === 1) {
+      // Credit $200
+      try {
+        await Vouchers.applyPromotionalCode({ code: 'BLOCKCLUSTER', userId: Meteor.userId() });
+      } catch (err) {
+        // Already claimed. Ignore
+      }
+    }
   }
 
-  StripeCustomer.update(
-    {
-      userId,
-    },
-    {
-      $set: {
-        ...customer,
+  await Bluebird.all([
+    StripeCustomer.update(
+      {
+        userId,
       },
-    },
-    {
-      upsert: true,
-    }
-  );
+      {
+        $set: {
+          ...customer,
+        },
+      },
+      {
+        upsert: true,
+      }
+    ),
+    Meteor.users.update(
+      {
+        _id: userId,
+      },
+      {
+        $set: {
+          stripeCustomerId: customer.id,
+        },
+        $unset: {
+          rzCustomerId: '',
+        },
+      }
+    ),
+  ]);
 
-  Meteor.users.update(
-    {
-      _id: userId,
-    },
-    {
-      $set: {
-        stripeCustomerId: customer.id,
+  const rzSubscriptions = RazorPaySubscription.find({ userId }).fetch();
+  if (rzSubscriptions.length > 0) {
+    RazorPaySubscription.update(
+      {
+        userId,
       },
-    }
-  );
+      {
+        $set: {
+          bc_status: 'cancelled',
+        },
+      }
+    );
+    await Bluebird.each(rzSubscriptions, async rzSubscription => {
+      return RazorPay.cancelSubscription({ rzSubscription });
+    });
+  }
 
   return true;
 };
@@ -146,6 +177,25 @@ Stripe.chargeCustomer = async ({ customerId, amountInDollars, idempotencyKey, de
   debug('Stripe charged customer', response);
 
   return { ...response, id };
+};
+
+Stripe.createPaymentIntent = async ({ paymentRequest }) => {
+  if (!paymentRequest) {
+    throw new Meteor.Error(403, 'Payment request not created');
+  }
+  const response = await stripe.paymentIntents.create({
+    amount: paymentRequest.amount * 100,
+    currency: 'usd',
+    payment_method_types: ['card'],
+  });
+
+  PaymentIntent.insert({
+    userId: paymentRequest.userId,
+    paymentRequestId: paymentRequest._id,
+    ...response,
+  });
+
+  return response;
 };
 
 export default Stripe;

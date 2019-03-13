@@ -17,7 +17,7 @@ export default withRouter(
       return (
         <div style={{ background: 'linear-gradient(-135deg, rgb(0, 166, 255), rgb(0, 66, 134))' }} className="full-height">
           <div className="page-container">
-            <Route exact path="/payments/card-verification" component={StripeCheckout} />
+            <Route path="/payments" component={StripeCheckout} />
           </div>
         </div>
       );

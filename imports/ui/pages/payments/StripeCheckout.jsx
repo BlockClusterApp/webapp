@@ -1,12 +1,13 @@
 import React from 'react';
 import { StripeProvider, Elements } from 'react-stripe-elements';
-import { withRouter } from 'react-router-dom';
+import { withRouter, Switch, BrowserRouter, Route } from 'react-router-dom';
 
 import './Components/Styles.scss';
 
 const API_KEY = 'pk_test_M9GRhEchj7TJtLXAgFXRL9kO';
 
 import CardVerification from './Components/CardVerification';
+import Collect from './Components/CollectPayment';
 
 class Checkout extends React.Component {
   constructor(props) {
@@ -16,6 +17,12 @@ class Checkout extends React.Component {
       user,
     };
   }
+
+  paymentRequestLoaded = request => {
+    this.setState({
+      request,
+    });
+  };
 
   render() {
     return (
@@ -29,20 +36,54 @@ class Checkout extends React.Component {
                   <span style={{ fontSize: '18px', fontWeight: 'bold', verticalAlign: 'middle' }}>
                     {' '}
                     &nbsp; | &nbsp;{this.props.location.pathname.includes('/card-verification') ? 'Card Verification' : ''}
+                    {this.props.location.pathname.includes('/collect') ? 'Payment' : ''}
                   </span>
                 </center>
 
-                <input type="text" className="full-width" value={this.state.user.name} disabled />
-                <input type="email" className="full-width" value={this.state.user.email} disabled />
+                {this.state.request && (
+                  <div className="row">
+                    <div className="col-md-5 b-r b-grey p-10">
+                      <input type="text" className="full-width" value={this.state.user.name} disabled />
+                      <input type="email" className="full-width" value={this.state.user.email} disabled />
+                    </div>
+                    <div className="col-md-7 p-t-10" style={{ fontSize: '18px' }}>
+                      <div className="row">
+                        <div className="col-md-4">
+                          <b>Charge for: </b>
+                        </div>
+                        <div className="col-md-8">{this.state.request.reason}</div>
+                        <div className="col-md-4">
+                          <b>Amount: </b>
+                        </div>
+                        <div className="col-md-8">$ {this.state.request.amount}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {!this.state.request && (
+                  <div>
+                    <input type="text" className="full-width" value={this.state.user.name} disabled />
+                    <input type="email" className="full-width" value={this.state.user.email} disabled />
+                  </div>
+                )}
               </div>
             </div>
           </div>
           <div className="row m-t-20">
             <div className="col-md-12">
               <div className="stripe-form" style={{ background: '#fff', padding: '50px', borderRadius: '10px' }}>
-                <StripeProvider apiKey={API_KEY}>
+                <StripeProvider apiKey={API_KEY} betas={['payment_intent_beta_3']}>
                   <Elements>
-                    <CardVerification user={this.state.user} />
+                    <BrowserRouter>
+                      <Switch>
+                        <Route exact path="/payments/card-verification" render={props => <CardVerification user={this.state.user} {...props} />} />
+                        <Route
+                          exact
+                          path="/payments/collect/:id"
+                          render={props => <Collect user={this.state.user} paymentRequestLoadListener={this.paymentRequestLoaded} {...props} />}
+                        />
+                      </Switch>
+                    </BrowserRouter>
                   </Elements>
                 </StripeProvider>
               </div>

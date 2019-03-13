@@ -30,6 +30,13 @@ Meteor.publish('userCards', function() {
   return UserCards.find({ userId: Meteor.userId() });
 });
 
+Meteor.publish('paymentRequest.stripe', function({ id }) {
+  return PaymentRequests.find({
+    _id: id,
+    userId: Meteor.userId(),
+  });
+});
+
 Meteor.publish('pending-invoice', function(billingLabel) {
   return Invoice.find({
     userId: Meteor.userId(),

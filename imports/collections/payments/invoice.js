@@ -47,6 +47,9 @@ Invoice.schema = new SimpleSchema({
   rzSubscriptionId: {
     type: String,
   },
+  stripeCustomerId: {
+    type: String,
+  },
   totalAmount: {
     // Amount after applying credits
     type: Number,
