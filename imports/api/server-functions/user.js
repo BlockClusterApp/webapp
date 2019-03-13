@@ -10,6 +10,7 @@ import Bull from '../../modules/schedulers/bull';
 import moment from 'moment';
 
 const User = {};
+const mobileNumberRegex = /^\+{0,2}([\-\. ])?(\(?\d{0,3}\))?([\-\. ])?\(?\d{0,3}\)?([\-\. ])?\d{3}([\-\. ])?\d{4}/;
 
 function _deleteNetwork(id, userId) {
   return new Promise(resolve => {
@@ -206,6 +207,9 @@ User.updateInfo = async ({ firstName, lastName, mobile }) => {
   const user = Meteor.user();
 
   const update = {};
+  if (mobile && !mobileNumberRegex.test(mobile)) {
+    throw new Meteor.Error(400, 'Invalid mobile number');
+  }
   if (user.profile.mobiles && user.profile.mobiles[0].number !== mobile) {
     update['profile.mobiles'] = [
       {
