@@ -267,6 +267,22 @@ class CardsAndNewPayment extends Component {
               {!!(this.props.rzSubscription && this.props.rzSubscription.bc_status === 'active') && (
                 <p>Bill will be generated on 1st of every month and sent via email. The invoice would have to be cleared before 10th of the month to prevent deletion of nodes.</p>
               )}
+
+              <div>
+                <LaddaButton
+                  loading={this.state.loading}
+                  data-size={S}
+                  data-style={SLIDE_UP}
+                  data-spinner-size={30}
+                  data-spinner-lines={12}
+                  className="btn btn-primary btn-cons m-t-5 p-t-5 p-b-5"
+                  onClick={this.verifyCard}
+                >
+                  &nbsp;&nbsp;
+                  <i className="fa fa-credit-card" aria-hidden="true" />
+                  &nbsp; Change Added Card
+                </LaddaButton>
+              </div>
             </div>
           </div>
           <div className="col-md-7">
@@ -277,19 +293,6 @@ class CardsAndNewPayment extends Component {
                     <Card last4={card.last4} name={card.name} network={card.network} key={`card_${index}`} />
                   </div>
                 </div>
-              </div>
-              <div className="col-md-12 text-center">
-                <LaddaButton
-                  loading={this.state.loading}
-                  data-size={S}
-                  data-style={SLIDE_UP}
-                  data-spinner-size={30}
-                  data-spinner-lines={12}
-                  className="btn btn-success btn-cons m-t-5 p-t-5 p-b-5"
-                  onClick={this.verifyCard}
-                >
-                  &nbsp;&nbsp;Change Payment method
-                </LaddaButton>
               </div>
             </div>
           </div>
@@ -359,6 +362,17 @@ class CardsAndNewPayment extends Component {
                       We will try to auto debit the bill from your payment method on 5th of every month. Incase the payment fails or if your card does not support auto debit, you
                       would have to clear the invoice before 10<sup>th</sup> of that month to avoid account suspension and data deletion.
                     </p>
+                    <br />
+                    <div className="card card-default bg-primary" data-pages="card">
+                      <div className="card-block">
+                        <h3 className="text-white">
+                          <span className="semi-bold">$200</span> credit to get started!
+                        </h3>
+                        <p className="text-white">
+                          For successfully adding your payment method you will receive a credit $200. This credits can be utilized for any apps or services provided by BlockCluster
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   <div className="col-md-12">
                     <LaddaButton
@@ -370,7 +384,8 @@ class CardsAndNewPayment extends Component {
                       className="btn btn-success  btn-cons m-t-10 p-t-5 p-b-5"
                       onClick={this.verifyCard}
                     >
-                      &nbsp;&nbsp;Add Payment Method
+                      &nbsp;&nbsp;
+                      <i class="fa fa-credit-card" aria-hidden="true" /> Add Credit/Debit Card
                     </LaddaButton>
                   </div>
                 </div>
