@@ -4,7 +4,7 @@ import UserCards from '../../../../collections/payments/user-cards';
 import RZSubscription from '../../../../collections/razorpay/subscription';
 import Invoice from '../../../../collections/payments/invoice';
 import Card from './Card.jsx';
-import PromotionalCredits from './PromotionalCredits';
+import StripeCheckoutModal from '../../payments/StripeCheckoutModal';
 import moment from 'moment';
 import RazorPay from '../../../components/Razorpay/Razorpay';
 
@@ -132,17 +132,23 @@ class CardsAndNewPayment extends Component {
   };
 
   verifyCard = () => {
-    const user = {
-      name: `${this.props.user.profile.firstName} ${this.props.user.profile.lastName}`,
-      email: this.props.user.emails[0].address,
-    };
+    this.openStripeCheckoutModal();
+    // const user = {
+    //   name: `${this.props.user.profile.firstName} ${this.props.user.profile.lastName}`,
+    //   email: this.props.user.emails[0].address,
+    // };
 
-    localStorage.setItem('user', JSON.stringify(user));
+    // localStorage.setItem('user', JSON.stringify(user));
 
-    const w = window.open(`${window.location.origin}/payments/card-verification`);
-    if (!w || w.closed || typeof w.closed == 'undefined') {
-      alert('Your browser has blocked the popup. Kindly enable the popup to continue to payment');
-    }
+    // const w = window.open(`${window.location.origin}/payments/card-verification`);
+    // if (!w || w.closed || typeof w.closed == 'undefined') {
+    //   alert('Your browser has blocked the popup. Kindly enable the popup to continue to payment');
+    // }
+  };
+
+  stripeCheckoutToggleFunction = (openFn, closeFn) => {
+    this.openStripeCheckoutModal = openFn;
+    this.closeStripeCheckoutModal = closeFn;
   };
 
   render() {
@@ -421,6 +427,7 @@ class CardsAndNewPayment extends Component {
 
     return (
       <div>
+        <StripeCheckoutModal toggleFunctions={this.stripeCheckoutToggleFunction} />
         <div className="row padding-25 saved-cards">
           <div className="card card-transparent">{displayView}</div>
         </div>
