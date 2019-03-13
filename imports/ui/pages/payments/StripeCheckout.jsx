@@ -26,7 +26,12 @@ class Checkout extends React.Component {
               <div className="stripe-form" style={{ background: '#fff', padding: '50px', borderRadius: '10px' }}>
                 <center>
                   <img src="https://app.blockcluster.io/assets/img/logo/blockcluster.png" />
+                  <span style={{ fontSize: '18px', fontWeight: 'bold', verticalAlign: 'middle' }}>
+                    {' '}
+                    &nbsp; | &nbsp;{this.props.location.pathname.includes('/card-verification') ? 'Card Verification' : ''}
+                  </span>
                 </center>
+
                 <input type="text" className="full-width" value={this.state.user.name} disabled />
                 <input type="email" className="full-width" value={this.state.user.email} disabled />
               </div>

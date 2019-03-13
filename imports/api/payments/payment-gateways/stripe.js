@@ -53,14 +53,22 @@ Stripe.createCustomer = async ({ userId, token }) => {
   }
 
   const stripeCustomer = StripeCustomer.find({ userId }).fetch()[0];
-  if (stripeCustomer) {
-    throw new Meteor.Error(400, 'Already verified');
+  // if (stripeCustomer) {
+  //   throw new Meteor.Error(400, 'Already verified');
+  // }
+  let customer;
+  if (!stripeCustomer) {
+    customer = await stripe.customers.create({
+      description: userId,
+      source: token.id,
+      email: user.emails[0].address,
+    });
+  } else {
+    await stripe.customers.update(stripeCustomer.id, {
+      source: token.id,
+    });
+    customer = await stripe.customers.retrieve(stripeCustomer.id);
   }
-  const customer = await stripe.customers.create({
-    description: userId,
-    source: token.id,
-    email: user.emails[0].address,
-  });
 
   debug('Stripe customer', customer);
   const card = {
@@ -78,16 +86,21 @@ Stripe.createCustomer = async ({ userId, token }) => {
   const userCard = UserCards.find({ userId }).fetch()[0];
 
   if (!(userCard && userCard.cards.map(c => c.id).includes(token.card.id))) {
+    let cards = [];
+    if (userCard && userCard.cards) {
+      userCard.cards.forEach(card => {
+        cards.push({ ...card, active: false });
+      });
+    }
+    cards.push(card);
     UserCards.update(
       {
         userId,
       },
       {
-        $push: {
-          cards: card,
-        },
         $set: {
           updatedAt: new Date(),
+          cards,
         },
       },
       {
@@ -96,10 +109,19 @@ Stripe.createCustomer = async ({ userId, token }) => {
     );
   }
 
-  StripeCustomer.insert({
-    userId,
-    ...customer,
-  });
+  StripeCustomer.insert(
+    {
+      userId,
+    },
+    {
+      $set: {
+        ...customer,
+      },
+    },
+    {
+      upsert: true,
+    }
+  );
 
   Meteor.users.update(
     {

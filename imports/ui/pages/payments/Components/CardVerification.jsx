@@ -15,6 +15,12 @@ class CardForm extends React.Component {
       loading: true,
     });
     this.props.stripe.createToken({ name: this.props.user.name, email: this.props.user.email }).then(token => {
+      if (!(token && token.token)) {
+        this.setState({
+          loading: false,
+        });
+        return notifications.error('Verification Failed');
+      }
       Meteor.call('captureStripeCustomer', { token: token.token }, (err, data) => {
         this.setState({
           loading: false,

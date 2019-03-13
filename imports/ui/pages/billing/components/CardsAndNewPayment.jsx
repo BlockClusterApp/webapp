@@ -219,13 +219,29 @@ class CardsAndNewPayment extends Component {
               {!!(this.props.rzSubscription && this.props.rzSubscription.bc_status === 'active') && (
                 <p>Bill will be generated on 1st of every month and sent via email. The invoice would have to be cleared before 10th of the month to prevent deletion of nodes.</p>
               )}
-              <p className="small">To change the card associated with your account kindly raise a support ticket.</p>
             </div>
           </div>
           <div className="col-md-7">
-            <div className="padding-30 sm-padding-5">
-              <div key={`card_col_${index}`}>
-                <Card last4={card.last4} name={card.name} network={card.network} key={`card_${index}`} />
+            <div className="row">
+              <div className="col-md-12">
+                <div className="padding-30 sm-padding-5">
+                  <div key={`card_col_${index}`}>
+                    <Card last4={card.last4} name={card.name} network={card.network} key={`card_${index}`} />
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-12 text-center">
+                <LaddaButton
+                  loading={this.state.loading}
+                  data-size={S}
+                  data-style={SLIDE_UP}
+                  data-spinner-size={30}
+                  data-spinner-lines={12}
+                  className="btn btn-success btn-cons m-t-10 p-t-5 p-b-5"
+                  onClick={this.verifyCard}
+                >
+                  &nbsp;&nbsp;Change Payment method
+                </LaddaButton>
               </div>
             </div>
           </div>
@@ -343,7 +359,7 @@ class CardsAndNewPayment extends Component {
                       data-style={SLIDE_UP}
                       data-spinner-size={30}
                       data-spinner-lines={12}
-                      className="btn btn-success  btn-cons m-t-10 full-width"
+                      className="btn btn-success  btn-cons m-t-10 p-t-5 p-b-5"
                       onClick={this.verifyCard}
                     >
                       &nbsp;&nbsp;Verify
