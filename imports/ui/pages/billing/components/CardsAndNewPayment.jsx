@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import UserCards from '../../../../collections/payments/user-cards';
 import RZSubscription from '../../../../collections/razorpay/subscription';
 import Invoice from '../../../../collections/payments/invoice';
@@ -13,6 +14,7 @@ import { withRouter } from 'react-router-dom';
 const html2pdf = require('html2pdf.js');
 
 import './CardsAndNewPayment.scss';
+import notifications from '../../../../modules/notifications';
 
 const CARDS_IN_ROW = 3;
 
@@ -82,21 +84,65 @@ class CardsAndNewPayment extends Component {
   };
 
   downloadInvoice = () => {
+    this.setState({
+      downloading: true,
+    });
     Meteor.call('generateInvoiceHTML', this.props.invoice._id, (err, res) => {
+      this.setState({
+        downloading: false,
+      });
       if (err) {
         console.log(err);
         RavenLogger.log('Generate Invoice HTML err', {
           invoice: this.props.invoice._id,
           res,
         });
-        alert('Error downloading', err.reason);
+        notifications.err(err.reason);
         return false;
       }
-      html2pdf()
-        .from(res)
-        .set({ jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }, margin: [0.5, 1] })
-        .save();
+      let a = document.createElement('a');
+      a.href = 'data:application/octet-stream;base64,' + res;
+      a.download = `BlockclusterBill-${this.props.invoice._id}.pdf`;
+      a.click();
     });
+  };
+
+  makePayment = () => {
+    this.setState({
+      loading: true,
+    });
+    Meteor.call('initiateStripePayment', { invoiceId: this.props.invoice._id }, (err, res) => {
+      this.setState({
+        loading: false,
+      });
+      if (err) {
+        return notifications.error(err.reason);
+      }
+      const user = {
+        name: `${this.props.user.profile.firstName} ${this.props.user.profile.lastName}`,
+        email: this.props.user.emails[0].address,
+      };
+      localStorage.setItem('user', JSON.stringify(user));
+      const paymentRequestId = res.paymentRequestId;
+      const w = window.open(`${window.location.origin}/payments/collect/${paymentRequestId}`);
+      if (!w || w.closed || typeof w.closed == 'undefined') {
+        alert('Your browser has blocked the popup. Kindly enable the popup to continue to payment');
+      }
+    });
+  };
+
+  verifyCard = () => {
+    const user = {
+      name: `${this.props.user.profile.firstName} ${this.props.user.profile.lastName}`,
+      email: this.props.user.emails[0].address,
+    };
+
+    localStorage.setItem('user', JSON.stringify(user));
+
+    const w = window.open(`${window.location.origin}/payments/card-verification`);
+    if (!w || w.closed || typeof w.closed == 'undefined') {
+      alert('Your browser has blocked the popup. Kindly enable the popup to continue to payment');
+    }
   };
 
   render() {
@@ -117,26 +163,37 @@ class CardsAndNewPayment extends Component {
       (this.props.user && !this.props.user.demoUser && !this.props.user.offlineUser)
     ) {
       paymentDisplay = Number(this.props.invoice.totalAmount) !== 0 && (
-        <div className="alert alert-warning col-md-12">
+        <div className="alert alert-warning col-md-12 m-t-20">
           <div className="col-md-12 b-r b-dashed b-grey sm-b-b">
             <i className="fa fa-warning" /> Your bill for the month of&nbsp;
             {this.props.invoice.billingPeriodLabel}
             &nbsp; is pending. Kindly pay it before 10
             <sup>th</sup> of this month to avoid node deletions.
             <br />
-            <div className="row" style={{ padding: '15px' }}>
-              <button className="btn btn-primary" onClick={this.downloadInvoice}>
-                Download Invoice
-              </button>
+            <div className="row" style={{ padding: '15px', paddingBottom: '5px' }}>
+              <LaddaButton
+                loading={this.state.downloading}
+                data-size={S}
+                data-style={SLIDE_UP}
+                data-spinner-size={30}
+                data-spinner-lines={12}
+                className="btn btn-primary"
+                onClick={this.downloadInvoice}
+              >
+                &nbsp;&nbsp;Download Invoice
+              </LaddaButton>
               &nbsp;&nbsp;
-              <RazorPay
-                buttonText={`Pay $${this.props.invoice.totalAmount}`}
-                buttonIcon="fa-open"
+              <LaddaButton
                 loading={this.state.loading || (this.state.waitingForCards && cards.length === 0)}
-                preTriggerPaymentListener={this.invoicePrePaymentTrigger}
-                paymentHandler={this.invoicePaymentHandler}
-                modalDismissListener={this.modalDismissListener}
-              />
+                data-size={S}
+                data-style={SLIDE_UP}
+                data-spinner-size={30}
+                data-spinner-lines={12}
+                className="btn btn-success"
+                onClick={this.makePayment}
+              >
+                &nbsp;&nbsp;Pay ${this.props.invoice.totalAmount}
+              </LaddaButton>
             </div>
           </div>
         </div>
@@ -207,13 +264,29 @@ class CardsAndNewPayment extends Component {
               {!!(this.props.rzSubscription && this.props.rzSubscription.bc_status === 'active') && (
                 <p>Bill will be generated on 1st of every month and sent via email. The invoice would have to be cleared before 10th of the month to prevent deletion of nodes.</p>
               )}
-              <p className="small">To change the card associated with your account kindly raise a support ticket.</p>
             </div>
           </div>
           <div className="col-md-7">
-            <div className="padding-30 sm-padding-5">
-              <div key={`card_col_${index}`}>
-                <Card last4={card.last4} name={card.name} network={card.network} key={`card_${index}`} />
+            <div className="row">
+              <div className="col-md-12">
+                <div className="padding-30 sm-padding-5">
+                  <div key={`card_col_${index}`}>
+                    <Card last4={card.last4} name={card.name} network={card.network} key={`card_${index}`} />
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-12 text-center">
+                <LaddaButton
+                  loading={this.state.loading}
+                  data-size={S}
+                  data-style={SLIDE_UP}
+                  data-spinner-size={30}
+                  data-spinner-lines={12}
+                  className="btn btn-success btn-cons m-t-5 p-t-5 p-b-5"
+                  onClick={this.verifyCard}
+                >
+                  &nbsp;&nbsp;Change Payment method
+                </LaddaButton>
               </div>
             </div>
           </div>
@@ -276,13 +349,15 @@ class CardsAndNewPayment extends Component {
             </div>
             <div className="col-md-7">
               <div className="padding-30 sm-padding-5">
-                <h5>Select Card Type</h5>
+                <h5>Payment Method</h5>
                 <div className="row">
-                  <div className="col-lg-7 col-md-6">
-                    <p className="no-margin">Select a type of card you would like to add. </p>
-                    <p className="small hint-text">We support all major card brands for both credit and debit cards.</p>
+                  <div className="col-lg-12 col-md-12">
+                    <p className="no-margin">
+                      We will try to auto debit the bill from your payment method on 5th of every month. Incase the payment fails or if your card does not support auto debit, you
+                      would have to clear the invoice before 10<sup>th</sup> of that month to avoid account suspension and data deletion.
+                    </p>
                   </div>
-                  <div className="col-lg-5 col-md-6">
+                  {/* <div className="col-lg-5 col-md-6">
                     <div className="btn-group" data-toggle="buttons">
                       <label className="btn btn-default active" onClick={e => this.setState({ paymentMethod: 'credit' })}>
                         <input type="radio" name="options" id="option1" selected /> <span className="fs-16">Credit Card</span>
@@ -291,8 +366,8 @@ class CardsAndNewPayment extends Component {
                         <input type="radio" name="options" id="option2" /> <span className="fs-16">Debit Card</span>
                       </label>
                     </div>
-                  </div>
-                  <div className="col-md-12">
+                </div> */}
+                  {/* <div className="col-md-12">
                     {this.state.paymentMethod === 'debit' && (
                       <div className="card card-default bg-warning">
                         <div className="card-header  separator">
@@ -308,31 +383,27 @@ class CardsAndNewPayment extends Component {
                         </div>
                       </div>
                     )}
-
-                    {/*(this.state.paymentMethod === 'credit' || this.state.paymentMethod === undefined) && (
-                            <div className="card card-default bg-success">
-                                <div className="card-header  separator">
-                                  <div className="card-title">Note
-                                  </div>
-                                </div>
-                                <div className="card-block">
-                                  <h3>
-                                      <span className="semi-bold">Auto</span> Debit </h3>
-                                      <p className="hint-text">You will recieve invoice on 1st of every month and bill amount will be auto deducted from your card on 5th of every month.</p>
-                                </div>
-                              </div>
-
-                        )*/}
-                  </div>
+                  </div> */}
                   <div className="col-md-12">
-                    <RazorPay
+                    <LaddaButton
+                      loading={this.state.loading || (this.state.waitingForCards && cards.length === 0)}
+                      data-size={S}
+                      data-style={SLIDE_UP}
+                      data-spinner-size={30}
+                      data-spinner-lines={12}
+                      className="btn btn-success  btn-cons m-t-10 p-t-5 p-b-5"
+                      onClick={this.verifyCard}
+                    >
+                      &nbsp;&nbsp;Add Payment Method
+                    </LaddaButton>
+                    {/* <RazorPay
                       buttonText="Add Card"
                       buttonIcon="fa-plus"
                       loading={this.state.loading || (this.state.waitingForCards && cards.length === 0)}
                       preTriggerPaymentListener={this.preTriggerPaymentListener}
                       paymentHandler={this.rzPaymentHandler}
                       modalDismissListener={this.modalDismissListener}
-                    />
+                    /> */}
                   </div>
                 </div>
               </div>
