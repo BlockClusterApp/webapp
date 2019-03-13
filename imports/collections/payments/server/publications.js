@@ -1,4 +1,5 @@
 import PaymentRequests from '../payment-requests';
+import StripePayments from '../../stripe/payments';
 import { RZPayment, RZPlan, RZSubscription } from '../../razorpay';
 import UserCards from '../user-cards';
 import Invoice from '../invoice';
@@ -19,11 +20,35 @@ Meteor.publish('userPayments', function() {
     RZPayment.find({
       userId: Meteor.userId(),
     }),
+    StripePayments.find({
+      userId: Meteor.userId(),
+    }),
   ];
 });
 
 Meteor.publish('userCards', function() {
   return UserCards.find({ userId: Meteor.userId() });
+});
+
+Meteor.publish('paymentRequest.stripe', function({ id }) {
+  const req = PaymentRequests.find({
+    _id: id,
+  }).fetch()[0];
+  return [
+    PaymentRequests.find({
+      _id: id,
+    }),
+    Meteor.users.find(
+      { _id: req.userId },
+      {
+        fields: {
+          profile: 1,
+          emails: 1,
+          _id: 1,
+        },
+      }
+    ),
+  ];
 });
 
 Meteor.publish('pending-invoice', function(billingLabel) {

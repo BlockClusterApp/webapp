@@ -21,6 +21,9 @@ const SupportTicketCodes = {
 
 export default {
   getCurrencySymbol: function(currencyCode) {
+    if (!currencyCode) {
+      return null;
+    }
     currencyCode = currencyCode.toUpperCase();
     if (currencyCode === 'USD') {
       return '$';
@@ -28,6 +31,9 @@ export default {
     return 'INR';
   },
   firstLetterCapital: function(str) {
+    if (!str) {
+      return str;
+    }
     return str.charAt(0).toUpperCase() + str.slice(1);
   },
   convertStatusToTag: function(status, text) {

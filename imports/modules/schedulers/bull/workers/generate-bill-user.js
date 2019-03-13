@@ -2,6 +2,7 @@ import Billing from '../../../../api/billing';
 import Invoice from '../../../../api/billing/invoice';
 import moment from 'moment';
 import { RZPlan, RZSubscription } from '../../../../collections/razorpay';
+import StripeCustomer from '../../../../collections/stripe/customer';
 
 const debug = require('debug')('scheduler:bull:bill');
 
@@ -30,23 +31,38 @@ module.exports = bullSystem => {
       });
       debug('Bill', bill);
 
-      const rzSubscription = RZSubscription.find({
-        userId,
-        plan_id: plan.id,
-        bc_status: 'active',
-      }).fetch()[0];
+      const user = Meteor.users.find({ _id: userId }).fetch()[0];
+
+      if (!user) {
+        ElasticLogger.log('Invoice generate userId invalid', { userId });
+        return true;
+      }
+
+      let rzSubscription;
+      let stripeCustomer;
+      if (user.stripeCustomerId) {
+        stripeCustomer = StripeCustomer.find({ id: user.stripeCustomerId }).fetch()[0];
+      } else {
+        rzSubscription = RZSubscription.find({
+          userId,
+          plan_id: plan.id,
+          bc_status: 'active',
+        }).fetch()[0];
+      }
 
       const invoiceId = await Invoice.generateInvoice({
         userId,
         billingMonth: billingMonth.toDate(),
         bill,
         rzSubscription,
+        stripeCustomer,
       });
 
       ElasticLogger.log('Invoice generated', {
         billingMonth: billingMonth.format('MMM-YYYY'),
         userId,
         rzSubscription: rzSubscription && rzSubscription._id,
+        stripeCustomerId: user.stripCustomerId,
         invoiceId,
       });
 

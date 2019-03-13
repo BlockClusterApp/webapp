@@ -92,15 +92,9 @@ class BillingDashboard extends Component {
         });
         return false;
       }
-
-      // debugger;
-      // html2pdf().from(res).set({jsPDF:{ unit: 'in', format: 'a4', orientation: 'portrait' }, margin: [0, 0]}).save();
       this.setState({
         downloading: false,
       });
-      //       let pdfWindow = window.open("")
-      // pdfWindow.document.write("<iframe width='100%' height='100%' src='data:application/pdf;base64, " + encodeURI(res)+"'></iframe>")
-      // window.open("data:application/octet-stream;charset=utf-16le;base64,"+encodeURI(res));
       let a = document.createElement('a');
       a.href = 'data:application/octet-stream;base64,' + res;
       a.download = `BlockclusterBill-${this.state.bill.invoiceId}.pdf`;
@@ -173,17 +167,6 @@ class BillingDashboard extends Component {
                 </div>
                 <div className="card-block">
                   <div className="table-responsive">
-                    {/* <div className="row">
-                      <div className="col-md-5">
-                        <p style={{ lineHeight: '45px' }}>
-                          Free micro node usage:&nbsp;
-                          {this.state.bill && this.state.bill.totalFreeMicroHours
-                            ? `${this.state.bill.totalFreeMicroHours.hours}:${this.state.bill.totalFreeMicroHours.minutes % 60} `
-                            : '0'}
-                          / {1490 * 2} hrs
-                        </p>
-                      </div>
-                    </div> */}
                     <div className="row">
                       <div className="col-md-3">
                         <div className="form-group ">
