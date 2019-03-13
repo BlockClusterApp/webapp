@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
 import createHistory from 'history/createBrowserHistory';
 import { withTracker } from 'meteor/react-meteor-data';
 
@@ -13,6 +13,10 @@ class Header extends Component {
     sessionStorage.clear();
     this.props.history.push('/app/login');
     Meteor.logout();
+  };
+
+  openProfile = () => {
+    this.props.history.push('/app/profile');
   };
 
   render() {
@@ -49,29 +53,15 @@ class Header extends Component {
         </div>
         {/* <div className="d-flex align-items-center">
           <div className="dropdown">
-            <div
-              className="dropdown-toggle d-flex align-items-center"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
+            <div className="dropdown-toggle d-flex align-items-center" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <div className="pull-left p-r-10 fs-14 font-heading hidden-md-down">
-                <span className="semi-bold">
-                  {this.props.user ? this.props.user.profile.firstName : ""}
-                </span>&nbsp;
-                <span className="text-master">
-                  {this.props.user ? this.props.user.profile.lastName : ""}
-                </span>
+                <span className="semi-bold">{this.props.user ? this.props.user.profile.firstName : ''}</span>&nbsp;
+                <span className="text-master">{this.props.user ? this.props.user.profile.lastName : ''}</span>
               </div>
               <div className="pull-right hidden-md-down ">
                 <button className="profile-dropdown-toggle">
                   <span className="thumbnail-wrapper d32 circular inline">
-                    <img
-                      src="/assets/img/icons/profile.png"
-                      alt=""
-                      width="32"
-                      height="32"
-                    />
+                    <img src="/assets/img/icons/profile.png" alt="" width="32" height="32" />
                   </span>
                 </button>
               </div>
@@ -92,11 +82,11 @@ class Header extends Component {
           />
         </div> */}
         <div className="d-flex align-items-center">
-          <div className="pull-left p-r-10 fs-14 font-heading hidden-md-down">
+          <div className="pull-left p-r-10 fs-14 font-heading hidden-md-down" onClick={this.openProfile} style={{ cursor: 'pointer' }}>
             <span className="semi-bold">{this.props.user ? this.props.user.profile.firstName : ''}</span>{' '}
             <span className="text-master">{this.props.user ? this.props.user.profile.lastName : ''}</span>
           </div>
-          <div className="dropdown pull-right hidden-md-down">
+          <div className="dropdown pull-right hidden-md-down" onClick={this.openProfile} style={{ cursor: 'pointer' }}>
             <button className="profile-dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <span className="thumbnail-wrapper d32 circular inline">
                 <img src="/assets/img/icons/profile.png" alt="" width="32" height="32" />
@@ -120,4 +110,4 @@ export default withTracker(() => {
   return {
     user: Meteor.user(),
   };
-})(Header);
+})(withRouter(Header));
