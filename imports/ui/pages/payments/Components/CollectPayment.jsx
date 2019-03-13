@@ -49,20 +49,35 @@ class CollectForm extends React.Component {
     });
   };
 
-  componentDidMount = () => {
-    Meteor.subscribe(
+  loadSubscription = () => {
+    this.subscription = Meteor.subscribe(
       'paymentRequest.stripe',
       { id: this.props.match.params.id },
       {
         onReady: () => {
           const paymentRequest = PaymentRequests.findOne({ _id: this.props.match.params.id });
+
+          const user = Meteor.users.findOne({ _id: paymentRequest.userId });
           this.request = paymentRequest;
 
+          this.props.paymentRequestLoadListener && this.props.paymentRequestLoadListener({ paymentRequest, user });
+          if (![PaymentRequests.StatusMapping.Pending, PaymentRequests.StatusMapping.Failed].includes(paymentRequest.paymentStatus)) {
+            return this.setState({
+              disabled: true,
+            });
+          }
           this.loadPaymentRequest();
-          this.props.paymentRequestLoadListener && this.props.paymentRequestLoadListener(paymentRequest);
         },
       }
     );
+  };
+
+  componentDidMount = () => {
+    this.loadSubscription();
+  };
+
+  componentWillUnmount = () => {
+    this.subscription.stop();
   };
 
   handleSubmit = e => {
@@ -78,8 +93,6 @@ class CollectForm extends React.Component {
         return notifications.error('Verification Failed');
       }
       Meteor.call('initiateStripePaymentIntent', { paymentRequestId: this.request._id }, async (err, res) => {
-        console.log(err, res);
-
         if (err) {
           this.setState({
             loading: false,
@@ -103,11 +116,14 @@ class CollectForm extends React.Component {
             if (_err) {
               return notifications.error(_err.reason);
             }
+            this.loadSubscription();
             notifications.success('Payment Successful');
+            setTimeout(() => window.close(), 1000);
           });
+        } else {
+          this.loadSubscription();
+          notifications.error('Some error');
         }
-
-        console.log('Payment intent', paymentIntent, error);
       });
     });
   };
@@ -116,58 +132,63 @@ class CollectForm extends React.Component {
     return (
       <form onSubmit={this.handleSubmit}>
         <div className="row">
-          {this.state.paymentRequestEnabled && (
+          {this.state.paymentRequestEnabled && !this.state.disabled && (
             <div className="col-md-12">
               <div className="row">
                 <div className="col-md-12">
                   <span style={{ fontSize: '24px' }}>Quick Pay: </span>
                 </div>
-                <div className="col-md-4">{this.state.paymentRequestEnabled && <PaymentRequestButtonElement paymentRequest={this.paymentRequest} />}</div>
+                <div className="col-md-4">{this.state.paymentRequestEnabled && !this.state.disabled && <PaymentRequestButtonElement paymentRequest={this.paymentRequest} />}</div>
                 <div className="col-md-4" />
               </div>
             </div>
           )}
         </div>
-        <div className="row m-t-25">
-          <div className="col-md-12">
-            <span style={{ fontSize: '24px' }}>Pay via Card:</span>
+        {!this.state.disabled && (
+          <div className="row m-t-25">
+            <div className="col-md-12">
+              <span style={{ fontSize: '24px' }}>Pay via Card:</span>
+            </div>
           </div>
-        </div>
-        <div className="row m-t-20">
-          <div className="col-md-12">
-            <CardElement
-              ref={e => (this.cardElement = e)}
-              iconStyle="solid"
-              style={{
-                invalid: {
-                  iconColor: '#eb1c26',
-                  color: '#eb1c26',
-                },
-                base: {
-                  iconColor: 'rgb(0, 66, 134)',
-                  color: '#222',
-                  fontWeight: 500,
-                  fontFamily: 'Roboto, Open Sans, Segoe UI, sans-serif',
-                  fontSize: '24px',
-                  fontSmoothing: 'antialiased',
+        )}
+        {!this.state.disabled && (
+          <div className="row m-t-20">
+            <div className="col-md-12">
+              <CardElement
+                ref={e => (this.cardElement = e)}
+                iconStyle="solid"
+                style={{
+                  invalid: {
+                    iconColor: '#eb1c26',
+                    color: '#eb1c26',
+                  },
+                  base: {
+                    iconColor: 'rgb(0, 66, 134)',
+                    color: '#222',
+                    fontWeight: 500,
+                    fontFamily: 'Roboto, Open Sans, Segoe UI, sans-serif',
+                    fontSize: '24px',
+                    fontSmoothing: 'antialiased',
 
-                  ':-webkit-autofill': {
-                    color: '#fce883',
+                    ':-webkit-autofill': {
+                      color: '#fce883',
+                    },
+                    '::placeholder': {
+                      color: '#87BBFD',
+                    },
                   },
-                  '::placeholder': {
-                    color: '#87BBFD',
-                  },
-                },
-              }}
-            />
+                }}
+              />
+            </div>
           </div>
-        </div>
+        )}
         <div className="row m-t-20">
           <div className="col-md-4" />
           <div className="col-md-4">
             <LaddaButton
               loading={this.state.loading}
               data-size={S}
+              disabled={this.state.disabled}
               data-style={SLIDE_UP}
               data-spinner-size={30}
               data-spinner-lines={12}
@@ -175,7 +196,7 @@ class CollectForm extends React.Component {
               style={{ fontSize: '20px', padding: '15px' }}
               type="submit"
             >
-              Pay
+              {this.state.disabled ? 'Paid. You may close this page' : 'Pay'}
             </LaddaButton>
           </div>
           <div className="col-md-4" />

@@ -31,10 +31,24 @@ Meteor.publish('userCards', function() {
 });
 
 Meteor.publish('paymentRequest.stripe', function({ id }) {
-  return PaymentRequests.find({
+  const req = PaymentRequests.find({
     _id: id,
-    userId: Meteor.userId(),
-  });
+  }).fetch()[0];
+  return [
+    PaymentRequests.find({
+      _id: id,
+    }),
+    Meteor.users.find(
+      { _id: req.userId },
+      {
+        fields: {
+          profile: 1,
+          emails: 1,
+          _id: 1,
+        },
+      }
+    ),
+  ];
 });
 
 Meteor.publish('pending-invoice', function(billingLabel) {

@@ -10,6 +10,7 @@ class CardForm extends React.Component {
   }
 
   handleSubmit = e => {
+    const user = Meteor.user();
     e.preventDefault();
     this.setState({
       loading: true,

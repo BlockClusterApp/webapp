@@ -23,6 +23,8 @@ import User from '../server-functions/user';
 import Communication from '../communication/slack';
 import Stripe from '../payments/payment-gateways/stripe';
 import StripeCustomer from '../../collections/stripe/customer';
+import Payments from '../../api/payments/';
+import Config from '../../modules/config/server';
 
 const InvoiceObj = {};
 
@@ -255,10 +257,20 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
       }
     );
   } else {
+    const request = await Payments.createRequest({
+      paymentGateway: 'stripe',
+      reason: `Platform usage charges for ${invoiceObject.billingPeriodLabel}`,
+      amount: totalAmount,
+      userId: invoiceObject.userId,
+    });
     Invoice.update(
       { _id: invoiceId },
       {
         $set: {
+          paymentLink: {
+            id: `stripe_${request.paymentRequestId}`,
+            link: `${Config.apiHost.replace(':3000/', ':3000')}/payments/collect/${request.paymentRequestId}`,
+          },
           totalAmountINR: invoiceObject.totalAmountINR,
           totalAmount,
           creditClaims,

@@ -264,7 +264,7 @@ Payments.initiateStripePayment = async ({ invoiceId }) => {
 };
 
 Payments.initiateStripePaymentIntent = async ({ paymentRequestId }) => {
-  const request = PaymentRequests.find({ _id: paymentRequestId, userId: Meteor.userId() }).fetch()[0];
+  const request = PaymentRequests.find({ _id: paymentRequestId }).fetch()[0];
 
   if (!request) {
     throw new Meteor.Error(403, 'Invalid request');
@@ -276,11 +276,13 @@ Payments.initiateStripePaymentIntent = async ({ paymentRequestId }) => {
 Payments.recordStripePayment = async ({ intent }) => {
   const newIntent = { ...intent };
   delete newIntent;
+  const source = await Stripe.fetchSource(intent.source);
   StripePaymentIntent.update(
     { id: intent.id },
     {
       $set: {
         ...newIntent,
+        source,
       },
     }
   );
@@ -304,7 +306,7 @@ Payments.recordStripePayment = async ({ intent }) => {
         status: PaymentRequests.StatusMapping.Approved,
       },
       $push: {
-        pgResponse: intent,
+        pgResponse: { ...intent, source },
       },
     }
   );
@@ -321,6 +323,7 @@ Meteor.methods({
   captureStripeCustomer: Payments.createStripeCustomer,
   initiateStripePayment: Payments.initiateStripePayment,
   initiateStripePaymentIntent: Payments.initiateStripePaymentIntent,
+  recordStripePayment: Payments.recordStripePayment,
 });
 
 export default Payments;

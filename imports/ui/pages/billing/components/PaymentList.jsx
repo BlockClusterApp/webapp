@@ -145,7 +145,20 @@ class PaymentDashboard extends Component {
       }
     });
 
-    const card = this.state.payment && this.state.payment.payment.pgResponse && this.state.payment.payment.pgResponse.find(r => !!r.card);
+    const card = (() => {
+      const pgResponse = this.state.payment && this.state.payment.payment.pgResponse;
+      if (!pgResponse) {
+        return null;
+      }
+      const a = pgResponse && pgResponse.find(r => !!r.card);
+      if (a) {
+        return a;
+      }
+      if (pgResponse && pgResponse[0] && typeof pgResponse[0].source === 'object') {
+        return pgResponse[0].source;
+      }
+      return null;
+    })();
     const stripePayment =
       this.state.payment && this.state.payment.payment.paymentGateway === 'stripe' && this.state.payment.payment.pgResponse && this.state.payment.payment.pgResponse[0];
 
@@ -194,8 +207,8 @@ class PaymentDashboard extends Component {
                             <tr>
                               <td>Card</td>
                               <td>
-                                {card && card.card.network}&nbsp;{card && card.card.last4}
-                                {stripePayment && `${stripePayment.source.brand} ${stripePayment.source.last4} - ${stripePayment.source.country}`}
+                                {card && (card.card.network || card.card.brand)}&nbsp;{card && card.card.last4}
+                                {stripePayment && stripePayment.source.brand && `${stripePayment.source.brand} ${stripePayment.source.last4} - ${stripePayment.source.country}`}
                               </td>
                             </tr>
                           )}

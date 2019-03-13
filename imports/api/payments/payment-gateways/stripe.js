@@ -187,6 +187,7 @@ Stripe.createPaymentIntent = async ({ paymentRequest }) => {
     amount: paymentRequest.amount * 100,
     currency: 'usd',
     payment_method_types: ['card'],
+    receipt_email: 'jibin.mathews@blockcluster.io',
   });
 
   PaymentIntent.insert({
@@ -196,6 +197,13 @@ Stripe.createPaymentIntent = async ({ paymentRequest }) => {
   });
 
   return response;
+};
+
+Stripe.fetchSource = async sourceId => {
+  if (!sourceId) {
+    return {};
+  }
+  return stripe.sources.retrieve(sourceId);
 };
 
 export default Stripe;

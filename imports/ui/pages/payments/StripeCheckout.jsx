@@ -1,6 +1,7 @@
 import React from 'react';
 import { StripeProvider, Elements } from 'react-stripe-elements';
 import { withRouter, Switch, BrowserRouter, Route } from 'react-router-dom';
+import moment from 'moment';
 
 import './Components/Styles.scss';
 
@@ -20,7 +21,8 @@ class Checkout extends React.Component {
 
   paymentRequestLoaded = request => {
     this.setState({
-      request,
+      request: request.paymentRequest,
+      user: { name: `${request.user.profile.firstName} ${request.user.profile.lastName}`, email: request.user.emails[0].address },
     });
   };
 
@@ -34,9 +36,7 @@ class Checkout extends React.Component {
                 <center>
                   <img src="https://app.blockcluster.io/assets/img/logo/blockcluster.png" />
                   <span style={{ fontSize: '18px', fontWeight: 'bold', verticalAlign: 'middle' }}>
-                    {' '}
-                    &nbsp; | &nbsp;{this.props.location.pathname.includes('/card-verification') ? 'Card Verification' : ''}
-                    {this.props.location.pathname.includes('/collect') ? 'Payment' : ''}
+                    {this.props.location.pathname.includes('/card-verification') ? ' | Card Verification' : ''}
                   </span>
                 </center>
 
@@ -56,6 +56,16 @@ class Checkout extends React.Component {
                           <b>Amount: </b>
                         </div>
                         <div className="col-md-8">$ {this.state.request.amount}</div>
+                        {[2, 3].includes(this.state.request.paymentStatus) && (
+                          <div className="col-md-12">
+                            <div className="row">
+                              <div className="col-md-4">
+                                <b>Paid At:</b>
+                              </div>
+                              <div className="col-md-8">{moment(this.state.request.updatedAt).format('DD-MMM-YYYY kk:mm:ss')}</div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

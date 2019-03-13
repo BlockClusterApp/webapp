@@ -121,7 +121,10 @@ class CardsAndNewPayment extends Component {
       };
       localStorage.setItem('user', JSON.stringify(user));
       const paymentRequestId = res.paymentRequestId;
-      window.open(`${window.location.origin}/payments/collect/${paymentRequestId}`);
+      const w = window.open(`${window.location.origin}/payments/collect/${paymentRequestId}`);
+      if (!w || w.closed || typeof w.closed == 'undefined') {
+        alert('Your browser has blocked the popup. Kindly enable the popup to continue to payment');
+      }
     });
   };
 
@@ -133,7 +136,10 @@ class CardsAndNewPayment extends Component {
 
     localStorage.setItem('user', JSON.stringify(user));
 
-    window.open(`${window.location.origin}/payments/card-verification`);
+    const w = window.open(`${window.location.origin}/payments/card-verification`);
+    if (!w || w.closed || typeof w.closed == 'undefined') {
+      alert('Your browser has blocked the popup. Kindly enable the popup to continue to payment');
+    }
   };
 
   render() {
