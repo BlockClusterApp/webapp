@@ -148,7 +148,7 @@ class Navbar extends Component {
                   )}
                   {features.Invoice && (
                     <li>
-                      <Link to="/app/payments/credits">Credits</Link>
+                      <Link to="/app/credits">Credits</Link>
                       <span className="icon-thumbnail">
                         <i className="fa fa-money" />
                       </span>
