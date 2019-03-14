@@ -6,6 +6,8 @@ import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import VoucherList from './components/VoucherList';
 import CampaignList from './components/CampaignList';
 
+import './components/style.scss';
+
 class VoucherDashboard extends Component {
   constructor(props) {
     super(props);
@@ -20,9 +22,13 @@ class VoucherDashboard extends Component {
     this.props.history.push('/app/admin/voucher/create');
   };
 
+  componentWillReceiveProps() {
+    this.setState({});
+  }
+
   render() {
     return (
-      <div className="content">
+      <div className="content VoucherDashboard">
         <style>{'\
                 .footer{\
                   display:none;\
@@ -32,7 +38,7 @@ class VoucherDashboard extends Component {
           <nav className="secondary-sidebar light" style={{ backgroundColor: 'rgb(251,251,251)' }}>
             <p className="menu-title fs-16">Voucher types</p>
             <ul className="main-menu">
-              <li className="active">
+              <li className={this.props.history.location.pathname === '/app/admin/vouchers/campaign' ? 'active-menu-item' : ''}>
                 <Link to={'/app/admin/vouchers/campaign'}>
                   <span className="title">
                     <i className="fa fa-file" />
@@ -40,7 +46,7 @@ class VoucherDashboard extends Component {
                   </span>
                 </Link>
               </li>
-              <li>
+              <li className={this.props.history.location.pathname === '/app/admin/vouchers/credits' ? 'active-menu-item' : ''}>
                 <Link to={'/app/admin/vouchers/credits'}>
                   <span className="title">
                     <i className="fa fa-cube" />
@@ -48,7 +54,7 @@ class VoucherDashboard extends Component {
                   </span>
                 </Link>
               </li>
-              <li>
+              <li className={this.props.history.location.pathname === '/app/admin/vouchers/networks' ? 'active-menu-item' : ''}>
                 <Link to={'/app/admin/vouchers/networks'}>
                   <span className="title">
                     <i className="fa fa-cube" />
@@ -56,7 +62,7 @@ class VoucherDashboard extends Component {
                   </span>
                 </Link>
               </li>
-              <li>
+              <li className={this.props.history.location.pathname === '/app/admin/vouchers/hyperion' ? 'active-menu-item' : ''}>
                 <Link to={'/app/admin/vouchers/hyperion'}>
                   <span className="title">
                     <i className="fa fa-cube" />
@@ -64,7 +70,7 @@ class VoucherDashboard extends Component {
                   </span>
                 </Link>
               </li>
-              <li>
+              <li className={this.props.history.location.pathname === '/app/admin/vouchers/paymeter' ? 'active-menu-item' : ''}>
                 <Link to={'/app/admin/vouchers/paymeter'}>
                   <span className="title">
                     <i className="fa fa-cube" />
