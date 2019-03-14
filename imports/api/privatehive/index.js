@@ -683,11 +683,48 @@ Meteor.methods({
       workerNodeIP: Config.workerNodeIP(),
     });
   },
+  privatehiveCreateChannel: async (peerId, ordererId, channelName) => {
+    let peerDetails = PrivatehivePeers.findOne({
+      instanceId: peerId,
+    });
+
+    let ordererDetails = PrivatehiveOrderers.findOne({
+      instanceId: ordererId,
+    });
+
+    async function createChannel() {
+      return new Promise((resolve, reject) => {
+        HTTP.call(
+          'POST',
+          `http://${peerDetails.workerNodeIP}:${peerDetails.apiNodePort}/createChannel`,
+          {
+            data: {
+              name: channelName,
+              ordererURL: ordererDetails.workerNodeIP + ':' + ordererDetails.ordererNodePort,
+              ordererOrgName: ordererDetails.instanceId,
+            },
+          },
+          (error, response) => {
+            if (error) {
+              reject();
+            } else {
+              resolve(response.data);
+            }
+          }
+        );
+      });
+    }
+
+    await createChannel();
+
+    console.log('Success');
+  },
 });
 
 //Note: At application layer we have to maintain a unique id for every network. Otherwise when inviting to channel we don't
 //know which network to send invite to.
 //When creating network or joining network, just create a peer node. Orderers will be added dynamically.
 
-//Meteor.call('createPrivatehiveNetwork');
-//Meteor.call('createPrivatehiveOrderer', 'ifhdwxve');
+//Meteor.call('createPrivatehivePeer');
+//Meteor.call('createPrivatehiveOrderer', 'vflnxhtq');
+//Meteor.call('privatehiveCreateChannel', 'vflnxhtq', 'zvlrumum', 'testingchannel');
