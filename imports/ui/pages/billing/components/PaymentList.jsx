@@ -7,7 +7,6 @@ import StripePayments from '../../../../collections/stripe/payments';
 import PaymentRequests from '../../../../collections/payments/payment-requests';
 import moment from 'moment';
 import Helpers from '../../../../modules/helpers';
-import CardVerification from '../components/CardVerification.jsx';
 
 import '../Dashboard.scss';
 
@@ -155,7 +154,9 @@ class PaymentDashboard extends Component {
         return a;
       }
       if (pgResponse && pgResponse[0] && typeof pgResponse[0].source === 'object') {
-        return pgResponse[0].source;
+        if (pgResponse[0].source.card) {
+          return pgResponse[0].source;
+        }
       }
       return null;
     })();
