@@ -305,8 +305,8 @@ class VoucherCreate extends Component {
 
     return (
       <div className="VoucherCreate">
-        <div className="m-t-20 container-fluid container-fixed-lg bg-white">
-          <div className="row">
+        <div className="m-t-20 container-fluid container-fixed-lg">
+          <div className="row  bg-white p-l-25 p-r-25">
             <div className="card-block">
               <div className="row">
                 <div className="col-md-12">
