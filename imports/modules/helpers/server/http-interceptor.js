@@ -20,7 +20,7 @@ function getLocationConfigURL(url) {
     kubeURLs = locationConfigs.map(lc => lc.masterAPIHost);
   }
   for (let locationConfig of locationConfigs) {
-    if (url.indexOf(locationConfig.masterAPIHost) === 0) {
+    if (url.toLowerCase().indexOf(locationConfig.masterAPIHost.toLowerCase()) === 0) {
       return locationConfig;
     }
   }
@@ -39,7 +39,7 @@ HTTP.setInterceptorFunction(requestOptions => {
   */
   let isKubeURL = false;
   for (const url of kubeURLs) {
-    if (requestOptions.url.includes(url)) {
+    if (requestOptions.url.toLowerCase().includes(url.toLowerCase())) {
       isKubeURL = true;
       break;
     }
@@ -64,6 +64,8 @@ HTTP.setInterceptorFunction(requestOptions => {
     requestOptions.headers = requestOptions.headers || {};
     requestOptions.headers.Authorization = `Bearer ${locationConfig.auth.token} `;
   }
+
+  const headers = requestOptions.headers;
 
   return undefined;
 });
