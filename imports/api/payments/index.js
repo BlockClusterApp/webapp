@@ -250,7 +250,7 @@ Payments.initiateStripePayment = async ({ invoiceId }) => {
 
   const request = await Payments.createRequest({
     paymentGateway: 'stripe',
-    reason: `Platform charges for ${invoice.billingPeriodLabel}`,
+    reason: `Platform usage charges for ${invoice.billingPeriodLabel}`,
     amount: invoice.totalAmount,
     userId: Meteor.userId(),
     metadata: {

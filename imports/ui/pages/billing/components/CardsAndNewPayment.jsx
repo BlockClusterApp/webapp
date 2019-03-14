@@ -4,9 +4,8 @@ import UserCards from '../../../../collections/payments/user-cards';
 import RZSubscription from '../../../../collections/razorpay/subscription';
 import Invoice from '../../../../collections/payments/invoice';
 import Card from './Card.jsx';
-import PromotionalCredits from './PromotionalCredits';
+import StripeCheckoutModal from '../../payments/StripeCheckoutModal';
 import moment from 'moment';
-import RazorPay from '../../../components/Razorpay/Razorpay';
 
 import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
@@ -118,31 +117,34 @@ class CardsAndNewPayment extends Component {
       if (err) {
         return notifications.error(err.reason);
       }
-      const user = {
-        name: `${this.props.user.profile.firstName} ${this.props.user.profile.lastName}`,
-        email: this.props.user.emails[0].address,
-      };
-      localStorage.setItem('user', JSON.stringify(user));
+
       const paymentRequestId = res.paymentRequestId;
-      const w = window.open(`${window.location.origin}/payments/collect/${paymentRequestId}`);
-      if (!w || w.closed || typeof w.closed == 'undefined') {
-        alert('Your browser has blocked the popup. Kindly enable the popup to continue to payment');
-      }
+      this.setState(
+        {
+          modalType: 'collect',
+          paymentRequestId,
+        },
+        () => {
+          this.openStripeCheckoutModal();
+        }
+      );
     });
   };
 
   verifyCard = () => {
-    const user = {
-      name: `${this.props.user.profile.firstName} ${this.props.user.profile.lastName}`,
-      email: this.props.user.emails[0].address,
-    };
+    this.setState(
+      {
+        modalType: 'card-verification',
+      },
+      () => {
+        this.openStripeCheckoutModal();
+      }
+    );
+  };
 
-    localStorage.setItem('user', JSON.stringify(user));
-
-    const w = window.open(`${window.location.origin}/payments/card-verification`);
-    if (!w || w.closed || typeof w.closed == 'undefined') {
-      alert('Your browser has blocked the popup. Kindly enable the popup to continue to payment');
-    }
+  stripeCheckoutToggleFunction = (openFn, closeFn) => {
+    this.openStripeCheckoutModal = openFn;
+    this.closeStripeCheckoutModal = closeFn;
   };
 
   render() {
@@ -217,14 +219,17 @@ class CardsAndNewPayment extends Component {
                 Download Invoice
               </button>
               &nbsp;&nbsp;
-              <RazorPay
-                buttonText={`Pay $${this.props.invoice.totalAmount}`}
-                buttonIcon="fa-open"
+              <LaddaButton
                 loading={this.state.loading || (this.state.waitingForCards && cards.length === 0)}
-                preTriggerPaymentListener={this.invoicePrePaymentTrigger}
-                paymentHandler={this.invoicePaymentHandler}
-                modalDismissListener={this.modalDismissListener}
-              />
+                data-size={S}
+                data-style={SLIDE_UP}
+                data-spinner-size={30}
+                data-spinner-lines={12}
+                className="btn btn-success"
+                onClick={this.makePayment}
+              >
+                &nbsp;&nbsp;Pay ${this.props.invoice.totalAmount}
+              </LaddaButton>
             </div>
             <div className="bottom" style={{ fontSize: '8px' }}>
               If you think this is an error, kindly raise a support ticket.
@@ -371,33 +376,6 @@ class CardsAndNewPayment extends Component {
                       </div>
                     </div>
                   </div>
-                  {/* <div className="col-lg-5 col-md-6">
-                    <div className="btn-group" data-toggle="buttons">
-                      <label className="btn btn-default active" onClick={e => this.setState({ paymentMethod: 'credit' })}>
-                        <input type="radio" name="options" id="option1" selected /> <span className="fs-16">Credit Card</span>
-                      </label>
-                      <label className="btn btn-default" onClick={e => this.setState({ paymentMethod: 'debit' })}>
-                        <input type="radio" name="options" id="option2" /> <span className="fs-16">Debit Card</span>
-                      </label>
-                    </div>
-                </div> */}
-                  {/* <div className="col-md-12">
-                    {this.state.paymentMethod === 'debit' && (
-                      <div className="card card-default bg-warning">
-                        <div className="card-header  separator">
-                          <div className="card-title">Note</div>
-                        </div>
-                        <div className="card-block">
-                          <h3>
-                            Invoice <span className="semi-bold">Clearance</span>{' '}
-                          </h3>
-                          <p className="hint-text">
-                            Bill will be generated on 1st of every month which would have to be cleared before 10th of the month. The invoice will be sent to you via email.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div> */}
                   <div className="col-md-12">
                     <LaddaButton
                       loading={this.state.loading || (this.state.waitingForCards && cards.length === 0)}
@@ -411,14 +389,6 @@ class CardsAndNewPayment extends Component {
                       &nbsp;&nbsp;
                       <i class="fa fa-credit-card" aria-hidden="true" /> Add Credit/Debit Card
                     </LaddaButton>
-                    {/* <RazorPay
-                      buttonText="Add Card"
-                      buttonIcon="fa-plus"
-                      loading={this.state.loading || (this.state.waitingForCards && cards.length === 0)}
-                      preTriggerPaymentListener={this.preTriggerPaymentListener}
-                      paymentHandler={this.rzPaymentHandler}
-                      modalDismissListener={this.modalDismissListener}
-                    /> */}
                   </div>
                 </div>
               </div>
@@ -436,6 +406,7 @@ class CardsAndNewPayment extends Component {
 
     return (
       <div>
+        <StripeCheckoutModal toggleFunctions={this.stripeCheckoutToggleFunction} type={this.state.modalType} paymentRequestId={this.state.paymentRequestId} />
         <div className="row padding-25 saved-cards">
           <div className="card card-transparent">{displayView}</div>
         </div>

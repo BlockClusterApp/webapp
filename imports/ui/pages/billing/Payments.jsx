@@ -30,11 +30,11 @@ class PaymentsContainer extends Component {
                   </Link>
                 </li>
 
-                <li className="nav-item">
+                {/* <li className="nav-item">
                   <Link to="/app/payments/credits" className={`${this.props.location.pathname === '/app/payments/credits' ? 'active' : ''}`}>
                     Credits Redemption History
                   </Link>
-                </li>
+                </li> */}
               </ul>
               <div className="tab-content">
                 <div className="tab-pane active" id="history">

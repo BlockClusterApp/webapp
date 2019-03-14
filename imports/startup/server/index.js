@@ -72,7 +72,7 @@ JsonRoutes.Middleware.use(
     }
 
     // Disable logging Kube pings
-    if (logObject && logObject.url === '/ping') {
+    if (logObject && ['/ping', '/api/config-client'].includes(logObject.url)) {
       return undefined;
     }
     if (process.env.NODE_ENV === 'development') {

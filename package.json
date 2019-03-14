@@ -24,6 +24,7 @@
     "bcrypt": "1.0.3",
     "bignumber.js": "^7.2.1",
     "bluebird": "^3.5.1",
+    "body-parser": "^1.18.3",
     "btoa": "1.2.1",
     "buffer": "^5.1.0",
     "bull": "^3.4.4",
