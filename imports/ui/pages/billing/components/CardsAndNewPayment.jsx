@@ -6,7 +6,6 @@ import Invoice from '../../../../collections/payments/invoice';
 import Card from './Card.jsx';
 import StripeCheckoutModal from '../../payments/StripeCheckoutModal';
 import moment from 'moment';
-import RazorPay from '../../../components/Razorpay/Razorpay';
 
 import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
@@ -220,14 +219,17 @@ class CardsAndNewPayment extends Component {
                 Download Invoice
               </button>
               &nbsp;&nbsp;
-              <RazorPay
-                buttonText={`Pay $${this.props.invoice.totalAmount}`}
-                buttonIcon="fa-open"
+              <LaddaButton
                 loading={this.state.loading || (this.state.waitingForCards && cards.length === 0)}
-                preTriggerPaymentListener={this.invoicePrePaymentTrigger}
-                paymentHandler={this.invoicePaymentHandler}
-                modalDismissListener={this.modalDismissListener}
-              />
+                data-size={S}
+                data-style={SLIDE_UP}
+                data-spinner-size={30}
+                data-spinner-lines={12}
+                className="btn btn-success"
+                onClick={this.makePayment}
+              >
+                &nbsp;&nbsp;Pay ${this.props.invoice.totalAmount}
+              </LaddaButton>
             </div>
             <div className="bottom" style={{ fontSize: '8px' }}>
               If you think this is an error, kindly raise a support ticket.

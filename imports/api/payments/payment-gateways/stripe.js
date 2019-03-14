@@ -6,6 +6,8 @@ import PaymentIntent from '../../../collections/stripe/intents';
 import RazorPaySubscription from '../../../collections/razorpay/subscription';
 import Bluebird from 'bluebird';
 import RazorPay from './razorpay';
+import bodyParser from 'body-parser';
+import Bull from '../../../modules/schedulers/bull/index';
 
 const stripToken = process.env.STRIPE_TOKEN || 'sk_test_DhE17qCC4NfY1A1SUygZWMkh';
 const webhookSecret = (() => {
@@ -222,17 +224,23 @@ Stripe.fetchSource = async sourceId => {
 };
 
 Stripe.processWebHook = async function(req, res) {
-  const sig = req.headers['stripe-signature'];
+  // const sig = req.headers['stripe-signature'];
   try {
-    stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-    bullSystem.addJob('stripe-webhook', req.body);
+    // stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    // console.log(event);
+    Bull.addJob('stripe-webhook', req.body, {
+      delay: 30 * 1000,
+    });
+    console.log('Stripe webhook added');
   } catch (err) {
+    console.log(err);
     res.statusCode = 400;
     res.end();
   }
   res.end('OK');
 };
 
+// JsonRoutes.Middleware.use('/api/payments/stripe/webhook', bodyParser.raw({ type: '*/*' }));
 JsonRoutes.add('post', '/api/payments/stripe/webhook', Stripe.processWebHook);
 
 export default Stripe;

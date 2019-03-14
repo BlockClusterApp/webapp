@@ -133,7 +133,7 @@ class CollectForm extends React.Component {
   render() {
     return (
       <form onSubmit={this.handleSubmit} className="stripe">
-        <div className="row">
+        {/* <div className="row">
           {this.state.paymentRequestEnabled && !this.state.disabled && (
             <div className="col-md-12">
               <div className="row">
@@ -146,7 +146,7 @@ class CollectForm extends React.Component {
               </div>
             </div>
           )}
-        </div>
+        </div> */}
         <div className="row m-t-25">
           <div className="col-md-12">
             <span style={{ fontSize: '20px' }}>Pay via Card:</span>

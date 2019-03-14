@@ -7,7 +7,6 @@ import StripePayments from '../../../../collections/stripe/payments';
 import PaymentRequests from '../../../../collections/payments/payment-requests';
 import moment from 'moment';
 import Helpers from '../../../../modules/helpers';
-import CardVerification from '../components/CardVerification.jsx';
 
 import '../Dashboard.scss';
 
@@ -155,7 +154,14 @@ class PaymentDashboard extends Component {
         return a;
       }
       if (pgResponse && pgResponse[0] && typeof pgResponse[0].source === 'object') {
-        return pgResponse[0].source;
+        if (pgResponse[0].source.card) {
+          return pgResponse[0].source;
+        }
+      }
+      if (pgResponse && pgResponse[0] && pgResponse[0].charge && typeof pgResponse[0].charge.source === 'object') {
+        if (pgResponse[0].charge.source.card) {
+          return pgResponse[0].charge.source;
+        }
       }
       return null;
     })();
@@ -246,8 +252,8 @@ class PaymentDashboard extends Component {
                             <tr>
                               <td>Receipt</td>
                               <td>
-                                <a href={stripePayment.receipt_url} target="_blank">
-                                  {stripePayment.receipt_url}
+                                <a href={stripePayment.receipt_url || (stripePayment.charge && stripePayment.charge.receipt_url)} target="_blank">
+                                  {stripePayment.receipt_url || (stripePayment.charge && stripePayment.charge.receipt_url)}
                                 </a>
                               </td>
                             </tr>
