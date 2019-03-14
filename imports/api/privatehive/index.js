@@ -3,6 +3,7 @@ import Config from '../../modules/config/server';
 import { PrivatehiveNetworks } from '../../collections/privatehiveNetworks/privatehiveNetworks.js';
 import { PrivatehiveOrderers } from '../../collections/privatehiveOrderers/privatehiveOrderers.js';
 import { PrivatehivePeers } from '../../collections/privatehivePeers/privatehivePeers.js';
+import { worker } from 'cluster';
 
 String.prototype.toPascalCase = function() {
   return this.charAt(0).toUpperCase() + this.slice(1);
@@ -13,6 +14,7 @@ let privateHive = {};
 privateHive.createPeer = async () => {
   const locationCode = 'us-west-2';
   const instanceId = helpers.instanceIDGenerate();
+  const workerNodeIP = Config.workerNodeIP();
 
   async function createPersistentvolumeclaims() {
     return new Promise((resolve, reject) => {
@@ -100,7 +102,8 @@ privateHive.createPeer = async () => {
                 reject();
               } else {
                 const peerAPINodePort = response.data.spec.ports[0].nodePort;
-                resolve(peerAPINodePort);
+                const peerGRPCAPINodePort = response.data.spec.ports[1].nodePort;
+                resolve({ peerAPINodePort, peerGRPCAPINodePort });
               }
             });
           }
@@ -109,7 +112,7 @@ privateHive.createPeer = async () => {
     });
   }
 
-  async function createDeployment() {
+  async function createDeployment(anchorCommPort) {
     return new Promise((resolve, reject) => {
       HTTP.call(
         'POST',
@@ -184,6 +187,14 @@ privateHive.createPeer = async () => {
                           name: 'CORE_CHAINCODE_KEEPALIVE',
                           value: `10`,
                         },
+                        {
+                          name: 'WORKER_NODE_IP',
+                          value: workerNodeIP,
+                        },
+                        {
+                          name: 'ANCHOR_PORT',
+                          value: anchorCommPort.toString(),
+                        },
                       ],
                       volumeMounts: [
                         {
@@ -235,6 +246,10 @@ privateHive.createPeer = async () => {
                         {
                           name: 'CORE_PEER_ADDRESS',
                           value: `localhost:7051`,
+                        },
+                        {
+                          name: 'CORE_PEER_GOSSIP_EXTERNALENDPOINT',
+                          value: workerNodeIP + ':' + anchorCommPort,
                         },
                       ],
                       volumeMounts: [
@@ -317,13 +332,13 @@ privateHive.createPeer = async () => {
   }
 
   await createPersistentvolumeclaims();
-  let peerAPINodePort = await createService();
-  await createDeployment();
+  let peerDetails = await createService();
+  await createDeployment(peerDetails.peerGRPCAPINodePort);
 
-  return { instanceId, peerAPINodePort };
+  return { instanceId, peerDetails };
 };
 
-privateHive.createOrderer = async (peerOrgName, peerAdminCert, peerCACert) => {
+privateHive.createOrderer = async (peerOrgName, peerAdminCert, peerCACert, peerWorkerNodeIP, anchorCommPort) => {
   const locationCode = 'us-west-2';
   const workerNodeIP = Config.workerNodeIP();
   const instanceId = helpers.instanceIDGenerate();
@@ -477,6 +492,16 @@ privateHive.createOrderer = async (peerOrgName, peerAdminCert, peerCACert) => {
                           value: peerCACert,
                         },
                         {
+                          name: 'PEER_WORKERNODE_IP',
+                          //same like above
+                          value: peerWorkerNodeIP,
+                        },
+                        {
+                          name: 'PEER_ANCHOR_PORT',
+                          //same like above
+                          value: anchorCommPort.toString(),
+                        },
+                        {
                           name: 'GOPATH',
                           value: '/opt/gopath',
                         },
@@ -620,21 +645,15 @@ privateHive.createOrderer = async (peerOrgName, peerAdminCert, peerCACert) => {
 };
 
 Meteor.methods({
-  createPrivatehiveNetwork: async () => {
+  createPrivatehivePeer: async () => {
     //here we will deploy one peer only based on the given location
-    let network_id = PrivatehiveNetworks.insert({
-      userId: Meteor.userId(),
-      createdOn: Date.now(),
-      locationCode: 'us-west-2',
-    });
-
     let peerDetails = await privateHive.createPeer();
 
     PrivatehivePeers.insert({
       instanceId: peerDetails.instanceId,
       workerNodeIP: Config.workerNodeIP(),
-      apiNodePort: peerDetails.peerAPINodePort,
-      network_id: network_id,
+      apiNodePort: peerDetails.peerDetails.peerAPINodePort,
+      anchorCommPort: peerDetails.peerDetails.peerGRPCAPINodePort,
     });
   },
   createPrivatehiveOrderer: async peerId => {
@@ -656,12 +675,11 @@ Meteor.methods({
 
     let certs = await getCerts();
 
-    let ordererDetails = await privateHive.createOrderer(peerId, certs.adminCert, certs.caCert);
+    let ordererDetails = await privateHive.createOrderer(peerId, certs.adminCert, certs.caCert, peerDetails.workerNodeIP, peerDetails.anchorCommPort);
 
     PrivatehiveOrderers.insert({
       instanceId: ordererDetails.instanceId,
       ordererNodePort: ordererDetails.ordererNodePort,
-      network_id: peerDetails.network_id,
       workerNodeIP: Config.workerNodeIP(),
     });
   },
@@ -672,4 +690,4 @@ Meteor.methods({
 //When creating network or joining network, just create a peer node. Orderers will be added dynamically.
 
 //Meteor.call('createPrivatehiveNetwork');
-//Meteor.call('createPrivatehiveOrderer', 'zuzvtivi');
+//Meteor.call('createPrivatehiveOrderer', 'ifhdwxve');
