@@ -158,6 +158,11 @@ class PaymentDashboard extends Component {
           return pgResponse[0].source;
         }
       }
+      if (pgResponse && pgResponse[0] && pgResponse[0].charge && typeof pgResponse[0].charge.source === 'object') {
+        if (pgResponse[0].charge.source.card) {
+          return pgResponse[0].charge.source;
+        }
+      }
       return null;
     })();
     const stripePayment =
@@ -247,8 +252,8 @@ class PaymentDashboard extends Component {
                             <tr>
                               <td>Receipt</td>
                               <td>
-                                <a href={stripePayment.receipt_url} target="_blank">
-                                  {stripePayment.receipt_url}
+                                <a href={stripePayment.receipt_url || (stripePayment.charge && stripePayment.charge.receipt_url)} target="_blank">
+                                  {stripePayment.receipt_url || (stripePayment.charge && stripePayment.charge.receipt_url)}
                                 </a>
                               </td>
                             </tr>

@@ -9,6 +9,15 @@ if (Meteor.isServer) {
   Payment._ensureIndex({
     userId: 1,
   });
+
+  Payment._ensureIndex(
+    {
+      id: 1,
+    },
+    {
+      unique: true,
+    }
+  );
 }
 
 export default Payment;
