@@ -6,8 +6,25 @@ import PaymentIntent from '../../../collections/stripe/intents';
 import RazorPaySubscription from '../../../collections/razorpay/subscription';
 import Bluebird from 'bluebird';
 import RazorPay from './razorpay';
+import bodyParser from 'body-parser';
+import Bull from '../../../modules/schedulers/bull/index';
 
 const stripToken = process.env.STRIPE_TOKEN || 'sk_test_DhE17qCC4NfY1A1SUygZWMkh';
+const webhookSecret = (() => {
+  if (process.env.NODE_ENV === 'development') {
+    return 'whsec_swM3UT7OKabQLts7D0iRWk7odkI2cwnt';
+  }
+  if (process.env.NODE_ENV === 'dev') {
+    return 'whsec_ojlYUMgiI5qubxuSgrjACnMdXPdUkX79';
+  }
+  if (process.env.NODE_ENV === 'test') {
+    return 'whsec_9hHshZ682mVoFxMnUOmGFWYMMUYuolfx';
+  }
+  if (process.env.NODE_ENV === 'production') {
+    return 'whsec_AkcTEzsOXTySpuUF3cYM3UlF1wXsZCxj';
+  }
+  return 'whsec_swM3UT7OKabQLts7D0iRWk7odkI2cwnt';
+})();
 const stripe = require('stripe')(stripToken);
 const debug = require('debug')('api:stripe');
 
@@ -205,5 +222,25 @@ Stripe.fetchSource = async sourceId => {
   }
   return stripe.sources.retrieve(sourceId);
 };
+
+Stripe.processWebHook = async function(req, res) {
+  // const sig = req.headers['stripe-signature'];
+  try {
+    // stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    // console.log(event);
+    Bull.addJob('stripe-webhook', req.body, {
+      delay: 30 * 1000,
+    });
+    console.log('Stripe webhook added');
+  } catch (err) {
+    console.log(err);
+    res.statusCode = 400;
+    res.end();
+  }
+  res.end('OK');
+};
+
+// JsonRoutes.Middleware.use('/api/payments/stripe/webhook', bodyParser.raw({ type: '*/*' }));
+JsonRoutes.add('post', '/api/payments/stripe/webhook', Stripe.processWebHook);
 
 export default Stripe;

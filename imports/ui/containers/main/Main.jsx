@@ -59,6 +59,8 @@ import ClientMetrics from '../../pages/admin/clients/ClientMetrics';
 import ConfigList from '../../pages/admin/network-config/List';
 import PlatformAPIKeys from '../../pages/platformApis/PlatformAPIKeys.jsx';
 import AdminPricingDashboard from '../../pages/admin/pricing/Dashboard.jsx';
+import CreditRedemption from '../../pages/billing/components/RedemptionHistory';
+import RedemptionHistory from '../../pages/billing/components/RedemptionHistory';
 
 export default withRouter(
   class Main extends Component {
@@ -143,6 +145,7 @@ export default withRouter(
               <Route exact path="/app/platform-apis" render={props => this.showFailedBillingWarning(PlatformAPIKeys, props)} />
 
               {features.Payments && <Route path="/app/payments" component={Payments} />}
+              {features.Payments && <Route exact path="/app/credits" component={RedemptionHistory} />}
               {features.Invoice && <Route exact path="/app/billing" component={BillingDashboard} />}
               {features.SupportTicket && <Route exact path="/app/support" component={SupportContainer} />}
               {features.SupportTicket && <Route exact path="/app/support/:id" component={SupportDetails} />}

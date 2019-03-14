@@ -1624,7 +1624,7 @@
         position: 'top-right',
         type: 'info',
         showClose: true,
-        timeout: 4000,
+        timeout: 15000,
         onShown: function() {},
         onClosed: function() {}
     }
