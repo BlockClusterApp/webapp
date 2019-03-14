@@ -7,17 +7,22 @@ import ConfirmationButton from '../../../../components/Buttons/ConfirmationButto
 export default class PaymentModal extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-    };
+    this.state = {};
     this.isModalShowing = false;
   }
 
-  componentWillUpdate(newProps, newState) {
-    if(newProps.showModal) {
-      $("#modalSlideLeft_paymentInfo").modal("show");
-      this.isModalShowing = true;
-    }
-  }
+  open = () => {
+    $('#modalSlideLeft_paymentInfo').modal('show');
+    this.isModalShowing = true;
+  };
+  close = () => {
+    $('#modalSlideLeft_paymentInfo').modal('hide');
+    this.isModalShowing = true;
+  };
+
+  componentDidMount = () => {
+    this.props.modalEventFns && this.props.modalEventFns(this.open, this.close);
+  };
 
   refundAmount = () => {
     this.setState({
