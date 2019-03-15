@@ -132,12 +132,28 @@ User.removeCard = async ({ cardId, userId }) => {
   return true;
 };
 
+User.changeTheme = async ({ theme }) => {
+  Meteor.users.update(
+    {
+      _id: Meteor.userId(),
+    },
+    {
+      $set: {
+        'profile.theme': theme,
+      },
+    }
+  );
+
+  return true;
+};
+
 Meteor.methods({
   fetchAdminDashboardDetails: User.fetchAdminDashboardDetails,
   updateUserAdmin: User.updateAdmin,
   adminVerifyEmail: User.verifyEmail,
   adminDeleteCard: User.removeCard,
   adminGenerateBill: User.generateBill,
+  changeTheme: User.changeTheme,
 });
 
 export default User;

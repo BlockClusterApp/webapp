@@ -1,0 +1,279 @@
+select {
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  height: 35px;
+  background: transparent;
+  border-radius: 2px;
+}
+
+.card-header a:not(.btn) {
+  opacity: 0.8 !important;
+  transition: opacity 0.1s linear 0s, background-color 0.1s linear 0s, opacity 0.2s linear 0s !important;
+}
+
+.card-header a:hover {
+  opacity: 1 !important;
+}
+
+.form-links {
+  font-size: 0.9em;
+}
+
+.form-links a,
+.form-links a:visited {
+  color: #37b0e9;
+}
+
+.theme-mixed {
+  .header {
+    background: #000 !important;
+    color: #fff;
+
+    li {
+      a {
+        color: #fff;
+      }
+    }
+  }
+
+  .page-sidebar {
+    background: #222;
+    color: #fff;
+
+    .sidebar-menu .menu-items > li > a {
+      color: #eee;
+    }
+    .sidebar-menu .menu-items {
+      li {
+        padding-top: 8px;
+      }
+      li.selected {
+        background: #555;
+      }
+      li:hover > a {
+        color: #fff;
+      }
+      .icon-thumbnail {
+        color: #eee;
+      }
+
+      ul.sub-menu {
+        background: #222;
+      }
+
+      li {
+        a {
+          color: #fff;
+        }
+      }
+
+      li:hover .icon-thumbnail {
+        color: #fff;
+      }
+    }
+  }
+}
+
+.theme-dark {
+  .header {
+    background: #000 !important;
+    color: #fff;
+
+    li {
+      a {
+        color: #fff;
+      }
+    }
+  }
+
+  .content {
+    background: #555;
+  }
+
+  .bg-white {
+    background: #222;
+    color: #eee;
+  }
+
+  .form-group-default {
+    background: #555;
+    color: #fff;
+
+    .form-control {
+      color: #fff;
+    }
+  }
+
+  li.theme-option a {
+    color: #fff;
+  }
+  li.theme-option {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  li.theme-option.selected {
+    background: rgba(255, 255, 255, 0.8);
+  }
+  .bg-master-light {
+    background: #555;
+  }
+  .viewNetwork .light-black-bg {
+    background: #000;
+  }
+
+  .paymeter .wallet-box-bg {
+    background: #222;
+  }
+
+  .modal-body pre {
+    background: rgba(0, 0, 0, 0.7) !important;
+  }
+
+  .viewNetwork .clickable p {
+    color: #fff !important;
+  }
+
+  .row {
+    color: #fff;
+  }
+
+  .footer .container-fluid {
+    background: #555;
+    color: #fff;
+
+    a,
+    a:visited,
+    a:focus {
+      color: #fff;
+    }
+  }
+
+  * {
+    color: #fff;
+  }
+
+  .nav-item a {
+    color: #fff;
+  }
+
+  .table tbody tr td {
+    background: #222;
+  }
+  .table thead tr th {
+    color: #fff;
+  }
+
+  .secondary-sidebar.light {
+    background: #333 !important;
+  }
+
+  .form-control {
+    background: #555;
+  }
+
+  .social-card {
+    background: #222;
+  }
+  .social-card .card-header,
+  .social-card .card-footer {
+    background: #111;
+    border-bottom: 1px solid #333;
+  }
+  .conversation .message {
+    background: #333;
+  }
+
+  .card {
+    background: #222;
+  }
+
+  .split-view .split-list {
+    background: #444;
+  }
+
+  .btn-default,
+  .btn-default:focus {
+    background-color: #222;
+    border: none;
+  }
+
+  .react-fine-uploader-gallery-nodrop-container,
+  .react-fine-uploader-gallery-dropzone {
+    background: #222;
+  }
+
+  .nav-tabs-linetriangle > li > a.active:hover,
+  .nav-tabs-linetriangle > li > a.active:focus,
+  .nav-tabs-linetriangle > li > a.active:active {
+    color: #fff;
+    text-decoration: underline;
+  }
+
+  .text-primary {
+    color: #bcacff;
+  }
+
+  .modal.fade.slide-right .modal-dialog .modal-body {
+    background: #333;
+  }
+
+  .modal.fade.slide-right .modal-dialog .modal-content {
+    border: solid 1px #000;
+  }
+  .page-link {
+    background: #000;
+  }
+
+  textarea {
+    background: #111;
+  }
+
+  .btn-default.hover,
+  .btn-default:hover {
+    background: #111;
+  }
+
+  .btn-info,
+  .btn-info:focus {
+    background: #1560ab;
+  }
+
+  .nav-tabs-linetriangle ~ .tab-content {
+    background: #222;
+  }
+
+  .page-sidebar {
+    background: #222;
+    color: #fff;
+
+    .sidebar-menu .menu-items > li > a {
+      color: #eee;
+    }
+    .sidebar-menu .menu-items {
+      li {
+        padding-top: 8px;
+
+        ul.sub-menu {
+          background: #222;
+        }
+
+        li {
+          a {
+            color: #fff;
+          }
+        }
+      }
+      li.selected {
+        background: #555;
+      }
+      li:hover > a {
+        color: #fff;
+      }
+      .icon-thumbnail {
+        color: #eee;
+      }
+
+      li:hover .icon-thumbnail {
+        color: #fff;
+      }
+    }
+  }
+}

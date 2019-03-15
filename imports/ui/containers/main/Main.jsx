@@ -62,6 +62,8 @@ import AdminPricingDashboard from '../../pages/admin/pricing/Dashboard.jsx';
 import CreditRedemption from '../../pages/billing/components/RedemptionHistory';
 import RedemptionHistory from '../../pages/billing/components/RedemptionHistory';
 
+import '../app/App.scss';
+
 export default withRouter(
   class Main extends Component {
     constructor(props) {
@@ -113,9 +115,9 @@ export default withRouter(
       }
 
       return (
-        <div className={`${fullHeight}`}>
+        <div className={`${fullHeight}   ${window.theme} `}>
           <Navbar />
-          <div className="page-container">
+          <div className={`page-container`}>
             <Header />
             <div className={`page-content-wrapper ${fullHeight}`}>
               <Route exact path="/app/profile" component={Profile} />
