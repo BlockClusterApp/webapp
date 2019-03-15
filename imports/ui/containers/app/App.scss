@@ -165,8 +165,20 @@ select {
     background: #333 !important;
   }
 
+  .CodeMirror {
+    background: #000;
+  }
+  .cm-s-ttcn .cm-string {
+    color: #67ff67;
+  }
   .form-control {
     background: #555;
+  }
+  .nav-tabs-fillup ~ .tab-content {
+    background: #222;
+  }
+  .table.table-hover tbody tr:hover td {
+    background: #555 !important;
   }
 
   .social-card {
@@ -208,7 +220,10 @@ select {
   }
 
   .text-primary {
-    color: #bcacff;
+    color: #bcacff !important;
+  }
+  .text-info {
+    color: #8ec0f3 !important;
   }
 
   .modal.fade.slide-right .modal-dialog .modal-body {
