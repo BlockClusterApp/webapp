@@ -181,7 +181,7 @@ privateHive.createPeer = async () => {
                         },
                         {
                           name: 'CORE_PEER_MSPCONFIGPATH',
-                          value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/crypto-config/peer.${instanceId.toLowerCase()}.com/users/Admin@peer.${instanceId.toLowerCase()}.com/msp`,
+                          value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${instanceId.toLowerCase()}.com/users/Admin@peer.${instanceId.toLowerCase()}.com/msp`,
                         },
                         {
                           name: 'CORE_CHAINCODE_KEEPALIVE',
@@ -194,6 +194,10 @@ privateHive.createPeer = async () => {
                         {
                           name: 'ANCHOR_PORT',
                           value: anchorCommPort.toString(),
+                        },
+                        {
+                          name: 'CONFIGTXLATOR_URL',
+                          value: 'http://127.0.0.1:7059',
                         },
                       ],
                       volumeMounts: [
@@ -473,8 +477,12 @@ privateHive.createOrderer = async (peerOrgName, peerAdminCert, peerCACert, peerW
                           value: '/etc/hyperledger/privatehive',
                         },
                         {
-                          name: 'ORDERER_ADDRESS',
-                          value: workerNodeIP + ':' + ordererNodePort,
+                          name: 'WORKER_NODE_IP',
+                          value: workerNodeIP,
+                        },
+                        {
+                          name: 'ORDERER_PORT',
+                          value: ordererNodePort.toString(),
                         },
                         {
                           name: 'PEER_ORG_NAME',
@@ -716,8 +724,81 @@ Meteor.methods({
     }
 
     await createChannel();
+  },
+  privatehiveJoinChannel: async (peerId, ordererId, newPeerId, channelName) => {
+    let peerDetails = PrivatehivePeers.findOne({
+      instanceId: peerId,
+    });
 
-    console.log('Success');
+    let newPeerDetails = PrivatehivePeers.findOne({
+      instanceId: newPeerId,
+    });
+
+    let ordererDetails = PrivatehiveOrderers.findOne({
+      instanceId: ordererId,
+    });
+
+    async function getDetails() {
+      return new Promise((resolve, reject) => {
+        HTTP.call('GET', `http://${newPeerDetails.workerNodeIP}:${newPeerDetails.apiNodePort}/orgDetails`, {}, (error, response) => {
+          if (error) {
+            reject();
+          } else {
+            resolve(response.data);
+          }
+        });
+      });
+    }
+
+    async function addNewOrgToChannel(details) {
+      return new Promise((resolve, reject) => {
+        HTTP.call(
+          'POST',
+          `http://${peerDetails.workerNodeIP}:${peerDetails.apiNodePort}/addOrgToChannel`,
+          {
+            data: {
+              name: channelName,
+              newOrgName: newPeerDetails.instanceId,
+              newOrgConf: details.message,
+            },
+          },
+          (error, response) => {
+            if (error) {
+              reject();
+            } else {
+              resolve(response.data);
+            }
+          }
+        );
+      });
+    }
+
+    async function joinChannel() {
+      return new Promise((resolve, reject) => {
+        HTTP.call(
+          'POST',
+          `http://${newPeerDetails.workerNodeIP}:${newPeerDetails.apiNodePort}/joinChannel`,
+          {
+            data: {
+              name: channelName,
+              ordererURL: ordererDetails.workerNodeIP + ':' + ordererDetails.ordererNodePort,
+              ordererOrgName: ordererDetails.instanceId,
+            },
+          },
+          (error, response) => {
+            if (error) {
+              reject();
+            } else {
+              resolve(response.data);
+            }
+          }
+        );
+      });
+    }
+
+    //let details = await getDetails();
+    //await addNewOrgToChannel(details);
+    await joinChannel();
   },
 });
 
@@ -726,5 +807,6 @@ Meteor.methods({
 //When creating network or joining network, just create a peer node. Orderers will be added dynamically.
 
 //Meteor.call('createPrivatehivePeer');
-//Meteor.call('createPrivatehiveOrderer', 'vflnxhtq');
-//Meteor.call('privatehiveCreateChannel', 'vflnxhtq', 'zvlrumum', 'testingchannel');
+//Meteor.call('createPrivatehiveOrderer', 'muoygwak');
+//Meteor.call('privatehiveCreateChannel', 'muoygwak', 'moyxsmta', 'channelsample');
+Meteor.call('privatehiveJoinChannel', 'muoygwak', 'moyxsmta', 'djtveuib', 'channelsample');
