@@ -796,8 +796,8 @@ Meteor.methods({
       });
     }
 
-    //let details = await getDetails();
-    //await addNewOrgToChannel(details);
+    let details = await getDetails();
+    await addNewOrgToChannel(details);
     await joinChannel();
   },
 });
