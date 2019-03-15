@@ -1,6 +1,5 @@
 import helpers from '../../modules/helpers';
 import Config from '../../modules/config/server';
-import { PrivatehiveNetworks } from '../../collections/privatehiveNetworks/privatehiveNetworks.js';
 import { PrivatehiveOrderers } from '../../collections/privatehiveOrderers/privatehiveOrderers.js';
 import { PrivatehivePeers } from '../../collections/privatehivePeers/privatehivePeers.js';
 import { worker } from 'cluster';
