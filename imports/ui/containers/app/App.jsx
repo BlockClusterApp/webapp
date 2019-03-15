@@ -52,8 +52,12 @@ class App extends Component {
   };
 
   requireNotLoggedIn = RouteComponent => {
+    let redirectTo = '/app/networks';
+    if (window.isAdminWindow) {
+      redirectTo = '/app/admin/users';
+    }
     return () => {
-      return this.props.userId ? <Redirect to="/app/networks" /> : <RouteComponent />;
+      return this.props.userId ? <Redirect to={redirectTo} /> : <RouteComponent />;
     };
   };
 
@@ -63,6 +67,11 @@ class App extends Component {
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
 
     document.body.appendChild(script);
+
+    if (window.location.origin.includes('admin.blockcluster.io')) {
+      window.isAdminWindow = true;
+      this.setState({});
+    }
   }
 
   render() {

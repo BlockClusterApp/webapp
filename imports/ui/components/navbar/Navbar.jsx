@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
 import { withTracker } from 'meteor/react-meteor-data';
 import Config from '../../../modules/config/client';
+
+import './Navbar.scss';
 
 class Navbar extends Component {
   constructor(props) {
@@ -30,14 +32,90 @@ class Navbar extends Component {
     $.Pages.init();
   }
 
+  componentWillReceiveProps() {
+    this.setState({});
+  }
+
   render() {
     const { remoteConfig } = this.state;
     let { features } = remoteConfig;
     if (!features) {
       features = {};
     }
+
+    const adminItems = [];
+    adminItems.push(
+      <li className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/users' && 'selected'}>
+        <Link to="/app/admin/users">Users</Link>
+        <span className="icon-thumbnail">
+          <i className="fa fa-users" />
+        </span>
+      </li>
+    );
+    features.Invoice &&
+      adminItems.push(
+        <li className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/invoices' && 'selected'}>
+          <Link to="/app/admin/invoices">Invoices</Link>
+          <span className="icon-thumbnail">
+            <i className="fa fa-list-alt" />
+          </span>
+        </li>
+      );
+
+    adminItems.push(
+      <li className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/networks' && 'selected'}>
+        <Link to="/app/admin/networks">Networks</Link>
+        <span className="icon-thumbnail">
+          <i className="fa fa-desktop" />
+        </span>
+      </li>
+    );
+    adminItems.push(
+      <li className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/network-configs' && 'selected'}>
+        <Link to="/app/admin/network-configs">Network Configs</Link>
+        <span className="icon-thumbnail">
+          <i className="fa fa-sliders" />
+        </span>
+      </li>
+    );
+    features.Vouchers &&
+      adminItems.push(
+        <li className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/vouchers' && 'selected'}>
+          <Link to="/app/admin/vouchers">Vouchers</Link>
+          <span className="icon-thumbnail">
+            <i className="fa fa-tags" />
+          </span>
+        </li>
+      );
+    features.SupportTicket &&
+      adminItems.push(
+        <li className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/support' && 'selected'}>
+          <Link to="/app/admin/support">Support</Link>
+          <span className="icon-thumbnail">
+            <i className="fa fa-ticket" />
+          </span>
+        </li>
+      );
+    (features.Paymeter || features.Hyperion) &&
+      adminItems.push(
+        <li className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/pricing' && 'selected'}>
+          <Link to="/app/admin/pricing">Pricing</Link>
+          <span className="icon-thumbnail">
+            <i className="fa fa-money" />
+          </span>
+        </li>
+      );
+    features.ClientDashboard &&
+      adminItems.push(
+        <li className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/clients' && 'selected'}>
+          <Link to="/app/admin/clients">Clients</Link>
+          <span className="icon-thumbnail">
+            <i className="fa fa-users" />
+          </span>
+        </li>
+      );
     return (
-      <nav className="page-sidebar" data-pages="sidebar">
+      <nav className={`page-sidebar ${window.isAdminWindow ? 'admin' : ''}`} data-pages="sidebar">
         <div className="sidebar-overlay-slide from-top" id="appMenu">
           <div className="row">
             <div className="col-xs-6 no-padding">
@@ -77,16 +155,18 @@ class Navbar extends Component {
         </div>
         <div className="sidebar-menu">
           <ul className="menu-items">
-            <li className="m-t-30 ">
-              <Link to={'/app/networks'} className="detailed">
-                <span className="title">Networks</span>
-                <span className="details">Dynamo Management</span>
-              </Link>
-              <span className="icon-thumbnail">
-                <i className="fa fa-list" />
-              </span>
-            </li>
-            {features.Paymeter && (
+            {!window.isAdminWindow && (
+              <li className="m-t-30 ">
+                <Link to={'/app/networks'} className="detailed">
+                  <span className="title">Networks</span>
+                  <span className="details">Dynamo Management</span>
+                </Link>
+                <span className="icon-thumbnail">
+                  <i className="fa fa-list" />
+                </span>
+              </li>
+            )}
+            {features.Paymeter && !window.isAdminWindow && (
               <li>
                 <Link to={'/app/paymeter'} className="detailed">
                   <span className="title">Wallets</span>
@@ -95,17 +175,9 @@ class Navbar extends Component {
                 <span className="icon-thumbnail">
                   <i className="fa fa-cube" />
                 </span>
-                {/* <ul className="sub-menu">
-                  <li>
-                    <Link to="/app/paymeter/notifications">Notifications</Link>
-                    <span className="icon-thumbnail">
-                      <i className="fa fa-bell" />
-                    </span>
-                  </li>
-                </ul> */}
               </li>
             )}
-            {features.Hyperion && (
+            {features.Hyperion && !window.isAdminWindow && (
               <li>
                 <Link to={'/app/hyperion'} className="detailed">
                   <span className="title">Files</span>
@@ -116,19 +188,23 @@ class Navbar extends Component {
                 </span>
               </li>
             )}
-            <li>
-              <Link to={'/app/notifications'}>Notifications</Link>
-              <span className="icon-thumbnail">
-                <i className="fa fa-bell" />
-              </span>
-            </li>
-            <li>
-              <Link to={'/app/platform-apis'}>API Keys</Link>
-              <span className="icon-thumbnail">
-                <i className="fa fa-key" />
-              </span>
-            </li>
-            {(features.Payments || features.SupportTicket || features.Invoice) && (
+            {!window.isAdminWindow && (
+              <li>
+                <Link to={'/app/notifications'}>Notifications</Link>
+                <span className="icon-thumbnail">
+                  <i className="fa fa-bell" />
+                </span>
+              </li>
+            )}
+            {!window.isAdminWindow && (
+              <li>
+                <Link to={'/app/platform-apis'}>API Keys</Link>
+                <span className="icon-thumbnail">
+                  <i className="fa fa-key" />
+                </span>
+              </li>
+            )}
+            {(features.Payments || features.SupportTicket || features.Invoice) && !window.isAdminWindow && (
               <li>
                 <a href="javascript:;">
                   <span className="title">Billing</span>
@@ -173,7 +249,7 @@ class Navbar extends Component {
                 </ul>
               </li>
             )}
-            {features.Admin && this.props.user && this.props.user.admin >= 1 && (
+            {features.Admin && this.props.user && this.props.user.admin >= 1 && !window.isAdminWindow && (
               <li>
                 <a href="javascript:;">
                   <span className="title">Admin</span>
@@ -182,68 +258,10 @@ class Navbar extends Component {
                 <span className="icon-thumbnail">
                   <i className="fa fa-user-md" />
                 </span>
-                <ul className="sub-menu">
-                  <li>
-                    <Link to="/app/admin/users">Users</Link>
-                    <span className="icon-thumbnail">
-                      <i className="fa fa-users" />
-                    </span>
-                  </li>
-                  {features.Invoice && (
-                    <li>
-                      <Link to="/app/admin/invoices">Invoices</Link>
-                      <span className="icon-thumbnail">
-                        <i className="fa fa-list-alt" />
-                      </span>
-                    </li>
-                  )}
-                  <li>
-                    <Link to="/app/admin/networks">Networks</Link>
-                    <span className="icon-thumbnail">
-                      <i className="fa fa-desktop" />
-                    </span>
-                  </li>
-                  <li>
-                    <Link to="/app/admin/network-configs">Network Configs</Link>
-                    <span className="icon-thumbnail">
-                      <i className="fa fa-sliders" />
-                    </span>
-                  </li>
-                  {features.Vouchers && (
-                    <li>
-                      <Link to="/app/admin/vouchers">Vouchers</Link>
-                      <span className="icon-thumbnail">
-                        <i className="fa fa-tags" />
-                      </span>
-                    </li>
-                  )}
-                  {features.SupportTicket && (
-                    <li>
-                      <Link to="/app/admin/support">Support</Link>
-                      <span className="icon-thumbnail">
-                        <i className="fa fa-ticket" />
-                      </span>
-                    </li>
-                  )}
-                  {(features.Paymeter || features.Hyperion) && (
-                    <li>
-                      <Link to="/app/admin/pricing">Pricing</Link>
-                      <span className="icon-thumbnail">
-                        <i className="fa fa-money" />
-                      </span>
-                    </li>
-                  )}
-                  {features.ClientDashboard && (
-                    <li>
-                      <Link to="/app/admin/clients">Clients</Link>
-                      <span className="icon-thumbnail">
-                        <i className="fa fa-users" />
-                      </span>
-                    </li>
-                  )}
-                </ul>
+                <ul className="sub-menu">{adminItems}</ul>
               </li>
             )}
+            {features.Admin && this.props.user && this.props.user.admin >= 1 && window.isAdminWindow && adminItems}
 
             {/* (this.props.kuberREST_IP[0] !== undefined) &&
 	                    	<li className="">
@@ -267,4 +285,4 @@ export default withTracker(() => {
     kuberREST_IP: Config.kubeRestApiHost,
     user: Meteor.user(),
   };
-})(Navbar);
+})(withRouter(Navbar));

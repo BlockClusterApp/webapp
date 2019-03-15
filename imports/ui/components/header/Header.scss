@@ -11,6 +11,10 @@ body.menu-behind .header .brand {
 body.fixed-header .header {
   background: white;
 }
+body.fixed-header .header.admin {
+  background: #000;
+  color: #fff;
+}
 
 .dropdown-toggle:after {
   position: inherit;
