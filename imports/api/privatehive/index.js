@@ -809,4 +809,4 @@ Meteor.methods({
 //Meteor.call('createPrivatehivePeer');
 //Meteor.call('createPrivatehiveOrderer', 'muoygwak');
 //Meteor.call('privatehiveCreateChannel', 'muoygwak', 'moyxsmta', 'channelsample');
-Meteor.call('privatehiveJoinChannel', 'muoygwak', 'moyxsmta', 'djtveuib', 'channelsample');
+//Meteor.call('privatehiveJoinChannel', 'muoygwak', 'moyxsmta', 'djtveuib', 'channelsample');
