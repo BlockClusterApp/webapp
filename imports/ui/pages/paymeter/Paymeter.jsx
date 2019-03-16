@@ -23,12 +23,26 @@ class PaymeterComponent extends Component {
       firstBox: 'create-wallet',
       secondBox: '',
       secondBoxData: '',
+      transferEthFeeChecked: true,
+      transferErc20FeeChecked: true,
     };
   }
 
   componentWillUnmount() {
     this.props.subscriptions.forEach(s => {
       s.stop();
+    });
+  }
+
+  handleTransferEthFee() {
+    this.setState({
+      transferEthFeeChecked: !this.state.transferEthFeeChecked,
+    });
+  }
+
+  handleTransferErc20Fee() {
+    this.setState({
+      transferErc20FeeChecked: !this.state.transferErc20FeeChecked,
     });
   }
 
@@ -75,6 +89,7 @@ class PaymeterComponent extends Component {
       this.refs.transferEthAmount.value,
       {
         password: this.refs.transferEthPassword.value,
+        sendExactAmount: !this.refs.transferEthFee.checked,
       },
       (error, txnHash) => {
         if (error) {
@@ -123,6 +138,7 @@ class PaymeterComponent extends Component {
         feeWalletPassword: this.refs.transferErc20FeePassword.value,
         feeCollectWalletId: this.refs.erc20FeeCollectWallet.value === '' ? null : this.refs.erc20FeeCollectWallet.value,
         tokenValueInEth: this.refs.erc20FeeCollectPrice.value,
+        sendExactAmount: !this.refs.transferErc20Fee.checked,
       },
       (error, txnHash) => {
         if (error) {
@@ -942,10 +958,18 @@ class PaymeterComponent extends Component {
                                             <input type="password" className="form-control" ref="transferEthPassword" />
                                           </div>
                                           <div className="form-group form-group-default m-t-10 required">
-                                            <label>
-                                              Amount <small>{'(Reciever will pay the network fees)'}</small>
-                                            </label>
+                                            <label>Amount</label>
                                             <input type="text" className="form-control" ref="transferEthAmount" />
+                                          </div>
+                                          <div className="checkbox check-success  ">
+                                            <input
+                                              type="checkbox"
+                                              defaultChecked={this.state.transferEthFeeChecked}
+                                              ref="transferEthFee"
+                                              id="transferEthFee"
+                                              onChange={this.handleTransferEthFee.bind(this)}
+                                            />
+                                            <label htmlFor="transferEthFee">Receiver will pay fee</label>
                                           </div>
                                           <LaddaButton
                                             loading={this.state.transferEthLoading}
@@ -978,17 +1002,19 @@ class PaymeterComponent extends Component {
                                   <table className="table table-hover" id="basicTable">
                                     <thead>
                                       <tr>
+                                        <th style={{ width: '36%' }}>Date</th>
                                         <th style={{ width: '18%' }}>Txn ID</th>
                                         <th style={{ width: '13%' }}>Amount</th>
                                         <th style={{ width: '18%' }}>Fee</th>
                                         <th style={{ width: '17%' }}>To Address</th>
-                                        <th style={{ width: '20%' }}>Status</th>
+                                        <th style={{ width: '10%' }}>Status</th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {wallet.withdrawl_txns.map((item, index) => {
                                         return (
                                           <tr key={item._id}>
+                                            <td className="v-align-middle pre-imp ">{helpers.timeConverter(item.createdAt / 1000)}</td>
                                             <td className="v-align-middle ">{item.txnId}</td>
                                             <td className="v-align-middle">{item.amount} ETH</td>
                                             <td className="v-align-middle">{item.fee} ETH</td>
@@ -1014,17 +1040,19 @@ class PaymeterComponent extends Component {
                                   <table className="table table-hover" id="basicTable">
                                     <thead>
                                       <tr>
+                                        <th style={{ width: '36%' }}>Date</th>
                                         <th style={{ width: '18%' }}>Txn ID</th>
                                         <th style={{ width: '13%' }}>Amount</th>
                                         <th style={{ width: '18%' }}>Fee</th>
                                         <th style={{ width: '17%' }}>From Address</th>
-                                        <th style={{ width: '20%' }}>Status</th>
+                                        <th style={{ width: '10%' }}>Status</th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {wallet.deposit_txns.map((item, index) => {
                                         return (
                                           <tr key={item._id}>
+                                            <td className="v-align-middle pre-imp ">{helpers.timeConverter(item.createdAt / 1000)}</td>
                                             <td className="v-align-middle ">{item.txnId}</td>
                                             <td className="v-align-middle">{item.amount} ETH</td>
                                             <td className="v-align-middle">${item.usdCharged || '0.00'}</td>
@@ -1226,6 +1254,17 @@ class PaymeterComponent extends Component {
                                             </div>
                                           </div>
 
+                                          <div className="checkbox check-success  ">
+                                            <input
+                                              type="checkbox"
+                                              defaultChecked={this.state.transferErc20FeeChecked}
+                                              ref="transferErc20Fee"
+                                              id="transferErc20Fee"
+                                              onChange={this.handleTransferErc20Fee.bind(this)}
+                                            />
+                                            <label htmlFor="transferErc20Fee">Receiver will pay fee</label>
+                                          </div>
+
                                           <LaddaButton
                                             loading={this.state.transferErc20Loading}
                                             data-size={S}
@@ -1257,17 +1296,19 @@ class PaymeterComponent extends Component {
                                   <table className="table table-hover" id="basicTable">
                                     <thead>
                                       <tr>
+                                        <th style={{ width: '36%' }}>Date</th>
                                         <th style={{ width: '18%' }}>Txn ID</th>
                                         <th style={{ width: '13%' }}>Amount</th>
                                         <th style={{ width: '18%' }}>Fee</th>
                                         <th style={{ width: '17%' }}>To Address</th>
-                                        <th style={{ width: '20%' }}>Status</th>
+                                        <th style={{ width: '10%' }}>Status</th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {wallet.withdrawl_txns.map((item, index) => {
                                         return (
                                           <tr key={item._id}>
+                                            <td className="v-align-middle pre-imp ">{helpers.timeConverter(item.createdAt / 1000)}</td>
                                             <td className="v-align-middle ">{item.txnId}</td>
                                             <td className="v-align-middle">
                                               {item.amount} {wallet.tokenSymbol}
@@ -1295,17 +1336,19 @@ class PaymeterComponent extends Component {
                                   <table className="table table-hover" id="basicTable">
                                     <thead>
                                       <tr>
+                                        <th style={{ width: '36%' }}>Date</th>
                                         <th style={{ width: '18%' }}>Txn ID</th>
                                         <th style={{ width: '13%' }}>Amount</th>
                                         <th style={{ width: '18%' }}>Fee</th>
                                         <th style={{ width: '17%' }}>From Address</th>
-                                        <th style={{ width: '20%' }}>Status</th>
+                                        <th style={{ width: '10%' }}>Status</th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {wallet.deposit_txns.map((item, index) => {
                                         return (
                                           <tr key={item._id}>
+                                            <td className="v-align-middle pre-imp ">{helpers.timeConverter(item.createdAt / 1000)}</td>
                                             <td className="v-align-middle ">{item.txnId}</td>
                                             <td className="v-align-middle">
                                               {item.amount} {wallet.tokenSymbol}
