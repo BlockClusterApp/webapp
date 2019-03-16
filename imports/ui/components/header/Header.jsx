@@ -21,7 +21,7 @@ class Header extends Component {
 
   render() {
     return (
-      <div className={`header ${window.isAdminWindow && 'admin'}`}>
+      <div className={`header`}>
         <a href="#" className="btn-link toggle-sidebar hidden-lg-up pg pg-menu" data-toggle="sidebar" />
         <div className="">
           <div className="brand inline">

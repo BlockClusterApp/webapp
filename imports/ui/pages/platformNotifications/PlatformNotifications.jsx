@@ -64,6 +64,21 @@ class PlatformNotifications extends Component {
     $('#modalSlideLeft_payload').modal('show');
   }
 
+  testWebhook = () => {
+    this.setState({
+      loading: true,
+    });
+    Meteor.call('testWebhook', (err, data) => {
+      this.setState({
+        loading: false,
+      });
+      if (err) {
+        return notifications.error(err.reason);
+      }
+      return notifications.success('Event sent');
+    });
+  };
+
   render() {
     const { webhooks } = this.props;
 
@@ -140,7 +155,6 @@ class PlatformNotifications extends Component {
                           </div>
                         </div>
                       )}
-
                       {this.state['_nodeEvents_formSubmitError'] && (
                         <div className="row m-t-30">
                           <div className="col-md-12">
@@ -162,6 +176,19 @@ class PlatformNotifications extends Component {
                       >
                         <i className="fa fa-upload" aria-hidden="true" />
                         &nbsp;&nbsp;Update
+                      </LaddaButton>
+                      &nbsp;&nbsp;
+                      <LaddaButton
+                        loading={this.state.loading}
+                        data-size={S}
+                        data-style={SLIDE_UP}
+                        data-spinner-size={30}
+                        data-spinner-lines={12}
+                        className="btn btn-success m-t-10"
+                        onClick={this.testWebhook}
+                      >
+                        <i className="fa fa-upload" aria-hidden="true" />
+                        &nbsp;&nbsp;Test Webhook
                       </LaddaButton>
                     </form>
                   </div>

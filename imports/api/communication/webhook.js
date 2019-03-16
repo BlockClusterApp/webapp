@@ -123,6 +123,7 @@ WebHookApis.queue = async ({ payload, userId, id, delay, type }) => {
 WebHookApis.send = async ({ id }) => {
   const webhook = WebHook.find({ id }).fetch()[0];
   if (!webhook) {
+    console.log('Sending webhook to null id', id);
     return true;
   }
 
@@ -143,6 +144,7 @@ WebHookApis.send = async ({ id }) => {
   };
 
   try {
+    console.log('Sending');
     const response = await request(reqOptions);
     if (response.statusCode >= 200 && response.statusCode < 300) {
       WebHook.update(
@@ -158,6 +160,7 @@ WebHookApis.send = async ({ id }) => {
           },
         }
       );
+      console.log('Response', response.statusCode);
       ElasticLogger.log('Webhook Successful', {
         url,
         responseCode: response.statusCode,
@@ -205,4 +208,33 @@ WebHookApis.send = async ({ id }) => {
   }
 };
 
+WebHookApis.testWebhook = async () => {
+  const webhookId = WebHook.insert({
+    id: uuid(),
+    url: Meteor.user().profile.notifyURL,
+    payload: {
+      timestamp: new Date().getTime(),
+      event: 'test-event',
+      keys: ['event'],
+      data: {
+        event: {
+          generatedBy: Meteor.user().emails[0].address,
+          content: 'Hi there',
+        },
+      },
+    },
+    status: WebHook.StatusMapping.Pending,
+    type: 'test-event',
+    userId: Meteor.userId(),
+  });
+  console.log('Webhook id', webhookId);
+  const webhook = WebHook.find({ _id: webhookId }).fetch()[0];
+  await WebHookApis.send({ id: webhook.id });
+  return true;
+};
+
 export default WebHookApis;
+
+Meteor.methods({
+  testWebhook: WebHookApis.testWebhook,
+});
