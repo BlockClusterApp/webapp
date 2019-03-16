@@ -62,6 +62,8 @@ import AdminPricingDashboard from '../../pages/admin/pricing/Dashboard.jsx';
 import CreditRedemption from '../../pages/billing/components/RedemptionHistory';
 import RedemptionHistory from '../../pages/billing/components/RedemptionHistory';
 
+import '../app/App.scss';
+
 export default withRouter(
   class Main extends Component {
     constructor(props) {
@@ -113,49 +115,54 @@ export default withRouter(
       }
 
       return (
-        <div className={`${fullHeight}`}>
+        <div className={`${fullHeight}   ${window.theme} `}>
           <Navbar />
-          <div className="page-container">
+          <div className={`page-container`}>
             <Header />
             <div className={`page-content-wrapper ${fullHeight}`}>
-              <Route exact path="/app/networks" render={props => this.showFailedBillingWarning(NetworksList, props)} />
               <Route exact path="/app/profile" component={Profile} />
-              <Route exact path="/app/notifications" render={props => this.showFailedBillingWarning(PlatformNotifications, props)} />
-              <Route exact path="/app/createNetwork" render={props => this.showFailedBillingWarning(CreateNetwork, props)} />
-              <Route exact path="/app/networks/:id/settings" render={props => this.showFailedBillingWarning(ViewEditNetwork, props)} />
-              <Route exact path="/app/networks/:id/impulse" render={props => this.showFailedBillingWarning(ViewEditImpulse, props)} />
-              <Route exact path="/app/networks/:id" render={props => this.showFailedBillingWarning(ViewNetwork, props)} />
-              <Route exact path="/app/join/networks" render={props => this.showFailedBillingWarning(JoinNetwork, props)} />
-              <Route exact path="/app/invites" render={props => this.showFailedBillingWarning(Invites, props)} />
-              <Route exact path="/app/networks/:id/security/peers" render={props => this.showFailedBillingWarning(Peers, props)} />
-              <Route exact path="/app/networks/:id/events" render={props => this.showFailedBillingWarning(NodeEvents, props)} />
-              <Route exact path="/app/networks/:id/explorer" render={props => this.showFailedBillingWarning(Explorer, props)} />
-              <Route exact path="/app/networks/:id/assets/search" render={props => this.showFailedBillingWarning(AssetsSearch, props)} />
-              <Route exact path="/app/networks/:id/assets/exchange" render={props => this.showFailedBillingWarning(AssetsExchange, props)} />
-              <Route exact path="/app/networks/:id/assets/create" render={props => this.showFailedBillingWarning(CreateAssetType, props)} />
-              <Route exact path="/app/networks/:id/assets/stats" render={props => this.showFailedBillingWarning(AssetsStats, props)} />
-              <Route exact path="/app/networks/:id/assets/management" render={props => this.showFailedBillingWarning(AssetsManagement, props)} />
-              <Route exact path="/app/networks/:id/assets/audit" render={props => this.showFailedBillingWarning(AssetsAudit, props)} />
-              <Route exact path="/app/networks/:id/streams/create" render={props => this.showFailedBillingWarning(CreateStream, props)} />
-              <Route exact path="/app/networks/:id/streams/publish" render={props => this.showFailedBillingWarning(PublishStream, props)} />
-              <Route exact path="/app/networks/:id/streams/access-control" render={props => this.showFailedBillingWarning(AccessControlStreams, props)} />
-              <Route exact path="/app/networks/:id/bc-accounts" render={props => this.showFailedBillingWarning(BCAccountsView, props)} />
-              <Route exact path="/app/networks/:id/security/apis" render={props => this.showFailedBillingWarning(APIsCreds, props)} />
-              <Route exact path="/app/networks/:id/sc/management" render={props => this.showFailedBillingWarning(SmartContractsManagement, props)} />
-              <Route exact path="/app/platform-apis" render={props => this.showFailedBillingWarning(PlatformAPIKeys, props)} />
+              {!window.isAdminWindow && (
+                <Switch>
+                  <Route exact path="/app/networks" render={props => this.showFailedBillingWarning(NetworksList, props)} />
+                  <Route exact path="/app/notifications" render={props => this.showFailedBillingWarning(PlatformNotifications, props)} />
+                  <Route exact path="/app/createNetwork" render={props => this.showFailedBillingWarning(CreateNetwork, props)} />
+                  <Route exact path="/app/networks/:id/settings" render={props => this.showFailedBillingWarning(ViewEditNetwork, props)} />
+                  <Route exact path="/app/networks/:id/impulse" render={props => this.showFailedBillingWarning(ViewEditImpulse, props)} />
+                  <Route exact path="/app/networks/:id" render={props => this.showFailedBillingWarning(ViewNetwork, props)} />
+                  <Route exact path="/app/join/networks" render={props => this.showFailedBillingWarning(JoinNetwork, props)} />
+                  <Route exact path="/app/invites" render={props => this.showFailedBillingWarning(Invites, props)} />
+                  <Route exact path="/app/networks/:id/security/peers" render={props => this.showFailedBillingWarning(Peers, props)} />
+                  <Route exact path="/app/networks/:id/events" render={props => this.showFailedBillingWarning(NodeEvents, props)} />
+                  <Route exact path="/app/networks/:id/explorer" render={props => this.showFailedBillingWarning(Explorer, props)} />
+                  <Route exact path="/app/networks/:id/assets/search" render={props => this.showFailedBillingWarning(AssetsSearch, props)} />
+                  <Route exact path="/app/networks/:id/assets/exchange" render={props => this.showFailedBillingWarning(AssetsExchange, props)} />
+                  <Route exact path="/app/networks/:id/assets/create" render={props => this.showFailedBillingWarning(CreateAssetType, props)} />
+                  <Route exact path="/app/networks/:id/assets/stats" render={props => this.showFailedBillingWarning(AssetsStats, props)} />
+                  <Route exact path="/app/networks/:id/assets/management" render={props => this.showFailedBillingWarning(AssetsManagement, props)} />
+                  <Route exact path="/app/networks/:id/assets/audit" render={props => this.showFailedBillingWarning(AssetsAudit, props)} />
+                  <Route exact path="/app/networks/:id/streams/create" render={props => this.showFailedBillingWarning(CreateStream, props)} />
+                  <Route exact path="/app/networks/:id/streams/publish" render={props => this.showFailedBillingWarning(PublishStream, props)} />
+                  <Route exact path="/app/networks/:id/streams/access-control" render={props => this.showFailedBillingWarning(AccessControlStreams, props)} />
+                  <Route exact path="/app/networks/:id/bc-accounts" render={props => this.showFailedBillingWarning(BCAccountsView, props)} />
+                  <Route exact path="/app/networks/:id/security/apis" render={props => this.showFailedBillingWarning(APIsCreds, props)} />
+                  <Route exact path="/app/networks/:id/sc/management" render={props => this.showFailedBillingWarning(SmartContractsManagement, props)} />
+                  <Route exact path="/app/platform-apis" render={props => this.showFailedBillingWarning(PlatformAPIKeys, props)} />
 
-              {features.Payments && <Route path="/app/payments" component={Payments} />}
-              {features.Payments && <Route exact path="/app/credits" component={RedemptionHistory} />}
-              {features.Invoice && <Route exact path="/app/billing" component={BillingDashboard} />}
-              {features.SupportTicket && <Route exact path="/app/support" component={SupportContainer} />}
-              {features.SupportTicket && <Route exact path="/app/support/:id" component={SupportDetails} />}
-              {features.Hyperion && <Route exact path="/app/hyperion" render={props => this.showFailedBillingWarning(Hyperion, props)} />}
-              {features.Paymeter && (
-                <div className="full-height">
-                  <Route exact path="/app/paymeter" render={props => this.showFailedBillingWarning(Paymeter, props)} />
-                  <Route exact path="/app/paymeter/notifications" render={props => this.showFailedBillingWarning(WalletNotifications, props)} />
-                </div>
+                  {features.Payments && <Route path="/app/payments" component={Payments} />}
+                  {features.Payments && <Route exact path="/app/credits" component={RedemptionHistory} />}
+                  {features.Invoice && <Route exact path="/app/billing" component={BillingDashboard} />}
+                  {features.SupportTicket && <Route exact path="/app/support" component={SupportContainer} />}
+                  {features.SupportTicket && <Route exact path="/app/support/:id" component={SupportDetails} />}
+                  {features.Hyperion && <Route exact path="/app/hyperion" render={props => this.showFailedBillingWarning(Hyperion, props)} />}
+                  {features.Paymeter && (
+                    <div className="full-height">
+                      <Route exact path="/app/paymeter" render={props => this.showFailedBillingWarning(Paymeter, props)} />
+                      <Route exact path="/app/paymeter/notifications" render={props => this.showFailedBillingWarning(WalletNotifications, props)} />
+                    </div>
+                  )}
+                </Switch>
               )}
+
               {features.Admin && (
                 <div>
                   <Route exact path="/app/admin" render={() => <Redirect to="/app/admin/users" />} />

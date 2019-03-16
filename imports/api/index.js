@@ -6,4 +6,5 @@ require('./hyperion.js');
 require('./auth');
 require('./paymeter.js');
 require('./server-functions/user');
+require('./communication/webhook');
 require('./privatehive/');

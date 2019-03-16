@@ -4,12 +4,21 @@ import { withRouter } from 'react-router-dom';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import notifications from '../../../modules/notifications';
 
+import './Profile.scss';
+
 class Profile extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {};
   }
+
+  changeTheme = theme => {
+    const event = new Event('theme-change');
+    window.theme = theme;
+    window.dispatchEvent(event);
+    Meteor.call('changeTheme', { theme });
+  };
 
   onSubmit = () => {
     if (!(this.firstName.value && this.email.value && this.mobile.value)) {
@@ -123,6 +132,30 @@ class Profile extends React.Component {
                   </LaddaButton>
                 </div>
               </div>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-md-4" style={{ textAlign: 'right' }}>
+              <p>Dashboard theme: </p>
+            </div>
+            <div className="col-md-8">
+              <ul style={{ display: 'inline-flex', listStyle: 'none' }} className="p-l-0">
+                <li className={`theme-option ${!window.theme ? 'selected' : ''}`}>
+                  <a href="#" onClick={this.changeTheme.bind(this, '')}>
+                    Simply Regular
+                  </a>
+                </li>
+                <li className={`theme-option ${window.theme === 'theme-mixed' ? 'selected' : ''}`}>
+                  <a href="#" onClick={this.changeTheme.bind(this, 'theme-mixed')}>
+                    Slightly Dark
+                  </a>
+                </li>
+                <li className={`theme-option ${window.theme === 'theme-dark' ? 'selected' : ''}`}>
+                  <a href="#" onClick={this.changeTheme.bind(this, 'theme-dark')}>
+                    Dark World
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
         </div>

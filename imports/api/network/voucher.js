@@ -312,6 +312,14 @@ async function generateVouchers(items, size) {
   return voucherArray;
 }
 
+Voucher.adminVoucherApply = async ({ userId, code }) => {
+  if (Meteor.user().admin < 2) {
+    throw new Meteor.Error(401, 'Unauthorized');
+  }
+  await Voucher.applyPromotionalCode({ code, userId });
+  return true;
+};
+
 Meteor.methods({
   validateVoucher: Voucher.validate,
   CreateVoucher: Voucher.create,
@@ -319,6 +327,7 @@ Meteor.methods({
   applyPromotionalCode: Voucher.applyPromotionalCode,
   fetchBalanceCredits: Voucher.fetchBalanceCredits,
   applyVoucherCode: Voucher.applyVoucherCode,
+  adminVoucherApply: Voucher.adminVoucherApply,
 });
 
 export default Voucher;
