@@ -1,4 +1,5 @@
 import Invoice from '../../collections/payments/invoice';
+import PaymentRequest from '../../collections/payments/payment-requests';
 import RazorPay from '../../api/payments/payment-gateways/razorpay';
 import Payment from '../../api/payments/';
 import Email from '../emails/email-sender';
@@ -7,6 +8,7 @@ import fs from 'fs';
 import Future from 'fibers/future';
 import atob from 'atob';
 import pdf from 'html-pdf';
+import Bluebird from 'bluebird';
 
 const uuidv4 = require('uuid/v4');
 
@@ -19,6 +21,10 @@ import RZPTAddon from '../../collections/razorpay/trasient-addon';
 import Credits from '../../collections/payments/credits';
 import User from '../server-functions/user';
 import Communication from '../communication/slack';
+import Stripe from '../payments/payment-gateways/stripe';
+import StripeCustomer from '../../collections/stripe/customer';
+import Payments from '../../api/payments/';
+import Config from '../../modules/config/server';
 
 const InvoiceObj = {};
 
@@ -76,7 +82,7 @@ InvoiceObj.fetchCreditsRedemption = async ({ userId, totalAmount, invoiceObject 
   return { _totalAmount: totalAmount, eligibleCredits };
 };
 
-InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription }) => {
+InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription, stripeCustomer }) => {
   let totalAmount = Number(bill.totalAmount).toFixed(2);
   const user = Meteor.users
     .find({
@@ -93,6 +99,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
       billingAddress: '',
     },
     rzCustomerId: user.rzCustomerId,
+    stripeCustomerId: user.stripeCustomerId,
     paymentStatus: user.demoUser ? Invoice.PaymentStatusMapping.DemoUser : user.offlineUser ? Invoice.PaymentStatusMapping.OfflineUser : Invoice.PaymentStatusMapping.Pending,
     billingPeriod: billingMonth,
     billingPeriodLabel: moment(billingMonth).format('MMM-YYYY'),
@@ -135,6 +142,15 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
 
   invoiceObject.conversionRate = conversion;
 
+  const previousInvoices = Invoice.find({ userId, paymentStatus: { $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed] } }).fetch();
+
+  const previousPendingInvoiceIds = [];
+  previousInvoices.forEach(pi => {
+    previousPendingInvoiceIds.push(pi._id);
+  });
+
+  invoiceObject.previousPendingInvoiceIds = previousPendingInvoiceIds;
+
   const invoiceId = Invoice.insert(invoiceObject);
   let creditClaims = [];
 
@@ -159,6 +175,31 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
     );
     creditClaims.push({ id, code: credit.code, amount: ec.amount });
   });
+
+  if (rzSubscription && rzSubscription.bc_status === 'active') {
+    await Bluebird.map(
+      previousInvoices,
+      async pi => {
+        RZPTAddon.insert({
+          subscriptionId: rzSubscription.id,
+          addOn: {
+            name: `Pending dues for ${pi.billingPeriodLabel}`,
+            description: 'Pending Invoice',
+            amount: Number(pi.totalAmountINR),
+            currency: 'INR',
+          },
+          userId,
+          invoiceId,
+          billingPeriodLabel: invoiceObject.billingPeriodLabel,
+          pendingInvoiceId: pi._id,
+        });
+        return true;
+      },
+      {
+        concurrency: 2,
+      }
+    );
+  }
 
   if (!user.demoUser && !user.offlineUser && Math.round(invoiceObject.totalAmountINR) > 100 && rzSubscription && rzSubscription.bc_status === 'active') {
     RZPTAddon.insert({
@@ -188,31 +229,55 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
     );
     return true;
   }
-  const linkId = await RazorPay.createPaymentLink({
-    amount: invoiceObject.totalAmountINR,
-    description: `Bill for ${invoiceObject.billingPeriodLabel}`,
-    user,
-  });
 
-  const rzPaymentLink = RZPaymentLink.find({
-    _id: linkId,
-  }).fetch()[0];
+  if (!stripeCustomer) {
+    const linkId = await RazorPay.createPaymentLink({
+      amount: invoiceObject.totalAmountINR,
+      description: `Bill for ${invoiceObject.billingPeriodLabel}`,
+      user,
+    });
 
-  debug('RZPaymentLink', rzPaymentLink);
+    const rzPaymentLink = RZPaymentLink.find({
+      _id: linkId,
+    }).fetch()[0];
+    debug('RZPaymentLink', rzPaymentLink);
 
-  Invoice.update(
-    { _id: invoiceId },
-    {
-      $set: {
-        paymentLink: {
-          id: rzPaymentLink ? rzPaymentLink._id : '',
-          link: rzPaymentLink ? rzPaymentLink.short_url : '',
+    Invoice.update(
+      { _id: invoiceId },
+      {
+        $set: {
+          paymentLink: {
+            id: rzPaymentLink ? rzPaymentLink._id : '',
+            link: rzPaymentLink ? rzPaymentLink.short_url : '',
+          },
+          totalAmountINR: invoiceObject.totalAmountINR,
+          totalAmount,
+          creditClaims,
         },
-        totalAmountINR: invoiceObject.totalAmountINR,
-        creditClaims,
-      },
-    }
-  );
+      }
+    );
+  } else {
+    const request = await Payments.createRequest({
+      paymentGateway: 'stripe',
+      reason: `Platform usage charges for ${invoiceObject.billingPeriodLabel}`,
+      amount: totalAmount,
+      userId: invoiceObject.userId,
+    });
+    Invoice.update(
+      { _id: invoiceId },
+      {
+        $set: {
+          paymentLink: {
+            id: `stripe_${request.paymentRequestId}`,
+            link: `${Config.apiHost.replace(':3000/', ':3000')}/payments/collect/${request.paymentRequestId}`,
+          },
+          totalAmountINR: invoiceObject.totalAmountINR,
+          totalAmount,
+          creditClaims,
+        },
+      }
+    );
+  }
 
   BullSystem.addJob('invoice-created-email', {
     invoiceId,
@@ -221,7 +286,7 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
   return invoiceId;
 };
 
-InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth, billingMonthLabel, invoiceId, rzPayment }) => {
+InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth, billingMonthLabel, invoiceId, rzPayment, stripePayment }) => {
   const spanId = uuidv4();
   billingMonthLabel = billingMonthLabel || moment(billingMonth).format('MMM-YYYY');
 
@@ -238,11 +303,10 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
   if (invoiceId) {
     selector = {
       _id: invoiceId,
-      billingPeriodLabel: billingMonthLabel,
     };
   }
 
-  ElasticLogger.log('Trying to settle invoice', { selector, billingMonth, billingMonthLabel, rzPayment, id: spanId });
+  ElasticLogger.log('Trying to settle invoice', { selector, billingMonth, billingMonthLabel, rzPayment, stripePayment, id: spanId });
 
   if (!selector._id && !selector.rzSubscriptionId && !selector.rzCustomerId && !selector._id) {
     RavenLogger.log('Trying to settle unspecific', { ...selector });
@@ -267,7 +331,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     // await RazorPay.refundPayment(rzPayment.id, { noPaymentRequest: true, amount: rzPayment.amount });
     ElasticLogger.log('Refunded not existing invoice', {
       invoiceId,
-      rzPaymentId: rzPayment.id,
+      paymentId: rzPayment ? rzPayment.id : stripePayment ? stripePayment.id : null,
       id: spanId,
     });
     RavenLogger.log(`Error settling invoice: Does not exists`, { ...selector, at: new Date() });
@@ -305,11 +369,20 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     return invoice._id;
   }
 
+  const payment = (() => {
+    if (rzPayment) {
+      return { id: rzPayment.id, source: 'razorpay', amount: rzPayment.amount, currency: 'INR' };
+    }
+    if (stripePayment) {
+      return { id: stripePayment.id, source: 'stripe', amount: stripePayment.amount, currency: 'USD' };
+    }
+    return {};
+  })();
+
   Invoice.update(selector, {
     $set: {
       paymentStatus: Invoice.PaymentStatusMapping.Settled,
-      paymentId: rzPayment.id,
-      paidAmount: rzPayment.amount,
+      payment,
     },
     $unset: {
       paymentPending: '',
@@ -318,12 +391,41 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
     },
   });
 
+  if (invoice.previousPendingInvoiceIds && invoice.previousPendingInvoiceIds.length > 0 && rzPayment) {
+    await Bluebird.map(
+      previousPendingInvoiceIds,
+      async pid => {
+        Invoice.update(
+          { _id: pid },
+          {
+            $set: {
+              paymentStatus: Invoice.PaymentStatusMapping.Settled,
+              paymentId: rzPayment.id,
+              paidAmount: rzPayment.amount,
+            },
+            $unset: {
+              paymentPending: '',
+              paymentPendingForInvoiceId: '',
+              paymentPendingOn: '',
+            },
+          }
+        );
+        return true;
+      },
+      {
+        concurrency: 2,
+      }
+    );
+  } else {
+    invoice.previousPendingInvoiceIds = [];
+  }
+
   ElasticLogger.log('Settled invoice', { invoiceId: invoice._id, id: spanId });
 
   try {
     Invoice.update(
       {
-        _id: invoice._id,
+        _id: { $in: [invoice._id, ...invoice.previousPendingInvoiceIds] },
         'paymentFailedStatus.status': {
           $in: ['failed-warning'],
         },
@@ -338,6 +440,9 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
             on: new Date(),
           },
         },
+      },
+      {
+        multi: true,
       }
     );
 
@@ -385,7 +490,7 @@ InvoiceObj.generateHTML = async invoiceId => {
     invoice.creditClaims.forEach(claim => {
       items.push({
         name: 'Promotional Credits Redemption',
-        instanceId: claim.code,
+        instanceId: claim.code === 'BLOCKCLUSTER' ? 'Welcome Bonus' : claim.code,
         duration: '',
         rate: '',
         discount: '',
@@ -499,7 +604,7 @@ InvoiceObj.sendInvoiceCreatedEmail = async invoice => {
   const ejsTemplate = await getEJSTemplate({ fileName: 'invoice-created.ejs' });
   const finalHTML = ejsTemplate({
     invoice,
-    paymentLink: invoice.paymentLink.link,
+    paymentLink: invoice.paymentLink ? invoice.paymentLink.link : 'https://app.blockcluster.io/app/payments/cards',
   });
 
   const emailProps = {
@@ -650,11 +755,93 @@ InvoiceObj.changeToOfflinePayment = async ({ invoiceId }) => {
   return true;
 };
 
+InvoiceObj.adminChargeStripeInvoice = async ({ invoiceId, adminUserId }) => {
+  if (!adminUserId && Meteor.user().admin < 2) {
+    throw new Meteor.Error(401, 'Unauthorized');
+  }
+  const invoice = Invoice.find({ _id: invoiceId }).fetch()[0];
+  const stripeCustomer = StripeCustomer.find({ userId: invoice.userId }).fetch()[0];
+  if (!invoice) {
+    throw new Meteor.Error(403, 'Invalid invoiceid');
+  }
+
+  if (!invoice.stripeCustomerId || !stripeCustomer) {
+    throw new Meteor.Error(403, 'Cannot charge this invoice');
+  }
+
+  if (![Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed].includes(invoice.paymentStatus)) {
+    throw new Meteor.Error(403, 'Bad request');
+  }
+
+  const paymentRequest = await Payment.createRequest({
+    paymentGateway: 'stripe',
+    reason: `Platform usage charges for ${invoice.billingPeriodLabel}`,
+    amount: Number(invoice.totalAmount),
+    userId: invoice.userId,
+    metadata: {
+      from: 'admin',
+      by: adminUserId || Meteor.userId(),
+      invoiceId: invoice._id,
+    },
+  });
+  try {
+    const response = await Stripe.chargeCustomer({
+      customerId: stripeCustomer.id,
+      amountInDollars: invoice.totalAmount,
+      description: `Platform usage charges for ${invoice.billingPeriodLabel}`,
+      idempotencyKey: `${invoiceId}_${invoice.userId}${process.env.NODE_ENV === 'development' ? `${new Date().getTime()}` : ''}`,
+      userId: invoice.userId,
+    });
+    await InvoiceObj.settleInvoice({ billingMonthLabel: invoice.billingPeriodLabel, invoiceId: invoice._id });
+    ElasticLogger.log(adminUserId ? 'System Charge Stripe' : 'Admin charge invoice', {
+      response,
+      invoiceId,
+      paymentRequest,
+    });
+    PaymentRequest.update(
+      {
+        _id: paymentRequest.paymentRequestId,
+      },
+      {
+        $push: {
+          pgResponse: response,
+        },
+        $set: {
+          status: PaymentRequest.StatusMapping.Approved,
+          paymentStatus: PaymentRequest.StatusMapping.Approved,
+        },
+      }
+    );
+  } catch (err) {
+    ElasticLogger.log(adminUserId ? 'System Charge Stripe' : 'Admin charge invoice', {
+      error: err.toString(),
+      invoiceId,
+      paymentRequest,
+    });
+
+    PaymentRequest.update(
+      {
+        _id: paymentRequest.paymentRequestId,
+      },
+      {
+        $set: {
+          paymentStatus: PaymentRequest.StatusMapping.Failed,
+          failedReason: err.toString().replace('Error: ', ''),
+        },
+      }
+    );
+    throw new Meteor.Error(403, err.toString());
+  }
+
+  return true;
+};
+
 Meteor.methods({
   generateInvoiceHTML: InvoiceObj.generateHTML,
   sendInvoiceReminder: InvoiceObj.adminSendInvoiceReminder,
   waiveOffInvoice: InvoiceObj.waiveOffInvoice,
   changeToOfflinePayment: InvoiceObj.changeToOfflinePayment,
+  adminChargeStripeInvoice: async ({ invoiceId }) => InvoiceObj.adminChargeStripeInvoice({ invoiceId }),
 });
 
 export default InvoiceObj;

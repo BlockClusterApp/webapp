@@ -38,6 +38,8 @@ import SupportDetails from '../../pages/support/Support.jsx';
 import SmartContractsManagement from '../../pages/smartContractsManagement/SmartContractsManagement.jsx';
 import WalletNotifications from '../../pages/paymeter/Notifications.jsx';
 
+import Profile from '../../pages/profile/Profile';
+
 import UserList from '../../pages/admin/users/UserList.jsx';
 import UserDetails from '../../pages/admin/users/Details.jsx';
 import NetworkList from '../../pages/admin/networks/NetworkList.jsx';
@@ -57,6 +59,8 @@ import ClientMetrics from '../../pages/admin/clients/ClientMetrics';
 import ConfigList from '../../pages/admin/network-config/List';
 import PlatformAPIKeys from '../../pages/platformApis/PlatformAPIKeys.jsx';
 import AdminPricingDashboard from '../../pages/admin/pricing/Dashboard.jsx';
+import CreditRedemption from '../../pages/billing/components/RedemptionHistory';
+import RedemptionHistory from '../../pages/billing/components/RedemptionHistory';
 
 export default withRouter(
   class Main extends Component {
@@ -64,7 +68,7 @@ export default withRouter(
       super(props);
       this.state = {
         remoteConfig: window.RemoteConfig,
-        pathsWithFullHeight: ['/app/paymeter'],
+        pathsWithFullHeight: ['/app/paymeter', '/app/profile'],
       };
     }
 
@@ -115,6 +119,7 @@ export default withRouter(
             <Header />
             <div className={`page-content-wrapper ${fullHeight}`}>
               <Route exact path="/app/networks" render={props => this.showFailedBillingWarning(NetworksList, props)} />
+              <Route exact path="/app/profile" component={Profile} />
               <Route exact path="/app/notifications" render={props => this.showFailedBillingWarning(PlatformNotifications, props)} />
               <Route exact path="/app/createNetwork" render={props => this.showFailedBillingWarning(CreateNetwork, props)} />
               <Route exact path="/app/networks/:id/settings" render={props => this.showFailedBillingWarning(ViewEditNetwork, props)} />
@@ -140,6 +145,7 @@ export default withRouter(
               <Route exact path="/app/platform-apis" render={props => this.showFailedBillingWarning(PlatformAPIKeys, props)} />
 
               {features.Payments && <Route path="/app/payments" component={Payments} />}
+              {features.Payments && <Route exact path="/app/credits" component={RedemptionHistory} />}
               {features.Invoice && <Route exact path="/app/billing" component={BillingDashboard} />}
               {features.SupportTicket && <Route exact path="/app/support" component={SupportContainer} />}
               {features.SupportTicket && <Route exact path="/app/support/:id" component={SupportDetails} />}

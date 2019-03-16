@@ -101,6 +101,7 @@ Voucher.applyPromotionalCode = async function({ code, userId }) {
 
   const previousRedemption = CreditRedemption.find({ userId, codeId: voucher._id }).fetch()[0];
   if (previousRedemption) {
+    console.log('Already redeemed');
     throw new Meteor.Error(403, 'Already redeemed');
   }
 
@@ -140,6 +141,7 @@ Voucher.applyPromotionalCode = async function({ code, userId }) {
 
     return true;
   } catch (err) {
+    console.log('Voucher update error', err);
     if (redemptionId) {
       CreditRedemption.remove({ _id: redemptionId });
     }

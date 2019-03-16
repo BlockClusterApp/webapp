@@ -14,7 +14,7 @@ class RedemptionHistory extends Component {
     this.props.credits.forEach(credit => {
       txns.push({
         amount: `+ $${credit.amount}`,
-        description: `Redeemed using code ${credit.code}`,
+        description: credit.code === 'BLOCKCLUSTER' ? 'Welcome Bonus' : `Redeemed using code ${credit.code}`,
         date: credit.createdAt,
       });
       if (credit.metadata && credit.invoices) {
@@ -29,35 +29,39 @@ class RedemptionHistory extends Component {
     });
 
     return (
-      <div className="card-block">
-        <div className="row">
-          <PromotionalCredits />
-        </div>
-        <div className="row">
-          <div className="col-md-12">
-            <div className="table-responsive">
-              <table className="table table-hover" id="basicTable">
-                <thead>
-                  <tr>
-                    <th style={{ width: '5%' }}>S.No</th>
-                    <th style={{ width: '25%' }}>Amount</th>
-                    <th style={{ width: '50%' }}>Description</th>
-                    <th style={{ width: '20%' }}>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {txns.map((txn, index) => {
-                    return (
-                      <tr key={index + 1}>
-                        <td>{index + 1}</td>
-                        <td>{txn.amount}</td>
-                        <td>{txn.description}</td>
-                        <td>{moment(txn.date).format('DD-MMM-YYYY kk:mm')}</td>
+      <div className="content ">
+        <div className="m-t-20 container-fluid container-fixed-lg bg-white">
+          <div className="card-block">
+            <div className="row">
+              <PromotionalCredits />
+            </div>
+            <div className="row">
+              <div className="col-md-12">
+                <div className="table-responsive">
+                  <table className="table table-hover" id="basicTable">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '5%' }}>S.No</th>
+                        <th style={{ width: '25%' }}>Amount</th>
+                        <th style={{ width: '50%' }}>Description</th>
+                        <th style={{ width: '20%' }}>Date</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody>
+                      {txns.map((txn, index) => {
+                        return (
+                          <tr key={index + 1}>
+                            <td>{index + 1}</td>
+                            <td>{txn.amount}</td>
+                            <td>{txn.description}</td>
+                            <td>{moment(txn.date).format('DD-MMM-YYYY kk:mm')}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -1,0 +1,60 @@
+.stripe-wrapper input {
+  font-size: 24px;
+  padding: 5px 10px;
+  margin-top: 10px;
+  border: none;
+  // border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+  margin-top: 10px;
+}
+
+.stripe {
+  .checkout-element {
+    margin-top: 3px;
+    padding: 15px;
+    font-size: 18px;
+    width: 100%;
+    border-radius: 3px;
+    border: 1px solid #dcdcdc;
+  }
+
+  .field-container input {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+  }
+  .field-container {
+    position: relative;
+    margin-top: 10px;
+  }
+
+  label {
+    padding-bottom: 5px;
+    font-size: 13px;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .card-icons {
+    i {
+      font-size: 25px;
+    }
+
+    .fa-cc-amex {
+      color: #388e3c;
+    }
+    .fa-cc-mastercard {
+      color: #f9a825;
+    }
+    .fa-cc-visa {
+      color: #0288d1;
+    }
+    .fa-cc-jcb {
+      color: #d32f2f;
+    }
+    .fa-cc.discover {
+      color: #616161;
+    }
+    .fa-cc-diners-club {
+      color: #ef6c00;
+    }
+  }
+}

@@ -13,4 +13,6 @@ module.exports = bullSystem => {
   require('./handle-failed-billing')(bullSystem);
   require('./disable-ingress')(bullSystem);
   require('./enable-ingress')(bullSystem);
+  require('./charge-stripe-invoice')(bullSystem);
+  require('./stripe-webhook')(bullSystem);
 };

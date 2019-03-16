@@ -64,6 +64,11 @@ spec:
             secretKeyRef:
               name: sendgrid-creds
               key: apiKey
+        - name: STRIPE_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: stripe-creds
+              key: STRIPE_TOKEN
         - name: RAZORPAY_ID
           valueFrom:
             secretKeyRef:

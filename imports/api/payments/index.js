@@ -4,6 +4,9 @@ import Invoice from '../../collections/payments/invoice';
 import InvoiceFunctions from '../../api/billing/invoice';
 import PaymentRequests from '../../collections/payments/payment-requests';
 import { RZSubscription, RZPlan, RZPaymentLink } from '../../collections/razorpay';
+import Stripe from './payment-gateways/stripe';
+import StripePaymentIntent from '../../collections/stripe/intents';
+import InvoiceObj from '../../api/billing/invoice';
 const debug = require('debug')('api:payments');
 
 const Payments = {};
@@ -12,59 +15,74 @@ Payments.createRequest = async ({ paymentGateway, reason, amount, amountInPaisa,
   let insertResult;
   let subscription;
   paymentGateway = paymentGateway || 'razorpay';
-  const conversionFactor = await Payments.getConversionToINRRate({ currencyCode: 'usd' });
-  if (mode === 'credit') {
-    amount = 5;
-    const rzPlan = RZPlan.find({ identifier: 'verification' }).fetch()[0];
-    subscription = RZSubscription.find({
-      userId: Meteor.userId(),
-      plan_id: rzPlan.id,
-      bc_status: 'active',
-    }).fetch()[0];
-    if (!subscription) {
-      subscription = await RazorPay.createSubscription({
-        rzPlan,
-        type: 'verification',
+  if (paymentGateway === 'razorpay') {
+    const conversionFactor = await Payments.getConversionToINRRate({ currencyCode: 'usd' });
+    if (mode === 'credit') {
+      amount = 5;
+      const rzPlan = RZPlan.find({ identifier: 'verification' }).fetch()[0];
+      subscription = RZSubscription.find({
+        userId: Meteor.userId(),
+        plan_id: rzPlan.id,
+        bc_status: 'active',
+      }).fetch()[0];
+      if (!subscription) {
+        subscription = await RazorPay.createSubscription({
+          rzPlan,
+          type: 'verification',
+        });
+      }
+      insertResult = PaymentRequests.insert({
+        userId: Meteor.userId(),
+        paymentGateway,
+        reason,
+        amount: amount * 100,
+        rzSubscriptionId: subscription._id,
+        conversionFactor,
       });
+    } else if (mode === 'debit') {
+      amount = conversionFactor;
+      insertResult = PaymentRequests.insert({
+        userId: Meteor.userId(),
+        paymentGateway,
+        reason,
+        amount: Math.round(amount * 100),
+        conversionFactor,
+      });
+      const returnValue = { paymentRequestId: insertResult, amount: Math.round(amount * 100), display_amount: 1, display_currency: 'USD' };
+      debug('Payment create request | Debit RZP Options', returnValue);
+      return returnValue;
+    } else {
+      const request = PaymentRequests.insert({
+        userId: userId || Meteor.userId(),
+        paymentGateway: 'razorpay',
+        reason,
+        metadata,
+        amount: amountInPaisa || Math.round(amount * 100),
+        conversionFactor: metadata.conversionFactor,
+      });
+
+      return { paymentRequestId: request, amount: amountInPaisa || Math.round(amount * 100), display_amount, display_currency: 'USD', conversionFactor };
     }
-    insertResult = PaymentRequests.insert({
-      userId: Meteor.userId(),
-      paymentGateway,
-      reason,
-      amount: amount * 100,
-      rzSubscriptionId: subscription._id,
-      conversionFactor,
-    });
-  } else if (mode === 'debit') {
-    amount = conversionFactor;
-    insertResult = PaymentRequests.insert({
-      userId: Meteor.userId(),
-      paymentGateway,
-      reason,
-      amount: Math.round(amount * 100),
-      conversionFactor,
-    });
-    const returnValue = { paymentRequestId: insertResult, amount: Math.round(amount * 100), display_amount: 1, display_currency: 'USD' };
-    debug('Payment create request | Debit RZP Options', returnValue);
+    display_amount = Number(amount / conversionFactor).toFixed(2);
+
+    const returnValue = { paymentRequestId: insertResult, rzSubscriptionId: subscription.id, amount: amount * 100, display_amount, display_currency: 'USD' };
+    debug('Payment create request | Credit RZP Options', returnValue);
     return returnValue;
-  } else {
-    const request = PaymentRequests.insert({
+  } else if (paymentGateway === 'stripe') {
+    const insertResult = PaymentRequests.insert({
       userId: userId || Meteor.userId(),
-      paymentGateway: 'razorpay',
+      paymentGateway: 'stripe',
       reason,
       metadata,
-      amount: amountInPaisa || Math.round(amount * 100),
-      conversionFactor: metadata.conversionFactor,
+      amount,
+      currency: 'usd',
     });
-
-    return { paymentRequestId: request, amount: amountInPaisa || Math.round(amount * 100), display_amount, display_currency: 'USD', conversionFactor };
+    const returnValue = { paymentRequestId: insertResult, amount };
+    debug('Payment create request | Stripe', returnValue);
+    return returnValue;
+  } else {
+    throw new Error('Payment gateway not supported');
   }
-
-  display_amount = Number(amount / conversionFactor).toFixed(2);
-
-  const returnValue = { paymentRequestId: insertResult, rzSubscriptionId: subscription.id, amount: amount * 100, display_amount, display_currency: 'USD' };
-  debug('Payment create request | Credit RZP Options', returnValue);
-  return returnValue;
 };
 
 Payments.getConversionToINRRate = async ({ currencyCode }) => {
@@ -167,52 +185,145 @@ Payments.captureInvoicePayment = async pgResponse => {
   return true;
 };
 
-Payments.createPaymentLink = async ({reason, amount, amountInPaisa, amountInUSD, userId, invoiceId}) => {
-  if(Meteor.user().admin < 2) {
-    throw new Meteor.Error("unauthorized", "Unauthorized to perform this");
+Payments.createPaymentLink = async ({ reason, amount, amountInPaisa, amountInUSD, userId, invoiceId }) => {
+  if (Meteor.user().admin < 2) {
+    throw new Meteor.Error('unauthorized', 'Unauthorized to perform this');
   }
 
   let user;
 
-  if(invoiceId) {
-    const invoice = Invoice.find({id: _id}).fetch()[0];
-    if(invoice.paymentLink && invoice.paymentLink.link && !invoice.paymentLink.expired) {
+  if (invoiceId) {
+    const invoice = Invoice.find({ id: _id }).fetch()[0];
+    if (invoice.paymentLink && invoice.paymentLink.link && !invoice.paymentLink.expired) {
       return invoice.paymentLink;
     }
     amountInPaisa = invoice.totalAmountINR;
-    reason = reason || `Bill for ${invoice.billingPeriodLabel}`
-    user = Meteor.users.find({_id: invoice.userId}).fetch()[0];
+    reason = reason || `Bill for ${invoice.billingPeriodLabel}`;
+    user = Meteor.users.find({ _id: invoice.userId }).fetch()[0];
   }
 
-  if(!(reason && reason.length > 10)){
-    throw new Meteor.Error("bad-request", "Cannot create payment link without a valid reason. This reason would be sent in mail. Minimum of 10 characters needed")
+  if (!(reason && reason.length > 10)) {
+    throw new Meteor.Error('bad-request', 'Cannot create payment link without a valid reason. This reason would be sent in mail. Minimum of 10 characters needed');
   }
 
-  if(!amountInPaisa && amountInUSD) {
-    const conversionFactor = await Payments.getConversionToINRRate({currencyCode: 'usd'});
+  if (!amountInPaisa && amountInUSD) {
+    const conversionFactor = await Payments.getConversionToINRRate({ currencyCode: 'usd' });
     amount = amountInUSD * conversionFactor;
     amountInPaisa = Math.round(amount * 100);
   }
 
-  if(!user) {
-    user = Meteor.users.find({
-      _id: userId
-    }).fetch()[0];
+  if (!user) {
+    user = Meteor.users
+      .find({
+        _id: userId,
+      })
+      .fetch()[0];
   }
 
-  const paymentLinkId = await RazorPay.createPaymentLink({amount: amountInPaisa, user, description: reason });
+  const paymentLinkId = await RazorPay.createPaymentLink({ amount: amountInPaisa, user, description: reason });
 
   return RZPaymentLink.find({
-    _id: paymentLinkId
+    _id: paymentLinkId,
   }).fetch()[0];
-}
+};
+
+Payments.createStripeCustomer = async ({ token }) => {
+  const userId = Meteor.userId();
+
+  return Stripe.createCustomer({ userId, token });
+};
+
+Payments.initiateStripePayment = async ({ invoiceId }) => {
+  if (!invoiceId) {
+    throw new Meteor.Error(403, 'Required params missins');
+  }
+  const invoice = Invoice.find({
+    _id: invoiceId,
+    paymentStatus: {
+      $in: [Invoice.PaymentStatusMapping.Pending, Invoice.PaymentStatusMapping.Failed],
+    },
+    userId: Meteor.userId(),
+  }).fetch()[0];
+  if (!invoice) {
+    throw new Meteor.Error(403, 'Invalid invoice');
+  }
+
+  const request = await Payments.createRequest({
+    paymentGateway: 'stripe',
+    reason: `Platform usage charges for ${invoice.billingPeriodLabel}`,
+    amount: invoice.totalAmount,
+    userId: Meteor.userId(),
+    metadata: {
+      from: 'system',
+      by: Meteor.userId(),
+      invoiceId,
+    },
+  });
+
+  return request;
+};
+
+Payments.initiateStripePaymentIntent = async ({ paymentRequestId }) => {
+  const request = PaymentRequests.find({ _id: paymentRequestId }).fetch()[0];
+
+  if (!request) {
+    throw new Meteor.Error(403, 'Invalid request');
+  }
+
+  return Stripe.createPaymentIntent({ paymentRequest: request });
+};
+
+Payments.recordStripePayment = async ({ intent }) => {
+  const newIntent = { ...intent };
+  delete newIntent;
+  const source = await Stripe.fetchSource(intent.source);
+  StripePaymentIntent.update(
+    { id: intent.id },
+    {
+      $set: {
+        ...newIntent,
+        source,
+      },
+    }
+  );
+  const stripeIntent = StripePaymentIntent.find({ id: intent.id }).fetch()[0];
+  const paymentRequest = PaymentRequests.find({ _id: stripeIntent.paymentRequestId }).fetch()[0];
+
+  if (!paymentRequest) {
+    throw new Meteor.Error(403, 'Bad request');
+  }
+  if (paymentRequest.metadata && paymentRequest.metadata.invoiceId) {
+    await InvoiceObj.settleInvoice({ invoiceId: paymentRequest.metadata.invoiceId, stripePayment: stripeIntent });
+  }
+
+  PaymentRequests.update(
+    {
+      _id: paymentRequest._id,
+    },
+    {
+      $set: {
+        paymentStatus: PaymentRequests.StatusMapping.Approved,
+        status: PaymentRequests.StatusMapping.Approved,
+      },
+      $push: {
+        pgResponse: { ...intent, source },
+      },
+    }
+  );
+
+  return true;
+};
 
 Meteor.methods({
   createPaymentRequest: Payments.createRequest,
   refundPayment: Payments.refundAmount,
   createRequestForInvoice: Payments.createRequestForInvoice,
   captureInvoicePayment: Payments.captureInvoicePayment,
-  createPaymentLink: Payments.createPaymentLink
+  createPaymentLink: Payments.createPaymentLink,
+  captureStripeCustomer: Payments.createStripeCustomer,
+  initiateStripePayment: Payments.initiateStripePayment,
+  initiateStripePaymentIntent: Payments.initiateStripePaymentIntent,
+  recordStripePayment: Payments.recordStripePayment,
 });
 
 export default Payments;

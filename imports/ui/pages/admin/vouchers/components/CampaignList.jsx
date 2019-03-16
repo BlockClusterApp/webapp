@@ -105,14 +105,14 @@ class VoucherList extends Component {
   render() {
     return (
       <div className="voucherList">
-        <div className="m-t-20 container-fluid container-fixed-lg bg-white">
-          <div className="row">
+        <div className="m-t-20 container-fluid container-fixed-lg">
+          <div className="row  bg-white">
             <div className="col-lg-12">
               <div className="card card-transparent">
                 <div className="card-header ">
                   <div className="card-title">Vouchers</div>
                 </div>
-                <div className="card-block">
+                <div className="card-block p-l-0 p-r-0">
                   <div className="row">
                     <div className="col-md-12">
                       <div className="input-group transparent">

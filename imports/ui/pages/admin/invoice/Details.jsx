@@ -140,6 +140,25 @@ class InvoiceDetails extends Component {
     );
   };
 
+  chargeNow = () => {
+    const { invoice } = this.props;
+    if (!invoice.stripeCustomerId) {
+      return true;
+    }
+    this.setState({
+      loading: true,
+    });
+    Meteor.call('adminChargeStripeInvoice', { invoiceId: invoice._id }, (err, data) => {
+      this.setState({
+        loading: false,
+      });
+      if (err) {
+        return notifications.error(err.reason);
+      }
+      notifications.success('Charged invoice');
+    });
+  };
+
   render() {
     let billView = null;
     let creditsView = null;
@@ -213,7 +232,7 @@ class InvoiceDetails extends Component {
                   <h5 className="text-info pull-left fs-12">Payment Method</h5>
                   <div className="clearfix" />
                 </div>
-                <div className="card-description">{invoice.rzSubscriptionId ? `Subscription ${invoice.rzSubscriptionId}` : 'Debit card'}</div>
+                <div className="card-description">{invoice.stripeCustomerId ? 'Stripe' : invoice.rzSubscriptionId ? `Subscription ${invoice.rzSubscriptionId}` : 'Debit Card'}</div>
                 <div className="clearfix" />
               </div>
             </div>
@@ -269,7 +288,6 @@ class InvoiceDetails extends Component {
                 <div className="clearfix" />
               </div>
               <div className="card-description">
-                <h5>Emails</h5>
                 <ConfirmationButton
                   loading={this.state.loading}
                   completed={!(invoice && invoice.emailsSent && invoice.emailsSent.includes(1)) || this.state.disableReminder || [2, 5, 6, 7].includes(invoice.paymentStatus)}
@@ -287,6 +305,21 @@ class InvoiceDetails extends Component {
                       : 'Send Reminder: Invoice already paid'
                   }
                   actionText="Send Invoice Reminder"
+                />
+                &nbsp;&nbsp;
+                <ConfirmationButton
+                  loading={this.state.loading}
+                  completed={[2, 5, 6, 7].includes(invoice.paymentStatus) || !invoice.stripeCustomerId}
+                  onConfirm={this.chargeNow.bind(this, invoice._id)}
+                  loadingText="Charging customer"
+                  completedText={
+                    invoice.paymentStatus === 6
+                      ? 'Charge customer: Refunded'
+                      : [5, 6, 7].includes(invoice.paymentStatus)
+                      ? 'Charge customer: Not eligible'
+                      : 'Cannot charge manually'
+                  }
+                  actionText="Charge customer"
                 />
                 <br />
                 {![2, 6, 7].includes(invoice.paymentStatus) && (
