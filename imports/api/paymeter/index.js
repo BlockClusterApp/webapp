@@ -342,10 +342,10 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
 
           let gasLimit = 21000;
 
-          if (options.functionCallData) {
+          if (options.data) {
             let txnObj = {
               to: toAddress,
-              data: options.functionCallData,
+              data: options.data,
               from: wallet.address,
             };
 
@@ -376,8 +376,8 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
               value: web3.utils.toHex(web3.utils.toWei(final_amount, 'ether')),
             };
 
-            if (options.functionCallData) {
-              rawTx.data = options.functionCallData;
+            if (options.data) {
+              rawTx.data = options.data;
             }
 
             if (!final_amount.toString()) {
@@ -427,7 +427,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                 fromWallet: wallet._id,
                 toAddress: toAddress,
                 amount: final_amount,
-                data: options.functionCallData || '0x',
+                data: options.data || '0x',
                 createdAt: Date.now(),
                 internalStatus: sendTxnNow ? 'pending' : 'processing',
                 status: isInternalTxn ? 'completed' : 'pending',
