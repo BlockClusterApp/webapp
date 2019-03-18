@@ -213,7 +213,7 @@ class PaymentDashboard extends Component {
                             <tr>
                               <td>Card</td>
                               <td>
-                                {card && (card.card.network || card.card.brand)}&nbsp;{card && card.card.last4}
+                                {card && card.card && (card.card.network || card.card.brand)}&nbsp;{card && card.card && card.card.last4}
                                 {stripePayment && stripePayment.source.brand && `${stripePayment.source.brand} ${stripePayment.source.last4} - ${stripePayment.source.country}`}
                               </td>
                             </tr>

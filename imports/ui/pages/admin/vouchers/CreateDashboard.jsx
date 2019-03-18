@@ -9,6 +9,8 @@ import Hyperion from './components/HyperionCreate';
 import Paymeter from './components/PaymeterCreate';
 import CreditsCreate from './components/CreditsCreate';
 
+import './components/style.scss';
+
 class VoucherDashboard extends Component {
   constructor(props) {
     super(props);
@@ -28,13 +30,17 @@ class VoucherDashboard extends Component {
     });
   };
 
+  componentWillReceiveProps() {
+    this.setState({});
+  }
+
   create = () => {
     this.props.history.push('/app/admin/vouchers/');
   };
 
   render() {
     return (
-      <div className="content">
+      <div className="content VoucherDashboard">
         <style>{'\
                 .footer{\
                   display:none;\
@@ -44,7 +50,7 @@ class VoucherDashboard extends Component {
           <nav className="secondary-sidebar light" style={{ backgroundColor: 'rgb(251,251,251)' }}>
             <p className="menu-title fs-16">Create Vouchers</p>
             <ul className="main-menu">
-              <li className="active">
+              <li className={this.props.history.location.pathname === '/app/admin/voucher/create/campaign' ? 'active-menu-item' : ''}>
                 <Link to={'/app/admin/voucher/create/campaign'}>
                   <span className="title">
                     <i className="fa fa-file" />
@@ -52,7 +58,7 @@ class VoucherDashboard extends Component {
                   </span>
                 </Link>
               </li>
-              <li className="">
+              <li className={this.props.history.location.pathname === '/app/admin/voucher/create/credits' ? 'active-menu-item' : ''}>
                 <Link to={'/app/admin/voucher/create/credits'}>
                   <span className="title">
                     <i className="fa fa-file" />
@@ -60,7 +66,7 @@ class VoucherDashboard extends Component {
                   </span>
                 </Link>
               </li>
-              <li>
+              <li className={this.props.history.location.pathname === '/app/admin/voucher/create/networks' ? 'active-menu-item' : ''}>
                 <Link to={'/app/admin/voucher/create/networks'}>
                   <span className="title">
                     <i className="fa fa-cube" />
@@ -68,7 +74,7 @@ class VoucherDashboard extends Component {
                   </span>
                 </Link>
               </li>
-              <li>
+              <li className={this.props.history.location.pathname === '/app/admin/voucher/create/hyperion' ? 'active-menu-item' : ''}>
                 <Link to={'/app/admin/voucher/create/hyperion'}>
                   <span className="title">
                     <i className="fa fa-cube" />
@@ -76,7 +82,7 @@ class VoucherDashboard extends Component {
                   </span>
                 </Link>
               </li>
-              <li>
+              <li className={this.props.history.location.pathname === '/app/admin/voucher/create/paymeter' ? 'active-menu-item' : ''}>
                 <Link to={'/app/admin/voucher/create/paymeter'}>
                   <span className="title">
                     <i className="fa fa-cube" />

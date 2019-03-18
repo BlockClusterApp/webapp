@@ -6,15 +6,21 @@ import { WalletTransactions } from '../../walletTransactions/walletTransactions.
 
 Meteor.publishTransformed('wallets', function() {
   return Wallets.find({ user: this.userId }, { fields: { privateKey: 0 } }).serverTransform(doc => {
-    let withdrawl_txns = WalletTransactions.find({
-      fromWallet: doc._id,
-      type: 'withdrawal',
-    }).fetch();
+    let withdrawl_txns = WalletTransactions.find(
+      {
+        fromWallet: doc._id,
+        type: 'withdrawal',
+      },
+      { sort: { createdAt: -1 } }
+    ).fetch();
 
-    let deposit_txns = WalletTransactions.find({
-      toWallet: doc._id,
-      type: 'deposit',
-    }).fetch();
+    let deposit_txns = WalletTransactions.find(
+      {
+        toWallet: doc._id,
+        type: 'deposit',
+      },
+      { sort: { createdAt: -1 } }
+    ).fetch();
 
     doc.withdrawl_txns = withdrawl_txns;
     doc.deposit_txns = deposit_txns;
