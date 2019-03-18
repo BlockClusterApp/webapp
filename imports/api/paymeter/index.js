@@ -1401,6 +1401,23 @@ Meteor.methods({
   },
 });
 
+async function adminChangeMinimumPaymeterBill({ paymeter, value }) {
+  if (Meteor.user().admin < 2) {
+    throw new Meteor.Error(401, 'Unauthorized');
+  }
+  PaymeterCollection.update(
+    {
+      _id: paymeter,
+    },
+    {
+      $set: {
+        minimumFeeThisMonth: Number(value),
+      },
+    }
+  );
+  return true;
+}
+
 module.exports = {
   createWallet,
   getBalance,
@@ -1419,3 +1436,7 @@ module.exports = {
   getWalletTransactions,
   getBill: paymeter_getAndResetUserBill,
 };
+
+Meteor.methods({
+  adminChangeMinimumPaymeterBill,
+});

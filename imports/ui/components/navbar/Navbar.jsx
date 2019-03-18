@@ -45,7 +45,7 @@ class Navbar extends Component {
 
     const adminItems = [];
     adminItems.push(
-      <li className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/users' ? 'selected' : ''}>
+      <li key="admin-users" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/users' ? 'selected' : ''}>
         <Link to="/app/admin/users">Users</Link>
         <span className="icon-thumbnail">
           <i className="fa fa-users" />
@@ -54,7 +54,7 @@ class Navbar extends Component {
     );
     features.Invoice &&
       adminItems.push(
-        <li className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/invoices' ? 'selected' : ''}>
+        <li key="admin-invoices" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/invoices' ? 'selected' : ''}>
           <Link to="/app/admin/invoices">Invoices</Link>
           <span className="icon-thumbnail">
             <i className="fa fa-list-alt" />
@@ -63,15 +63,25 @@ class Navbar extends Component {
       );
 
     adminItems.push(
-      <li className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/networks' ? 'selected' : ''}>
+      <li key="admin-networks" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/networks' ? 'selected' : ''}>
         <Link to="/app/admin/networks">Networks</Link>
         <span className="icon-thumbnail">
           <i className="fa fa-desktop" />
         </span>
       </li>
     );
+
+    features.Paymeter &&
+      adminItems.push(
+        <li key="admin-paymeter" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/paymeter' ? 'selected' : ''}>
+          <Link to="/app/admin/paymeter">Paymeter</Link>
+          <span className="icon-thumbnail">
+            <i className="fa fa-cube" />
+          </span>
+        </li>
+      );
     adminItems.push(
-      <li className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/network-configs' ? 'selected' : ''}>
+      <li key="admin-configs" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/network-configs' ? 'selected' : ''}>
         <Link to="/app/admin/network-configs">Network Configs</Link>
         <span className="icon-thumbnail">
           <i className="fa fa-sliders" />
@@ -80,7 +90,7 @@ class Navbar extends Component {
     );
     features.Vouchers &&
       adminItems.push(
-        <li className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/vouchers' ? 'selected' : ''}>
+        <li key="admin-vouchers" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/vouchers' ? 'selected' : ''}>
           <Link to="/app/admin/vouchers">Vouchers</Link>
           <span className="icon-thumbnail">
             <i className="fa fa-tags" />
@@ -89,7 +99,7 @@ class Navbar extends Component {
       );
     features.SupportTicket &&
       adminItems.push(
-        <li className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/support' ? 'selected' : ''}>
+        <li key="admin-support" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/support' ? 'selected' : ''}>
           <Link to="/app/admin/support">Support</Link>
           <span className="icon-thumbnail">
             <i className="fa fa-ticket" />
@@ -98,7 +108,7 @@ class Navbar extends Component {
       );
     (features.Paymeter || features.Hyperion) &&
       adminItems.push(
-        <li className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/pricing' ? 'selected' : ''}>
+        <li key="admin-pricing" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/pricing' ? 'selected' : ''}>
           <Link to="/app/admin/pricing">Pricing</Link>
           <span className="icon-thumbnail">
             <i className="fa fa-money" />
@@ -107,7 +117,7 @@ class Navbar extends Component {
       );
     features.ClientDashboard &&
       adminItems.push(
-        <li className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/clients' ? 'selected' : ''}>
+        <li key="admin-clients" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/clients' ? 'selected' : ''}>
           <Link to="/app/admin/clients">Clients</Link>
           <span className="icon-thumbnail">
             <i className="fa fa-users" />
@@ -115,7 +125,7 @@ class Navbar extends Component {
         </li>
       );
     return (
-      <nav className={`page-sidebar ${window.isAdminWindow ? 'admin' : ''}`} data-pages="sidebar">
+      <nav className={`page-sidebar`} data-pages="sidebar">
         <div className="sidebar-overlay-slide from-top" id="appMenu">
           <div className="row">
             <div className="col-xs-6 no-padding">
@@ -262,16 +272,6 @@ class Navbar extends Component {
               </li>
             )}
             {features.Admin && this.props.user && this.props.user.admin >= 1 && window.isAdminWindow && adminItems}
-
-            {/* (this.props.kuberREST_IP[0] !== undefined) &&
-	                    	<li className="">
-		                    	<Link target="_blank" to={this.props.kuberREST_IP + "/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#!/overview?namespace=default"} className="detailed">
-		                    		<span className="title">Infrastructure</span>
-		                        	<span className="details">View Kubernetes</span>
-		                    	</Link>
-		                        <span className="icon-thumbnail"><i className="fa fa-cubes"></i></span>
-		                    </li>
-                      */}
           </ul>
           <div className="clearfix" />
         </div>
@@ -282,7 +282,6 @@ class Navbar extends Component {
 
 export default withTracker(() => {
   return {
-    kuberREST_IP: Config.kubeRestApiHost,
     user: Meteor.user(),
   };
 })(withRouter(Navbar));
