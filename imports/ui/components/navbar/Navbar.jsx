@@ -19,7 +19,12 @@ class Navbar extends Component {
         remoteConfig: window.RemoteConfig,
       });
     });
-    $.Pages.init();
+    this.props.history.listen((location, action) => {
+      if (location.pathname.includes('/app/admin')) {
+        console.log('updating state');
+        this.setState({});
+      }
+    });
   }
 
   componentWillReceiveProps(newProps, oldProps) {
@@ -32,10 +37,6 @@ class Navbar extends Component {
     $.Pages.init();
   }
 
-  componentWillReceiveProps() {
-    this.setState({});
-  }
-
   render() {
     const { remoteConfig } = this.state;
     let { features } = remoteConfig;
@@ -45,7 +46,7 @@ class Navbar extends Component {
 
     const adminItems = [];
     adminItems.push(
-      <li key="admin-users" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/users' ? 'selected' : ''}>
+      <li key="admin-users" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/users') ? 'selected' : ''}>
         <Link to="/app/admin/users">Users</Link>
         <span className="icon-thumbnail">
           <i className="fa fa-users" />
@@ -54,7 +55,7 @@ class Navbar extends Component {
     );
     features.Invoice &&
       adminItems.push(
-        <li key="admin-invoices" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/invoices' ? 'selected' : ''}>
+        <li key="admin-invoices" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/invoices') ? 'selected' : ''}>
           <Link to="/app/admin/invoices">Invoices</Link>
           <span className="icon-thumbnail">
             <i className="fa fa-list-alt" />
@@ -63,7 +64,7 @@ class Navbar extends Component {
       );
 
     adminItems.push(
-      <li key="admin-networks" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/networks' ? 'selected' : ''}>
+      <li key="admin-networks" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/networks') ? 'selected' : ''}>
         <Link to="/app/admin/networks">Networks</Link>
         <span className="icon-thumbnail">
           <i className="fa fa-desktop" />
@@ -73,7 +74,7 @@ class Navbar extends Component {
 
     features.Paymeter &&
       adminItems.push(
-        <li key="admin-paymeter" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/paymeter' ? 'selected' : ''}>
+        <li key="admin-paymeter" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/paymeter') ? 'selected' : ''}>
           <Link to="/app/admin/paymeter">Paymeter</Link>
           <span className="icon-thumbnail">
             <i className="fa fa-cube" />
@@ -81,7 +82,7 @@ class Navbar extends Component {
         </li>
       );
     adminItems.push(
-      <li key="admin-configs" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/network-configs' ? 'selected' : ''}>
+      <li key="admin-configs" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/network-configs') ? 'selected' : ''}>
         <Link to="/app/admin/network-configs">Network Configs</Link>
         <span className="icon-thumbnail">
           <i className="fa fa-sliders" />
@@ -90,7 +91,7 @@ class Navbar extends Component {
     );
     features.Vouchers &&
       adminItems.push(
-        <li key="admin-vouchers" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/vouchers' ? 'selected' : ''}>
+        <li key="admin-vouchers" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/vouchers') ? 'selected' : ''}>
           <Link to="/app/admin/vouchers">Vouchers</Link>
           <span className="icon-thumbnail">
             <i className="fa fa-tags" />
@@ -99,7 +100,7 @@ class Navbar extends Component {
       );
     features.SupportTicket &&
       adminItems.push(
-        <li key="admin-support" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/support' ? 'selected' : ''}>
+        <li key="admin-support" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/support') ? 'selected' : ''}>
           <Link to="/app/admin/support">Support</Link>
           <span className="icon-thumbnail">
             <i className="fa fa-ticket" />
@@ -108,7 +109,7 @@ class Navbar extends Component {
       );
     (features.Paymeter || features.Hyperion) &&
       adminItems.push(
-        <li key="admin-pricing" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/pricing' ? 'selected' : ''}>
+        <li key="admin-pricing" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/pricing') ? 'selected' : ''}>
           <Link to="/app/admin/pricing">Pricing</Link>
           <span className="icon-thumbnail">
             <i className="fa fa-money" />
@@ -117,7 +118,7 @@ class Navbar extends Component {
       );
     features.ClientDashboard &&
       adminItems.push(
-        <li key="admin-clients" className={window.isAdminWindow && this.props.history.location.pathname === '/app/admin/clients' ? 'selected' : ''}>
+        <li key="admin-clients" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/clients') ? 'selected' : ''}>
           <Link to="/app/admin/clients">Clients</Link>
           <span className="icon-thumbnail">
             <i className="fa fa-users" />
