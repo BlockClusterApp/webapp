@@ -1246,6 +1246,28 @@ async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMo
   }
 }
 
+//this can be used in case deposits are coming from a smart contract
+async function refreshBalance(walletId) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      Wallets.update(
+        {
+          _id: walletId,
+        },
+        {
+          $set: {
+            confirmedBalance: await getBalance(walletId),
+          },
+        }
+      );
+
+      resolve();
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
 Meteor.methods({
   createWallet: async (coinType, walletName, network, options) => {
     if (Meteor.userId()) {
@@ -1264,6 +1286,17 @@ Meteor.methods({
       try {
         let txnHash = await transfer(fromWalletId, toAddress, amount, options || {}, Meteor.userId());
         return txnHash;
+      } catch (e) {
+        throw new Meteor.Error(e, e);
+      }
+    } else {
+      throw new Meteor.Error('Not Allowed', 'Please login');
+    }
+  },
+  refreshBalance: async walletId => {
+    if (Meteor.userId()) {
+      try {
+        await refreshBalance(walletId, Meteor.userId());
       } catch (e) {
         throw new Meteor.Error(e, e);
       }
@@ -1413,6 +1446,7 @@ module.exports = {
       func('An error occured');
     }
   },
+  refreshBalance,
   transfer,
   getNonce,
   erc20ABI,

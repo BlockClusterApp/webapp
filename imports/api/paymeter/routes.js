@@ -59,6 +59,15 @@ JsonRoutes.add('get', '/api/paymeter/wallets/:id/deposits', async (req, res) => 
   }
 });
 
+JsonRoutes.add('get', '/api/paymeter/wallets/:id/refreshBalance', async (req, res) => {
+  try {
+    await Paymeter.refreshBalance(req.params.id);
+    return sendSuccess(res);
+  } catch (err) {
+    return sendError(res, 400, err);
+  }
+});
+
 JsonRoutes.add('post', '/api/paymeter/wallets/:id/send', async (req, res) => {
   const fromWalletId = req.params.id;
   const { toAddress, amount, options } = req.body;
