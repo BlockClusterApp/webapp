@@ -342,10 +342,10 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
 
           let gasLimit = 21000;
 
-          if (options.functionCall) {
+          if (options.data) {
             let txnObj = {
-              to: options.functionCall.contractAddress,
-              data: options.functionCall.data,
+              to: toAddress,
+              data: options.data,
               from: wallet.address,
             };
 
@@ -376,8 +376,8 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
               value: web3.utils.toHex(web3.utils.toWei(final_amount, 'ether')),
             };
 
-            if (options.functionCall) {
-              rawTx.data = options.functionCall.data;
+            if (options.data) {
+              rawTx.data = options.data;
             }
 
             if (!final_amount.toString()) {
@@ -427,7 +427,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                 fromWallet: wallet._id,
                 toAddress: toAddress,
                 amount: final_amount,
-                data: options.functionCall ? options.functionCall.data : '0x',
+                data: options.data || '0x',
                 createdAt: Date.now(),
                 internalStatus: sendTxnNow ? 'pending' : 'processing',
                 status: isInternalTxn ? 'completed' : 'pending',
@@ -1246,6 +1246,28 @@ async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMo
   }
 }
 
+//this can be used in case deposits are coming from a smart contract
+async function refreshBalance(walletId) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      Wallets.update(
+        {
+          _id: walletId,
+        },
+        {
+          $set: {
+            confirmedBalance: await getBalance(walletId),
+          },
+        }
+      );
+
+      resolve();
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
 Meteor.methods({
   createWallet: async (coinType, walletName, network, options) => {
     if (Meteor.userId()) {
@@ -1264,6 +1286,17 @@ Meteor.methods({
       try {
         let txnHash = await transfer(fromWalletId, toAddress, amount, options || {}, Meteor.userId());
         return txnHash;
+      } catch (e) {
+        throw new Meteor.Error(e, e);
+      }
+    } else {
+      throw new Meteor.Error('Not Allowed', 'Please login');
+    }
+  },
+  refreshBalance: async walletId => {
+    if (Meteor.userId()) {
+      try {
+        await refreshBalance(walletId, Meteor.userId());
       } catch (e) {
         throw new Meteor.Error(e, e);
       }
@@ -1430,6 +1463,7 @@ module.exports = {
       func(e.toString());
     }
   },
+  refreshBalance,
   transfer,
   getNonce,
   erc20ABI,

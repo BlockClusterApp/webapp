@@ -75,6 +75,16 @@ class PaymeterComponent extends Component {
     );
   };
 
+  refreshBalance = walletId => {
+    Meteor.call('refreshBalance', walletId, err => {
+      if (!err) {
+        notifications.success('Wallet refreshed');
+      } else {
+        notifications.error('An error occured');
+      }
+    });
+  };
+
   transferETH = (e, walletId) => {
     e.preventDefault();
 
@@ -930,7 +940,19 @@ class PaymeterComponent extends Component {
                                       <h5>
                                         Deposit Address <br /> <b>{wallet.address}</b>
                                       </h5>
-                                      <p className="small hint-text">15 confirmations are required for balance to update</p>
+                                      <p className="small hint-text">
+                                        <i
+                                          className="fa fa-refresh"
+                                          aria-hidden="true"
+                                          style={{
+                                            cursor: 'pointer',
+                                          }}
+                                          onClick={() => {
+                                            this.refreshBalance(wallet._id);
+                                          }}
+                                        />
+                                        &nbsp;15 confirmations are required for balance to update
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
@@ -1192,7 +1214,19 @@ class PaymeterComponent extends Component {
                                       <h5>
                                         Deposit Address: <br /> <b>{wallet.address}</b>
                                       </h5>
-                                      <p className="small hint-text">15 confirmations are required for balance to update</p>
+                                      <p className="small hint-text">
+                                        <i
+                                          className="fa fa-refresh"
+                                          aria-hidden="true"
+                                          style={{
+                                            cursor: 'pointer',
+                                          }}
+                                          onClick={() => {
+                                            this.refreshBalance(wallet._id);
+                                          }}
+                                        />
+                                        15 confirmations are required for balance to update
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
