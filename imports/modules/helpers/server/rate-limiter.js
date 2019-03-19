@@ -9,12 +9,16 @@ const OperationMapping = {
   'paymeter-api': {
     // 60 requests per minute
     interval: 1 * 60 * 1000,
-    rate: 30,
+    rate: 120,
   },
   'hyperion-api': {
     // 10 requests per minute
     interval: 1 * 60 * 1000,
-    rate: 10,
+    rate: 120,
+  },
+  'platform-api': {
+    interval: 1 * 60 * 1000,
+    rate: 180,
   },
   default: {
     // 200 operations per minute

@@ -303,7 +303,6 @@ Meteor.methods({
     if (!isAllowed) {
       throw new Meteor.Error(429, 'Rate limit exceeded. Try after 1 minute');
     }
-    return true;
     var myFuture = new Future();
     const nodeConfig = getNodeConfig(networkConfig);
 
@@ -837,6 +836,10 @@ Meteor.methods({
       if (!isPaymentMethodVerified) {
         throw new Meteor.Error('unauthorized', 'Credit card not verified');
       }
+    }
+    const isAllowed = await RateLimiter.isAllowed('create-network', userId);
+    if (!isAllowed) {
+      throw new Meteor.Error(429, 'Rate limit exceeded. Try after 1 minute');
     }
 
     debug('joinNetwork | Arguments', arguments);
