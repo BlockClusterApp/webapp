@@ -26,6 +26,7 @@ import moment from 'moment';
 import fs from 'fs';
 import agenda from '../imports/modules/schedulers/agenda';
 import Webhook from '../imports/api/communication/webhook';
+import RateLimiter from '../imports/modules/helpers/server/rate-limiter';
 var md5 = require('apache-md5');
 var base64 = require('base-64');
 var utf8 = require('utf8');
@@ -298,6 +299,10 @@ Meteor.methods({
   createNetwork: async function({ networkName, locationCode, networkConfig, userId }) {
     debug('CreateNetwork | Arguments', networkName, locationCode, networkConfig, userId);
     userId = userId || Meteor.userId();
+    const isAllowed = await RateLimiter.isAllowed('create-network', userId);
+    if (!isAllowed) {
+      throw new Meteor.Error(429, 'Rate limit exceeded. Try after 1 minute');
+    }
     var myFuture = new Future();
     const nodeConfig = getNodeConfig(networkConfig);
 
@@ -831,6 +836,10 @@ Meteor.methods({
       if (!isPaymentMethodVerified) {
         throw new Meteor.Error('unauthorized', 'Credit card not verified');
       }
+    }
+    const isAllowed = await RateLimiter.isAllowed('create-network', userId);
+    if (!isAllowed) {
+      throw new Meteor.Error(429, 'Rate limit exceeded. Try after 1 minute');
     }
 
     debug('joinNetwork | Arguments', arguments);
@@ -1487,7 +1496,6 @@ spec:
         timeout: 60000,
       },
       function(error, response) {
-
         if (error) {
           myFuture.throw(error);
         } else {

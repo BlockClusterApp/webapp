@@ -16,6 +16,7 @@ import Billing from './billing';
 import moment from 'moment';
 import Voucher from './network/voucher';
 import HyperionPricing from '../collections/pricing/hyperion';
+import RateLimter from '../modules/helpers/server/rate-limiter';
 
 Meteor.methods({
   getHyperionToken: file => {
@@ -294,6 +295,20 @@ JsonRoutes.Middleware.use('/api/hyperion/fileStats', authMiddleware);
 JsonRoutes.Middleware.use('/api/hyperion/delete', authMiddleware);
 JsonRoutes.Middleware.use('/api/hyperion/logout', authMiddleware);
 JsonRoutes.Middleware.use('/api/hyperion/upload', upload.single('file'));
+
+JsonRoutes.Middleware.use('/api/hyperion', async (req, res, next) => {
+  const isAllowed = await RateLimter.isAllowed('hyperion-api', req.userId);
+  if (!isAllowed) {
+    return JsonRoutes.sendResult(res, {
+      code: 429,
+      data: {
+        error: 'You are being rate limited. Kindly try after some time',
+      },
+    });
+  }
+
+  next();
+});
 
 JsonRoutes.add(
   'post',

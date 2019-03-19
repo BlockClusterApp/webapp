@@ -2,6 +2,7 @@ import ApiKeys from '../collections/api-keys';
 import NetworkConfig from '../api/network/network-configuration';
 import NetworkConfiguration from '../collections/network-configuration/network-configuration';
 import LocationApi from './locations';
+import RateLimiter from '../modules/helpers/server/rate-limiter';
 
 async function validateToken(token) {
   const key = ApiKeys.find({
@@ -44,6 +45,17 @@ JsonRoutes.add('get', '/ping', function(req, res, next) {
 
 JsonRoutes.Middleware.use('/api/platform', authMiddleware);
 
+JsonRoutes.Middleware.use('/api/platform', async (req, res, next) => {
+  const isAllowed = await RateLimiter.isAllowed('platform-api', req.userId);
+  if (!isAllowed) {
+    return JsonRoutes.sendResult(res, {
+      code: 429,
+      data: 'You are being rate limited. Try after some time',
+    });
+  }
+  next();
+});
+
 // Fetch Network Types for this user
 JsonRoutes.add('get', '/api/platform/networks/types', async function(req, res) {
   const configs = await NetworkConfig.getConfigs();
@@ -83,7 +95,7 @@ JsonRoutes.add('post', '/api/platform/networks', async function(req, res, next) 
     });
   }
 
-  const locations = await LocationApi.getLocations({ service: dynamo, userId: req.userId });
+  const locations = await LocationApi.getLocations({ service: 'dynamo', userId: req.userId });
   if (!locations.map(i => i.locationCode).includes(locationCode)) {
     return JsonRoutes.sendResult(res, {
       code: 400,
