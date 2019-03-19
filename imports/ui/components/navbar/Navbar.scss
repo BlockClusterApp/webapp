@@ -1,0 +1,26 @@
+.page-sidebar.admin {
+  background: #222;
+  color: #fff;
+
+  .sidebar-menu .menu-items > li > a {
+    color: #eee;
+  }
+  .sidebar-menu .menu-items {
+    li {
+      padding-top: 8px;
+    }
+    li.selected {
+      background: #555;
+    }
+    li:hover > a {
+      color: #fff;
+    }
+    .icon-thumbnail {
+      color: #eee;
+    }
+
+    li:hover .icon-thumbnail {
+      color: #fff;
+    }
+  }
+}

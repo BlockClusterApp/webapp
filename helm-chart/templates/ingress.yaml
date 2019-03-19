@@ -12,9 +12,17 @@ spec:
   tls:
   - hosts:
     - app.blockcluster.io
+    - admin.blockcluster.io
     secretName: blockcluster-ssl
   rules:
   - host: app.blockcluster.io
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: {{ template "server.name" . }}-svc
+          servicePort: 80
+  - host: admin.blockcluster.io
     http:
       paths:
       - path: /

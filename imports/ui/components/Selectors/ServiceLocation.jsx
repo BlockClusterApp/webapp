@@ -68,7 +68,7 @@ class ServiceLocation extends Component {
   render() {
     const locationView = Object.keys(this.locationMapping).map(locationCode => {
       return (
-        <div className="col-md-4 col-lg-3 col-sm-6 p-t-15">
+        <div className="col-md-4 col-lg-3 col-sm-6 p-t-15" key={locationCode}>
           <label htmlFor={`label_${locationCode}`} style={{ cursor: 'pointer' }}>
             {this.locationNameMapping[locationCode]} ({locationCode})
           </label>
