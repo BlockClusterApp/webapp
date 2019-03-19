@@ -42,7 +42,7 @@ class ViewEditImpulse extends Component {
 
     Meteor.call('deleteNetwork', this.props.network[0].instanceId, error => {
       if (error) {
-        notifications.error('An error occured');
+        notifications.error(error.reason || error.message || 'An error occured');
       } else {
         this.props.history.push('/app/networks');
         notifications.success('Network deleted successful');
@@ -58,7 +58,7 @@ class ViewEditImpulse extends Component {
     e.preventDefault();
     Meteor.call('vote', this.props.network[0]._id, this.authorityAddress.value, error => {
       if (error) {
-        notifications.error('An error occured');
+        notifications.error(error.reason || error.message || 'An error occured');
       } else {
         notifications.success('Voted Successfully');
         this.authorityAddress.value = '';
@@ -70,7 +70,7 @@ class ViewEditImpulse extends Component {
     e.preventDefault();
     Meteor.call('unVote', this.props.network[0]._id, this.authorityAddress.value, error => {
       if (error) {
-        notifications.error('An error occured');
+        notifications.error(error.reason || error.message || 'An error occured');
       } else {
         notifications.success('Unvoted Successfully');
         this.authorityAddress.value = '';
@@ -82,7 +82,7 @@ class ViewEditImpulse extends Component {
     e.preventDefault();
     Meteor.call('createAccount', this.accountPassword.value, this.props.network[0]._id, error => {
       if (error) {
-        notifications.error('An error occured');
+        notifications.error(error.reason || error.message || 'An error occured');
       } else {
         notifications.success('Account created');
         this.accountPassword.value = '';
@@ -100,7 +100,7 @@ class ViewEditImpulse extends Component {
       if (!error) {
         helpers.downloadString(result, 'application/json', 'key.json');
       } else {
-        notifications.error('An error occured');
+        notifications.error(error.reason || error.message || 'An error occured');
       }
 
       this.setState({

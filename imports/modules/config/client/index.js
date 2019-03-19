@@ -25,11 +25,25 @@ setInterval(async () => {
   await fetchNewConfig();
 }, 1 * 60 * 1000);
 
-
 function getMicroServiceBase() {
   if (process.env.LICENCE_SERVICE_HOST) {
     return process.env.LICENCE_SERVICE_HOST;
   }
+  switch (window.location.host) {
+    case 'app.blockcluster.io':
+    case 'admin.blockcluster.io':
+      return 'https://enterprise-api.blockcluster.io';
+    case 'staging.blockcluster.io':
+      return 'https://enterprise-api-staging.blockcluster.io';
+    case 'test.blockcluster.io':
+      return 'https://enterprise-api-dev.blockcluster.io';
+    case 'dev.blockcluster.io':
+      return 'https://enterprise-api-dev.blockcluster.io';
+    default:
+      return 'http://localhost:4000';
+  }
+}
+function getMicroServiceBase() {
   switch (window.location.host) {
     case 'app.blockcluster.io':
       return 'https://enterprise-api.blockcluster.io';
@@ -43,23 +57,9 @@ function getMicroServiceBase() {
       return 'http://localhost:4000';
   }
 }
-function getMicroServiceBase(){
-  switch (window.location.host) {
-    case "app.blockcluster.io":
-      return "https://enterprise-api.blockcluster.io";
-    case "staging.blockcluster.io":
-      return "https://enterprise-api-staging.blockcluster.io";
-    case "test.blockcluster.io":
-      return "https://enterprise-api-dev.blockcluster.io";
-    case "dev.blockcluster.io":
-      return "https://enterprise-api-dev.blockcluster.io";
-    default:
-      return 'http://localhost:4000';
-    }
-  }
 
 function getDynamoWokerDomainName(locationCode) {
-  if(RemoteConfig.workerDomainName && RemoteConfig.workerDomainName[locationCode]) {
+  if (RemoteConfig.workerDomainName && RemoteConfig.workerDomainName[locationCode]) {
     return RemoteConfig.workerDomainName[locationCode];
   }
   if (window.location.origin.includes('blockcluster.io')) {
@@ -68,7 +68,7 @@ function getDynamoWokerDomainName(locationCode) {
       prefix = `-${locationCode}`;
     }
     const host = window.location.origin;
-    const url = `${host.split("://")[1].replace(".blockcluster.io", '')}${prefix}.blockcluster.io`;
+    const url = `${host.split('://')[1].replace('.blockcluster.io', '')}${prefix}.blockcluster.io`;
     return url;
   }
 
@@ -93,5 +93,5 @@ module.exports = {
     },
   },
   licensingMicroserviceBase: getMicroServiceBase(),
-  activatedFeatures: RemoteConfig.features
-}
+  activatedFeatures: RemoteConfig.features,
+};

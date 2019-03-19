@@ -1037,10 +1037,30 @@ class PaymeterComponent extends Component {
                                         return (
                                           <tr key={item._id}>
                                             <td className="v-align-middle pre-imp ">{helpers.timeConverter(item.createdAt / 1000)}</td>
-                                            <td className="v-align-middle ">{item.txnId}</td>
+                                            <td className="v-align-middle ">
+                                              {wallet.network === 'testnet' ? (
+                                                <a href={`https://rinkeby.etherscan.io/tx/${item.txnId}`} target="_blank">
+                                                  {item.txnId}
+                                                </a>
+                                              ) : (
+                                                <a href={`https://etherscan.io/tx/${item.txnId}`} target="_blank">
+                                                  {item.txnId}
+                                                </a>
+                                              )}
+                                            </td>
                                             <td className="v-align-middle">{item.amount} ETH</td>
                                             <td className="v-align-middle">{item.fee} ETH</td>
-                                            <td className="v-align-middle">{item.toAddress}</td>
+                                            <td className="v-align-middle">
+                                              {wallet.network === 'testnet' ? (
+                                                <a href={`https://rinkeby.etherscan.io/address/${item.toAddress}`} target="_blank">
+                                                  {item.toAddress}
+                                                </a>
+                                              ) : (
+                                                <a href={`https://etherscan.io/address/${item.toAddress}`} target="_blank">
+                                                  {item.toAddress}
+                                                </a>
+                                              )}
+                                            </td>
                                             <td className="v-align-middle">{ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}</td>
                                           </tr>
                                         );
@@ -1075,10 +1095,30 @@ class PaymeterComponent extends Component {
                                         return (
                                           <tr key={item._id}>
                                             <td className="v-align-middle pre-imp ">{helpers.timeConverter(item.createdAt / 1000)}</td>
-                                            <td className="v-align-middle ">{item.txnId}</td>
+                                            <td className="v-align-middle ">
+                                              {wallet.network === 'testnet' ? (
+                                                <a href={`https://rinkeby.etherscan.io/tx/${item.txnId}`} target="_blank">
+                                                  {item.txnId}
+                                                </a>
+                                              ) : (
+                                                <a href={`https://etherscan.io/tx/${item.txnId}`} target="_blank">
+                                                  {item.txnId}
+                                                </a>
+                                              )}
+                                            </td>
                                             <td className="v-align-middle">{item.amount} ETH</td>
                                             <td className="v-align-middle">${item.usdCharged || '0.00'}</td>
-                                            <td className="v-align-middle">{item.fromAddress}</td>
+                                            <td className="v-align-middle">
+                                              {wallet.network === 'testnet' ? (
+                                                <a href={`https://rinkeby.etherscan.io/address/${item.fromAddress}`} target="_blank">
+                                                  {item.fromAddress}
+                                                </a>
+                                              ) : (
+                                                <a href={`https://etherscan.io/address/${item.fromAddress}`} target="_blank">
+                                                  {item.fromAddress}
+                                                </a>
+                                              )}
+                                            </td>
                                             <td className="v-align-middle">{ReactHtmlParser(helpers.convertStatusToTag(item.status, helpers.firstLetterCapital(item.status)))}</td>
                                           </tr>
                                         );

@@ -117,7 +117,7 @@ class ViewEditNetwork extends Component {
     e.preventDefault();
     Meteor.call('vote', this.props.network[0]._id, this.authorityAddress.value, error => {
       if (error) {
-        notifications.error('An error occured');
+        notifications.error(error.reason || error.message || 'An error occured');
       } else {
         notifications.success('Voted Successfully');
         this.authorityAddress.value = '';
@@ -129,7 +129,7 @@ class ViewEditNetwork extends Component {
     e.preventDefault();
     Meteor.call('unVote', this.props.network[0]._id, this.authorityAddress.value, error => {
       if (error) {
-        notifications.error('An error occured');
+        notifications.error(error.reason || error.message || 'An error occured');
       } else {
         notifications.success('Unvoted Successfully');
         this.authorityAddress.value = '';
@@ -141,7 +141,7 @@ class ViewEditNetwork extends Component {
     e.preventDefault();
     Meteor.call('createAccount', this.accountPassword.value, this.props.network[0]._id, error => {
       if (error) {
-        notifications.error('An error occured');
+        notifications.error(error.reason || error.message || 'An error occured');
       } else {
         notifications.success('Account created');
         this.accountPassword.value = '';
@@ -159,7 +159,7 @@ class ViewEditNetwork extends Component {
       if (!error) {
         helpers.downloadString(result, 'application/json', 'key.json');
       } else {
-        notifications.error('An error occured');
+        notifications.error(error.reason || error.message || 'An error occured');
       }
 
       this.setState({
@@ -181,7 +181,7 @@ class ViewEditNetwork extends Component {
       if (!error) {
         notifications.success('Node name changed');
       } else {
-        notifications.error('An error occured');
+        notifications.error(error.reason || error.message || 'An error occured');
       }
     });
   };
@@ -303,10 +303,12 @@ class ViewEditNetwork extends Component {
                                 </div>
                                 <div className="col-md-6">
                                   <button className="btn btn-complete btn-cons" onClick={this.vote}>
-                                    <i className="fa fa-thumbs-up" aria-hidden="true" />&nbsp;Vote
+                                    <i className="fa fa-thumbs-up" aria-hidden="true" />
+                                    &nbsp;Vote
                                   </button>
                                   <button className="btn btn-warning btn-cons" onClick={this.unVote}>
-                                    <i className="fa fa-thumbs-down" aria-hidden="true" />&nbsp;Unvote
+                                    <i className="fa fa-thumbs-down" aria-hidden="true" />
+                                    &nbsp;Unvote
                                   </button>
                                 </div>
                               </form>
@@ -466,7 +468,8 @@ class ViewEditNetwork extends Component {
                           }
                         }}
                       >
-                        <i className="fa fa-download" aria-hidden="true" />&nbsp;Download Genesis File
+                        <i className="fa fa-download" aria-hidden="true" />
+                        &nbsp;Download Genesis File
                       </button>
                     </div>
                   </div>
@@ -577,7 +580,8 @@ class ViewEditNetwork extends Component {
                         className="btn btn-danger btn-cons"
                         onClick={this.deleteNetwork}
                       >
-                        <i className="fa fa-trash-o" aria-hidden="true" />&nbsp;Yes! Leave Network
+                        <i className="fa fa-trash-o" aria-hidden="true" />
+                        &nbsp;Yes! Leave Network
                       </LaddaButton>
                     </div>
                   </div>

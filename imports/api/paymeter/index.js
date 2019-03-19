@@ -160,12 +160,12 @@ async function getEthDetectedBalance(walletId) {
                     minedBalance = web3.utils.fromWei(minedBalance, 'ether').toString();
                     resolve(new BigNumber(minedBalance).toFixed(18).toString());
                   } else {
-                    reject('An error occured');
+                    reject(error.toString());
                   }
                 })
               );
             } else {
-              reject('An error occured');
+              reject(err.toString());
             }
           })
         );
@@ -223,12 +223,12 @@ async function getBalance(walletId) {
 
                     resolve(new BigNumber(minedBalance).toFixed(18).toString());
                   } else {
-                    reject('An error occured');
+                    reject(error.toString());
                   }
                 })
               );
             } else {
-              reject('An error occured');
+              reject(err.toString());
             }
           })
         );
@@ -274,12 +274,12 @@ async function getBalance(walletId) {
 
                     resolve(new BigNumber(minedBalance).toFixed(18).toString());
                   } else {
-                    reject('An error occured');
+                    reject(error.toString());
                   }
                 })
               );
             } else {
-              reject('An error occured');
+              reject(err.toString());
             }
           })
         );
@@ -300,7 +300,7 @@ async function getNonce(address, url) {
       if (!error) {
         resolve(nonce);
       } else {
-        reject('An error occured');
+        reject(error.toString());
       }
     });
   });
@@ -342,10 +342,10 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
 
           let gasLimit = 21000;
 
-          if (options.functionCallData) {
+          if (options.data) {
             let txnObj = {
               to: toAddress,
-              data: options.functionCallData,
+              data: options.data,
               from: wallet.address,
             };
 
@@ -376,8 +376,8 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
               value: web3.utils.toHex(web3.utils.toWei(final_amount, 'ether')),
             };
 
-            if (options.functionCallData) {
-              rawTx.data = options.functionCallData;
+            if (options.data) {
+              rawTx.data = options.data;
             }
 
             if (!final_amount.toString()) {
@@ -427,7 +427,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                 fromWallet: wallet._id,
                 toAddress: toAddress,
                 amount: final_amount,
-                data: options.functionCallData || '0x',
+                data: options.data || '0x',
                 createdAt: Date.now(),
                 internalStatus: sendTxnNow ? 'pending' : 'processing',
                 status: isInternalTxn ? 'completed' : 'pending',
@@ -1091,7 +1091,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
       if (err.toString().includes('insufficient funds')) {
         reject('Insufficient Funds');
       } else {
-        reject('Unknown Error');
+        reject(err.toString());
       }
     }
   });
@@ -1434,6 +1434,23 @@ Meteor.methods({
   },
 });
 
+async function adminChangeMinimumPaymeterBill({ paymeter, value }) {
+  if (Meteor.user().admin < 2) {
+    throw new Meteor.Error(401, 'Unauthorized');
+  }
+  PaymeterCollection.update(
+    {
+      _id: paymeter,
+    },
+    {
+      $set: {
+        minimumFeeThisMonth: Number(value),
+      },
+    }
+  );
+  return true;
+}
+
 module.exports = {
   createWallet,
   getBalance,
@@ -1443,7 +1460,7 @@ module.exports = {
       let balance = await getBalance(_id);
       func(null, balance);
     } catch (e) {
-      func('An error occured');
+      func(e.toString());
     }
   },
   refreshBalance,
@@ -1453,3 +1470,7 @@ module.exports = {
   getWalletTransactions,
   getBill: paymeter_getAndResetUserBill,
 };
+
+Meteor.methods({
+  adminChangeMinimumPaymeterBill,
+});

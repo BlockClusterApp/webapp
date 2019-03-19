@@ -14,7 +14,7 @@ import ResetPassword from '../../pages/reset-password/ResetPassword.jsx';
 import AcceptInvitation from '../../pages/userInvitation/AcceptInvitation.jsx';
 import config from '../../../modules/config/client';
 
-import './App.css';
+import './App.scss';
 
 import axios from 'axios';
 
@@ -52,8 +52,12 @@ class App extends Component {
   };
 
   requireNotLoggedIn = RouteComponent => {
+    let redirectTo = '/app/networks';
+    if (window.isAdminWindow) {
+      redirectTo = '/app/admin/users';
+    }
     return () => {
-      return this.props.userId ? <Redirect to="/app/networks" /> : <RouteComponent />;
+      return this.props.userId ? <Redirect to={redirectTo} /> : <RouteComponent />;
     };
   };
 
@@ -63,6 +67,31 @@ class App extends Component {
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
 
     document.body.appendChild(script);
+    window.addEventListener('theme-changed', theme => {
+      this.setState({});
+    });
+    window.theme = this.props.user && this.props.user.profile.theme;
+    if (window.location.origin.includes('admin.blockcluster.io')) {
+      window.isAdminWindow = true;
+    }
+    this.setState({});
+  }
+
+  componentWillReceiveProps(newProps, oldProps) {
+    let didChange = false;
+    if (newProps.user) {
+      if (!(oldProps.user && oldProps.user)) {
+        window.theme = newProps.user.profile.theme;
+        didChange = true;
+      }
+      if (oldProps.user && newProps.user.profile.theme !== oldProps.user.profile.theme) {
+        window.theme = newProps.user.profile.theme;
+        didChange = true;
+      }
+    }
+    if (didChange) {
+      this.setState({});
+    }
   }
 
   render() {
