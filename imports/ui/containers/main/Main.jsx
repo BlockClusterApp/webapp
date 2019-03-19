@@ -61,6 +61,8 @@ import PlatformAPIKeys from '../../pages/platformApis/PlatformAPIKeys.jsx';
 import AdminPricingDashboard from '../../pages/admin/pricing/Dashboard.jsx';
 import CreditRedemption from '../../pages/billing/components/RedemptionHistory';
 import RedemptionHistory from '../../pages/billing/components/RedemptionHistory';
+import PaymeterAdminDashboard from '../../pages/admin/paymeter/Dashboard';
+import PaymeterAdminDetails from '../../pages/admin/paymeter/Details';
 
 import '../app/App.scss';
 
@@ -182,6 +184,8 @@ export default withRouter(
                   {features.Invoice && <Route exact path="/app/admin/invoices/:id" component={AdminInvoiceDetails} />}
 
                   {(features.Paymeter || features.Hyperion) && <Route path="/app/admin/pricing" component={AdminPricingDashboard} />}
+                  {features.Paymeter && <Route exact path="/app/admin/paymeter" component={PaymeterAdminDashboard} />}
+                  {features.Paymeter && <Route exact path="/app/admin/paymeter/:id" component={PaymeterAdminDetails} />}
 
                   {features.ClientDashboard && <Route exact path="/app/admin/clients" component={ClientList} />}
                   {features.ClientDashboard && <Route exact path="/app/admin/clients/details/:id" component={ClientDetails} />}
