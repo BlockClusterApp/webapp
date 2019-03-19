@@ -2,6 +2,7 @@ import Bluebird from 'bluebird';
 
 import AuthMiddleware from '../middleware/auth';
 import Paymeter from './';
+import RateLimiter from '../../modules/helpers/server/rate-limiter';
 
 const { Wallets } = require('../../collections/wallets/wallets');
 
@@ -40,6 +41,13 @@ function sendSuccess(res, data) {
 }
 
 JsonRoutes.Middleware.use('/api/paymeter', authMiddleware);
+JsonRoutes.Middleware.use('/api/paymeter', async (req, res, next) => {
+  const isAllowed = await RateLimiter.isAllowed('paymeter-api', req.userId);
+  if (!isAllowed) {
+    return sendError(res, 429, 'You are being rate limited. Kindly try in some time');
+  }
+  next();
+});
 
 JsonRoutes.add('get', '/api/paymeter/wallets/:id/withdrawals', async (req, res) => {
   try {
