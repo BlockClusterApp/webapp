@@ -185,7 +185,7 @@ class PaymeterDashboard extends Component {
                                 {user.profile.firstName} {user.profile.lastName}
                               </td>
                               <td>{user.emails[0].address}</td>
-                              <td>$ {Math.max(paymeter.bill, paymeter.minimumFeeThisMonth)}</td>
+                              <td>$ {Math.max(paymeter.bill || 0, paymeter.minimumFeeThisMonth)}</td>
                               <td>{paymeter.vouchers ? paymeter.vouchers.map(v => v.code).join(', ') : '-'}</td>
                               <td>
                                 {paymeter.subscriptions
