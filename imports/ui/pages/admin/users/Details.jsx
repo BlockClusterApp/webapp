@@ -214,6 +214,26 @@ class UserDetails extends Component {
     });
   };
 
+  adminApplyVoucher = () => {
+    if (!this.promotionalCode.value) {
+      console.log('Code required');
+      return false;
+    }
+    this.setState({
+      adminApplyVoucherLoading: true,
+    });
+    Meteor.call('adminVoucherApply', { userId: this.props.user._id, code: this.promotionalCode.value }, (err, res) => {
+      this.setState({
+        adminApplyVoucherLoading: false,
+      });
+      if (err) {
+        return notifications.error(err.reason);
+      }
+      this.refresh();
+      notifications.success('Code Applied');
+    });
+  };
+
   createPaymentLink = () => {
     this.setState({
       paymentLinkLoading: true,
@@ -373,6 +393,11 @@ class UserDetails extends Component {
     });
   };
 
+  modalEventFns = (open, close) => {
+    this.openPaymentModal = open;
+    this.closePaymentModal = close;
+  };
+
   render() {
     const { user } = this.props;
     const { cards, invitations, payments, vouchers, networks, invoices, paymentLinks, hyperion, paymeter, credits, hyperionPricing, paymeterPricing, oldNetworks } = this.state;
@@ -421,7 +446,7 @@ class UserDetails extends Component {
           payment={this.state.selectedPayment}
           paymentLink={paymentLinks && this.state.selectedPayment && paymentLinks.find(link => link.paymentRequestId === this.state.selectedPayment._id)}
           refundListener={this.refundListener}
-          showModal={this.state.showPaymentModal}
+          modalEventFns={this.modalEventFns}
         />
         <div className="content sm-gutter">
           <div data-pages="parallax">
@@ -778,7 +803,27 @@ class UserDetails extends Component {
                       </tbody>
                       <tfoot>
                         <tr>
-                          <td>&nbsp;</td>
+                          <td colSpan="4">
+                            <div className="row">
+                              <div className="col-md-8 form-input-group">
+                                <input name="code" type="text" placeholder="Apply Code" className="form-control" ref={input => (this.promotionalCode = input)} required />
+                              </div>
+                              <div className="col-md-4">
+                                <LaddaButton
+                                  loading={this.state.adminApplyVoucherLoading}
+                                  data-size={S}
+                                  data-style={SLIDE_UP}
+                                  data-spinner-size={30}
+                                  data-spinner-lines={12}
+                                  className="btn btn-success m-t-10"
+                                  onClick={this.adminApplyVoucher}
+                                  style={{ marginTop: 0 }}
+                                >
+                                  <i className="fa fa-check" /> &nbsp;Apply
+                                </LaddaButton>
+                              </div>
+                            </div>
+                          </td>
                         </tr>
                       </tfoot>
                     </table>
@@ -1130,8 +1175,8 @@ class UserDetails extends Component {
                                       onClick={() => {
                                         this.setState({
                                           selectedPayment: payment,
-                                          showPaymentModal: true,
                                         });
+                                        this.openPaymentModal();
                                       }}
                                     >
                                       <td className="font-montserrat all-caps fs-12 w-40">{payment.reason}</td>

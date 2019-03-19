@@ -1,7 +1,37 @@
 import Config from '../../modules/config/server';
 import fs from 'fs';
 import morgan from 'morgan';
+import path from 'path';
+import Bluebird from 'bluebird';
+
+const fetchRedis = require('../../modules/helpers/server/redis');
+const fsAsync = Bluebird.promisifyAll(fs);
+
 const uuid = require('uuid/v4');
+
+function loadLuaScripts(_redisClient) {
+  function loadScripts(dir) {
+    dir = path.join(dir, '..');
+    return fsAsync
+      .readdirAsync(dir)
+      .filter(file => path.extname(file) === '.lua')
+      .map(file => {
+        const longName = path.basename(file, '.lua');
+        const name = longName.split('-')[0];
+        const numberOfKeys = Number(longName.split('-')[1]);
+        return fsAsync.readFileAsync(path.join(dir, file)).then(lua => ({
+          name,
+          options: { numberOfKeys, lua: lua.toString() },
+        }));
+      });
+  }
+  const scripts = loadScripts(Assets.absoluteFilePath('redis-lua/isOperationAllowed-2.lua'));
+  return scripts.each(command => !console.log(`Loading redis function ${command.name}`) && _redisClient.defineCommand(command.name, command.options));
+}
+(async () => {
+  const redis = await fetchRedis();
+  loadLuaScripts(redis);
+})();
 
 const ErrorHandler = Meteor.Error;
 

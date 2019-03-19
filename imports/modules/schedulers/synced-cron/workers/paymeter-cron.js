@@ -1419,11 +1419,3 @@ process.on('RemoteConfigChanged', () => {
 });
 
 startCrons();
-
-/*Utilities.upsert({
-  key: "testnet-eth-last-scanned-blockNumber"
-}, {
-  $set: {
-    value: 3527701
-  }
-})*/

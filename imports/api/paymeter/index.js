@@ -160,12 +160,12 @@ async function getEthDetectedBalance(walletId) {
                     minedBalance = web3.utils.fromWei(minedBalance, 'ether').toString();
                     resolve(new BigNumber(minedBalance).toFixed(18).toString());
                   } else {
-                    reject('An error occured');
+                    reject(error.toString());
                   }
                 })
               );
             } else {
-              reject('An error occured');
+              reject(err.toString());
             }
           })
         );
@@ -223,12 +223,12 @@ async function getBalance(walletId) {
 
                     resolve(new BigNumber(minedBalance).toFixed(18).toString());
                   } else {
-                    reject('An error occured');
+                    reject(error.toString());
                   }
                 })
               );
             } else {
-              reject('An error occured');
+              reject(err.toString());
             }
           })
         );
@@ -274,12 +274,12 @@ async function getBalance(walletId) {
 
                     resolve(new BigNumber(minedBalance).toFixed(18).toString());
                   } else {
-                    reject('An error occured');
+                    reject(error.toString());
                   }
                 })
               );
             } else {
-              reject('An error occured');
+              reject(err.toString());
             }
           })
         );
@@ -300,7 +300,7 @@ async function getNonce(address, url) {
       if (!error) {
         resolve(nonce);
       } else {
-        reject('An error occured');
+        reject(error.toString());
       }
     });
   });
@@ -324,6 +324,8 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
         user: userId,
       });
 
+      let sendExactAmount = options.sendExactAmount;
+
       if (wallet) {
         let coinType = wallet.coinType;
         if (coinType === 'ETH') {
@@ -338,20 +340,49 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
           let currenct_balance = await getBalance(fromWalletId);
           let detected_balance = await getEthDetectedBalance(fromWalletId);
 
+          let gasLimit = 21000;
+
+          if (options.data) {
+            let txnObj = {
+              to: toAddress,
+              data: options.data,
+              from: wallet.address,
+            };
+
+            if (amount) {
+              txnObj.value = web3.utils.toHex(web3.utils.toWei(amount, 'ether'));
+            }
+
+            gasLimit = await web3.eth.estimateGas(txnObj);
+          }
+
+          if (sendExactAmount) {
+            let extra = web3.utils.fromWei(new BigNumber(gasPrice).multipliedBy(gasLimit).toString(), 'ether').toString();
+            amount = new BigNumber(extra).plus(amount).toString();
+          }
+
           if (new BigNumber(amount).lte(currenct_balance)) {
             let amount_bigNumber = new BigNumber(web3.utils.toWei(amount, 'ether'));
-            let fee = new BigNumber(gasPrice).multipliedBy(21000);
+            let fee = new BigNumber(gasPrice).multipliedBy(gasLimit);
             let final_amount = amount_bigNumber.minus(fee);
             final_amount = web3.utils.fromWei(final_amount.toString(), 'ether');
 
             var rawTx = {
               gasPrice: web3.utils.toHex(gasPrice),
-              gasLimit: web3.utils.toHex(21000),
+              gasLimit: web3.utils.toHex(gasLimit),
               from: wallet.address,
               nonce: web3.utils.toHex(nonce),
               to: toAddress,
               value: web3.utils.toHex(web3.utils.toWei(final_amount, 'ether')),
             };
+
+            if (options.data) {
+              rawTx.data = options.data;
+            }
+
+            if (!final_amount.toString()) {
+              delete rawTx.value;
+            }
 
             const cryptr = new Cryptr(options.password);
             let privateKey_decrypted = cryptr.decrypt(wallet.privateKey);
@@ -396,6 +427,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                 fromWallet: wallet._id,
                 toAddress: toAddress,
                 amount: final_amount,
+                data: options.data || '0x',
                 createdAt: Date.now(),
                 internalStatus: sendTxnNow ? 'pending' : 'processing',
                 status: isInternalTxn ? 'completed' : 'pending',
@@ -533,10 +565,23 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                   return;
                 }
 
+                if (sendExactAmount) {
+                  amount = new BigNumber(amount)
+                    .plus(amountOfTokenToDeduct)
+                    .toFixed(18)
+                    .toString();
+
+                  if (new BigNumber(amount).gt(currenct_balance)) {
+                    reject('Insufficient wallet balance');
+                    return;
+                  }
+                }
+
                 amount = new BigNumber(amount)
                   .minus(amountOfTokenToDeduct)
                   .toFixed(18)
                   .toString();
+
                 data = erc20_instance.methods.transfer(toAddress, web3.utils.toWei(String(amount), 'ether')).encodeABI();
               }
 
@@ -564,15 +609,6 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
 
               let valueToTransfer = web3.utils.toHex(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString());
 
-              if (feeCollectWallet) {
-                valueToTransfer = web3.utils.toHex(
-                  new BigNumber(gasPrice)
-                    .multipliedBy(contractGasLimit.toString())
-                    .multipliedBy(2)
-                    .toString()
-                );
-              }
-
               let rawTx = {
                 gasPrice: web3.utils.toHex(gasPrice),
                 gasLimit: web3.utils.toHex(21000),
@@ -585,7 +621,11 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
               let fee_wallet_current_balance = await getBalance(options.feeWalletId);
               let fee_wallet_detected_balance = await getEthDetectedBalance(options.feeWalletId);
 
-              if (new BigNumber(web3.utils.fromWei(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString(), 'ether')).lte(fee_wallet_current_balance)) {
+              if (
+                new BigNumber(web3.utils.fromWei(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString(), 'ether'))
+                  .plus(web3.utils.fromWei(new BigNumber(21000).multipliedBy(gasPrice).toString(), 'ether'))
+                  .lte(fee_wallet_current_balance)
+              ) {
                 let cryptr = new Cryptr(options.feeWalletPassword);
                 let privateKey_decrypted = cryptr.decrypt(feeWallet.privateKey);
 
@@ -597,7 +637,11 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
 
                   let sendTxnNow = false;
 
-                  if (new BigNumber(amount).lte(fee_wallet_detected_balance)) {
+                  if (
+                    new BigNumber(web3.utils.fromWei(new BigNumber(gasPrice).multipliedBy(contractGasLimit.toString()).toString(), 'ether'))
+                      .plus(web3.utils.fromWei(new BigNumber(21000).multipliedBy(gasPrice).toString(), 'ether'))
+                      .lte(fee_wallet_detected_balance)
+                  ) {
                     sendTxnNow = true;
 
                     if (WalletTransactions.find({ fromWallet: feeWallet._id, internalStatus: 'processing' }).count() > 0) {
@@ -697,7 +741,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                       nonce: nonce,
                       rawTx: '0x' + serializedTx.toString('hex'),
                       feeDepositWallet: options.feeWalletId,
-                      feeDepositTxnId: hash.transactionHash,
+                      feeDepositTxnId: hash,
                     };
 
                     if (options.originalTokenValueInEth) {
@@ -769,7 +813,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
                         nonce: nonce + 1,
                         rawTx: '0x' + serializedTx.toString('hex'),
                         feeDepositWallet: options.feeWalletId,
-                        feeDepositTxnId: hash.transactionHash,
+                        feeDepositTxnId: hash,
                         feeCollectPriceConversion: options.originalTokenValueInEth,
                       };
 
@@ -1047,7 +1091,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
       if (err.toString().includes('insufficient funds')) {
         reject('Insufficient Funds');
       } else {
-        reject('Unknown Error');
+        reject(err.toString());
       }
     }
   });
@@ -1202,6 +1246,28 @@ async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMo
   }
 }
 
+//this can be used in case deposits are coming from a smart contract
+async function refreshBalance(walletId) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      Wallets.update(
+        {
+          _id: walletId,
+        },
+        {
+          $set: {
+            confirmedBalance: await getBalance(walletId),
+          },
+        }
+      );
+
+      resolve();
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
 Meteor.methods({
   createWallet: async (coinType, walletName, network, options) => {
     if (Meteor.userId()) {
@@ -1220,6 +1286,17 @@ Meteor.methods({
       try {
         let txnHash = await transfer(fromWalletId, toAddress, amount, options || {}, Meteor.userId());
         return txnHash;
+      } catch (e) {
+        throw new Meteor.Error(e, e);
+      }
+    } else {
+      throw new Meteor.Error('Not Allowed', 'Please login');
+    }
+  },
+  refreshBalance: async walletId => {
+    if (Meteor.userId()) {
+      try {
+        await refreshBalance(walletId, Meteor.userId());
       } catch (e) {
         throw new Meteor.Error(e, e);
       }
@@ -1357,6 +1434,23 @@ Meteor.methods({
   },
 });
 
+async function adminChangeMinimumPaymeterBill({ paymeter, value }) {
+  if (Meteor.user().admin < 2) {
+    throw new Meteor.Error(401, 'Unauthorized');
+  }
+  PaymeterCollection.update(
+    {
+      _id: paymeter,
+    },
+    {
+      $set: {
+        minimumFeeThisMonth: Number(value),
+      },
+    }
+  );
+  return true;
+}
+
 module.exports = {
   createWallet,
   getBalance,
@@ -1366,12 +1460,17 @@ module.exports = {
       let balance = await getBalance(_id);
       func(null, balance);
     } catch (e) {
-      func('An error occured');
+      func(e.toString());
     }
   },
+  refreshBalance,
   transfer,
   getNonce,
   erc20ABI,
   getWalletTransactions,
   getBill: paymeter_getAndResetUserBill,
 };
+
+Meteor.methods({
+  adminChangeMinimumPaymeterBill,
+});

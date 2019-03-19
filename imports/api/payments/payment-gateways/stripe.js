@@ -7,6 +7,7 @@ import RazorPaySubscription from '../../../collections/razorpay/subscription';
 import Bluebird from 'bluebird';
 import RazorPay from './razorpay';
 import bodyParser from 'body-parser';
+import Vouchers from '../../network/voucher';
 import Bull from '../../../modules/schedulers/bull/index';
 
 const stripToken = process.env.STRIPE_TOKEN || 'sk_test_DhE17qCC4NfY1A1SUygZWMkh';
@@ -95,14 +96,16 @@ Stripe.createCustomer = async ({ userId, token }) => {
         upsert: true,
       }
     );
-    const userCards = UserCards.findOne({ userId: Meteor.userId() });
-    if (userCards.cards.length === 1) {
-      // Credit $200
-      try {
-        await Vouchers.applyPromotionalCode({ code: 'BLOCKCLUSTER', userId: Meteor.userId() });
-      } catch (err) {
-        // Already claimed. Ignore
-      }
+  }
+
+  const userCards = UserCards.findOne({ userId: Meteor.userId() });
+  if (userCards.cards.length === 1) {
+    // Credit $200
+    try {
+      await Vouchers.applyPromotionalCode({ code: 'BLOCKCLUSTER', userId: Meteor.userId() });
+    } catch (err) {
+      console.log('Blockcluster application error', err);
+      // Already claimed. Ignore
     }
   }
 

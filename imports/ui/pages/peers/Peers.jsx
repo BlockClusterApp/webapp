@@ -262,7 +262,7 @@ class Peers extends Component {
 
     Meteor.call('removePeer', instanceId, url, error => {
       if (error) {
-        notifications.error('Unknown Error Occured');
+        notifications.error(error.reason || error.message || 'Unknown Error Occured');
       } else {
         notifications.success('Removed Successfully');
       }
@@ -274,7 +274,7 @@ class Peers extends Component {
 
     Meteor.call('blacklistPeer', instanceId, url, error => {
       if (error) {
-        notifications.error('Unknown Error Occured');
+        notifications.error(error.reason || error.message || 'Unknown Error Occured');
       } else {
         notifications.success('Blacklisted Successfully');
       }

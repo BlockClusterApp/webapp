@@ -101,6 +101,7 @@ Voucher.applyPromotionalCode = async function({ code, userId }) {
 
   const previousRedemption = CreditRedemption.find({ userId, codeId: voucher._id }).fetch()[0];
   if (previousRedemption) {
+    console.log('Already redeemed');
     throw new Meteor.Error(403, 'Already redeemed');
   }
 
@@ -140,6 +141,7 @@ Voucher.applyPromotionalCode = async function({ code, userId }) {
 
     return true;
   } catch (err) {
+    console.log('Voucher update error', err);
     if (redemptionId) {
       CreditRedemption.remove({ _id: redemptionId });
     }
@@ -310,6 +312,19 @@ async function generateVouchers(items, size) {
   return voucherArray;
 }
 
+Voucher.adminVoucherApply = async ({ userId, code, type }) => {
+  if (Meteor.user().admin < 2) {
+    throw new Meteor.Error(401, 'Unauthorized');
+  }
+  if (type) {
+    await Voucher.applyVoucherCode({ code, userId, type });
+  } else {
+    await Voucher.applyPromotionalCode({ code, userId });
+  }
+
+  return true;
+};
+
 Meteor.methods({
   validateVoucher: Voucher.validate,
   CreateVoucher: Voucher.create,
@@ -317,6 +332,7 @@ Meteor.methods({
   applyPromotionalCode: Voucher.applyPromotionalCode,
   fetchBalanceCredits: Voucher.fetchBalanceCredits,
   applyVoucherCode: Voucher.applyVoucherCode,
+  adminVoucherApply: Voucher.adminVoucherApply,
 });
 
 export default Voucher;

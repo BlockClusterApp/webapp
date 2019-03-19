@@ -196,8 +196,8 @@ class CreditsCreate extends Component {
 
     return (
       <div className="VoucherCreate">
-        <div className="m-t-20 container-fluid container-fixed-lg bg-white">
-          <div className="row">
+        <div className="m-t-20 container-fluid container-fixed-lg">
+          <div className="row  bg-white p-l-25 p-r-25">
             <div className="card-block">
               <div className="row">
                 <div className="col-md-12">
@@ -283,7 +283,9 @@ class CreditsCreate extends Component {
                 <br />
                 <label className="fs-14 text-primary">Usability</label>
                 <div className="row">
-                  <p>Each promotional code can be used only once by the customer (if eligible) to claim credits</p>
+                  <div className="col-md-12">
+                    <p>Each promotional code can be used only once by the customer (if eligible) to claim credits</p>
+                  </div>
                 </div>
                 <br />
                 <label className="fs-14 text-primary">Availability</label>
