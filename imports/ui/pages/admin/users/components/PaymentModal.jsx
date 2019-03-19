@@ -96,8 +96,8 @@ export default class PaymentModal extends Component {
                             <div className="m-t-15" style={{ paddingLeft: '10px' }}>
                               <p className="hint-text fade small pull-left">
                                 {moment(pg.created_at * 1000).format('DD-MMM-YYYY kk:mm:ss')}
-                                {pg.notes.reason || pg.reason ? <br /> : null}
-                                {pg.notes.reason || pg.reason}
+                                {(pg.notes && pg.notes.reason) || pg.reason ? <br /> : null}
+                                {(pg.notes && pg.notes.reason) || pg.reason}
                               </p>
                               <div className="clearfix" />
                             </div>

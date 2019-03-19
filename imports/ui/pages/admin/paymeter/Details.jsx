@@ -32,7 +32,14 @@ class PaymeterDetails extends Component {
   updateUser = () => {
     const user = Meteor.users.find({ _id: this.props.paymeter.userId }).fetch()[0];
     const wallets = Wallets.find({ user: user._id }).fetch();
-    const walletTransactions = WalletTransactions.find({ $or: [{ fromWallet: { $in: wallets.map(w => w._id) } }, { toWallet: { $in: wallets.map(w => w._id) } }] }).fetch();
+    const walletTransactions = WalletTransactions.find(
+      { $or: [{ fromWallet: { $in: wallets.map(w => w._id) } }, { toWallet: { $in: wallets.map(w => w._id) } }] },
+      {
+        sort: {
+          createdAt: -1,
+        },
+      }
+    ).fetch();
     this.setState({
       user,
       wallets,
@@ -72,7 +79,7 @@ class PaymeterDetails extends Component {
     this.setState({
       adminApplyVoucherLoading: true,
     });
-    Meteor.call('adminVoucherApply', { userId: this.props.user._id, code: this.voucher.value, type: 'paymeter' }, (err, res) => {
+    Meteor.call('adminVoucherApply', { userId: this.state.user._id, code: this.voucher.value, type: 'paymeter' }, (err, res) => {
       this.setState({
         adminApplyVoucherLoading: false,
       });
@@ -104,22 +111,87 @@ class PaymeterDetails extends Component {
 
   showTxnDetails = txnId => {
     const txn = WalletTransactions.find({ _id: txnId }).fetch()[0];
+    const walletQuery = {};
+    if (txn.type === 'deposit') {
+      if (txn.toWallet) {
+        walletQuery._id = txn.toWallet;
+      } else {
+        walletQuery.address = txn.toAddress;
+      }
+    } else {
+      walletQuery._id = txn.fromWallet;
+    }
+    const wallet = Wallets.find(walletQuery).fetch()[0];
     if (!txn) {
       return this.setState({ txnDetails: 'Txn not found' });
     }
+
     this.setState({
       txnDetails: {
-        'Transaction Id': txn.txnId,
+        'Transaction Id':
+          wallet.network === 'testnet' ? (
+            <a href={`https://rinkeby.etherscan.io/tx/${txn.txnId}`} target="_blank">
+              {txn.txnId}
+            </a>
+          ) : (
+            <a href={`https://etherscan.io/tx/${txn.txnId}`} target="_blank">
+              {txn.txnId}
+            </a>
+          ),
         'From Wallet': txn.fromWallet,
         'To Wallet': txn.toWallet,
-        'To Address': txn.toAddress,
+        'To Address':
+          wallet.network === 'testnet' ? (
+            <a href={`https://rinkeby.etherscan.io/address/${txn.toAddress}`} target="_blank">
+              {txn.toAddress}
+            </a>
+          ) : (
+            <a href={`https://etherscan.io/address/${txn.toAddress}`} target="_blank">
+              {txn.toAddress}
+            </a>
+          ),
         Type: txn.type,
         Status: txn.status,
         'Is Internal Txn': txn.isInternalTxn,
+        Token: wallet.coinType === 'ERC20' ? `ERC20 | ${wallet.tokenSymbol}` : wallet.coinType,
         Fee: txn.fee,
         Amount: txn.amount,
-        'Raw Tx': txn.rawTx,
+        'Raw Tx': (
+          <textarea
+            style={{
+              padding: '5px',
+              background: '#efefef',
+              border: 'none',
+              fontSize: '12px',
+              minHeight: '100px',
+              wordBreak: 'break-all',
+              whiteSpace: 'normal',
+              width: '100%',
+              fontFamily: 'monospace',
+            }}
+            value={txn.rawTx}
+            disabled
+          />
+        ),
+        Data: (
+          <textarea
+            style={{
+              padding: '5px',
+              background: '#efefef',
+              border: 'none',
+              fontSize: '12px',
+              wordBreak: 'break-all',
+              whiteSpace: 'normal',
+              width: '100%',
+              fontFamily: 'monospace',
+            }}
+            value={txn.data}
+            disabled
+          />
+        ),
         'USD Charged': txn.usdCharged,
+        Network: wallet.network,
+        'Created At': moment(txn.createdAt).format('DD-MMM-YYYY kk:mm:ss'),
       },
     });
   };
@@ -167,33 +239,54 @@ class PaymeterDetails extends Component {
     const walletIds = this.state.displayWallets.map(w => w._id);
     if (!e) {
       return this.setState({
-        txns: WalletTransactions.find({ $or: [{ fromWallet: { $in: walletIds } }, { toWallet: { $in: walletIds } }] }).fetch(),
+        txns: WalletTransactions.find(
+          { $or: [{ fromWallet: { $in: walletIds } }, { toWallet: { $in: walletIds } }] },
+          {
+            sort: {
+              createdAt: -1,
+            },
+          }
+        ).fetch(),
       });
     }
     const { value } = e.target;
     if (!value) {
       return this.setState({
-        txns: WalletTransactions.find({ $or: [{ fromWallet: { $in: walletIds } }, { toWallet: { $in: walletIds } }] }).fetch(),
+        txns: WalletTransactions.find(
+          { $or: [{ fromWallet: { $in: walletIds } }, { toWallet: { $in: walletIds } }] },
+          {
+            sort: {
+              createdAt: -1,
+            },
+          }
+        ).fetch(),
       });
     }
     if (value.length < 3) {
       return true;
     }
     this.setState({
-      txns: WalletTransactions.find({
-        $and: [
-          { $or: [{ fromWallet: { $in: walletIds } }, { toWallet: { $in: walletIds } }] },
-          {
-            $or: [
-              { _id: { $regex: `${value}*`, $options: 'i' } },
-              { txnId: { $regex: `${value}*`, $options: 'i' } },
-              { toWallet: { $regex: `${value}*`, $options: 'i' } },
-              { fromWallet: { $regex: `${value}*`, $options: 'i' } },
-              { toAddress: { $regex: `${value}*`, $options: 'i' } },
-            ],
+      txns: WalletTransactions.find(
+        {
+          $and: [
+            { $or: [{ fromWallet: { $in: walletIds } }, { toWallet: { $in: walletIds } }] },
+            {
+              $or: [
+                { _id: { $regex: `${value}*`, $options: 'i' } },
+                { txnId: { $regex: `${value}*`, $options: 'i' } },
+                { toWallet: { $regex: `${value}*`, $options: 'i' } },
+                { fromWallet: { $regex: `${value}*`, $options: 'i' } },
+                { toAddress: { $regex: `${value}*`, $options: 'i' } },
+              ],
+            },
+          ],
+        },
+        {
+          sort: {
+            createdAt: -1,
           },
-        ],
-      }),
+        }
+      ),
     });
   };
 
@@ -360,10 +453,11 @@ class PaymeterDetails extends Component {
                         <thead>
                           <tr>
                             <th style={{ width: '5%' }}>S No.</th>
-                            <th style={{ width: '20%' }}>Name</th>
+                            <th style={{ width: '18%' }}>Name</th>
                             <th style={{ width: '15%' }}>Coin</th>
                             <th style={{ width: '20%' }}>Balance</th>
-                            <th style={{ width: '40%' }}>Address</th>
+                            <th style={{ width: '32%' }}>Address</th>
+                            <th style={{ width: '10%' }}>Network</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -375,6 +469,7 @@ class PaymeterDetails extends Component {
                                 <td>{wallet.coinType === 'ERC20' ? `${wallet.coinType} | ${wallet.tokenSymbol}` : wallet.coinType}</td>
                                 <td>{wallet.confirmedBalance}</td>
                                 <td>{wallet.address}</td>
+                                <td className={wallet.network === 'testnet' ? 'text-primary' : 'text-success'}>{wallet.network}</td>
                               </tr>
                             );
                           })}
@@ -447,9 +542,9 @@ class PaymeterDetails extends Component {
                           {this.state.txnDetails &&
                             Object.keys(this.state.txnDetails).map((key, index) => {
                               return (
-                                <tr key={index + 1}>
+                                <tr key={`${this.state.txnDetails['Transaction Id']}${index + 1}`}>
                                   <td style={{ width: '30%' }}>{key}</td>
-                                  <td style={{ width: '60%' }} className="text-right">
+                                  <td style={{ width: '60%' }} className="text-right" key={this.state.txnDetails['Transaction Id']}>
                                     {this.state.txnDetails[key]}
                                   </td>
                                 </tr>
