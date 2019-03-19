@@ -65,14 +65,14 @@ class PaymeterDetails extends Component {
   };
 
   adminApplyVoucher = () => {
-    if (!this.promotionalCode.value) {
+    if (!this.voucher.value) {
       console.log('Code required');
       return false;
     }
     this.setState({
       adminApplyVoucherLoading: true,
     });
-    Meteor.call('adminVoucherApply', { userId: this.props.user._id, code: this.promotionalCode.value, type: 'paymeter' }, (err, res) => {
+    Meteor.call('adminVoucherApply', { userId: this.props.user._id, code: this.voucher.value, type: 'paymeter' }, (err, res) => {
       this.setState({
         adminApplyVoucherLoading: false,
       });
@@ -250,6 +250,9 @@ class PaymeterDetails extends Component {
                       <br />
                       <br />
                       <Link to={`/app/admin/users/${user._id}`}>{user.emails[0].address}</Link>
+                      <br />
+                      <br />
+                      {paymeter.subscribed ? <span className="label label-success">Subscribed</span> : <span className="label label-danger">Not Subscribed</span>}
                     </p>
                   </div>
                 </div>
@@ -277,18 +280,26 @@ class PaymeterDetails extends Component {
                 <table className="table table-condensed table-hover m-t-0">
                   <tbody>
                     <tr>
-                      <td className="font-montserrat w-60">Minimum fee this month</td>
-                      <td className="text-right b-r b-dashed b-grey w-45">
+                      <td className="font-montserrat" style={{ width: '35%' }}>
+                        Minimum fee this month
+                      </td>
+                      <td className="text-right b-r b-dashed b-grey" style={{ width: '65%' }}>
                         <EditableText value={Number(paymeter.minimumFeeThisMonth).toFixed(2)} valueChanged={this.minimumBillChangeListener} />
                       </td>
                     </tr>
                     <tr>
-                      <td className="font-montserrat w-60">Actual Bill</td>
-                      <td className="text-right b-r b-dashed b-grey w-45">$ {Number(paymeter.bill).toFixed(2)}</td>
+                      <td className="font-montserrat" style={{ width: '35%' }}>
+                        Actual Bill
+                      </td>
+                      <td className="text-right b-r b-dashed b-grey" style={{ width: '65%' }}>
+                        $ {Number(paymeter.bill).toFixed(2)}
+                      </td>
                     </tr>
                     <tr>
-                      <td className="font-montserrat w-60">Vouchers</td>
-                      <td className="text-right b-r b-dashed b-grey w-45">
+                      <td className="font-montserrat" style={{ width: '35%' }}>
+                        Vouchers
+                      </td>
+                      <td className="text-right b-r b-dashed b-grey" style={{ width: '65%' }}>
                         {paymeter.vouchers &&
                           paymeter.vouchers.map(v => (
                             <Link to={`/app/admin/voucher/details/${v._id}`} key={v._id}>{`${v.code} : ${moment(v.appliedOn).format('DD-MMM-YYYY kk:mm:ss')}`}</Link>
@@ -296,12 +307,29 @@ class PaymeterDetails extends Component {
                       </td>
                     </tr>
                     <tr>
-                      <td className="font-montserrat w-60">Subscribed</td>
-                      <td className="text-right b-r b-dashed b-grey w-45">{paymeter.subscribed ? 'Yes' : 'No'}</td>
+                      <td className="font-montserrat" style={{ width: '35%' }}>
+                        Apply Voucher
+                      </td>
+                      <td className="text-right b-r b-dashed b-grey p-t-0 p-b-0" style={{ width: '65%' }}>
+                        <div className="row">
+                          <div className="col-md-8">
+                            <input type="text" placeholder="Voucher code" ref={i => (this.voucher = i)} className="form-control" />
+                          </div>
+                          <div className="col-md-4">
+                            <button className="btn btn-success" onClick={this.adminApplyVoucher} disabled={this.state.adminApplyVoucherLoading}>
+                              Apply
+                            </button>
+                          </div>
+                        </div>
+                      </td>
                     </tr>
                     <tr>
-                      <td className="font-montserrat w-60">Unsubscribe next month</td>
-                      <td className="text-right b-r b-dashed b-grey w-45">{paymeter.unsubscribeNextMonth ? 'Yes' : 'No'}</td>
+                      <td className="font-montserrat" style={{ width: '35%' }}>
+                        Unsubscribe next month
+                      </td>
+                      <td className="text-right b-r b-dashed b-grey" style={{ width: '65%' }}>
+                        {paymeter.unsubscribeNextMonth ? 'Yes' : 'No'}
+                      </td>
                     </tr>
                   </tbody>
                 </table>

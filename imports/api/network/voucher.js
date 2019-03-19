@@ -312,11 +312,16 @@ async function generateVouchers(items, size) {
   return voucherArray;
 }
 
-Voucher.adminVoucherApply = async ({ userId, code }) => {
+Voucher.adminVoucherApply = async ({ userId, code, type }) => {
   if (Meteor.user().admin < 2) {
     throw new Meteor.Error(401, 'Unauthorized');
   }
-  await Voucher.applyPromotionalCode({ code, userId });
+  if (type) {
+    await Voucher.applyVoucherCode({ code, userId, type });
+  } else {
+    await Voucher.applyPromotionalCode({ code, userId });
+  }
+
   return true;
 };
 

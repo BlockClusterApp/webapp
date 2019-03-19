@@ -21,7 +21,6 @@ class Navbar extends Component {
     });
     this.props.history.listen((location, action) => {
       if (location.pathname.includes('/app/admin')) {
-        console.log('updating state');
         this.setState({});
       }
     });
