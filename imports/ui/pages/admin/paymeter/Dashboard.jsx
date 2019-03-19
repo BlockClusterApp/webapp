@@ -71,13 +71,13 @@ class PaymeterDashboard extends Component {
       {
         onReady: () => {
           const userPaymeterMapping = {};
-          const paymeters = Paymeter.find(this.query, this.pagination).fetch();
+          const paymeters = Paymeter.find({}, this.pagination).fetch();
           paymeters.forEach(p => {
             userPaymeterMapping[p.userId] = p;
           });
           this.setState({
             paymeters,
-            users: Meteor.users.find({ _id: { $in: paymeters.map(p => p.userId) } }),
+            users: Meteor.users.find({ _id: { $in: paymeters.map(p => p.userId) }, ...this.query }),
             loading: false,
             userPaymeterMapping,
           });
