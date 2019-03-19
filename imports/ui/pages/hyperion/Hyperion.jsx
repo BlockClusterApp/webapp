@@ -235,7 +235,7 @@ class HyperionComponent extends Component {
         );
         notifications.success('File download started');
       } else {
-        notifications.error('An error occured');
+        notifications.error(err.reason || err.message || 'An error occured');
       }
 
       let downloadingFiles = this.state.downloadingFiles;
@@ -288,7 +288,7 @@ class HyperionComponent extends Component {
           });
         });
       } else {
-        notifications.error('An error occured');
+        notifications.error(err.reason || err.message || 'An error occured');
         this.setState({
           searchLoading: false,
         });
@@ -312,7 +312,7 @@ class HyperionComponent extends Component {
           if (!error) {
             notifications.success('File deleted successfully');
           } else {
-            notifications.error('An error occured');
+            notifications.error(err.reason || err.message || 'An error occured');
           }
 
           let deletingFiles = this.state.deletingFiles;
@@ -326,7 +326,7 @@ class HyperionComponent extends Component {
           }
         });
       } else {
-        notifications.error('An error occured');
+        notifications.error(err.reason || err.message || 'An error occured');
 
         let deletingFiles = this.state.deletingFiles;
         let index = deletingFiles.indexOf(item.hash);

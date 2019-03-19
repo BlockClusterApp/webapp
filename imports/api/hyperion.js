@@ -314,7 +314,7 @@ JsonRoutes.add(
               return JsonRoutes.sendResult(res, {
                 code: 401,
                 data: {
-                  error: 'An unknown error occured',
+                  error: err.toString(),
                 },
               });
             }
@@ -409,7 +409,7 @@ JsonRoutes.add(
                   JsonRoutes.sendResult(res, {
                     code: 401,
                     data: {
-                      error: 'An unknown error occured',
+                      error: err.toString(),
                     },
                   });
                 }
@@ -584,7 +584,7 @@ JsonRoutes.add('delete', '/api/hyperion/delete', async (req, res, next) => {
                     JsonRoutes.sendResult(res, {
                       code: 401,
                       data: {
-                        error: 'An unknown error occured',
+                        error: err.toString(),
                       },
                     });
                   } else {
@@ -647,7 +647,7 @@ JsonRoutes.add('delete', '/api/hyperion/delete', async (req, res, next) => {
               JsonRoutes.sendResult(res, {
                 code: 401,
                 data: {
-                  error: 'An unknown error occured',
+                  error: err.toString(),
                 },
               });
             }

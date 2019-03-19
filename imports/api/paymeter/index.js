@@ -160,12 +160,12 @@ async function getEthDetectedBalance(walletId) {
                     minedBalance = web3.utils.fromWei(minedBalance, 'ether').toString();
                     resolve(new BigNumber(minedBalance).toFixed(18).toString());
                   } else {
-                    reject('An error occured');
+                    reject(error.toString());
                   }
                 })
               );
             } else {
-              reject('An error occured');
+              reject(err.toString());
             }
           })
         );
@@ -223,12 +223,12 @@ async function getBalance(walletId) {
 
                     resolve(new BigNumber(minedBalance).toFixed(18).toString());
                   } else {
-                    reject('An error occured');
+                    reject(error.toString());
                   }
                 })
               );
             } else {
-              reject('An error occured');
+              reject(err.toString());
             }
           })
         );
@@ -274,12 +274,12 @@ async function getBalance(walletId) {
 
                     resolve(new BigNumber(minedBalance).toFixed(18).toString());
                   } else {
-                    reject('An error occured');
+                    reject(error.toString());
                   }
                 })
               );
             } else {
-              reject('An error occured');
+              reject(err.toString());
             }
           })
         );
@@ -300,7 +300,7 @@ async function getNonce(address, url) {
       if (!error) {
         resolve(nonce);
       } else {
-        reject('An error occured');
+        reject(error.toString());
       }
     });
   });
@@ -1091,7 +1091,7 @@ async function transfer(fromWalletId, toAddress, amount, options, userId) {
       if (err.toString().includes('insufficient funds')) {
         reject('Insufficient Funds');
       } else {
-        reject('Unknown Error');
+        reject(err.toString());
       }
     }
   });
@@ -1427,7 +1427,7 @@ module.exports = {
       let balance = await getBalance(_id);
       func(null, balance);
     } catch (e) {
-      func('An error occured');
+      func(e.toString());
     }
   },
   transfer,
