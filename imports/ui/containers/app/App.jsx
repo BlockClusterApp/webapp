@@ -68,6 +68,12 @@ class App extends Component {
 
     document.body.appendChild(script);
     window.addEventListener('theme-changed', theme => {
+      if (window.theme === 'theme-dark') {
+        document.querySelector('body').style = 'background: #222';
+      } else {
+        document.querySelector('body').style = 'background: #f0f0f0';
+      }
+
       this.setState({});
     });
     window.theme = this.props.user && this.props.user.profile.theme;
@@ -90,6 +96,12 @@ class App extends Component {
       }
     }
     if (didChange) {
+      if (window.theme === 'theme-dark') {
+        document.querySelector('body').style = 'background: #222';
+      } else {
+        document.querySelector('body').style = 'background: #f0f0f0';
+      }
+
       this.setState({});
     }
   }

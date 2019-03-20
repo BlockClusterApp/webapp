@@ -385,7 +385,7 @@ class PaymeterDetails extends Component {
                         Actual Bill
                       </td>
                       <td className="text-right b-r b-dashed b-grey" style={{ width: '65%' }}>
-                        $ {Number(paymeter.bill).toFixed(2)}
+                        $ {Number(paymeter.bill || 0).toFixed(2)}
                       </td>
                     </tr>
                     <tr>
