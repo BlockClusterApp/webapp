@@ -103,6 +103,15 @@ Stripe.createCustomer = async ({ userId, token }) => {
     // Credit $200
     try {
       await Vouchers.applyPromotionalCode({ code: 'BLOCKCLUSTER', userId: Meteor.userId() });
+      Bull.addJob(
+        'credited-200-email',
+        {
+          userId: Meteor.userId(),
+        },
+        {
+          delay: 10 * 1000,
+        }
+      );
     } catch (err) {
       console.log('Blockcluster application error', err);
       // Already claimed. Ignore
