@@ -45,6 +45,13 @@ class Header extends Component {
               </li>
             </ul>
           )}
+          {window.isAdminWindow && (
+            <ul className="hidden-md-down notification-list no-margin hidden-sm-down b-grey b-l no-style p-l-30 p-r-20">
+              <li className="p-r-10 inline" title="Overview">
+                <Link to={'/app/admin/overview'} className="header-icon fa fa-eye" />
+              </li>
+            </ul>
+          )}
         </div>
 
         <div className="d-flex align-items-center">

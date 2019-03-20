@@ -1,6 +1,7 @@
-import ModelHelpers from "../model-helpers";
-import crypto from "crypto";
-import ejs from "ejs";
+import ModelHelpers from '../model-helpers';
+import crypto from 'crypto';
+import ejs from 'ejs';
+import fs from 'fs';
 import Config from '../../config/server';
 
 require('./http-interceptor');
@@ -24,22 +25,23 @@ const EJSMapping = {
   'updated-support-ticket.ejs': UpdatedSupportTicket,
   'invoice.ejs': InvoiceTemplate,
   'invoice-created.ejs': InvoiceGeneratedTemplate,
-  'invoice-pending.ejs': InvoicePendingTemplate
+  'invoice-pending.ejs': InvoicePendingTemplate,
+  'credited-200': fs.readFileSync(Assets.absoluteFilePath('email-templates/credited-200.ejs')).toString(),
 };
 
-function generateRandomString(placeholder, salt = "I<3BlockCluster") {
+function generateRandomString(placeholder, salt = 'I<3BlockCluster') {
   return `${new Date().getTime()}${crypto
-    .createHash("sha256")
-    .update(`${placeholder}${salt}${new Date().getTime()}`, "utf8")
-    .digest("hex")}`;
+    .createHash('sha256')
+    .update(`${placeholder}${salt}${new Date().getTime()}`, 'utf8')
+    .digest('hex')}`;
 }
 
-function generateURL(route){
-  return `${Config.apiHost.replace(":3000/", ':3000')}${route}`;
+function generateURL(route) {
+  return `${Config.apiHost.replace(':3000/', ':3000')}${route}`;
 }
 
 function generateCompleteURLForUserInvite(query) {
-  return generateURL(`/accept-invitation?invitation=${query}`)
+  return generateURL(`/accept-invitation?invitation=${query}`);
 }
 
 function generateCompleteURLForEmailVerification(query) {
@@ -50,24 +52,19 @@ function generateCompleteURLForPasswordReset(query) {
   return generateURL(`/reset-password?key=${query}`);
 }
 
-function getEJSTemplate({fileName}) {
+function getEJSTemplate({ fileName }) {
   return new Promise(resolve => {
-    if(!fileName){
-      fileName = "email-verification.ejs";
+    if (!fileName) {
+      fileName = 'email-verification.ejs';
     }
     const content = EJSMapping[fileName];
-    resolve(ejs.compile(content, {
-      cache: true,
-      filename: fileName
-    }));
+    resolve(
+      ejs.compile(content, {
+        cache: true,
+        filename: fileName,
+      })
+    );
   });
 }
 
-export {
-    generateRandomString,
-    generateCompleteURLForEmailVerification,
-    generateCompleteURLForPasswordReset,
-    generateCompleteURLForUserInvite,
-    getEJSTemplate,
-    ModelHelpers
-  }
+export { generateRandomString, generateCompleteURLForEmailVerification, generateCompleteURLForPasswordReset, generateCompleteURLForUserInvite, getEJSTemplate, ModelHelpers };

@@ -197,7 +197,7 @@ Voucher.validate = async function({ voucherCode, type, userId }) {
   const email_matching = voucher.availability.email_ids.indexOf(user.emails[0].address);
   const claimed_status = voucher.voucher_claim_status
     ? voucher.voucher_claim_status.filter(i => {
-        return i['claimedBy'] == userId;
+        return i['claimedBy'] === userId;
       })
     : 0;
 
