@@ -15,4 +15,5 @@ module.exports = bullSystem => {
   require('./enable-ingress')(bullSystem);
   require('./charge-stripe-invoice')(bullSystem);
   require('./stripe-webhook')(bullSystem);
+  require('./credited-200')(bullSystem);
 };
