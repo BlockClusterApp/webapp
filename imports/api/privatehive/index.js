@@ -592,6 +592,10 @@ privateHive.createOrderer = async (peerOrgName, peerAdminCert, peerCACert, peerW
                           name: 'GODEBUG',
                           value: 'netdns=go',
                         },
+                        {
+                          name: 'KAFKA_NAMESPACE',
+                          value: Config.namespace,
+                        },
                       ],
                       volumeMounts: [
                         {
