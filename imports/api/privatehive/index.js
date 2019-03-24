@@ -198,6 +198,10 @@ privateHive.createPeer = async () => {
                           name: 'CONFIGTXLATOR_URL',
                           value: 'http://127.0.0.1:7059',
                         },
+                        {
+                          name: 'MONGO_URL',
+                          value: `${process.env.MONGO_URL}`,
+                        },
                       ],
                       volumeMounts: [
                         {
@@ -205,6 +209,18 @@ privateHive.createPeer = async () => {
                           mountPath: '/etc/hyperledger/privatehive',
                         },
                       ],
+                      lifecycle: {
+                        postStart: {
+                          exec: {
+                            command: ['/bin/bash', '-c', 'node postStart.js'],
+                          },
+                        },
+                        preStop: {
+                          exec: {
+                            command: ['/bin/bash', '-c', 'node preStop.js'],
+                          },
+                        },
+                      },
                     },
                     {
                       name: 'peer',
@@ -540,7 +556,23 @@ privateHive.createOrderer = async (peerOrgName, peerAdminCert, peerCACert, peerW
                           name: 'CORE_CHAINCODE_KEEPALIVE',
                           value: `10`,
                         },
+                        {
+                          name: 'MONGO_URL',
+                          value: `${process.env.MONGO_URL}`,
+                        },
                       ],
+                      lifecycle: {
+                        postStart: {
+                          exec: {
+                            command: ['/bin/bash', '-c', 'node postStart.js'],
+                          },
+                        },
+                        preStop: {
+                          exec: {
+                            command: ['/bin/bash', '-c', 'node preStop.js'],
+                          },
+                        },
+                      },
                       volumeMounts: [
                         {
                           name: 'privatehive-dir',
@@ -593,7 +625,7 @@ privateHive.createOrderer = async (peerOrgName, peerAdminCert, peerCACert, peerW
                           value: 'netdns=go',
                         },
                         {
-                          name: 'KAFKA_NAMESPACE',
+                          name: 'NAMESPACE',
                           value: Config.namespace,
                         },
                       ],
@@ -1282,6 +1314,6 @@ Meteor.methods({
 //When creating network or joining network, just create a peer node. Orderers will be added dynamically.
 
 //Meteor.call('createPrivatehivePeer');
-//Meteor.call('createPrivatehiveOrderer', 'wosrhjfg');
+//Meteor.call('createPrivatehiveOrderer', 'cvmdruiu');
 //Meteor.call('privatehiveCreateChannel', 'wosrhjfg', 'xgnwmbwk', 'channelsample');
 //Meteor.call('privatehiveJoinChannel', 'muoygwak', 'moyxsmta', 'djtveuib', 'channelsample');
