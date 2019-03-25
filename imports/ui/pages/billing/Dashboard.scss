@@ -1,11 +1,30 @@
-.networksList {
-	.table tbody tr td {
-		padding-left: 12px;
-		padding-right: 12px;
-		vertical-align: middle;
-	}
+.billingList {
+  .table tbody tr td {
+    padding-left: 12px;
+    padding-right: 12px;
+    vertical-align: middle;
+  }
 
-	.table tbody tr:hover {
-		cursor: pointer;
-	}
+  .table tbody tr:hover {
+    cursor: pointer;
+  }
+
+  .bill-section {
+    margin-top: 10px;
+    .section-header {
+      cursor: pointer;
+      font-size: 18px;
+      text-transform: uppercase;
+      font-weight: bold;
+      padding: 4px 6px;
+      background: rgba(0, 0, 0, 0.05);
+    }
+    .section-content {
+      padding: 0px 30px;
+      background: rgba(0, 0, 0, 0.01);
+    }
+    .total {
+      background: rgba(0, 0, 0, 0.1);
+    }
+  }
 }

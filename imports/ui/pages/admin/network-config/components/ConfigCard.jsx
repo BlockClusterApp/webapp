@@ -38,6 +38,7 @@ export default class ConfigCard extends React.Component {
           locationMapping: this.locationMapping,
         },
         userId: Meteor.userId(),
+        type: 'dynamo',
       },
       () => {
         this.setState({

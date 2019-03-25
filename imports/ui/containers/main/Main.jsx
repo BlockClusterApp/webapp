@@ -66,6 +66,17 @@ import PaymeterAdminDetails from '../../pages/admin/paymeter/Details';
 import Overview from '../../pages/admin/Overview';
 
 import '../app/App.scss';
+import PrivateHiveDashboard from '../../pages/privatehive/Dashboard';
+import PrivateHiveNetworkManage from '../../pages/privatehive/Manage';
+import PrivateHiveNetworkSettings from '../../pages/privatehive/Settings';
+import PrivateHiveAdminList from '../../pages/admin/privatehive/NetworkList';
+import PrivateHiveAdminDetails from '../../pages/admin/privatehive/Details';
+import PrivateHiveChannelExplorer from '../../pages/privatehive/Explorer.jsx';
+import PrivateHiveChannelManagement from '../../pages/privatehive/ManageChannels';
+import PrivateHiveChaincodeManagement from '../../pages/privatehive/ManageChaincode';
+import PrivateHiveChannelCreate from '../../pages/privatehive/CreateChannel';
+import PrivateHiveSecurity from '../../pages/privatehive/Security';
+import PrivateHiveChaincodeCreate from '../../pages/privatehive/CreateChancode';
 
 export default withRouter(
   class Main extends Component {
@@ -151,6 +162,16 @@ export default withRouter(
                   <Route exact path="/app/networks/:id/sc/management" render={props => this.showFailedBillingWarning(SmartContractsManagement, props)} />
                   <Route exact path="/app/platform-apis" render={props => this.showFailedBillingWarning(PlatformAPIKeys, props)} />
 
+                  <Route exact path="/app/privatehive/:id/details" render={props => this.showFailedBillingWarning(PrivateHiveNetworkManage, props)} />
+                  <Route exact path="/app/privatehive/:id/settings" render={props => this.showFailedBillingWarning(PrivateHiveNetworkSettings, props)} />
+                  <Route exact path="/app/privatehive/:id/security" render={props => this.showFailedBillingWarning(PrivateHiveSecurity, props)} />
+                  <Route exact path="/app/privatehive/:id/channels/create" render={props => this.showFailedBillingWarning(PrivateHiveChannelCreate, props)} />
+                  <Route exact path="/app/privatehive/:id/channels/explorer" render={props => this.showFailedBillingWarning(PrivateHiveChannelExplorer, props)} />
+                  <Route exact path="/app/privatehive/:id/channels/manage" render={props => this.showFailedBillingWarning(PrivateHiveChannelManagement, props)} />
+                  <Route exact path="/app/privatehive/:id/chaincode/manage" render={props => this.showFailedBillingWarning(PrivateHiveChaincodeManagement, props)} />
+                  <Route exact path="/app/privatehive/:id/chaincode/create" render={props => this.showFailedBillingWarning(PrivateHiveChaincodeCreate, props)} />
+                  <Route path="/app/privatehive" render={props => this.showFailedBillingWarning(PrivateHiveDashboard, props)} />
+
                   {features.Payments && <Route path="/app/payments" component={Payments} />}
                   {features.Payments && <Route exact path="/app/credits" component={RedemptionHistory} />}
                   {features.Invoice && <Route exact path="/app/billing" component={BillingDashboard} />}
@@ -174,7 +195,10 @@ export default withRouter(
                   <Route exact path="/app/admin/users/:id" component={UserDetails} />
                   <Route exact path="/app/admin/networks" component={NetworkList} />
                   <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
-                  <Route exact path="/app/admin/network-configs" component={ConfigList} />
+
+                  <Route exact path="/app/admin/privatehive" component={PrivateHiveAdminList} />
+                  <Route exact path="/app/admin/privatehive/:id" component={PrivateHiveAdminDetails} />
+
                   {features.Vouchers && <Route path="/app/admin/vouchers" component={VoucherList} />}
                   {features.Vouchers && <Route exact path="/app/admin/voucher/details/:id" component={VoucherDetails} />}
                   {features.Vouchers && <Route path="/app/admin/voucher/create" component={VoucherCreate} />}

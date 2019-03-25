@@ -64,7 +64,16 @@ class Navbar extends Component {
 
     adminItems.push(
       <li key="admin-networks" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/networks') ? 'selected' : ''}>
-        <Link to="/app/admin/networks">Networks</Link>
+        <Link to="/app/admin/networks">Dynamo</Link>
+        <span className="icon-thumbnail">
+          <i className="fa fa-desktop" />
+        </span>
+      </li>
+    );
+
+    adminItems.push(
+      <li key="admin-privatehive" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/privatehive') ? 'selected' : ''}>
+        <Link to="/app/admin/privatehive">Private Hive</Link>
         <span className="icon-thumbnail">
           <i className="fa fa-desktop" />
         </span>
@@ -80,14 +89,14 @@ class Navbar extends Component {
           </span>
         </li>
       );
-    adminItems.push(
-      <li key="admin-configs" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/network-configs') ? 'selected' : ''}>
-        <Link to="/app/admin/network-configs">Network Configs</Link>
-        <span className="icon-thumbnail">
-          <i className="fa fa-sliders" />
-        </span>
-      </li>
-    );
+    // adminItems.push(
+    //   <li key="admin-configs" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/network-configs') ? 'selected' : ''}>
+    //     <Link to="/app/admin/network-configs">Network Configs</Link>
+    //     <span className="icon-thumbnail">
+    //       <i className="fa fa-sliders" />
+    //     </span>
+    //   </li>
+    // );
     features.Vouchers &&
       adminItems.push(
         <li key="admin-vouchers" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/vouchers') ? 'selected' : ''}>
@@ -173,6 +182,17 @@ class Navbar extends Component {
                 </Link>
                 <span className="icon-thumbnail">
                   <i className="fa fa-list" />
+                </span>
+              </li>
+            )}
+            {!window.isAdminWindow && (
+              <li>
+                <Link to="/app/privatehive" className="detailed">
+                  <span className="title">Private Hive</span>
+                  <span className="details">Hyperledger fabric</span>
+                </Link>
+                <span className="icon-thumbnail">
+                  <i className="fa fa-snowflake-o" />
                 </span>
               </li>
             )}

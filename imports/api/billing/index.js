@@ -10,6 +10,8 @@ import HyperionApis from '../hyperion.js';
 import PaymeterApis from '../paymeter/index.js';
 import ChargeableAPI from '../../collections/chargeable-apis';
 import InvoiceApis from './invoice';
+import PrivateHive from '../privatehive';
+import PaymeterPricing from '../../collections/pricing/paymeter';
 
 const Billing = {};
 
@@ -54,6 +56,18 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
 
   const result = {
     totalAmount: 0,
+    totals: {
+      dynamo: 0,
+      privatehive: 0,
+      hyperion: 0,
+      paymeter: 0,
+      credits: 0,
+    },
+    creditClaims: [],
+    dynamos: [],
+    privateHives: [],
+    hyperions: [],
+    paymeters: [],
   };
   if (!(selectedMonth.month() === moment().month() && selectedMonth.year() === moment().year()) && isFromFrontend) {
     const prevMonthInvoice = Invoice.find({
@@ -82,7 +96,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
           $gte: selectedMonth
             .startOf('month')
             .toDate()
-            .getDate(),
+            .getTime(),
         },
       },
     ],
@@ -95,7 +109,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
     Micro: 0,
   };
 
-  result.networks = userNetworks
+  result.dynamos = userNetworks
     .map(network => {
       let isMicroNode = network.networkConfig && network.networkConfig.cpu === 500;
 
@@ -230,7 +244,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             //in this case discout value will be percentage of discount.
             cost = cost * ((100 - discount) / 100);
           } else {
-            cost = cost - discount;
+            cost = Math.max(cost - discount, 0);
           }
 
           //so that we can track record how many times he used.
@@ -305,7 +319,10 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       if (network.deletedAt && moment(network.deletedAt).isBefore(selectedMonth.startOf('month'))) {
         return undefined;
       }
+
+      cost = Number(Number(cost).toFixed(2));
       result.totalAmount += Number(cost);
+      result.totals.dynamo += Number(cost);
       function floorFigure(figure, decimals) {
         if (!decimals) decimals = 3;
         var d = Math.pow(10, decimals);
@@ -323,6 +340,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
         voucher: voucher,
         networkConfig,
         label,
+        type: 'dynamo',
         discount: Number(discountValue).toFixed(2),
         timeperiod: `Started at: ${moment(network.createdOn).format('DD-MMM-YYYY kk:mm')} ${
           network.deletedAt ? ` to ${moment(network.deletedAt).format('DD-MMM-YYYY kk:mm:ss')}` : 'and still running'
@@ -341,9 +359,8 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
   if (hyperion_stats.length === 1) {
     const hyperionPricing = HyperionPricing.find({ active: true }).fetch()[0];
     total_hyperion_cost = await HyperionApis.getBill({ userId, isFromFrontEnd: isFromFrontend, selectedMonth });
-    result.networks = result.networks || [];
-    result.networks.push({
-      name: 'Hyperion Cost',
+    result.hyperions.push({
+      name: 'Monthly subscription',
       instanceId: '',
       createdOn: isFromFrontend
         ? moment()
@@ -353,71 +370,85 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
             .subtract(1, 'month')
             .startOf('month')
             .toDate(),
-      rate: `$ ${hyperionPricing.perGBCost} / GB-month `,
+      rate: `$ ${hyperionPricing.minimumMonthlyCost} / month `,
       runtime: '',
+      type: 'hyperion',
       discount: Number(total_hyperion_cost.discount).toFixed(2),
       cost: Number(total_hyperion_cost.bill).toFixed(2),
     });
+    total_hyperion_cost.bill = Number(Number(total_hyperion_cost.bill).toFixed(2));
     result.totalAmount += Number(total_hyperion_cost.bill);
+    result.totals.hyperion += Number(total_hyperion_cost.bill);
 
-    if (hyperionPricing.perApiCost) {
-      const apiCalls = ChargeableAPI.find({
-        userId,
-        createdAt: {
-          $gte: selectedMonth.toDate(),
-          $lte: calculationEndDate,
-        },
-      }).fetch();
+    const apiCalls = ChargeableAPI.find({
+      userId,
+      createdAt: {
+        $gte: selectedMonth.toDate(),
+        $lte: calculationEndDate,
+      },
+    }).fetch();
 
-      const totalApiCallCost = hyperionPricing.perApiCost * apiCalls.length;
-      result.networks.push({
-        name: 'Hyperion API Cost',
-        instanceId: '',
-        createdOn: isFromFrontend
-          ? moment()
-              .startOf('month')
-              .toDate()
-          : moment()
-              .subtract(1, 'month')
-              .startOf('month')
-              .toDate(),
-        rate: `$ ${hyperionPricing.perApiCost} / request`,
-        runtime: `${apiCalls.length} requests`,
-        cost: totalApiCallCost,
-      });
+    const totalApiCallCost = Number(Number(hyperionPricing.perApiCost * apiCalls.length).toFixed(2));
+    result.hyperions.push({
+      name: 'APIs',
+      instanceId: '',
+      createdOn: isFromFrontend
+        ? moment()
+            .startOf('month')
+            .toDate()
+        : moment()
+            .subtract(1, 'month')
+            .startOf('month')
+            .toDate(),
+      type: 'hyperion',
+      rate: `$ ${hyperionPricing.perApiCost} / request`,
+      runtime: `${apiCalls.length} requests`,
+      discount: '0.00',
+      cost: totalApiCallCost,
+    });
 
-      result.totalAmount += Number(totalApiCallCost);
-    }
+    result.totals.hyperion += totalApiCallCost;
+    result.totalAmount += totalApiCallCost;
   }
 
   const paymeterCost = await PaymeterApis.getBill({ userId, isFromFrontEnd: isFromFrontend, selectedMonth });
-  // if (Math.floor(Number(paymeterCost)) > 0) {
-  result.networks = result.networks || [];
-  result.networks.push({
-    name: 'Paymeter Cost',
+  const paymeterPricing = PaymeterPricing.find({ active: true }).fetch()[0];
+  const cost = Number(Number(paymeterCost.bill).toFixed(2));
+  result.paymeters.push({
+    name: 'Monthly Subscription',
     instanceId: '',
     createdOn: '',
-    rate: '',
+    rate: `$ ${paymeterPricing.minimumMonthlyCost} / month`,
     runtime: '',
+    type: 'paymeter',
     discount: Number(paymeterCost.discount).toFixed(2),
-    cost: Number(paymeterCost.bill).toFixed(2),
+    cost: Number(cost).toFixed(2),
   });
 
-  result.totalAmount += Number(paymeterCost.bill);
+  result.totalAmount += cost;
+  result.totals.paymeter += cost;
   // }
+
+  const privatehiveBill = await PrivateHive.generateBill({ userId, month, year, isFromFrontend });
+
+  result.totalAmount += Number(Number(privatehiveBill.totalAmount).toFixed(2));
+  result.totals.privatehive += Number(Number(privatehiveBill.totalAmount).toFixed(2));
+  result.privateHives = privatehiveBill.networks;
 
   // Fetch redeemable credits
   if (isFromFrontend) {
     const { eligibleCredits } = await InvoiceApis.fetchCreditsRedemption({ userId, totalAmount: result.totalAmount });
     eligibleCredits.forEach(ec => {
-      result.networks.push({
+      result.creditClaims.push({
         name: `Credit Redemption`,
         instanceId: ec.credit.code,
         createdOn: '',
         rate: `$ ${ec.credit.amount}`,
-        cost: `-${ec.amount}`,
+        cost: `${ec.amount}`,
+        type: 'credit',
       });
       result.totalAmount -= ec.amount;
+      result.totals.credits += Number(Number(ec.amount).toFixed(2));
     });
   }
 
@@ -427,8 +458,10 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       billingPeriodLabel: selectedMonth.format('MMM-YYYY'),
     }).fetch()[0];
     if (!prevMonthInvoice) {
-      result.networks = [];
       result.totalAmount = 0;
+      result.networks = [];
+      result.creditClaims = [];
+      result.notGenerated = true;
     } else {
       result.networks = prevMonthInvoice.items;
       result.totalAmount = prevMonthInvoice.totalAmount;

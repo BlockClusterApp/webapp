@@ -3,6 +3,7 @@ import Bull from '../../modules/schedulers/bull';
 import request from 'request-promise';
 import uuid from 'uuid/v4';
 import { Networks } from '../../collections/networks/networks';
+import PrivateHive from '../../collections/privatehive';
 
 const debug = require('debug')('api:communication:webhook');
 
@@ -19,21 +20,39 @@ WebHookApis.generatePayload = data => {
   delete data.event;
 
   if (data.networkId) {
-    const network = Networks.find({ instanceId: data.networkId }).fetch()[0];
-    result.keys.push('network');
-    result.data.network = {
-      instanceId: network.instanceId,
-      name: network.name,
-      type: network.peerType,
-      locationCode: network.locationCode,
-      configuration: {
-        cpu: Number(network.networkConfig.cpu),
-        memory: Number(network.networkConfig.ram),
-        disk: Number(network.networkConfig.disk),
-      },
-      status: network.status,
-      impulseStatus: network.impulseStatus,
-    };
+    if (data.type === 'privatehive') {
+      const network = PrivateHive.find({ instanceId: data.networkId }).fetch()[0];
+      result.keys.push('network');
+      result.data.network = {
+        instanceId: network.instanceId,
+        name: network.name,
+        service: 'privatehive',
+        type: network.isJoin ? 'peer' : 'orderer',
+        locationCode: network.locationCode,
+        configuration: network.networkConfig,
+        status: network.status,
+        properties: network.properties,
+        nfsServer: network.nfs.url,
+      };
+    } else {
+      const network = Networks.find({ instanceId: data.networkId }).fetch()[0];
+      result.keys.push('network');
+      result.data.network = {
+        instanceId: network.instanceId,
+        name: network.name,
+        service: 'dynamo',
+        type: network.peerType,
+        locationCode: network.locationCode,
+        configuration: {
+          cpu: Number(network.networkConfig.cpu),
+          memory: Number(network.networkConfig.ram),
+          disk: Number(network.networkConfig.disk),
+        },
+        status: network.status,
+        impulseStatus: network.impulseStatus,
+      };
+    }
+    delete data.type;
     delete data.networkId;
   }
 
@@ -185,6 +204,7 @@ WebHookApis.send = async ({ id }) => {
       });
       ElasticLogger.log('Webhook Failed', {
         url,
+        id,
         responseCode: response.statusCode,
       });
     }

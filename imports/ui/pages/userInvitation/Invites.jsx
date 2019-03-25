@@ -4,6 +4,7 @@ import { UserInvitation } from '../../../collections/user-invitation';
 import helpers from '../../../modules/helpers';
 import LocationSelector from '../../components/Selectors/LocationSelector';
 import NetworkConfigSelector from '../../components/Selectors/NetworkConfigSelector.jsx';
+import PrivateHiveNetworkConfigSelector from '../../components/Selectors/PrivateHiveNetworkConfigSelector';
 import { withRouter } from 'react-router-dom';
 import CardVerification from '../billing/components/CardVerification.jsx';
 
@@ -83,19 +84,28 @@ class Invites extends Component {
       loading,
     });
     if (!this.loading[inviteId]) {
-      Meteor.call('acceptInvitation', inviteId, this.inviteLocationMapping[inviteId] || this.state.locations[0].locationCode, this.inviteConfigMapping[inviteId], () => {
-        this.loading[inviteId] = false;
-        const loading = this.state.loading;
-        loading[inviteId] = false;
-        $('#modalSlideLeft_soloAssetInfo').modal('hide');
-        setTimeout(
-          this.setState({
-            loading,
-            showModal: false,
-          }),
-          1000
-        );
-      });
+      Meteor.call(
+        'acceptInvitation',
+        {
+          inviteId,
+          locationCode: this.inviteLocationMapping[inviteId] || this.state.locations[0].locationCode,
+          networkConfig: this.inviteConfigMapping[inviteId],
+          type: this.state.modalInvite.type,
+        },
+        () => {
+          this.loading[inviteId] = false;
+          const loading = this.state.loading;
+          loading[inviteId] = false;
+          $('#modalSlideLeft_soloAssetInfo').modal('hide');
+          setTimeout(
+            this.setState({
+              loading,
+              showModal: false,
+            }),
+            1000
+          );
+        }
+      );
     }
     this.loading[inviteId] = loading;
   };
@@ -263,15 +273,27 @@ class Invites extends Component {
                 <div className="row-md-height">
                   <div className="modal-body col-md-height col-middle">
                     <form role="form" className="modal-assetInfo">
+                      <h3>
+                        Join <b>{this.state.modalInvite.metadata.network.name}</b> Network
+                      </h3>
                       <p>Select Location to deploy</p>
                       <LocationSelector locationChangeListener={this.locationChangeListener.bind(this, this.state.modalInviteId)} />
                       <br />
                       <p>Select Node Configuration</p>
-                      <NetworkConfigSelector
-                        locationCode={this.inviteLocationMapping[this.state.modalInviteId]}
-                        key={this.inviteLocationMapping[this.state.modalInviteId]}
-                        configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)}
-                      />
+                      {this.state.modalInvite.type === 'privatehive' ? (
+                        <PrivateHiveNetworkConfigSelector
+                          locationCode={this.inviteLocationMapping[this.state.modalInviteId]}
+                          key={this.inviteLocationMapping[this.state.modalInviteId]}
+                          isJoin={true}
+                          configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)}
+                        />
+                      ) : (
+                        <NetworkConfigSelector
+                          locationCode={this.inviteLocationMapping[this.state.modalInviteId]}
+                          key={this.inviteLocationMapping[this.state.modalInviteId]}
+                          configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)}
+                        />
+                      )}
                       {!isVoucherAlertShown ? null : <CardVerification cardVerificationListener={this.cardVerificationListener} />}
                     </form>
                     <button

@@ -66,6 +66,19 @@ class VoucherDetails extends Component {
             formattedData['Network Config\n(CPU,RAM,DISK)'] = `${i.networkConfig.cpu}C,${i.networkConfig.ram}G,${i.networkConfig.disk}G`;
             formattedData['Disk Changebale'] = i.isDiskChangeable ? 'YES' : 'NO';
           }
+          if (i.type === 'privatehive') {
+            const config = i.networkConfig;
+            formattedData['Network Config'] = `
+              Config Name: ${config.name} (${config._id})<br />
+              Fabric: Version <b>${config.fabric.version}</b> | <b>${config.fabric.orderers}</b> Orderers | <b>${config.fabric.peers}</b> Peers<br />
+              Orderers: <b>${config.orderer.cpu}</b> vCPUs | <b>${config.orderer.ram}</b> GB RAM | <b>${config.orderer.disk}${
+              config.orderer.isDiskChangeable ? '*' : ''
+            }</b> GB Disk<br />
+              Kafka: <b>${config.kafka.cpu}</b> vCPUs | <b>${config.kafka.ram}</b> GB RAM | <b>${config.kafka.disk}${config.kafka.isDiskChangeable ? '*' : ''}</b> GB Disk<br />
+              Peer: <b>${config.orderer.cpu}</b> vCPUs | <b>${config.orderer.ram}</b> GB RAM<br />
+              Data: <b>${config.data.disk}${config.data.isDiskChangeable ? '*' : ''}</b> GB Disk
+            `;
+          }
           if (i.campaignId && i.campaignId !== 'None') {
             this.campaignSubscription = Meteor.subscribe('campaign.all', {
               onReady: () => {
@@ -79,15 +92,9 @@ class VoucherDetails extends Component {
           const updatedData = Object.keys(formattedData).map(i => {
             return { [i]: formattedData[i] };
           });
-          this.setState(
-            {
-              formattedData: updatedData,
-            },
-            () => {
-              debugger;
-            }
-          );
-          debugger;
+          this.setState({
+            formattedData: updatedData,
+          });
         },
       }
     );
@@ -121,7 +128,7 @@ class VoucherDetails extends Component {
                   <thead>
                     <tr>
                       <th style={{ width: '30%' }}>Options</th>
-                      <th style={{ width: '70%' }}>Desctiption</th>
+                      <th style={{ width: '70%' }}>Description</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -131,7 +138,7 @@ class VoucherDetails extends Component {
                       return (
                         <tr key={index + 1}>
                           <td className="v-align-middle semi-bold">{Key}</td>
-                          <td className="v-align-middle">{Value}</td>
+                          <td className="v-align-middle" dangerouslySetInnerHTML={{ __html: Value }} />
                         </tr>
                       );
                     })}

@@ -2,14 +2,16 @@ import { Meteor } from 'meteor/meteor';
 import { generateRandomString, generateCompleteURLForUserInvite, getEJSTemplate } from '../../modules/helpers/server';
 import { UserInvitation } from '../../collections/user-invitation';
 import { UserCards } from '../../collections/payments/user-cards';
+import PrivateHiveApis from '../../api/privatehive/old_index.js';
 import { sendEmail } from '../emails/email-sender';
 import { Networks } from '../../collections/networks/networks';
 import Config from '../../../imports/modules/config/server';
 import agenda from '../../modules/schedulers/agenda';
 import Billing from '../../api/billing';
 import WebHookApis from '../communication/webhook';
+import PrivateHive from '../../collections/privatehive';
 
-const debug = require('debug')('api:user-functions')
+const debug = require('debug')('api:user-functions');
 
 async function sendEmails(users) {
   const ejsTemplate = await getEJSTemplate({
@@ -176,22 +178,32 @@ agenda.define(
 
 const NetworkInvitation = {};
 
-NetworkInvitation.inviteUserToNetwork = async function(networkId, nodeType, email, userId) {
+NetworkInvitation.inviteUserToNetwork = async function({ instanceId, nodeType, email, userId, type }) {
   if (!userId) {
     userId = Meteor.userId();
   }
-  const network = Networks.find({
-    instanceId: networkId,
-    user: userId,
-    active: true,
-  }).fetch()[0];
+
+  let network;
+
+  const networkId = instanceId;
+
+  if (type === 'privatehive') {
+    network = PrivateHive.find({ instanceId: networkId, userId, active: true, $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }] }).fetch()[0];
+  } else {
+    network = Networks.find({
+      instanceId: networkId,
+      user: userId,
+      active: true,
+    }).fetch()[0];
+  }
+
   if (!network) {
-    throw new Meteor.Error('Invalid network');
+    throw new Meteor.Error('bad-request', 'Invalid network');
   }
 
   const invitingUser = Meteor.users
     .find({
-      _id: network.user,
+      _id: network.user || network.userId,
     })
     .fetch()[0];
 
@@ -231,22 +243,12 @@ NetworkInvitation.inviteUserToNetwork = async function(networkId, nodeType, emai
     networkJoinLink: joinNetworkLink,
   });
 
-  await sendEmail({
-    from: {
-      name: 'Blockcluster',
-      email: 'no-reply@blockcluster.io',
-    },
-    to: email,
-    subject: `Invite to join ${network.name} network on blockcluster.io`,
-    text: `Visit the following link to join ${network.name} network on blockcluster.io - ${joinNetworkLink}`,
-    html: emailHtml,
-  });
-
   const result = UserInvitation.insert({
     inviteFrom: invitingUser._id,
     inviteTo: invitedUser._id,
     uniqueToken: uniqueString,
     networkId: network._id,
+    type,
     nodeType,
     metadata: {
       inviteFrom: {
@@ -264,11 +266,23 @@ NetworkInvitation.inviteUserToNetwork = async function(networkId, nodeType, emai
     },
   });
 
+  await sendEmail({
+    from: {
+      name: 'Blockcluster',
+      email: 'no-reply@blockcluster.io',
+    },
+    to: email,
+    subject: `Invite to join ${network.name} network on blockcluster.io`,
+    text: `Visit the following link to join ${network.name} network on blockcluster.io - ${joinNetworkLink}`,
+    html: emailHtml,
+  });
+
   WebHookApis.queue({
     userId,
     payload: WebHookApis.generatePayload({
       event: 'invite-sent',
       networkId: network.instanceId,
+      type,
       userId: invitedUser._id,
       inviteId: result,
     }),
@@ -279,6 +293,7 @@ NetworkInvitation.inviteUserToNetwork = async function(networkId, nodeType, emai
     payload: WebHookApis.generatePayload({
       event: 'invite-received',
       networkId: network.instanceId,
+      type,
       userId: invitingUser._id,
       inviteId: result,
     }),
@@ -307,9 +322,16 @@ NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
       _id: invitation.inviteTo,
     })
     .fetch()[0];
-  const network = Networks.find({
-    _id: invitation.networkId,
-  }).fetch()[0];
+  let network;
+  if (invitation.type === 'privatehive') {
+    network = PrivateHive.find({
+      _id: invitation.networkId,
+    }).fetch()[0];
+  } else {
+    network = Networks.find({
+      _id: invitation.networkId,
+    }).fetch()[0];
+  }
   return {
     invitation,
     invitedUser,
@@ -318,25 +340,29 @@ NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
   };
 };
 
-NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networkConfig, userId) {
-  return new Promise((resolve, reject) => {
-    userId = userId || Meteor.userId;
+NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkConfig, userId, type }) {
+  return new Promise(async (resolve, reject) => {
+    userId = userId || Meteor.userId();
     const invitation = UserInvitation.find({
-      _id: invitationId,
-      inviteTo: userId
+      _id: inviteId,
     }).fetch()[0];
 
-    if(!invitation) {
-      reject("Invalid invitation id");
+    if (!invitation) {
+      return reject('Invalid invitation id');
     }
 
-    const network = Networks.find({
-      _id: invitation.networkId,
-    }).fetch()[0];
+    let network;
+    if (type === 'privatehive') {
+      network = PrivateHive.find({ _id: invitation.networkId }).fetch()[0];
+    } else {
+      network = Networks.find({
+        _id: invitation.networkId,
+      }).fetch()[0];
+    }
 
-    debug("Network to join", network);
-    if(!network) {
-      throw new Meteor.Error("No network to join");
+    debug('Network to join', network);
+    if (!network) {
+      throw new Meteor.Error('No network to join');
     }
 
     WebHookApis.queue({
@@ -345,6 +371,7 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
         event: 'invite-accepted',
         inviteId: invitation._id,
         networkId: network.instanceId,
+        type,
       }),
     });
 
@@ -354,50 +381,76 @@ NetworkInvitation.acceptInvitation = function(invitationId, locationCode, networ
         event: 'invite-accepted',
         inviteId: invitation._id,
         networkId: network.instanceId,
+        type,
       }),
     });
 
-    Meteor.call(
-      'joinNetwork',
-      network.name,
-      invitation.nodeType || 'authority',
-      network.genesisBlock.toString(),
-      ['enode://' + network.nodeId + '@' + network.workerNodeIP + ':' + network.ethNodePort].concat(network.totalENodes),
-      network.impulseURL,
-      network.assetsContractAddress,
-      network.atomicSwapContractAddress,
-      network.streamsContractAddress,
-      network.impulseContractAddress,
-      locationCode,
-      networkConfig,
-      invitation.inviteTo,
-      (err, res) => {
-        debug(err, res);
-        if (err) return reject(err);
-        UserInvitation.update(
-          {
-            _id: invitationId,
+    if (type === 'privatehive') {
+      const res = await PrivateHiveApis.join({
+        ordererId: network._id,
+        name: network.name,
+        networkConfig: networkConfig,
+        voucherId: networkConfig.voucher ? networkConfig.voucher._id : undefined,
+        locationCode,
+        userId,
+      });
+      UserInvitation.update(
+        {
+          _id: inviteId,
+        },
+        {
+          $set: {
+            joinedNetwork: res,
+            joinedLocation: locationCode,
+            invitationStatus: UserInvitation.StatusMapping.Accepted,
+            inviteStatusUpdatedAt: new Date(),
           },
-          {
-            $set: {
-              joinedNetwork: res,
-              joinedLocation: locationCode,
-              invitationStatus: UserInvitation.StatusMapping.Accepted,
-              inviteStatusUpdatedAt: new Date(),
+        }
+      );
+      return resolve(res);
+    } else {
+      Meteor.call(
+        'joinNetwork',
+        network.name,
+        invitation.nodeType || 'authority',
+        network.genesisBlock.toString(),
+        ['enode://' + network.nodeId + '@' + network.workerNodeIP + ':' + network.ethNodePort].concat(network.totalENodes),
+        network.impulseURL,
+        network.assetsContractAddress,
+        network.atomicSwapContractAddress,
+        network.streamsContractAddress,
+        network.impulseContractAddress,
+        locationCode,
+        networkConfig,
+        invitation.inviteTo,
+        (err, res) => {
+          debug(err, res);
+          if (err) return reject(err);
+          UserInvitation.update(
+            {
+              _id: inviteId,
             },
-          }
-        );
+            {
+              $set: {
+                joinedNetwork: res,
+                joinedLocation: locationCode,
+                invitationStatus: UserInvitation.StatusMapping.Accepted,
+                inviteStatusUpdatedAt: new Date(),
+              },
+            }
+          );
 
-        agenda.schedule(new Date(Date.now() + 30000), 'whitelist nodes', {
-          newNode_id: res,
-          node_id: network._id,
-        });
+          agenda.schedule(new Date(Date.now() + 30000), 'whitelist nodes', {
+            newNode_id: res,
+            node_id: network._id,
+          });
 
-        debug("Accepted invitation", res);
+          debug('Accepted invitation', res);
 
-        resolve(res);
-      }
-    );
+          resolve(res);
+        }
+      );
+    }
   });
 };
 
@@ -410,7 +463,7 @@ NetworkInvitation.rejectInvitation = async function(invitationId) {
     userId: invitation.inviteFrom,
     payload: WebHookApis.generatePayload({
       event: 'invite-rejected',
-      inviteId: invitation._id
+      inviteId: invitation._id,
     }),
   });
 
@@ -418,7 +471,7 @@ NetworkInvitation.rejectInvitation = async function(invitationId) {
     userId: invitation.inviteTo,
     payload: WebHookApis.generatePayload({
       event: 'invite-rejected',
-      inviteId: invitation._id
+      inviteId: invitation._id,
     }),
   });
 
@@ -445,7 +498,7 @@ NetworkInvitation.cancelInvitation = async function(inviteId, userId) {
     userId: invitation.inviteFrom,
     payload: WebHookApis.generatePayload({
       event: 'invite-cancelled',
-      inviteId: invitation._id
+      inviteId: invitation._id,
     }),
   });
 
@@ -453,7 +506,7 @@ NetworkInvitation.cancelInvitation = async function(inviteId, userId) {
     userId: invitation.inviteTo,
     payload: WebHookApis.generatePayload({
       event: 'invite-cancelled',
-      inviteId: invitation._id
+      inviteId: invitation._id,
     }),
   });
 
@@ -483,9 +536,15 @@ NetworkInvitation.resendInvitation = async function(inviteId, userId) {
       _id: invite.inviteFrom,
     })
     .fetch()[0];
-  const network = Networks.find({
-    _id: invite.networkId,
-  }).fetch()[0];
+  let network;
+  if (invite.type === 'privatehive') {
+    network = PrivateHive.find({ _id: invite.networkId }).fetch()[0];
+  } else {
+    network = Networks.find({
+      _id: invite.networkId,
+    }).fetch()[0];
+  }
+
   const uniqueString = invite.uniqueString;
   const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
 

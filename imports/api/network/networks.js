@@ -83,26 +83,6 @@ NetworkObj.restartPod = instanceId => {
     });
   });
 };
-
-NetworkObj.adminDeleteNetwork = instanceId => {
-  return new Promise(resolve => {
-    if (Meteor.user().admin < MIN_ADMIN_LEVEL) {
-      throw new Meteor.Error('unauthorized', 'Unauthorized for this action');
-    }
-    ElasticLogger.log('Admin delete network', {
-      instanceId,
-      user: Meteor.user(),
-    });
-    Meteor.call('deleteNetwork', instanceId, (err, res) => {
-      if (err) {
-        RavenLogger.log(err);
-        throw new Meteor.Error(err.error, err.reason);
-      }
-      return resolve(true);
-    });
-  });
-};
-
 NetworkObj.updateContainerImages = async function(req, res, next) {
   if (!(req.headers && req.headers.authorization && req.headers.authorization === `${Config.NetworkUpdate.id}:${Config.NetworkUpdate.key}`)) {
     console.log('Network update request unauthorized ', req.headers && req.headers.authorization, `${Config.NetworkUpdate.id}:${Config.NetworkUpdate.key}`);
@@ -124,7 +104,6 @@ JsonRoutes.add('post', '/api/networks/update-container-images', NetworkObj.updat
 Meteor.methods({
   nodeCount: NetworkObj.getNodeCount,
   restartPod: NetworkObj.restartPod,
-  adminDeleteNetwork: NetworkObj.adminDeleteNetwork,
 });
 
 export default NetworkObj;

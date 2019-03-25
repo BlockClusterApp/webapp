@@ -26,13 +26,14 @@ if (env === 'production') {
 const bullSystem = {};
 
 bullSystem.initBull = function() {
-  console.log('Bull redis', `redis://${Config.redisHost}:${Config.redisPort}`);
+  console.log('Bull redis', `redis://${Config.redisHost}:${Config.redisPort} @ ${bullPrefix}`);
   const queue = new Bull('queue', `redis://${Config.redisHost}:${Config.redisPort}`, { prefix: bullPrefix });
   const volumeJobs = new Bull('volume', `redis://${Config.redisHost}:${Config.redisPort}`, { prefix: bullPrefix });
 
   bullSystem.bullJobs = queue;
   bullSystem.volumeJobs = volumeJobs;
 
+  // Delay in ms
   bullSystem.addJob = (name, data, { attempts = 3, delay = 0, timeout = 120000, backOffDelay = 10000, jobId } = {}) => {
     const jobOptions = {
       attempts,

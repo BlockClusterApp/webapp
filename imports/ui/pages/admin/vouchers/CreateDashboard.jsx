@@ -8,6 +8,7 @@ import Campaign from './components/CampaignCreate';
 import Hyperion from './components/HyperionCreate';
 import Paymeter from './components/PaymeterCreate';
 import CreditsCreate from './components/CreditsCreate';
+import PrivateHiveCreate from './components/PrivateHiveCreate';
 
 import './components/style.scss';
 
@@ -70,7 +71,15 @@ class VoucherDashboard extends Component {
                 <Link to={'/app/admin/voucher/create/networks'}>
                   <span className="title">
                     <i className="fa fa-cube" />
-                    Networks
+                    Dynamo
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link to={'/app/admin/voucher/create/privatehive'}>
+                  <span className="title">
+                    <i className="fa fa-cube" />
+                    Private Hive
                   </span>
                 </Link>
               </li>
@@ -113,6 +122,7 @@ class VoucherDashboard extends Component {
             <Route exact path="/app/admin/voucher/create/networks" render={props => <Network locations={this.state.locations} {...props} />} />
             <Route exact path="/app/admin/voucher/create/hyperion" render={props => <Hyperion locations={this.state.locations} {...props} />} />
             <Route exact path="/app/admin/voucher/create/paymeter" render={props => <Paymeter locations={this.state.locations} {...props} />} />
+            <Route exact path="/app/admin/voucher/create/privatehive" render={props => <PrivateHiveCreate locations={this.state.locations} {...props} />} />
           </div>
         </div>
       </div>

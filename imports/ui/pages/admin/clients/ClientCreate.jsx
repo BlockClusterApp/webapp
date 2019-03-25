@@ -6,7 +6,7 @@ import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import Toggle from 'react-toggle';
 import 'react-toggle/style.css';
 import Axios from 'axios';
-import CopyToClipboard from 'react-copy-to-clipboard'
+import CopyToClipboard from 'react-copy-to-clipboard';
 
 class ClientCreate extends Component {
   constructor(props) {
@@ -18,9 +18,9 @@ class ClientCreate extends Component {
       phone: '',
       genLicense: true,
       expire: 3,
-      clientMeta:'',
-      clientLogo:'',
-      serviceIncluded:{}
+      clientMeta: '',
+      clientLogo: '',
+      serviceIncluded: {},
     };
   }
 
@@ -55,7 +55,7 @@ class ClientCreate extends Component {
     });
     const data = {
       clientMeta: this.state.clientMeta,
-      clientLogo:this.state.clientLogo,
+      clientLogo: this.state.clientLogo,
       clientDetails: {
         clientName: this.state.clientName,
         emailId: this.state.emailId,
@@ -73,7 +73,6 @@ class ClientCreate extends Component {
           ['createClient_formloading']: false,
           ['createClient_formSubmitError']: '',
         });
-        console.log(saved);
         this.resetFrom();
         notifications.success('Client Added');
       })
@@ -82,7 +81,6 @@ class ClientCreate extends Component {
           ['createClient_formloading']: false,
           ['createClient_formSubmitError']: '',
         });
-        console.log(error);
         notifications.error('Error occured');
       });
   };
@@ -150,34 +148,42 @@ class ClientCreate extends Component {
                       />
                     </div>
                   )}
+                </div>
+                <br />
+                <label>Client Data</label>
+                <div className="row">
+                  <div className="col-md-4 form-input-group">
+                    <label> Clients Meta-data</label>
+                    <input
+                      name="clientMeta"
+                      type="text"
+                      placeholder="Some Note... *Optional "
+                      className="form-control"
+                      onChange={this.handleChanges.bind(this)}
+                      value={this.state.clientMeta}
+                      required
+                    />
                   </div>
-                  <br />
-                  <label>Client Data</label>
-                  <div className='row'>
-                      <div className='col-md-4 form-input-group'>
-                      <label> Clients Meta-data</label>
-                      <input
-                        name="clientMeta"
-                        type="text"
-                        placeholder="Some Note... *Optional "
-                        className="form-control"
-                        onChange={this.handleChanges.bind(this)}
-                        value={this.state.clientMeta}
-                        required
-                      />
-                      </div>
-                      <div className='form-input-group'>
-                        <label>Client Logo</label>
-                        <span className='help'> e.g URI</span>
-                        <input
-                        name='clientLogo'
-                        type="text"
-                        placeholder="https://...."
-                        className="form-control"
-                        onChange={this.handleChanges.bind(this)}
-                        value={this.state.clientLogo}
-                        required/>
-                      </div><div className='m-t-30'><CopyToClipboard text={this.state.clientLogo}><button className='btn btn-default'><i className='fa fa-copy'/></button></CopyToClipboard></div>
+                  <div className="form-input-group">
+                    <label>Client Logo</label>
+                    <span className="help"> e.g URI</span>
+                    <input
+                      name="clientLogo"
+                      type="text"
+                      placeholder="https://...."
+                      className="form-control"
+                      onChange={this.handleChanges.bind(this)}
+                      value={this.state.clientLogo}
+                      required
+                    />
+                  </div>
+                  <div className="m-t-30">
+                    <CopyToClipboard text={this.state.clientLogo}>
+                      <button className="btn btn-default">
+                        <i className="fa fa-copy" />
+                      </button>
+                    </CopyToClipboard>
+                  </div>
                 </div>
               </div>
               <LaddaButton
@@ -203,5 +209,3 @@ class ClientCreate extends Component {
 export default withTracker(() => {
   return {};
 })(withRouter(ClientCreate));
-
-

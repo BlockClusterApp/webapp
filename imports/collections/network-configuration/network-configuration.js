@@ -41,6 +41,64 @@ NetworkConfiguration.schema = new SimpleSchema({
       hourly: String,
     },
   },
+  kafka: {
+    type: {
+      cpu: {
+        type: String,
+      },
+      disk: {
+        type: String,
+      },
+      ram: {
+        type: String,
+      },
+      isDiskChangeable: {
+        type: Boolean,
+      },
+    },
+  },
+  orderer: {
+    type: {
+      cpu: {
+        type: String,
+      },
+      disk: {
+        type: String,
+      },
+      ram: {
+        type: String,
+      },
+      isDiskChangeable: {
+        type: Boolean,
+      },
+    },
+  },
+  data: {
+    type: {
+      disk: {
+        type: String,
+      },
+      isDiskChangeable: {
+        type: Boolean,
+      },
+    },
+  },
+  fabric: {
+    type: {
+      version: {
+        type: String,
+      },
+      orderers: {
+        type: String,
+      },
+      peers: {
+        type: String,
+      },
+    },
+  },
+  for: {
+    type: String,
+  },
   locations: {
     type: Array,
   },

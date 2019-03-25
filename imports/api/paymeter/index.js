@@ -1146,7 +1146,7 @@ async function paymeter_getAndResetUserBill({ userId, isFromFrontEnd, selectedMo
       let bill = paymeter_userData.bill || '0';
       let nextMonthMin = new BigNumber(paymeterPricing.minimumMonthlyCost);
 
-      if (paymeter_userData.unsubscribeNextMonth) {
+      if (paymeter_userData.unsubscribeNextMonth && !isFromFrontEnd) {
         let UserWallets = Wallets.find({
           userId: userId,
         }).fetch();
