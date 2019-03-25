@@ -1,5 +1,5 @@
 import PrivateHiveCollection from '../../../../collections/privatehive';
-import PrivateHiveApis from '../../../../api/privatehive';
+import PrivateHiveApis from '../../../../api/privatehive/old_index.js';
 
 const debug = require('debug')('scheduler:bull:create-privatehive');
 
