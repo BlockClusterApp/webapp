@@ -88,7 +88,7 @@ export default {
   },
   instanceIDGenerate() {
     var ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
-    var ID_LENGTH = 8;
+    var ID_LENGTH = 10;
 
     var rtn = '';
     for (var i = 0; i < ID_LENGTH; i++) {

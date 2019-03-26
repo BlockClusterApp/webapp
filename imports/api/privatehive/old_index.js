@@ -698,7 +698,7 @@ async function revokePrivateHiveToken({ instanceId, token }) {
 
 /* Meteor methods so that our frontend can call these function without using HTTP calls. Although I would prefer to use HTTP instead of meteor method. */
 Meteor.methods({
-  initializePrivateHiveNetwork: PrivateHive.initializeNetwork,
+  // initializePrivateHiveNetwork: PrivateHive.initializeNetwork,
   getPrivateHiveNetworkCount: PrivateHive.getPrivateHiveNetworkCount,
   deletePrivateHiveNetwork: PrivateHive.deleteNetwork,
   changePrivateHiveNodeName: PrivateHive.changeName,
