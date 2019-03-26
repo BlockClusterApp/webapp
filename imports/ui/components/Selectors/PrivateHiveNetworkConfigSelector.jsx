@@ -188,7 +188,7 @@ class PrivateHiveNetworkConfigSelector extends Component {
     ];
     const dropDown = (
       <div className="form-group form-group-default ">
-        <label>Node Type</label>
+        <label>Organisation Type</label>
         <select
           className="form-control form-group-default"
           name="nodeType"
@@ -234,7 +234,7 @@ class PrivateHiveNetworkConfigSelector extends Component {
                 <div className="row clearfix">
                   <div className="form-group form-group-default input-group">
                     <div className="form-input-group">
-                      <label>Peer ID</label>
+                      <label>Peer Organisation ID</label>
                       <input type="text" className="form-control" name="projectName" ref={input => (this.peerId = input)} onChange={this.onConfigChange.bind(this, false)} />
                     </div>
                   </div>

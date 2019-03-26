@@ -73,7 +73,7 @@ class PaymentDashboard extends Component {
                     <div className="row clearfix">
                       <div className="col-md-12">
                         <div className="form-group form-group-default required">
-                          <label>Network name</label>
+                          <label>Name</label>
                           <input
                             type="text"
                             className="form-control"

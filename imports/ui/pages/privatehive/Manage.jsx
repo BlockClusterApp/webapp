@@ -32,8 +32,9 @@ class ViewNetwork extends Component {
                 <div className="card-block">
                   <h2>{this.props.network ? this.props.network.name : ''}</h2>
                   <h5>
-                    {this.props.network ? helpers.firstLetterCapital(!this.props.network.isJoin ? 'Orderer' : 'Remote Peer') : ''} network created on{' '}
-                    {this.props.network ? moment(this.props.network.createdAt).format('DD-MMM-YYYY kk:mm:SS') : ''}. Here is the control panel for this blockchain node.
+                    {this.props.network ? helpers.firstLetterCapital(this.props.network.type == 'peer' ? 'Peer' : 'Orderer') : ''} network created on{' '}
+                    {this.props.network ? moment(this.props.network.createdAt).format('DD-MMM-YYYY kk:mm:SS') : ''}. Here is the control panel for this{' '}
+                    {this.props.network ? (this.props.network.type == 'peer' ? 'peer' : 'orderer') : ''}.
                   </h5>
                   <hr />
                   <div className="row ">
@@ -175,8 +176,12 @@ class ViewNetwork extends Component {
 export default withTracker(function(props) {
   return {
     network: [
-      ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true }).fetch(),
-      ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true }).fetch(),
+      ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true })
+        .fetch()
+        .map(o => ({ ...o, type: 'peer' })),
+      ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true })
+        .fetch()
+        .map(o => ({ ...o, type: 'orderer' })),
     ][0],
     subscriptions: [
       Meteor.subscribe(

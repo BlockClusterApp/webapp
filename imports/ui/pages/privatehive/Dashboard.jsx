@@ -40,7 +40,7 @@ class PrivateHiveDashboard extends Component {
                 </li> */}
                 <li className="nav-item">
                   <Link to="/app/privatehive/invite" className={`${this.props.location.pathname === '/app/privatehive/invite' ? 'active' : ''}`}>
-                    Invite
+                    Invitations
                   </Link>
                 </li>
               </ul>

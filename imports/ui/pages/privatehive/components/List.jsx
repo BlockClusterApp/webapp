@@ -46,13 +46,6 @@ class NetworksList extends Component {
         });
       }
     });
-    Meteor.call('getPrivateHiveNetworkCount', (err, res) => {
-      if (!err) {
-        if (res <= 0) {
-          this.props.history.push(`/app/privatehive/create`);
-        }
-      }
-    });
   }
 
   openNetwork = networkId => {
@@ -83,8 +76,8 @@ class NetworksList extends Component {
                       <thead>
                         <tr>
                           <th style={{ width: '20%' }}>Name</th>
-                          <th style={{ width: '15%' }}>Instance ID</th>
-                          <th style={{ width: '15%' }}>Member Type</th>
+                          <th style={{ width: '15%' }}>MSP ID</th>
+                          <th style={{ width: '15%' }}>Organisation Type</th>
                           <th style={{ width: '18%' }}>Location</th>
                           <th style={{ width: '17%' }}>Status</th>
                           <th style={{ width: '15%' }}>Created on</th>
@@ -105,8 +98,8 @@ class NetworksList extends Component {
                             return (
                               <tr key={item._id} onClick={() => this.openNetwork(item.instanceId)}>
                                 <td className="v-align-middle ">{item.name}</td>
-                                <td className="v-align-middle">{item.instanceId}</td>
-                                <td className="v-align-middle">{item.type === 'peer' ? 'Peer' : 'Authority'}</td>
+                                <td className="v-align-middle">{item.instanceId.toPascalCase()}</td>
+                                <td className="v-align-middle">{item.type === 'peer' ? 'Peer' : 'Orderer'}</td>
                                 <td className="v-align-middle">{this.getLocationName(item.locationCode)}</td>
                                 <td className="v-align-middle">{this.convertStatusToTag(item.status)}</td>
                                 <td className="v-align-middle">{moment(item.createdAt).format('DD-MMM-YYYY kk:mm')}</td>

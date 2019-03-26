@@ -110,22 +110,14 @@ class ViewEditNetwork extends Component {
                 <div className="form-horizontal">
                   <div className="form-group row">
                     <label htmlFor="fname" className="col-md-3 control-label">
-                      Instance ID
-                    </label>
-                    <div className="col-md-9">
-                      <span className="value-valign-middle">{network.instanceId}</span>
-                    </div>
-                  </div>
-                  <div className="form-group row">
-                    <label htmlFor="fname" className="col-md-3 control-label">
-                      Node Name
+                      Name
                     </label>
                     <div className="col-md-9">
                       <span className="value-valign-middle">{<EditableText value={network.name} valueChanged={this.nodeNameChange} />}</span>
                     </div>
                   </div>
                   <div className="form-group row">
-                    <label className="col-md-3 control-label">Member Type</label>
+                    <label className="col-md-3 control-label">Organisation Type</label>
                     <div className="col-md-9">
                       <span className="value-valign-middle">{network.type === 'peer' ? 'Peer' : 'Orderer network'}</span>
                     </div>
@@ -151,7 +143,7 @@ class ViewEditNetwork extends Component {
                   <div className="form-group row">
                     <label className="col-md-3 control-label">MSP Id</label>
                     <div className="col-md-9">
-                      <b className="value-valign-middle">{network.instanceId.replace('ph-', '')}MSP</b>
+                      <b className="value-valign-middle">{network.instanceId.toPascalCase()}</b>
                     </div>
                   </div>
 

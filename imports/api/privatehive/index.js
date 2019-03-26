@@ -6,10 +6,6 @@ import { PrivatehiveOrderers } from '../../collections/privatehiveOrderers/priva
 import { PrivatehivePeers } from '../../collections/privatehivePeers/privatehivePeers.js';
 import Creators from './creators';
 
-String.prototype.toPascalCase = function() {
-  return this.charAt(0).toUpperCase() + this.slice(1);
-};
-
 let PrivateHive = {};
 
 PrivateHive.createPeer = async ({ locationCode }) => {
@@ -40,7 +36,7 @@ PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, pee
   const workerNodeIP = Config.workerNodeIP(locationCode);
   const instanceId = helpers.instanceIDGenerate();
   const namespace = Config.namespace;
-  let ordererNodePort
+  let ordererNodePort;
   try {
     await Creators.deployZookeeper({ locationCode, instanceId, namespace: Config.namespace });
     await Creators.deployKafka({ locationCode, namespace: Config.namespace, instanceId });
@@ -171,7 +167,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       throw new Meteor.Error(403, 'Invalid peer');
     }
 
-    console.log("Peer", peerDetails);
+    console.log('Peer', peerDetails);
 
     async function getCerts(peer) {
       return new Promise((resolve, reject) => {
