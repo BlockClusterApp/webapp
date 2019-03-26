@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
 import PrivateHive from '../../../../collections/privatehive';
+import { PrivatehivePeers } from '../../../../collections/privatehivePeers/privatehivePeers';
+import { PrivatehiveOrderers } from '../../../../collections/privatehiveOrderers/privatehiveOrderers';
 import helpers from '../../../../modules/helpers';
 import moment from 'moment';
 import { withRouter } from 'react-router-dom';
@@ -22,7 +24,7 @@ class NetworksList extends Component {
 
   convertStatusToTag = status => {
     if (!status) {
-      return null;
+      return <span className="label label-inverse">Initializing</span>;
     }
     if (status === 'initializing' || status === 'pending') {
       return <span className="label label-inverse">{helpers.firstLetterCapital(status)}</span>;
@@ -104,7 +106,7 @@ class NetworksList extends Component {
                               <tr key={item._id} onClick={() => this.openNetwork(item.instanceId)}>
                                 <td className="v-align-middle ">{item.name}</td>
                                 <td className="v-align-middle">{item.instanceId}</td>
-                                <td className="v-align-middle">{item.isJoin ? 'Peer' : 'Authority'}</td>
+                                <td className="v-align-middle">{item.type === 'peer' ? 'Peer' : 'Authority'}</td>
                                 <td className="v-align-middle">{this.getLocationName(item.locationCode)}</td>
                                 <td className="v-align-middle">{this.convertStatusToTag(item.status)}</td>
                                 <td className="v-align-middle">{moment(item.createdAt).format('DD-MMM-YYYY kk:mm')}</td>
@@ -126,7 +128,14 @@ class NetworksList extends Component {
 
 export default withTracker(() => {
   return {
-    networks: PrivateHive.find({ userId: Meteor.userId(), active: true, deletedAt: null }).fetch(),
+    networks: [
+      ...PrivatehivePeers.find({ userId: Meteor.userId(), active: true, deletedAt: null })
+        .fetch()
+        .map(o => ({ ...o, type: 'peer' })),
+      ...PrivatehiveOrderers.find({ userId: Meteor.userId(), active: true, deletedAt: null })
+        .fetch()
+        .map(o => ({ ...o, type: 'orderer' })),
+    ].sort((a, b) => (moment(a.createdAt).isBefore(moment(b.createdAt)) ? -1 : 1)),
     subscriptions: [Meteor.subscribe('privatehive')],
   };
 })(withRouter(NetworksList));

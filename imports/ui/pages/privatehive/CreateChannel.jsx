@@ -5,6 +5,8 @@ import { withRouter } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import notifications from '../../../modules/notifications';
+import { PrivatehiveOrderers } from '../../../collections/privatehiveOrderers/privatehiveOrderers';
+import { PrivatehivePeers } from '../../../collections/privatehivePeers/privatehivePeers';
 
 class CreateChannel extends Component {
   constructor() {
@@ -117,14 +119,22 @@ class CreateChannel extends Component {
 
 export default withTracker(props => {
   return {
-    network: PrivateHive.find({ instanceId: props.match.params.id, active: true }).fetch()[0],
+    network: [
+      ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true }).fetch(),
+      ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true }).fetch(),
+    ][0],
     subscriptions: [
       Meteor.subscribe(
         'privatehive.one',
-        { instanceId: props.match.params.id, active: true },
+        { instanceId: props.match.params.id },
         {
           onReady: function() {
-            if (PrivateHive.find({ instanceId: props.match.params.id, active: true }).fetch().length !== 1) {
+            if (
+              [
+                ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true }).fetch(),
+                ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true }).fetch(),
+              ].length !== 1
+            ) {
               props.history.push('/app/privatehive');
             }
           },

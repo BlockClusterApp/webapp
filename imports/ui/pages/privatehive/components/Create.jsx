@@ -34,9 +34,11 @@ class PaymentDashboard extends Component {
         loading: false,
       });
     }
+
+    const { config } = this.config;
     Meteor.call(
       'initializePrivateHiveNetwork',
-      { name, networkConfig: this.config, locationCode: this.locationCode, voucherId: this.selectedVoucher ? this.selectedVoucher._id : undefined },
+      { name, type: config.networkType, peerId: config.peerId, locationCode: this.locationCode, voucherId: this.selectedVoucher ? this.selectedVoucher._id : undefined },
       (err, res) => {
         this.setState({
           loading: false,
@@ -60,24 +62,12 @@ class PaymentDashboard extends Component {
                 <div className="card-block">
                   <h3>Create Your Hyperledeger Fabric Network</h3>
                   <p>Here you can create your own production grade HLF network</p>
-                  <ul>
-                    <li>
-                      <i>Orderer</i>: Orderer is responsible for creating blocks. The authority of the network should be the creator of the network and is who hosts the orderer.
-                    </li>
-                    <li>
-                      <i>Kafka and Zookeeper</i>: These are internal components of Orderer, which enable orderer to handle large TPS.
-                    </li>
-                    <li>
-                      <i>Data Disk Space</i>: This space will hold all your CA certs, chaincodes, channel config files, channel blocks and other generated artifacts.
-                    </li>
-                  </ul>
                 </div>
               </div>
             </div>
             <div className="col-md-7">
               <div className="card card-transparent">
                 <div className="card-block">
-                  {/* <form id="form-project" role="form" onSubmit={this.onSubmit} autoComplete="off"> */}
                   <p>Basic Information</p>
                   <div className="form-group-attached">
                     <div className="row clearfix">

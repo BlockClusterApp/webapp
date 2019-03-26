@@ -15,53 +15,151 @@ let PrivateHive = {};
 PrivateHive.createPeer = async ({ locationCode }) => {
   const instanceId = helpers.instanceIDGenerate();
   const workerNodeIP = Config.workerNodeIP(locationCode);
+  const namespace = Config.namespace;
 
-  await Creators.createPersistentvolumeclaims({ locationCode, namespace: Config.namespace, instanceId, storage: 50 });
-  let peerDetails = await Creators.createPeerService({ locationCode, namespace: Config.namespace, instanceId });
+  try {
+    console.log('Creating PVC');
+    await Creators.createPersistentvolumeclaims({ locationCode, namespace: Config.namespace, instanceId, storage: 50 });
+    console.log('Creating Service');
+    peerDetails = await Creators.createPeerService({ locationCode, namespace: Config.namespace, instanceId });
 
-  {
-    locationCode, namespace, instanceId, anchorCommPort, workerNodeIP;
+    console.log('Creating Deployment');
+    await Creators.createPeerDeployment({ locationCode, namespace: Config.namespace, instanceId, workerNodeIP, anchorCommPort: peerDetails.peerGRPCAPINodePort });
+
+    return { instanceId, peerDetails };
+  } catch (err) {
+    await Creators.deletePersistentVolumeClaim({ locationCode, namespace, name: `${instanceId}-pvc` });
+    await Creators.deleteService({ locationCode, namespace, name: `${instanceId}-privatehive` });
+    await Creators.deleteDeployment({ locationCode, namespace, name: `${instanceId}-privatehive` });
+
+    throw new Meteor.Error(err);
   }
-  await Creators.createPeerDeployment({ locationCode, namespace: Config.namespace, instanceId, workerNodeIP, anchorCommPort: peerDetails.peerGRPCAPINodePort });
-
-  return { instanceId, peerDetails };
 };
 
 PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, peerWorkerNodeIP, anchorCommPort, locationCode }) => {
   const workerNodeIP = Config.workerNodeIP(locationCode);
   const instanceId = helpers.instanceIDGenerate();
+  const namespace = Config.namespace;
+  let ordererNodePort
+  try {
+    await Creators.deployZookeeper({ locationCode, instanceId, namespace: Config.namespace });
+    await Creators.deployKafka({ locationCode, namespace: Config.namespace, instanceId });
 
-  await Creators.deployZookeeper({ locationCode, instanceId, namespace: Config.namespace });
-  await Creators.deployKafka({ locationCode, namespace: Config.namespace, instanceId });
+    await Creators.createPersistentvolumeclaims({ locationCode, namespace: Config.namespace, instanceId, storage: 50 });
+    ordererNodePort = await Creators.createOrdererService({ locationCode, namespace: Config.namespace, instanceId });
 
-  await Creators.createPersistentvolumeclaims({ locationCode, namespace: Config.namespace, instanceId, storage: 50 });
-  const ordererNodePort = await Creators.createOrdererService({ locationCode, namespace: Config.namespace, instanceId });
+    await Creators.createOrdererDeployment({
+      locationCode,
+      namespace: Config.namespace,
+      instanceId,
+      workerNodeIP,
+      peerOrgName,
+      peerAdminCert,
+      peerCACert,
+      peerWorkerNodeIP,
+      anchorCommPort,
+      ordererNodePort,
+    });
+  } catch (err) {
+    await Creators.destroyZookeper({ locationCode, namespace, instanceId });
+    await Creators.destroyKafka({ locationCode, namespace, instanceId });
+    await Creators.deletePersistentVolumeClaim({ locationCode, namespace, name: `${instanceId}-pvc` });
+    await Creators.deleteService({ locationCode, namespace, name: `${instanceId}-privatehive` });
+    await Creators.deleteDeployment({ locationCode, namespace, name: `${instanceId}-privatehive` });
 
-  await Creators.createOrdererDeployment({
-    locationCode,
-    namespace: Config.namespace,
-    instanceId,
-    workerNodeIP,
-    peerOrgName,
-    peerAdminCert,
-    peerCACert,
-    peerWorkerNodeIP,
-    anchorCommPort,
-    ordererNodePort,
-  });
+    throw new Meteor.Error(err);
+  }
 
   return { instanceId, ordererNodePort };
 };
 
-PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, type }) => {
+PrivateHive.deleteNetwork = async ({ userId, instanceId }) => {
+  let network;
+  let type = 'peer';
+
+  network = PrivatehivePeers.findOne({ instanceId, userId });
+  if (!network) {
+    network = PrivatehiveOrderers.findOne({ instanceId, userId });
+    type = 'orderer';
+  }
+
+  if (!network) {
+    throw new Meteor.Error(401, 'Invalid network');
+  }
+
+  const { locationCode } = network;
+  const namespace = Config.namespace;
+
+  if (type === 'orderer') {
+    try {
+      await Creators.destroyZookeper({ locationCode, namespace, instanceId });
+    } catch (err) {}
+    try {
+      await Creators.destroyKafka({ locationCode, namespace, instanceId });
+    } catch (err) {}
+  }
+
+  try {
+    await Creators.deletePersistentVolumeClaim({ locationCode, namespace, name: `${instanceId}-pvc` });
+  } catch (err) {}
+  try {
+    await Creators.deleteService({ locationCode, namespace, name: `${instanceId}-privatehive` });
+  } catch (err) {}
+  try {
+    await Creators.deleteDeployment({ locationCode, namespace, name: `${instanceId}-privatehive` });
+  } catch (err) {}
+
+  if (type === 'peer') {
+    PrivatehivePeers.update(
+      { _id: network._id },
+      {
+        $set: {
+          deletedAt: new Date(),
+        },
+      }
+    );
+  } else {
+    PrivatehiveOrderers.update(
+      {
+        _id: network._id,
+      },
+      {
+        $set: {
+          deletedAt: new Date(),
+        },
+      }
+    );
+  }
+
+  return true;
+};
+
+PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, type, voucherId, name }) => {
+  let voucher;
+  if (voucherId) {
+    voucher = Voucher.find({ _id: voucherId }).fetch()[0];
+
+    if (!voucher) {
+      throw new Meteor.Error(400, 'Invalid voucher');
+    }
+
+    const tempVoucher = { ...voucher };
+    delete tempVoucher.networkConfig;
+    delete tempVoucher.voucher_claim_status;
+    delete tempVoucher.availability;
+
+    voucher = tempVoucher;
+  }
+
+  const commonData = { userId, locationCode, voucher, name };
+
   if (type === 'peer') {
     let peerDetails = await PrivateHive.createPeer({ locationCode });
     PrivatehivePeers.insert({
       instanceId: peerDetails.instanceId,
       apiNodePort: peerDetails.peerDetails.peerAPINodePort,
       anchorCommPort: peerDetails.peerDetails.peerGRPCAPINodePort,
-      userId,
-      locationCode,
+      ...commonData,
     });
     return peerDetails.instanceId;
   } else if (type === 'orderer') {
@@ -69,9 +167,15 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       instanceId: peerId,
     });
 
-    async function getCerts() {
+    if (!peerDetails) {
+      throw new Meteor.Error(403, 'Invalid peer');
+    }
+
+    console.log("Peer", peerDetails);
+
+    async function getCerts(peer) {
       return new Promise((resolve, reject) => {
-        HTTP.call('GET', `http://${Config.workerNodeIP(peerDetails.locationCode)}:${peerDetails.apiNodePort}/channelConfigCerts`, {}, (error, response) => {
+        HTTP.call('GET', `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/channelConfigCerts`, {}, (error, response) => {
           if (error) {
             reject();
           } else {
@@ -81,7 +185,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       });
     }
 
-    let certs = await getCerts();
+    let certs = await getCerts(peerDetails);
     let ordererDetails = await PrivateHive.createOrderer({
       peerOrgName: peerId,
       peerAdminCert: certs.adminCert,
@@ -94,8 +198,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       instanceId: ordererDetails.instanceId,
       ordererNodePort: ordererDetails.ordererNodePort,
       workerNodeIP: Config.workerNodeIP(peerDetails.locationCode),
-      userId,
-      locationCode,
+      ...commonData,
     });
     return ordererDetails.instanceId;
   } else {
@@ -103,9 +206,19 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
   }
 };
 
+PrivateHive.getPrivateHiveNetworkCount = async () => {
+  const userId = Meteor.userId();
+  return PrivatehiveOrderers.find({ active: true, deletedAt: null, userId }).count() + PrivatehivePeers.find({ active: true, deletedAt: null, userId }).count();
+};
+
 Meteor.methods({
-  initializePrivateHiveNetwork: async ({ peerId, locationCode, type }) => {
-    return PrivateHive.createPrivateHiveNetwork({ userId: Meteor.userId(), peerId, locationCode, type });
+  initializePrivateHiveNetwork: async ({ peerId, locationCode, type, name, voucherId }) => {
+    const res = await PrivateHive.createPrivateHiveNetwork({ userId: Meteor.userId(), peerId, locationCode, type, name, voucherId });
+    return res;
+  },
+  getPrivateHiveNetworkCount: PrivateHive.getPrivateHiveNetworkCount,
+  deletePrivateHiveNetwork: async ({ instanceId }) => {
+    return PrivateHive.deleteNetwork({ userId: Meteor.userId(), instanceId });
   },
   privatehiveCreateChannel: async ({ peerId, ordererId, channelName, userId }) => {
     userId = userId || Meteor.userId();

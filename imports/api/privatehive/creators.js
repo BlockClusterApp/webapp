@@ -38,6 +38,17 @@ Creators.createPersistentvolumeclaims = async ({ locationCode, namespace, instan
     );
   });
 
+Creators.deletePersistentVolumeClaim = function({ locationCode, namespace, name }) {
+  return new Promise((resolve, reject) => {
+    HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/persistentvolumeclaims/${name}`, (err, res) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve();
+    });
+  });
+};
+
 Creators.createPeerService = async function({ locationCode, namespace, instanceId }) {
   return new Promise((resolve, reject) => {
     HTTP.call(
@@ -94,6 +105,28 @@ Creators.createPeerService = async function({ locationCode, namespace, instanceI
         }
       }
     );
+  });
+};
+
+Creators.deleteService = function({ locationCode, namespace, name }) {
+  return new Promise((resolve, reject) => {
+    HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/services/${name}`, (err, res) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve();
+    });
+  });
+};
+
+Creators.deleteDeployment = function({ locationCode, namespace, name }) {
+  return new Promise((resolve, reject) => {
+    HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${namespace}/deployments/${name}`, (err, res) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve();
+    });
   });
 };
 
@@ -384,6 +417,23 @@ Creators.createOrdererService = async ({ locationCode, namespace, instanceId }) 
   });
 };
 
+Creators.deleteStatefulSet = function({ locationCode, namespace, name }) {
+  return new Promise((resolve, reject) => {
+    HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1/namespaces/${namespace}/statefulsets/${name}`, (err, res) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve();
+    });
+  });
+};
+
+Creators.destroyZookeper = async function({ locationCode, namespace, instanceId }) {
+  await Creators.deleteService({ locationCode, namespace, name: `zk-svc-${instanceId}` });
+  await Creators.deleteStatefulSet({ locationCode, namespace, name: `zk-${instanceId}` });
+  return true;
+};
+
 Creators.deployZookeeper = async function deployZookeeper({ locationCode, instanceId, namespace }) {
   async function createService() {
     return new Promise((resolve, reject) => {
@@ -603,6 +653,12 @@ Creators.deployZookeeper = async function deployZookeeper({ locationCode, instan
   } catch (e) {
     return Promise.reject(e);
   }
+};
+
+Creators.destroyKafka = async function({ locationCode, namespace, instanceId }) {
+  await Creators.deleteService({ locationCode, namespace, name: `kafka-svc-${instanceId}` });
+  await Creators.deleteStatefulSet({ locationCode, namespace, name: `kafka-${instanceId}` });
+  return true;
 };
 
 Creators.deployKafka = async function({ locationCode, namespace, instanceId }) {

@@ -1,49 +1,51 @@
 import PrivateHive from '../';
+import { PrivatehivePeers } from '../../privatehivePeers/privatehivePeers';
+import { PrivatehiveOrderers } from '../../privatehiveOrderers/privatehiveOrderers';
 
 const MIN_ADMIN_LEVEL = 1;
 const pageSize = 10;
 
 Meteor.publish('privatehive', () => {
-  return PrivateHive.find({ active: true, deletedAt: null, userId: Meteor.userId() });
+  const query = { active: true, deletedAt: null, userId: Meteor.userId() };
+  return [PrivatehivePeers.find(query), PrivatehiveOrderers.find(query)];
 });
 
 Meteor.publish('privatehive.one', query => {
   query = query || {};
-  const networks = PrivateHive.find({ active: true, deletedAt: null, userId: Meteor.userId(), ...query }).fetch();
-  const orderers = networks.reduce((co, network) => {
-    if (!co.includes(network.ordererId) && network.ordererId) {
-      co.push(network.ordererId);
-    }
-    return co;
-  }, []);
-  return [PrivateHive.find({ active: true, deletedAt: null, $or: [{ userId: Meteor.userId(), ...query }, { _id: { $in: orderers } }] })];
+  const finalQuery = { active: true, deletedAt: null, userId: Meteor.userId(), ...query };
+  // const networks = PrivateHive.find({ active: true, deletedAt: null, userId: Meteor.userId(), ...query }).fetch();
+  // const orderers = networks.reduce((co, network) => {
+  //   if (!co.includes(network.ordererId) && network.ordererId) {
+  //     co.push(network.ordererId);
+  //   }
+  //   return co;
+  // }, []);
+  return [PrivatehivePeers.find(finalQuery), PrivatehiveOrderers.find(finalQuery)];
 });
 
 Meteor.publish('privatehive.all', function({ page }) {
   if (Meteor.user() && Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
-  return PrivateHive.find(
-    {},
-    {
-      limit: pageSize,
-      skip: page * pageSize,
-      sort: {
-        createdAt: -1,
-      },
-      fields: {
-        instanceId: 1,
-        locationCode: 1,
-        status: 1,
-        createdAt: 1,
-        deletedAt: 1,
-        active: 1,
-        networkConfig: 1,
-        _id: 1,
-        name: 1,
-      },
-    }
-  );
+  const options = {
+    limit: pageSize,
+    skip: page * pageSize,
+    sort: {
+      createdAt: -1,
+    },
+    fields: {
+      instanceId: 1,
+      locationCode: 1,
+      status: 1,
+      createdAt: 1,
+      deletedAt: 1,
+      active: 1,
+      networkConfig: 1,
+      _id: 1,
+      name: 1,
+    },
+  };
+  return [PrivatehivePeers.find({}, options), PrivatehiveOrderers.find({}, options)];
 });
 
 Meteor.publish('privatehive.search', function({ query, limit, page }) {
@@ -52,7 +54,8 @@ Meteor.publish('privatehive.search', function({ query, limit, page }) {
   }
   limit = limit || pageSize;
   page = page || 1;
-  return PrivateHive.find(query, {
+
+  const options = {
     fields: {
       instanceId: 1,
       createdAt: 1,
@@ -69,5 +72,6 @@ Meteor.publish('privatehive.search', function({ query, limit, page }) {
     },
     limit: limit,
     skip: (page - 1) * pageSize,
-  });
+  };
+  return [PrivatehivePeers.find(query, options), PrivatehiveOrderers.find(query, options)];
 });

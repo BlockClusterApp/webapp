@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
 import PrivateHive from '../../../../collections/privatehive';
 import helpers from '../../../../modules/helpers';
+import { PrivatehivePeers } from '../../../../collections/privatehivePeers/privatehivePeers';
+import { PrivatehiveOrderers } from '../../../../collections/privatehiveOrderers/privatehiveOrderers';
 import { withRouter } from 'react-router-dom';
 import ReactHtmlParser from 'react-html-parser';
 import moment from 'moment';
@@ -107,7 +109,14 @@ class NetworkList extends Component {
       {
         onReady: () => {
           this.setState({
-            networks: PrivateHive.find(this.query, this.pagination).fetch(),
+            networks: [
+              ...PrivatehivePeers.find({ userId: Meteor.userId(), active: true, deletedAt: null })
+                .fetch()
+                .map(o => ({ ...o, type: 'peer' })),
+              ...PrivatehiveOrderers.find({ userId: Meteor.userId(), active: true, deletedAt: null })
+                .fetch()
+                .map(o => ({ ...o, type: 'orderer' })),
+            ],
             loading: false,
           });
         },

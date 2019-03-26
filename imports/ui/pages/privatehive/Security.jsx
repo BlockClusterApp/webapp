@@ -2,7 +2,9 @@ import React, { Component } from 'react';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
-import PrivateHive from '../../../collections/privatehive';
+
+import { PrivatehiveOrderers } from '../../../collections/privatehiveOrderers/privatehiveOrderers';
+import { PrivatehivePeers } from '../../../collections/privatehivePeers/privatehivePeers';
 import notifications from '../../../modules/notifications';
 import { Link } from 'react-router-dom';
 import ConfirmationButton from '../../components/Buttons/ConfirmationButton';
@@ -174,15 +176,27 @@ class Security extends Component {
 
 export default withTracker(props => {
   return {
-    network: PrivateHive.find({ instanceId: props.match.params.id, active: true }).fetch()[0],
+    network: [
+      ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true }).fetch(),
+      ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true }).fetch(),
+    ][0],
     subscriptions: [
-      Meteor.subscribe('privatehive.one', {
-        onReady: function() {
-          if (PrivateHive.find({ instanceId: props.match.params.id, active: true }).fetch().length !== 1) {
-            props.history.push('/app/privatehive');
-          }
-        },
-      }),
+      Meteor.subscribe(
+        'privatehive.one',
+        { instanceId: props.match.params.id },
+        {
+          onReady: function() {
+            if (
+              [
+                ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true }).fetch(),
+                ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true }).fetch(),
+              ].length !== 1
+            ) {
+              props.history.push('/app/privatehive');
+            }
+          },
+        }
+      ),
     ],
   };
 })(withRouter(Security));

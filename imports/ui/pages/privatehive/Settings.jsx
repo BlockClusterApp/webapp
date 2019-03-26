@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
-import PrivateHive from '../../../collections/privatehive';
+
+import { PrivatehiveOrderers } from '../../../collections/privatehiveOrderers/privatehiveOrderers';
+import { PrivatehivePeers } from '../../../collections/privatehivePeers/privatehivePeers';
 import { withRouter } from 'react-router-dom';
 import helpers from '../../../modules/helpers';
 import notifications from '../../../modules/notifications';
@@ -43,7 +45,7 @@ class ViewEditNetwork extends Component {
       deleting: true,
     });
 
-    Meteor.call('deletePrivateHiveNetwork', { id: this.props.network._id }, error => {
+    Meteor.call('deletePrivateHiveNetwork', { instanceId: this.props.network.instanceId }, error => {
       this.setState({
         deleting: false,
       });
@@ -125,7 +127,7 @@ class ViewEditNetwork extends Component {
                   <div className="form-group row">
                     <label className="col-md-3 control-label">Member Type</label>
                     <div className="col-md-9">
-                      <span className="value-valign-middle">{network.isJoin ? 'Peer only' : 'Orderer network'}</span>
+                      <span className="value-valign-middle">{network.type === 'peer' ? 'Peer' : 'Orderer network'}</span>
                     </div>
                   </div>
                   <div className="form-group row">
@@ -147,84 +149,6 @@ class ViewEditNetwork extends Component {
                   </div>
 
                   <div className="form-group row">
-                    <label className="col-md-3 control-label">HLF Version</label>
-                    <div className="col-md-9">{network.networkConfig.fabric.version}</div>
-                  </div>
-
-                  <div className="form-group row">
-                    <label className="col-md-3 control-label">Total Orderers</label>
-                    <div className="col-md-9">{network.networkConfig.fabric.orderers}</div>
-                  </div>
-
-                  <div className="form-group row">
-                    <label className="col-md-3 control-label">Orderer Configuration</label>
-                    <div className="col-md-9">
-                      {network.networkConfig.orderer.cpu} vCPUs - {network.networkConfig.orderer.ram} GB RAM - {network.networkConfig.orderer.disk} GB Disk Space
-                    </div>
-                  </div>
-
-                  <div className="form-group row">
-                    <label className="col-md-3 control-label">Total Peers</label>
-                    <div className="col-md-9">{network.networkConfig.fabric.peers}</div>
-                  </div>
-
-                  <div className="form-group row">
-                    <label className="col-md-3 control-label">Peer Configuration</label>
-                    <div className="col-md-9">
-                      {network.networkConfig.peer.cpu} vCPUs - {network.networkConfig.peer.ram} GB RAM
-                    </div>
-                  </div>
-
-                  <div className="form-group row">
-                    <label className="col-md-3 control-label">Data Disk Space</label>
-                    <div className="col-md-9">{network.networkConfig.data.disk} GB Disk Space</div>
-                  </div>
-                  <div className="form-group row">
-                    <label className="col-md-3 control-label">Created At</label>
-                    <div className="col-md-9">
-                      <span className="value-valign-middle">{moment(network.createdAt).format('DD-MMM-YYYY kk:mm:ss')}</span>
-                    </div>
-                  </div>
-                  {!network.isJoin && (
-                    <div className="form-group row">
-                      <label className="col-md-3 control-label">External Orderer Addresses</label>
-                      <div className="col-md-9">
-                        <b className="value-valign-middle">
-                          {(network.properties.externalOrderers || []).map((orderer, index) => {
-                            return <li key={`${network.instanceId}_orderers_${index}`}>{orderer}</li>;
-                          })}
-                        </b>
-                      </div>
-                    </div>
-                  )}
-
-                  {!network.isJoin && (
-                    <div className="form-group row">
-                      <label className="col-md-3 control-label">Anchor Peer External Addresses</label>
-                      <div className="col-md-9">
-                        <b className="value-valign-middle">
-                          {(network.properties.externalAnchorPeers || []).map((peer, index) => {
-                            return <li key={`${network.instanceId}_anchor_peer_${index}`}>{peer}</li>;
-                          })}
-                        </b>
-                      </div>
-                    </div>
-                  )}
-
-                  {network.isJoin && (
-                    <div className="form-group row">
-                      <label className="col-md-3 control-label">External Addresses</label>
-                      <div className="col-md-9">
-                        <b className="value-valign-middle">
-                          {(network.properties.externalPeers || []).map((peer, index) => {
-                            return <li key={`${network.instanceId}_anchor_peer_${index}`}>{peer}</li>;
-                          })}
-                        </b>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="form-group row">
                     <label className="col-md-3 control-label">MSP Id</label>
                     <div className="col-md-9">
                       <b className="value-valign-middle">{network.instanceId.replace('ph-', '')}MSP</b>
@@ -234,7 +158,7 @@ class ViewEditNetwork extends Component {
                   <div className="form-group row">
                     <label className="col-md-3 control-label">API Client</label>
                     <div className="col-md-9">
-                      <b className="value-valign-middle">{network.properties.apiEndPoint}</b>
+                      <b className="value-valign-middle">{network.instanceId}.blockcluster.io</b>
                     </div>
                   </div>
 
@@ -265,15 +189,31 @@ class ViewEditNetwork extends Component {
 
 export default withTracker(function(props) {
   return {
-    network: PrivateHive.find({ instanceId: props.match.params.id, active: true }).fetch()[0],
+    network: [
+      ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true })
+        .fetch()
+        .map(o => ({ ...o, type: 'peer' })),
+      ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true })
+        .fetch()
+        .map(o => ({ ...o, type: 'orderer' })),
+    ][0],
     subscriptions: [
-      Meteor.subscribe('privatehive', {
-        onReady: function() {
-          if (PrivateHive.find({ instanceId: props.match.params.id, active: true }).fetch().length !== 1) {
-            props.history.push('/app/privatehive/list');
-          }
-        },
-      }),
+      Meteor.subscribe(
+        'privatehive.one',
+        { instanceId: props.match.params.id },
+        {
+          onReady: function() {
+            if (
+              [
+                ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true }).fetch(),
+                ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true }).fetch(),
+              ].length !== 1
+            ) {
+              props.history.push('/app/privatehive');
+            }
+          },
+        }
+      ),
     ],
   };
 })(withRouter(ViewEditNetwork));

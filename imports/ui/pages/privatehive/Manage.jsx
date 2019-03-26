@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
-import PrivateHive from '../../../collections/privatehive';
+import { PrivatehiveOrderers } from '../../../collections/privatehiveOrderers/privatehiveOrderers';
+import { PrivatehivePeers } from '../../../collections/privatehivePeers/privatehivePeers';
 import helpers from '../../../modules/helpers';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
@@ -173,14 +174,22 @@ class ViewNetwork extends Component {
 
 export default withTracker(function(props) {
   return {
-    network: PrivateHive.find({ instanceId: props.match.params.id, active: true }).fetch()[0],
+    network: [
+      ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true }).fetch(),
+      ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true }).fetch(),
+    ][0],
     subscriptions: [
       Meteor.subscribe(
         'privatehive.one',
         { instanceId: props.match.params.id },
         {
           onReady: function() {
-            if (PrivateHive.find({ instanceId: props.match.params.id, active: true }).fetch().length !== 1) {
+            if (
+              [
+                ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true }).fetch(),
+                ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true }).fetch(),
+              ].length !== 1
+            ) {
               props.history.push('/app/privatehive');
             }
           },
