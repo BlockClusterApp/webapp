@@ -55,6 +55,20 @@ Meteor.publish('privatehive.search', function({ query, limit, page }) {
   limit = limit || pageSize;
   page = page || 1;
 
+  if (query.deletedAt === null) {
+    if (query['$or']) {
+      query.$and = [{ $or: query['$or'] }, { $or: [{ deletedAt: null }, { deletedAt: { $exists: false } }] }];
+      delete query['$or'];
+    } else {
+      query['$or'] = [{ deletedAt: null }, { deletedAt: { $exists: false } }];
+    }
+    delete query.deletedAt;
+  } else {
+    query.deletedAt = {
+      $exists: true,
+    };
+  }
+
   const options = {
     fields: {
       instanceId: 1,

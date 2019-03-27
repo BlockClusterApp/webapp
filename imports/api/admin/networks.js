@@ -6,6 +6,8 @@ import PrivateHive from '../../collections/privatehive';
 import Config from '../../modules/config/server';
 import moment from 'moment';
 import PrivateHiveApis from '../privatehive';
+import { PrivatehivePeers } from '../../collections/privatehivePeers/privatehivePeers';
+import { PrivatehiveOrderers } from '../../collections/privatehiveOrderers/privatehiveOrderers';
 
 const Network = {};
 
@@ -61,12 +63,15 @@ Network.fetchPrivateHiveNetworkForAdmin = async networkId => {
     return new Meteor.Error('Unauthorized');
   }
 
-  let network = PrivateHive.find({ _id: networkId }).fetch()[0];
+  let network = PrivatehivePeers.find({ _id: networkId }).fetch()[0];
   if (!network) {
-    network = PrivateHive.find({ instanceId: networkId }).fetch()[0];
+    network = PrivatehiveOrderers.find({ instanceId: networkId }).fetch()[0];
     if (!network) {
       return { network };
     }
+    network.type = 'orderer';
+  } else {
+    network.type = 'peer';
   }
   const user = Meteor.users
     .find(
@@ -83,20 +88,17 @@ Network.fetchPrivateHiveNetworkForAdmin = async networkId => {
     )
     .fetch()[0];
   const locations = await LocationApi.getLocations({ service: 'privatehive', userId: network.userId });
-  let voucher, networkType;
+  let voucher;
   if (network.voucher) {
     voucher = Voucher.find({
       _id: network.voucher._id,
     }).fetch()[0];
   }
 
-  if (network.networkConfig) {
-    networkType = NetworkConfig.find({ _id: network.networkConfig._id, for: 'privatehive' }).fetch()[0];
-  }
-  return { network, user, locations, voucher, networkType };
+  return { network, user, locations, voucher };
 };
 
-Network.fetchPodStatus = ({ id, selector, namespace, type }) => {
+Network.fetchPodStatus = ({ id, selector, namespace, type, networkType }) => {
   return new Promise((resolve, reject) => {
     if (Meteor.user().admin < SUPER_ADMIN_LEVEL) {
       return reject(new Meteor.Error('Unauthorized'));
@@ -105,7 +107,11 @@ Network.fetchPodStatus = ({ id, selector, namespace, type }) => {
     namespace = namespace || Config.namespace;
     type = type || 'network';
     if (type === 'privatehive') {
-      network = PrivateHive.find({ _id: id }).fetch()[0];
+      if (networkType === 'peer') {
+        network = PrivatehivePeers.find({ _id: id }).fetch()[0];
+      } else {
+        network = PrivatehiveOrderers.find({ _id: id }).fetch()[0];
+      }
     } else {
       network = Networks.find({ _id: id }).fetch()[0];
     }
@@ -185,14 +191,18 @@ Network.fetchPodStatus = ({ id, selector, namespace, type }) => {
   });
 };
 
-Network.fetchServiceStatus = async ({ id, namespace, type, selector }) => {
+Network.fetchServiceStatus = async ({ id, namespace, type, selector, networkType }) => {
   return new Promise((resolve, reject) => {
     if (Meteor.user().admin < SUPER_ADMIN_LEVEL) {
       return reject(new Meteor.Error('Unauthorized'));
     }
     type = type || 'network';
     if (type === 'privatehive') {
-      network = PrivateHive.find({ _id: id }).fetch()[0];
+      if (networkType === 'peer') {
+        network = PrivatehivePeers.find({ _id: id }).fetch()[0];
+      } else {
+        network = PrivatehiveOrderers.find({ _id: id }).fetch()[0];
+      }
     } else {
       network = Networks.find({ _id: id }).fetch()[0];
     }
@@ -248,7 +258,7 @@ Network.fetchServiceStatus = async ({ id, namespace, type, selector }) => {
   });
 };
 
-Network.fetchDeploymentStatus = async ({ id, namespace, type, selector }) => {
+Network.fetchDeploymentStatus = async ({ id, namespace, type, selector, networkType }) => {
   return new Promise((resolve, reject) => {
     if (Meteor.user().admin < SUPER_ADMIN_LEVEL) {
       return reject(new Meteor.Error('Unauthorized'));
@@ -256,7 +266,11 @@ Network.fetchDeploymentStatus = async ({ id, namespace, type, selector }) => {
     namespace = namespace || Config.namespace;
     type = type || 'network';
     if (type === 'privatehive') {
-      network = PrivateHive.find({ _id: id }).fetch()[0];
+      if (networkType === 'peer') {
+        network = PrivatehivePeers.find({ _id: id }).fetch()[0];
+      } else {
+        network = PrivatehiveOrderers.find({ _id: id }).fetch()[0];
+      }
     } else {
       network = Networks.find({ _id: id }).fetch()[0];
     }
@@ -309,7 +323,7 @@ Network.fetchDeploymentStatus = async ({ id, namespace, type, selector }) => {
   });
 };
 
-Network.fetchPVCStatus = async ({ id, namespace, type, selector }) => {
+Network.fetchPVCStatus = async ({ id, namespace, type, selector, networkType }) => {
   return new Promise((resolve, reject) => {
     if (Meteor.user().admin < SUPER_ADMIN_LEVEL) {
       return reject(new Meteor.Error('Unauthorized'));
@@ -317,7 +331,11 @@ Network.fetchPVCStatus = async ({ id, namespace, type, selector }) => {
     namespace = namespace || Config.namespace;
     type = type || 'network';
     if (type === 'privatehive') {
-      network = PrivateHive.find({ _id: id }).fetch()[0];
+      if (networkType === 'peer') {
+        network = PrivatehivePeers.find({ _id: id }).fetch()[0];
+      } else {
+        network = PrivatehiveOrderers.find({ _id: id }).fetch()[0];
+      }
     } else {
       network = Networks.find({ _id: id }).fetch()[0];
     }
@@ -368,7 +386,7 @@ Network.fetchPVCStatus = async ({ id, namespace, type, selector }) => {
   });
 };
 
-Network.fetchIngressStatus = async ({ id, namespace, type, selector }) => {
+Network.fetchIngressStatus = async ({ id, namespace, type, selector, networkType }) => {
   return new Promise((resolve, reject) => {
     if (Meteor.user().admin < SUPER_ADMIN_LEVEL) {
       return reject(new Meteor.Error('Unauthorized'));
@@ -376,7 +394,11 @@ Network.fetchIngressStatus = async ({ id, namespace, type, selector }) => {
     namespace = namespace || Config.namespace;
     type = type || 'network';
     if (type === 'privatehive') {
-      network = PrivateHive.find({ _id: id }).fetch()[0];
+      if (networkType === 'peer') {
+        network = PrivatehivePeers.find({ _id: id }).fetch()[0];
+      } else {
+        network = PrivatehiveOrderers.find({ _id: id }).fetch()[0];
+      }
     } else {
       network = Networks.find({ _id: id }).fetch()[0];
     }
@@ -455,7 +477,7 @@ Network.adminPrivatehiveDeleteNetwork = async id => {
     id,
     userId: Meteor.userId(),
   });
-  await PrivateHiveApis.deleteNetwork({ id, userId: Meteor.userId() });
+  await PrivateHiveApis.deleteNetwork({ instanceId: id, userId: Meteor.userId() });
 };
 
 Meteor.methods({

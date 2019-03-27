@@ -55,10 +55,24 @@ class NetworkList extends Component {
       this.page = 1;
     }
 
+    const deleteQuery = {};
+    if (this.query.deletedAt !== undefined) {
+      deleteQuery['$or'] = [{ deletedAt: null }, { deletedAt: { $exists: false } }];
+    }
+    const updatedQuery = { ...this.query };
+    delete updatedQuery.deletedAt;
+
     this.state = {
       locations: [],
       page: 0,
-      networks: PrivateHive.find(this.query).fetch(),
+      networks: [
+        ...PrivatehivePeers.find({ ...updatedQuery, active: true, ...deleteQuery })
+          .fetch()
+          .map(o => ({ ...o, type: 'peer' })),
+        ...PrivatehiveOrderers.find({ ...updatedQuery, active: true, ...deleteQuery })
+          .fetch()
+          .map(o => ({ ...o, type: 'orderer' })),
+      ],
     };
   }
 
@@ -108,12 +122,18 @@ class NetworkList extends Component {
       },
       {
         onReady: () => {
+          let deleteQuery = {};
+          if (this.query.deletedAt === null) {
+            deleteQuery = {
+              $or: [{ deletedAt: null }, { deletedAt: { $exists: false } }],
+            };
+          }
           this.setState({
             networks: [
-              ...PrivatehivePeers.find({ userId: Meteor.userId(), active: true, deletedAt: null })
+              ...PrivatehivePeers.find({ active: true, ...deleteQuery })
                 .fetch()
                 .map(o => ({ ...o, type: 'peer' })),
-              ...PrivatehiveOrderers.find({ userId: Meteor.userId(), active: true, deletedAt: null })
+              ...PrivatehiveOrderers.find({ active: true, ...deleteQuery })
                 .fetch()
                 .map(o => ({ ...o, type: 'orderer' })),
             ],
@@ -222,14 +242,8 @@ class NetworkList extends Component {
                           <option value="running" selected={this.query.status === 'running'}>
                             Running
                           </option>
-                          <option value="deleting" selected={this.query.status === 'deleting'}>
-                            Deleting
-                          </option>
                           <option value="deleted" selected={this.query.status === 'deleted'}>
                             Deleted
-                          </option>
-                          <option value="Prepare delete" selected={this.query.status === 'Prepare delete'}>
-                            Preparing Delete
                           </option>
                           <option value="down" selected={this.query.status === 'down'}>
                             Down
@@ -275,9 +289,9 @@ class NetworkList extends Component {
                       <thead>
                         <tr>
                           <th style={{ width: '5%' }}>S.No</th>
-                          {/* <th style={{width: "15%"}}>Id</th> */}
-                          <th style={{ width: '30%' }}>Name</th>
-                          <th style={{ width: '25%' }}>Instance id</th>
+                          <th style={{ width: '25%' }}>Name</th>
+                          <th style={{ width: '15%' }}>Instance id</th>
+                          <th style={{ width: '15%' }}>Type</th>
                           <th style={{ width: '20%' }}>Status</th>
                           <th style={{ width: '20%' }}>Created At</th>
                         </tr>
@@ -289,6 +303,7 @@ class NetworkList extends Component {
                               <td>{this.state.loading ? <i className="fa fa-spin fa-circle-o-notch text-primary" /> : (this.page - 1) * PAGE_LIMIT + index + 1}</td>
                               <td>{network.name}</td>
                               <td>{network.instanceId}</td>
+                              <td>{network.type}</td>
                               <td>
                                 {ReactHtmlParser(
                                   helpers.convertStatusToTag(helpers.calculateNodeStatus(network.status), helpers.firstLetterCapital(helpers.calculateNodeStatus(network.status)))

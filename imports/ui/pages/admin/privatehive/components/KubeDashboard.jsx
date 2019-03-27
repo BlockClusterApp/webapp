@@ -17,8 +17,8 @@ export default class KubeDashboard extends Component {
       {
         id: this.props.networkId,
         type: 'privatehive',
-        namespace: `ns-${this.props.instanceId}`,
-        selector: `labelSelector=group%3Dprivatehive-${this.props.instanceId.replace('ph-', '')}`,
+        networkType: this.props.type,
+        selector: `labelSelector=app%3D${this.props.instanceId}-privatehive`,
       },
       (err, res) => {
         if (err) {
@@ -34,8 +34,8 @@ export default class KubeDashboard extends Component {
       {
         id: this.props.networkId,
         type: 'privatehive',
-        namespace: `ns-${this.props.instanceId}`,
-        selector: `labelSelector=group%3Dprivatehive-${this.props.instanceId.replace('ph-', '')}`,
+        networkType: this.props.type,
+        selector: `labelSelector=app%3D${this.props.instanceId}-privatehive`,
       },
       (err, res) => {
         if (err) {
@@ -52,8 +52,8 @@ export default class KubeDashboard extends Component {
       {
         id: this.props.networkId,
         type: 'privatehive',
-        namespace: `ns-${this.props.instanceId}`,
-        selector: `labelSelector=group%3Dprivatehive-${this.props.instanceId.replace('ph-', '')}`,
+        networkType: this.props.type,
+        selector: `labelSelector=app%3D${this.props.instanceId}-privatehive`,
       },
       (err, res) => {
         if (err) {
@@ -70,8 +70,8 @@ export default class KubeDashboard extends Component {
       {
         id: this.props.networkId,
         type: 'privatehive',
-        namespace: `ns-${this.props.instanceId}`,
-        selector: `labelSelector=group%3Dprivatehive-${this.props.instanceId.replace('ph-', '')}`,
+        networkType: this.props.type,
+        selector: `labelSelector=app%3D${this.props.instanceId}-privatehive`,
       },
       (err, res) => {
         if (err) {
@@ -83,23 +83,23 @@ export default class KubeDashboard extends Component {
       }
     );
 
-    Meteor.call(
-      'fetchIngressStatus',
-      {
-        id: this.props.networkId,
-        type: 'privatehive',
-        namespace: `ns-${this.props.instanceId}`,
-        selector: `labelSelector=group%3Dprivatehive-${this.props.instanceId.replace('ph-', '')}`,
-      },
-      (err, res) => {
-        if (err) {
-          return console.log(err);
-        }
-        this.setState({
-          ingresses: res,
-        });
-      }
-    );
+    // Meteor.call(
+    //   'fetchIngressStatus',
+    //   {
+    //     id: this.props.networkId,
+    //     type: 'privatehive',
+    //     networkType: this.props.type,
+    //     selector: `labelSelector=app%3D${this.props.instanceId}-privatehive`,
+    //   },
+    //   (err, res) => {
+    //     if (err) {
+    //       return console.log(err);
+    //     }
+    //     this.setState({
+    //       ingresses: res,
+    //     });
+    //   }
+    // );
   }
 
   getPodView = () => {

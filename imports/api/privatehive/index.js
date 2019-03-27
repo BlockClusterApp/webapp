@@ -14,12 +14,9 @@ PrivateHive.createPeer = async ({ locationCode }) => {
   const namespace = Config.namespace;
 
   try {
-    console.log('Creating PVC');
     await Creators.createPersistentvolumeclaims({ locationCode, namespace: Config.namespace, instanceId, storage: 50 });
-    console.log('Creating Service');
     peerDetails = await Creators.createPeerService({ locationCode, namespace: Config.namespace, instanceId });
 
-    console.log('Creating Deployment');
     await Creators.createPeerDeployment({ locationCode, namespace: Config.namespace, instanceId, workerNodeIP, anchorCommPort: peerDetails.peerGRPCAPINodePort });
 
     return { instanceId, peerDetails };
@@ -62,6 +59,7 @@ PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, pee
     await Creators.deletePersistentVolumeClaim({ locationCode, namespace, name: `${instanceId}-pvc` });
     await Creators.deleteService({ locationCode, namespace, name: `${instanceId}-privatehive` });
     await Creators.deleteDeployment({ locationCode, namespace, name: `${instanceId}-privatehive` });
+    await Creators.deletePrivatehiveReplicaSets({ locationCode, namespace, instanceId });
 
     throw new Meteor.Error(err);
   }
@@ -103,6 +101,9 @@ PrivateHive.deleteNetwork = async ({ userId, instanceId }) => {
   } catch (err) {}
   try {
     await Creators.deleteDeployment({ locationCode, namespace, name: `${instanceId}-privatehive` });
+  } catch (err) {}
+  try {
+    await Creators.deletePrivatehiveReplicaSets({ locationCode, namespace, instanceId });
   } catch (err) {}
 
   if (type === 'peer') {

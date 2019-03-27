@@ -1,5 +1,5 @@
 import Config from '../../modules/config/server';
-
+import Bluebird from 'bluebird';
 const Creators = {};
 
 Creators.createPersistentvolumeclaims = async ({ locationCode, namespace, instanceId, storage }) =>
@@ -13,6 +13,10 @@ Creators.createPersistentvolumeclaims = async ({ locationCode, namespace, instan
           kind: 'PersistentVolumeClaim',
           metadata: {
             name: `${instanceId}-pvc`,
+            labels: {
+              app: `${instanceId}-privatehive`,
+              service: 'privatehive',
+            },
           },
           spec: {
             accessModes: ['ReadWriteOnce'],
@@ -119,6 +123,46 @@ Creators.deleteService = function({ locationCode, namespace, name }) {
   });
 };
 
+Creators.deleteReplicaSet = function({ locationCode, namespace, name, selfLink }) {
+  return new Promise((resolve, reject) => {
+    let url;
+    if (selfLink) {
+      url = `${Config.kubeRestApiHost(locationCode)}${selfLink}`;
+    } else {
+      url = `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${namespace}/replicasets/${name}`;
+    }
+    HTTP.call('DELETE', url, (err, data) => {
+      if (err) {
+        return reject(err);
+      }
+      return resolve(data);
+    });
+  });
+};
+
+Creators.deletePrivatehiveReplicaSets = function({ locationCode, namespace, instanceId }) {
+  return new Promise((resolve, reject) => {
+    HTTP.call(
+      'GET',
+      `${Config.kubeRestApiHost(locationCode)}/apis/extentions/v1beta1/namespaces/${namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent(`${instanceId}-privatehive`),
+      async (err, data) => {
+        if (err) {
+          return reject(err);
+        }
+        const res = JSON.parse(data.content);
+        if (res.items.length > 0) {
+          const promises = [];
+          res.items.forEach(rs => {
+            promises.push(Creators.deleteReplicaSet({ locationCode, selfLink: rs.metadata.selfLink }));
+          });
+          await Bluebird.all(promises);
+        }
+        return resolve();
+      }
+    );
+  });
+};
+
 Creators.deleteDeployment = function({ locationCode, namespace, name }) {
   return new Promise((resolve, reject) => {
     HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${namespace}/deployments/${name}`, (err, res) => {
@@ -143,6 +187,7 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
             name: `${instanceId}-privatehive`,
             labels: {
               app: `${instanceId}-privatehive`,
+              service: 'privatehive',
             },
           },
           spec: {
@@ -380,6 +425,10 @@ Creators.createOrdererService = async ({ locationCode, namespace, instanceId }) 
           kind: 'Service',
           metadata: {
             name: `${instanceId}-privatehive`,
+            labels: {
+              app: `${instanceId}-privatehive`,
+              service: 'privatehive'
+            }
           },
           spec: {
             type: 'NodePort',
@@ -448,6 +497,7 @@ Creators.deployZookeeper = async function deployZookeeper({ locationCode, instan
               name: `zk-svc-${instanceId}`,
               labels: {
                 app: `zk-svc-${instanceId}`,
+                service: 'privatehive',
               },
             },
             spec: {
@@ -497,6 +547,9 @@ Creators.deployZookeeper = async function deployZookeeper({ locationCode, instan
             kind: 'StatefulSet',
             metadata: {
               name: `zk-${instanceId}`,
+              labels: {
+                service: 'privatehive',
+              },
             },
             spec: {
               serviceName: `zk-svc-${instanceId}`,
@@ -676,6 +729,7 @@ Creators.deployKafka = async function({ locationCode, namespace, instanceId }) {
                 name: `kafka-svc-${instanceId}`,
                 labels: {
                   app: `kafka-svc-${instanceId}`,
+                  service: 'privatehive',
                 },
               },
               spec: {
@@ -907,6 +961,7 @@ Creators.createOrdererDeployment = async function createDeployment({
             name: `${instanceId}-privatehive`,
             labels: {
               app: `${instanceId}-privatehive`,
+              service: 'privatehive',
             },
           },
           spec: {

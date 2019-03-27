@@ -48,46 +48,46 @@ class NetworkList extends Component {
     });
   }
 
-  getNetworkType = config => {
-    if (!config) {
-      return null;
-    }
-    return (
-      <div className="row p-t-10">
-        <div className="col-md-12">
-          <i className="fa fa-save" />
-          &nbsp;Kafka: <b>{config.kafka.cpu}</b> vCPUs, <b>{config.kafka.ram}</b> GB RAM,{' '}
-          <b>
-            {config.kafka.disk}
-            {config.kafka.isDiskChangeable ? <sup>*</sup> : ''}
-          </b>{' '}
-          GB Disk
-        </div>
-        <div className="col-md-12">
-          <i className="fa fa-save" />
-          &nbsp;Orderer: <b>{config.orderer.cpu}</b> vCPUs, <b>{config.orderer.ram}</b> GB RAM,{' '}
-          <b>
-            {config.kafka.disk}
-            {config.orderer.isDiskChangeable ? <sup>*</sup> : ''}
-          </b>{' '}
-          GB Disk
-        </div>
-        <div className="col-md-12">
-          <i className="fa fa-save" />
-          &nbsp;Peer: <b>{config.peer.cpu}</b> vCPUs, <b>{config.peer.ram}</b> GB RAM
-        </div>
-        <div className="col-md-12">
-          <i className="fa fa-save" />
-          &nbsp;Data:{' '}
-          <b>
-            {config.kafka.disk}
-            {config.data.isDiskChangeable ? <sup>*</sup> : ''}
-          </b>{' '}
-          GB Disk
-        </div>
-      </div>
-    );
-  };
+  // getNetworkType = config => {
+  //   if (!config) {
+  //     return null;
+  //   }
+  //   return (
+  //     <div className="row p-t-10">
+  //       <div className="col-md-12">
+  //         <i className="fa fa-save" />
+  //         &nbsp;Kafka: <b>{config.kafka.cpu}</b> vCPUs, <b>{config.kafka.ram}</b> GB RAM,{' '}
+  //         <b>
+  //           {config.kafka.disk}
+  //           {config.kafka.isDiskChangeable ? <sup>*</sup> : ''}
+  //         </b>{' '}
+  //         GB Disk
+  //       </div>
+  //       <div className="col-md-12">
+  //         <i className="fa fa-save" />
+  //         &nbsp;Orderer: <b>{config.orderer.cpu}</b> vCPUs, <b>{config.orderer.ram}</b> GB RAM,{' '}
+  //         <b>
+  //           {config.kafka.disk}
+  //           {config.orderer.isDiskChangeable ? <sup>*</sup> : ''}
+  //         </b>{' '}
+  //         GB Disk
+  //       </div>
+  //       <div className="col-md-12">
+  //         <i className="fa fa-save" />
+  //         &nbsp;Peer: <b>{config.peer.cpu}</b> vCPUs, <b>{config.peer.ram}</b> GB RAM
+  //       </div>
+  //       <div className="col-md-12">
+  //         <i className="fa fa-save" />
+  //         &nbsp;Data:{' '}
+  //         <b>
+  //           {config.kafka.disk}
+  //           {config.data.isDiskChangeable ? <sup>*</sup> : ''}
+  //         </b>{' '}
+  //         GB Disk
+  //       </div>
+  //     </div>
+  //   );
+  // };
 
   getNetworkStatus = status => {
     if (status === 'initializing' || status === 'pending' || 'testing') {
@@ -119,7 +119,7 @@ class NetworkList extends Component {
       deleteDisabled: true,
     });
 
-    Meteor.call('adminPrivateHiveDeleteNetwork', this.state.network.network._id, (err, res) => {
+    Meteor.call('adminPrivateHiveDeleteNetwork', this.state.network.network.instanceId, (err, res) => {
       if (!err) {
         this.setState({
           deleteDisabled: true,
@@ -150,29 +150,29 @@ class NetworkList extends Component {
       });
     }
 
-    this.setState({
-      restartingPod: true,
-    });
+    // this.setState({
+    //   restartingPod: true,
+    // });
 
-    Meteor.call('restartPod', this.state.network.network.instanceId, (err, res) => {
-      this.setState({
-        restartConfirmAsked: false,
-      });
-      if (!err) {
-        this.restartTimer = setTimeout(() => {
-          this.setState({
-            restartingPod: false,
-          });
-        }, 60 * 1000);
-        notifications.success('Pod restarted successfully');
-      } else {
-        notifications.error(err.reason);
-      }
-    });
+    // Meteor.call('restartPod', this.state.network.network.instanceId, (err, res) => {
+    //   this.setState({
+    //     restartConfirmAsked: false,
+    //   });
+    //   if (!err) {
+    //     this.restartTimer = setTimeout(() => {
+    //       this.setState({
+    //         restartingPod: false,
+    //       });
+    //     }, 60 * 1000);
+    //     notifications.success('Pod restarted successfully');
+    //   } else {
+    //     notifications.error(err.reason);
+    //   }
+    // });
   };
 
   render() {
-    const { network, user, locations, voucher, networkType, bill } = this.state.network;
+    const { network, user, locations, voucher } = this.state.network;
     if (!user) {
       const LoadingView = (
         <div
@@ -313,7 +313,7 @@ class NetworkList extends Component {
                   <div className="card-description">
                     Location: <b>{thisLocation.locationCode}</b> <span style={{ color: '#777', fontSize: '11px' }}>&nbsp;{thisLocation.locationName} </span>
                     <br />
-                    Specs: {this.getNetworkType(network.networkConfig)}
+                    Type: {network.type}
                   </div>
                   <div className="clearfix" />
                 </div>
@@ -325,9 +325,7 @@ class NetworkList extends Component {
                         <div className="clearfix" />
                       </div>
                       <div className="card-description" style={{ fontSize: '0.8em', color: '#888' }}>
-                        <h5>
-                          {voucher.code}&nbsp;|&nbsp;<span style={{ fontSize: '0.8em', color: '#888' }}>{this.getNetworkType(voucher.networkConfig)}</span>
-                        </h5>
+                        <h5>{voucher.code}&nbsp;</h5>
                         {voucher.isDiskChangeable ? 'Disk configurable' : null}
                         <p>Expires on: {moment(voucher.expiryDate).format('DD-MMM-YYYY')}</p>
                       </div>
@@ -341,7 +339,7 @@ class NetworkList extends Component {
             {!network.deletedAt && (
               <div className="row">
                 <div className="col-md-12">
-                  <KubeDashboard instanceId={network.instanceId} networkId={network._id} />
+                  <KubeDashboard instanceId={network.instanceId} networkId={network._id} type={network.type} />
                 </div>
               </div>
             )}

@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
-import PrivateHive from '../../../../collections/privatehive';
+import { PrivatehivePeers } from '../../../../collections/privatehivePeers/privatehivePeers';
+import { PrivatehiveOrderers } from '../../../../collections/privatehiveOrderers/privatehiveOrderers';
 import notification from '../../../../modules/notifications';
 
 const invalidChars = ['!', '#', '$', '%', '^', '&', '*', '(', ')', '-', ' ', '{', '}', '|', '~', '`', ','];
@@ -185,8 +186,9 @@ class Join extends Component {
 }
 
 export default withTracker(() => {
+  const query = { userId: Meteor.userId(), deletedAt: null, active: true, status: 'running' };
   return {
-    networks: PrivateHive.find({ userId: Meteor.userId(), deletedAt: null, active: true, status: 'running', isJoin: { $ne: true } }).fetch(),
+    networks: [...PrivatehivePeers.find(query).fetch(), ...PrivatehiveOrderers.find(query).fetch()],
     subscriptions: [Meteor.subscribe('privatehive')],
   };
 })(withRouter(Join));

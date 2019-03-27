@@ -31,31 +31,31 @@ export default class PrivateHiveConfigCard extends React.Component {
       {
         params: {
           _id: this.config._id,
-          fabric: {
-            orderers: this.ordererCount.value,
-            peers: this.peerCount.value,
-            version: this.version.value,
-          },
-          kafka: {
-            cpu: this.kafkaCpu.value,
-            ram: this.kafkaRAM.value,
-            disk: this.kafkaDiskSpace.value,
-            isDiskChangeable: this.isKafkaDiskChangeable,
-          },
-          orderer: {
-            cpu: this.ordererCpu.value,
-            ram: this.ordererRAM.value,
-            disk: this.ordererDiskSpace.value,
-            isDiskChangeable: this.isOrdererDiskChangeable,
-          },
-          peer: {
-            cpu: this.peerCpu.value,
-            ram: this.peerRAM.value,
-          },
-          data: {
-            disk: this.dataDiskSpace.value,
-            isDiskChangeable: this.isDataDiskChangeable,
-          },
+          // fabric: {
+          //   orderers: this.ordererCount.value,
+          //   peers: this.peerCount.value,
+          //   version: this.version.value,
+          // },
+          // kafka: {
+          //   cpu: this.kafkaCpu.value,
+          //   ram: this.kafkaRAM.value,
+          //   disk: this.kafkaDiskSpace.value,
+          //   isDiskChangeable: this.isKafkaDiskChangeable,
+          // },
+          // orderer: {
+          //   cpu: this.ordererCpu.value,
+          //   ram: this.ordererRAM.value,
+          //   disk: this.ordererDiskSpace.value,
+          //   isDiskChangeable: this.isOrdererDiskChangeable,
+          // },
+          // peer: {
+          //   cpu: this.peerCpu.value,
+          //   ram: this.peerRAM.value,
+          // },
+          // data: {
+          //   disk: this.dataDiskSpace.value,
+          //   isDiskChangeable: this.isDataDiskChangeable,
+          // },
           name: this.configName.value,
           'cost.monthly': this.configMonthlyCost.value,
           'cost.hourly': this.state.costHourly,
@@ -102,70 +102,60 @@ export default class PrivateHiveConfigCard extends React.Component {
       config = {};
     }
 
-    if (!config.orderer) {
-      config = {
-        fabric: {},
-        orderer: {},
-        kafka: {},
-        data: {},
-        peer: {},
-      };
-    }
-
     if (!config.cost) {
       config.cost = {};
     }
 
     this.config = config;
 
-    let locationEditView = [];
-    let locationsEnabled = [];
-    if (!config.locations) {
-      locations.forEach(loc => {
-        locationsEnabled.push(loc.locationCode);
-        this.locationMapping[loc.locationCode] = this.locationMapping[loc.locationCode] === false ? false : true;
-        locationEditView.push(
-          <div className="col-md-4 col-lg-3 col-sm-6">
-            <label htmlFor={`label_${loc.locationCode}`} style={{ cursor: 'pointer' }}>
-              {loc.locationCode}
-            </label>
-            &nbsp;
-            <input
-              type="checkbox"
-              id={`label_${loc.locationCode}`}
-              defaultChecked={true}
-              onClick={e => {
-                this.locationMapping[loc.locationCode] = e.target.checked;
-              }}
-            />
-          </div>
-        );
-      });
-    } else {
-      locations.forEach(loc => {
-        const isChecked = config.locations.includes(loc.locationCode);
-        this.locationMapping[loc.locationCode] = isChecked;
-        if (isChecked) {
-          locationsEnabled.push(loc.locationCode);
-        }
-        locationEditView.push(
-          <div className="col-md-4 col-lg-3 col-sm-6">
-            <label htmlFor={`label_${loc.locationCode}`} style={{ cursor: 'pointer' }}>
-              {loc.locationCode}
-            </label>
-            &nbsp;
-            <input
-              type="checkbox"
-              id={`label_${loc.locationCode}`}
-              defaultChecked={isChecked}
-              onClick={e => {
-                this.locationMapping[loc.locationCode] = e.target.checked;
-              }}
-            />
-          </div>
-        );
-      });
-    }
+    // let locationEditView = [];
+    // let locationsEnabled = [];
+    // if (!config.locations) {
+    //   locations.forEach(loc => {
+    //     locationsEnabled.push(loc.locationCode);
+    //     this.locationMapping[loc.locationCode] = this.locationMapping[loc.locationCode] === false ? false : true;
+    //     locationEditView.push(
+    //       <div className="col-md-4 col-lg-3 col-sm-6">
+    //         <label htmlFor={`label_${loc.locationCode}`} style={{ cursor: 'pointer' }}>
+    //           {loc.locationCode}
+    //         </label>
+    //         &nbsp;
+    //         <input
+    //           type="checkbox"
+    //           id={`label_${loc.locationCode}`}
+    //           defaultChecked={true}
+    //           onClick={e => {
+    //             this.locationMapping[loc.locationCode] = e.target.checked;
+    //           }}
+    //         />
+    //       </div>
+    //     );
+    //   });
+    // } else {
+    //   locations.forEach(loc => {
+    //     const isChecked = config.locations.includes(loc.locationCode);
+    //     this.locationMapping[loc.locationCode] = isChecked;
+    //     if (isChecked) {
+    //       locationsEnabled.push(loc.locationCode);
+    //     }
+    //     locationEditView.push(
+    //       <div className="col-md-4 col-lg-3 col-sm-6">
+    //         <label htmlFor={`label_${loc.locationCode}`} style={{ cursor: 'pointer' }}>
+    //           {loc.locationCode}
+    //         </label>
+    //         &nbsp;
+    //         <input
+    //           type="checkbox"
+    //           id={`label_${loc.locationCode}`}
+    //           defaultChecked={isChecked}
+    //           onClick={e => {
+    //             this.locationMapping[loc.locationCode] = e.target.checked;
+    //           }}
+    //         />
+    //       </div>
+    //     );
+    //   });
+    // }
 
     const FoldedMode = (
       <div className="card bg-white" onClick={() => this.setState({ isFolded: false })}>
@@ -175,14 +165,15 @@ export default class PrivateHiveConfigCard extends React.Component {
               {config.name}
             </h5>
             <i className="fa fa-close pull-right p-t-5 fs-16" style={{ cursor: 'pointer' }} onClick={() => this.setState({ isFolded: true })} />
+            <i className="fa fa-pencil pull-right p-t-5 fs-16" style={{ cursor: 'pointer' }} onClick={() => this.setState({ isFolded: false, isInEditMode: true })} />
           </div>
         </div>
         <div className="card-block">
-          <div className="row">
+          {/* <div className="row">
             <div className="col-md-12">
               <b>Available in: </b> {locationsEnabled.join(', ')}
             </div>
-          </div>
+          </div> */}
           <div className="row">
             <div className="col-md-12 fs-16">
               <b>$ {config.cost.monthly} / month</b>
@@ -192,19 +183,20 @@ export default class PrivateHiveConfigCard extends React.Component {
       </div>
     );
 
-    const DisplayMode = (
-      <div className="card bg-white">
-        <div className="card-header ">
-          <div className="card-title full-width">
-            <h5 className="text-primary m-b-0 m-t-0" style={{ display: 'inline' }}>
-              {config.name}
-            </h5>
+    // const DisplayMode = (
+    //   <div className="card bg-white">
+    //     <div className="card-header ">
+    //       <div className="card-title full-width">
+    //         <h5 className="text-primary m-b-0 m-t-0" style={{ display: 'inline' }}>
+    //           {config.name}
+    //         </h5>
 
-            <i className="fa fa-close pull-right p-t-5 fs-16" style={{ cursor: 'pointer' }} onClick={() => this.setState({ isFolded: true, isInEditMode: false })} />
-            <i className="fa fa-pencil pull-right p-t-5 fs-16" style={{ cursor: 'pointer' }} onClick={() => this.setState({ isFolded: false, isInEditMode: true })} />
-          </div>
-        </div>
-        <div className="card-block">
+    //         <i className="fa fa-close pull-right p-t-5 fs-16" style={{ cursor: 'pointer' }} onClick={() => this.setState({ isFolded: true, isInEditMode: false })} />
+    //         <i className="fa fa-pencil pull-right p-t-5 fs-16" style={{ cursor: 'pointer' }} onClick={() => this.setState({ isFolded: false, isInEditMode: true })} />
+    //       </div>
+    //     </div>
+    {
+      /* <div className="card-block">
           <div className="row">
             <div className="col-md-12" style={{ fontWeight: 'bold', fontSize: '16px', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
               Fabric Core configs
@@ -267,16 +259,17 @@ export default class PrivateHiveConfigCard extends React.Component {
               <b>Available in: </b> {locationsEnabled.join(', ')}
             </div>
           </div>
-        </div>
-        <div className="card-footer clearfix">
-          <h4 className="m-b-0 m-t-0" style={{ display: 'inline' }}>
-            $ {config.cost.monthly || 0}
-          </h4>{' '}
-          / month
-          <div className="clearfix" />
-        </div>
-      </div>
-    );
+        </div> */
+    }
+    //     <div className="card-footer clearfix">
+    //       <h4 className="m-b-0 m-t-0" style={{ display: 'inline' }}>
+    //         $ {config.cost.monthly || 0}
+    //       </h4>{' '}
+    //       / month
+    //       <div className="clearfix" />
+    //     </div>
+    //   </div>
+    // );
 
     const EditMode = (
       <div className="card bg-white">
@@ -322,7 +315,7 @@ export default class PrivateHiveConfigCard extends React.Component {
             </div>
           </div>
         </div>
-        <div className="card-block">
+        {/* <div className="card-block">
           <div className="row">
             <div className="col-md-12" style={{ fontWeight: 'bold', fontSize: '16px', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
               Fabric Core configs
@@ -457,7 +450,7 @@ export default class PrivateHiveConfigCard extends React.Component {
             <div className="col-md-12 bold">Availibility:</div>
             {locationEditView}
           </div>
-        </div>
+        </div> */}
         <div className="card-footer clearfix">
           <div className="row">
             <div className="col-md-3">
@@ -491,7 +484,8 @@ export default class PrivateHiveConfigCard extends React.Component {
     );
 
     if (isInEditMode) return EditMode;
-    if (this.state.isFolded) return FoldedMode;
-    return DisplayMode;
+    // if (this.state.isFolded) return FoldedMode;
+    // return DisplayMode;
+    return FoldedMode;
   }
 }
