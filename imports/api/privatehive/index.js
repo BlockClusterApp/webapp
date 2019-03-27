@@ -18,12 +18,15 @@ PrivateHive.createPeer = async ({ locationCode }) => {
     peerDetails = await Creators.createPeerService({ locationCode, namespace: Config.namespace, instanceId });
 
     await Creators.createPeerDeployment({ locationCode, namespace: Config.namespace, instanceId, workerNodeIP, anchorCommPort: peerDetails.peerGRPCAPINodePort });
+    await Creators.createAPIIngress({ locationCode, namespace, instanceId });
 
     return { instanceId, peerDetails };
   } catch (err) {
+    ElasticLogger.log('Error creating privatehive peer', { locationCode, err });
     await Creators.deletePersistentVolumeClaim({ locationCode, namespace, name: `${instanceId}-pvc` });
     await Creators.deleteService({ locationCode, namespace, name: `${instanceId}-privatehive` });
     await Creators.deleteDeployment({ locationCode, namespace, name: `${instanceId}-privatehive` });
+    await Creators.deleteIngress({ locationCode, namespace, name: `${instanceId}-privatehive` });
 
     throw new Meteor.Error(err);
   }
@@ -53,13 +56,16 @@ PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, pee
       anchorCommPort,
       ordererNodePort,
     });
+    await Creators.createAPIIngress({ locationCode, namespace, instanceId });
   } catch (err) {
+    ElasticLogger.log('Error creating privatehive orderer', { locationCode, err });
     await Creators.destroyZookeper({ locationCode, namespace, instanceId });
     await Creators.destroyKafka({ locationCode, namespace, instanceId });
     await Creators.deletePersistentVolumeClaim({ locationCode, namespace, name: `${instanceId}-pvc` });
     await Creators.deleteService({ locationCode, namespace, name: `${instanceId}-privatehive` });
     await Creators.deleteDeployment({ locationCode, namespace, name: `${instanceId}-privatehive` });
     await Creators.deletePrivatehiveReplicaSets({ locationCode, namespace, instanceId });
+    await Creators.deleteIngress({ locationCode, namespace, name: `${instanceId}-privatehive` });
 
     throw new Meteor.Error(err);
   }
@@ -104,6 +110,9 @@ PrivateHive.deleteNetwork = async ({ userId, instanceId }) => {
   } catch (err) {}
   try {
     await Creators.deletePrivatehiveReplicaSets({ locationCode, namespace, instanceId });
+  } catch (err) {}
+  try {
+    await Creators.deleteIngress({ locationCode, namespace, name: `${instanceId}-privatehive` });
   } catch (err) {}
 
   if (type === 'peer') {

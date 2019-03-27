@@ -64,6 +64,10 @@ Creators.createPeerService = async function({ locationCode, namespace, instanceI
           kind: 'Service',
           metadata: {
             name: `${instanceId}-privatehive`,
+            labels: {
+              service: 'privatehive',
+              app: `${instanceId}--privatehive`,
+            },
           },
           spec: {
             type: 'NodePort',
@@ -144,7 +148,7 @@ Creators.deletePrivatehiveReplicaSets = function({ locationCode, namespace, inst
   return new Promise((resolve, reject) => {
     HTTP.call(
       'GET',
-      `${Config.kubeRestApiHost(locationCode)}/apis/extentions/v1beta1/namespaces/${namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent(`${instanceId}-privatehive`),
+      `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent(`${instanceId}-privatehive`),
       async (err, data) => {
         if (err) {
           return reject(err);
@@ -427,8 +431,8 @@ Creators.createOrdererService = async ({ locationCode, namespace, instanceId }) 
             name: `${instanceId}-privatehive`,
             labels: {
               app: `${instanceId}-privatehive`,
-              service: 'privatehive'
-            }
+              service: 'privatehive',
+            },
           },
           spec: {
             type: 'NodePort',
@@ -1161,12 +1165,97 @@ Creators.createOrdererDeployment = async function createDeployment({
       },
       err => {
         if (err) {
+          console.log('Error creating deployment', err);
           reject(err);
         } else {
           resolve();
         }
       }
     );
+  });
+};
+
+Creators.createAPIIngress = async ({ locationCode, namespace, instanceId }) => {
+  if (!RemoteConfig.Ingress.Annotations) {
+    RemoteConfig.Ingress.Annotations = {};
+  }
+  const annotations = {
+    ...{
+      'nginx.ingress.kubernetes.io/rewrite-target': '/',
+      'nginx.ingress.kubernetes.io/enable-cors': 'true',
+      'nginx.ingress.kubernetes.io/cors-credentials': 'true',
+      'kubernetes.io/ingress.class': 'nginx',
+      'nginx.ingress.kubernetes.io/configuration-snippet': `if ($request_method = 'OPTIONS') {\n    add_header 'Access-Control-Max-Age' 1728000;\n    add_header 'Content-Type' 'text/plain charset=UTF-8';\n    add_header 'Content-Length' 0;\n    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';\n    add_header 'Access-Control-Allow-Origin' \"$http_origin\";\n    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE';\n    return 204;\n}`,
+    },
+    ...RemoteConfig.Ingress.Annotations,
+  };
+  const tlsConfig = {
+    hosts: [Config.workerNodeDomainName(locationCode)],
+  };
+
+  if (RemoteConfig.Ingress.tlsSecret) {
+    tlsConfig.secretName = RemoteConfig.Ingress.tlsSecret;
+  }
+  console.log('Creating ingress', instanceId);
+  return new Promise((resolve, reject) => {
+    HTTP.call(
+      'POST',
+      `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${namespace}/ingresses`,
+      {
+        content: JSON.stringify({
+          apiVersion: 'extensions/v1beta1',
+          kind: 'Ingress',
+          metadata: {
+            name: `${instanceId}-privatehive`,
+            labels: {
+              service: 'privatehive',
+              app: `${instanceId}-privatehive`,
+            },
+            annotations,
+          },
+          spec: {
+            tls: [tlsConfig],
+            rules: [
+              {
+                host: Config.workerNodeDomainName(locationCode),
+                http: {
+                  paths: [
+                    {
+                      path: `/api/privatehive/${instanceId}`,
+                      backend: {
+                        serviceName: `${instanceId}-privatehive`,
+                        servicePort: 3000,
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+      (err, response) => {
+        if (err) {
+          console.log('Error creating ingress', err);
+          return reject(err);
+        }
+        resolve();
+      }
+    );
+  });
+};
+
+Creators.deleteIngress = async ({ locationCode, namespace, name }) => {
+  return new Promise((resolve, reject) => {
+    HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${namespace}/ingresses/${name}`, (err, response) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve();
+    });
   });
 };
 

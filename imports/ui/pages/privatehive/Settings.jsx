@@ -147,12 +147,12 @@ class ViewEditNetwork extends Component {
                     </div>
                   </div>
 
-                  <div className="form-group row">
+                  {/* <div className="form-group row">
                     <label className="col-md-3 control-label">API Client</label>
                     <div className="col-md-9">
                       <b className="value-valign-middle">{network.instanceId}.blockcluster.io</b>
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="row form-group">
                     <div className="col-md-3">
