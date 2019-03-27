@@ -131,6 +131,11 @@ PrivateHive.deleteNetwork = async ({ userId, instanceId }) => {
   return true;
 };
 
+PrivateHive.join = async () => {
+  // PlaceHolder function
+  return true;
+};
+
 PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, type, voucherId, name }) => {
   let voucher;
   if (voucherId) {

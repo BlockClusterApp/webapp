@@ -2,7 +2,7 @@ import { Meteor } from 'meteor/meteor';
 import { generateRandomString, generateCompleteURLForUserInvite, getEJSTemplate } from '../../modules/helpers/server';
 import { UserInvitation } from '../../collections/user-invitation';
 import { UserCards } from '../../collections/payments/user-cards';
-import PrivateHiveApis from '../../api/privatehive/old_index.js';
+import PrivateHiveApis from '../../api/privatehive/index.js';
 import { sendEmail } from '../emails/email-sender';
 import { Networks } from '../../collections/networks/networks';
 import Config from '../../../imports/modules/config/server';

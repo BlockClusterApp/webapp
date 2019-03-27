@@ -4,8 +4,10 @@ import moment from 'moment';
 import PrivateHiveCollection from '../../collections/privatehive';
 import Voucher from '../../collections/vouchers/voucher';
 import Bull from '../../modules/schedulers/bull';
-import PrivateHiveServer from './server-communicator';
+// import PrivateHiveServer from './server-communicator';
 import NetworkConfiguration from '../../collections/network-configuration/network-configuration';
+
+const PrivateHiveServer = {};
 
 require('./network-operations');
 const debug = require('debug')('api:privatehive');
