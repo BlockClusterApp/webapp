@@ -204,6 +204,20 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                 },
               },
               spec: {
+                initContainers: [
+                  {
+                    name: 'ledger-path-creator',
+                    image: 'alpine',
+                    volumeMounts: [
+                      {
+                        name: 'privatehive-dir',
+                        mountPath: '/etc/hyperledger/privatehive',
+                      },
+                    ],
+                    command: ['/bin/sh'],
+                    args: ['-c', 'mkdir -p /etc/hyperledger/privatehive/ledgerData'],
+                  },
+                ],
                 containers: [
                   {
                     name: 'privatehive-api',
@@ -337,6 +351,10 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                       {
                         name: 'CORE_PEER_GOSSIP_EXTERNALENDPOINT',
                         value: workerNodeIP + ':' + anchorCommPort,
+                      },
+                      {
+                        name: 'CORE_PEER_FILESYSTEMPATH',
+                        value: '/etc/hyperledger/privatehive/ledgerData',
                       },
                     ],
                     volumeMounts: [
@@ -978,6 +996,20 @@ Creators.createOrdererDeployment = async function createDeployment({
                 },
               },
               spec: {
+                initContainers: [
+                  {
+                    name: 'ledgerpathcreator',
+                    image: 'alpine',
+                    volumeMounts: [
+                      {
+                        name: 'privatehive-dir',
+                        mountPath: '/etc/hyperledger/privatehive',
+                      },
+                    ],
+                    command: ['/bin/sh'],
+                    args: ['-c', 'mkdir -p /etc/hyperledger/privatehive/ledgerData'],
+                  },
+                ],
                 containers: [
                   {
                     name: 'privatehive-api',
@@ -1132,6 +1164,10 @@ Creators.createOrdererDeployment = async function createDeployment({
                       {
                         name: 'NAMESPACE',
                         value: namespace,
+                      },
+                      {
+                        name: 'ORDERER_FILELEDGER_LOCATION',
+                        value: '/etc/hyperledger/privatehive/ledgerData',
                       },
                     ],
                     volumeMounts: [
