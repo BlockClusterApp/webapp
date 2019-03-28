@@ -460,6 +460,11 @@ Creators.createOrdererService = async ({ locationCode, namespace, instanceId }) 
                 targetPort: 7050,
                 name: 'orderer',
               },
+              {
+                port: 3000,
+                targetPort: 3000,
+                name: 'api'
+              }
             ],
             selector: {
               app: `${instanceId}-privatehive`,

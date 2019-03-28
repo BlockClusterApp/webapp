@@ -65,7 +65,7 @@ Network.fetchPrivateHiveNetworkForAdmin = async networkId => {
 
   let network = PrivatehivePeers.find({ _id: networkId }).fetch()[0];
   if (!network) {
-    network = PrivatehiveOrderers.find({ instanceId: networkId }).fetch()[0];
+    network = PrivatehiveOrderers.find({ _id: networkId }).fetch()[0];
     if (!network) {
       return { network };
     }
