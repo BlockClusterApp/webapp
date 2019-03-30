@@ -161,6 +161,47 @@ Creators.deletePrivatehiveReplicaSets = function({ locationCode, namespace, inst
           });
           await Bluebird.all(promises);
         }
+        await Creators.deletePrivatehivePods({locationCode, namespace, instanceId});
+        return resolve();
+      }
+    );
+  });
+};
+
+Creators.deletePod = function({ locationCode, namespace, name, selfLink }) {
+  return new Promise((resolve, reject) => {
+    let url;
+    if (selfLink) {
+      url = `${Config.kubeRestApiHost(locationCode)}${selfLink}`;
+    } else {
+      url = `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/pods/${name}`;
+    }
+    HTTP.call('DELETE', url, (err, data) => {
+      if (err) {
+        return reject(err);
+      }
+      return resolve(data);
+    });
+  });
+};
+
+Creators.deletePrivatehivePods = function({ locationCode, namespace, instanceId }) {
+  return new Promise((resolve, reject) => {
+    HTTP.call(
+      'GET',
+      `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/pods?labelSelector=app%3D` + encodeURIComponent(`${instanceId}-privatehive`),
+      async (err, data) => {
+        if (err) {
+          return reject(err);
+        }
+        const res = JSON.parse(data.content);
+        if (res.items.length > 0) {
+          const promises = [];
+          res.items.forEach(rs => {
+            promises.push(Creators.deletePod({ locationCode, selfLink: rs.metadata.selfLink }));
+          });
+          await Bluebird.all(promises);
+        }
         return resolve();
       }
     );
