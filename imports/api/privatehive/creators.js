@@ -1,5 +1,6 @@
 import Config from '../../modules/config/server';
 import Bluebird from 'bluebird';
+var md5 = require('apache-md5');
 const Creators = {};
 
 Creators.createPersistentvolumeclaims = async ({ locationCode, namespace, instanceId, storage }) =>
@@ -161,7 +162,7 @@ Creators.deletePrivatehiveReplicaSets = function({ locationCode, namespace, inst
           });
           await Bluebird.all(promises);
         }
-        await Creators.deletePrivatehivePods({locationCode, namespace, instanceId});
+        await Creators.deletePrivatehivePods({ locationCode, namespace, instanceId });
         return resolve();
       }
     );
@@ -504,8 +505,8 @@ Creators.createOrdererService = async ({ locationCode, namespace, instanceId }) 
               {
                 port: 3000,
                 targetPort: 3000,
-                name: 'api'
-              }
+                name: 'api',
+              },
             ],
             selector: {
               app: `${instanceId}-privatehive`,
@@ -1257,11 +1258,49 @@ Creators.createOrdererDeployment = async function createDeployment({
   });
 };
 
-Creators.createAPIIngress = async ({ locationCode, namespace, instanceId }) => {
+Creators.createBasicAuth = async ({ locationCode, namespace, instanceId, password }) => {
+  return new Promise((resolve, reject) => {
+    HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/secrets/` + 'basic-auth-' + instanceId, function(error, response) {
+      if (!password) {
+        return resolve();
+      }
+      let encryptedPassword = md5(password);
+      let auth = base64.encode(utf8.encode(instanceId + ':' + encryptedPassword));
+      HTTP.call(
+        'POST',
+        `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/secrets`,
+        {
+          content: JSON.stringify({
+            apiVersion: 'v1',
+            data: {
+              auth: auth,
+            },
+            kind: 'Secret',
+            metadata: {
+              name: 'basic-auth-ph-' + instanceId,
+            },
+            type: 'Opaque',
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+        (err, res) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve();
+        }
+      );
+    });
+  });
+};
+
+Creators.createAPIIngress = async ({ locationCode, namespace, instanceId, password }) => {
   if (!RemoteConfig.Ingress.Annotations) {
     RemoteConfig.Ingress.Annotations = {};
   }
-  const annotations = {
+  let annotations = {
     ...{
       'nginx.ingress.kubernetes.io/rewrite-target': '/',
       'nginx.ingress.kubernetes.io/enable-cors': 'true',
@@ -1271,6 +1310,16 @@ Creators.createAPIIngress = async ({ locationCode, namespace, instanceId }) => {
     },
     ...RemoteConfig.Ingress.Annotations,
   };
+
+  if (password) {
+    annotations = {
+      ...annotations,
+      'nginx.ingress.kubernetes.io/auth-type': 'basic',
+      'nginx.ingress.kubernetes.io/auth-secret': 'basic-auth-ph-' + instanceId,
+      'nginx.ingress.kubernetes.io/auth-realm': 'Authentication Required',
+    };
+  }
+
   const tlsConfig = {
     hosts: [Config.workerNodeDomainName(locationCode)],
   };
@@ -1280,53 +1329,61 @@ Creators.createAPIIngress = async ({ locationCode, namespace, instanceId }) => {
   }
   console.log('Creating ingress', instanceId);
   return new Promise((resolve, reject) => {
-    HTTP.call(
-      'POST',
-      `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${namespace}/ingresses`,
-      {
-        content: JSON.stringify({
-          apiVersion: 'extensions/v1beta1',
-          kind: 'Ingress',
-          metadata: {
-            name: `${instanceId}-privatehive`,
-            labels: {
-              service: 'privatehive',
-              app: `${instanceId}-privatehive`,
-            },
-            annotations,
-          },
-          spec: {
-            tls: [tlsConfig],
-            rules: [
-              {
-                host: Config.workerNodeDomainName(locationCode),
-                http: {
-                  paths: [
-                    {
-                      path: `/api/privatehive/${instanceId}`,
-                      backend: {
-                        serviceName: `${instanceId}-privatehive`,
-                        servicePort: 3000,
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-          },
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-      (err, response) => {
-        if (err) {
-          console.log('Error creating ingress', err);
-          return reject(err);
-        }
-        resolve();
+    HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${namespace}/ingresses/` + `${instanceId}-privatehive`, async function(
+      error,
+      response
+    ) {
+      if (password) {
+        await Creators.createBasicAuth({ locationCode, namespace, instanceId, password });
       }
-    );
+      HTTP.call(
+        'POST',
+        `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${namespace}/ingresses`,
+        {
+          content: JSON.stringify({
+            apiVersion: 'extensions/v1beta1',
+            kind: 'Ingress',
+            metadata: {
+              name: `${instanceId}-privatehive`,
+              labels: {
+                service: 'privatehive',
+                app: `${instanceId}-privatehive`,
+              },
+              annotations,
+            },
+            spec: {
+              tls: [tlsConfig],
+              rules: [
+                {
+                  host: Config.workerNodeDomainName(locationCode),
+                  http: {
+                    paths: [
+                      {
+                        path: `/api/privatehive/${instanceId}`,
+                        backend: {
+                          serviceName: `${instanceId}-privatehive`,
+                          servicePort: 3000,
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+        (err, response) => {
+          if (err) {
+            console.log('Error creating ingress', err);
+            return reject(err);
+          }
+          resolve();
+        }
+      );
+    });
   });
 };
 

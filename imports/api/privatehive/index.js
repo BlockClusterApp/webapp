@@ -73,6 +73,20 @@ PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, pee
   return { instanceId, ordererNodePort };
 };
 
+PrivateHive.changeNetworkPassword = async ({ instanceId, password }) => {
+  let network;
+  let type = 'peer';
+
+  network = PrivatehivePeers.findOne({ instanceId, userId });
+  if (!network) {
+    network = PrivatehiveOrderers.findOne({ instanceId, userId });
+    type = 'orderer';
+  }
+
+  await Creators.createAPIIngress({ locationCode: network.locationCode, namespace: Config.namespace, instanceId: network.instanceId, password });
+  return true;
+};
+
 PrivateHive.deleteNetwork = async ({ userId, instanceId }) => {
   let network;
   let type = 'peer';
@@ -231,6 +245,7 @@ Meteor.methods({
   deletePrivateHiveNetwork: async ({ instanceId }) => {
     return PrivateHive.deleteNetwork({ userId: Meteor.userId(), instanceId });
   },
+  changeNetworkPassword: PrivateHive.changeNetworkPassword,
   privatehiveCreateChannel: async ({ peerId, ordererId, channelName, userId }) => {
     userId = userId || Meteor.userId();
 
