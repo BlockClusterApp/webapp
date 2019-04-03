@@ -23,7 +23,7 @@ class ViewNetwork extends Component {
               <div className="card card-transparent">
                 <div className="card-header ">
                   <div className="card-title">
-                    <Link to={'/app/privatehive'}>
+                    <Link to={'/app/privatehive/list'}>
                       {' '}
                       <i className="fa fa-angle-left" /> All Networks
                     </Link>
@@ -189,13 +189,8 @@ export default withTracker(function(props) {
         { instanceId: props.match.params.id },
         {
           onReady: function() {
-            if (
-              [
-                ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true }).fetch(),
-                ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true }).fetch(),
-              ].length !== 1
-            ) {
-              props.history.push('/app/privatehive');
+            if ([...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true }).fetch()].length !== 1) {
+              props.history.push('/app/privatehive/list');
             }
           },
         }

@@ -447,7 +447,7 @@ export default withTracker(props => {
         {
           onReady: function() {
             if (PrivateHive.find({ instanceId: props.match.params.id, active: true }).fetch().length !== 1) {
-              props.history.push('/app/privatehive');
+              props.history.push('/app/privatehive/list');
             }
           },
         }

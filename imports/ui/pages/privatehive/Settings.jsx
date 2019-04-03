@@ -201,7 +201,7 @@ export default withTracker(function(props) {
                 ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true }).fetch(),
               ].length !== 1
             ) {
-              props.history.push('/app/privatehive');
+              props.history.push('/app/privatehive/list');
             }
           },
         }

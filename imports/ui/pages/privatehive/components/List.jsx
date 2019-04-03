@@ -48,8 +48,12 @@ class NetworksList extends Component {
     });
   }
 
-  openNetwork = networkId => {
-    this.props.history.push(`/app/privatehive/${networkId}/details`);
+  openNetwork = network => {
+    if (network.type === 'peer') {
+      this.props.history.push(`/app/privatehive/${network.instanceId}/details`);
+    } else {
+      this.props.history.push(`/app/privatehive/${network.instanceId}/security`);
+    }
   };
 
   getLocationName = locationCode => {
@@ -96,7 +100,7 @@ class NetworksList extends Component {
                           )
                           .map((item, index) => {
                             return (
-                              <tr key={item._id} onClick={() => this.openNetwork(item.instanceId)}>
+                              <tr key={item._id} onClick={() => this.openNetwork(item)}>
                                 <td className="v-align-middle ">{item.name}</td>
                                 <td className="v-align-middle">{item.instanceId.toPascalCase()}</td>
                                 <td className="v-align-middle">{item.type === 'peer' ? 'Peer' : 'Orderer'}</td>
