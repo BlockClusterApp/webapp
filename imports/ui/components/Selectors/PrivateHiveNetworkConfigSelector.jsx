@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-
+import PrivateHiveNetworkSelector from './PrivatehiveNetworkSelector';
 import './NetworkConfigSelector.scss';
 class PrivateHiveNetworkConfigSelector extends Component {
   constructor(props) {
@@ -90,12 +90,12 @@ class PrivateHiveNetworkConfigSelector extends Component {
     if (!useDefault) {
       this.setState({
         networkType: this.networkType.value,
-        peerId: this.peerId && this.peerId.value,
+        peerId: this.peerId,
       });
 
       const config = {
         networkType: this.networkType.value,
-        peerId: this.peerId && this.peerId.value,
+        peerId: this.peerId,
       };
       if (this.props && this.props.configChangeListener) {
         this.props.configChangeListener({ config, error: error ? true : false, voucher: this.voucherDetails });
@@ -232,12 +232,15 @@ class PrivateHiveNetworkConfigSelector extends Component {
 
               {this.state.networkType === 'orderer' && (
                 <div className="row clearfix">
-                  <div className="form-group form-group-default input-group">
-                    <div className="form-input-group">
-                      <label>Peer Organisation ID</label>
-                      <input type="text" className="form-control" name="projectName" ref={input => (this.peerId = input)} onChange={this.onConfigChange.bind(this, false)} />
-                    </div>
-                  </div>
+                  <PrivateHiveNetworkSelector
+                    key={this.props.networks && this.props.networks.length}
+                    networks={this.props.networks}
+                    onValueChangeListener={network => {
+                      this.peerId = network.instanceId;
+                      this.onConfigChange();
+                    }}
+                    label="Peer Organization ID"
+                  />
                 </div>
               )}
 

@@ -151,7 +151,7 @@ export default withTracker(props => {
     subscriptions: [
       Meteor.subscribe(
         'privatehive',
-        { instanceId: props.match.params.id },
+        {},
         {
           onReady: function() {
             if (

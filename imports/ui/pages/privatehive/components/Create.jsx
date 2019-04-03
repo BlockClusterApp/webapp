@@ -6,6 +6,7 @@ import LocationSelector from '../../../components/Selectors/LocationSelector.jsx
 import PrivateHiveNetworkConfigSelector from '../../../components/Selectors/PrivateHiveNetworkConfigSelector.jsx';
 import CardVerification from '../../billing/components/CardVerification.jsx';
 import notification from '../../../../modules/notifications';
+import { PrivatehivePeers } from '../../../../collections/privatehivePeers/privatehivePeers';
 
 class PaymentDashboard extends Component {
   constructor(props) {
@@ -103,7 +104,8 @@ class PaymentDashboard extends Component {
                   <p>Node Configuration</p>
                   <PrivateHiveNetworkConfigSelector
                     locationCode={this.locationCode}
-                    key={this.locationCode}
+                    key={`${this.locationCode}-${this.props.networks.length}`}
+                    networks={this.props.networks}
                     configChangeListener={config => {
                       const voucher = config.voucher;
                       delete config.voucher;
@@ -157,6 +159,14 @@ class PaymentDashboard extends Component {
 
 export default withTracker(() => {
   return {
-    subscriptions: [],
+    networks: [
+      ...PrivatehivePeers.find({ userId: Meteor.userId(), active: true })
+        .fetch()
+        .map(p => ({ ...p, type: 'peer' })),
+      // ...PrivatehiveOrderers.find({ userId: Meteor.userId(), active: true })
+      //   .fetch()
+      //   .map(p => ({ ...p, type: 'orderer' })),
+    ],
+    subscriptions: [Meteor.subscribe('privatehive', {})],
   };
 })(withRouter(PaymentDashboard));
