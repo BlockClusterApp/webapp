@@ -1183,6 +1183,10 @@ Creators.createOrdererDeployment = async function createDeployment({
                         name: 'MONGO_URL',
                         value: `${process.env.MONGO_URL}`,
                       },
+                      {
+                        name: 'NAMESPACE',
+                        value: namespace,
+                      },
                     ],
                     lifecycle: {
                       postStart: {
