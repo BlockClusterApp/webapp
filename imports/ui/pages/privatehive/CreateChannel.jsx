@@ -28,37 +28,16 @@ class CreateChannel extends Component {
     this.setState({
       loading: true,
     });
-    let ordererNetwork = network;
-    if (network.isJoin) {
-      ordererNetwork = PrivateHive.find({ _id: network.ordererId }).fetch()[0];
-    }
-    let url = `https://${network.properties.apiEndPoint}/channels`;
-    HTTP.call(
-      'POST',
-      url,
-      {
-        headers: {
-          'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
-        },
-        data: {
-          channelName: this.channelName.value,
-          externalBroker: ordererNetwork.properties.externalKafkaBroker,
-          ordererOrg: ordererNetwork.instanceId.replace('ph-', ''),
-          ordererGrpcHost: ordererNetwork.properties.externalOrderers[0],
-          ordererApiClientHost: ordererNetwork.properties.apiEndPoint,
-          orgApiEndpoint: network.properties.apiEndPoint,
-        },
-      },
-      (err, res) => {
-        this.setState({
-          loading: false,
-        });
-        if (err) {
-          return notifications.error(err.reason);
-        }
-        return notifications.success('Proposal sent');
+
+    Meteor.call('privatehiveCreateChannel', { peerId: this.props.match.params.id, ordererId: this.ordererNetwork.instanceId, channelName: this.channelName.value }, (err, res) => {
+      this.setState({
+        loading: false,
+      });
+      if (err) {
+        return notifications.error(err.reason);
       }
-    );
+      return notifications.success('Proposal sent');
+    });
   };
 
   render() {
