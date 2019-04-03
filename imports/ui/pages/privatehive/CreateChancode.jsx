@@ -3,7 +3,7 @@ import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import { withTracker } from 'meteor/react-meteor-data';
 import notifications from '../../../modules/notifications';
 import { withRouter, Link } from 'react-router-dom';
-import PrivateHive from '../../../collections/privatehive';
+import { PrivatehivePeers } from '../../../collections/privatehivePeers/privatehivePeers';
 
 import 'react-fine-uploader/gallery/gallery.css';
 
@@ -285,14 +285,29 @@ class CreateChannelCode extends Component {
 
 export default withTracker(props => {
   return {
-    network: PrivateHive.find({ instanceId: props.match.params.id, active: true }).fetch()[0],
+    network: [
+      ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true })
+        .fetch()
+        .map(p => ({ ...p, type: 'peer' })),
+      // ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true })
+      //   .fetch()
+      //   .map(p => ({ ...p, type: 'orderer' })),
+    ][0],
+    // networks: [
+    //   ...PrivatehivePeers.find({ userId: Meteor.userId(), active: true })
+    //     .fetch()
+    //     .map(p => ({ ...p, type: 'peer' })),
+    //   ...PrivatehiveOrderers.find({ userId: Meteor.userId(), active: true })
+    //     .fetch()
+    //     .map(p => ({ ...p, type: 'orderer' })),
+    // ],
     subscriptions: [
       Meteor.subscribe(
-        'privatehive.one',
-        { instanceId: props.match.params.id, active: true },
+        'privatehive',
+        {},
         {
           onReady: function() {
-            if (PrivateHive.find({ instanceId: props.match.params.id, active: true }).fetch().length !== 1) {
+            if ([...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true }).fetch()].length !== 1) {
               props.history.push('/app/privatehive/list');
             }
           },
