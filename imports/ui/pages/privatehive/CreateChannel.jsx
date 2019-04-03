@@ -7,6 +7,7 @@ import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import notifications from '../../../modules/notifications';
 import { PrivatehiveOrderers } from '../../../collections/privatehiveOrderers/privatehiveOrderers';
 import { PrivatehivePeers } from '../../../collections/privatehivePeers/privatehivePeers';
+import PrivateHiveNetworkSelector from '../../components/Selectors/PrivatehiveNetworkSelector';
 
 class CreateChannel extends Component {
   constructor() {
@@ -79,7 +80,7 @@ class CreateChannel extends Component {
                 <div className="card-block">
                   <div className="row">
                     <div className="col-xl-12">
-                      <div className="card card-transparent">
+                      <div className="card card-transparent m-b-0">
                         <div className="form-group">
                           <label>Channel Name</label>
                           <span className="help"> e.g. "License"</span>
@@ -92,19 +93,31 @@ class CreateChannel extends Component {
                             }}
                           />
                         </div>
-                        <LaddaButton
-                          loading={this.state.loading}
-                          data-size={S}
-                          data-style={SLIDE_UP}
-                          data-spinner-size={30}
-                          data-spinner-lines={12}
-                          className="btn btn-success m-t-10 col-md-3"
-                          onClick={this.createChannel}
-                        >
-                          <i className="fa fa-plus-circle" aria-hidden="true" />
-                          &nbsp;&nbsp;Create
-                        </LaddaButton>
                       </div>
+                    </div>
+                    <div className="col-sm-12">
+                      <PrivateHiveNetworkSelector
+                        key={this.props.networks.length}
+                        networks={this.props.networks.length > 0 ? this.props.networks.filter(p => p.type === 'orderer') : []}
+                        onValueChangeListener={network => {
+                          this.ordererNetwork = network;
+                        }}
+                        label="Select Orderer"
+                      />
+                    </div>
+                    <div className="col-sm-12">
+                      <LaddaButton
+                        loading={this.state.loading}
+                        data-size={S}
+                        data-style={SLIDE_UP}
+                        data-spinner-size={30}
+                        data-spinner-lines={12}
+                        className="btn btn-success m-t-10 col-md-3"
+                        onClick={this.createChannel}
+                      >
+                        <i className="fa fa-plus-circle" aria-hidden="true" />
+                        &nbsp;&nbsp;Create
+                      </LaddaButton>
                     </div>
                   </div>
                 </div>
@@ -120,12 +133,24 @@ class CreateChannel extends Component {
 export default withTracker(props => {
   return {
     network: [
-      ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true }).fetch(),
-      ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true }).fetch(),
+      ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true })
+        .fetch()
+        .map(p => ({ ...p, type: 'peer' })),
+      ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true })
+        .fetch()
+        .map(p => ({ ...p, type: 'orderer' })),
     ][0],
+    networks: [
+      ...PrivatehivePeers.find({ userId: Meteor.userId(), active: true })
+        .fetch()
+        .map(p => ({ ...p, type: 'peer' })),
+      ...PrivatehiveOrderers.find({ userId: Meteor.userId(), active: true })
+        .fetch()
+        .map(p => ({ ...p, type: 'orderer' })),
+    ],
     subscriptions: [
       Meteor.subscribe(
-        'privatehive.one',
+        'privatehive',
         { instanceId: props.match.params.id },
         {
           onReady: function() {
