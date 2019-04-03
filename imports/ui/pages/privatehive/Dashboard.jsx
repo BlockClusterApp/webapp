@@ -16,7 +16,7 @@ class PrivateHiveDashboard extends Component {
   render() {
     return (
       <div className="content ">
-        <div className="container-fluid container-fixed-lg">
+        <div className="m-t-20 container-fluid container-fixed-lg">
           <div className="row payments-container">
             {/* <div className="card card-borderless m-b-0 card-transparent">
               <h3 style={{ textTransform: 'uppercase' }}>Private Hive </h3>
