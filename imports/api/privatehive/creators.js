@@ -215,6 +215,7 @@ Creators.deleteDeployment = function({ locationCode, namespace, name }) {
       if (err) {
         return reject(err);
       }
+      Creators.deleteVolumesByLabel({ locationCode, namespace, label: `app%3D${name.split('-')[0]}-privatehive` });
       resolve();
     });
   });
@@ -546,9 +547,46 @@ Creators.deleteStatefulSet = function({ locationCode, namespace, name }) {
   });
 };
 
+Creators.deleteVolumeClaim = function({ locationCode, namespace, name, selfLink }) {
+  return new Promise((resolve, reject) => {
+    let url;
+    if (selfLink) {
+      url = `${Config.kubeRestApiHost(locationCode)}${selfLink}`;
+    } else {
+      url = `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/persistentvolumeclaims/${name}`;
+    }
+    HTTP.call('DELETE', url, (err, data) => {
+      if (err) {
+        return reject(err);
+      }
+      return resolve(data);
+    });
+  });
+};
+
+Creators.deleteVolumesByLabel = async ({ locationCode, namespace, label }) => {
+  return new Promise((resolve, reject) => {
+    HTTP.call('GET', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/persistentvolumeclaims/labelSelector=${label}`, async (err, data) => {
+      if (err) {
+        return reject(err);
+      }
+      const res = JSON.parse(data.content);
+      if (res.items.length > 0) {
+        const promises = [];
+        res.items.forEach(rs => {
+          promises.push(Creators.deleteVolumeClaim({ locationCode, selfLink: rs.metadata.selfLink }));
+        });
+        await Bluebird.all(promises);
+      }
+      return resolve();
+    });
+  });
+};
+
 Creators.destroyZookeper = async function({ locationCode, namespace, instanceId }) {
   await Creators.deleteService({ locationCode, namespace, name: `zk-svc-${instanceId}` });
   await Creators.deleteStatefulSet({ locationCode, namespace, name: `zk-${instanceId}` });
+  await Creators.deleteVolumesByLabel({ locationCode, namespace, label: `app%3D${encodeURIComponent(`kafka-${instanceId}`)}` });
   return true;
 };
 
@@ -780,6 +818,7 @@ Creators.deployZookeeper = async function deployZookeeper({ locationCode, instan
 Creators.destroyKafka = async function({ locationCode, namespace, instanceId }) {
   await Creators.deleteService({ locationCode, namespace, name: `kafka-svc-${instanceId}` });
   await Creators.deleteStatefulSet({ locationCode, namespace, name: `kafka-${instanceId}` });
+  await Creators.deleteVolumesByLabel({ locationCode, namespace, label: `app%3D${encodeURIComponent(`zk-${instanceId}`)}` });
   return true;
 };
 
