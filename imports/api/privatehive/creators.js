@@ -1299,12 +1299,12 @@ Creators.createOrdererDeployment = async function createDeployment({
 
 Creators.createBasicAuth = async ({ locationCode, namespace, instanceId, password }) => {
   return new Promise((resolve, reject) => {
-    HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/secrets/` + 'basic-auth-' + instanceId, function(error, response) {
+    HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/secrets/` + 'basic-auth-ph-' + instanceId, function(error, response) {
       if (!password) {
         return resolve();
       }
       let encryptedPassword = md5(password);
-      let auth = base64.encode(utf8.encode(instanceId + ':' + encryptedPassword));
+      let auth = Buffer.from(Buffer.from(instanceId + ':' + encryptedPassword).toString('utf-8')).toString('base64');
       HTTP.call(
         'POST',
         `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/secrets`,

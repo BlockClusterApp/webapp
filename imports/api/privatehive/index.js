@@ -75,6 +75,7 @@ PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, pee
 
 PrivateHive.changeNetworkPassword = async ({ instanceId, password }) => {
   let network;
+  const userId = Meteor.userId();
   let type = 'peer';
 
   network = PrivatehivePeers.findOne({ instanceId, userId });
@@ -196,8 +197,6 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       throw new Meteor.Error(403, 'Invalid peer');
     }
 
-    console.log('Peer', peerDetails);
-
     async function getCerts(peer) {
       return new Promise((resolve, reject) => {
         HTTP.call('GET', `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/channelConfigCerts`, {}, (error, response) => {
@@ -245,7 +244,7 @@ Meteor.methods({
   deletePrivateHiveNetwork: async ({ instanceId }) => {
     return PrivateHive.deleteNetwork({ userId: Meteor.userId(), instanceId });
   },
-  changeNetworkPassword: PrivateHive.changeNetworkPassword,
+  privatehiveRpcPasswordUpdate: PrivateHive.changeNetworkPassword,
   privatehiveCreateChannel: async ({ peerId, ordererId, channelName, userId }) => {
     userId = userId || Meteor.userId();
 

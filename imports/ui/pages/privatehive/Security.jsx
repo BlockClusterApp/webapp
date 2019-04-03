@@ -35,7 +35,7 @@ class APIsCreds extends Component {
       rpcLoading: true,
     });
 
-    Meteor.call('privatehiveRpcPasswordUpdate', this.networkNameRPCUpdate.value, this.rpcPassword.value, this.props.network.locationCode, error => {
+    Meteor.call('privatehiveRpcPasswordUpdate', { instanceId: this.props.match.params.id, password: this.rpcPassword.value }, error => {
       if (!error) {
         this.setState({
           updateRPCFormSubmitError: '',
@@ -43,8 +43,9 @@ class APIsCreds extends Component {
           rpcLoading: false,
         });
       } else {
+        console.log(error);
         this.setState({
-          updateRPCFormSubmitError: 'An error occured while updating password',
+          updateRPCFormSubmitError: error.toString(),
           updateRPCFormSubmitSuccess: '',
           rpcLoading: false,
         });
