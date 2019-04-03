@@ -52,7 +52,7 @@ class NetworksList extends Component {
     if (network.type === 'peer') {
       this.props.history.push(`/app/privatehive/${network.instanceId}/details`);
     } else {
-      this.props.history.push(`/app/privatehive/${network.instanceId}/security`);
+      this.props.history.push(`/app/privatehive/${network.instanceId}/settings`);
     }
   };
 

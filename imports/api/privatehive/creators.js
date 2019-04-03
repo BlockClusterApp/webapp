@@ -566,7 +566,7 @@ Creators.deleteVolumeClaim = function({ locationCode, namespace, name, selfLink 
 
 Creators.deleteVolumesByLabel = async ({ locationCode, namespace, label }) => {
   return new Promise((resolve, reject) => {
-    HTTP.call('GET', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/persistentvolumeclaims/labelSelector=${label}`, async (err, data) => {
+    HTTP.call('GET', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/persistentvolumeclaims?labelSelector=${label}`, async (err, data) => {
       if (err) {
         return reject(err);
       }
@@ -585,8 +585,8 @@ Creators.deleteVolumesByLabel = async ({ locationCode, namespace, label }) => {
 
 Creators.destroyZookeper = async function({ locationCode, namespace, instanceId }) {
   await Creators.deleteService({ locationCode, namespace, name: `zk-svc-${instanceId}` });
-  await Creators.deleteStatefulSet({ locationCode, namespace, name: `zk-${instanceId}` });
-  await Creators.deleteVolumesByLabel({ locationCode, namespace, label: `app%3D${encodeURIComponent(`kafka-${instanceId}`)}` });
+  await Creators.deleteStatefulSet({ locationCode, namespace, name: `zk%3D${instanceId}` });
+  await Creators.deleteVolumesByLabel({ locationCode, namespace, label: `app%3Dzk-${instanceId}` });
   return true;
 };
 
@@ -818,7 +818,7 @@ Creators.deployZookeeper = async function deployZookeeper({ locationCode, instan
 Creators.destroyKafka = async function({ locationCode, namespace, instanceId }) {
   await Creators.deleteService({ locationCode, namespace, name: `kafka-svc-${instanceId}` });
   await Creators.deleteStatefulSet({ locationCode, namespace, name: `kafka-${instanceId}` });
-  await Creators.deleteVolumesByLabel({ locationCode, namespace, label: `app%3D${encodeURIComponent(`zk-${instanceId}`)}` });
+  await Creators.deleteVolumesByLabel({ locationCode, namespace, label: `app=kafka-${instanceId}` });
   return true;
 };
 
