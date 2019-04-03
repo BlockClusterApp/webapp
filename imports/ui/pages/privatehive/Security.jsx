@@ -102,7 +102,7 @@ class APIsCreds extends Component {
                                 <div className="col-md-12">
                                   <div className="form-group form-group-default required">
                                     <label>Username</label>
-                                    {this.props.network === 1 && (
+                                    {this.props.network && (
                                       <input
                                         type="text"
                                         className="form-control readOnly-Value"
@@ -120,7 +120,7 @@ class APIsCreds extends Component {
                                 <div className="col-md-12">
                                   <div className="form-group form-group-default required">
                                     <label>Password</label>
-                                    {this.props.network === 1 && (
+                                    {this.props.network && (
                                       <input
                                         ref={input => {
                                           this.rpcPassword = input;
