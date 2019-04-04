@@ -94,4 +94,5 @@ module.exports = {
   },
   licensingMicroserviceBase: getMicroServiceBase(),
   activatedFeatures: RemoteConfig.features,
+  dkyContractAddress: '0xc25D80fF9D25802cb69b2A751394F83534011308',
 };

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import { withTracker } from 'meteor/react-meteor-data';
-import { withRouter } from 'react-router-dom';
+import { withRouter, Link } from 'react-router-dom';
 import notifications from '../../../modules/notifications';
 import Config from '../../../modules/config/client';
 import { Wallets } from '../../../collections/wallets/wallets.js';
@@ -865,7 +865,15 @@ class PaymeterComponent extends Component {
                         </div>
                         <div className="form-group form-group-default required ">
                           <label>ERC20 Contract Address</label>
-                          <input type="text" className="form-control" required ref="erc20ContractAddress" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            required
+                            ref="erc20ContractAddress"
+                            name="erc20ContractAddress"
+                            onChange={e => this.setState({ [e.target.name]: e.target.value })}
+                            value={this.state.erc20ContractAddress}
+                          />
                         </div>
                         <div className="form-group form-group-default required ">
                           <label>Token Symbol</label>
@@ -877,7 +885,7 @@ class PaymeterComponent extends Component {
                         </div>
                         <div className="form-group form-group-default required ">
                           <label>Network</label>
-                          <select className="form-control" ref="erc20WalletNetwork">
+                          <select className="form-control" ref="erc20WalletNetwork" onChange={e => this.setState({ mainnet: e.target.value == 'mainnet' ? true : false })}>
                             <option value={'testnet'} key={'testnet'}>
                               Rinkeby
                             </option>
@@ -886,6 +894,26 @@ class PaymeterComponent extends Component {
                             </option>
                           </select>
                         </div>
+
+                        {!this.state.mainnet && (
+                          <div className="form-group form-group-default">
+                            <input
+                              type="checkbox"
+                              defaultChecked={false}
+                              ref="erc20useDky"
+                              onClick={e => {
+                                if (e.target.checked) {
+                                  this.setState({ oldContractAddress: this.state.erc20ContractAddress, erc20ContractAddress: Config.dkyContractAddress });
+                                } else {
+                                  this.setState({ erc20ContractAddress: this.state.oldContractAddress ? this.state.oldContractAddress : '' });
+                                }
+                              }}
+                              disabled={this.state.mainnet}
+                            />{' '}
+                            Use <a href="https://github.com/suchitgupta60/DKYToken"> DKY Contract</a>
+                          </div>
+                        )}
+
                         <LaddaButton
                           loading={this.state.createERC20WalletLoading}
                           data-size={S}
