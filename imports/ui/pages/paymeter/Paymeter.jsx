@@ -1503,22 +1503,30 @@ class PaymeterComponent extends Component {
                         <div className="row">
                           <div className="col-lg-12">
                             <div className="card card-transparent">
-                              <div className="card-block" style={{ paddingBottom: '0px', alignItems: 'center' }}>
-                                <label> ETH Balance</label>
-                                <LaddaButton
-                                  loading={this.state[wallet._id + '_loader']}
-                                  data-size={S}
-                                  data-style={SLIDE_UP}
-                                  data-spinner-size={30}
-                                  data-spinner-lines={12}
-                                  className="btn btn-complete btn-cons m-t-10"
-                                  onClick={this.getTestNetEthBalance.bind(this, wallet.address, wallet._id)}
-                                  type="submit"
-                                >
-                                  <i className="fa fa-get-pocket" aria-hidden="true" />
-                                  &nbsp;&nbsp;Fetch Now
-                                </LaddaButton>
-                                {this.state[wallet._id + '_EthBal'] ? this.state[wallet._id + '_EthBal'] + ' ETH' : ''}
+                              <div className="card-block" style={{ paddingBottom: '0px' }}>
+                                <div className="row row-same-height">
+                                  <div className="col-md-12 sm-b-b">
+                                    <div className="p-t-0 p-b-30 p-l-30 p-r-30 sm-padding-5 sm-m-t-15 m-t-50 deposit-box ">
+                                      <label> ETH Balance</label>
+                                      <div>
+                                        <LaddaButton
+                                          loading={this.state[wallet._id + '_loader']}
+                                          data-size={S}
+                                          data-style={SLIDE_UP}
+                                          data-spinner-size={30}
+                                          data-spinner-lines={12}
+                                          className="btn btn-complete btn-cons m-t-10"
+                                          onClick={this.getTestNetEthBalance.bind(this, wallet.address, wallet._id)}
+                                          type="submit"
+                                        >
+                                          <i className="fa fa-get-pocket" aria-hidden="true" />
+                                          &nbsp;&nbsp;Fetch Now
+                                        </LaddaButton>
+                                      </div>
+                                      <p>{this.state[wallet._id + '_EthBal'] ? this.state[wallet._id + '_EthBal'] + ' ETH' : ''}</p>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
