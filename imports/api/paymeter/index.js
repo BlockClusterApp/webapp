@@ -1432,6 +1432,18 @@ Meteor.methods({
       }
     );
   },
+  getTestNetEthBalance: async walletAddress => {
+    const testnet = 'https://ropsten.infura.io';
+    try {
+      const web3 = new Web3(new Web3.providers.HttpProvider(testnet));
+      var balance = await web3.eth.getBalance(walletAddress); //Will give value in.
+      balance = web3.utils.fromWei(balance, 'ether');
+      return balance;
+    } catch (x) {
+      console.log(x);
+      throw new Meteor.Error('unable-to-fetch', 'Unable to fetch balance');
+    }
+  },
 });
 
 async function adminChangeMinimumPaymeterBill({ paymeter, value }) {

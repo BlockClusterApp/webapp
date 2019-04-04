@@ -39,6 +39,11 @@ class PaymeterComponent extends Component {
       transferEthFeeChecked: !this.state.transferEthFeeChecked,
     });
   }
+  handleTransferEthFee() {
+    this.setState({
+      transferEthFeeChecked: !this.state.transferEthFeeChecked,
+    });
+  }
 
   handleTransferErc20Fee() {
     this.setState({
@@ -252,6 +257,24 @@ class PaymeterComponent extends Component {
 
       this.setState({
         ['_activate_loading']: false,
+      });
+    });
+  };
+
+  getTestNetEthBalance = (walletAddress, id) => {
+    this.setState({
+      [id + '_loader']: true,
+    });
+    Meteor.call('getTestNetEthBalance', walletAddress, (error, data) => {
+      if (error) {
+        this.setState({
+          [id + '_loader']: false,
+        });
+        notifications.error(error.reason);
+      }
+      this.setState({
+        [id + '_loader']: false,
+        [id + '_EthBal']: data,
       });
     });
   };
@@ -896,7 +919,7 @@ class PaymeterComponent extends Component {
                         </div>
 
                         {!this.state.mainnet && (
-                          <div className="form-group form-group-default">
+                          <div className="form-group form-group-default ">
                             <input
                               type="checkbox"
                               defaultChecked={false}
@@ -1220,14 +1243,21 @@ class PaymeterComponent extends Component {
                       </li>
                       <li className="nav-item">
                         <a className="" href="#" data-toggle="tab" role="tab" data-target="#withdrawlHistory">
-                          Withdrawl History
+                          Withdrawls
                         </a>
                       </li>
                       <li className="nav-item">
                         <a className="" href="#" data-toggle="tab" role="tab" data-target="#depositHistory">
-                          Deposit History
+                          Deposits
                         </a>
                       </li>
+                      {wallet.network === 'testnet' && (
+                        <li className="nav-item">
+                          <a className="" href="#" data-toggle="tab" role="tab" data-target="#getTokens" style={{ textAlign: 'right' }}>
+                            Get Tokens
+                          </a>
+                        </li>
+                      )}
                     </ul>
                     <div className="tab-content">
                       <div className="tab-pane active" id="deposit">
@@ -1464,6 +1494,31 @@ class PaymeterComponent extends Component {
                                     </tbody>
                                   </table>
                                 </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="tab-pane" id="getTokens">
+                        <div className="row">
+                          <div className="col-lg-12">
+                            <div className="card card-transparent">
+                              <div className="card-block" style={{ paddingBottom: '0px', alignItems: 'center' }}>
+                                <label> ETH Balance</label>
+                                <LaddaButton
+                                  loading={this.state[wallet._id + '_loader']}
+                                  data-size={S}
+                                  data-style={SLIDE_UP}
+                                  data-spinner-size={30}
+                                  data-spinner-lines={12}
+                                  className="btn btn-complete btn-cons m-t-10"
+                                  onClick={this.getTestNetEthBalance.bind(this, wallet.address, wallet._id)}
+                                  type="submit"
+                                >
+                                  <i className="fa fa-get-pocket" aria-hidden="true" />
+                                  &nbsp;&nbsp;Fetch Now
+                                </LaddaButton>
+                                {this.state[wallet._id + '_EthBal'] ? this.state[wallet._id + '_EthBal'] + ' ETH' : ''}
                               </div>
                             </div>
                           </div>
