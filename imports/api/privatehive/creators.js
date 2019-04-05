@@ -824,6 +824,38 @@ Creators.destroyKafka = async function({ locationCode, namespace, instanceId }) 
 
 Creators.deployKafka = async function({ locationCode, namespace, instanceId }) {
   try {
+    async function createConfigMap() {
+      return new Promise((resolve, reject) => {
+        HTTP.call(
+          'POST',
+          `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/configmaps`,
+          {
+            content: JSON.stringify({
+              kind: 'ConfigMap',
+              metadata: {
+                name: `broker-config-${instanceId}`,
+              },
+              apiVersion: 'v1',
+              data: {
+                'init.sh':
+                  '#!/bin/bash\nset -e\nset -x\ncp /etc/kafka-configmap/log4j.properties /etc/kafka/\nKAFKA_BROKER_ID=${HOSTNAME##*-}\nSEDS=("s/#init#broker.id=#init#/broker.id=$KAFKA_BROKER_ID/")\nLABELS="kafka-broker-id=$KAFKA_BROKER_ID"\nANNOTATIONS=""\nhash kubectl 2>/dev/null || {\n  SEDS+=("s/#init#broker.rack=#init#/#init#broker.rack=# kubectl not found in path/")\n} && {\n  ZONE=$(kubectl get node "$NODE_NAME" -o=go-template=\'{{index .metadata.labels "failure-domain.beta.kubernetes.io/zone"}}\')\n  if [ "x$ZONE" == "x<no value>" ]; then\n    SEDS+=("s/#init#broker.rack=#init#/#init#broker.rack=# zone label not found for node $NODE_NAME/")\n  else\n    SEDS+=("s/#init#broker.rack=#init#/broker.rack=$ZONE/")\n    LABELS="$LABELS kafka-broker-rack=$ZONE"\n  fi\n  OUTSIDE_HOST=$(kubectl get node "$NODE_NAME" -o jsonpath=\'{.status.addresses[?(@.type=="InternalIP")].address}\')\n  OUTSIDE_PORT=3240${KAFKA_BROKER_ID}\n  SEDS+=("s|#init#advertised.listeners=PLAINTEXT://#init#|advertised.listeners=PLAINTEXT://:9092,OUTSIDE://${OUTSIDE_HOST}:${OUTSIDE_PORT}|")\n  ANNOTATIONS="$ANNOTATIONS kafka-listener-outside-host=$OUTSIDE_HOST kafka-listener-outside-port=$OUTSIDE_PORT"\n  if [ ! -z "$LABELS" ]; then\n    kubectl -n $POD_NAMESPACE label pod $POD_NAME $LABELS || echo "Failed to label $POD_NAMESPACE.$POD_NAME - RBAC issue?"\n  fi\n  if [ ! -z "$ANNOTATIONS" ]; then\n    kubectl -n $POD_NAMESPACE annotate pod $POD_NAME $ANNOTATIONS || echo "Failed to annotate $POD_NAMESPACE.$POD_NAME - RBAC issue?"\n  fi\n}\nprintf \'%s\\n\' "${SEDS[@]}" | sed -f - /etc/kafka-configmap/server.properties > /etc/kafka/server.properties.tmp\n[ $? -eq 0 ] && mv /etc/kafka/server.properties.tmp /etc/kafka/server.properties',
+                'server.properties': `############################# Log Basics #############################\n# A comma seperated list of directories under which to store log files\n# Overrides log.dir\nlog.dirs=/var/lib/kafka/data/topics\n# The default number of log partitions per topic. More partitions allow greater\n# parallelism for consumption, but this will also result in more files across\n# the brokers.\nnum.partitions=12\ndefault.replication.factor=3\nmin.insync.replicas=2\nauto.create.topics.enable=false\n# The number of threads per data directory to be used for log recovery at startup and flushing at shutdown.\n# This value is recommended to be increased for installations with data dirs located in RAID array.\n#num.recovery.threads.per.data.dir=1\n############################# Server Basics #############################\n# The id of the broker. This must be set to a unique integer for each broker.\n#init#broker.id=#init#\n#init#broker.rack=#init#\n############################# Socket Server Settings #############################\n# The address the socket server listens on. It will get the value returned from \n# java.net.InetAddress.getCanonicalHostName() if not configured.\n#   FORMAT:\n#     listeners = listener_name://host_name:port\n#   EXAMPLE:\n#     listeners = PLAINTEXT://your.host.name:9092\n#listeners=PLAINTEXT://:9092\nlisteners=PLAINTEXT://:9092,OUTSIDE://:9094\n# Hostname and port the broker will advertise to producers and consumers. If not set, \n# it uses the value for "listeners" if configured.  Otherwise, it will use the value\n# returned from java.net.InetAddress.getCanonicalHostName().\n#advertised.listeners=PLAINTEXT://your.host.name:9092\n#init#advertised.listeners=PLAINTEXT://#init#\n# Maps listener names to security protocols, the default is for them to be the same. See the config documentation for more details\n#listener.security.protocol.map=PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_SSL:SASL_SSL\nlistener.security.protocol.map=PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_SSL:SASL_SSL,OUTSIDE:PLAINTEXT\ninter.broker.listener.name=PLAINTEXT\n# The number of threads that the server uses for receiving requests from the network and sending responses to the network\n#num.network.threads=3\n# The number of threads that the server uses for processing requests, which may include disk I/O\n#num.io.threads=8\n# The send buffer (SO_SNDBUF) used by the socket server\n#socket.send.buffer.bytes=102400\n# The receive buffer (SO_RCVBUF) used by the socket server\n#socket.receive.buffer.bytes=102400\n# The maximum size of a request that the socket server will accept (protection against OOM)\n#socket.request.max.bytes=104857600\n############################# Internal Topic Settings  #############################\n# The replication factor for the group metadata internal topics "__consumer_offsets" and "__transaction_state"\n# For anything other than development testing, a value greater than 1 is recommended for to ensure availability such as 3.\n#offsets.topic.replication.factor=1\n#transaction.state.log.replication.factor=1\n#transaction.state.log.min.isr=1\n############################# Log Flush Policy #############################\n# Messages are immediately written to the filesystem but by default we only fsync() to sync\n# the OS cache lazily. The following configurations control the flush of data to disk.\n# There are a few important trade-offs here:\n#    1. Durability: Unflushed data may be lost if you are not using replication.\n#    2. Latency: Very large flush intervals may lead to latency spikes when the flush does occur as there will be a lot of data to flush.\n#    3. Throughput: The flush is generally the most expensive operation, and a small flush interval may lead to excessive seeks.\n# The settings below allow one to configure the flush policy to flush data after a period of time or\n# every N messages (or both). This can be done globally and overridden on a per-topic basis.\n# The number of messages to accept before forcing a flush of data to disk\n#log.flush.interval.messages=10000\n# The maximum amount of time a message can sit in a log before we force a flush\n#log.flush.interval.ms=1000\n############################# Log Retention Policy #############################\n# The following configurations control the disposal of log segments. The policy can\n# be set to delete segments after a period of time, or after a given size has accumulated.\n# A segment will be deleted whenever *either* of these criteria are met. Deletion always happens\n# from the end of the log.\n# https://cwiki.apache.org/confluence/display/KAFKA/KIP-186%3A+Increase+offsets+retention+default+to+7+days\noffsets.retention.minutes=10080\n# The minimum age of a log file to be eligible for deletion due to age\nlog.retention.hours=-1\n# A size-based retention policy for logs. Segments are pruned from the log unless the remaining\n# segments drop below log.retention.bytes. Functions independently of log.retention.hours.\n#log.retention.bytes=1073741824\n# The maximum size of a log segment file. When this size is reached a new log segment will be created.\n#log.segment.bytes=1073741824\n# The interval at which log segments are checked to see if they can be deleted according\n# to the retention policies\n#log.retention.check.interval.ms=300000\n############################# Zookeeper #############################\n# Zookeeper connection string (see zookeeper docs for details).\n# This is a comma separated host:port pairs, each corresponding to a zk\n# server. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002".\n# You can also append an optional chroot string to the urls to specify the\n# root directory for all kafka znodes.\nzookeeper.connect=zk-${instanceId}-0.zk-svc-${instanceId}.${namespace}.svc.cluster.local:2181,zk-${instanceId}-1.zk-svc-${instanceId}.${namespace}.svc.cluster.local:2181,zk-${instanceId}-2.zk-svc-${instanceId}.${namespace}.svc.cluster.local:2181\n# Timeout in ms for connecting to zookeeper\n#zookeeper.connection.timeout.ms=6000\n############################# Group Coordinator Settings #############################\n# The following configuration specifies the time, in milliseconds, that the GroupCoordinator will delay the initial consumer rebalance.\n# The rebalance will be further delayed by the value of group.initial.rebalance.delay.ms as new members join the group, up to a maximum of max.poll.interval.ms.\n# The default value for this is 3 seconds.\n# We override this to 0 here as it makes for a better out-of-the-box experience for development and testing.\n# However, in production environments the default value of 3 seconds is more suitable as this will help to avoid unnecessary, and potentially expensive, rebalances during application startup.\n#group.initial.rebalance.delay.ms=0`,
+                'log4j.properties':
+                  "# Unspecified loggers and loggers with additivity=true output to server.log and stdout\n# Note that INFO only applies to unspecified loggers, the log level of the child logger is used otherwise\nlog4j.rootLogger=INFO, stdout\nlog4j.appender.stdout=org.apache.log4j.ConsoleAppender\nlog4j.appender.stdout.layout=org.apache.log4j.PatternLayout\nlog4j.appender.stdout.layout.ConversionPattern=[%d] %p %m (%c)%n\nlog4j.appender.kafkaAppender=org.apache.log4j.DailyRollingFileAppender\nlog4j.appender.kafkaAppender.DatePattern='.'yyyy-MM-dd-HH\nlog4j.appender.kafkaAppender.File=${kafka.logs.dir}/server.log\nlog4j.appender.kafkaAppender.layout=org.apache.log4j.PatternLayout\nlog4j.appender.kafkaAppender.layout.ConversionPattern=[%d] %p %m (%c)%n\nlog4j.appender.stateChangeAppender=org.apache.log4j.DailyRollingFileAppender\nlog4j.appender.stateChangeAppender.DatePattern='.'yyyy-MM-dd-HH\nlog4j.appender.stateChangeAppender.File=${kafka.logs.dir}/state-change.log\nlog4j.appender.stateChangeAppender.layout=org.apache.log4j.PatternLayout\nlog4j.appender.stateChangeAppender.layout.ConversionPattern=[%d] %p %m (%c)%n\nlog4j.appender.requestAppender=org.apache.log4j.DailyRollingFileAppender\nlog4j.appender.requestAppender.DatePattern='.'yyyy-MM-dd-HH\nlog4j.appender.requestAppender.File=${kafka.logs.dir}/kafka-request.log\nlog4j.appender.requestAppender.layout=org.apache.log4j.PatternLayout\nlog4j.appender.requestAppender.layout.ConversionPattern=[%d] %p %m (%c)%n\nlog4j.appender.cleanerAppender=org.apache.log4j.DailyRollingFileAppender\nlog4j.appender.cleanerAppender.DatePattern='.'yyyy-MM-dd-HH\nlog4j.appender.cleanerAppender.File=${kafka.logs.dir}/log-cleaner.log\nlog4j.appender.cleanerAppender.layout=org.apache.log4j.PatternLayout\nlog4j.appender.cleanerAppender.layout.ConversionPattern=[%d] %p %m (%c)%n\nlog4j.appender.controllerAppender=org.apache.log4j.DailyRollingFileAppender\nlog4j.appender.controllerAppender.DatePattern='.'yyyy-MM-dd-HH\nlog4j.appender.controllerAppender.File=${kafka.logs.dir}/controller.log\nlog4j.appender.controllerAppender.layout=org.apache.log4j.PatternLayout\nlog4j.appender.controllerAppender.layout.ConversionPattern=[%d] %p %m (%c)%n\nlog4j.appender.authorizerAppender=org.apache.log4j.DailyRollingFileAppender\nlog4j.appender.authorizerAppender.DatePattern='.'yyyy-MM-dd-HH\nlog4j.appender.authorizerAppender.File=${kafka.logs.dir}/kafka-authorizer.log\nlog4j.appender.authorizerAppender.layout=org.apache.log4j.PatternLayout\nlog4j.appender.authorizerAppender.layout.ConversionPattern=[%d] %p %m (%c)%n\n# Change the two lines below to adjust ZK client logging\nlog4j.logger.org.I0Itec.zkclient.ZkClient=INFO\nlog4j.logger.org.apache.zookeeper=INFO\n# Change the two lines below to adjust the general broker logging level (output to server.log and stdout)\nlog4j.logger.kafka=INFO\nlog4j.logger.org.apache.kafka=INFO\n# Change to DEBUG or TRACE to enable request logging\nlog4j.logger.kafka.request.logger=WARN, requestAppender\nlog4j.additivity.kafka.request.logger=false\n# Uncomment the lines below and change log4j.logger.kafka.network.RequestChannel$ to TRACE for additional output\n# related to the handling of requests\n#log4j.logger.kafka.network.Processor=TRACE, requestAppender\n#log4j.logger.kafka.server.KafkaApis=TRACE, requestAppender\n#log4j.additivity.kafka.server.KafkaApis=false\nlog4j.logger.kafka.network.RequestChannel$=WARN, requestAppender\nlog4j.additivity.kafka.network.RequestChannel$=false\nlog4j.logger.kafka.controller=TRACE, controllerAppender\nlog4j.additivity.kafka.controller=false\nlog4j.logger.kafka.log.LogCleaner=INFO, cleanerAppender\nlog4j.additivity.kafka.log.LogCleaner=false\nlog4j.logger.state.change.logger=TRACE, stateChangeAppender\nlog4j.additivity.state.change.logger=false\n# Change to DEBUG to enable audit log for the authorizer\nlog4j.logger.kafka.authorizer.logger=WARN, authorizerAppender\nlog4j.additivity.kafka.authorizer.logger=false",
+              },
+            }),
+          },
+          (err, response) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          }
+        );
+      });
+    }
+
     async function createService() {
       return new Promise((resolve, reject) => {
         HTTP.call(
@@ -843,7 +875,7 @@ Creators.deployKafka = async function({ locationCode, namespace, instanceId }) {
               spec: {
                 ports: [
                   {
-                    port: 9093,
+                    port: 9092,
                     name: 'server',
                   },
                 ],
@@ -874,14 +906,14 @@ Creators.deployKafka = async function({ locationCode, namespace, instanceId }) {
           'POST',
           `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1/namespaces/${namespace}/statefulsets`,
           {
-            content: `
+            /*content: `
               apiVersion: apps/v1
               kind: StatefulSet
               metadata:
                 name: kafka-${instanceId}
               spec:
                 serviceName: kafka-svc-${instanceId}
-                replicas: 3
+                replicas: 4
                 selector:
                   matchLabels:
                     app: kafka-${instanceId}
@@ -1021,7 +1053,206 @@ Creators.deployKafka = async function({ locationCode, namespace, instanceId }) {
                     resources:
                       requests:
                         storage: 10Gi
-            `,
+            `,*/
+            content: JSON.stringify({
+              apiVersion: 'apps/v1',
+              kind: 'StatefulSet',
+              metadata: {
+                name: `kafka-${instanceId}`,
+              },
+              spec: {
+                selector: {
+                  matchLabels: {
+                    app: `kafka-${instanceId}`,
+                  },
+                },
+                serviceName: `kafka-svc-${instanceId}`,
+                replicas: 3,
+                updateStrategy: {
+                  type: 'OnDelete',
+                },
+                template: {
+                  metadata: {
+                    labels: {
+                      app: `kafka-${instanceId}`,
+                    },
+                    annotations: null,
+                  },
+                  spec: {
+                    terminationGracePeriodSeconds: 30,
+                    serviceAccountName: 'dev-webapp',
+                    initContainers: [
+                      {
+                        name: 'init-config',
+                        image: 'solsson/kafka-initutils@sha256:18bf01c2c756b550103a99b3c14f741acccea106072cd37155c6d24be4edd6e2',
+                        env: [
+                          {
+                            name: 'NODE_NAME',
+                            valueFrom: {
+                              fieldRef: {
+                                fieldPath: 'spec.nodeName',
+                              },
+                            },
+                          },
+                          {
+                            name: 'POD_NAME',
+                            valueFrom: {
+                              fieldRef: {
+                                fieldPath: 'metadata.name',
+                              },
+                            },
+                          },
+                          {
+                            name: 'POD_NAMESPACE',
+                            valueFrom: {
+                              fieldRef: {
+                                fieldPath: 'metadata.namespace',
+                              },
+                            },
+                          },
+                        ],
+                        command: ['/bin/bash', '/etc/kafka-configmap/init.sh'],
+                        volumeMounts: [
+                          {
+                            name: 'configmap',
+                            mountPath: '/etc/kafka-configmap',
+                          },
+                          {
+                            name: 'config',
+                            mountPath: '/etc/kafka',
+                          },
+                        ],
+                      },
+                    ],
+                    containers: [
+                      {
+                        name: 'broker',
+                        image: 'solsson/kafka:1.0.1@sha256:1a4689d49d6274ac59b9b740f51b0408e1c90a9b66d16ad114ee9f7193bab111',
+                        env: [
+                          {
+                            name: 'KAFKA_LOG4J_OPTS',
+                            value: '-Dlog4j.configuration=file:/etc/kafka/log4j.properties',
+                          },
+                          {
+                            name: 'JMX_PORT',
+                            value: '5555',
+                          },
+                          {
+                            name: 'KAFKA_LOG_RETENTION_MS',
+                            value: '-1',
+                          },
+                          {
+                            name: 'KAFKA_MESSAGE_MAX_BYTES',
+                            value: '103809024',
+                          },
+                          {
+                            name: 'KAFKA_REPLICA_FETCH_MAX_BYTES',
+                            value: '103809024',
+                          },
+                          {
+                            name: 'KAFKA_BROKER_ID',
+                            value: '0',
+                          },
+                          {
+                            name: 'KAFKA_ZOOKEEPER_CONNECT',
+                            value: `zk-${instanceId}-0.zk-svc-${instanceId}.${namespace}.svc.cluster.local:2181,zk-${instanceId}-1.zk-svc-${instanceId}.${namespace}.svc.cluster.local:2181,zk-${instanceId}-2.zk-svc-${instanceId}.${namespace}.svc.cluster.local:2181`,
+                          },
+                          {
+                            name: 'KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE',
+                            value: 'false',
+                          },
+                          {
+                            name: 'KAFKA_DEFAULT_REPLICATION_FACTOR',
+                            value: '3',
+                          },
+                          {
+                            name: 'KAFKA_MIN_INSYNC_REPLICAS',
+                            value: '2',
+                          },
+                          {
+                            name: 'KAFKA_LISTENERS',
+                            value: 'INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:9094',
+                          },
+                          {
+                            name: 'KAFKA_LISTENER_SECURITY_PROTOCOL_MAP',
+                            value: 'INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT',
+                          },
+                          {
+                            name: 'KAFKA_INTER_BROKER_LISTENER_NAME',
+                            value: 'INSIDE',
+                          },
+                        ],
+                        ports: [
+                          {
+                            name: 'inside',
+                            containerPort: 9092,
+                          },
+                          {
+                            name: 'outside',
+                            containerPort: 9094,
+                          },
+                          {
+                            name: 'jmx',
+                            containerPort: 5555,
+                          },
+                        ],
+                        command: ['./bin/kafka-server-start.sh', '/etc/kafka/server.properties'],
+                        resources: {
+                          requests: {
+                            cpu: '100m',
+                            memory: '512Mi',
+                          },
+                        },
+                        readinessProbe: {
+                          tcpSocket: {
+                            port: 9092,
+                          },
+                          timeoutSeconds: 1,
+                        },
+                        volumeMounts: [
+                          {
+                            name: 'config',
+                            mountPath: '/etc/kafka',
+                          },
+                          {
+                            name: 'data',
+                            mountPath: '/var/lib/kafka/data',
+                          },
+                        ],
+                      },
+                    ],
+                    volumes: [
+                      {
+                        name: 'configmap',
+                        configMap: {
+                          name: `broker-config-${instanceId}`,
+                        },
+                      },
+                      {
+                        name: 'config',
+                        emptyDir: {},
+                      },
+                    ],
+                  },
+                },
+                volumeClaimTemplates: [
+                  {
+                    metadata: {
+                      name: 'data',
+                    },
+                    spec: {
+                      accessModes: ['ReadWriteOnce'],
+                      storageClassName: 'gp2-storage-class',
+                      resources: {
+                        requests: {
+                          storage: '200Gi',
+                        },
+                      },
+                    },
+                  },
+                ],
+              },
+            }),
             headers: {
               'Content-Type': 'application/yaml',
             },
@@ -1037,6 +1268,7 @@ Creators.deployKafka = async function({ locationCode, namespace, instanceId }) {
       });
     }
 
+    await createConfigMap();
     await createService();
     await createStatefulSet();
 
@@ -1183,6 +1415,10 @@ Creators.createOrdererDeployment = async function createDeployment({
                       {
                         name: 'MONGO_URL',
                         value: `${process.env.MONGO_URL}`,
+                      },
+                      {
+                        name: 'NAMESPACE',
+                        value: namespace,
                       },
                     ],
                     lifecycle: {
