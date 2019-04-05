@@ -38,6 +38,7 @@ PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, pee
   const namespace = Config.namespace;
   let ordererNodePort;
   try {
+    await Creators.createOrdererRbac({ locationCode, namespace: Config.namespace, instanceId });
     await Creators.deployZookeeper({ locationCode, instanceId, namespace: Config.namespace });
     await Creators.deployKafka({ locationCode, namespace: Config.namespace, instanceId });
 
