@@ -1282,7 +1282,7 @@ Creators.createKafkaTokenRole = async function({ locationCode, namespace, instan
   return new Promise((resolve, reject) => {
     HTTP.call(
       'POST',
-      `${Config.kubeRestApiHost(locationCode)}/apis/rbac.authorization.k8s.io/v1beta1/namespaces/${namespace}/role`,
+      `${Config.kubeRestApiHost(locationCode)}/apis/rbac.authorization.k8s.io/v1beta1/namespaces/${namespace}/roles`,
       {
         content: JSON.stringify({
           kind: 'Role',
@@ -1317,7 +1317,7 @@ Creators.createKafkaTokenServiceAccount = async ({ locationCode, namespace, inst
   return new Promise((resolve, reject) => {
     HTTP.call(
       'POST',
-      `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/serviceaccount`,
+      `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/serviceaccounts`,
       {
         content: JSON.stringify({
           apiVersion: 'v1',
@@ -1346,7 +1346,7 @@ Creators.createKafkaTokenRoleBinding = async ({ locationCode, namespace, instanc
   return new Promise((resolve, reject) => {
     HTTP.call(
       'POST',
-      `${Config.kubeRestApiHost(locationCode)}/apis/rbac.authorization.k8s.io/v1beta1/namespaces/${namespace}/rolebinding`,
+      `${Config.kubeRestApiHost(locationCode)}/apis/rbac.authorization.k8s.io/v1beta1/namespaces/${namespace}/rolebindings`,
       {
         content: JSON.stringify({
           kind: 'RoleBinding',
@@ -1386,7 +1386,7 @@ Creators.createKafkaTokenClusterRoleBinding = async ({ locationCode, namespace, 
   return new Promise((resolve, reject) => {
     HTTP.call(
       'POST',
-      `${Config.kubeRestApiHost(locationCode)}/apis/rbac.authorization.k8s.io/v1beta1/clusterrolebinding`,
+      `${Config.kubeRestApiHost(locationCode)}/apis/rbac.authorization.k8s.io/v1beta1/clusterrolebindings`,
       {
         content: JSON.stringify({
           kind: 'ClusterRoleBinding',
@@ -1429,6 +1429,24 @@ Creators.createOrdererRbac = async ({ locationCode, namespace, instanceId }) => 
   await Creators.createKafkaTokenRoleBinding(params);
   await Creators.createKafkaTokenClusterRoleBinding(params);
 
+  return true;
+};
+
+Creators.destroyOrdererRbac = async ({ locationCode, namespace, instanceId }) => {
+  const urls = [
+    `${Config.kubeRestApiHost(locationCode)}/apis/rbac.authorization.k8s.io/v1beta1/namespaces/${namespace}/roles/kafka-token-${instanceId}`,
+    `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/serviceaccounts/kafka-token-${instanceId}`,
+    `${Config.kubeRestApiHost(locationCode)}/apis/rbac.authorization.k8s.io/v1beta1/namespaces/${namespace}/rolebindings/kafka-token-${instanceId}`,
+    `${Config.kubeRestApiHost(locationCode)}/apis/rbac.authorization.k8s.io/v1beta1/clusterrolebindings/kafka-token-nodes-${instanceId}`,
+  ];
+
+  await Bluebird.each(urls, url => {
+    return new Promise(resolve => {
+      HTTP.call('DELETE', url, (err, res) => {
+        resolve();
+      });
+    });
+  });
   return true;
 };
 

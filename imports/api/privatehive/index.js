@@ -67,6 +67,7 @@ PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, pee
     await Creators.deleteDeployment({ locationCode, namespace, name: `${instanceId}-privatehive` });
     await Creators.deletePrivatehiveReplicaSets({ locationCode, namespace, instanceId });
     await Creators.deleteIngress({ locationCode, namespace, name: `${instanceId}-privatehive` });
+    await Creators.destroyOrdererRbac({ locationCode, namespace, instanceId });
 
     throw new Meteor.Error(err);
   }
