@@ -585,7 +585,7 @@ Creators.deleteVolumesByLabel = async ({ locationCode, namespace, label }) => {
 
 Creators.destroyZookeper = async function({ locationCode, namespace, instanceId }) {
   await Creators.deleteService({ locationCode, namespace, name: `zk-svc-${instanceId}` });
-  await Creators.deleteStatefulSet({ locationCode, namespace, name: `zk%3D${instanceId}` });
+  await Creators.deleteStatefulSet({ locationCode, namespace, name: `zk-${instanceId}` });
   await Creators.deleteVolumesByLabel({ locationCode, namespace, label: `app%3Dzk-${instanceId}` });
   return true;
 };
@@ -891,6 +891,7 @@ Creators.deployKafka = async function({ locationCode, namespace, instanceId }) {
                       app: kafka-${instanceId}
                   spec:
                     terminationGracePeriodSeconds: 300
+                    serviceAccountName: dev-webapp
                     containers:
                     - name: k8skafka
                       imagePullPolicy: Always

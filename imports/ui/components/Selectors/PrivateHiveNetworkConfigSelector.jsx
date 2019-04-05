@@ -236,7 +236,9 @@ class PrivateHiveNetworkConfigSelector extends Component {
                     key={this.props.networks && this.props.networks.length}
                     networks={this.props.networks}
                     onValueChangeListener={network => {
-                      this.peerId = network.instanceId;
+                      if (network) {
+                        this.peerId = network.instanceId;
+                      }
                       this.onConfigChange();
                     }}
                     label="Peer Organization ID"
