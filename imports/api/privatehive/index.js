@@ -17,7 +17,14 @@ PrivateHive.createPeer = async ({ locationCode }) => {
     await Creators.createPersistentvolumeclaims({ locationCode, namespace: Config.namespace, instanceId, storage: 50 });
     peerDetails = await Creators.createPeerService({ locationCode, namespace: Config.namespace, instanceId });
 
-    await Creators.createPeerDeployment({ locationCode, namespace: Config.namespace, instanceId, workerNodeIP, anchorCommPort: peerDetails.peerGRPCAPINodePort });
+    await Creators.createPeerDeployment({
+      locationCode,
+      namespace: Config.namespace,
+      instanceId,
+      workerNodeIP,
+      anchorCommPort: peerDetails.peerGRPCAPINodePort,
+      chaincodePort: peerDetails.chaincodeListenNodePort,
+    });
     await Creators.createAPIIngress({ locationCode, namespace, instanceId });
 
     return { instanceId, peerDetails };

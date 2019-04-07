@@ -88,6 +88,11 @@ Creators.createPeerService = async function({ locationCode, namespace, instanceI
                 targetPort: 7054,
                 name: 'ca',
               },
+              {
+                port: 7052,
+                targetPort: 7052,
+                name: 'chaincode',
+              },
             ],
             selector: {
               app: `${instanceId}-privatehive`,
@@ -108,7 +113,8 @@ Creators.createPeerService = async function({ locationCode, namespace, instanceI
             } else {
               const peerAPINodePort = response.data.spec.ports[0].nodePort;
               const peerGRPCAPINodePort = response.data.spec.ports[1].nodePort;
-              resolve({ peerAPINodePort, peerGRPCAPINodePort });
+              const chaincodeListenNodePort = response.data.spec.ports[3].nodePort;
+              resolve({ peerAPINodePort, peerGRPCAPINodePort, chaincodeListenNodePort });
             }
           });
         }
@@ -221,7 +227,7 @@ Creators.deleteDeployment = function({ locationCode, namespace, name }) {
   });
 };
 
-Creators.createPeerDeployment = async function({ locationCode, namespace, instanceId, anchorCommPort, workerNodeIP }) {
+Creators.createPeerDeployment = async function({ locationCode, namespace, instanceId, anchorCommPort, chaincodePort, workerNodeIP }) {
   return new Promise((resolve, reject) => {
     HTTP.call(
       'POST',
@@ -297,7 +303,7 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                       },
                       {
                         name: 'CORE_PEER_ADDRESS',
-                        value: 'localhost:7051',
+                        value: `${workerNodeIP}:${anchorCommPort}`,
                       },
                       {
                         name: 'CORE_PEER_LOCALMSPID',
@@ -333,6 +339,14 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                         name: 'privatehive-dir',
                         mountPath: '/etc/hyperledger/privatehive',
                       },
+                      {
+                        mountPath: '/host/var/run/',
+                        name: 'run',
+                      },
+                      {
+                        name: 'shared-chaincode',
+                        mountPath: '/opt/gopath/src/',
+                      },
                     ],
                     lifecycle: {
                       postStart: {
@@ -357,15 +371,18 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                         containerPort: 7053,
                       },
                     ],
-                    workingDir: '/opt/gopath/src/github.com/hyperledger/fabric/peer',
                     env: [
                       {
                         name: 'CORE_VM_ENDPOINT',
                         value: 'unix:///host/var/run/docker.sock',
                       },
                       {
-                        name: 'CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE',
-                        value: 'artifacts_default',
+                        name: 'CORE_CHAINCODE_EXECUTETIMEOUT',
+                        value: '300s',
+                      },
+                      {
+                        name: 'CORE_VM_ENDCORE_CHAINCODE_DEPLOYTIMEOUTPOINT',
+                        value: '300s',
                       },
                       {
                         name: 'CORE_LOGGING_LEVEL',
@@ -389,7 +406,11 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                       },
                       {
                         name: 'CORE_PEER_ADDRESS',
-                        value: `localhost:7051`,
+                        value: `${workerNodeIP}:${anchorCommPort}`,
+                      },
+                      {
+                        name: 'CORE_PEER_CHAINCODELISTENADDRESS',
+                        value: `0.0.0.0:7052`,
                       },
                       {
                         name: 'CORE_PEER_GOSSIP_EXTERNALENDPOINT',
@@ -399,11 +420,23 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                         name: 'CORE_PEER_FILESYSTEMPATH',
                         value: '/etc/hyperledger/privatehive/ledgerData',
                       },
+                      {
+                        name: 'GOPATH',
+                        value: '/opt/gopath',
+                      },
                     ],
                     volumeMounts: [
                       {
                         name: 'privatehive-dir',
                         mountPath: '/etc/hyperledger/privatehive',
+                      },
+                      {
+                        mountPath: '/host/var/run/',
+                        name: 'run',
+                      },
+                      {
+                        name: 'shared-chaincode',
+                        mountPath: '/opt/gopath/src/',
                       },
                     ],
                   },
@@ -453,6 +486,16 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                     persistentVolumeClaim: {
                       claimName: `${instanceId}-pvc`,
                     },
+                  },
+                  {
+                    name: 'run',
+                    hostPath: {
+                      path: '/run/',
+                    },
+                  },
+                  {
+                    name: 'shared-chaincode',
+                    emptyDir: {},
                   },
                 ],
                 imagePullSecrets: [
@@ -1396,10 +1439,6 @@ Creators.createOrdererDeployment = async function createDeployment({
                         value: 'cli',
                       },
                       {
-                        name: 'CORE_PEER_ADDRESS',
-                        value: 'localhost:7051',
-                      },
-                      {
                         name: 'CORE_PEER_LOCALMSPID',
                         value: `${instanceId.toPascalCase()}`,
                       },
@@ -1449,7 +1488,6 @@ Creators.createOrdererDeployment = async function createDeployment({
                         containerPort: 7050,
                       },
                     ],
-                    workingDir: '/opt/gopath/src/github.com/hyperledger/fabric/orderers',
                     env: [
                       {
                         name: 'ORDERER_GENERAL_LOGLEVEL',
