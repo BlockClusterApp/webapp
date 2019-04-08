@@ -14,6 +14,7 @@ Invoice.PaymentStatusMapping = {
   WaivedOff: 5,
   Refunded: 6,
   OfflineUser: 7,
+  Transient: 8, // Addon attached but invoice for next cycle. Show this as unpaid in customer dashboard
 };
 
 Invoice.EmailMapping = {
