@@ -228,6 +228,7 @@ Creators.deleteDeployment = function({ locationCode, namespace, name }) {
 };
 
 Creators.createPeerDeployment = async function({ locationCode, namespace, instanceId, anchorCommPort, chaincodePort, workerNodeIP }) {
+  console.log(chaincodePort);
   return new Promise((resolve, reject) => {
     HTTP.call(
       'POST',
@@ -302,10 +303,6 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                         value: 'cli',
                       },
                       {
-                        name: 'CORE_PEER_ADDRESS',
-                        value: `${workerNodeIP}:${anchorCommPort}`,
-                      },
-                      {
                         name: 'CORE_PEER_LOCALMSPID',
                         value: `${instanceId.toPascalCase()}`,
                       },
@@ -364,7 +361,7 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                   {
                     name: 'peer',
                     image: 'hyperledger/fabric-peer',
-                    args: ['peer', 'node', 'start'],
+                    args: ['peer', 'node', 'start', '--peer-chaincodedev=true'],
                     ports: [
                       {
                         containerPort: 7051,
@@ -407,6 +404,22 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                       {
                         name: 'CORE_PEER_ADDRESS',
                         value: `${workerNodeIP}:${anchorCommPort}`,
+                      },
+                      {
+                        name: 'CORE_PEER_CHAINCODEADDRESS',
+                        value: `${workerNodeIP}:${chaincodePort}`,
+                      },
+                      {
+                        name: 'CORE_VM_DOCKER_ATTACHSTDOUT',
+                        value: 'true',
+                      },
+                      {
+                        name: 'CORE_CHAINCODE_LOGGING_LEVEL',
+                        value: 'debug',
+                      },
+                      {
+                        name: 'CORE_CHAINCODE_LOGGING_SHIM',
+                        value: 'debug',
                       },
                       {
                         name: 'CORE_PEER_CHAINCODELISTENADDRESS',
@@ -1432,7 +1445,7 @@ Creators.createOrdererDeployment = async function createDeployment({
                       },
                       {
                         name: 'CORE_LOGGING_LEVEL',
-                        value: 'info',
+                        value: 'debug',
                       },
                       {
                         name: 'CORE_PEER_ID',
