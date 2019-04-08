@@ -35,22 +35,6 @@ class ManageChaincode extends Component {
 
   getAssetTypes() {
     const { network } = this.props;
-    // let url = `https://${network.properties.apiEndPoint}/chaincode/installed`;
-    // HTTP.get(
-    //   url,
-    //   {
-    //     headers: {
-    //       'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
-    //     },
-    //   },
-    //   (err, res) => {
-    //     if (!err) {
-    //       this.setState({
-    //         chaincodes: res.data.data.chaincodes,
-    //       });
-    //     }
-    //   }
-    // );
     Meteor.call('fetchChaincodes', { networkId: network.instanceId }, (err, res) => {
       if (err) {
         return notifications.error(err.reason);
@@ -61,7 +45,8 @@ class ManageChaincode extends Component {
     });
   }
 
-  installChaincode = chaincodeName => {
+  installChaincode = () => {
+    const chaincodeName = this.state.modalChaincodeName;
     this.setState({
       [`loading_${chaincodeName}`]: true,
     });
@@ -80,10 +65,13 @@ class ManageChaincode extends Component {
     this.setState({
       [`loading_${chaincodeName}`]: true,
     });
+    if (!this.channelName.value) {
+      return notifications.error('Channel required');
+    }
     Meteor.call(
       'instantiateChaincode',
       {
-        name: chaincodeName,
+        name: this.state.modalChaincodeName,
         networkId: this.props.match.params.id,
         channelName: this.channelName.value,
         functionName: this.functionName.value,
@@ -98,13 +86,103 @@ class ManageChaincode extends Component {
           return notifications.error(err.reason);
         }
         notifications.success('Instantiated');
+        $('#chaincode_modal').modal('hide');
       }
     );
   };
 
   render() {
+    let Modal = (
+      <div className="modal fade slide-right" id="chaincode_modal" tabIndex="-1" role="dialog" aria-hidden="true">
+        <div className="modal-dialog modal-md">
+          <div className="modal-content-wrapper">
+            <div className="modal-content">
+              <button type="button" className="close" data-dismiss="modal" aria-hidden="true">
+                <i className="pg-close fs-14" />
+              </button>
+              <div className="container-md-height full-height">
+                <div className="row-md-height">
+                  <div className="modal-body col-md-height col-middle">
+                    <h3>
+                      Instantiate Chaincode <b>{this.state.modalChaincodeName}</b>
+                    </h3>
+                    <br />
+                    <div className="row clearfix">
+                      <div className="col-md-12">
+                        <div className="form-group form-group-default input-group">
+                          <div className="form-input-group">
+                            <label>Channel Name</label>
+                            <input type="text" className="form-control" name="projectName" ref={input => (this.channelName = input)} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="row clearfix">
+                      <div className="col-md-12">
+                        <div className="form-group form-group-default input-group">
+                          <div className="form-input-group">
+                            <label>Function name</label>
+                            <input type="text" className="form-control" name="projectName" ref={input => (this.functionName = input)} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="row clearfix">
+                      <div className="col-md-12">
+                        <div className="form-group form-group-default input-group">
+                          <div className="form-input-group">
+                            <label>Args</label>
+                            <input type="text" className="form-control" name="projectName" ref={input => (this.args = input)} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="row clearfix">
+                      <div className="col-md-12">
+                        <div className="form-group form-group-default input-group">
+                          <div className="form-input-group">
+                            <label>Endorsment Policy</label>
+                            <input type="text" className="form-control" name="projectName" ref={input => (this.endorsmentPolicy = input)} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <br />
+                    <LaddaButton
+                      loading={this.state[`loading_${this.state.modalChaincodeName}`]}
+                      data-size={S}
+                      data-style={SLIDE_UP}
+                      data-spinner-size={30}
+                      data-spinner-lines={12}
+                      className="btn btn-success"
+                      onClick={this.instantiateChaincode}
+                    >
+                      <i className="fa fa-circle-plus" aria-hidden="true" />
+                      &nbsp;&nbsp;Instantiate
+                    </LaddaButton>
+                    &nbsp;
+                    <button
+                      type="button"
+                      className="btn btn-default"
+                      data-dismiss="modal"
+                      onClick={() => {
+                        $('#chaincode_modal').modal('hide');
+                      }}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
     return (
       <div className="assetsStats content">
+        {Modal}
         <div className="m-t-20 container-fluid container-fixed-lg bg-white">
           <div className="row dashboard">
             <div className="col-lg-12">
@@ -171,7 +249,10 @@ class ManageChaincode extends Component {
                                           onClick={this.onSubmit}
                                           className="btn btn-primary"
                                           onClick={() => {
-                                            this.instantiateChaincode(cc.name);
+                                            this.setState({
+                                              modalChaincodeName: cc.name,
+                                            });
+                                            $('#chaincode_modal').modal('show');
                                           }}
                                         >
                                           <i className="fa fa-save" aria-hidden="true" />

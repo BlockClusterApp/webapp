@@ -21,7 +21,24 @@ function uploadFile(fileName, content) {
   });
 }
 
-Operations.fetchChannels = async ({ networkId }) => {};
+Operations.fetchChannels = async ({ networkId }) => {
+  const userId = Meteor.userId();
+
+  const network = PrivatehivePeers.findOne({
+    instanceId: networkId,
+    userId,
+  });
+
+  if (!network) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+
+  return request({
+    uri: `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/channels/list`,
+    method: 'GET',
+    json: true,
+  });
+};
 
 Operations.addChaincode = async ({ file, content, name, type, networkId }) => {
   const userId = Meteor.userId();
@@ -70,7 +87,6 @@ Operations.fetchChaincodes = async ({ networkId }) => {
 
   const res = await request.get(`http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/chaincodes/list`);
 
-  console.log(res);
   return JSON.parse(res);
 };
 
@@ -127,4 +143,5 @@ Meteor.methods({
   fetchChaincodes: Operations.fetchChaincodes,
   installChaincode: Operations.installChaincode,
   instantiateChaincode: Operations.instantiateChaincode,
+  fetchChannels: Operations.fetchChannels,
 });
