@@ -28,17 +28,17 @@ class CreateChannelCode extends Component {
         error: 'Name is required',
       });
     }
-    if (!this.chainCodeVersion.value) {
-      return this.setState({
-        error: 'Version is required',
-      });
-    }
+    // if (!this.chainCodeVersion.value) {
+    //   return this.setState({
+    //     error: 'Version is required',
+    //   });
+    // }
 
-    if (!this.chaincodePath.value) {
-      return this.setState({
-        error: 'Path is required',
-      });
-    }
+    // if (!this.chaincodePath.value) {
+    //   return this.setState({
+    //     error: 'Path is required',
+    //   });
+    // }
 
     if (!this.chaincodeFile.files[0]) {
       return this.setState({
@@ -51,61 +51,32 @@ class CreateChannelCode extends Component {
       loading: true,
     });
 
-    const { network } = this.props;
-
-    console.log('Chaincodes', this.chaincodeFile.files[0]);
-
-    const form = new FormData();
-    form.append('chaincode', this.chaincodeFile.files[0]);
-    form.append('name', this.chaincodeName.value);
-    form.append('type', this.chaincodeType.value);
-    form.append('version', this.chainCodeVersion.value);
-    form.append('ccPath', this.chaincodePath.value);
-
-    fetch(`https://${network.properties.apiEndPoint}/chaincode/install`, {
-      method: 'POST',
-      headers: {
-        'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
-      },
-      body: form,
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          notifications.success('Installed chaincode');
-        } else {
-          notifications.error(data.error);
+    const reader = new FileReader();
+    reader.onload = fileLoadEvent => {
+      Meteor.call(
+        'addChaincode',
+        {
+          file: this.chaincodeFile.files[0],
+          content: reader.result,
+          name: this.chaincodeName.value,
+          type: this.chaincodeType.value,
+          networkId: this.props.match.params.id,
+          // version: this.chainCodeVersion.value,
+          // ccPath: this.chaincodePath.value,
+        },
+        (err, res) => {
+          this.setState({
+            loading: false,
+          });
+          if (err) {
+            return notifications.error(err.reason);
+          }
+          return notifications.success('Chaincode added');
         }
-        this.setState({
-          loading: false,
-        });
-      })
-      .catch(err => {
-        notifications.error(err.toString());
-        this.setState({
-          loading: false,
-        });
-      });
-    // HTTP.call(
-    //   'POST',
-    //   url,
-    //   {
-    //     headers: {
-    //
-    //     },
-    //     data: {
-    //       channelName: this.channelName.value,
-    //       externalBroker: network.properties.externalKafkaBroker,
-    //       ordererOrg: network.isJoin ? '' : network.instanceId.replace('ph-', ''),
-    //     },
-    //   },
-    //   (err, res) => {
-    //     if (err) {
-    //       return notifications.error(err.reason);
-    //     }
-    //     return notifications.success('Proposal sent');
-    //   }
-    // );
+      );
+    };
+
+    reader.readAsBinaryString(this.chaincodeFile.files[0]);
   };
 
   render() {
@@ -179,7 +150,7 @@ class CreateChannelCode extends Component {
                   </div>
                 </div>
               </div>
-              <div className="row clearfix">
+              {/* <div className="row clearfix">
                 <div className="col-md-12">
                   <div className="form-group form-group-default required">
                     <label>Chaincode Version</label>
@@ -195,8 +166,8 @@ class CreateChannelCode extends Component {
                     />
                   </div>
                 </div>
-              </div>
-              <div className="row clearfix">
+              </div> */}
+              {/* <div className="row clearfix">
                 <div className="col-md-12">
                   <div className="form-group form-group-default required">
                     <label>Chaincode Path</label>
@@ -212,7 +183,7 @@ class CreateChannelCode extends Component {
                     />
                   </div>
                 </div>
-              </div>
+              </div> */}
               <div className="row clearfix">
                 <div className="col-md-12">
                   <div className="form-group form-group-default ">
@@ -240,6 +211,8 @@ class CreateChannelCode extends Component {
                       ref={input => (this.chaincodeType = input)}
                     >
                       <option value="golang">Go Lang</option>
+                      <option value="javascript">JavaScript</option>
+                      <option value="java">Java</option>
                     </select>
                   </div>
                 </div>
@@ -289,18 +262,7 @@ export default withTracker(props => {
       ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true })
         .fetch()
         .map(p => ({ ...p, type: 'peer' })),
-      // ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true })
-      //   .fetch()
-      //   .map(p => ({ ...p, type: 'orderer' })),
     ][0],
-    // networks: [
-    //   ...PrivatehivePeers.find({ userId: Meteor.userId(), active: true })
-    //     .fetch()
-    //     .map(p => ({ ...p, type: 'peer' })),
-    //   ...PrivatehiveOrderers.find({ userId: Meteor.userId(), active: true })
-    //     .fetch()
-    //     .map(p => ({ ...p, type: 'orderer' })),
-    // ],
     subscriptions: [
       Meteor.subscribe(
         'privatehive',

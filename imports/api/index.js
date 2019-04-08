@@ -8,4 +8,5 @@ require('./paymeter.js');
 require('./server-functions/user');
 require('./communication/webhook');
 require('./privatehive');
+require('./privatehive/node-operations');
 require('./paymeter');

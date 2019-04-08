@@ -76,7 +76,7 @@ import PrivateHiveChannelManagement from '../../pages/privatehive/ManageChannels
 import PrivateHiveChaincodeManagement from '../../pages/privatehive/ManageChaincode';
 import PrivateHiveChannelCreate from '../../pages/privatehive/CreateChannel';
 import PrivateHiveSecurity from '../../pages/privatehive/Security';
-import PrivateHiveChaincodeCreate from '../../pages/privatehive/CreateChancode';
+import PrivateHiveChaincodeCreate from '../../pages/privatehive/CreateChaincode';
 
 export default withRouter(
   class Main extends Component {
