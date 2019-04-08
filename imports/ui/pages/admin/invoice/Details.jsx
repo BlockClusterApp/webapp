@@ -61,6 +61,8 @@ class InvoiceDetails extends Component {
         return <span className="label label-danger">Waived Off</span>;
       case 6:
         return <span className="label label-danger">Refunded</span>;
+      case 8:
+        return <span className="label label-danger">Addon Attached</span>;
       default:
         return null;
     }
