@@ -45,6 +45,7 @@ PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, pee
   const namespace = Config.namespace;
   let ordererNodePort;
   try {
+    await Creators.createOrdererRbac({ locationCode, namespace: Config.namespace, instanceId });
     await Creators.deployZookeeper({ locationCode, instanceId, namespace: Config.namespace });
     await Creators.deployKafka({ locationCode, namespace: Config.namespace, instanceId });
 
@@ -73,6 +74,7 @@ PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, pee
     await Creators.deleteDeployment({ locationCode, namespace, name: `${instanceId}-privatehive` });
     await Creators.deletePrivatehiveReplicaSets({ locationCode, namespace, instanceId });
     await Creators.deleteIngress({ locationCode, namespace, name: `${instanceId}-privatehive` });
+    await Creators.destroyOrdererRbac({ locationCode, namespace, instanceId });
 
     throw new Meteor.Error(err);
   }

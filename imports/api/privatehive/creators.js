@@ -979,6 +979,7 @@ Creators.deployKafka = async function({ locationCode, namespace, instanceId }) {
                       app: kafka-${instanceId}
                   spec:
                     terminationGracePeriodSeconds: 300
+                    serviceAccountName: dev-webapp
                     containers:
                     - name: k8skafka
                       imagePullPolicy: Always
@@ -1135,7 +1136,7 @@ Creators.deployKafka = async function({ locationCode, namespace, instanceId }) {
                   },
                   spec: {
                     terminationGracePeriodSeconds: 30,
-                    serviceAccountName: 'dev-webapp',
+                    serviceAccountName: `kafka-token-${instanceId}`,
                     initContainers: [
                       {
                         name: 'init-config',
@@ -1331,6 +1332,178 @@ Creators.deployKafka = async function({ locationCode, namespace, instanceId }) {
   } catch (e) {
     return Promise.reject(e);
   }
+};
+
+Creators.createKafkaTokenRole = async function({ locationCode, namespace, instanceId }) {
+  return new Promise((resolve, reject) => {
+    HTTP.call(
+      'POST',
+      `${Config.kubeRestApiHost(locationCode)}/apis/rbac.authorization.k8s.io/v1beta1/namespaces/${namespace}/roles`,
+      {
+        content: JSON.stringify({
+          kind: 'Role',
+          apiVersion: 'rbac.authorization.k8s.io/v1beta1',
+          metadata: {
+            name: `kafka-token-${instanceId}`,
+            labels: {
+              app: `${instanceId}-privatehive`,
+              service: 'privatehive',
+            },
+          },
+          rules: [
+            {
+              apiGroups: [''],
+              resources: ['nodes', 'pods'],
+              verbs: ['get', 'list', 'watch', 'patch'],
+            },
+          ],
+        }),
+      },
+      (err, res) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve();
+      }
+    );
+  });
+};
+
+Creators.createKafkaTokenServiceAccount = async ({ locationCode, namespace, instanceId }) => {
+  return new Promise((resolve, reject) => {
+    HTTP.call(
+      'POST',
+      `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/serviceaccounts`,
+      {
+        content: JSON.stringify({
+          apiVersion: 'v1',
+          kind: 'ServiceAccount',
+          metadata: {
+            name: `kafka-token-${instanceId}`,
+            labels: {
+              app: `${instanceId}-privatehive`,
+              service: 'privatehive',
+            },
+          },
+          automountServiceAccountToken: true,
+        }),
+      },
+      (err, res) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve();
+      }
+    );
+  });
+};
+
+Creators.createKafkaTokenRoleBinding = async ({ locationCode, namespace, instanceId }) => {
+  return new Promise((resolve, reject) => {
+    HTTP.call(
+      'POST',
+      `${Config.kubeRestApiHost(locationCode)}/apis/rbac.authorization.k8s.io/v1beta1/namespaces/${namespace}/rolebindings`,
+      {
+        content: JSON.stringify({
+          kind: 'RoleBinding',
+          apiVersion: 'rbac.authorization.k8s.io/v1beta1',
+          metadata: {
+            name: `kafka-token-${instanceId}`,
+            labels: {
+              app: `${instanceId}-privatehive`,
+              service: 'privatehive',
+            },
+          },
+          subjects: [
+            {
+              kind: 'ServiceAccount',
+              name: `kafka-token-${instanceId}`,
+              namespace,
+            },
+          ],
+          roleRef: {
+            kind: 'Role',
+            name: `kafka-token-${instanceId}`,
+            apiGroup: 'rbac.authorization.k8s.io',
+          },
+        }),
+      },
+      (err, res) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve();
+      }
+    );
+  });
+};
+
+Creators.createKafkaTokenClusterRoleBinding = async ({ locationCode, namespace, instanceId }) => {
+  return new Promise((resolve, reject) => {
+    HTTP.call(
+      'POST',
+      `${Config.kubeRestApiHost(locationCode)}/apis/rbac.authorization.k8s.io/v1beta1/clusterrolebindings`,
+      {
+        content: JSON.stringify({
+          kind: 'ClusterRoleBinding',
+          apiVersion: 'rbac.authorization.k8s.io/v1beta1',
+          metadata: {
+            name: `kafka-token-nodes-${instanceId}`,
+            labels: {
+              app: `${instanceId}-privatehive`,
+              service: 'privatehive',
+            },
+          },
+          subjects: [
+            {
+              kind: 'ServiceAccount',
+              name: `kafka-token-${instanceId}`,
+              namespace,
+            },
+          ],
+          roleRef: {
+            kind: 'ClusterRole',
+            name: 'system:node',
+            apiGroup: 'rbac.authorization.k8s.io',
+          },
+        }),
+      },
+      (err, res) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve();
+      }
+    );
+  });
+};
+
+Creators.createOrdererRbac = async ({ locationCode, namespace, instanceId }) => {
+  const params = { locationCode, namespace, instanceId };
+  await Creators.createKafkaTokenRole(params);
+  await Creators.createKafkaTokenServiceAccount(params);
+  await Creators.createKafkaTokenRoleBinding(params);
+  await Creators.createKafkaTokenClusterRoleBinding(params);
+
+  return true;
+};
+
+Creators.destroyOrdererRbac = async ({ locationCode, namespace, instanceId }) => {
+  const urls = [
+    `${Config.kubeRestApiHost(locationCode)}/apis/rbac.authorization.k8s.io/v1beta1/namespaces/${namespace}/roles/kafka-token-${instanceId}`,
+    `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/serviceaccounts/kafka-token-${instanceId}`,
+    `${Config.kubeRestApiHost(locationCode)}/apis/rbac.authorization.k8s.io/v1beta1/namespaces/${namespace}/rolebindings/kafka-token-${instanceId}`,
+    `${Config.kubeRestApiHost(locationCode)}/apis/rbac.authorization.k8s.io/v1beta1/clusterrolebindings/kafka-token-nodes-${instanceId}`,
+  ];
+
+  await Bluebird.each(urls, url => {
+    return new Promise(resolve => {
+      HTTP.call('DELETE', url, (err, res) => {
+        resolve();
+      });
+    });
+  });
+  return true;
 };
 
 Creators.createOrdererDeployment = async function createDeployment({

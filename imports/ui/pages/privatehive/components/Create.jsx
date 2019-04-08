@@ -37,6 +37,12 @@ class PaymentDashboard extends Component {
     }
 
     const { config } = this.config;
+    if (config.networkType === 'orderer' && !config.peerId) {
+      return this.setState({
+        formSubmitError: 'Cannot create orderer without peer',
+        loading: false,
+      });
+    }
     Meteor.call(
       'initializePrivateHiveNetwork',
       { name, type: config.networkType, peerId: config.peerId, locationCode: this.locationCode, voucherId: this.selectedVoucher ? this.selectedVoucher._id : undefined },
