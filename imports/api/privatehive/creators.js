@@ -271,7 +271,7 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                 containers: [
                   {
                     name: 'privatehive-api',
-                    image: '402432300121.dkr.ecr.ap-south-1.amazonaws.com/privatehive-peer-api:latest',
+                    image: `402432300121.dkr.ecr.ap-south-1.amazonaws.com/privatehive-peer-api:${process.env.NODE_ENV === 'production' ? 'latest' : process.env.NODE_ENV}`,
                     ports: [
                       {
                         containerPort: 3000,

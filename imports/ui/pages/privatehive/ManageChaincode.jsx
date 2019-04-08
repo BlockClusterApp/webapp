@@ -61,6 +61,47 @@ class ManageChaincode extends Component {
     });
   }
 
+  installChaincode = chaincodeName => {
+    this.setState({
+      [`loading_${chaincodeName}`]: true,
+    });
+    Meteor.call('installChaincode', { name: chaincodeName, networkId: this.props.match.params.id }, (err, res) => {
+      this.setState({
+        [`loading_${chaincodeName}`]: true,
+      });
+      if (err) {
+        return notifications.error(err.reason);
+      }
+      notifications.success('Installed');
+    });
+  };
+
+  instantiateChaincode = chaincodeName => {
+    this.setState({
+      [`loading_${chaincodeName}`]: true,
+    });
+    Meteor.call(
+      'instantiateChaincode',
+      {
+        name: chaincodeName,
+        networkId: this.props.match.params.id,
+        channelName: this.channelName.value,
+        functionName: this.functionName.value,
+        args: this.args.value,
+        endorsmentPolicy: this.endorsmentPolicy.value,
+      },
+      (err, res) => {
+        this.setState({
+          [`loading_${chaincodeName}`]: true,
+        });
+        if (err) {
+          return notifications.error(err.reason);
+        }
+        notifications.success('Instantiated');
+      }
+    );
+  };
+
   render() {
     return (
       <div className="assetsStats content">
@@ -104,30 +145,34 @@ class ManageChaincode extends Component {
                                       </td>
                                       <td>
                                         <LaddaButton
-                                          loading={this.state.loading}
-                                          disabled={this.state.loading}
+                                          loading={this.state[`loading_${cc.name}`]}
+                                          disabled={this.state[`loading_${cc.name}`]}
                                           data-size={S}
                                           data-style={SLIDE_UP}
                                           data-spinner-size={30}
                                           data-spinner-lines={12}
                                           onClick={this.onSubmit}
                                           className="btn btn-info"
-                                          onClick={() => {}}
+                                          onClick={() => {
+                                            this.installChaincode(cc.name);
+                                          }}
                                         >
                                           <i className="fa fa-save" aria-hidden="true" />
                                           &nbsp;&nbsp;Install
                                         </LaddaButton>
                                         &nbsp;&nbsp;
                                         <LaddaButton
-                                          loading={this.state.loading}
-                                          disabled={this.state.loading}
+                                          loading={this.state[`loading_${cc.name}`]}
+                                          disabled={this.state[`loading_${cc.name}`]}
                                           data-size={S}
                                           data-style={SLIDE_UP}
                                           data-spinner-size={30}
                                           data-spinner-lines={12}
                                           onClick={this.onSubmit}
                                           className="btn btn-primary"
-                                          onClick={() => {}}
+                                          onClick={() => {
+                                            this.instantiateChaincode(cc.name);
+                                          }}
                                         >
                                           <i className="fa fa-save" aria-hidden="true" />
                                           &nbsp;&nbsp;Instantiate

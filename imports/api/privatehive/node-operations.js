@@ -74,7 +74,57 @@ Operations.fetchChaincodes = async ({ networkId }) => {
   return JSON.parse(res);
 };
 
+Operations.installChaincode = async ({ name, type, version, networkId }) => {
+  const userId = Meteor.userId();
+
+  const network = PrivatehivePeers.findOne({
+    instanceId: networkId,
+    userId,
+  });
+
+  if (!network) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+
+  return request({
+    uri: `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/chaincodes/install`,
+    method: 'POST',
+    body: {
+      chaincodeName: name,
+    },
+    json: true,
+  });
+};
+
+Operations.instantiateChaincode = async ({ name, channelName, functionName, args, endorsmentPolicy, networkId }) => {
+  const userId = Meteor.userId();
+
+  const network = PrivatehivePeers.findOne({
+    instanceId: networkId,
+    userId,
+  });
+
+  if (!network) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+
+  return request({
+    uri: `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/chaincodes/install`,
+    method: 'POST',
+    body: {
+      chaincodeName: name,
+      channelName,
+      functionName,
+      args,
+      endorsmentPolicy,
+    },
+    json: true,
+  });
+};
+
 Meteor.methods({
   addChaincode: Operations.addChaincode,
   fetchChaincodes: Operations.fetchChaincodes,
+  installChaincode: Operations.installChaincode,
+  instantiateChaincode: Operations.instantiateChaincode,
 });
