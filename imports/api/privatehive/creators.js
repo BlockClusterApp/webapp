@@ -931,7 +931,7 @@ Creators.deployKafka = async function({ locationCode, namespace, instanceId }) {
               spec: {
                 ports: [
                   {
-                    port: 9092,
+                    port: 9093,
                     name: 'server',
                   },
                 ],
@@ -962,205 +962,154 @@ Creators.deployKafka = async function({ locationCode, namespace, instanceId }) {
           'POST',
           `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1/namespaces/${namespace}/statefulsets`,
           {
-            content: JSON.stringify({
-              apiVersion: 'apps/v1',
-              kind: 'StatefulSet',
-              metadata: {
-                name: `kafka-${instanceId}`,
-              },
-              spec: {
-                selector: {
-                  matchLabels: {
-                    app: `kafka-${instanceId}`,
-                  },
-                },
-                serviceName: `kafka-svc-${instanceId}`,
-                replicas: 3,
-                updateStrategy: {
-                  type: 'OnDelete',
-                },
-                template: {
-                  metadata: {
-                    labels: {
-                      app: `kafka-${instanceId}`,
-                    },
-                    annotations: null,
-                  },
-                  spec: {
-                    terminationGracePeriodSeconds: 30,
-                    serviceAccountName: `kafka-token-${instanceId}`,
-                    initContainers: [
-                      {
-                        name: 'init-config',
-                        image: 'solsson/kafka-initutils@sha256:18bf01c2c756b550103a99b3c14f741acccea106072cd37155c6d24be4edd6e2',
-                        env: [
-                          {
-                            name: 'NODE_NAME',
-                            valueFrom: {
-                              fieldRef: {
-                                fieldPath: 'spec.nodeName',
-                              },
-                            },
-                          },
-                          {
-                            name: 'POD_NAME',
-                            valueFrom: {
-                              fieldRef: {
-                                fieldPath: 'metadata.name',
-                              },
-                            },
-                          },
-                          {
-                            name: 'POD_NAMESPACE',
-                            valueFrom: {
-                              fieldRef: {
-                                fieldPath: 'metadata.namespace',
-                              },
-                            },
-                          },
-                        ],
-                        command: ['/bin/bash', '/etc/kafka-configmap/init.sh'],
-                        volumeMounts: [
-                          {
-                            name: 'configmap',
-                            mountPath: '/etc/kafka-configmap',
-                          },
-                          {
-                            name: 'config',
-                            mountPath: '/etc/kafka',
-                          },
-                        ],
-                      },
-                    ],
-                    containers: [
-                      {
-                        name: 'broker',
-                        image: 'solsson/kafka:1.0.1@sha256:1a4689d49d6274ac59b9b740f51b0408e1c90a9b66d16ad114ee9f7193bab111',
-                        env: [
-                          {
-                            name: 'KAFKA_LOG4J_OPTS',
-                            value: '-Dlog4j.configuration=file:/etc/kafka/log4j.properties',
-                          },
-                          {
-                            name: 'JMX_PORT',
-                            value: '5555',
-                          },
-                          {
-                            name: 'KAFKA_LOG_RETENTION_MS',
-                            value: '-1',
-                          },
-                          {
-                            name: 'KAFKA_MESSAGE_MAX_BYTES',
-                            value: '103809024',
-                          },
-                          {
-                            name: 'KAFKA_REPLICA_FETCH_MAX_BYTES',
-                            value: '103809024',
-                          },
-                          {
-                            name: 'KAFKA_BROKER_ID',
-                            value: '0',
-                          },
-                          {
-                            name: 'KAFKA_ZOOKEEPER_CONNECT',
-                            value: `zk-${instanceId}-0.zk-svc-${instanceId}.${namespace}.svc.cluster.local:2181,zk-${instanceId}-1.zk-svc-${instanceId}.${namespace}.svc.cluster.local:2181,zk-${instanceId}-2.zk-svc-${instanceId}.${namespace}.svc.cluster.local:2181`,
-                          },
-                          {
-                            name: 'KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE',
-                            value: 'false',
-                          },
-                          {
-                            name: 'KAFKA_DEFAULT_REPLICATION_FACTOR',
-                            value: '3',
-                          },
-                          {
-                            name: 'KAFKA_MIN_INSYNC_REPLICAS',
-                            value: '2',
-                          },
-                          {
-                            name: 'KAFKA_LISTENERS',
-                            value: 'INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:9094',
-                          },
-                          {
-                            name: 'KAFKA_LISTENER_SECURITY_PROTOCOL_MAP',
-                            value: 'INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT',
-                          },
-                          {
-                            name: 'KAFKA_INTER_BROKER_LISTENER_NAME',
-                            value: 'INSIDE',
-                          },
-                        ],
-                        ports: [
-                          {
-                            name: 'inside',
-                            containerPort: 9092,
-                          },
-                          {
-                            name: 'outside',
-                            containerPort: 9094,
-                          },
-                          {
-                            name: 'jmx',
-                            containerPort: 5555,
-                          },
-                        ],
-                        command: ['./bin/kafka-server-start.sh', '/etc/kafka/server.properties'],
-                        resources: {
-                          requests: {
-                            cpu: '100m',
-                            memory: '512Mi',
-                          },
-                        },
-                        readinessProbe: {
-                          tcpSocket: {
-                            port: 9092,
-                          },
-                          timeoutSeconds: 1,
-                        },
-                        volumeMounts: [
-                          {
-                            name: 'config',
-                            mountPath: '/etc/kafka',
-                          },
-                          {
-                            name: 'data',
-                            mountPath: '/var/lib/kafka/data',
-                          },
-                        ],
-                      },
-                    ],
-                    volumes: [
-                      {
-                        name: 'configmap',
-                        configMap: {
-                          name: `broker-config-${instanceId}`,
-                        },
-                      },
-                      {
-                        name: 'config',
-                        emptyDir: {},
-                      },
-                    ],
-                  },
-                },
-                volumeClaimTemplates: [
-                  {
-                    metadata: {
-                      name: 'data',
-                    },
-                    spec: {
-                      accessModes: ['ReadWriteOnce'],
-                      storageClassName: 'gp2-storage-class',
-                      resources: {
-                        requests: {
-                          storage: '200Gi',
-                        },
-                      },
-                    },
-                  },
-                ],
-              },
-            }),
+            content: `
+              apiVersion: apps/v1
+              kind: StatefulSet
+              metadata:
+                name: kafka-${instanceId}
+              spec:
+                serviceName: kafka-svc-${instanceId}
+                replicas: 4
+                selector:
+                  matchLabels:
+                    app: kafka-${instanceId}
+                template:
+                  metadata:
+                    labels:
+                      app: kafka-${instanceId}
+                  spec:
+                    terminationGracePeriodSeconds: 300
+                    serviceAccountName: dev-webapp
+                    containers:
+                    - name: k8skafka
+                      imagePullPolicy: Always
+                      image: gcr.io/google_samples/k8skafka:v1
+                      resources:
+                        requests:
+                          memory: "1Gi"
+                          cpu: 500m
+                      ports:
+                      - containerPort: 9093
+                        name: server
+                      command:
+                      - sh
+                      - -c
+                      - "exec kafka-server-start.sh /opt/kafka/config/server.properties --override broker.id=\$\{HOSTNAME##*-\} \
+                        --override listeners=PLAINTEXT://:9093 \
+                        --override zookeeper.connect=zk-${instanceId}-0.zk-svc-${instanceId}.${namespace}.svc.cluster.local:2181,zk-${instanceId}-1.zk-svc-${instanceId}.${namespace}.svc.cluster.local:2181,zk-${instanceId}-2.zk-svc-${instanceId}.${namespace}.svc.cluster.local:2181 \
+                        --override log.dir=/var/lib/kafka \
+                        --override auto.create.topics.enable=true \
+                        --override auto.leader.rebalance.enable=true \
+                        --override background.threads=10 \
+                        --override compression.type=producer \
+                        --override delete.topic.enable=false \
+                        --override leader.imbalance.check.interval.seconds=300 \
+                        --override leader.imbalance.per.broker.percentage=10 \
+                        --override log.flush.interval.messages=9223372036854775807 \
+                        --override log.flush.offset.checkpoint.interval.ms=60000 \
+                        --override log.flush.scheduler.interval.ms=9223372036854775807 \
+                        --override log.retention.bytes=-1 \
+                        --override log.retention.hours=168 \
+                        --override log.roll.hours=168 \
+                        --override log.roll.jitter.hours=0 \
+                        --override log.segment.bytes=1073741824 \
+                        --override log.segment.delete.delay.ms=60000 \
+                        --override message.max.bytes=1000012 \
+                        --override min.insync.replicas=1 \
+                        --override num.io.threads=8 \
+                        --override num.network.threads=3 \
+                        --override num.recovery.threads.per.data.dir=1 \
+                        --override num.replica.fetchers=1 \
+                        --override offset.metadata.max.bytes=4096 \
+                        --override offsets.commit.required.acks=-1 \
+                        --override offsets.commit.timeout.ms=5000 \
+                        --override offsets.load.buffer.size=5242880 \
+                        --override offsets.retention.check.interval.ms=600000 \
+                        --override offsets.retention.minutes=1440 \
+                        --override offsets.topic.compression.codec=0 \
+                        --override offsets.topic.num.partitions=50 \
+                        --override offsets.topic.replication.factor=3 \
+                        --override offsets.topic.segment.bytes=104857600 \
+                        --override queued.max.requests=500 \
+                        --override quota.consumer.default=9223372036854775807 \
+                        --override quota.producer.default=9223372036854775807 \
+                        --override replica.fetch.min.bytes=1 \
+                        --override replica.fetch.wait.max.ms=500 \
+                        --override replica.high.watermark.checkpoint.interval.ms=5000 \
+                        --override replica.lag.time.max.ms=10000 \
+                        --override replica.socket.receive.buffer.bytes=65536 \
+                        --override replica.socket.timeout.ms=30000 \
+                        --override request.timeout.ms=30000 \
+                        --override socket.receive.buffer.bytes=102400 \
+                        --override socket.request.max.bytes=104857600 \
+                        --override socket.send.buffer.bytes=102400 \
+                        --override unclean.leader.election.enable=true \
+                        --override zookeeper.session.timeout.ms=6000 \
+                        --override zookeeper.set.acl=false \
+                        --override broker.id.generation.enable=true \
+                        --override connections.max.idle.ms=600000 \
+                        --override controlled.shutdown.enable=true \
+                        --override controlled.shutdown.max.retries=3 \
+                        --override controlled.shutdown.retry.backoff.ms=5000 \
+                        --override controller.socket.timeout.ms=30000 \
+                        --override default.replication.factor=1 \
+                        --override fetch.purgatory.purge.interval.requests=1000 \
+                        --override group.max.session.timeout.ms=300000 \
+                        --override group.min.session.timeout.ms=6000 \
+                        --override inter.broker.protocol.version=0.10.2-IV0 \
+                        --override log.cleaner.backoff.ms=15000 \
+                        --override log.cleaner.dedupe.buffer.size=134217728 \
+                        --override log.cleaner.delete.retention.ms=86400000 \
+                        --override log.cleaner.enable=true \
+                        --override log.cleaner.io.buffer.load.factor=0.9 \
+                        --override log.cleaner.io.buffer.size=524288 \
+                        --override log.cleaner.io.max.bytes.per.second=1.7976931348623157E308 \
+                        --override log.cleaner.min.cleanable.ratio=0.5 \
+                        --override log.cleaner.min.compaction.lag.ms=0 \
+                        --override log.cleaner.threads=1 \
+                        --override log.cleanup.policy=delete \
+                        --override log.index.interval.bytes=4096 \
+                        --override log.index.size.max.bytes=10485760 \
+                        --override log.message.timestamp.difference.max.ms=9223372036854775807 \
+                        --override log.message.timestamp.type=CreateTime \
+                        --override log.preallocate=false \
+                        --override log.retention.check.interval.ms=300000 \
+                        --override max.connections.per.ip=2147483647 \
+                        --override num.partitions=1 \
+                        --override producer.purgatory.purge.interval.requests=1000 \
+                        --override replica.fetch.backoff.ms=1000 \
+                        --override replica.fetch.max.bytes=1048576 \
+                        --override replica.fetch.response.max.bytes=10485760 \
+                        --override reserved.broker.max.id=1000 "
+                      env:
+                      - name: KAFKA_HEAP_OPTS
+                        value : "-Xmx512M -Xms512M"
+                      - name: KAFKA_OPTS
+                        value: "-Dlogging.level=INFO"
+                      volumeMounts:
+                      - name: datadir
+                        mountPath: /var/lib/kafka
+                      readinessProbe:
+                        initialDelaySeconds: 30
+                        timeoutSeconds: 5
+                        exec:
+                          command:
+                            - sh
+                            - -c
+                            - "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server=localhost:9093"
+                    securityContext:
+                      runAsUser: 1000
+                      fsGroup: 1000
+                volumeClaimTemplates:
+                - metadata:
+                    name: datadir
+                  spec:
+                    storageClassName: 'gp2-storage-class'
+                    accessModes: [ "ReadWriteOnce" ]
+                    resources:
+                      requests:
+                        storage: 10Gi
+            `,
             headers: {
               'Content-Type': 'application/yaml',
             },
