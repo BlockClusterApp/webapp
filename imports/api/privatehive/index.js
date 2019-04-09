@@ -40,15 +40,18 @@ PrivateHive.createPeer = async ({ locationCode }) => {
   }
 };
 
-PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, peerWorkerNodeIP, anchorCommPort, locationCode }) => {
+PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, peerWorkerNodeIP, anchorCommPort, locationCode, type }) => {
   const workerNodeIP = Config.workerNodeIP(locationCode);
   const instanceId = helpers.instanceIDGenerate();
   const namespace = Config.namespace;
   let ordererNodePort;
   try {
-    await Creators.createOrdererRbac({ locationCode, namespace: Config.namespace, instanceId });
-    await Creators.deployZookeeper({ locationCode, instanceId, namespace: Config.namespace });
-    await Creators.deployKafka({ locationCode, namespace: Config.namespace, instanceId });
+    type = type || 'solo';
+
+    if (type === 'kafka') {
+      await Creators.deployZookeeper({ locationCode, instanceId, namespace: Config.namespace });
+      await Creators.deployKafka({ locationCode, namespace: Config.namespace, instanceId });
+    }
 
     await Creators.createPersistentvolumeclaims({ locationCode, namespace: Config.namespace, instanceId, storage: 50 });
     ordererNodePort = await Creators.createOrdererService({ locationCode, namespace: Config.namespace, instanceId });
@@ -64,6 +67,7 @@ PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, pee
       peerWorkerNodeIP,
       anchorCommPort,
       ordererNodePort,
+      type,
     });
     await Creators.createAPIIngress({ locationCode, namespace, instanceId });
   } catch (err) {
@@ -75,7 +79,6 @@ PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, pee
     await Creators.deleteDeployment({ locationCode, namespace, name: `${instanceId}-privatehive` });
     await Creators.deletePrivatehiveReplicaSets({ locationCode, namespace, instanceId });
     await Creators.deleteIngress({ locationCode, namespace, name: `${instanceId}-privatehive` });
-    await Creators.destroyOrdererRbac({ locationCode, namespace, instanceId });
 
     throw new Meteor.Error(err);
   }
@@ -209,7 +212,7 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererId })
   return peerId;
 };
 
-PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, type, voucherId, name }) => {
+PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, type, voucherId, name, ordererType }) => {
   let voucher;
   if (voucherId) {
     voucher = Voucher.find({ _id: voucherId }).fetch()[0];
@@ -266,6 +269,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       peerWorkerNodeIP: Config.workerNodeIP(peerDetails.locationCode),
       anchorCommPort: peerDetails.anchorCommPort,
       locationCode,
+      type: ordererType,
     });
     PrivatehiveOrderers.insert({
       instanceId: ordererDetails.instanceId,
