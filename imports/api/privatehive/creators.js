@@ -969,7 +969,7 @@ Creators.deployKafka = async function({ locationCode, namespace, instanceId }) {
                 name: kafka-${instanceId}
               spec:
                 serviceName: kafka-svc-${instanceId}
-                replicas: 4
+                replicas: 3
                 selector:
                   matchLabels:
                     app: kafka-${instanceId}
