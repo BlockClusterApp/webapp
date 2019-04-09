@@ -27,6 +27,7 @@ const EJSMapping = {
   'invoice-created.ejs': InvoiceGeneratedTemplate,
   'invoice-pending.ejs': InvoicePendingTemplate,
   'credited-200': fs.readFileSync(Assets.absoluteFilePath('email-templates/credited-200.ejs')).toString(),
+  'invite-user-channel.ejs': fs.readFileSync(Assets.absoluteFilePath('email-templates/invite-user-channel.ejs')).toString(),
 };
 
 function generateRandomString(placeholder, salt = 'I<3BlockCluster') {

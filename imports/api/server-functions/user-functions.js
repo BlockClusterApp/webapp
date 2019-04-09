@@ -9,7 +9,7 @@ import Config from '../../../imports/modules/config/server';
 import agenda from '../../modules/schedulers/agenda';
 import Billing from '../../api/billing';
 import WebHookApis from '../communication/webhook';
-import PrivateHive from '../../collections/privatehive';
+import { PrivatehivePeers } from '../../collections/privatehivePeers/privatehivePeers';
 
 const debug = require('debug')('api:user-functions');
 
@@ -178,6 +178,29 @@ agenda.define(
 
 const NetworkInvitation = {};
 
+async function fetchOrCreateUser(email) {
+  let invitedUser = Meteor.users
+    .find({
+      'emails.address': email,
+    })
+    .fetch()[0];
+
+  if (!invitedUser) {
+    const createdId = Accounts.createUser({
+      email,
+      password: `a-${new Date().getTime()}`,
+      toBeCreated: true,
+      profile: {},
+    });
+    invitedUser = Meteor.users
+      .find({
+        _id: createdId,
+      })
+      .fetch()[0];
+  }
+  return invitedUser;
+}
+
 NetworkInvitation.inviteUserToNetwork = async function({ instanceId, nodeType, email, userId, type }) {
   if (!userId) {
     userId = Meteor.userId();
@@ -211,25 +234,7 @@ NetworkInvitation.inviteUserToNetwork = async function({ instanceId, nodeType, e
   //   throw new Error("Cannot invite yourself to the network");
   // }
 
-  let invitedUser = Meteor.users
-    .find({
-      'emails.address': email,
-    })
-    .fetch()[0];
-
-  if (!invitedUser) {
-    const createdId = Accounts.createUser({
-      email,
-      password: `a-${new Date().getTime()}`,
-      toBeCreated: true,
-      profile: {},
-    });
-    invitedUser = Meteor.users
-      .find({
-        _id: createdId,
-      })
-      .fetch()[0];
-  }
+  const invitedUser = await fetchOrCreateUser(email);
 
   const uniqueString = generateRandomString(`${email}-${networkId}-${new Date().toString()}`);
   const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
@@ -302,6 +307,92 @@ NetworkInvitation.inviteUserToNetwork = async function({ instanceId, nodeType, e
   return result;
 };
 
+NetworkInvitation.inviteUserToChannel = async ({ channelName, networkId, email, userId, ordererId }) => {
+  if (!email) {
+    throw new Meteor.Error(403, 'Email missing');
+  }
+  userId = userId || Meteor.userId();
+  const network = PrivatehivePeers.findOne({
+    instanceId: networkId,
+    userId,
+  });
+  if (!network) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+
+  const invitingUser = Meteor.users.findOne({ _id: userId });
+  const invitedUser = await fetchOrCreateUser(email);
+  const uniqueString = generateRandomString(`${email}-${networkId}-${new Date().toString()}`);
+  const joinNetworkLink = generateCompleteURLForUserInvite(uniqueString);
+
+  const result = UserInvitation.insert({
+    inviteFrom: invitingUser._id,
+    inviteTo: invitedUser._id,
+    uniqueToken: uniqueString,
+    networkId: network._id,
+    type: 'privatehive-channel',
+    metadata: {
+      inviteFrom: {
+        name: `${invitingUser.profile.firstName} ${invitingUser.profile.lastName}`,
+        email: invitingUser.emails[0].address,
+      },
+      inviteTo: {
+        email,
+        name: invitedUser.profile.firstName ? `${invitedUser.profile.firstName} ${invitedUser.profile.lastName}` : undefined,
+      },
+      channel: {
+        name: channelName,
+        ordererId,
+        networkId: network._id,
+      },
+    },
+  });
+
+  const Template = await getEJSTemplate({
+    fileName: 'invite-user-channel.ejs',
+  });
+  const emailHtml = Template({
+    channelName,
+    invitingUser,
+    networkJoinLink: joinNetworkLink,
+  });
+
+  await sendEmail({
+    from: {
+      name: 'Blockcluster',
+      email: 'no-reply@blockcluster.io',
+    },
+    to: email,
+    subject: `Invite to join ${channelName} fabric channel on blockcluster.io`,
+    text: `Visit the following link to join ${channelName} channel on blockcluster.io - ${joinNetworkLink}`,
+    html: emailHtml,
+  });
+
+  WebHookApis.queue({
+    userId,
+    payload: WebHookApis.generatePayload({
+      event: 'invite-sent',
+      networkId: network.instanceId,
+      type: 'privatehive',
+      userId: invitedUser._id,
+      inviteId: result,
+    }),
+  });
+
+  WebHookApis.queue({
+    userId: invitedUser._id,
+    payload: WebHookApis.generatePayload({
+      event: 'invite-received',
+      networkId: network.instanceId,
+      type: 'privatehive',
+      userId: invitingUser._id,
+      inviteId: result,
+    }),
+  });
+
+  return result;
+};
+
 NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
   const invitation = UserInvitation.find({
     uniqueToken: invitationKey,
@@ -323,8 +414,8 @@ NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
     })
     .fetch()[0];
   let network;
-  if (invitation.type === 'privatehive') {
-    network = PrivateHive.find({
+  if (invitation.type === 'privatehive-channel') {
+    network = PrivatehivePeers.find({
       _id: invitation.networkId,
     }).fetch()[0];
   } else {
@@ -340,7 +431,7 @@ NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
   };
 };
 
-NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkConfig, userId, type }) {
+NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkConfig, userId, type, peerId }) {
   return new Promise(async (resolve, reject) => {
     userId = userId || Meteor.userId();
     const invitation = UserInvitation.find({
@@ -352,8 +443,8 @@ NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkC
     }
 
     let network;
-    if (type === 'privatehive') {
-      network = PrivateHive.find({ _id: invitation.networkId }).fetch()[0];
+    if (invitation.type === 'privatehive-channel') {
+      network = PrivatehivePeers.findOne({ _id: invitation.networkId });
     } else {
       network = Networks.find({
         _id: invitation.networkId,
@@ -385,28 +476,27 @@ NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkC
       }),
     });
 
-    if (type === 'privatehive') {
+    if (type === 'privatehive-channel') {
       const res = await PrivateHiveApis.join({
-        ordererId: network._id,
-        name: network.name,
-        networkConfig: networkConfig,
-        voucherId: networkConfig.voucher ? networkConfig.voucher._id : undefined,
-        locationCode,
+        networkId: network._id,
+        channelName: invite.metadata.channel.name,
+        peerId,
         userId,
+        ordererId: invite.metadata.channel.ordererId,
       });
-      UserInvitation.update(
-        {
-          _id: inviteId,
-        },
-        {
-          $set: {
-            joinedNetwork: res,
-            joinedLocation: locationCode,
-            invitationStatus: UserInvitation.StatusMapping.Accepted,
-            inviteStatusUpdatedAt: new Date(),
-          },
-        }
-      );
+      // UserInvitation.update(
+      //   {
+      //     _id: inviteId,
+      //   },
+      //   {
+      //     $set: {
+      //       joinedNetwork: peerId,
+      //       joinedLocation: locationCode,
+      //       invitationStatus: UserInvitation.StatusMapping.Accepted,
+      //       inviteStatusUpdatedAt: new Date(),
+      //     },
+      //   }
+      // );
       return resolve(res);
     } else {
       Meteor.call(
@@ -620,6 +710,7 @@ Meteor.methods({
   },
   cancelInvitation: NetworkInvitation.cancelInvitation,
   resendInvitation: NetworkInvitation.resendInvitation,
+  inviteUserToChannel: NetworkInvitation.inviteUserToChannel,
 });
 
 export default NetworkInvitation;

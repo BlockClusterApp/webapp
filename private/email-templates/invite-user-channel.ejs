@@ -1,6 +1,5 @@
-module.exports = `
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Invite</title>
+    <title>Registration Successful</title>
     <style type="text/css">
       .ReadMsgBody {width: 100%; background-color: #ffffff;}
           .ExternalClass {width: 100%; background-color: #ffffff;}
@@ -277,19 +276,19 @@ module.exports = `
                         <tr>
                           <td align="center" style="font-size: 0;">
                             <p style="margin: 20px 15px 16px 15px;font-family: arial, sans-serif; font-size: 22px; color: #4d4d4d;">
-                              <strong>You've been invited to join <br><span style="color: #00adef">BlockCluster Family</span></strong>
+                              <strong>You've been invited to join Privatehive network</strong>
                             </p>
                           </td>
                         </tr>
                         <tr>
                           <td align="center" style="font-size: 0;padding:0 75px 15px 75px;">
                             <p style="line-height:22px;font-family: arial, sans-serif; font-size: 13px; color: #4d4d4d;">
-                              <span style="color:#999;font-size: 17px;font-family: &#39;arial&#39;;line-height: 24px;text-align: center;">Hi,  <span style="color: #09759c;font-weight: bold;"><%= invitingUser.profile.firstName %> <%= invitingUser.profile.lastName %></span> You have successfully registered <b><%= network.name %></b> on <a href="https://blockcluster.io/">blockcluster.io</a> click on join network button to join network.<br><br></span>
+                              <span style="color:#999;font-size: 17px;font-family: &#39;arial&#39;;line-height: 24px;text-align: center;">Hi, <br /> You have been invited by <b><%= invitingUser.profile.firstName %> <%= invitingUser.profile.lastName %></b> to join <%= channelName %> channel on their hyperledger fabric network<br><br></span>
                             </p>
                             <div width="200;height:20px;"></div>
                             <table border="0" cellpadding="0" cellspacing="0" style="Margin:0 auto;">
                                         <tbody><tr>
-                                          <td width="250" height="50" align="center" bgcolor="#0062b3" style="-moz-border-radius: 30px; -webkit-border-radius: 30px; border-radius: 30px;"><a href="<%= networkJoinLink %>" target="_blank" style="width:250; display:block; text-decoration:none; border:0; text-align:center; font-weight:bold;font-size:18px; font-family: Arial, sans-serif; color: #ffffff" class="button_link">Start Blockchaining <img src="https://s3-us-west-2.amazonaws.com/bc-email-t-images/right-arrow.png" width="32" height="17" style="padding-top:5px" alt="" border="0"></a></td>
+                                          <td width="250" height="50" align="center" bgcolor="#0062b3" style="-moz-border-radius: 30px; -webkit-border-radius: 30px; border-radius: 30px;"><a href="<%= networkJoinLink %>" target="_blank" style="width:250; display:block; text-decoration:none; border:0; text-align:center; font-weight:bold;font-size:18px; font-family: Arial, sans-serif; color: #ffffff" class="button_link">Join Channel <img src="https://s3-us-west-2.amazonaws.com/bc-email-t-images/right-arrow.png" width="32" height="17" style="padding-top:5px" alt="" border="0"></a></td>
                                         </tr>
                                       </tbody></table>
                               <div width="200;height:20px;"></div>
@@ -431,4 +430,4 @@ module.exports = `
 
 
 
-  </body></html>`;
+  </body></html>

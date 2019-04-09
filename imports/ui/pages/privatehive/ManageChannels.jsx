@@ -19,13 +19,13 @@ class ManageChannels extends Component {
       modalChannel: {},
     };
 
-    this.getAssetTypes = this.getAssetTypes.bind(this);
+    this.getChannels = this.getChannels.bind(this);
   }
 
   componentDidMount() {
-    setTimeout(() => this.getAssetTypes(), 1000);
+    setTimeout(() => this.getChannels(), 1000);
     this.setState({
-      refreshAssetTypesTimer: setInterval(this.getAssetTypes, 15000),
+      refreshAssetTypesTimer: setInterval(this.getChannels, 15000),
     });
   }
 
@@ -37,33 +37,33 @@ class ManageChannels extends Component {
     clearInterval(this.state.refreshAssetTypesTimer);
   }
 
-  getAssetTypes() {
-    const { network } = this.props;
-    let url = `https://${network.properties.apiEndPoint}/channels`;
-    HTTP.get(
-      url,
+  getChannels() {
+    Meteor.call(
+      'fetchChannels',
       {
-        headers: {
-          'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
-          // Authorization: 'Basic ' + new Buffer(`${this.props.network[0].instanceId}:${this.props.network[0]['api-password']}`).toString('base64'),
-        },
+        networkId: this.props.match.params.id,
       },
       (err, res) => {
-        if (!err) {
-          this.setState({
-            channels: res.data.data.channels,
-          });
+        this.setState({
+          loading: false,
+        });
+        if (err) {
+          return notifications.error(err.reason);
         }
+        return this.setState({
+          channels: res.message,
+        });
       }
     );
   }
 
-  showAddOrgModal = channelName => {
+  showAddOrgModal = (channelName, ordererOrgName) => {
     return this.setState(
       {
         showAddOrgModal: true,
         modalChannel: {
           name: channelName,
+          ordererOrgName,
         },
       },
       () => {
@@ -73,20 +73,21 @@ class ManageChannels extends Component {
   };
 
   addOrgToChannel = () => {
-    if (!this.orgEndpoint.value) {
+    if (!this.email.value) {
       return this.setState({
-        modalError: 'Endpoint is required',
+        modalError: 'Email is required',
       });
     }
     this.setState({
       loading: true,
     });
     Meteor.call(
-      'addOrgToChannel',
+      'inviteUserToChannel',
       {
         channelName: this.state.modalChannel.name,
-        organizationId: this.props.network.instanceId,
-        newOrgEndpoint: this.orgEndpoint.value,
+        ordererId: this.state.modalChannel.ordererOrgName.toLowerCase(),
+        networkId: this.props.network.instanceId,
+        email: this.email.value,
       },
       (err, res) => {
         this.setState({
@@ -95,7 +96,8 @@ class ManageChannels extends Component {
         if (err) {
           return notifications.error(err.reason);
         }
-        return notifications.success('Proposal sent');
+        $('#channel_info_modal').modal('hide');
+        return notifications.success('Invite sent');
       }
     );
   };
@@ -146,20 +148,16 @@ class ManageChannels extends Component {
                 <div className="row-md-height">
                   <div className="modal-body col-md-height col-middle">
                     <h3>
-                      Add new org to <b>{this.state.modalChannel.name}</b>
+                      Invite user to channel <b>{this.state.modalChannel.name}</b>
                     </h3>
-                    <br />
-                    <p>
-                      <b>Note:</b> You can only add peers created using blockcluster platform using this interface
-                    </p>
                     <br />
                     <br />
                     <div className="row clearfix">
                       <div className="col-md-12">
                         <div className="form-group form-group-default input-group">
                           <div className="form-input-group">
-                            <label>Organization API-Client Endpoint</label>
-                            <input type="text" className="form-control" name="projectName" ref={input => (this.orgEndpoint = input)} />
+                            <label>User email</label>
+                            <input type="email" className="form-control" name="projectName" ref={input => (this.email = input)} defaultValue={this.props.user.emails[0].address} />
                           </div>
                         </div>
                       </div>
@@ -175,7 +173,7 @@ class ManageChannels extends Component {
                       onClick={this.addOrgToChannel}
                     >
                       <i className="fa fa-circle-plus" aria-hidden="true" />
-                      &nbsp;&nbsp;Add Org
+                      &nbsp;&nbsp;Invite User
                     </LaddaButton>
                     &nbsp;
                     <button
@@ -197,96 +195,6 @@ class ManageChannels extends Component {
         </div>
       </div>
     );
-
-    if (this.state.showChannelInfoModal) {
-      Modal = (
-        <div className="modal fade slide-right" id="channel_info_modal" tabIndex="-1" role="dialog" aria-hidden="true">
-          <div className="modal-dialog modal-md">
-            <div className="modal-content-wrapper">
-              <div className="modal-content">
-                <button type="button" className="close" data-dismiss="modal" aria-hidden="true">
-                  <i className="pg-close fs-14" />
-                </button>
-                <div className="container-md-height full-height">
-                  <div className="row-md-height">
-                    {this.state.channelInfo && (
-                      <div className="modal-body col-md-height col-middle">
-                        <h3>
-                          Channel <b>{this.state.channelInfo.name}</b>
-                        </h3>
-                        <br />
-                        <br />
-                        <table className="table table-hover" id="basicTable">
-                          <thead>
-                            <tr>
-                              <th style={{ width: '25%' }}>Details</th>
-                              <th style={{ width: '75%' }}>&nbsp;</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td className="v-align-middle ">Created By</td>
-                              <td>{this.state.channelInfo.createdByOrg}</td>
-                            </tr>
-                            <tr>
-                              <td className="v-align-middle ">Created At</td>
-                              <td>{moment(this.state.channelInfo.createdAt).format('DD-MMM-YYYY kk:mm:ss')}</td>
-                            </tr>
-                            <tr>
-                              <td className="v-align-middle ">Updated At</td>
-                              <td>{moment(this.state.channelInfo.updatedAt).format('DD-MMM-YYYY kk:mm:ss')}</td>
-                            </tr>
-                            <tr>
-                              <td className="v-align-middle ">Members</td>
-                              <td>
-                                {this.state.channelInfo.members.map(member => {
-                                  return (
-                                    <li>
-                                      <div className="p-l-10 m-b-10" style={{ display: 'inline-table' }}>
-                                        <b>Org:</b>&nbsp;{member.org}
-                                        <br />
-                                        <b>API Host:</b>&nbsp;{member.apiClientHost}
-                                        <br />
-                                        <b>Joined at:</b>&nbsp;{moment(member.joinedOn).format('DD-MMM-YYYY kk:mm:ss')}
-                                        <br />
-                                      </div>
-                                    </li>
-                                  );
-                                })}
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                        <br />
-                        &nbsp;
-                        <button
-                          type="button"
-                          className="btn btn-default"
-                          data-dismiss="modal"
-                          onClick={() => {
-                            $('#channel_info').modal('hide');
-                            setTimeout(this.setState({ showAddOrgModal: false }), 1000);
-                          }}
-                        >
-                          Close
-                        </button>
-                      </div>
-                    )}
-                    {!this.state.channelInfo && (
-                      <div className="d-flex justify-content-center flex-column full-height ">
-                        <div id="loader" />
-                        <br />
-                        <p style={{ textAlign: 'center', fontSize: '1.2em' }}>Fetching info...</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
 
     return (
       <div className="assetsStats content">
@@ -318,12 +226,12 @@ class ManageChannels extends Component {
                               </thead>
                               <tbody>
                                 {this.state.channels
-                                  .sort((a, b) => (a.channel_id < b.channel_id ? -1 : 1))
+                                  .sort((a, b) => (a.name < b.name ? -1 : 1))
                                   .map(channel => {
                                     return (
-                                      <tr key={channel.channel_id}>
-                                        <td className="v-align-middle " onClick={this.getChannelInfo.bind(this, channel.channel_id)} style={{ cursor: 'pointer' }}>
-                                          {channel.channel_id}
+                                      <tr key={channel.name}>
+                                        <td className="v-align-middle " style={{ cursor: 'pointer' }}>
+                                          {channel.name}
                                         </td>
                                         <td>
                                           <LaddaButton
@@ -346,10 +254,10 @@ class ManageChannels extends Component {
                                             data-spinner-size={30}
                                             data-spinner-lines={12}
                                             className="btn btn-success"
-                                            onClick={this.showAddOrgModal.bind(this, channel.channel_id)}
+                                            onClick={this.showAddOrgModal.bind(this, channel.name)}
                                           >
                                             <i className="fa fa-circle-plus" aria-hidden="true" />
-                                            &nbsp;&nbsp;Add Org
+                                            &nbsp;&nbsp;Invite Org
                                           </LaddaButton>
                                         </td>
                                       </tr>
@@ -375,6 +283,7 @@ class ManageChannels extends Component {
 
 export default withTracker(props => {
   return {
+    user: Meteor.user(),
     network: [
       ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true }).fetch(),
       ...PrivatehiveOrderers.find({ instanceId: props.match.params.id, active: true }).fetch(),

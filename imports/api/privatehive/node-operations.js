@@ -1,10 +1,7 @@
-import moment from 'moment';
 import fs from 'fs';
 import request from 'request-promise';
 
-import helpers from '../../modules/helpers';
 import Config from '../../modules/config/server';
-import { PrivatehiveOrderers } from '../../collections/privatehiveOrderers/privatehiveOrderers.js';
 import { PrivatehivePeers } from '../../collections/privatehivePeers/privatehivePeers.js';
 
 const Operations = {};
@@ -33,11 +30,13 @@ Operations.fetchChannels = async ({ networkId }) => {
     throw new Meteor.Error(403, 'Invalid network');
   }
 
-  return request({
+  const res = request({
     uri: `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/channels/list`,
     method: 'GET',
     json: true,
   });
+
+  return res;
 };
 
 Operations.addChaincode = async ({ file, content, name, type, networkId }) => {
@@ -124,9 +123,12 @@ Operations.instantiateChaincode = async ({ name, channelName, functionName, args
     throw new Meteor.Error(403, 'Invalid network');
   }
 
-  return request({
-    uri: `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/chaincodes/install`,
+  const res = await request({
+    uri: `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/chaincodes/instantiate`,
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: {
       chaincodeName: name,
       channelName,
@@ -136,6 +138,9 @@ Operations.instantiateChaincode = async ({ name, channelName, functionName, args
     },
     json: true,
   });
+
+  console.log(res);
+  return res;
 };
 
 Meteor.methods({

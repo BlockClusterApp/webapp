@@ -274,7 +274,15 @@ class Invites extends Component {
                   <div className="modal-body col-md-height col-middle">
                     <form role="form" className="modal-assetInfo">
                       <h3>
-                        Join <b>{this.state.modalInvite.metadata.network.name}</b> Network
+                        Join{' '}
+                        <b>
+                          {this.state.modalInvite.metadata.network
+                            ? this.state.modalInvite.metadata.network.name
+                            : this.state.modalInvite.metadata.channel
+                            ? this.state.modalInvite.metadata.channel.name
+                            : null}
+                        </b>{' '}
+                        Network
                       </h3>
                       <p>Select Location to deploy</p>
                       <LocationSelector locationChangeListener={this.locationChangeListener.bind(this, this.state.modalInviteId)} />
@@ -393,7 +401,7 @@ class Invites extends Component {
                               <tr key={item._id}>
                                 <td>{index + 1}.</td>
                                 <td title={data.inviteFrom.email}>{data.inviteFrom.name}</td>
-                                <td>{data.network.name}</td>
+                                <td>{data.network ? data.network.name : data.channel ? data.channel.name : null}</td>
                                 <td>
                                   <div className="row">
                                     {item.invitationStatus === 1 ? (
@@ -461,7 +469,7 @@ class Invites extends Component {
                                     minute: 'numeric',
                                   })}
                                 </td>
-                                <td>{data.network.name}</td>
+                                <td>{data.network ? data.network.name : data.channel ? data.channel.name : null}</td>
                                 <td>{this.getStatus(item.invitationStatus, item._id, item.resendCount)}</td>
                                 <td>{this.getActions(item.invitationStatus, item._id, item.resendCount)}</td>
                               </tr>

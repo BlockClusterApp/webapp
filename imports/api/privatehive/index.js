@@ -5,6 +5,7 @@ import Config from '../../modules/config/server';
 import { PrivatehiveOrderers } from '../../collections/privatehiveOrderers/privatehiveOrderers.js';
 import { PrivatehivePeers } from '../../collections/privatehivePeers/privatehivePeers.js';
 import Creators from './creators';
+import request from 'request-promise';
 
 let PrivateHive = {};
 
@@ -164,9 +165,48 @@ PrivateHive.deleteNetwork = async ({ userId, instanceId }) => {
   return true;
 };
 
-PrivateHive.join = async () => {
+PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererId }) => {
   // PlaceHolder function
-  return true;
+  const peer = PrivatehivePeers.findOne({ _id: peerId, userId });
+  if (!peer) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+  const network = PrivatehivePeers.findOne({ _id: networkId });
+  if (!peer) {
+    throw new Meteor.Error(403, 'Invalid inviting network');
+  }
+
+  const newOrgConf = await request({
+    uri: `http://${newConfig.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/orgDetails`,
+    method: 'GET',
+  });
+
+  const addOrgRes = await request({
+    uri: `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/channels/addOrg`,
+    method: 'POST',
+    body: {
+      name: channelName,
+      newOrgName: peer.instanceId,
+      newOrgConf,
+    },
+  });
+
+  console.log('AddOrg', addOrgRes);
+
+  const ordererDetails = PrivatehiveOrderers.findOne({ instanceId: ordererId.toLowerCase() });
+
+  const res = await request({
+    uri: `http://${newConfig.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/channels/join`,
+    body: {
+      name: channelName,
+      ordererURL: `${Config.workerNodeIP(ordererDetails.locationCode)}:${ordererDetails.ordererNodePort}`,
+      ordererOrgName: ordererDetails.instanceId,
+    },
+  });
+
+  console.log('Join res', res);
+
+  return peerId;
 };
 
 PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, type, voucherId, name }) => {
@@ -271,7 +311,7 @@ Meteor.methods({
       return new Promise((resolve, reject) => {
         HTTP.call(
           'POST',
-          `http://${Config.workerNodeIP(peerDetails.locationCode)}:${peerDetails.apiNodePort}/createChannel`,
+          `http://${Config.workerNodeIP(peerDetails.locationCode)}:${peerDetails.apiNodePort}/channel/create`,
           {
             data: {
               name: channelName,

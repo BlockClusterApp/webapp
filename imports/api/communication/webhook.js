@@ -3,7 +3,8 @@ import Bull from '../../modules/schedulers/bull';
 import request from 'request-promise';
 import uuid from 'uuid/v4';
 import { Networks } from '../../collections/networks/networks';
-import PrivateHive from '../../collections/privatehive';
+import { PrivatehivePeers } from '../../collections/privatehivePeers/privatehivePeers';
+import { PrivatehiveOrderers } from '../../collections/privatehiveOrderers/privatehiveOrderers';
 
 const debug = require('debug')('api:communication:webhook');
 
@@ -21,18 +22,21 @@ WebHookApis.generatePayload = data => {
 
   if (data.networkId) {
     if (data.type === 'privatehive') {
-      const network = PrivateHive.find({ instanceId: data.networkId }).fetch()[0];
+      let network = PrivatehivePeers.findOne({ instanceId: data.networkId });
+      let type = 'peer';
+      if (!network) {
+        network = PrivatehiveOrderers.findOne({ instanceId: data.networkId });
+        type = 'orderer';
+      }
       result.keys.push('network');
       result.data.network = {
         instanceId: network.instanceId,
         name: network.name,
         service: 'privatehive',
-        type: network.isJoin ? 'peer' : 'orderer',
+        type,
         locationCode: network.locationCode,
         configuration: network.networkConfig,
         status: network.status,
-        properties: network.properties,
-        nfsServer: network.nfs.url,
       };
     } else {
       const network = Networks.find({ instanceId: data.networkId }).fetch()[0];

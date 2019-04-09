@@ -45,8 +45,7 @@ class ManageChaincode extends Component {
     });
   }
 
-  installChaincode = () => {
-    const chaincodeName = this.state.modalChaincodeName;
+  installChaincode = chaincodeName => {
     this.setState({
       [`loading_${chaincodeName}`]: true,
     });
@@ -68,6 +67,12 @@ class ManageChaincode extends Component {
     if (!this.channelName.value) {
       return notifications.error('Channel required');
     }
+    let args;
+    try {
+      args = JSON.parse(this.args.value);
+    } catch (err) {
+      return notifications.error('ARGS should be JSON');
+    }
     Meteor.call(
       'instantiateChaincode',
       {
@@ -75,7 +80,7 @@ class ManageChaincode extends Component {
         networkId: this.props.match.params.id,
         channelName: this.channelName.value,
         functionName: this.functionName.value,
-        args: this.args.value,
+        args,
         endorsmentPolicy: this.endorsmentPolicy.value,
       },
       (err, res) => {
