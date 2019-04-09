@@ -177,8 +177,8 @@ class Navbar extends Component {
             {!window.isAdminWindow && (
               <li className="m-t-30 ">
                 <Link to={'/app/networks'} className="detailed">
-                  <span className="title">Networks</span>
-                  <span className="details">Dynamo Management</span>
+                  <span className="title">Dynamo</span>
+                  <span className="details">Manage Networks</span>
                 </Link>
                 <span className="icon-thumbnail">
                   <i className="fa fa-list" />
@@ -189,7 +189,7 @@ class Navbar extends Component {
               <li>
                 <Link to="/app/privatehive" className="detailed">
                   <span className="title">Private Hive</span>
-                  <span className="details">Hyperledger fabric</span>
+                  <span className="details">Hyperledger Fabric</span>
                 </Link>
                 <span className="icon-thumbnail">
                   <i className="fa fa-snowflake-o" />
@@ -199,8 +199,8 @@ class Navbar extends Component {
             {features.Paymeter && !window.isAdminWindow && (
               <li>
                 <Link to={'/app/paymeter'} className="detailed">
-                  <span className="title">Wallets</span>
-                  <span className="details">Manage Paymeter</span>
+                  <span className="title">Paymeter</span>
+                  <span className="details">Manage Wallets</span>
                 </Link>
                 <span className="icon-thumbnail">
                   <i className="fa fa-cube" />
@@ -210,8 +210,8 @@ class Navbar extends Component {
             {features.Hyperion && !window.isAdminWindow && (
               <li>
                 <Link to={'/app/hyperion'} className="detailed">
-                  <span className="title">Files</span>
-                  <span className="details">Upload on Hyperion</span>
+                  <span className="title">Hyperion</span>
+                  <span className="details">Upload Files</span>
                 </Link>
                 <span className="icon-thumbnail">
                   <i className="fa fa-file" />

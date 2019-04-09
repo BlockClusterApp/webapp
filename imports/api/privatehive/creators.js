@@ -271,7 +271,7 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                 containers: [
                   {
                     name: 'privatehive-api',
-                    image: `402432300121.dkr.ecr.ap-south-1.amazonaws.com/privatehive-peer-api:${process.env.NODE_ENV === 'production' ? 'latest' : process.env.NODE_ENV}`,
+                    image: `402432300121.dkr.ecr.ap-south-1.amazonaws.com/privatehive-peer-api:latest`, //${process.env.NODE_ENV === 'production' ? 'latest' : process.env.NODE_ENV}
                     ports: [
                       {
                         containerPort: 3000,
@@ -361,7 +361,7 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                   {
                     name: 'peer',
                     image: 'hyperledger/fabric-peer',
-                    args: ['peer', 'node', 'start', '--peer-chaincodedev=true'],
+                    args: ['peer', 'node', 'start'],
                     ports: [
                       {
                         containerPort: 7051,
