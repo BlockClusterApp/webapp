@@ -1523,8 +1523,29 @@ class PaymeterComponent extends Component {
                                           &nbsp;&nbsp;Fetch Now
                                         </LaddaButton>
                                       </div>
-                                      <p>{this.state[wallet._id + '_EthBal'] ? this.state[wallet._id + '_EthBal'] + ' ETH' : ''}</p>
-                                    </div>
+                                      <p>{this.state[wallet._id + '_EthBal'] ? this.state[wallet._id + '_EthBal'] + ' ETH' : 'Please topup your wallet with ETH'}</p>
+                                    </div>{' '}
+                                    {wallet.contractAddress == Config.dkyContractAddress && (
+                                      <div>
+                                        <div className="form-group form-group-default m-t-10">
+                                          <label>*send some token to get some</label>
+                                          <input className="form-control" />
+                                        </div>
+                                        <LaddaButton
+                                          loading={this.state.sendingLoader}
+                                          data-size={S}
+                                          data-style={SLIDE_UP}
+                                          data-spinner-size={30}
+                                          data-spinner-lines={12}
+                                          className="btn btn-complete btn-cons m-t-10"
+                                          onClick={()=>{console.log("sned here")}}
+                                          type="submit"
+                                        >
+                                          <i className="fa fa-paper-plane" aria-hidden="true" />
+                                          &nbsp;&nbsp;Send
+                                        </LaddaButton>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </div>
