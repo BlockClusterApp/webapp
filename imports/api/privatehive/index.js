@@ -275,6 +275,8 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       });
     }
 
+    console.log('Orderer type', ordererType);
+
     let certs = await getCerts(peerDetails);
     let ordererDetails = await PrivateHive.createOrderer({
       peerOrgName: peerId,
@@ -289,6 +291,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       instanceId: ordererDetails.instanceId,
       ordererNodePort: ordererDetails.ordererNodePort,
       workerNodeIP: Config.workerNodeIP(peerDetails.locationCode),
+      ordererType,
       ...commonData,
     });
     return ordererDetails.instanceId;
@@ -303,8 +306,8 @@ PrivateHive.getPrivateHiveNetworkCount = async () => {
 };
 
 Meteor.methods({
-  initializePrivateHiveNetwork: async ({ peerId, locationCode, type, name, voucherId }) => {
-    const res = await PrivateHive.createPrivateHiveNetwork({ userId: Meteor.userId(), peerId, locationCode, type, name, voucherId });
+  initializePrivateHiveNetwork: async ({ peerId, locationCode, type, name, voucherId, ordererType }) => {
+    const res = await PrivateHive.createPrivateHiveNetwork({ userId: Meteor.userId(), peerId, locationCode, type, name, voucherId, ordererType });
     return res;
   },
   getPrivateHiveNetworkCount: PrivateHive.getPrivateHiveNetworkCount,

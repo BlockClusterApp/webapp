@@ -45,7 +45,14 @@ class PaymentDashboard extends Component {
     }
     Meteor.call(
       'initializePrivateHiveNetwork',
-      { name, type: config.networkType, peerId: config.peerId, locationCode: this.locationCode, voucherId: this.selectedVoucher ? this.selectedVoucher._id : undefined },
+      {
+        name,
+        ordererType: config.ordererType,
+        type: config.networkType,
+        peerId: config.peerId,
+        locationCode: this.locationCode,
+        voucherId: this.selectedVoucher ? this.selectedVoucher._id : undefined,
+      },
       (err, res) => {
         this.setState({
           loading: false,

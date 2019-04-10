@@ -146,6 +146,14 @@ class ViewEditNetwork extends Component {
                       <b className="value-valign-middle">{network.instanceId.toPascalCase()}</b>
                     </div>
                   </div>
+                  {network.type === 'orderer' && (
+                    <div className="form-group row">
+                      <label className="col-md-3 control-label">Orderer Type</label>
+                      <div className="col-md-9">
+                        <b className="value-valign-middle">{network.ordererType}</b>
+                      </div>
+                    </div>
+                  )}
 
                   {/* <div className="form-group row">
                     <label className="col-md-3 control-label">API Client</label>
