@@ -96,7 +96,7 @@ class Invites extends Component {
           locationCode: this.inviteLocationMapping[inviteId] || this.state.locations[0].locationCode,
           networkConfig: this.inviteConfigMapping[inviteId],
           type: this.state.modalInvite.type,
-          peerId: this.peer._id,
+          peerId: this.peer && this.peer._id,
         },
         () => {
           this.loading[inviteId] = false;
@@ -271,7 +271,7 @@ class Invites extends Component {
       isVoucherAlertShown = true;
     }
 
-    let Modal = this.state.showModal && this.state.modalInvite.type === 'network' && (
+    let Modal = this.state.showModal && (
       <div className="modal fade slide-right" id="modalSlideLeft_soloAssetInfo" tabIndex="-1" role="dialog" aria-hidden="true">
         <div className="modal-dialog modal-md">
           <div className="modal-content-wrapper">
