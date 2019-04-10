@@ -479,10 +479,10 @@ NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkC
     if (type === 'privatehive-channel') {
       const res = await PrivateHiveApis.join({
         networkId: network._id,
-        channelName: invite.metadata.channel.name,
+        channelName: invitation.metadata.channel.name,
         peerId,
         userId,
-        ordererId: invite.metadata.channel.ordererId,
+        ordererId: invitation.metadata.channel.ordererId,
       });
       // UserInvitation.update(
       //   {

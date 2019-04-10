@@ -180,18 +180,19 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererId })
   }
 
   const newOrgConf = await request({
-    uri: `http://${newConfig.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/orgDetails`,
+    uri: `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/orgDetails`,
     method: 'GET',
   });
 
   const addOrgRes = await request({
-    uri: `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/channels/addOrg`,
+    uri: `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/channel/addOrg`,
     method: 'POST',
     body: {
       name: channelName,
       newOrgName: peer.instanceId,
       newOrgConf,
     },
+    json: true,
   });
 
   console.log('AddOrg', addOrgRes);
@@ -199,7 +200,7 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererId })
   const ordererDetails = PrivatehiveOrderers.findOne({ instanceId: ordererId.toLowerCase() });
 
   const res = await request({
-    uri: `http://${newConfig.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/channels/join`,
+    uri: `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/channel/join`,
     body: {
       name: channelName,
       ordererURL: `${Config.workerNodeIP(ordererDetails.locationCode)}:${ordererDetails.ordererNodePort}`,
@@ -435,7 +436,7 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
   };
 
   const userNetworks = [
-    PrivatehiveOrderers.find({
+    ...PrivatehiveOrderers.find({
       userId: userId,
       createdAt: {
         $lt: calculationEndDate,
@@ -449,8 +450,10 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
           },
         },
       ],
-    }).fetch(),
-    PrivatehivePeers.find({
+    })
+      .fetch()
+      .map(m => ({ ...m, type: 'orderer' })),
+    ...PrivatehivePeers.find({
       userId: userId,
       createdAt: {
         $lt: calculationEndDate,
@@ -464,7 +467,9 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
           },
         },
       ],
-    }).fetch(),
+    })
+      .fetch()
+      .map(m => ({ ...m, type: 'peer' })),
   ];
 
   result.networks = /* userNetworks */ []
