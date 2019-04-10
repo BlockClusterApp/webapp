@@ -313,7 +313,7 @@ NetworkInvitation.inviteUserToChannel = async ({ channelName, networkId, email, 
   }
   userId = userId || Meteor.userId();
   const network = PrivatehivePeers.findOne({
-    instanceId: networkId,
+    _id: networkId,
     userId,
   });
   if (!network) {
@@ -444,7 +444,7 @@ NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkC
 
     let network;
     if (invitation.type === 'privatehive-channel') {
-      network = PrivatehivePeers.findOne({ _id: invitation.networkId });
+      network = PrivatehivePeers.findOne({ _id: invitation.metadata.channel.networkId });
     } else {
       network = Networks.find({
         _id: invitation.networkId,

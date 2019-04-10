@@ -7,6 +7,12 @@ import { PrivatehivePeers } from '../../collections/privatehivePeers/privatehive
 import Creators from './creators';
 import request from 'request-promise';
 
+function sleep(timeout) {
+  return new Promise(r => {
+    setTimeout(() => r(), timeout);
+  });
+}
+
 let PrivateHive = {};
 
 PrivateHive.createPeer = async ({ locationCode }) => {
@@ -175,13 +181,18 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererId })
     throw new Meteor.Error(403, 'Invalid network');
   }
   const network = PrivatehivePeers.findOne({ _id: networkId });
-  if (!peer) {
+  if (!network) {
     throw new Meteor.Error(403, 'Invalid inviting network');
+  }
+
+  if (network._id === peer._id) {
+    throw new Meteor.Error(403, 'Cannot join invited network');
   }
 
   const newOrgConf = await request({
     uri: `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/orgDetails`,
     method: 'GET',
+    json: true,
   });
 
   const addOrgRes = await request({
@@ -190,22 +201,24 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererId })
     body: {
       name: channelName,
       newOrgName: peer.instanceId,
-      newOrgConf,
+      newOrgConf: newOrgConf.message,
     },
     json: true,
   });
 
-  console.log('AddOrg', addOrgRes);
-
   const ordererDetails = PrivatehiveOrderers.findOne({ instanceId: ordererId.toLowerCase() });
+  console.log('AddOrg response', addOrgRes, ordererDetails);
 
+  await sleep(5000);
   const res = await request({
     uri: `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/channel/join`,
+    method: 'POST',
     body: {
       name: channelName,
       ordererURL: `${Config.workerNodeIP(ordererDetails.locationCode)}:${ordererDetails.ordererNodePort}`,
       ordererOrgName: ordererDetails.instanceId,
     },
+    json: true,
   });
 
   console.log('Join res', res);

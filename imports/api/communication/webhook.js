@@ -21,7 +21,7 @@ WebHookApis.generatePayload = data => {
   delete data.event;
 
   if (data.networkId) {
-    if (data.type.includes('privatehive')) {
+    if (data.type && data.type.includes('privatehive')) {
       let network = PrivatehivePeers.findOne({ instanceId: data.networkId });
       let type = 'peer';
       if (!network) {

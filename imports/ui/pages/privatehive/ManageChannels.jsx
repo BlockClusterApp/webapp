@@ -86,7 +86,7 @@ class ManageChannels extends Component {
       {
         channelName: this.state.modalChannel.name,
         ordererId: this.state.modalChannel.ordererOrgName.toLowerCase(),
-        networkId: this.props.network.instanceId,
+        networkId: this.props.network._id,
         email: this.email.value,
       },
       (err, res) => {
@@ -96,7 +96,7 @@ class ManageChannels extends Component {
         if (err) {
           return notifications.error(err.reason);
         }
-        $('#channel_info_modal').modal('hide');
+        $('#channel_add_org_details').modal('hide');
         return notifications.success('Invite sent');
       }
     );
@@ -254,7 +254,7 @@ class ManageChannels extends Component {
                                             data-spinner-size={30}
                                             data-spinner-lines={12}
                                             className="btn btn-success"
-                                            onClick={this.showAddOrgModal.bind(this, channel.name)}
+                                            onClick={this.showAddOrgModal.bind(this, channel.name, channel.ordererOrgName)}
                                           >
                                             <i className="fa fa-circle-plus" aria-hidden="true" />
                                             &nbsp;&nbsp;Invite Org
