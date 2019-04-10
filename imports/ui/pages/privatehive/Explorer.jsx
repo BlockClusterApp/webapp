@@ -4,6 +4,7 @@ import PrivateHive from '../../../collections/privatehive';
 import helpers from '../../../modules/helpers';
 import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from 'react-html-parser';
 import { withRouter, Link } from 'react-router-dom';
+import { PrivatehivePeers } from '../../../collections/privatehivePeers/privatehivePeers';
 import Config from '../../../modules/config/client';
 
 import querystring from 'querystring';
@@ -439,14 +440,14 @@ class Explorer extends Component {
 
 export default withTracker(props => {
   return {
-    network: PrivateHive.find({ instanceId: props.match.params.id, active: true }).fetch()[0],
+    network: PrivatehivePeers.findOne({ instanceId: props.match.params.id, active: true }),
     subscriptions: [
       Meteor.subscribe(
         'privatehive.one',
-        { instanceId: props.match.params.id, active: true },
+        { instanceId: props.match.params.id },
         {
           onReady: function() {
-            if (PrivateHive.find({ instanceId: props.match.params.id, active: true }).fetch().length !== 1) {
+            if (PrivatehivePeers.find({ instanceId: props.match.params.id, active: true }).fetch().length !== 1) {
               props.history.push('/app/privatehive/list');
             }
           },

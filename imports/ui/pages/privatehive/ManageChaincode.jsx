@@ -13,6 +13,7 @@ class ManageChaincode extends Component {
 
     this.state = {
       chaincodes: [],
+      channels: [],
     };
 
     this.getAssetTypes = this.getAssetTypes.bind(this);
@@ -34,6 +35,7 @@ class ManageChaincode extends Component {
   }
 
   getAssetTypes() {
+    this.getChannels();
     const { network } = this.props;
     Meteor.call('fetchChaincodes', { networkId: network.instanceId }, (err, res) => {
       if (err) {
@@ -51,7 +53,7 @@ class ManageChaincode extends Component {
     });
     Meteor.call('installChaincode', { name: chaincodeName, networkId: this.props.match.params.id }, (err, res) => {
       this.setState({
-        [`loading_${chaincodeName}`]: true,
+        [`loading_${chaincodeName}`]: false,
       });
       if (err) {
         return notifications.error(err.reason);
@@ -59,6 +61,26 @@ class ManageChaincode extends Component {
       notifications.success('Installed');
     });
   };
+
+  getChannels() {
+    Meteor.call(
+      'fetchChannels',
+      {
+        networkId: this.props.match.params.id,
+      },
+      (err, res) => {
+        this.setState({
+          loading: false,
+        });
+        if (err) {
+          return notifications.error(err.reason);
+        }
+        return this.setState({
+          channels: res.message,
+        });
+      }
+    );
+  }
 
   instantiateChaincode = chaincodeName => {
     this.setState({
@@ -97,6 +119,14 @@ class ManageChaincode extends Component {
   };
 
   render() {
+    const channelOptions = this.state.channels.map((channel, index) => {
+      return (
+        <option key={channel.name} selected={index === 0}>
+          {channel.name}
+        </option>
+      );
+    });
+
     let Modal = (
       <div className="modal fade slide-right" id="chaincode_modal" tabIndex="-1" role="dialog" aria-hidden="true">
         <div className="modal-dialog modal-md">
@@ -114,11 +144,11 @@ class ManageChaincode extends Component {
                     <br />
                     <div className="row clearfix">
                       <div className="col-md-12">
-                        <div className="form-group form-group-default input-group">
-                          <div className="form-input-group">
-                            <label>Channel Name</label>
-                            <input type="text" className="form-control" name="projectName" ref={input => (this.channelName = input)} />
-                          </div>
+                        <div className="form-group form-group-default ">
+                          <label>Select Channel</label>
+                          <select className="form-control" ref={input => (this.channel = input)} onChange={this.channelChangeListener}>
+                            {channelOptions}
+                          </select>
                         </div>
                       </div>
                     </div>
@@ -146,7 +176,7 @@ class ManageChaincode extends Component {
                       <div className="col-md-12">
                         <div className="form-group form-group-default input-group">
                           <div className="form-input-group">
-                            <label>Endorsment Policy</label>
+                            <label>Endorsement Policy</label>
                             <input type="text" className="form-control" name="projectName" ref={input => (this.endorsmentPolicy = input)} />
                           </div>
                         </div>

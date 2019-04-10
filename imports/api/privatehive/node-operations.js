@@ -143,10 +143,116 @@ Operations.instantiateChaincode = async ({ name, channelName, functionName, args
   return res;
 };
 
+Operations.addNotificationURL = async ({ networkId, notificationURL, chaincodeName, channelName, chaincodeEventName, startBlock }) => {
+  const network = PrivatehivePeers.findOne({
+    instanceId: networkId,
+    userId: Meteor.userId(),
+  });
+
+  if (!network) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+
+  const url = `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/notifications/add`;
+
+  const res = await request({
+    uri: url,
+    method: 'POST',
+    body: {
+      chaincodeName,
+      channelName,
+      chaincodeEventName,
+      notificationURL,
+      startBlock,
+    },
+    json: true,
+  });
+
+  return res;
+};
+
+Operations.updateNotificationURL = async ({ networkId, notificationURL, chaincodeName, channelName, chaincodeEventName }) => {
+  const network = PrivatehivePeers.findOne({
+    instanceId: networkId,
+    userId: Meteor.userId(),
+  });
+
+  if (!network) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+
+  const url = `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/notifications/update`;
+
+  const res = await request({
+    uri: url,
+    method: 'POST',
+    body: {
+      chaincodeName,
+      channelName,
+      chaincodeEventName,
+      notificationURL,
+    },
+    json: true,
+  });
+
+  return res;
+};
+
+Operations.removeNotificationURL = async ({ networkId, chaincodeName, channelName, chaincodeEventName }) => {
+  const network = PrivatehivePeers.findOne({
+    instanceId: networkId,
+    userId: Meteor.userId(),
+  });
+
+  if (!network) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+
+  const url = `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/notifications/remove`;
+
+  console.log('Deleting', chaincodeEventName, chaincodeName, channelName);
+  const res = await request({
+    uri: url,
+    method: 'POST',
+    body: {
+      chaincodeName,
+      channelName,
+      chaincodeEventName,
+    },
+    json: true,
+  });
+
+  return res;
+};
+
+Operations.listNotificationURLs = async ({ networkId }) => {
+  const network = PrivatehivePeers.findOne({
+    instanceId: networkId,
+    userId: Meteor.userId(),
+  });
+
+  if (!network) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+
+  const url = `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/notifications/list`;
+
+  const res = await request({
+    uri: url,
+    method: 'GET',
+    json: true,
+  });
+  return res.message;
+};
+
 Meteor.methods({
   addChaincode: Operations.addChaincode,
   fetchChaincodes: Operations.fetchChaincodes,
   installChaincode: Operations.installChaincode,
   instantiateChaincode: Operations.instantiateChaincode,
   fetchChannels: Operations.fetchChannels,
+  addChaincodeNotification: Operations.addNotificationURL,
+  updateChaincodeNotification: Operations.updateNotificationURL,
+  removeChaincodeNotification: Operations.removeNotificationURL,
+  listChaincodeNotifications: Operations.listNotificationURLs,
 });
