@@ -73,6 +73,7 @@ import PrivateHiveAdminList from '../../pages/admin/privatehive/NetworkList';
 import PrivateHiveAdminDetails from '../../pages/admin/privatehive/Details';
 import PrivateHiveChannelExplorer from '../../pages/privatehive/Explorer.jsx';
 import PrivateHiveChannelManagement from '../../pages/privatehive/ManageChannels';
+import PrivateHiveChannelInvite from '../../pages/privatehive/InviteChannel';
 import PrivateHiveChaincodeManagement from '../../pages/privatehive/ManageChaincode';
 import PrivateHiveChannelCreate from '../../pages/privatehive/CreateChannel';
 import PrivateHiveSecurity from '../../pages/privatehive/Security';
@@ -169,6 +170,7 @@ export default withRouter(
                   <Route exact path="/app/privatehive/:id/channels/create" render={props => this.showFailedBillingWarning(PrivateHiveChannelCreate, props)} />
                   <Route exact path="/app/privatehive/:id/channels/explorer" render={props => this.showFailedBillingWarning(PrivateHiveChannelExplorer, props)} />
                   <Route exact path="/app/privatehive/:id/channels/manage" render={props => this.showFailedBillingWarning(PrivateHiveChannelManagement, props)} />
+                  <Route exact path="/app/privatehive/:id/channels/invite" render={props => this.showFailedBillingWarning(PrivateHiveChannelInvite, props)} />
                   <Route exact path="/app/privatehive/:id/chaincode/manage" render={props => this.showFailedBillingWarning(PrivateHiveChaincodeManagement, props)} />
                   <Route exact path="/app/privatehive/:id/chaincode/create" render={props => this.showFailedBillingWarning(PrivateHiveChaincodeCreate, props)} />
                   <Route exact path="/app/privatehive/:id/notifications" render={props => this.showFailedBillingWarning(PrivateHiveNotifications, props)} />

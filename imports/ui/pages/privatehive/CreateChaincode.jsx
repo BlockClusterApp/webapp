@@ -70,8 +70,9 @@ class CreateChannelCode extends Component {
           });
           if (err) {
             return notifications.error(err.reason);
+          } else {
+            return notifications.success('Chaincode added');
           }
-          return notifications.success('Chaincode added');
         }
       );
     };
@@ -89,44 +90,25 @@ class CreateChannelCode extends Component {
                 {' '}
                 Control Panel <i className="fa fa-angle-right" />
               </Link>{' '}
-              Install Chaincode
+              Upload Chaincode
             </div>
           </div>
           <div className="row">
             <div className="col-md-6">
               <div className="card card-transparent">
                 <div className="card-block" style={{ padding: '0px' }}>
-                  <h3>Install Your Chaincode on peer</h3>
-                  <p>Install a new chaincode on the fabric network. We support only golang based chaincodes for now</p>
+                  <h3>Upload Your Chaincode on peer</h3>
+                  <p>Upload a new chaincode on the peer. We support both Golang and Node.js chaincodes</p>
                   <ul>
                     <li>
                       <i>Name</i>: A valid name for the chaincode.
                     </li>
                     <li>
-                      <i>Version</i>: Any alphanumeric string to maintain revisions.
+                      <i>Version</i>: When you upload a new chaincode we assign default version to be 1.0. While upgrading chaincode you can change the version.
                     </li>
                     <li>
-                      <i>ZIP File</i>: The path containing the chaincode in the zip file. It should be a valid golang package path Eg:{' '}
-                      <i>github.com/BlockClusterApp/sample-chaincode/</i>
-                    </li>
-                    <li>
-                      The zip file should contain{' '}
-                      <b>
-                        <i>src</i>
-                      </b>
-                      &nbsp; folder at root with all the dependencies inside. The file will be unziped at $GOPATH before compiling Eg: If your chaincode depends on two different
-                      packages, the folder structure should be:
-                      <br />
-                      src/
-                      <br />
-                      &nbsp;&nbsp;|- github.com/ <br />
-                      &nbsp;&nbsp;|&nbsp;&nbsp;|- BlockClusterApp/ <br />
-                      &nbsp;&nbsp;|&nbsp;&nbsp;|&nbsp;&nbsp;| - sample-chaincode/
-                      <br />
-                      &nbsp;&nbsp;|&nbsp;&nbsp;|&nbsp;&nbsp;| - dependency-package/ <br />
-                      &nbsp;&nbsp;|- gopkg.com/ <br />
-                      &nbsp;&nbsp;|&nbsp;&nbsp;|- vendor/ <br />
-                      &nbsp;&nbsp;|&nbsp;&nbsp;|&nbsp;&nbsp;| - another-dependency-package/
+                      <i>ZIP File</i>: The .zip file should contain a directory with same name as the chaincode name. Inside the directory place the code files. For example: in
+                      case of golang, the directory should contain &#123;chaincodeName&#125;.go file.
                     </li>
                   </ul>
                 </div>
@@ -186,13 +168,16 @@ class CreateChannelCode extends Component {
               </div> */}
               <div className="row clearfix">
                 <div className="col-md-12">
-                  <div className="form-group form-group-default ">
+                  <div className="form-group form-group-default required">
                     <label>Chaincode Source ZIP file</label>
                     <input
                       type="file"
                       className="form-control file-button"
                       name="firstName"
                       required
+                      style={{
+                        marginTop: '5px',
+                      }}
                       ref={input => {
                         this.chaincodeFile = input;
                       }}
@@ -202,17 +187,11 @@ class CreateChannelCode extends Component {
               </div>
               <div className="row">
                 <div className="col-md-12">
-                  <div className="form-group ">
-                    <select
-                      className="full-width select2-hidden-accessible"
-                      data-init-plugin="select2"
-                      tabIndex="-1"
-                      aria-hidden="true"
-                      ref={input => (this.chaincodeType = input)}
-                    >
-                      <option value="golang">Go Lang</option>
-                      <option value="javascript">JavaScript</option>
-                      <option value="java">Java</option>
+                  <div className="form-group form-group-default required">
+                    <label>Chaincode Language</label>
+                    <select className="form-control" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" ref={input => (this.chaincodeType = input)}>
+                      <option value="golang">Go</option>
+                      <option value="node">Node</option>
                     </select>
                   </div>
                 </div>
@@ -228,7 +207,7 @@ class CreateChannelCode extends Component {
 
               <div className="row">
                 <div className="col-md-12">
-                  <div className="form-group p-l-15">
+                  <div className="form-group">
                     <LaddaButton
                       loading={this.state.loading}
                       disabled={this.state.loading}
@@ -242,8 +221,8 @@ class CreateChannelCode extends Component {
                         this.installChaincode();
                       }}
                     >
-                      <i className="fa fa-save" aria-hidden="true" />
-                      &nbsp;&nbsp;Install Chaincode
+                      <i className="fa fa-upload" aria-hidden="true" />
+                      &nbsp;&nbsp;Upload Chaincode
                     </LaddaButton>
                   </div>
                 </div>

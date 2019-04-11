@@ -25,14 +25,14 @@ class ViewNetwork extends Component {
                   <div className="card-title">
                     <Link to={'/app/privatehive/list'}>
                       {' '}
-                      <i className="fa fa-angle-left" /> All Networks
+                      <i className="fa fa-angle-left" /> All Organisations
                     </Link>
                   </div>
                 </div>
                 <div className="card-block">
                   <h2>{this.props.network ? this.props.network.name : ''}</h2>
                   <h5>
-                    {this.props.network ? helpers.firstLetterCapital(this.props.network.type == 'peer' ? 'Peer' : 'Orderer') : ''} network created on{' '}
+                    {this.props.network ? helpers.firstLetterCapital(this.props.network.type == 'peer' ? 'Peer' : 'Orderer') : ''} organisation created on{' '}
                     {this.props.network ? moment(this.props.network.createdAt).format('DD-MMM-YYYY kk:mm:SS') : ''}. Here is the control panel for this{' '}
                     {this.props.network ? (this.props.network.type == 'peer' ? 'peer' : 'orderer') : ''}.
                   </h5>
@@ -54,7 +54,7 @@ class ViewNetwork extends Component {
                             }}
                           >
                             <p className="no-margin text-black bold text-uppercase fs-12">Create Channels</p>
-                            <p className="no-margin fs-12">Private Subnet</p>
+                            <p className="no-margin fs-12">Private subnet</p>
                           </div>
                           <div
                             className="clickable"
@@ -63,16 +63,16 @@ class ViewNetwork extends Component {
                             }}
                           >
                             <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Manage Channels</p>
-                            <p className="no-margin fs-12">Add/Remove Members</p>
+                            <p className="no-margin fs-12">List of subnets</p>
                           </div>
                           <div
                             className="clickable"
                             onClick={() => {
-                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/channels/explorer') : '';
+                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/channels/invite') : '';
                             }}
                           >
-                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Explorer</p>
-                            <p className="no-margin fs-12">Audit the blockchain</p>
+                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Access Control</p>
+                            <p className="no-margin fs-12">Add organisation or Join</p>
                           </div>
                         </div>
                       </div>
@@ -94,8 +94,8 @@ class ViewNetwork extends Component {
                               this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/chaincode/create') : '';
                             }}
                           >
-                            <p className="no-margin text-black bold text-uppercase fs-12">Install Chaincode</p>
-                            <p className="no-margin fs-12">Install and Initiate</p>
+                            <p className="no-margin text-black bold text-uppercase fs-12">Add Chaincode</p>
+                            <p className="no-margin fs-12">Upload Chaincode Files</p>
                           </div>
                           <div
                             className="clickable"
@@ -104,9 +104,9 @@ class ViewNetwork extends Component {
                             }}
                           >
                             <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Manage Chaincodes</p>
-                            <p className="no-margin fs-12">Management</p>
+                            <p className="no-margin fs-12">Install and Instantiate</p>
                           </div>
-                          <div
+                          {/*<div
                             className="clickable"
                             onClick={() => {
                               this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/chaincode/access-control') : '';
@@ -114,14 +114,66 @@ class ViewNetwork extends Component {
                           >
                             <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">APIs</p>
                             <p className="no-margin fs-12">Integrate Chaincode</p>
+                          </div>*/}
+                          <div
+                            className="clickable"
+                            onClick={() => {
+                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/chaincode/access-control') : '';
+                            }}
+                          >
+                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Upgrade Chaincode</p>
+                            <p className="no-margin fs-12">Resolve Bugs and Add Features</p>
                           </div>
                         </div>
                       </div>
                       <br />
-                      <p className="small hint-text">Write, deploy and generate APIs for smart contracts using JavaScript, Java and Golang</p>
+                      <p className="small hint-text">Write, deploy and generate APIs for smart contracts using NodeJS and Golang</p>
                     </div>
                     <div className="col-lg-3">
-                      <p>Settings</p>
+                      <p>API Integrations</p>
+                      <div className="row m-l-5 m-t-10">
+                        <div className="col-1 card-left-piller no-padding ">
+                          <div className="light-black-bg p-t-30 p-b-35" />
+                          <div className="bg-master-light p-t-30 p-b-35" />
+                          <div className="light-black-bg p-t-30 p-b-35" />
+                        </div>
+                        <div className="col-10 bg-white b-a b-grey padding-10">
+                          <div
+                            className="clickable"
+                            onClick={() => {
+                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/settings') : '';
+                            }}
+                          >
+                            <p className="no-margin text-black bold text-uppercase fs-12">Invoke and Query</p>
+                            <p className="no-margin fs-12">Read and Write to Chaincode</p>
+                          </div>
+                          <div
+                            className="clickable"
+                            onClick={() => {
+                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/notifications') : '';
+                            }}
+                          >
+                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Notifications</p>
+                            <p className="no-margin fs-12">Events and Alerts</p>
+                          </div>
+                          <div
+                            className="clickable"
+                            onClick={() => {
+                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/security') : '';
+                            }}
+                          >
+                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Security</p>
+                            <p className="no-margin fs-12">Access Management</p>
+                          </div>
+                        </div>
+                      </div>
+                      <br />
+                      <p className="small hint-text">Test, Integrate and Register APIs for your DLT app</p>
+                    </div>
+                  </div>
+                  <div className="row ">
+                    <div className="col-lg-3">
+                      <p>Miscellaneous</p>
                       <div className="row m-l-5 m-t-10">
                         <div className="col-1 card-left-piller no-padding ">
                           <div className="light-black-bg p-t-30 p-b-35" />
@@ -154,8 +206,8 @@ class ViewNetwork extends Component {
                               this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/notifications') : '';
                             }}
                           >
-                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Notifications</p>
-                            <p className="no-margin fs-12">Events and Alerts</p>
+                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Explorer</p>
+                            <p className="no-margin fs-12">Audit Transactions</p>
                           </div>
                         </div>
                       </div>

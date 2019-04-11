@@ -117,6 +117,14 @@ class ViewEditNetwork extends Component {
                     </div>
                   </div>
                   <div className="form-group row">
+                    <label htmlFor="fname" className="col-md-3 control-label">
+                      Instance ID
+                    </label>
+                    <div className="col-md-9">
+                      <span className="value-valign-middle">{network.instanceId}</span>
+                    </div>
+                  </div>
+                  <div className="form-group row">
                     <label className="col-md-3 control-label">Organisation Type</label>
                     <div className="col-md-9">
                       <span className="value-valign-middle">{network.type === 'peer' ? 'Peer' : 'Orderer network'}</span>
@@ -141,7 +149,7 @@ class ViewEditNetwork extends Component {
                   </div>
 
                   <div className="form-group row">
-                    <label className="col-md-3 control-label">MSP Id</label>
+                    <label className="col-md-3 control-label">MSPID and Organisation Name</label>
                     <div className="col-md-9">
                       <b className="value-valign-middle">{network.instanceId.toPascalCase()}</b>
                     </div>
@@ -164,7 +172,7 @@ class ViewEditNetwork extends Component {
 
                   <div className="row form-group">
                     <div className="col-md-3">
-                      <p>You can leave the network if you wish but if you are only one member then all data will be lost. Deleting orderer will cause all the functions to stop</p>
+                      <p>You can delete the organisation if you wish. Deleting will cause all the functions to stop</p>
                     </div>
                     <div className="col-md-9">
                       <ConfirmationButton
@@ -173,7 +181,7 @@ class ViewEditNetwork extends Component {
                         onConfirm={this.deleteNetwork.bind(this, network._id)}
                         loadingText="Deleting"
                         completedText="Deleted"
-                        actionText="Delete Network"
+                        actionText="Delete Organisation"
                       />
                     </div>
                   </div>

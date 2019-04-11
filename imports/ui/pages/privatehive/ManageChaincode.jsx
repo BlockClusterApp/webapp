@@ -49,16 +49,17 @@ class ManageChaincode extends Component {
 
   installChaincode = chaincodeName => {
     this.setState({
-      [`loading_${chaincodeName}`]: true,
+      [`loading_${chaincodeName}_install`]: true,
     });
     Meteor.call('installChaincode', { name: chaincodeName, networkId: this.props.match.params.id }, (err, res) => {
       this.setState({
-        [`loading_${chaincodeName}`]: false,
+        [`loading_${chaincodeName}_install`]: false,
       });
       if (err) {
-        return notifications.error(err.reason);
+        return notifications.error('An error occured');
+      } else {
+        notifications.success('Chaincode installed');
       }
-      notifications.success('Installed');
     });
   };
 
@@ -82,19 +83,33 @@ class ManageChaincode extends Component {
     );
   }
 
-  instantiateChaincode = chaincodeName => {
+  instantiateChaincode = () => {
     this.setState({
-      [`loading_${chaincodeName}`]: true,
+      [`loading_${this.state.modalChaincodeName}_init`]: true,
     });
+
     if (!this.channelName.value) {
-      return notifications.error('Channel required');
+      this.setState({
+        initError: true,
+        initErrorMsg: 'Channel name missing',
+        [`loading_${this.state.modalChaincodeName}_init`]: false,
+      });
+      return;
     }
-    let args;
+
+    let args = this.args.value || '[]';
+
     try {
-      args = JSON.parse(this.args.value);
+      args = JSON.parse(args);
     } catch (err) {
-      return notifications.error('ARGS should be JSON');
+      this.setState({
+        initError: true,
+        initErrorMsg: 'Invalid Args. Must be a JSON array',
+        [`loading_${this.state.modalChaincodeName}_init`]: false,
+      });
+      return;
     }
+
     Meteor.call(
       'instantiateChaincode',
       {
@@ -107,13 +122,21 @@ class ManageChaincode extends Component {
       },
       (err, res) => {
         this.setState({
-          [`loading_${chaincodeName}`]: true,
+          [`loading_${this.state.modalChaincodeName}_init`]: true,
         });
         if (err) {
-          return notifications.error(err.reason);
+          this.setState({
+            initError: true,
+            initErrorMsg: 'An error occured',
+            [`loading_${this.state.modalChaincodeName}_init`]: false,
+          });
+        } else {
+          this.setState({
+            [`loading_${this.state.modalChaincodeName}_init`]: false,
+          });
+          $('#chaincode_modal').modal('hide');
+          notifications.success('Chaincode instantiated');
         }
-        notifications.success('Instantiated');
-        $('#chaincode_modal').modal('hide');
       }
     );
   };
@@ -138,15 +161,11 @@ class ManageChaincode extends Component {
               <div className="container-md-height full-height">
                 <div className="row-md-height">
                   <div className="modal-body col-md-height col-middle">
-                    <h3>
-                      Instantiate Chaincode <b>{this.state.modalChaincodeName}</b>
-                    </h3>
-                    <br />
                     <div className="row clearfix">
                       <div className="col-md-12">
-                        <div className="form-group form-group-default ">
+                        <div className="form-group form-group-default required">
                           <label>Select Channel</label>
-                          <select className="form-control" ref={input => (this.channel = input)} onChange={this.channelChangeListener}>
+                          <select className="form-control" ref={input => (this.channelName = input)} onChange={this.channelChangeListener}>
                             {channelOptions}
                           </select>
                         </div>
@@ -166,8 +185,8 @@ class ManageChaincode extends Component {
                       <div className="col-md-12">
                         <div className="form-group form-group-default input-group">
                           <div className="form-input-group">
-                            <label>Args</label>
-                            <input type="text" className="form-control" name="projectName" ref={input => (this.args = input)} />
+                            <label>Arguments</label>
+                            <input type="text" placeholder="[]" className="form-control" name="projectName" ref={input => (this.args = input)} />
                           </div>
                         </div>
                       </div>
@@ -177,14 +196,28 @@ class ManageChaincode extends Component {
                         <div className="form-group form-group-default input-group">
                           <div className="form-input-group">
                             <label>Endorsement Policy</label>
-                            <input type="text" className="form-control" name="projectName" ref={input => (this.endorsmentPolicy = input)} />
+                            <textarea
+                              placeholder={'Default: Only your org has to sign'}
+                              rows={10}
+                              className="form-control"
+                              name="projectName"
+                              ref={input => (this.endorsmentPolicy = input)}
+                            />
                           </div>
                         </div>
                       </div>
                     </div>
-                    <br />
+                    {this.state.initError === true && (
+                      <div className="row">
+                        <div className="col-md-12">
+                          <div className="m-b-10 alert alert-danger m-b-0" role="alert">
+                            {this.state.initErrorMsg}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <LaddaButton
-                      loading={this.state[`loading_${this.state.modalChaincodeName}`]}
+                      loading={this.state[`loading_${this.state.modalChaincodeName}_init`]}
                       data-size={S}
                       data-style={SLIDE_UP}
                       data-spinner-size={30}
@@ -192,7 +225,7 @@ class ManageChaincode extends Component {
                       className="btn btn-success"
                       onClick={this.instantiateChaincode}
                     >
-                      <i className="fa fa-circle-plus" aria-hidden="true" />
+                      <i className="fa fa-check" aria-hidden="true" />
                       &nbsp;&nbsp;Instantiate
                     </LaddaButton>
                     &nbsp;
@@ -204,7 +237,8 @@ class ManageChaincode extends Component {
                         $('#chaincode_modal').modal('hide');
                       }}
                     >
-                      Close
+                      <i className="fa fa-times" aria-hidden="true" />
+                      &nbsp;&nbsp;Close
                     </button>
                   </div>
                 </div>
@@ -240,8 +274,9 @@ class ManageChaincode extends Component {
                             <table className="table table-hover" id="basicTable">
                               <thead>
                                 <tr>
-                                  <th style={{ width: '25%' }}>Chaincode Name</th>
-                                  <th style={{ width: '35%' }}>Details</th>
+                                  <th style={{ width: '20%' }}>Chaincode Name</th>
+                                  <th style={{ width: '20%' }}>Version</th>
+                                  <th style={{ width: '20%' }}>Language</th>
                                   <th style={{ width: '40%' }}>Actions</th>
                                 </tr>
                               </thead>
@@ -250,33 +285,29 @@ class ManageChaincode extends Component {
                                   return (
                                     <tr key={cc.name}>
                                       <td className="v-align-middle ">{cc.name}</td>
-                                      <td className="v-align-middle">
-                                        <b> Version:</b> {cc.version} <br />
-                                        <b> Language:</b> {cc.language}
-                                        {/* <br /> */}
-                                        {/* <b> Id:</b> {cc.id} */}
-                                      </td>
+                                      <td className="v-align-middle ">{cc.version}</td>
+                                      <td className="v-align-middle ">{cc.language === 'golang' ? 'Go' : 'Node'}</td>
                                       <td>
                                         <LaddaButton
-                                          loading={this.state[`loading_${cc.name}`]}
-                                          disabled={this.state[`loading_${cc.name}`]}
+                                          loading={this.state[`loading_${cc.name}_install`]}
+                                          disabled={this.state[`loading_${cc.name}_install`]}
                                           data-size={S}
                                           data-style={SLIDE_UP}
                                           data-spinner-size={30}
                                           data-spinner-lines={12}
                                           onClick={this.onSubmit}
-                                          className="btn btn-info"
+                                          className="btn btn-complete"
                                           onClick={() => {
                                             this.installChaincode(cc.name);
                                           }}
                                         >
-                                          <i className="fa fa-save" aria-hidden="true" />
+                                          <i className="fa fa-thumb-tack" aria-hidden="true" />
                                           &nbsp;&nbsp;Install
                                         </LaddaButton>
                                         &nbsp;&nbsp;
                                         <LaddaButton
-                                          loading={this.state[`loading_${cc.name}`]}
-                                          disabled={this.state[`loading_${cc.name}`]}
+                                          loading={this.state[`loading_${cc.name}_init`]}
+                                          disabled={this.state[`loading_${cc.name}_init`]}
                                           data-size={S}
                                           data-style={SLIDE_UP}
                                           data-spinner-size={30}
@@ -286,11 +317,13 @@ class ManageChaincode extends Component {
                                           onClick={() => {
                                             this.setState({
                                               modalChaincodeName: cc.name,
+                                              initError: false,
+                                              initErrorMsg: '',
                                             });
                                             $('#chaincode_modal').modal('show');
                                           }}
                                         >
-                                          <i className="fa fa-save" aria-hidden="true" />
+                                          <i className="fa fa-arrow-circle-o-right" aria-hidden="true" />
                                           &nbsp;&nbsp;Instantiate
                                         </LaddaButton>
                                       </td>

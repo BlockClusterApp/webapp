@@ -72,7 +72,7 @@ class NetworksList extends Component {
             <div className="col-lg-12">
               <div className="card card-transparent">
                 <div className="card-header ">
-                  <div className="card-title">List of Networks</div>
+                  <div className="card-title">List of Organisations</div>
                 </div>
                 <div className="card-block">
                   <div className="table-responsive">
@@ -80,7 +80,7 @@ class NetworksList extends Component {
                       <thead>
                         <tr>
                           <th style={{ width: '20%' }}>Name</th>
-                          <th style={{ width: '15%' }}>MSP ID</th>
+                          <th style={{ width: '15%' }}>MSPID/OrgName</th>
                           <th style={{ width: '15%' }}>Organisation Type</th>
                           <th style={{ width: '18%' }}>Location</th>
                           <th style={{ width: '17%' }}>Status</th>

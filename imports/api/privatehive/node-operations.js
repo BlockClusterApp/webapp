@@ -69,6 +69,11 @@ Operations.addChaincode = async ({ file, content, name, type, networkId }) => {
   const res = await chaincodeRequest;
 
   console.log(filePath, res);
+
+  if (res.error) {
+    throw new Meteor.Error(res.message);
+  }
+
   return true;
 };
 
@@ -101,7 +106,7 @@ Operations.installChaincode = async ({ name, type, version, networkId }) => {
     throw new Meteor.Error(403, 'Invalid network');
   }
 
-  return request({
+  let res = await request({
     uri: `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/chaincodes/install`,
     method: 'POST',
     body: {
@@ -109,6 +114,10 @@ Operations.installChaincode = async ({ name, type, version, networkId }) => {
     },
     json: true,
   });
+
+  if (res.error) {
+    throw new Meteor.Error(res.message);
+  }
 };
 
 Operations.instantiateChaincode = async ({ name, channelName, functionName, args, endorsmentPolicy, networkId }) => {
@@ -139,7 +148,10 @@ Operations.instantiateChaincode = async ({ name, channelName, functionName, args
     json: true,
   });
 
-  console.log(res);
+  if (res.error) {
+    throw new Meteor.Error('Error occured', res.message);
+  }
+
   return res;
 };
 
@@ -168,6 +180,10 @@ Operations.addNotificationURL = async ({ networkId, notificationURL, chaincodeNa
     json: true,
   });
 
+  if (res.error) {
+    throw new Meteor.Error('Error occured', res.message);
+  }
+
   return res;
 };
 
@@ -195,6 +211,10 @@ Operations.updateNotificationURL = async ({ networkId, notificationURL, chaincod
     json: true,
   });
 
+  if (res.error) {
+    throw new Meteor.Error('Error occured', res.message);
+  }
+
   return res;
 };
 
@@ -221,6 +241,10 @@ Operations.removeNotificationURL = async ({ networkId, chaincodeName, channelNam
     },
     json: true,
   });
+
+  if (res.error) {
+    throw new Meteor.Error('Error occured', res.message);
+  }
 
   return res;
 };

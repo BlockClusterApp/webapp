@@ -1,16 +1,15 @@
 import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
+import PrivateHive from '../../../collections/privatehive';
 import { withRouter } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 import notifications from '../../../modules/notifications';
 import { PrivatehiveOrderers } from '../../../collections/privatehiveOrderers/privatehiveOrderers';
 import { PrivatehivePeers } from '../../../collections/privatehivePeers/privatehivePeers';
-import moment from 'moment';
+import PrivateHiveNetworkSelector from '../../components/Selectors/PrivatehiveNetworkSelector';
 
-import './Explorer.scss';
-
-class ManageChannels extends Component {
+class InviteChannel extends Component {
   constructor() {
     super();
 
@@ -57,6 +56,44 @@ class ManageChannels extends Component {
     );
   }
 
+  addOrgToChannel = () => {
+    if (!this.email.value) {
+      return this.setState({
+        modalError: 'Email is required',
+      });
+    }
+    this.setState({
+      loading: true,
+    });
+
+    let ordererOrgName = '';
+
+    this.state.channels.forEach(channel => {
+      if (channel.name === this.channelName.value) {
+        ordererOrgName = channel.ordererOrgName;
+      }
+    });
+
+    Meteor.call(
+      'inviteUserToChannel',
+      {
+        channelName: this.channelName.value,
+        ordererId: ordererOrgName.toLowerCase(),
+        networkId: this.props.network._id,
+        email: this.email.value,
+      },
+      (err, res) => {
+        this.setState({
+          loading: false,
+        });
+        if (err) {
+          return notifications.error(err.reason);
+        }
+        return notifications.success('Invite sent');
+      }
+    );
+  };
+
   getChannelInfo = channelName => {
     this.setState(
       {
@@ -91,6 +128,14 @@ class ManageChannels extends Component {
   };
 
   render() {
+    const channelOptions = this.state.channels.map((channel, index) => {
+      return (
+        <option key={channel.name} selected={index === 0}>
+          {channel.name}
+        </option>
+      );
+    });
+
     return (
       <div className="assetsStats content">
         <div className="m-t-20 container-fluid container-fixed-lg bg-white">
@@ -103,42 +148,51 @@ class ManageChannels extends Component {
                       {' '}
                       Control Panel <i className="fa fa-angle-right" />
                     </Link>{' '}
-                    Channel Management
+                    Invite Organisation to Channel
                   </div>
                 </div>
                 <div className="card-block">
                   <div className="row">
                     <div className="col-xl-12">
-                      <div className="card card-transparent">
-                        {this.props.network && (
-                          <div className="table-responsive">
-                            <table className="table table-hover" id="basicTable">
-                              <thead>
-                                <tr>
-                                  <th style={{ width: '30%' }}>Channel Name</th>
-                                  <th style={{ width: '30%' }}>Orderer Org Name</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {this.state.channels
-                                  .sort((a, b) => (a.name < b.name ? -1 : 1))
-                                  .map(channel => {
-                                    return (
-                                      <tr key={channel.name}>
-                                        <td className="v-align-middle " style={{ cursor: 'pointer' }}>
-                                          {channel.name}
-                                        </td>
-                                        <td className="v-align-middle " style={{ cursor: 'pointer' }}>
-                                          {channel.ordererOrgName}
-                                        </td>
-                                      </tr>
-                                    );
-                                  })}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
+                      <div className="card card-transparent m-b-0">
+                        <div className="form-group">
+                          <label>Channel</label>
+                          <select className="form-control" ref={input => (this.channelName = input)} onChange={this.channelChangeListener}>
+                            {channelOptions}
+                          </select>
+                        </div>
                       </div>
+                    </div>
+                    <div className="col-xl-12">
+                      <div className="card card-transparent m-b-0">
+                        <div className="form-group">
+                          <label>User Email</label>
+                          <input
+                            type="email"
+                            className="form-control"
+                            required
+                            ref={input => {
+                              this.email = input;
+                            }}
+                            defaultValue={this.props.user.emails[0].address}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-sm-12">
+                      <LaddaButton
+                        loading={this.state.loading}
+                        data-size={S}
+                        data-style={SLIDE_UP}
+                        data-spinner-size={30}
+                        data-spinner-lines={12}
+                        className="btn btn-success"
+                        onClick={this.addOrgToChannel}
+                      >
+                        <i className="fa fa-plus-circle" aria-hidden="true" />
+                        &nbsp;&nbsp;Invite User
+                      </LaddaButton>
                     </div>
                   </div>
                 </div>
@@ -177,4 +231,4 @@ export default withTracker(props => {
       ),
     ],
   };
-})(withRouter(ManageChannels));
+})(withRouter(InviteChannel));

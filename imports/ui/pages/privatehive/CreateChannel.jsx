@@ -35,8 +35,9 @@ class CreateChannel extends Component {
       });
       if (err) {
         return notifications.error(err.reason);
+      } else {
+        return notifications.success('Channel created');
       }
-      return notifications.success('Proposal sent');
     });
   };
 
@@ -62,7 +63,7 @@ class CreateChannel extends Component {
                       <div className="card card-transparent m-b-0">
                         <div className="form-group">
                           <label>Channel Name</label>
-                          <span className="help"> e.g. "License"</span>
+                          <span className="help"> e.g. "EU Banks"</span>
                           <input
                             type="text"
                             className="form-control"
