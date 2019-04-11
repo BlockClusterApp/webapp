@@ -68,7 +68,7 @@ class Security extends Component {
         <div className="m-t-20 container-fluid container-fixed-lg">
           <div className="row">
             <div className="col-lg-12 m-b-10">
-              <Link to={'/app/networks/' + this.props.match.params.id}>
+              <Link to={'/app/privatehive/' + this.props.match.params.id + '/details'}>
                 {' '}
                 Control Panel <i className="fa fa-angle-right" />
               </Link>{' '}
