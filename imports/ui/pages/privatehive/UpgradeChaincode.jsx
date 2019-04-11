@@ -62,7 +62,8 @@ class UpgradeChaincode extends Component {
     );
   }
 
-  upgradeChaincode = () => {
+  upgradeChaincode = e => {
+    e.preventDefault();
     if (!this.chaincodeFile.files[0]) {
       return this.setState({
         error: 'Chaincode file is required',
@@ -74,6 +75,22 @@ class UpgradeChaincode extends Component {
       loading: true,
     });
 
+    let args = [];
+
+    if (this.chaincodeArgs.value) {
+      args = this.chaincodeArgs.value;
+    }
+
+    try {
+      args = JSON.parse(args);
+      args = JSON.stringify(args);
+    } catch (e) {
+      this.setState({
+        loading: false,
+      });
+      return notifications.error('Arguments is invalid');
+    }
+
     const reader = new FileReader();
     reader.onload = fileLoadEvent => {
       Meteor.call(
@@ -82,9 +99,12 @@ class UpgradeChaincode extends Component {
           file: this.chaincodeFile.files[0],
           content: reader.result,
           name: this.chaincodeName.value,
-          type: this.chaincodeType.value,
+          args: this.chaincodeArgs.value,
+          fcn: this.chaincodeFcn.value,
           networkId: this.props.match.params.id,
           version: this.chaincodeVersion.value,
+          channel: this.invoke_channel.value,
+          endorsmentPolicy: this.endorsmentPolicy.value,
           // ccPath: this.chaincodePath.value,
         },
         (err, res) => {
@@ -94,7 +114,7 @@ class UpgradeChaincode extends Component {
           if (err) {
             return notifications.error(err.reason);
           } else {
-            return notifications.success('Chaincode added');
+            return notifications.success('Chaincode Upgraded');
           }
         }
       );
@@ -114,7 +134,7 @@ class UpgradeChaincode extends Component {
 
     const chaincodeOptions = this.state.chaincodes.map((chaincode, index) => {
       return (
-        <option key={chaincode.name} value={chaincode.name} selected={this.state.notification ? this.state.notification.chaincodeName === chaincode.name : index === 0}>
+        <option key={chaincode.name} value={chaincode.name}>
           {chaincode.name} - {chaincode.version}
         </option>
       );
@@ -150,12 +170,17 @@ class UpgradeChaincode extends Component {
                 </div>
               </div>
             </div>
-            <div className="col-md-6">
+            <form
+              className="col-md-6"
+              onSubmit={e => {
+                this.upgradeChaincode(e);
+              }}
+            >
               <div className="row clearfix">
                 <div className="col-md-12">
-                  <div className="form-group form-group-default ">
+                  <div className="form-group form-group-default required">
                     <label>Select Channel</label>
-                    <select className="form-control" ref={input => (this.invoke_channel = input)}>
+                    <select required className="form-control" ref={input => (this.invoke_channel = input)}>
                       {channelOptions}
                     </select>
                   </div>
@@ -163,9 +188,9 @@ class UpgradeChaincode extends Component {
               </div>
               <div className="row clearfix">
                 <div className="col-md-12">
-                  <div className="form-group form-group-default ">
+                  <div className="form-group form-group-default required">
                     <label>Select Chaincode</label>
-                    <select className="form-control" ref={input => (this.invoke_chaincode = input)}>
+                    <select required className="form-control" ref={input => (this.chaincodeName = input)}>
                       {chaincodeOptions}
                     </select>
                   </div>
@@ -193,22 +218,40 @@ class UpgradeChaincode extends Component {
 
               <div className="row clearfix">
                 <div className="col-md-12">
-                  <div className="form-group form-group-default input-group">
+                  <div className="form-group form-group-default input-group required">
                     <div className="form-input-group">
                       <label>Chaincode Version</label>
-                      <input type="text" className="form-control" name="eventName" ref={input => (this.chaincodeVersion = input)} />
+                      <input required type="text" className="form-control" name="eventName" ref={input => (this.chaincodeVersion = input)} />
                     </div>
                   </div>
                 </div>
               </div>
               <div className="row">
                 <div className="col-md-12">
-                  <div className="form-group form-group-default required">
-                    <label>Chaincode Language</label>
-                    <select className="form-control" data-init-plugin="select2" tabIndex="-1" aria-hidden="true" ref={input => (this.chaincodeType = input)}>
-                      <option value="golang">Go</option>
-                      <option value="node">Node</option>
-                    </select>
+                  <div className="form-group form-group-default">
+                    <label>Arguments</label>
+                    <input type="text" className="form-control" name="eventName" ref={input => (this.chaincodeArgs = input)} />
+                  </div>
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-md-12">
+                  <div className="form-group form-group-default">
+                    <label>Function Name</label>
+                    <input type="text" placeholder="[]" className="form-control" name="eventName" ref={input => (this.chaincodeFcn = input)} />
+                  </div>
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-md-12">
+                  <div className="form-group form-group-default">
+                    <label>Endorsment Policy</label>
+                    <textarea
+                      placeholder="Default is only your organisation has to sign"
+                      className="form-control"
+                      name="eventName"
+                      ref={input => (this.endorsmentPolicy = input)}
+                    />
                   </div>
                 </div>
               </div>
@@ -231,11 +274,8 @@ class UpgradeChaincode extends Component {
                       data-style={SLIDE_UP}
                       data-spinner-size={30}
                       data-spinner-lines={12}
-                      onClick={this.onSubmit}
                       className="btn btn-success"
-                      onClick={() => {
-                        this.upgradeChaincode();
-                      }}
+                      type="submit"
                     >
                       <i className="fa fa-upload" aria-hidden="true" />
                       &nbsp;&nbsp;Upgrade Chaincode
@@ -243,7 +283,7 @@ class UpgradeChaincode extends Component {
                   </div>
                 </div>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       </div>

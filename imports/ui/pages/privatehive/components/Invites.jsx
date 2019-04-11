@@ -237,10 +237,9 @@ class Invites extends Component {
                   <div className="row-md-height">
                     <div className="modal-body col-md-height col-middle">
                       <form role="form" className="modal-assetInfo">
-                        <h3>
-                          Join Channel&nbsp;
-                          <b>{this.state.modalInvite.metadata.channel.name}</b>
-                        </h3>
+                        <h5 class="text-primary ">
+                          Join Channel <span class="semi-bold">{this.state.modalInvite.metadata.channel.name}</span>
+                        </h5>
                         <PrivatehiveNetworkSelector label="Select Peer" networks={this.props.networks} onValueChangeListener={this.onPrivateHivePeerChange} />
                       </form>
                       <button type="button" className="btn btn-success" onClick={this.acceptInvitation.bind(this, this.state.modalInviteId, this.state.modalInvite, true)}>

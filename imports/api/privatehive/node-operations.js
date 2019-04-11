@@ -353,7 +353,7 @@ Operations.invokeOrQueryChaincode = async ({ channelName, chaincodeName, functio
   return res.message;
 };
 
-Operations.upgradeChaincode = async ({ file, content, name, type, networkId, version }) => {
+Operations.upgradeChaincode = async ({ file, content, name, args, fcn, networkId, channel, endorsmentPolicy, version }) => {
   if (!networkId) {
     throw new Meteor.Error(400, 'Network ID required');
   }
@@ -381,8 +381,11 @@ Operations.upgradeChaincode = async ({ file, content, name, type, networkId, ver
 
   form.append('chaincode_zip', fs.createReadStream(filePath));
   form.append('chaincodeName', name);
-  form.append('chaincodeLanguage', type);
+  form.append('args', args);
+  form.append('fcn', fcn);
   form.append('chaincodeVersion', version);
+  form.append('channelName', channel);
+  form.append('endorsmentPolicy', endorsmentPolicy);
 
   const res = await chaincodeRequest;
 

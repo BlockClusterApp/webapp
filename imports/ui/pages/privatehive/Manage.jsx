@@ -54,7 +54,7 @@ class ViewNetwork extends Component {
                             }}
                           >
                             <p className="no-margin text-black bold text-uppercase fs-12">Create Channels</p>
-                            <p className="no-margin fs-12">Private subnet</p>
+                            <p className="no-margin fs-12">Private Blockchains</p>
                           </div>
                           <div
                             className="clickable"
@@ -63,7 +63,7 @@ class ViewNetwork extends Component {
                             }}
                           >
                             <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Manage Channels</p>
-                            <p className="no-margin fs-12">List of subnets</p>
+                            <p className="no-margin fs-12">List of Blockchains</p>
                           </div>
                           <div
                             className="clickable"
@@ -72,7 +72,7 @@ class ViewNetwork extends Component {
                             }}
                           >
                             <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Access Control</p>
-                            <p className="no-margin fs-12">Add organisation or Join</p>
+                            <p className="no-margin fs-12">Add Organisation or Join</p>
                           </div>
                         </div>
                       </div>
