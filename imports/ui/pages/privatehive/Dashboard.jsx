@@ -3,7 +3,7 @@ import { withRouter, Link, Redirect, Route } from 'react-router-dom';
 
 import Create from './components/Create';
 import Join from './components/Join';
-import Invite from './components/Invite';
+import Invite from './components/Invites';
 import List from './components/List';
 
 class PrivateHiveDashboard extends Component {

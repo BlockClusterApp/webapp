@@ -484,19 +484,19 @@ NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkC
         userId,
         ordererId: invitation.metadata.channel.ordererId,
       });
-      // UserInvitation.update(
-      //   {
-      //     _id: inviteId,
-      //   },
-      //   {
-      //     $set: {
-      //       joinedNetwork: peerId,
-      //       joinedLocation: locationCode,
-      //       invitationStatus: UserInvitation.StatusMapping.Accepted,
-      //       inviteStatusUpdatedAt: new Date(),
-      //     },
-      //   }
-      // );
+      UserInvitation.update(
+        {
+          _id: inviteId,
+        },
+        {
+          $set: {
+            joinedNetwork: peerId,
+            joinedLocation: locationCode,
+            invitationStatus: UserInvitation.StatusMapping.Accepted,
+            inviteStatusUpdatedAt: new Date(),
+          },
+        }
+      );
       return resolve(res);
     } else {
       Meteor.call(

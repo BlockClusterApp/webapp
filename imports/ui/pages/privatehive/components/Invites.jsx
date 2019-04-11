@@ -1,25 +1,22 @@
 import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
-import { UserInvitation } from '../../../collections/user-invitation';
-import LocationSelector from '../../components/Selectors/LocationSelector';
-import NetworkConfigSelector from '../../components/Selectors/NetworkConfigSelector.jsx';
 import { withRouter } from 'react-router-dom';
-import CardVerification from '../billing/components/CardVerification.jsx';
+import { UserInvitation } from '../../../../collections/user-invitation';
+import PrivatehiveNetworkSelector from '../../../components/Selectors/PrivatehiveNetworkSelector';
+import { PrivatehivePeers } from '../../../../collections/privatehivePeers/privatehivePeers';
+import notifications from '../../../../modules/notifications';
 
-import './Invites.scss';
+import '../../userInvitation/Invites.scss';
 
 class Invites extends Component {
   constructor(props) {
     super(props);
-
-    this.inviteLocationMapping = {};
     this.inviteConfigMapping = {};
     this.loading = {};
     this.state = {
       showModal: false,
       modalInvite: {},
       modalInviteId: undefined,
-      locations: [],
       userData: [],
       loading: {},
     };
@@ -31,26 +28,7 @@ class Invites extends Component {
     });
   }
 
-  componentDidMount() {
-    Meteor.call('getClusterLocations', {}, (err, res) => {
-      this.setState({
-        locations: res,
-      });
-    });
-  }
-
-  getLocationName = locationCode => {
-    const locationConfig = this.state.locations.find(a => a.locationCode === locationCode);
-    if (!locationConfig) {
-      return undefined;
-    }
-    return locationConfig.locationName;
-  };
-
-  locationChangeListener = (inviteId, location) => {
-    this.inviteLocationMapping[inviteId] = location;
-    this.setState({});
-  };
+  componentDidMount() {}
 
   configChangeListener = (inviteId, config) => {
     this.inviteConfigMapping[inviteId] = config;
@@ -81,13 +59,14 @@ class Invites extends Component {
     this.setState({
       loading,
     });
+    if (!this.peer) {
+      return notifications.error('Peer is required');
+    }
     if (!this.loading[inviteId]) {
       Meteor.call(
         'acceptInvitation',
         {
           inviteId,
-          locationCode: this.inviteLocationMapping[inviteId] || this.state.locations[0].locationCode,
-          networkConfig: this.inviteConfigMapping[inviteId],
           type: this.state.modalInvite.type,
           peerId: this.peer && this.peer._id,
         },
@@ -128,14 +107,6 @@ class Invites extends Component {
     this.loading[inviteId] = loading;
   };
 
-  getLocationName = locationCode => {
-    const locationConfig = this.state.locations.find(a => a.locationCode === locationCode);
-    if (!locationConfig) {
-      return undefined;
-    }
-    return locationConfig.locationName;
-  };
-
   getActionStatus = (int, inviteId, invite) => {
     switch (int) {
       case 2:
@@ -151,7 +122,7 @@ class Invites extends Component {
           </button>
         );
       case 4:
-        return <button className="btn btn-warn">Cancelled</button>;
+        return <button className="btn btn-danger">Cancelled</button>;
       case 1:
       default:
         return (
@@ -251,94 +222,59 @@ class Invites extends Component {
   };
 
   render() {
-    let isButtonDisabled = this.state.loading[this.state.modalInviteId] === true;
-    let isVoucherAlertShown = false;
-    if (!this.state.cardVerified) {
-      isButtonDisabled = true;
-      isVoucherAlertShown = true;
-    }
-    if (this.inviteConfigMapping[this.state.modalInviteId] && this.inviteConfigMapping[this.state.modalInviteId].voucher) {
-      isButtonDisabled = false;
-      isVoucherAlertShown = false;
-    } else {
-      isVoucherAlertShown = true;
-    }
+    let Modal = undefined;
 
-    let Modal = this.state.showModal && (
-      <div className="modal fade slide-right" id="modalSlideLeft_soloAssetInfo" tabIndex="-1" role="dialog" aria-hidden="true">
-        <div className="modal-dialog modal-md">
-          <div className="modal-content-wrapper">
-            <div className="modal-content">
-              <button type="button" className="close" data-dismiss="modal" aria-hidden="true">
-                <i className="pg-close fs-14" />
-              </button>
-              <div className="container-md-height full-height">
-                <div className="row-md-height">
-                  <div className="modal-body col-md-height col-middle">
-                    <form role="form" className="modal-assetInfo">
-                      <h3>
-                        Join{' '}
-                        <b>
-                          {this.state.modalInvite.metadata.network
-                            ? this.state.modalInvite.metadata.network.name
-                            : this.state.modalInvite.metadata.channel
-                            ? this.state.modalInvite.metadata.channel.name
-                            : null}
-                        </b>{' '}
-                        Network
-                      </h3>
-                      <p>Select Location to deploy</p>
-                      <LocationSelector locationChangeListener={this.locationChangeListener.bind(this, this.state.modalInviteId)} />
-                      <br />
-                      <p>Select Node Configuration</p>
-                      <NetworkConfigSelector
-                        locationCode={this.inviteLocationMapping[this.state.modalInviteId]}
-                        key={this.inviteLocationMapping[this.state.modalInviteId]}
-                        configChangeListener={this.configChangeListener.bind(this, this.state.modalInviteId)}
-                      />
-
-                      {!isVoucherAlertShown ? null : <CardVerification cardVerificationListener={this.cardVerificationListener} />}
-                    </form>
-                    <button
-                      type="button"
-                      className="btn btn-success"
-                      onClick={this.acceptInvitation.bind(this, this.state.modalInviteId, this.state.modalInvite, true)}
-                      disabled={isButtonDisabled}
-                    >
-                      {this.state.loading[this.state.modalInviteId] === true ? <i className="fa fa-spinner fa-spin" /> : <i className="fa fa-check" />}&nbsp;Accept
-                    </button>
-                    &nbsp;
-                    <button
-                      type="button"
-                      className="btn btn-default"
-                      data-dismiss="modal"
-                      onClick={() => {
-                        $('#modalSlideLeft_soloAssetInfo').modal('hide');
-                        setTimeout(this.setState({ showModal: false }), 1000);
-                      }}
-                    >
-                      Close
-                    </button>
+    if (this.state.modalInvite.type === 'privatehive-channel') {
+      Modal = (
+        <div className="modal fade slide-right" id="modalSlideLeft_soloAssetInfo" tabIndex="-1" role="dialog" aria-hidden="true">
+          <div className="modal-dialog modal-md">
+            <div className="modal-content-wrapper">
+              <div className="modal-content">
+                <button type="button" className="close" data-dismiss="modal" aria-hidden="true">
+                  <i className="pg-close fs-14" />
+                </button>
+                <div className="container-md-height full-height">
+                  <div className="row-md-height">
+                    <div className="modal-body col-md-height col-middle">
+                      <form role="form" className="modal-assetInfo">
+                        <h3>
+                          Join Channel&nbsp;
+                          <b>{this.state.modalInvite.metadata.channel.name}</b>
+                        </h3>
+                        <PrivatehiveNetworkSelector label="Select Peer" networks={this.props.networks} onValueChangeListener={this.onPrivateHivePeerChange} />
+                      </form>
+                      <button type="button" className="btn btn-success" onClick={this.acceptInvitation.bind(this, this.state.modalInviteId, this.state.modalInvite, true)}>
+                        {this.state.loading[this.state.modalInviteId] === true ? <i className="fa fa-spinner fa-spin" /> : <i className="fa fa-check" />}&nbsp;Join
+                      </button>
+                      &nbsp;
+                      <button
+                        type="button"
+                        className="btn btn-default"
+                        data-dismiss="modal"
+                        onClick={() => {
+                          $('#modalSlideLeft_soloAssetInfo').modal('hide');
+                        }}
+                      >
+                        Close
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    );
+      );
+    }
 
     return (
-      <div className="content invite">
+      <div className="invite">
         <div className="m-t-20 container-fluid container-fixed-lg bg-white">
           <div className="row">
             <div className="col-lg-12">
               <div className="card card-transparent">
                 <div className="card-header ">
-                  <div className="text-primary">
-                    <h3>Dynamo Invitations</h3>
-                  </div>
-                  <div className="card-title">Received</div>
+                  <div className="card-title">Received Invitations</div>
                 </div>
                 <div className="card-block">
                   <div className="table-responsive">
@@ -347,7 +283,7 @@ class Invites extends Component {
                         <tr>
                           <th style={{ width: '5%' }}>S.No</th>
                           <th style={{ width: '25%' }}>Invite From</th>
-                          <th style={{ width: '25%' }}>Network</th>
+                          <th style={{ width: '25%' }}>Channel</th>
                           <th style={{ width: '%' }}>Action</th>
                         </tr>
                       </thead>
@@ -360,13 +296,13 @@ class Invites extends Component {
                               <tr key={item._id}>
                                 <td>{index + 1}.</td>
                                 <td title={data.inviteFrom.email}>{data.inviteFrom.name}</td>
-                                <td>{data.network ? data.network.name : data.channel ? data.channel.name : null}</td>
+                                <td>{data.channel ? data.channel.name : null}</td>
                                 <td>
                                   <div className="row">
-                                    {[1, 3, 4].includes(item.invitationStatus) ? (
+                                    {[1, 3, 4, 5].includes(item.invitationStatus) ? (
                                       undefined
                                     ) : (
-                                      <input className="form-control" value={this.getLocationName(item.joinedLocation)} disabled type="text" style={{ width: '50%' }} />
+                                      <input className="form-control" value={item.joinedNetwork} disabled type="text" style={{ width: '50%' }} />
                                     )}
                                     &nbsp;&nbsp;
                                     {this.getActionStatus(item.invitationStatus, item._id, item)}
@@ -386,7 +322,7 @@ class Invites extends Component {
             <div className="col-lg-12">
               <div className="card card-transparent">
                 <div className="card-header ">
-                  <div className="card-title">Sent</div>
+                  <div className="card-title">Sent Invitations</div>
                 </div>
                 <div className="card-block">
                   <div className="table-responsive">
@@ -445,16 +381,13 @@ export default withTracker(() => {
   return {
     receivedInvitations: UserInvitation.find({
       inviteTo: Meteor.userId(),
-      type: {
-        $nin: ['privatehive-channel'],
-      },
+      type: 'privatehive-channel',
     }).fetch(),
     sentInvitations: UserInvitation.find({
       inviteFrom: Meteor.userId(),
-      type: {
-        $nin: ['privatehive-channel'],
-      },
+      type: 'privatehive-channel',
     }).fetch(),
-    subscriptions: [Meteor.subscribe('receivedInvitations'), Meteor.subscribe('sentInvitations')],
+    subscriptions: [Meteor.subscribe('receivedInvitations'), Meteor.subscribe('sentInvitations'), Meteor.subscribe('privatehive')],
+    networks: [...PrivatehivePeers.find({ userId: Meteor.userId(), active: true }).fetch()],
   };
 })(withRouter(Invites));
