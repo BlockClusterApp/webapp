@@ -47,7 +47,7 @@ class InviteChannel extends Component {
           loading: false,
         });
         if (err) {
-          return notifications.error(err.reason);
+          return;
         }
         return this.setState({
           channels: res.message,

@@ -48,7 +48,7 @@ class ManageChannels extends Component {
           loading: false,
         });
         if (err) {
-          return notifications.error(err.reason);
+          return;
         }
         return this.setState({
           channels: res.message,
@@ -56,39 +56,6 @@ class ManageChannels extends Component {
       }
     );
   }
-
-  getChannelInfo = channelName => {
-    this.setState(
-      {
-        showChannelInfoModal: true,
-        channelInfo: null,
-      },
-      () => {
-        $('#channel_info_modal').modal('show');
-      }
-    );
-    const { network } = this.props;
-    const url = `https://${network.properties.apiEndPoint}/channels/${channelName}/info`;
-    HTTP.get(
-      url,
-      {
-        headers: {
-          'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
-        },
-      },
-      (err, res) => {
-        if (err) {
-          return notifications.error(err);
-        }
-        if (!res.data.success) {
-          return notifications.error(res.data.error);
-        }
-        this.setState({
-          channelInfo: res.data.data,
-        });
-      }
-    );
-  };
 
   render() {
     return (

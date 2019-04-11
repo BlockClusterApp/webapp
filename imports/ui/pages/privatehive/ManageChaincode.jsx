@@ -56,7 +56,7 @@ class ManageChaincode extends Component {
         [`loading_${chaincodeName}_install`]: false,
       });
       if (err) {
-        return notifications.error('An error occured');
+        return;
       } else {
         notifications.success('Chaincode installed');
       }
@@ -74,7 +74,7 @@ class ManageChaincode extends Component {
           loading: false,
         });
         if (err) {
-          return notifications.error(err.reason);
+          return;
         }
         return this.setState({
           channels: res.message,
