@@ -63,12 +63,6 @@ class UpgradeChaincode extends Component {
   }
 
   upgradeChaincode = () => {
-    if (!this.chaincodeName.value) {
-      return this.setState({
-        error: 'Name is required',
-      });
-    }
-
     if (!this.chaincodeFile.files[0]) {
       return this.setState({
         error: 'Chaincode file is required',
@@ -83,14 +77,14 @@ class UpgradeChaincode extends Component {
     const reader = new FileReader();
     reader.onload = fileLoadEvent => {
       Meteor.call(
-        'addChaincode',
+        'upgradeChaincode',
         {
           file: this.chaincodeFile.files[0],
           content: reader.result,
           name: this.chaincodeName.value,
           type: this.chaincodeType.value,
           networkId: this.props.match.params.id,
-          // version: this.chainCodeVersion.value,
+          version: this.chaincodeVersion.value,
           // ccPath: this.chaincodePath.value,
         },
         (err, res) => {
@@ -193,6 +187,17 @@ class UpgradeChaincode extends Component {
                         this.chaincodeFile = input;
                       }}
                     />
+                  </div>
+                </div>
+              </div>
+
+              <div className="row clearfix">
+                <div className="col-md-12">
+                  <div className="form-group form-group-default input-group">
+                    <div className="form-input-group">
+                      <label>Chaincode Version</label>
+                      <input type="text" className="form-control" name="eventName" ref={input => (this.chaincodeVersion = input)} />
+                    </div>
                   </div>
                 </div>
               </div>

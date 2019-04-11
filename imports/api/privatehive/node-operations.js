@@ -353,6 +353,46 @@ Operations.invokeOrQueryChaincode = async ({ channelName, chaincodeName, functio
   return res.message;
 };
 
+Operations.upgradeChaincode = async ({ file, content, name, type, networkId, version }) => {
+  if (!networkId) {
+    throw new Meteor.Error(400, 'Network ID required');
+  }
+  const userId = Meteor.userId();
+
+  const network = PrivatehivePeers.findOne({
+    instanceId: networkId,
+    userId,
+  });
+
+  if (!network) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+
+  let filePath;
+  try {
+    filePath = await uploadFile(`${userId}-${network.name.replace(/\s/g, '_')}-${name}`, content);
+  } catch (err) {
+    throw new Meteor.Error(err);
+  }
+
+  const url = `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/chaincodes/upgrade`;
+  const chaincodeRequest = request.post(url);
+  const form = chaincodeRequest.form();
+
+  form.append('chaincode_zip', fs.createReadStream(filePath));
+  form.append('chaincodeName', name);
+  form.append('chaincodeLanguage', type);
+  form.append('chaincodeVersion', version);
+
+  const res = await chaincodeRequest;
+
+  if (res.error) {
+    throw new Meteor.Error(res.message);
+  }
+
+  return true;
+};
+
 Meteor.methods({
   addChaincode: Operations.addChaincode,
   fetchChaincodes: Operations.fetchChaincodes,
@@ -364,4 +404,5 @@ Meteor.methods({
   removeChaincodeNotification: Operations.removeNotificationURL,
   listChaincodeNotifications: Operations.listNotificationURLs,
   invokeOrQueryChaincode: Operations.invokeOrQueryChaincode,
+  upgradeChaincode: Operations.upgradeChaincode,
 });
