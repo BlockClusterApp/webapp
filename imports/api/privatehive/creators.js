@@ -93,6 +93,11 @@ Creators.createPeerService = async function({ locationCode, namespace, instanceI
                 targetPort: 7052,
                 name: 'chaincode',
               },
+              {
+                port: 5984,
+                targetPort: 5984,
+                name: 'couchdb',
+              },
             ],
             selector: {
               app: `${instanceId}-privatehive`,
@@ -359,6 +364,25 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                     },
                   },
                   {
+                    name: 'couchdb',
+                    image: 'hyperledger/fabric-couchdb',
+                    ports: [
+                      {
+                        containerPort: 5984,
+                      },
+                    ],
+                    env: [
+                      {
+                        name: 'COUCHDB_USER',
+                        value: '',
+                      },
+                      {
+                        name: 'COUCHDB_PASSWORD',
+                        value: '',
+                      },
+                    ],
+                  },
+                  {
                     name: 'peer',
                     image: 'hyperledger/fabric-peer:1.4.0',
                     args: ['peer', 'node', 'start'],
@@ -436,6 +460,22 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                       {
                         name: 'GOPATH',
                         value: '/opt/gopath',
+                      },
+                      {
+                        name: 'CORE_LEDGER_STATE_STATEDATABASE',
+                        value: 'CouchDB',
+                      },
+                      {
+                        name: 'CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS',
+                        value: 'localhost:5984',
+                      },
+                      {
+                        name: 'CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME',
+                        value: '',
+                      },
+                      {
+                        name: 'CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD',
+                        value: '',
                       },
                     ],
                     volumeMounts: [

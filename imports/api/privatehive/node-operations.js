@@ -333,6 +333,18 @@ Operations.invokeOrQueryChaincode = async ({ channelName, chaincodeName, functio
 
   const url = `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/chaincodes/${action}`;
 
+  console.log({
+    uri: url,
+    method: 'POST',
+    body: {
+      channelName,
+      chaincodeName,
+      fcn: functionName,
+      args,
+    },
+    json: true,
+  });
+
   const res = await request({
     uri: url,
     method: 'POST',

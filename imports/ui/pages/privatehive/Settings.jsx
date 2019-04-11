@@ -163,6 +163,27 @@ class ViewEditNetwork extends Component {
                     </div>
                   )}
 
+                  {network.type === 'orderer' && (
+                    <div className="form-group row">
+                      <label className="col-md-3 control-label">Zookeeper Nodes</label>
+                      <div className="col-md-9">3</div>
+                    </div>
+                  )}
+
+                  {network.type === 'orderer' && (
+                    <div className="form-group row">
+                      <label className="col-md-3 control-label">Kafka Nodes</label>
+                      <div className="col-md-9">3</div>
+                    </div>
+                  )}
+
+                  {network.type === 'peer' && (
+                    <div className="form-group row">
+                      <label className="col-md-3 control-label">DB Type</label>
+                      <div className="col-md-9">CouchDB</div>
+                    </div>
+                  )}
+
                   {/* <div className="form-group row">
                     <label className="col-md-3 control-label">API Client</label>
                     <div className="col-md-9">

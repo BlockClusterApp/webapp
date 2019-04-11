@@ -257,7 +257,16 @@ class InvokeChaincode extends Component {
                       <h5 className="text-default">Query Result</h5>
                       <CodeMirror
                         value={this.state.queryRes || ''}
-                        options={{ readOnly: true, autofocus: true, indentUnit: 2, theme: 'mdn-like', mode: { name: 'javascript', json: true } }}
+                        options={{
+                          readOnly: true,
+                          autofocus: true,
+                          indentUnit: 2,
+                          theme: 'mdn-like',
+                          mode: { name: 'javascript', json: true },
+                          lineNumbers: true,
+                          autofocus: false,
+                          lineWrapping: true,
+                        }}
                       />
                     </div>
                   </div>
