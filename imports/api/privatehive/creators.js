@@ -360,7 +360,7 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                   },
                   {
                     name: 'peer',
-                    image: 'hyperledger/fabric-peer',
+                    image: 'hyperledger/fabric-peer:1.4.0',
                     args: ['peer', 'node', 'start'],
                     ports: [
                       {
@@ -455,7 +455,7 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                   },
                   {
                     name: 'ca',
-                    image: 'hyperledger/fabric-ca',
+                    image: 'hyperledger/fabric-ca:1.4.0',
                     command: ['sh'],
                     args: ['-c', 'fabric-ca-server start -b admin:adminpw -d'],
                     ports: [
@@ -1300,7 +1300,7 @@ Creators.createOrdererDeployment = async function createDeployment({
                   },
                   {
                     name: 'orderer',
-                    image: 'hyperledger/fabric-orderer',
+                    image: 'hyperledger/fabric-orderer:1.4.0',
                     command: ['/bin/sh'],
                     args: ['-c', 'orderer'],
                     ports: [
