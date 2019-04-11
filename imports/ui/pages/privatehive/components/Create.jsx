@@ -74,7 +74,7 @@ class PaymentDashboard extends Component {
             <div className="col-md-5">
               <div className="card card-transparent">
                 <div className="card-block">
-                  <h3>Create Your Hyperledeger Fabric Network</h3>
+                  <h3>Create Your Hyperledeger Fabric Organisation</h3>
                   <p>Here you can create your own production grade HLF network</p>
                 </div>
               </div>
