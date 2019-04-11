@@ -186,7 +186,7 @@ class ManageChaincode extends Component {
                         <div className="form-group form-group-default input-group">
                           <div className="form-input-group">
                             <label>Arguments</label>
-                            <input type="text" placeholder="[]" className="form-control" name="projectName" ref={input => (this.args = input)} />
+                            <input type="text" defaultValue="[]" className="form-control" name="projectName" ref={input => (this.args = input)} />
                           </div>
                         </div>
                       </div>

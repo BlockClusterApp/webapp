@@ -15,6 +15,8 @@ import '/node_modules/codemirror/mode/javascript/javascript.js';
 
 const CodeMirror = require('react-codemirror');
 
+import './Privatehive.scss';
+
 class InvokeChaincode extends Component {
   constructor() {
     super();
@@ -71,13 +73,27 @@ class InvokeChaincode extends Component {
   }
 
   invokeOrQueryChaincode = (action, cb) => {
+    let args = [];
+
+    if (this.invoke_args.value) {
+      args = this.invoke_args.value;
+    }
+
+    try {
+      args = JSON.parse(args);
+      args = JSON.stringify(args);
+    } catch (e) {
+      cb(err, null);
+      return notifications.error('Invalid arguments');
+    }
+
     Meteor.call(
       'invokeOrQueryChaincode',
       {
         channelName: this.invoke_channel.value,
         chaincodeName: this.invoke_chaincode.value,
         functionName: this.invoke_functionName.value,
-        args: this.invoke_args.value,
+        args: JSON.parse(this.invoke_args.value),
         action,
         networkId: this.props.match.params.id,
       },
@@ -134,7 +150,7 @@ class InvokeChaincode extends Component {
     const chaincodeOptions = this.state.chaincodes.map((chaincode, index) => {
       return (
         <option key={chaincode.name} value={chaincode.name} selected={this.state.notification ? this.state.notification.chaincodeName === chaincode.name : index === 0}>
-          {chaincode.name} - {chaincode.version}
+          {chaincode.name}
         </option>
       );
     });
@@ -156,7 +172,7 @@ class InvokeChaincode extends Component {
                 </div>
                 <div className="card-block">
                   <div className="row">
-                    <div className="col-xl-12">
+                    <div className="col-xl-6">
                       <div className="card card-transparent">
                         <div>
                           <div>
@@ -237,16 +253,13 @@ class InvokeChaincode extends Component {
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="row">
-                    {this.state.queryRes && (
-                      <div className="col-md-12">
-                        <CodeMirror
-                          value={this.state.queryRes}
-                          options={{ readOnly: true, autofocus: true, indentUnit: 2, theme: 'mdn-like', mode: { name: 'javascript', json: true } }}
-                        />
-                      </div>
-                    )}
+                    <div className="col-xl-6">
+                      <h5 className="text-default">Query Result</h5>
+                      <CodeMirror
+                        value={this.state.queryRes || ''}
+                        options={{ readOnly: true, autofocus: true, indentUnit: 2, theme: 'mdn-like', mode: { name: 'javascript', json: true } }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

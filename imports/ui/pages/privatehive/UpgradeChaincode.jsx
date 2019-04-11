@@ -125,17 +125,13 @@ class UpgradeChaincode extends Component {
 
   render() {
     const channelOptions = this.state.channels.map((channel, index) => {
-      return (
-        <option key={channel.name} selected={this.state.notification ? this.state.notification.channelName === channel.name : index === 0}>
-          {channel.name}
-        </option>
-      );
+      return <option key={channel.name}>{channel.name}</option>;
     });
 
     const chaincodeOptions = this.state.chaincodes.map((chaincode, index) => {
       return (
         <option key={chaincode.name} value={chaincode.name}>
-          {chaincode.name} - {chaincode.version}
+          {chaincode.name}
         </option>
       );
     });
@@ -230,7 +226,7 @@ class UpgradeChaincode extends Component {
                 <div className="col-md-12">
                   <div className="form-group form-group-default">
                     <label>Arguments</label>
-                    <input type="text" className="form-control" name="eventName" ref={input => (this.chaincodeArgs = input)} />
+                    <input type="text" defaultValue="[]" className="form-control" name="eventName" ref={input => (this.chaincodeArgs = input)} />
                   </div>
                 </div>
               </div>
