@@ -79,6 +79,8 @@ import PrivateHiveChannelCreate from '../../pages/privatehive/CreateChannel';
 import PrivateHiveSecurity from '../../pages/privatehive/Security';
 import PrivateHiveChaincodeCreate from '../../pages/privatehive/CreateChaincode';
 import PrivateHiveNotifications from '../../pages/privatehive/Notifications';
+import PrivateHiveChaincodeInvoke from '../../pages/privatehive/Invoke';
+import PrivateHiveChaincodeUpgrade from '../../pages/privatehive/UpgradeChaincode';
 
 export default withRouter(
   class Main extends Component {
@@ -168,9 +170,11 @@ export default withRouter(
                   <Route exact path="/app/privatehive/:id/settings" render={props => this.showFailedBillingWarning(PrivateHiveNetworkSettings, props)} />
                   <Route exact path="/app/privatehive/:id/security" render={props => this.showFailedBillingWarning(PrivateHiveSecurity, props)} />
                   <Route exact path="/app/privatehive/:id/channels/create" render={props => this.showFailedBillingWarning(PrivateHiveChannelCreate, props)} />
-                  <Route exact path="/app/privatehive/:id/channels/explorer" render={props => this.showFailedBillingWarning(PrivateHiveChannelExplorer, props)} />
+                  <Route exact path="/app/privatehive/:id/explorer" render={props => this.showFailedBillingWarning(PrivateHiveChannelExplorer, props)} />
                   <Route exact path="/app/privatehive/:id/channels/manage" render={props => this.showFailedBillingWarning(PrivateHiveChannelManagement, props)} />
                   <Route exact path="/app/privatehive/:id/channels/invite" render={props => this.showFailedBillingWarning(PrivateHiveChannelInvite, props)} />
+                  <Route exact path="/app/privatehive/:id/chaincode/invoke" render={props => this.showFailedBillingWarning(PrivateHiveChaincodeInvoke, props)} />
+                  <Route exact path="/app/privatehive/:id/chaincode/upgrade" render={props => this.showFailedBillingWarning(PrivateHiveChaincodeUpgrade, props)} />
                   <Route exact path="/app/privatehive/:id/chaincode/manage" render={props => this.showFailedBillingWarning(PrivateHiveChaincodeManagement, props)} />
                   <Route exact path="/app/privatehive/:id/chaincode/create" render={props => this.showFailedBillingWarning(PrivateHiveChaincodeCreate, props)} />
                   <Route exact path="/app/privatehive/:id/notifications" render={props => this.showFailedBillingWarning(PrivateHiveNotifications, props)} />

@@ -38,10 +38,10 @@ class Notifications extends Component {
   }
 
   getChaincodes() {
-    const { network } = this.props;
     Meteor.call('fetchChaincodes', { networkId: this.props.match.params.id }, (err, res) => {
-      if (err) {
-        return notifications.error(err.reason);
+
+      if(err){
+        return
       }
       this.setState({
         chaincodes: res.message,
@@ -56,11 +56,8 @@ class Notifications extends Component {
         networkId: this.props.match.params.id,
       },
       (err, res) => {
-        this.setState({
-          loading: false,
-        });
-        if (err) {
-          return notifications.error(err.reason);
+        if(err){
+          return
         }
         return this.setState({
           channels: res.message,
@@ -76,11 +73,8 @@ class Notifications extends Component {
         networkId: this.props.match.params.id,
       },
       (err, res) => {
-        this.setState({
-          loading: false,
-        });
-        if (err) {
-          return notifications.error(err.reason);
+        if(err){
+          return
         }
         return this.setState({
           notifications: res,

@@ -106,19 +106,10 @@ class ViewNetwork extends Component {
                             <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Manage Chaincodes</p>
                             <p className="no-margin fs-12">Install and Instantiate</p>
                           </div>
-                          {/*<div
-                            className="clickable"
-                            onClick={() => {
-                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/chaincode/access-control') : '';
-                            }}
-                          >
-                            <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">APIs</p>
-                            <p className="no-margin fs-12">Integrate Chaincode</p>
-                          </div>*/}
                           <div
                             className="clickable"
                             onClick={() => {
-                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/chaincode/access-control') : '';
+                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/chaincode/upgrade') : '';
                             }}
                           >
                             <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Upgrade Chaincode</p>
@@ -141,7 +132,7 @@ class ViewNetwork extends Component {
                           <div
                             className="clickable"
                             onClick={() => {
-                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/settings') : '';
+                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/chaincode/invoke') : '';
                             }}
                           >
                             <p className="no-margin text-black bold text-uppercase fs-12">Invoke and Query</p>

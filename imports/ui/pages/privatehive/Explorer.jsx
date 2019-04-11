@@ -1,11 +1,7 @@
 import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
-import PrivateHive from '../../../collections/privatehive';
-import helpers from '../../../modules/helpers';
-import ReactHtmlParser, { processNodes, convertNodeToElement, htmlparser2 } from 'react-html-parser';
 import { withRouter, Link } from 'react-router-dom';
 import { PrivatehivePeers } from '../../../collections/privatehivePeers/privatehivePeers';
-import Config from '../../../modules/config/client';
 
 import querystring from 'querystring';
 
@@ -34,7 +30,7 @@ class Explorer extends Component {
       blockOrTxnOutput: '',
       chainCodeCount: 0,
       channels: [],
-      channel_id: query.channel || 'mychannel',
+      name: query.channel || 'mychannel',
     };
   }
 
@@ -49,26 +45,18 @@ class Explorer extends Component {
   }
 
   getChannels() {
-    const { network } = this.props;
-    let url = `https://${network.properties.apiEndPoint}/channels`;
-    HTTP.get(
-      url,
+    Meteor.call(
+      'fetchChannels',
       {
-        headers: {
-          'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
-        },
+        networkId: this.props.match.params.id,
       },
       (err, res) => {
-        if (!err) {
-          let channel = res.data.data.channels[0] ? res.data.data.channels[0].channel_id : '';
-          if (this.query && this.query.channel) {
-            channel = this.query.channel;
-          }
-          this.setState({
-            channels: res.data.data.channels,
-            channel,
-          });
-        }
+        this.setState({
+          loading: false,
+        });
+        return this.setState({
+          channels: res.message,
+        });
       }
     );
   }
@@ -111,31 +99,14 @@ class Explorer extends Component {
   }
 
   fetchChainCodeCount = () => {
-    const { network } = this.props;
-    if (!network) {
-      return true;
-    }
-    if (network.status !== 'running') {
-      return;
-    }
-
-    const url = `https://${network.properties.apiEndPoint}/chaincode/installed`;
-    HTTP.get(
-      url,
-      {
-        headers: {
-          'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
-        },
-      },
-      (err, res) => {
-        if (err) {
-          return;
-        }
-        this.setState({
-          chainCodeCount: res.data.data.chaincodes.length,
-        });
+    Meteor.call('fetchChaincodes', { networkId: this.props.match.params.id }, (err, res) => {
+      if (err) {
+        return;
       }
-    );
+      this.setState({
+        chaincodes: res.message,
+      });
+    });
   };
 
   refreshLatestTxns = () => {
@@ -236,8 +207,8 @@ class Explorer extends Component {
   render() {
     const channelOptions = this.state.channels.map(channel => {
       return (
-        <option value={location.channel_id} key={channel.channel_id} selected={this.query.channel === channel.channel_id}>
-          {channel.channel_id}
+        <option value={location.name} key={channel.name}>
+          {channel.name}
         </option>
       );
     });

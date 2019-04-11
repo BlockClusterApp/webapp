@@ -7,27 +7,68 @@ import { PrivatehivePeers } from '../../../collections/privatehivePeers/privateh
 
 import 'react-fine-uploader/gallery/gallery.css';
 
-class CreateChannelCode extends Component {
+class UpgradeChaincode extends Component {
   constructor() {
     super();
 
-    this.state = {};
+    this.state = {
+      channels: [],
+      chaincodes: [],
+    };
   }
 
-  componentDidMount() {}
+  refresher = () => {
+    this.getChaincodes();
+    this.getChannels();
+  };
 
   componentWillUnmount() {
     this.props.subscriptions.forEach(s => {
       s.stop();
     });
+    clearInterval(this.timer);
   }
 
-  installChaincode = () => {
+  componentDidMount() {
+    this.refresher();
+    this.timer = setInterval(this.refresher, 10 * 1000);
+  }
+
+  getChaincodes() {
+    Meteor.call('fetchChaincodes', { networkId: this.props.match.params.id }, (err, res) => {
+      if (err) {
+        return;
+      }
+      this.setState({
+        chaincodes: res.message,
+      });
+    });
+  }
+
+  getChannels() {
+    Meteor.call(
+      'fetchChannels',
+      {
+        networkId: this.props.match.params.id,
+      },
+      (err, res) => {
+        if (err) {
+          return;
+        }
+        return this.setState({
+          channels: res.message,
+        });
+      }
+    );
+  }
+
+  upgradeChaincode = () => {
     if (!this.chaincodeName.value) {
       return this.setState({
         error: 'Name is required',
       });
     }
+
     if (!this.chaincodeFile.files[0]) {
       return this.setState({
         error: 'Chaincode file is required',
@@ -69,6 +110,22 @@ class CreateChannelCode extends Component {
   };
 
   render() {
+    const channelOptions = this.state.channels.map((channel, index) => {
+      return (
+        <option key={channel.name} selected={this.state.notification ? this.state.notification.channelName === channel.name : index === 0}>
+          {channel.name}
+        </option>
+      );
+    });
+
+    const chaincodeOptions = this.state.chaincodes.map((chaincode, index) => {
+      return (
+        <option key={chaincode.name} value={chaincode.name} selected={this.state.notification ? this.state.notification.chaincodeName === chaincode.name : index === 0}>
+          {chaincode.name} - {chaincode.version}
+        </option>
+      );
+    });
+
     return (
       <div className="assetsStats content">
         <div className="container-fluid container-fixed-lg m-t-20 p-l-25 p-r-25 p-t-25 p-b-25 sm-padding-10 bg-white">
@@ -78,21 +135,18 @@ class CreateChannelCode extends Component {
                 {' '}
                 Control Panel <i className="fa fa-angle-right" />
               </Link>{' '}
-              Upload Chaincode
+              Upgrade Chaincode
             </div>
           </div>
           <div className="row">
             <div className="col-md-6">
               <div className="card card-transparent">
                 <div className="card-block" style={{ padding: '0px' }}>
-                  <h3>Upload Your Chaincode on peer</h3>
-                  <p>Upload a new chaincode on the peer. We support both Golang and Node.js chaincodes</p>
+                  <h3>Upgrade Your Chaincode on peer</h3>
+                  <p>Upgrade an existing chaincode on the peer. We support both Golang and Node.js chaincodes</p>
                   <ul>
                     <li>
-                      <i>Name</i>: A valid name for the chaincode.
-                    </li>
-                    <li>
-                      <i>Version</i>: When you upload a new chaincode we assign default version to be 1.0. While upgrading chaincode you can change the version.
+                      <i>Version</i>: New version of chaincode
                     </li>
                     <li>
                       <i>ZIP File</i>: The .zip file should contain a directory with same name as the chaincode name. Inside the directory place the code files. For example: in
@@ -105,55 +159,24 @@ class CreateChannelCode extends Component {
             <div className="col-md-6">
               <div className="row clearfix">
                 <div className="col-md-12">
-                  <div className="form-group form-group-default required">
-                    <label>Chaincode name</label>
-                    <input
-                      ref={input => {
-                        this.chaincodeName = input;
-                      }}
-                      type="text"
-                      className="form-control"
-                      name="ccname"
-                      required
-                      placeholder="marbles"
-                    />
+                  <div className="form-group form-group-default ">
+                    <label>Select Channel</label>
+                    <select className="form-control" ref={input => (this.invoke_channel = input)}>
+                      {channelOptions}
+                    </select>
                   </div>
                 </div>
               </div>
-              {/* <div className="row clearfix">
+              <div className="row clearfix">
                 <div className="col-md-12">
-                  <div className="form-group form-group-default required">
-                    <label>Chaincode Version</label>
-                    <input
-                      ref={input => {
-                        this.chainCodeVersion = input;
-                      }}
-                      type="text"
-                      className="form-control"
-                      name="ccname"
-                      required
-                      placeholder="v1"
-                    />
+                  <div className="form-group form-group-default ">
+                    <label>Select Chaincode</label>
+                    <select className="form-control" ref={input => (this.invoke_chaincode = input)}>
+                      {chaincodeOptions}
+                    </select>
                   </div>
                 </div>
-              </div> */}
-              {/* <div className="row clearfix">
-                <div className="col-md-12">
-                  <div className="form-group form-group-default required">
-                    <label>Chaincode Path</label>
-                    <input
-                      ref={input => {
-                        this.chaincodePath = input;
-                      }}
-                      type="text"
-                      className="form-control"
-                      name="ccpath"
-                      required
-                      placeholder="github.com/fabric-samples/marbles/"
-                    />
-                  </div>
-                </div>
-              </div> */}
+              </div>
               <div className="row clearfix">
                 <div className="col-md-12">
                   <div className="form-group form-group-default required">
@@ -206,11 +229,11 @@ class CreateChannelCode extends Component {
                       onClick={this.onSubmit}
                       className="btn btn-success"
                       onClick={() => {
-                        this.installChaincode();
+                        this.upgradeChaincode();
                       }}
                     >
                       <i className="fa fa-upload" aria-hidden="true" />
-                      &nbsp;&nbsp;Upload Chaincode
+                      &nbsp;&nbsp;Upgrade Chaincode
                     </LaddaButton>
                   </div>
                 </div>
@@ -225,11 +248,7 @@ class CreateChannelCode extends Component {
 
 export default withTracker(props => {
   return {
-    network: [
-      ...PrivatehivePeers.find({ instanceId: props.match.params.id, active: true })
-        .fetch()
-        .map(p => ({ ...p, type: 'peer' })),
-    ][0],
+    network: PrivatehivePeers.findOne({ instanceId: props.match.params.id, active: true }),
     subscriptions: [
       Meteor.subscribe(
         'privatehive',
@@ -244,4 +263,4 @@ export default withTracker(props => {
       ),
     ],
   };
-})(withRouter(CreateChannelCode));
+})(withRouter(UpgradeChaincode));
