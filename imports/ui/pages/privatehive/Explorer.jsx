@@ -174,6 +174,8 @@ class Explorer extends Component {
   };
 
   render() {
+    console.log(this.state.blocks);
+
     const channelOptions = this.state.channels.map(channel => {
       return (
         <option value={JSON.stringify(channel)} key={channel.name}>
@@ -198,7 +200,7 @@ class Explorer extends Component {
               </div>
               <div className="row">
                 <div className="col-lg-4">
-                  <div className="card no-border bg-white no-margin widget-loader-bar">
+                  <div className="card no-border bg-white no-margin widget-loader-bar full-height">
                     <div className="card-header  top-left top-right ">
                       <div className="card-title text-black hint-text">
                         <span className="font-montserrat fs-11 all-caps">
@@ -219,7 +221,7 @@ class Explorer extends Component {
                       <div className="row">
                         <div className="col-sm-12">
                           <div className=" ">
-                            <select className="full-width select2-hidden-accessible bg-white" ref={input => (this.channel = input)} onChange={this.channelChangeListener}>
+                            <select className="full-width select2-hidden-accessible bg-white m-t-10" ref={input => (this.channel = input)} onChange={this.channelChangeListener}>
                               {channelOptions}
                             </select>
                           </div>
@@ -230,7 +232,7 @@ class Explorer extends Component {
                   </div>
                 </div>
                 <div className="col-lg-4">
-                  <div className="widget-9 card no-border bg-success no-margin widget-loader-bar">
+                  <div className="card no-border bg-success no-margin widget-loader-bar full-height">
                     <div className="full-height d-flex flex-column">
                       <div className="card-header ">
                         <div className="card-title text-black">
@@ -255,7 +257,7 @@ class Explorer extends Component {
                   </div>
                 </div>
                 <div className="col-lg-4">
-                  <div className="widget-9 card no-border bg-primary no-margin widget-loader-bar">
+                  <div className="card no-border bg-primary no-margin widget-loader-bar full-height">
                     <div className="full-height d-flex flex-column">
                       <div className="card-header ">
                         <div className="card-title text-black">
@@ -280,8 +282,8 @@ class Explorer extends Component {
                     </div>
                   </div>
                 </div>
-                <div className="col-lg-8 m-t-10">
-                  <div className="card no-border no-margin details">
+                <div className="col-lg-7 m-t-10">
+                  <div className="card no-border no-margin details full-height">
                     <hr className="no-margin" />
                     <div className="">
                       <form role="form">
@@ -310,8 +312,8 @@ class Explorer extends Component {
                   </div>
                 </div>
 
-                <div className="col-lg-4 m-t-10">
-                  <div className="widget-9  widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch details">
+                <div className="col-lg-5 m-t-10">
+                  <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch details full-height">
                     <div className="padding-25">
                       <div className="pull-left">
                         <h2 className="text-success no-margin">Organizations</h2>
@@ -354,7 +356,12 @@ class Explorer extends Component {
               <div className="row">
                 <div className="col-lg-12 m-b-30" />
               </div>
-              <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+              <div
+                style={{
+                  height: '95.5%',
+                }}
+                className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column"
+              >
                 <div className="card-header top-right">
                   <div className="card-controls">
                     <ul>
@@ -387,14 +394,14 @@ class Explorer extends Component {
                         this.state.blocks.map((item, index) => {
                           return (
                             <tr
-                              key={item.number}
+                              key={item.blockNumber}
                               onClick={() => {
-                                this.txnBlock.value = item.number;
-                                this.fetchBlockOrTxn(item.number);
+                                this.txnBlock.value = item.blockNumber;
+                                this.fetchBlockOrTxn(item.blockNumber);
                               }}
                             >
                               <td className="font-montserrat all-caps fs-12 w-50" style={{ cursor: 'pointer' }}>
-                                Block #{item.number}
+                                Block #{item.blockNumber}
                               </td>
                               <td className="text-right hidden-lg">{/* <span className="hint-text small">dewdrops</span> */}</td>
                             </tr>
