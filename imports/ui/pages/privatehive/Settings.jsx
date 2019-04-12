@@ -149,9 +149,9 @@ class ViewEditNetwork extends Component {
                   </div>
 
                   <div className="form-group row">
-                    <label className="col-md-3 control-label">MSPID and Organisation Name</label>
+                    <label className="col-md-3 control-label">Organisation Name and ID</label>
                     <div className="col-md-9">
-                      <b className="value-valign-middle">{network.instanceId.toPascalCase()}</b>
+                      <b className="value-valign-middle">{network.orgName}</b>
                     </div>
                   </div>
                   {network.type === 'orderer' && (

@@ -232,7 +232,7 @@ Creators.deleteDeployment = function({ locationCode, namespace, name }) {
   });
 };
 
-Creators.createPeerDeployment = async function({ locationCode, namespace, instanceId, anchorCommPort, chaincodePort, workerNodeIP }) {
+Creators.createPeerDeployment = async function({ locationCode, namespace, instanceId, anchorCommPort, chaincodePort, workerNodeIP, orgName }) {
   console.log(chaincodePort);
   return new Promise((resolve, reject) => {
     HTTP.call(
@@ -285,7 +285,11 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                     env: [
                       {
                         name: 'ORG_NAME',
-                        value: `${instanceId.toPascalCase()}`,
+                        value: `${orgName.toPascalCase()}`,
+                      },
+                      {
+                        name: 'INSTANCE_ID',
+                        value: `${instanceId}`,
                       },
                       {
                         name: 'SHARE_FILE_DIR',
@@ -309,11 +313,11 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                       },
                       {
                         name: 'CORE_PEER_LOCALMSPID',
-                        value: `${instanceId.toPascalCase()}`,
+                        value: `${orgName.toPascalCase()}`,
                       },
                       {
                         name: 'CORE_PEER_MSPCONFIGPATH',
-                        value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${instanceId.toLowerCase()}.com/users/Admin@peer.${instanceId.toLowerCase()}.com/msp`,
+                        value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${orgName.toLowerCase()}.com/users/Admin@peer.${orgName.toLowerCase()}.com/msp`,
                       },
                       {
                         name: 'CORE_CHAINCODE_KEEPALIVE',
@@ -417,7 +421,7 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                       },
                       {
                         name: 'CORE_PEER_MSPCONFIGPATH',
-                        value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${instanceId.toLowerCase()}.com/peers/peer0.peer.${instanceId.toLowerCase()}.com/msp`,
+                        value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${orgName.toLowerCase()}.com/peers/peer0.peer.${orgName.toLowerCase()}.com/msp`,
                       },
                       {
                         name: 'CORE_PEER_TLS_ENABLED',
@@ -425,11 +429,11 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                       },
                       {
                         name: 'CORE_PEER_ID',
-                        value: `peer0.peer.${instanceId.toLowerCase()}.com`,
+                        value: `peer0.peer.${orgName.toLowerCase()}.com`,
                       },
                       {
                         name: 'CORE_PEER_LOCALMSPID',
-                        value: `${instanceId.toPascalCase()}`,
+                        value: `${orgName.toPascalCase()}`,
                       },
                       {
                         name: 'CORE_PEER_ADDRESS',
@@ -516,15 +520,15 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                       },
                       {
                         name: 'FABRIC_CA_SERVER_CA_NAME',
-                        value: `ca-${instanceId.toLowerCase()}`,
+                        value: `ca-${orgName.toLowerCase()}`,
                       },
                       {
                         name: 'FABRIC_CA_SERVER_CA_CERTFILE',
-                        value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${instanceId.toLowerCase()}.com/ca/ca.peer.${instanceId.toLowerCase()}.com-cert.pem`,
+                        value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${orgName.toLowerCase()}.com/ca/ca.peer.${orgName.toLowerCase()}.com-cert.pem`,
                       },
                       {
                         name: 'FABRIC_CA_SERVER_CA_KEYFILE',
-                        value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${instanceId.toLowerCase()}.com/ca/privateKey`,
+                        value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/peer.${orgName.toLowerCase()}.com/ca/privateKey`,
                       },
                       {
                         name: 'FABRIC_CA_SERVER_TLS_ENABLED',
@@ -1193,6 +1197,7 @@ Creators.createOrdererDeployment = async function createDeployment({
   anchorCommPort,
   ordererNodePort,
   type,
+  orgName,
 }) {
   return new Promise((resolve, reject) => {
     HTTP.call(
@@ -1245,7 +1250,11 @@ Creators.createOrdererDeployment = async function createDeployment({
                     env: [
                       {
                         name: 'ORG_NAME',
-                        value: `${instanceId.toPascalCase()}`,
+                        value: `${orgName.toPascalCase()}`,
+                      },
+                      {
+                        name: 'INSTANCE_ID',
+                        value: `${instanceId}`,
                       },
                       {
                         name: 'SHARE_FILE_DIR',
@@ -1299,14 +1308,6 @@ Creators.createOrdererDeployment = async function createDeployment({
                       {
                         name: 'CORE_PEER_ID',
                         value: 'cli',
-                      },
-                      {
-                        name: 'CORE_PEER_LOCALMSPID',
-                        value: `${instanceId.toPascalCase()}`,
-                      },
-                      {
-                        name: 'CORE_PEER_MSPCONFIGPATH',
-                        value: `/etc/hyperledger/privatehive/crypto-config/peerOrganizations/crypto-config/peer.${instanceId.toLowerCase()}.com/users/Admin@peer.${instanceId.toLowerCase()}.com/msp`,
                       },
                       {
                         name: 'CORE_CHAINCODE_KEEPALIVE',
@@ -1373,11 +1374,11 @@ Creators.createOrdererDeployment = async function createDeployment({
                       },
                       {
                         name: 'ORDERER_GENERAL_LOCALMSPID',
-                        value: `${instanceId.toPascalCase()}Orderer`,
+                        value: `${orgName.toPascalCase()}`,
                       },
                       {
                         name: 'ORDERER_GENERAL_LOCALMSPDIR',
-                        value: `/etc/hyperledger/privatehive/crypto-config/ordererOrganizations/orderer.${instanceId.toLowerCase()}.com/users/Admin@orderer.${instanceId.toLowerCase()}.com/msp`,
+                        value: `/etc/hyperledger/privatehive/crypto-config/ordererOrganizations/orderer.${orgName.toLowerCase()}.com/users/Admin@orderer.${orgName.toLowerCase()}.com/msp`,
                       },
                       {
                         name: 'ORDERER_GENERAL_TLS_ENABLED',

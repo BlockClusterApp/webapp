@@ -26,12 +26,20 @@ class PaymentDashboard extends Component {
 
   createPrivateHiveNetwork = () => {
     const name = this.networkName.value;
+    const orgName = this.orgName.value;
     this.setState({
       loading: true,
     });
     if (!name) {
       return this.setState({
-        formSubmitError: 'Name cannot be empty',
+        formSubmitError: 'Label cannot be empty',
+        loading: false,
+      });
+    }
+
+    if (!orgName) {
+      return this.setState({
+        formSubmitError: 'Organisation name cannot be empty',
         loading: false,
       });
     }
@@ -47,6 +55,7 @@ class PaymentDashboard extends Component {
       'initializePrivateHiveNetwork',
       {
         name,
+        orgName,
         ordererType: config.ordererType,
         type: config.networkType,
         peerId: config.peerId,
@@ -61,7 +70,7 @@ class PaymentDashboard extends Component {
           return notification.error(err.reason);
         }
         this.props.history.push(`/app/privatehive/list`);
-        notification.success('Network Creating');
+        notification.success('Deploying...');
       }
     );
   };
@@ -87,7 +96,7 @@ class PaymentDashboard extends Component {
                     <div className="row clearfix">
                       <div className="col-md-12">
                         <div className="form-group form-group-default required">
-                          <label>Name</label>
+                          <label>Label</label>
                           <input
                             type="text"
                             className="form-control"
@@ -95,6 +104,22 @@ class PaymentDashboard extends Component {
                             required
                             ref={input => {
                               this.networkName = input;
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="row clearfix">
+                      <div className="col-md-12">
+                        <div className="form-group form-group-default required">
+                          <label>Organisation Name</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="projectName"
+                            required
+                            ref={input => {
+                              this.orgName = input;
                             }}
                           />
                         </div>

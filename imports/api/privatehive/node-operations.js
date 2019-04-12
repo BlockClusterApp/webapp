@@ -439,6 +439,8 @@ Operations.explorerDetails = async ({ channelName, networkId }) => {
     latestBlock: latestBlockReq,
   });
 
+  console.log(res);
+
   return res;
 };
 

@@ -15,7 +15,7 @@ function sleep(timeout) {
 
 let PrivateHive = {};
 
-PrivateHive.createPeer = async ({ locationCode }) => {
+PrivateHive.createPeer = async ({ locationCode, orgName }) => {
   const instanceId = helpers.instanceIDGenerate();
   const workerNodeIP = Config.workerNodeIP(locationCode);
   const namespace = Config.namespace;
@@ -29,6 +29,7 @@ PrivateHive.createPeer = async ({ locationCode }) => {
       namespace: Config.namespace,
       instanceId,
       workerNodeIP,
+      orgName,
       anchorCommPort: peerDetails.peerGRPCAPINodePort,
       chaincodePort: peerDetails.chaincodeListenNodePort,
     });
@@ -46,7 +47,7 @@ PrivateHive.createPeer = async ({ locationCode }) => {
   }
 };
 
-PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, peerWorkerNodeIP, anchorCommPort, locationCode, type }) => {
+PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, peerWorkerNodeIP, anchorCommPort, locationCode, type, orgName }) => {
   const workerNodeIP = Config.workerNodeIP(locationCode);
   const instanceId = helpers.instanceIDGenerate();
   const namespace = Config.namespace;
@@ -74,6 +75,7 @@ PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, pee
       anchorCommPort,
       ordererNodePort,
       type,
+      orgName,
     });
     await Creators.createAPIIngress({ locationCode, namespace, instanceId });
   } catch (err) {
@@ -190,7 +192,7 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererId })
   }
 
   const newOrgConf = await request({
-    uri: `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/orgDetails`,
+    uri: `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/config/orgDetails`,
     method: 'GET',
     json: true,
   });
@@ -226,7 +228,7 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererId })
   return peerId.instanceId;
 };
 
-PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, type, voucherId, name, ordererType }) => {
+PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, type, voucherId, name, orgName, ordererType }) => {
   let voucher;
   if (voucherId) {
     voucher = Voucher.find({ _id: voucherId }).fetch()[0];
@@ -246,9 +248,10 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
   const commonData = { userId, locationCode, voucher, name };
 
   if (type === 'peer') {
-    let peerDetails = await PrivateHive.createPeer({ locationCode });
+    let peerDetails = await PrivateHive.createPeer({ locationCode, orgName });
     PrivatehivePeers.insert({
       instanceId: peerDetails.instanceId,
+      orgName: orgName.toPascalCase(),
       apiNodePort: peerDetails.peerDetails.peerAPINodePort,
       anchorCommPort: peerDetails.peerDetails.peerGRPCAPINodePort,
       ...commonData,
@@ -265,7 +268,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
 
     async function getCerts(peer) {
       return new Promise((resolve, reject) => {
-        HTTP.call('GET', `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/channelConfigCerts`, {}, (error, response) => {
+        HTTP.call('GET', `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/config/cryptoCerts`, {}, (error, response) => {
           if (error) {
             reject();
           } else {
@@ -279,12 +282,13 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
 
     let certs = await getCerts(peerDetails);
     let ordererDetails = await PrivateHive.createOrderer({
-      peerOrgName: peerId,
+      peerOrgName: peerDetails.orgName,
       peerAdminCert: certs.adminCert,
       peerCACert: certs.caCert,
       peerWorkerNodeIP: Config.workerNodeIP(peerDetails.locationCode),
       anchorCommPort: peerDetails.anchorCommPort,
       locationCode,
+      orgName,
       type: ordererType,
     });
     PrivatehiveOrderers.insert({
@@ -292,6 +296,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       ordererNodePort: ordererDetails.ordererNodePort,
       workerNodeIP: Config.workerNodeIP(peerDetails.locationCode),
       ordererType,
+      orgName: orgName.toPascalCase(),
       ...commonData,
     });
     return ordererDetails.instanceId;
@@ -306,8 +311,8 @@ PrivateHive.getPrivateHiveNetworkCount = async () => {
 };
 
 Meteor.methods({
-  initializePrivateHiveNetwork: async ({ peerId, locationCode, type, name, voucherId, ordererType }) => {
-    const res = await PrivateHive.createPrivateHiveNetwork({ userId: Meteor.userId(), peerId, locationCode, type, name, voucherId, ordererType });
+  initializePrivateHiveNetwork: async ({ peerId, locationCode, type, name, orgName, voucherId, ordererType }) => {
+    const res = await PrivateHive.createPrivateHiveNetwork({ userId: Meteor.userId(), peerId, locationCode, type, name, orgName, voucherId, ordererType });
     return res;
   },
   getPrivateHiveNetworkCount: PrivateHive.getPrivateHiveNetworkCount,
@@ -330,6 +335,11 @@ Meteor.methods({
 
     async function createChannel() {
       return new Promise((resolve, reject) => {
+        console.log({
+          name: channelName,
+          ordererURL: `${Config.workerNodeIP(ordererDetails.locationCode)}:${ordererDetails.ordererNodePort}`,
+          ordererOrgName: ordererDetails.instanceId,
+        });
         HTTP.call(
           'POST',
           `http://${Config.workerNodeIP(peerDetails.locationCode)}:${peerDetails.apiNodePort}/channel/create`,
@@ -375,7 +385,7 @@ Meteor.methods({
 
     async function getDetails() {
       return new Promise((resolve, reject) => {
-        HTTP.call('GET', `http://${newConfig.workerNodeIP(peerDetails.locationCode)}:${newPeerDetails.apiNodePort}/orgDetails`, {}, (error, response) => {
+        HTTP.call('GET', `http://${newConfig.workerNodeIP(peerDetails.locationCode)}:${newPeerDetails.apiNodePort}/config/orgDetails`, {}, (error, response) => {
           if (error) {
             reject();
           } else {

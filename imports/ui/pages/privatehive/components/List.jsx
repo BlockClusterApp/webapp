@@ -102,7 +102,7 @@ class NetworksList extends Component {
                             return (
                               <tr key={item._id} onClick={() => this.openNetwork(item)}>
                                 <td className="v-align-middle ">{item.name}</td>
-                                <td className="v-align-middle">{item.instanceId.toPascalCase()}</td>
+                                <td className="v-align-middle">{item.orgName}</td>
                                 <td className="v-align-middle">{item.type === 'peer' ? 'Peer' : 'Orderer'}</td>
                                 <td className="v-align-middle">{this.getLocationName(item.locationCode)}</td>
                                 <td className="v-align-middle">{this.convertStatusToTag(item.status)}</td>
