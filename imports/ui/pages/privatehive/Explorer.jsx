@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter, Link } from 'react-router-dom';
 import { PrivatehivePeers } from '../../../collections/privatehivePeers/privatehivePeers';
+import helpers from '../../../modules/helpers/index';
 
 import querystring from 'querystring';
 
@@ -20,7 +21,6 @@ class Explorer extends Component {
     this.query = query;
 
     this.state = {
-      channel: query.channel || 'mychannel',
       latestBlock: null,
       oldestBlock: null,
       blocks: [],
@@ -35,11 +35,8 @@ class Explorer extends Component {
   }
 
   componentDidMount() {
-    this.chaincodeTimer = setInterval(() => {
-      this.fetchChainCodeCount();
-    }, REFRESH_INTERVAL);
-    this.latestBlockTimer = setInterval(() => {
-      this.refreshLatestTxns();
+    this.refreshTimer = setInterval(() => {
+      this.refreshExplorerDetails();
     }, REFRESH_INTERVAL);
     setTimeout(() => this.getChannels(), 1000);
   }
@@ -54,9 +51,17 @@ class Explorer extends Component {
         this.setState({
           loading: false,
         });
-        return this.setState({
-          channels: res.message,
-        });
+        return this.setState(
+          {
+            channels: res.message,
+            channel: this.state.selectedChannel || res.message[0],
+          },
+          () => {
+            if (!this.state.channel) {
+              this.refreshExplorerDetails();
+            }
+          }
+        );
       }
     );
   }
@@ -65,7 +70,7 @@ class Explorer extends Component {
     this.props.subscriptions.forEach(s => {
       s.stop();
     });
-    clearInterval(this.chaincodeTimer);
+    clearInterval(this.refreshTimer);
     clearInterval(this.latestBlockTimer);
   }
 
@@ -109,50 +114,23 @@ class Explorer extends Component {
     });
   };
 
-  refreshLatestTxns = () => {
-    const { network } = this.props;
-    if (!network) {
-      return true;
-    }
-    // let rpc = null;
-    let status = network.status;
-    let username = null;
-    let password = null;
+  refreshExplorerDetails = () => {
+    Meteor.call('explorerDetails', { channelName: this.state.channel.name, networkId: this.props.match.params.id }, (err, res) => {
+      console.log(err, res);
+    });
+  };
 
-    if (status == 'running') {
-      let url = `https://${network.properties.apiEndPoint}/blocks/${this.state.channel}/latestInfo`;
-      HTTP.get(
-        url,
-        {
-          headers: {
-            'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
-          },
-        },
-        (err, res) => {
-          if (!err) {
-            const { data } = res.data;
-            const latestBlockNumber = data.height.low;
-            if (this.state.blocks.length < 15) {
-              const blocks = [];
-              let number = latestBlockNumber - 1;
-              while (blocks.length < 15) {
-                blocks.push({
-                  number,
-                });
-                number -= 1;
-                if (number < 0) {
-                  break;
-                }
-              }
-              this.setState({
-                blocks,
-              });
-            }
-          }
-        }
-      );
-    } else {
-    }
+  channelChangeListener = () => {
+    this.txnBlock.value = '';
+    this.setState(
+      {
+        channel: JSON.parse(this.channel.value),
+        blockOrTxnOutput: '',
+      },
+      () => {
+        this.refreshExplorerDetails();
+      }
+    );
   };
 
   fetchBlockOrTxn = value => {
@@ -191,23 +169,10 @@ class Explorer extends Component {
     );
   };
 
-  channelChangeListener = () => {
-    this.txnBlock.value = '';
-    this.setState(
-      {
-        channel: this.channel.value,
-        blockOrTxnOutput: '',
-      },
-      () => {
-        this.refreshLatestTxns();
-      }
-    );
-  };
-
   render() {
     const channelOptions = this.state.channels.map(channel => {
       return (
-        <option value={location.name} key={channel.name}>
+        <option value={JSON.stringify(channel)} key={channel.name}>
           {channel.name}
         </option>
       );
@@ -233,7 +198,7 @@ class Explorer extends Component {
                     <div className="card-header  top-left top-right ">
                       <div className="card-title text-black hint-text">
                         <span className="font-montserrat fs-11 all-caps">
-                          Transaction Pool <i className="fa fa-chevron-right" />
+                          Channels <i className="fa fa-chevron-right" />
                         </span>
                       </div>
                       <div className="card-controls">
@@ -249,18 +214,10 @@ class Explorer extends Component {
                     <div className="card-block p-t-40">
                       <div className="row">
                         <div className="col-sm-12">
-                          <h4 className="no-margin p-b-5 text-danger semi-bold">{this.state.totalPoolTxns} TXNS</h4>
-                          <div className="pull-left small">
-                            <span>Pending</span>
-                            <span className=" text-success font-montserrat">
-                              <i className="fa fa-caret-up m-l-10" /> {this.state.totalPending}
-                            </span>
-                          </div>
-                          <div className="pull-left m-l-20 small">
-                            <span>Queue</span>
-                            <span className=" text-danger font-montserrat">
-                              <i className="fa fa-caret-down m-l-10" /> {this.state.totalQueued}
-                            </span>
+                          <div className=" ">
+                            <select className="full-width select2-hidden-accessible bg-white" ref={input => (this.channel = input)} onChange={this.channelChangeListener}>
+                              {channelOptions}
+                            </select>
                           </div>
                           <div className="clearfix" />
                         </div>
@@ -268,7 +225,7 @@ class Explorer extends Component {
                     </div>
                   </div>
                 </div>
-                <div className="col-lg-3">
+                <div className="col-lg-4">
                   <div className="widget-9 card no-border bg-success no-margin widget-loader-bar">
                     <div className="full-height d-flex flex-column">
                       <div className="card-header ">
@@ -293,21 +250,27 @@ class Explorer extends Component {
                     </div>
                   </div>
                 </div>
-                <div className="col-lg-5">
+                <div className="col-lg-4">
                   <div className="widget-9 card no-border bg-primary no-margin widget-loader-bar">
                     <div className="full-height d-flex flex-column">
                       <div className="card-header ">
                         <div className="card-title text-black">
                           <span className="font-montserrat fs-11 all-caps text-white">
-                            Select Channel <i className="fa fa-chevron-right" />
+                            Size of Blockchain <i className="fa fa-chevron-right" />
                           </span>
                         </div>
-                        <div className="card-controls" />
+                        <div className="card-controls">
+                          <ul>
+                            <li>
+                              <a href="#" className="card-refresh" data-toggle="refresh">
+                                <i className="card-icon card-icon-refresh text-white" />
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
                       </div>
-                      <div className="p-l-20 p-r-20 p-b-20 ">
-                        <select className="full-width select2-hidden-accessible bg-white" ref={input => (this.channel = input)} onChange={this.channelChangeListener}>
-                          {channelOptions}
-                        </select>
+                      <div className="p-l-20">
+                        <h3 className="no-margin p-b-30 text-white ">{helpers.bytesToSize(this.state.diskSize, 2)}</h3>
                       </div>
                     </div>
                   </div>

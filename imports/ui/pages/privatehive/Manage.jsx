@@ -194,7 +194,7 @@ class ViewNetwork extends Component {
                           <div
                             className="clickable"
                             onClick={() => {
-                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/notifications') : '';
+                              this.props.network ? this.props.history.push('/app/privatehive/' + this.props.network.instanceId + '/explorer') : '';
                             }}
                           >
                             <p className="p-t-20 no-margin text-black bold text-uppercase fs-12">Explorer</p>

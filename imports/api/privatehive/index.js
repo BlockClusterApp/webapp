@@ -223,7 +223,7 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererId })
 
   console.log('Join res', res);
 
-  return peerId;
+  return peerId.instanceId;
 };
 
 PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, type, voucherId, name, ordererType }) => {

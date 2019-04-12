@@ -1,6 +1,6 @@
 import fs from 'fs';
 import request from 'request-promise';
-
+import Bluebird from 'bluebird';
 import Config from '../../modules/config/server';
 import { PrivatehivePeers } from '../../collections/privatehivePeers/privatehivePeers.js';
 
@@ -408,6 +408,40 @@ Operations.upgradeChaincode = async ({ file, content, name, args, fcn, networkId
   return true;
 };
 
+Operations.explorerDetails = async ({ channelName, networkId }) => {
+  if (!networkId) {
+    throw new Meteor.Error(400, 'Network ID required');
+  }
+  const userId = Meteor.userId();
+
+  const network = PrivatehivePeers.findOne({
+    instanceId: networkId,
+    userId,
+  });
+
+  if (!network) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+
+  const baseURL = `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}`;
+
+  const sizeReq = request({ uri: `${baseURL}/explore/size`, method: 'GET' });
+  const blocksReq = request({ uri: `${baseURL}/explore/getBlocks?channelName=${channelName}`, method: 'GET' });
+  const organizationReq = request({ uri: `${baseURL}/explore/organisations?channelName=${channelName}`, method: 'GET' });
+  const chaincodesReq = request({ uri: `${baseURL}/explore/chaincodesInstantiated?channelName=${channelName}`, method: 'GET' });
+  const latestBlockReq = request({ uri: `${baseURL}/explore/getLatestBlock?channelName=${channelName}`, method: 'GET' });
+
+  const res = /* { size, blocks, organizations, chaincodes, latestBlock } */ await Bluebird.props({
+    size: sizeReq,
+    blocks: blocksReq,
+    organizations: organizationReq,
+    chaincodes: chaincodesReq,
+    latestBlock: latestBlockReq,
+  });
+
+  return res;
+};
+
 Meteor.methods({
   addChaincode: Operations.addChaincode,
   fetchChaincodes: Operations.fetchChaincodes,
@@ -420,4 +454,5 @@ Meteor.methods({
   listChaincodeNotifications: Operations.listNotificationURLs,
   invokeOrQueryChaincode: Operations.invokeOrQueryChaincode,
   upgradeChaincode: Operations.upgradeChaincode,
+  explorerDetails: Operations.explorerDetails,
 });
