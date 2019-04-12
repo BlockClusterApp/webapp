@@ -344,6 +344,7 @@ Meteor.methods({
             if (error) {
               reject();
             } else {
+              console.log('Create channel response', response);
               resolve(response.data);
             }
           }
@@ -351,7 +352,11 @@ Meteor.methods({
       });
     }
 
-    await createChannel();
+    const channel = await createChannel();
+
+    if (channel.error) {
+      throw new Meteor.Error(500, channel.message);
+    }
 
     return channelName;
   },

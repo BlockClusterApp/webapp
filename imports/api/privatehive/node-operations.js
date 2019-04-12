@@ -425,11 +425,11 @@ Operations.explorerDetails = async ({ channelName, networkId }) => {
 
   const baseURL = `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}`;
 
-  const sizeReq = request({ uri: `${baseURL}/explore/size`, method: 'GET' });
-  const blocksReq = request({ uri: `${baseURL}/explore/getBlocks?channelName=${channelName}`, method: 'GET' });
-  const organizationReq = request({ uri: `${baseURL}/explore/organisations?channelName=${channelName}`, method: 'GET' });
-  const chaincodesReq = request({ uri: `${baseURL}/explore/chaincodesInstantiated?channelName=${channelName}`, method: 'GET' });
-  const latestBlockReq = request({ uri: `${baseURL}/explore/getLatestBlock?channelName=${channelName}`, method: 'GET' });
+  const sizeReq = request({ uri: `${baseURL}/explore/size`, method: 'GET', json: true });
+  const blocksReq = request({ uri: `${baseURL}/explore/getBlocks?channelName=${channelName}`, method: 'GET', json: true });
+  const organizationReq = request({ uri: `${baseURL}/explore/organisations?channelName=${channelName}`, method: 'GET', json: true });
+  const chaincodesReq = request({ uri: `${baseURL}/explore/chaincodesInstantiated?channelName=${channelName}`, method: 'GET', json: true });
+  const latestBlockReq = request({ uri: `${baseURL}/explore/getLatestBlock?channelName=${channelName}`, method: 'GET', json: true });
 
   const res = /* { size, blocks, organizations, chaincodes, latestBlock } */ await Bluebird.props({
     size: sizeReq,

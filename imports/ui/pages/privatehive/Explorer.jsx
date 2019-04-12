@@ -21,23 +21,16 @@ class Explorer extends Component {
     this.query = query;
 
     this.state = {
-      latestBlock: null,
-      oldestBlock: null,
       blocks: [],
-      totalTransactions: 0,
       latestTxns: [],
       blocks: [],
       blockOrTxnOutput: '',
-      chainCodeCount: 0,
       channels: [],
       name: query.channel || 'mychannel',
     };
   }
 
   componentDidMount() {
-    this.refreshTimer = setInterval(() => {
-      this.refreshExplorerDetails();
-    }, REFRESH_INTERVAL);
     setTimeout(() => this.getChannels(), 1000);
   }
 
@@ -57,7 +50,10 @@ class Explorer extends Component {
             channel: this.state.selectedChannel || res.message[0],
           },
           () => {
-            if (!this.state.channel) {
+            if (!this.refreshTimer) {
+              this.refreshTimer = setInterval(() => {
+                this.refreshExplorerDetails();
+              }, REFRESH_INTERVAL);
               this.refreshExplorerDetails();
             }
           }
@@ -70,8 +66,9 @@ class Explorer extends Component {
     this.props.subscriptions.forEach(s => {
       s.stop();
     });
-    clearInterval(this.refreshTimer);
-    clearInterval(this.latestBlockTimer);
+    if (this.refreshTimer) {
+      clearInterval(this.refreshTimer);
+    }
   }
 
   selectNetwork(e) {
@@ -117,6 +114,13 @@ class Explorer extends Component {
   refreshExplorerDetails = () => {
     Meteor.call('explorerDetails', { channelName: this.state.channel.name, networkId: this.props.match.params.id }, (err, res) => {
       console.log(err, res);
+      this.setState({
+        blocks: res.blocks.message,
+        chaincodes: res.chaincodes.message,
+        latestBlock: res.latestBlock.message,
+        organizations: res.organizations.message,
+        size: res.size.message,
+      });
     });
   };
 
@@ -245,7 +249,7 @@ class Explorer extends Component {
                         </div>
                       </div>
                       <div className="p-l-20">
-                        <h3 className="no-margin p-b-30 text-white ">{this.state.chainCodeCount}</h3>
+                        <h3 className="no-margin p-b-30 text-white ">{this.state.chaincodes && Array.isArray(this.state.chaincodes) && this.state.chaincodes.length}</h3>
                       </div>
                     </div>
                   </div>
@@ -270,12 +274,13 @@ class Explorer extends Component {
                         </div>
                       </div>
                       <div className="p-l-20">
-                        <h3 className="no-margin p-b-30 text-white ">{helpers.bytesToSize(this.state.diskSize, 2)}</h3>
+                        {!isNaN(Number(this.state.size)) && <h3 className="no-margin p-b-30 text-white ">{helpers.bytesToSize(Number(this.state.size) || 0, 2)}</h3>}
+                        {isNaN(Number(this.state.size)) && <p className="no-margin p-b-30 text-white ">{this.state.size}</p>}
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="col-lg-12 m-t-10">
+                <div className="col-lg-8 m-t-10">
                   <div className="card no-border no-margin details">
                     <hr className="no-margin" />
                     <div className="">
@@ -301,6 +306,45 @@ class Explorer extends Component {
                     </div>
                     <div className="padding-15 json-output">
                       <pre>{this.state.blockOrTxnOutput}</pre>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="col-lg-4 m-t-10">
+                  <div className="widget-9  widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch details">
+                    <div className="padding-25">
+                      <div className="pull-left">
+                        <h2 className="text-success no-margin">Organizations</h2>
+                      </div>
+                      <h3 className="pull-right semi-bold">
+                        <sup>
+                          <small className="semi-bold">#</small>
+                        </sup>
+                        &nbsp;
+                        {this.state.organizations && this.state.organizations.length}
+                      </h3>
+                      <div className="clearfix" />
+                    </div>
+                    <div className="auto-overflow widget-11-2-table-2">
+                      <table className="table table-condensed table-hover">
+                        <tbody>
+                          {this.state.organizations &&
+                            Array.isArray(this.state.organizations) &&
+                            this.state.organizations.map((orgName, index) => {
+                              return (
+                                <tr key={orgName}>
+                                  <td className="font-montserrat fs-14 break-word">{orgName.toPascalCase()}</td>
+                                </tr>
+                              );
+                            })}
+
+                          {this.state.organizations && !Array.isArray(this.state.organizations) && (
+                            <tr className="break-word">
+                              <td>{this.state.organizations}</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
@@ -338,28 +382,29 @@ class Explorer extends Component {
                 <div className="auto-overflow widget-11-2-table">
                   <table className="table table-condensed table-hover">
                     <tbody>
-                      {this.state.blocks.map((item, index) => {
-                        return (
-                          <tr
-                            key={item.number}
-                            onClick={() => {
-                              this.txnBlock.value = item.number;
-                              this.fetchBlockOrTxn(item.number);
-                            }}
-                          >
-                            <td className="font-montserrat all-caps fs-12 w-50" style={{ cursor: 'pointer' }}>
-                              Block #{item.number}
-                            </td>
-                            <td className="text-right hidden-lg">{/* <span className="hint-text small">dewdrops</span> */}</td>
-                            {/* <td className="text-right b-r b-dashed b-grey w-25"> */}
-                            {/* <span className="hint-text small">{item.transactions.length} Txns</span> */}
-                            {/* </td> */}
-                            {/* <td className="w-25"> */}
-                            {/* <span className="font-montserrat fs-18">{item.size} Bytes</span> */}
-                            {/* </td> */}
-                          </tr>
-                        );
-                      })}
+                      {this.state.blocks &&
+                        Array.isArray(this.state.blocks) &&
+                        this.state.blocks.map((item, index) => {
+                          return (
+                            <tr
+                              key={item.number}
+                              onClick={() => {
+                                this.txnBlock.value = item.number;
+                                this.fetchBlockOrTxn(item.number);
+                              }}
+                            >
+                              <td className="font-montserrat all-caps fs-12 w-50" style={{ cursor: 'pointer' }}>
+                                Block #{item.number}
+                              </td>
+                              <td className="text-right hidden-lg">{/* <span className="hint-text small">dewdrops</span> */}</td>
+                            </tr>
+                          );
+                        })}
+                      {this.state.blocks && !Array.isArray(this.state.blocks) && (
+                        <tr className="break-word">
+                          <td title={this.state.blocks}>{this.state.blocks}</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

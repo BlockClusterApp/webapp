@@ -270,7 +270,7 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                       },
                     ],
                     command: ['/bin/sh'],
-                    args: ['-c', 'mkdir -p /etc/hyperledger/privatehive/ledgerData'],
+                    args: ['-c', 'mkdir -p /etc/hyperledger/privatehive/ledgerData; mkdir -p /etc/hyperledger/privatehive/couchdb;'],
                   },
                 ],
                 containers: [
@@ -379,6 +379,12 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                       {
                         name: 'COUCHDB_PASSWORD',
                         value: '',
+                      },
+                    ],
+                    volumeMounts: [
+                      {
+                        name: 'privatehive-dir',
+                        mountPath: '/etc/hyperledger/privatehive',
                       },
                     ],
                   },
