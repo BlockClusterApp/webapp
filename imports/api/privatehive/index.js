@@ -32,6 +32,7 @@ PrivateHive.createPeer = async ({ locationCode, orgName }) => {
       orgName,
       anchorCommPort: peerDetails.peerGRPCAPINodePort,
       chaincodePort: peerDetails.chaincodeListenNodePort,
+      caPort: peerDetails.caNodePort,
     });
     await Creators.createAPIIngress({ locationCode, namespace, instanceId });
 
@@ -254,6 +255,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       orgName: orgName.toPascalCase(),
       apiNodePort: peerDetails.peerDetails.peerAPINodePort,
       anchorCommPort: peerDetails.peerDetails.peerGRPCAPINodePort,
+      caNodePort: peerDetails.peerDetails.caNodePort,
       ...commonData,
     });
     return peerDetails.instanceId;
@@ -268,11 +270,11 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
 
     async function getCerts(peer) {
       return new Promise((resolve, reject) => {
-        HTTP.call('GET', `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/config/cryptoCerts`, {}, (error, response) => {
+        HTTP.call('GET', `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/config/ordererCerts`, {}, (error, response) => {
           if (error) {
             reject();
           } else {
-            resolve(response.data);
+            resolve(response.data.message);
           }
         });
       });

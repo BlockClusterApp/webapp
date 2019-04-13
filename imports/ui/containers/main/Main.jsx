@@ -81,6 +81,7 @@ import PrivateHiveChaincodeCreate from '../../pages/privatehive/CreateChaincode'
 import PrivateHiveNotifications from '../../pages/privatehive/Notifications';
 import PrivateHiveChaincodeInvoke from '../../pages/privatehive/Invoke';
 import PrivateHiveChaincodeUpgrade from '../../pages/privatehive/UpgradeChaincode';
+import Downloads from '../../pages/privatehive/Downloads';
 
 export default withRouter(
   class Main extends Component {
@@ -178,6 +179,7 @@ export default withRouter(
                   <Route exact path="/app/privatehive/:id/chaincode/manage" render={props => this.showFailedBillingWarning(PrivateHiveChaincodeManagement, props)} />
                   <Route exact path="/app/privatehive/:id/chaincode/create" render={props => this.showFailedBillingWarning(PrivateHiveChaincodeCreate, props)} />
                   <Route exact path="/app/privatehive/:id/notifications" render={props => this.showFailedBillingWarning(PrivateHiveNotifications, props)} />
+                  <Route exact path="/app/privatehive/:id/downloads" render={props => this.showFailedBillingWarning(Downloads, props)} />
                   <Route path="/app/privatehive" render={props => this.showFailedBillingWarning(PrivateHiveDashboard, props)} />
 
                   {features.Payments && <Route path="/app/payments" component={Payments} />}

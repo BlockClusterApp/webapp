@@ -118,8 +118,9 @@ Creators.createPeerService = async function({ locationCode, namespace, instanceI
             } else {
               const peerAPINodePort = response.data.spec.ports[0].nodePort;
               const peerGRPCAPINodePort = response.data.spec.ports[1].nodePort;
+              const caNodePort = response.data.spec.ports[2].nodePort;
               const chaincodeListenNodePort = response.data.spec.ports[3].nodePort;
-              resolve({ peerAPINodePort, peerGRPCAPINodePort, chaincodeListenNodePort });
+              resolve({ peerAPINodePort, peerGRPCAPINodePort, chaincodeListenNodePort, caNodePort });
             }
           });
         }
@@ -232,7 +233,7 @@ Creators.deleteDeployment = function({ locationCode, namespace, name }) {
   });
 };
 
-Creators.createPeerDeployment = async function({ locationCode, namespace, instanceId, anchorCommPort, chaincodePort, workerNodeIP, orgName }) {
+Creators.createPeerDeployment = async function({ locationCode, namespace, instanceId, anchorCommPort, caPort, chaincodePort, workerNodeIP, orgName }) {
   console.log(chaincodePort);
   return new Promise((resolve, reject) => {
     HTTP.call(
@@ -330,6 +331,10 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                       {
                         name: 'ANCHOR_PORT',
                         value: anchorCommPort.toString(),
+                      },
+                      {
+                        name: 'CA_PORT',
+                        value: caPort.toString(),
                       },
                       {
                         name: 'CONFIGTXLATOR_URL',
@@ -510,7 +515,7 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                     args: ['-c', 'fabric-ca-server start -b admin:adminpw -d'],
                     ports: [
                       {
-                        containerPort: 7051,
+                        containerPort: 7054,
                       },
                     ],
                     env: [

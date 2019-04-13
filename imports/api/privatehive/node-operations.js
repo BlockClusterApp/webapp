@@ -1,8 +1,9 @@
 import fs from 'fs';
-import request from 'request-promise';
+const request = require('request-promise').defaults({ encoding: null });
 import Bluebird from 'bluebird';
 import Config from '../../modules/config/server';
 import { PrivatehivePeers } from '../../collections/privatehivePeers/privatehivePeers.js';
+var btoa = require('btoa');
 
 const Operations = {};
 
@@ -439,9 +440,117 @@ Operations.explorerDetails = async ({ channelName, networkId }) => {
     latestBlock: latestBlockReq,
   });
 
-  console.log(res);
-
   return res;
+};
+
+Operations.fetchConnectionProfile = async ({ networkId }) => {
+  if (!networkId) {
+    throw new Meteor.Error(400, 'Network ID required');
+  }
+  const network = PrivatehivePeers.findOne({
+    instanceId: networkId,
+    userId: Meteor.userId(),
+  });
+
+  if (!network) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+
+  const url = `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/config/connectionProfile`;
+
+  const res = await request({
+    uri: url,
+    method: 'GET',
+    json: true,
+  });
+
+  if (res.error) {
+    throw new Meteor.Error(400, res.message);
+  }
+
+  return res.message;
+};
+
+Operations.fetchOrgDetails = async ({ networkId }) => {
+  if (!networkId) {
+    throw new Meteor.Error(400, 'Network ID required');
+  }
+  const network = PrivatehivePeers.findOne({
+    instanceId: networkId,
+    userId: Meteor.userId(),
+  });
+
+  if (!network) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+
+  const url = `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/config/orgDetails`;
+
+  const res = await request({
+    uri: url,
+    method: 'GET',
+    json: true,
+  });
+
+  if (res.error) {
+    throw new Meteor.Error(400, res.message);
+  }
+
+  return res.message;
+};
+
+Operations.fetchChannelInviteCerts = async ({ networkId }) => {
+  if (!networkId) {
+    throw new Meteor.Error(400, 'Network ID required');
+  }
+  const network = PrivatehivePeers.findOne({
+    instanceId: networkId,
+    userId: Meteor.userId(),
+  });
+
+  if (!network) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+
+  const url = `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/config/ordererCerts`;
+
+  const res = await request({
+    uri: url,
+    method: 'GET',
+    json: true,
+  });
+
+  if (res.error) {
+    throw new Meteor.Error(400, res.message);
+  }
+
+  return res.message;
+};
+
+Operations.fetchCryptoConfig = async ({ networkId }) => {
+  if (!networkId) {
+    throw new Meteor.Error(400, 'Network ID required');
+  }
+  const network = PrivatehivePeers.findOne({
+    instanceId: networkId,
+    userId: Meteor.userId(),
+  });
+
+  if (!network) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+
+  const url = `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/config/cryptoConfig`;
+
+  const res = await request({
+    uri: url,
+    method: 'GET',
+    json: true,
+  });
+
+  console.log(typeof res);
+
+  return new Buffer(res).toString('base64');
 };
 
 Meteor.methods({
@@ -450,6 +559,10 @@ Meteor.methods({
   installChaincode: Operations.installChaincode,
   instantiateChaincode: Operations.instantiateChaincode,
   fetchChannels: Operations.fetchChannels,
+  fetchConnectionProfile: Operations.fetchConnectionProfile,
+  fetchOrgDetails: Operations.fetchOrgDetails,
+  fetchChannelInviteCerts: Operations.fetchChannelInviteCerts,
+  fetchCryptoConfig: Operations.fetchCryptoConfig,
   addChaincodeNotification: Operations.addNotificationURL,
   updateChaincodeNotification: Operations.updateNotificationURL,
   removeChaincodeNotification: Operations.removeNotificationURL,

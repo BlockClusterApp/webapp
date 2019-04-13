@@ -156,6 +156,16 @@ class ViewEditNetwork extends Component {
                   </div>
                   {network.type === 'orderer' && (
                     <div className="form-group row">
+                      <label className="col-md-3 control-label">Orderer URL</label>
+                      <div className="col-md-9">
+                        <b className="value-valign-middle">
+                          grpc://{network.workerNodeIP}:{network.ordererNodePort}
+                        </b>
+                      </div>
+                    </div>
+                  )}
+                  {network.type === 'orderer' && (
+                    <div className="form-group row">
                       <label className="col-md-3 control-label">Orderer Type</label>
                       <div className="col-md-9">
                         <b className="value-valign-middle">{network.ordererType}</b>
