@@ -166,6 +166,26 @@ class ViewEditNetwork extends Component {
                   )}
                   {network.type === 'orderer' && (
                     <div className="form-group row">
+                      <label className="col-md-3 control-label">Peer URL</label>
+                      <div className="col-md-9">
+                        <b className="value-valign-middle">
+                          grpc://{network.workerNodeIP}:{network.anchorCommPort}
+                        </b>
+                      </div>
+                    </div>
+                  )}
+                  {network.type === 'orderer' && (
+                    <div className="form-group row">
+                      <label className="col-md-3 control-label">CA URL</label>
+                      <div className="col-md-9">
+                        <b className="value-valign-middle">
+                          grpc://{network.workerNodeIP}:{network.caNodePort}
+                        </b>
+                      </div>
+                    </div>
+                  )}
+                  {network.type === 'orderer' && (
+                    <div className="form-group row">
                       <label className="col-md-3 control-label">Orderer Type</label>
                       <div className="col-md-9">
                         <b className="value-valign-middle">{network.ordererType}</b>
