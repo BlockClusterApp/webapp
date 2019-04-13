@@ -256,6 +256,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       apiNodePort: peerDetails.peerDetails.peerAPINodePort,
       anchorCommPort: peerDetails.peerDetails.peerGRPCAPINodePort,
       caNodePort: peerDetails.peerDetails.caNodePort,
+      workerNodeIP: Config.workerNodeIP(peerDetails.locationCode),
       ...commonData,
     });
     return peerDetails.instanceId;
