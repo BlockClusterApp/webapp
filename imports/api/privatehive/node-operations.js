@@ -152,6 +152,14 @@ Operations.instantiateChaincode = async ({ name, channelName, functionName, args
     throw new Meteor.Error(403, 'Invalid network');
   }
 
+  console.log({
+    chaincodeName: name,
+    channelName,
+    functionName,
+    args,
+    endorsmentPolicy,
+  });
+
   const res = await request({
     uri: `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/chaincodes/instantiate`,
     method: 'POST',

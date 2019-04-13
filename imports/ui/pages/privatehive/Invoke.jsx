@@ -100,6 +100,7 @@ class InvokeChaincode extends Component {
       (err, res) => {
         if (err) {
           cb(err, null);
+          console.log(err);
           return notifications.error(err.reason);
         }
         cb(null, res);

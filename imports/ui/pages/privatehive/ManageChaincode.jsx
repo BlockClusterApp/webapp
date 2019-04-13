@@ -110,6 +110,19 @@ class ManageChaincode extends Component {
       return;
     }
 
+    let endorsmentPolicy = this.endorsmentPolicy.value || '';
+
+    try {
+      endorsmentPolicy = JSON.parse(endorsmentPolicy);
+    } catch (err) {
+      this.setState({
+        initError: true,
+        initErrorMsg: 'Invalid Endorsment Policy. Must be a valid json',
+        [`loading_${this.state.modalChaincodeName}_init`]: false,
+      });
+      return;
+    }
+
     Meteor.call(
       'instantiateChaincode',
       {
@@ -118,13 +131,14 @@ class ManageChaincode extends Component {
         channelName: this.channelName.value,
         functionName: this.functionName.value,
         args,
-        endorsmentPolicy: this.endorsmentPolicy.value,
+        endorsmentPolicy,
       },
       (err, res) => {
         this.setState({
           [`loading_${this.state.modalChaincodeName}_init`]: true,
         });
         if (err) {
+          console.log(err);
           this.setState({
             initError: true,
             initErrorMsg: 'An error occured',

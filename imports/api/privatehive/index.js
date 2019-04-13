@@ -219,7 +219,7 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererId })
     body: {
       name: channelName,
       ordererURL: `${Config.workerNodeIP(ordererDetails.locationCode)}:${ordererDetails.ordererNodePort}`,
-      ordererOrgName: ordererDetails.instanceId,
+      ordererOrgName: ordererDetails.orgName,
     },
     json: true,
   });
@@ -341,7 +341,7 @@ Meteor.methods({
         console.log({
           name: channelName,
           ordererURL: `${Config.workerNodeIP(ordererDetails.locationCode)}:${ordererDetails.ordererNodePort}`,
-          ordererOrgName: ordererDetails.instanceId,
+          ordererOrgName: ordererDetails.orgName,
         });
         HTTP.call(
           'POST',
@@ -350,7 +350,7 @@ Meteor.methods({
             data: {
               name: channelName,
               ordererURL: `${Config.workerNodeIP(ordererDetails.locationCode)}:${ordererDetails.ordererNodePort}`,
-              ordererOrgName: ordererDetails.instanceId,
+              ordererOrgName: ordererDetails.orgName,
             },
           },
           (error, response) => {
@@ -430,7 +430,7 @@ Meteor.methods({
             data: {
               name: channelName,
               ordererURL: `${Config.workerNodeIP(ordererDetails.locationCode)}:${ordererDetails.ordererNodePort}`,
-              ordererOrgName: ordererDetails.instanceId,
+              ordererOrgName: ordererDetails.orgName,
             },
           },
           (error, response) => {
