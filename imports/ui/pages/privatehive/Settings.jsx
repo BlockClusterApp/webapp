@@ -179,7 +179,7 @@ class ViewEditNetwork extends Component {
                       <label className="col-md-3 control-label">CA URL</label>
                       <div className="col-md-9">
                         <b className="value-valign-middle">
-                          grpc://{network.workerNodeIP}:{network.caNodePort}
+                          http://{network.workerNodeIP}:{network.caNodePort}
                         </b>
                       </div>
                     </div>
