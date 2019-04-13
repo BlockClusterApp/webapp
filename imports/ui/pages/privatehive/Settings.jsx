@@ -164,7 +164,7 @@ class ViewEditNetwork extends Component {
                       </div>
                     </div>
                   )}
-                  {network.type === 'orderer' && (
+                  {network.type === 'peer' && (
                     <div className="form-group row">
                       <label className="col-md-3 control-label">Peer URL</label>
                       <div className="col-md-9">
@@ -174,7 +174,7 @@ class ViewEditNetwork extends Component {
                       </div>
                     </div>
                   )}
-                  {network.type === 'orderer' && (
+                  {network.type === 'peer' && (
                     <div className="form-group row">
                       <label className="col-md-3 control-label">CA URL</label>
                       <div className="col-md-9">
