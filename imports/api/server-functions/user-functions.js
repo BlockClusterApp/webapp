@@ -307,7 +307,7 @@ NetworkInvitation.inviteUserToNetwork = async function({ instanceId, nodeType, e
   return result;
 };
 
-NetworkInvitation.inviteUserToChannel = async ({ channelName, networkId, email, userId, ordererId }) => {
+NetworkInvitation.inviteUserToChannel = async ({ channelName, networkId, email, userId, ordererOrg, ordererConnectionDetails }) => {
   if (!email) {
     throw new Meteor.Error(403, 'Email missing');
   }
@@ -342,7 +342,8 @@ NetworkInvitation.inviteUserToChannel = async ({ channelName, networkId, email, 
       },
       channel: {
         name: channelName,
-        ordererId,
+        ordererOrg,
+        ordererConnectionDetails,
         networkId: network._id,
       },
     },
@@ -482,7 +483,8 @@ NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkC
         channelName: invitation.metadata.channel.name,
         peerId,
         userId,
-        ordererId: invitation.metadata.channel.ordererId,
+        ordererOrg: invitation.metadata.channel.ordererOrg,
+        ordererConnectionDetails: invitation.metadata.channel.ordererConnectionDetails,
       });
       UserInvitation.update(
         {

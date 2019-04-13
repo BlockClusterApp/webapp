@@ -177,7 +177,7 @@ PrivateHive.deleteNetwork = async ({ userId, instanceId }) => {
   return true;
 };
 
-PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererId }) => {
+PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererOrg, ordererConnectionDetails }) => {
   // PlaceHolder function
   const peer = PrivatehivePeers.findOne({ _id: peerId, userId });
   if (!peer) {
@@ -209,17 +209,17 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererId })
     json: true,
   });
 
-  const ordererDetails = PrivatehiveOrderers.findOne({ instanceId: ordererId.toLowerCase() });
-  console.log('AddOrg response', addOrgRes, ordererDetails);
+  console.log({ networkId, channelName, peerId, userId, ordererOrg, ordererConnectionDetails });
 
   await sleep(5000);
+
   const res = await request({
     uri: `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/channel/join`,
     method: 'POST',
     body: {
       name: channelName,
-      ordererURL: `${Config.workerNodeIP(ordererDetails.locationCode)}:${ordererDetails.ordererNodePort}`,
-      ordererOrgName: ordererDetails.orgName,
+      ordererURL: ordererConnectionDetails.substring(7),
+      ordererOrgName: ordererOrg,
     },
     json: true,
   });

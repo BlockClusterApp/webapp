@@ -49,6 +49,7 @@ class InviteChannel extends Component {
         if (err) {
           return;
         }
+
         return this.setState({
           channels: res.message,
         });
@@ -67,10 +68,12 @@ class InviteChannel extends Component {
     });
 
     let ordererOrgName = '';
+    let ordererConnectionDetails = '';
 
     this.state.channels.forEach(channel => {
       if (channel.name === this.channelName.value) {
         ordererOrgName = channel.ordererOrgName;
+        ordererConnectionDetails = channel.connectionDetails;
       }
     });
 
@@ -78,7 +81,8 @@ class InviteChannel extends Component {
       'inviteUserToChannel',
       {
         channelName: this.channelName.value,
-        ordererId: ordererOrgName.toLowerCase(),
+        ordererOrg: ordererOrgName,
+        ordererConnectionDetails,
         networkId: this.props.network._id,
         email: this.email.value,
       },
