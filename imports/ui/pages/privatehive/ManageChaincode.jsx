@@ -20,7 +20,7 @@ class ManageChaincode extends Component {
   }
 
   componentDidMount() {
-    setTimeout(() => this.getAssetTypes(), 1000);
+    setTimeout(() => this.getAssetTypes(), 3000);
     this.setState({
       refreshAssetTypesTimer: setInterval(this.getAssetTypes, 15000),
     });
