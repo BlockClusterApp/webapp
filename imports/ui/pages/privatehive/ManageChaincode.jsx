@@ -164,6 +164,17 @@ class ManageChaincode extends Component {
       );
     });
 
+    let defaultEP = `
+    {
+      "identities": [
+        { "role": { "name": "member", "mspId": "${this.props.network ? this.props.network.orgName : ''}" }}
+      ],
+      "policy": {
+        "1-of":[{ "signed-by": 0 }]
+      }
+    }
+    `;
+
     let Modal = (
       <div className="modal fade slide-right" id="chaincode_modal" tabIndex="-1" role="dialog" aria-hidden="true">
         <div className="modal-dialog modal-md">
@@ -210,13 +221,18 @@ class ManageChaincode extends Component {
                         <div className="form-group form-group-default input-group">
                           <div className="form-input-group">
                             <label>Endorsement Policy</label>
-                            <textarea
-                              placeholder={'Default: Only your org has to sign'}
-                              rows={10}
-                              className="form-control"
-                              name="projectName"
-                              ref={input => (this.endorsmentPolicy = input)}
-                            />
+                            {this.props.network && (
+                              <textarea
+                                placeholder={'Default: Only your org has to sign'}
+                                style={{
+                                  height: '170px',
+                                }}
+                                defaultValue={defaultEP}
+                                className="form-control"
+                                name="projectName"
+                                ref={input => (this.endorsmentPolicy = input)}
+                              />
+                            )}
                           </div>
                         </div>
                       </div>

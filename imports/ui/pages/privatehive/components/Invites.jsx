@@ -82,6 +82,8 @@ class Invites extends Component {
             }),
             1000
           );
+
+          notifications.success('Channel joined');
         }
       );
     }

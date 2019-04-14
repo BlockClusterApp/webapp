@@ -203,7 +203,7 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererOrg, 
     method: 'POST',
     body: {
       name: channelName,
-      newOrgName: peer.instanceId,
+      newOrgName: peer.orgName,
       newOrgConf: newOrgConf.message,
     },
     json: true,
