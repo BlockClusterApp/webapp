@@ -123,6 +123,21 @@ class ManageChaincode extends Component {
       return;
     }
 
+    let collectionsConfig = this.collectionsConfig.value || '';
+
+    if (collectionsConfig) {
+      try {
+        collectionsConfig = JSON.parse(collectionsConfig);
+      } catch (e) {
+        this.setState({
+          initError: true,
+          initErrorMsg: 'Invalid Collections Config. Must be a valid json array',
+          [`loading_${this.state.modalChaincodeName}_init`]: false,
+        });
+        return;
+      }
+    }
+
     Meteor.call(
       'instantiateChaincode',
       {
@@ -132,16 +147,16 @@ class ManageChaincode extends Component {
         functionName: this.functionName.value,
         args,
         endorsmentPolicy,
+        collectionsConfig,
       },
       (err, res) => {
         this.setState({
           [`loading_${this.state.modalChaincodeName}_init`]: true,
         });
         if (err) {
-          console.log(err);
           this.setState({
             initError: true,
-            initErrorMsg: 'An error occured',
+            initErrorMsg: err.reason,
             [`loading_${this.state.modalChaincodeName}_init`]: false,
           });
         } else {
@@ -231,6 +246,26 @@ class ManageChaincode extends Component {
                                 className="form-control"
                                 name="projectName"
                                 ref={input => (this.endorsmentPolicy = input)}
+                              />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="row clearfix">
+                      <div className="col-md-12">
+                        <div className="form-group form-group-default input-group">
+                          <div className="form-input-group">
+                            <label>Collections Config</label>
+                            {this.props.network && (
+                              <textarea
+                                style={{
+                                  height: '170px',
+                                }}
+                                defaultValue={''}
+                                className="form-control"
+                                name="projectName"
+                                ref={input => (this.collectionsConfig = input)}
                               />
                             )}
                           </div>

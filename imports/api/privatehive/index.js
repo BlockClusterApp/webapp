@@ -198,6 +198,12 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererOrg, 
     json: true,
   });
 
+  console.log({
+    name: channelName,
+    newOrgName: peer.orgName,
+    newOrgConf: newOrgConf.message,
+  });
+
   const addOrgRes = await request({
     uri: `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/channel/addOrg`,
     method: 'POST',
@@ -209,9 +215,13 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererOrg, 
     json: true,
   });
 
-  console.log({ networkId, channelName, peerId, userId, ordererOrg, ordererConnectionDetails });
-
   await sleep(5000);
+
+  console.log({
+    name: channelName,
+    ordererURL: ordererConnectionDetails.substring(7),
+    ordererOrgName: ordererOrg,
+  });
 
   const res = await request({
     uri: `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/channel/join`,

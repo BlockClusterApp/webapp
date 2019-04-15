@@ -91,6 +91,19 @@ class UpgradeChaincode extends Component {
       return notifications.error('Arguments is invalid');
     }
 
+    let collectionsConfig = this.collectionsConfig.value || '';
+
+    if (collectionsConfig) {
+      try {
+        collectionsConfig = JSON.parse(collectionsConfig);
+      } catch (e) {
+        this.setState({
+          loading: false,
+        });
+        return notifications.error('Collections config is invalid');
+      }
+    }
+
     const reader = new FileReader();
     reader.onload = fileLoadEvent => {
       Meteor.call(
@@ -105,6 +118,7 @@ class UpgradeChaincode extends Component {
           version: this.chaincodeVersion.value,
           channel: this.invoke_channel.value,
           endorsmentPolicy: this.endorsmentPolicy.value,
+          collectionsConfig: this.collectionsConfig.value,
           // ccPath: this.chaincodePath.value,
         },
         (err, res) => {
@@ -135,6 +149,17 @@ class UpgradeChaincode extends Component {
         </option>
       );
     });
+
+    let defaultEP = `
+    {
+      "identities": [
+        { "role": { "name": "member", "mspId": "${this.props.network ? this.props.network.orgName : ''}" }}
+      ],
+      "policy": {
+        "1-of":[{ "signed-by": 0 }]
+      }
+    }
+    `;
 
     return (
       <div className="assetsStats content">
@@ -173,7 +198,7 @@ class UpgradeChaincode extends Component {
               }}
             >
               <div className="row clearfix">
-                <div className="col-md-12">
+                <div className="col-md-6">
                   <div className="form-group form-group-default required">
                     <label>Select Channel</label>
                     <select required className="form-control" ref={input => (this.invoke_channel = input)}>
@@ -181,9 +206,7 @@ class UpgradeChaincode extends Component {
                     </select>
                   </div>
                 </div>
-              </div>
-              <div className="row clearfix">
-                <div className="col-md-12">
+                <div className="col-md-6">
                   <div className="form-group form-group-default required">
                     <label>Select Chaincode</label>
                     <select required className="form-control" ref={input => (this.chaincodeName = input)}>
@@ -193,7 +216,7 @@ class UpgradeChaincode extends Component {
                 </div>
               </div>
               <div className="row clearfix">
-                <div className="col-md-12">
+                <div className="col-md-6">
                   <div className="form-group form-group-default required">
                     <label>Chaincode Source ZIP file</label>
                     <input
@@ -210,10 +233,7 @@ class UpgradeChaincode extends Component {
                     />
                   </div>
                 </div>
-              </div>
-
-              <div className="row clearfix">
-                <div className="col-md-12">
+                <div className="col-md-6">
                   <div className="form-group form-group-default input-group required">
                     <div className="form-input-group">
                       <label>Chaincode Version</label>
@@ -223,18 +243,16 @@ class UpgradeChaincode extends Component {
                 </div>
               </div>
               <div className="row">
-                <div className="col-md-12">
+                <div className="col-md-6">
                   <div className="form-group form-group-default">
                     <label>Arguments</label>
                     <input type="text" defaultValue="[]" className="form-control" name="eventName" ref={input => (this.chaincodeArgs = input)} />
                   </div>
                 </div>
-              </div>
-              <div className="row">
-                <div className="col-md-12">
+                <div className="col-md-6">
                   <div className="form-group form-group-default">
                     <label>Function Name</label>
-                    <input type="text" placeholder="[]" className="form-control" name="eventName" ref={input => (this.chaincodeFcn = input)} />
+                    <input type="text" placeholder="" className="form-control" name="eventName" ref={input => (this.chaincodeFcn = input)} />
                   </div>
                 </div>
               </div>
@@ -246,7 +264,25 @@ class UpgradeChaincode extends Component {
                       placeholder="Default is only your organisation has to sign"
                       className="form-control"
                       name="eventName"
+                      style={{
+                        height: '170px',
+                      }}
                       ref={input => (this.endorsmentPolicy = input)}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-md-12">
+                  <div className="form-group form-group-default">
+                    <label>Collections Config</label>
+                    <textarea
+                      className="form-control"
+                      name="eventName"
+                      style={{
+                        height: '170px',
+                      }}
+                      ref={input => (this.collectionsConfig = input)}
                     />
                   </div>
                 </div>

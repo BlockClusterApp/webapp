@@ -77,7 +77,6 @@ agenda.define(
               userId: userId,
             }
           );
-          console.log(sent_mails);
         })
         .catch(error_sending_mail => {
           console.log(error_sending_mail);

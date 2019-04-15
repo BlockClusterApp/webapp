@@ -137,7 +137,7 @@ Operations.installChaincode = async ({ name, type, version, networkId }) => {
   return res;
 };
 
-Operations.instantiateChaincode = async ({ name, channelName, functionName, args, endorsmentPolicy, networkId }) => {
+Operations.instantiateChaincode = async ({ name, channelName, functionName, args, endorsmentPolicy, collectionsConfig, networkId }) => {
   if (!networkId) {
     throw new Meteor.Error(400, 'Network ID required');
   }
@@ -152,14 +152,6 @@ Operations.instantiateChaincode = async ({ name, channelName, functionName, args
     throw new Meteor.Error(403, 'Invalid network');
   }
 
-  console.log({
-    chaincodeName: name,
-    channelName,
-    functionName,
-    args,
-    endorsmentPolicy,
-  });
-
   const res = await request({
     uri: `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/chaincodes/instantiate`,
     method: 'POST',
@@ -172,6 +164,7 @@ Operations.instantiateChaincode = async ({ name, channelName, functionName, args
       functionName,
       args,
       endorsmentPolicy,
+      collectionsConfig,
     },
     json: true,
   });
@@ -342,18 +335,6 @@ Operations.invokeOrQueryChaincode = async ({ channelName, chaincodeName, functio
 
   const url = `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/chaincodes/${action}`;
 
-  console.log({
-    uri: url,
-    method: 'POST',
-    body: {
-      channelName,
-      chaincodeName,
-      fcn: functionName,
-      args,
-    },
-    json: true,
-  });
-
   const res = await request({
     uri: url,
     method: 'POST',
@@ -374,7 +355,7 @@ Operations.invokeOrQueryChaincode = async ({ channelName, chaincodeName, functio
   return res.message;
 };
 
-Operations.upgradeChaincode = async ({ file, content, name, args, fcn, networkId, channel, endorsmentPolicy, version }) => {
+Operations.upgradeChaincode = async ({ file, content, name, args, fcn, networkId, channel, endorsmentPolicy, collectionsConfig, version }) => {
   if (!networkId) {
     throw new Meteor.Error(400, 'Network ID required');
   }
@@ -407,6 +388,7 @@ Operations.upgradeChaincode = async ({ file, content, name, args, fcn, networkId
   form.append('chaincodeVersion', version);
   form.append('channelName', channel);
   form.append('endorsmentPolicy', endorsmentPolicy);
+  form.append('collectionsConfig', collectionsConfig);
 
   const res = await chaincodeRequest;
 
