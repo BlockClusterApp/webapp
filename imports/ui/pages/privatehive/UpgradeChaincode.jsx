@@ -197,124 +197,129 @@ class UpgradeChaincode extends Component {
                 this.upgradeChaincode(e);
               }}
             >
-              <div className="row clearfix">
-                <div className="col-md-6">
-                  <div className="form-group form-group-default required">
-                    <label>Select Channel</label>
-                    <select required className="form-control" ref={input => (this.invoke_channel = input)}>
-                      {channelOptions}
-                    </select>
+              {this.props.network && (
+                <div>
+                  <div className="row clearfix">
+                    <div className="col-md-6">
+                      <div className="form-group form-group-default required">
+                        <label>Select Channel</label>
+                        <select required className="form-control" ref={input => (this.invoke_channel = input)}>
+                          {channelOptions}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="form-group form-group-default required">
+                        <label>Select Chaincode</label>
+                        <select required className="form-control" ref={input => (this.chaincodeName = input)}>
+                          {chaincodeOptions}
+                        </select>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="form-group form-group-default required">
-                    <label>Select Chaincode</label>
-                    <select required className="form-control" ref={input => (this.chaincodeName = input)}>
-                      {chaincodeOptions}
-                    </select>
+                  <div className="row clearfix">
+                    <div className="col-md-6">
+                      <div className="form-group form-group-default required">
+                        <label>Chaincode Source ZIP file</label>
+                        <input
+                          type="file"
+                          className="form-control file-button"
+                          name="firstName"
+                          required
+                          style={{
+                            marginTop: '5px',
+                          }}
+                          ref={input => {
+                            this.chaincodeFile = input;
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="form-group form-group-default input-group required">
+                        <div className="form-input-group">
+                          <label>Chaincode Version</label>
+                          <input required type="text" className="form-control" name="eventName" ref={input => (this.chaincodeVersion = input)} />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div className="row clearfix">
-                <div className="col-md-6">
-                  <div className="form-group form-group-default required">
-                    <label>Chaincode Source ZIP file</label>
-                    <input
-                      type="file"
-                      className="form-control file-button"
-                      name="firstName"
-                      required
-                      style={{
-                        marginTop: '5px',
-                      }}
-                      ref={input => {
-                        this.chaincodeFile = input;
-                      }}
-                    />
+                  <div className="row">
+                    <div className="col-md-6">
+                      <div className="form-group form-group-default">
+                        <label>Arguments</label>
+                        <input type="text" defaultValue="[]" className="form-control" name="eventName" ref={input => (this.chaincodeArgs = input)} />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="form-group form-group-default">
+                        <label>Function Name</label>
+                        <input type="text" placeholder="" className="form-control" name="eventName" ref={input => (this.chaincodeFcn = input)} />
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="form-group form-group-default input-group required">
-                    <div className="form-input-group">
-                      <label>Chaincode Version</label>
-                      <input required type="text" className="form-control" name="eventName" ref={input => (this.chaincodeVersion = input)} />
+                  <div className="row">
+                    <div className="col-md-12">
+                      <div className="form-group form-group-default">
+                        <label>Endorsment Policy</label>
+                        <textarea
+                          placeholder="Default is only your organisation has to sign"
+                          className="form-control"
+                          name="eventName"
+                          defaultValue={defaultEP}
+                          style={{
+                            height: '170px',
+                          }}
+                          ref={input => (this.endorsmentPolicy = input)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="col-md-12">
+                      <div className="form-group form-group-default">
+                        <label>Collections Config</label>
+                        <textarea
+                          className="form-control"
+                          name="eventName"
+                          style={{
+                            height: '170px',
+                          }}
+                          ref={input => (this.collectionsConfig = input)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {this.state.error && (
+                    <div className="row">
+                      <div className="col-md-12">
+                        <div className="alert alert-danger">{this.state.error}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="row">
+                    <div className="col-md-12">
+                      <div className="form-group">
+                        <LaddaButton
+                          loading={this.state.loading}
+                          disabled={this.state.loading}
+                          data-size={S}
+                          data-style={SLIDE_UP}
+                          data-spinner-size={30}
+                          data-spinner-lines={12}
+                          className="btn btn-success"
+                          type="submit"
+                        >
+                          <i className="fa fa-upload" aria-hidden="true" />
+                          &nbsp;&nbsp;Upgrade Chaincode
+                        </LaddaButton>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="form-group form-group-default">
-                    <label>Arguments</label>
-                    <input type="text" defaultValue="[]" className="form-control" name="eventName" ref={input => (this.chaincodeArgs = input)} />
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="form-group form-group-default">
-                    <label>Function Name</label>
-                    <input type="text" placeholder="" className="form-control" name="eventName" ref={input => (this.chaincodeFcn = input)} />
-                  </div>
-                </div>
-              </div>
-              <div className="row">
-                <div className="col-md-12">
-                  <div className="form-group form-group-default">
-                    <label>Endorsment Policy</label>
-                    <textarea
-                      placeholder="Default is only your organisation has to sign"
-                      className="form-control"
-                      name="eventName"
-                      style={{
-                        height: '170px',
-                      }}
-                      ref={input => (this.endorsmentPolicy = input)}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="row">
-                <div className="col-md-12">
-                  <div className="form-group form-group-default">
-                    <label>Collections Config</label>
-                    <textarea
-                      className="form-control"
-                      name="eventName"
-                      style={{
-                        height: '170px',
-                      }}
-                      ref={input => (this.collectionsConfig = input)}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {this.state.error && (
-                <div className="row">
-                  <div className="col-md-12">
-                    <div className="alert alert-danger">{this.state.error}</div>
-                  </div>
-                </div>
               )}
-
-              <div className="row">
-                <div className="col-md-12">
-                  <div className="form-group">
-                    <LaddaButton
-                      loading={this.state.loading}
-                      disabled={this.state.loading}
-                      data-size={S}
-                      data-style={SLIDE_UP}
-                      data-spinner-size={30}
-                      data-spinner-lines={12}
-                      className="btn btn-success"
-                      type="submit"
-                    >
-                      <i className="fa fa-upload" aria-hidden="true" />
-                      &nbsp;&nbsp;Upgrade Chaincode
-                    </LaddaButton>
-                  </div>
-                </div>
-              </div>
             </form>
           </div>
         </div>

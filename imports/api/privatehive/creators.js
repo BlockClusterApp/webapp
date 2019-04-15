@@ -389,6 +389,18 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                         name: 'COUCHDB_PASSWORD',
                         value: '',
                       },
+                      {
+                        name: 'COUCHDB_ADMIN_USER',
+                        value: '',
+                      },
+                      {
+                        name: 'COUCHDB_ADMIN_PASS',
+                        value: '',
+                      },
+                      {
+                        name: 'COUCHDB_LOG_LEVEL',
+                        value: 'debug',
+                      },
                     ],
                     volumeMounts: [
                       {
