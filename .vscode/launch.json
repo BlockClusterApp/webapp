@@ -6,7 +6,8 @@
       "request": "launch",
       "name": "Meteor: Chrome",
       "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}"
+      "webRoot": "${workspaceFolder}",
+      "outputCapture": "std"
     },
     {
       "type": "node",
@@ -14,8 +15,9 @@
       "name": "Meteor: Node",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "debug"],
-      "port": 3000,
-      "timeout": 30000
+      "outputCapture": "std",
+      "port": 9229,
+      "timeout": 60000
     }
   ],
   "compounds": [
