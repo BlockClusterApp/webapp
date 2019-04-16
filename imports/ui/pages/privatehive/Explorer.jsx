@@ -113,14 +113,23 @@ class Explorer extends Component {
   };
 
   refreshExplorerDetails = () => {
+    if (!(this.state.channel && this.state.channel.name)) {
+      return;
+    }
+    this.setState({
+      loading: true,
+    });
     Meteor.call('explorerDetails', { channelName: this.state.channel.name, networkId: this.props.match.params.id }, (err, res) => {
-      console.log(err, res);
+      if (res.channelName !== this.state.channel.name) {
+        return;
+      }
       this.setState({
         blocks: res.blocks.message,
         chaincodes: res.chaincodes.message,
         latestBlock: res.latestBlock.message,
-        organizations: res.organizations.message,
+        organizations: res.organizations.error ? [JSON.stringify(res.organizations.message)] : res.organizations.message,
         size: res.size.message,
+        loading: false,
       });
     });
   };
@@ -133,7 +142,11 @@ class Explorer extends Component {
         blockOrTxnOutput: '',
       },
       () => {
+        clearInterval(this.refreshTimer);
         this.refreshExplorerDetails();
+        this.refreshTimer = setInterval(() => {
+          this.refreshExplorerDetails();
+        }, REFRESH_INTERVAL);
       }
     );
   };
@@ -145,38 +158,52 @@ class Explorer extends Component {
         blockOrTxnOutput: 'Wait for network to start running',
       });
     }
-    let url = `https://${network.properties.apiEndPoint}/blocks/${this.state.channel}`;
 
-    if (value.length > 10) {
-      url = `${url}/txn/${value}`;
-    } else if (!Number.isNaN(parseInt(value))) {
-      url = `${url}/block/${value}`;
-    } else {
-      return;
-    }
+    Meteor.call('fetchBlockOrTxn', { networkId: network.instanceId, value, channelName: this.state.channel.name }, (err, res) => {
+      if (err) {
+        setTimeout(() => this.fetchBlockOrTxn(value), 3000);
+        if (err.error === 501) {
+          return;
+        }
+        return this.setState({ blockOrTxnOutput: err.toString() });
+      }
+      return this.setState({
+        blockOrTxnOutput: JSON.stringify(res, null, 2),
+      });
+    });
+  };
 
-    HTTP.get(
-      url,
+  loadMoreBlocks = () => {
+    const lastBlock = this.state.blocks[this.state.blocks.length - 1].blockNumber;
+
+    Meteor.call(
+      'fetchMorePrivatehiveBlocks',
       {
-        headers: {
-          'x-access-key': network.properties.tokens ? network.properties.tokens[0] : undefined,
-        },
+        networkId: this.props.match.params.id,
+        channelName: this.state.channel.name,
+        startBlock: lastBlock,
+        endBlock: Math.min(lastBlock + 10, this.state.latestBlock.blockNumber),
       },
       (err, res) => {
         if (err) {
-          setTimeout(() => this.fetchBlockOrTxn(value), 3000);
-          return this.setState({ blockOrTxnOutput: err.toString() });
+          return setTimeout(this.loadMoreBlocks, 3000);
         }
-        return this.setState({
-          blockOrTxnOutput: JSON.stringify(res.data.data, null, 2),
+        const blocks = [];
+        const blockNumbers = this.state.blocks.map(b => b.blockNumber);
+        res.forEach(block => {
+          if (!blockNumbers.includes(Number(block.blockNumber))) {
+            blocks.push(block);
+          }
+        });
+
+        this.setState({
+          blocks: [...new Set([...this.state.blocks, ...blocks])].sort((b, c) => b.blockNumber - c.blockNumber),
         });
       }
     );
   };
 
   render() {
-    console.log(this.state.blocks);
-
     const channelOptions = this.state.channels.map(channel => {
       return (
         <option value={JSON.stringify(channel)} key={channel.name}>
@@ -212,7 +239,7 @@ class Explorer extends Component {
                         <ul>
                           <li className="p-l-10">
                             <a data-toggle="refresh" className="card-refresh text-black" href="#">
-                              <i className="fa fa-spinner" />
+                              <i className={`fa fa-spinner ${this.state.loading && 'fa-spin'}`} />
                             </a>
                           </li>
                         </ul>
@@ -283,7 +310,7 @@ class Explorer extends Component {
                     </div>
                   </div>
                 </div>
-                <div className="col-lg-7 m-t-10">
+                <div className="col-lg-8 m-t-10">
                   <div className="card no-border no-margin details full-height">
                     <hr className="no-margin" />
                     <div className="">
@@ -313,7 +340,7 @@ class Explorer extends Component {
                   </div>
                 </div>
 
-                <div className="col-lg-5 m-t-10">
+                <div className="col-lg-4 m-t-10">
                   <div className="widget-11-2 card no-border card-condensed no-margin widget-loader-circle align-self-stretch details full-height">
                     <div className="padding-25">
                       <div className="pull-left">
@@ -333,7 +360,7 @@ class Explorer extends Component {
                         <tbody>
                           {this.state.organizations &&
                             Array.isArray(this.state.organizations) &&
-                            this.state.organizations.map((orgName, index) => {
+                            this.state.organizations.sort().map((orgName, index) => {
                               return (
                                 <tr key={orgName}>
                                   <td className="font-montserrat fs-14 break-word">{toPascalCase(orgName)}</td>
@@ -383,7 +410,7 @@ class Explorer extends Component {
                     <sup>
                       <small className="semi-bold">#</small>
                     </sup>{' '}
-                    {this.state.blocks && this.state.blocks.length}
+                    {this.state.latestBlock && this.state.latestBlock.blockNumber}
                   </h3>
                   <div className="clearfix" />
                 </div>
@@ -401,10 +428,13 @@ class Explorer extends Component {
                                 this.fetchBlockOrTxn(item.blockNumber);
                               }}
                             >
-                              <td className="font-montserrat all-caps fs-12 w-50" style={{ cursor: 'pointer' }}>
-                                Block #{item.blockNumber}
+                              <td className="font-montserrat all-caps fs-12 w-75">Block #{item.blockNumber}</td>
+                              <td className="text-right hidden-lg">
+                                <span className="hint-text small">dewdrops</span>
                               </td>
-                              <td className="text-right hidden-lg">{/* <span className="hint-text small">dewdrops</span> */}</td>
+                              <td className="text-right b-r b-dashed b-grey w-25">
+                                <span className="hint-text small">{item.totalTxns} Txns</span>
+                              </td>
                             </tr>
                           );
                         })}
@@ -415,6 +445,17 @@ class Explorer extends Component {
                       )}
                     </tbody>
                   </table>
+                </div>
+                <div className="padding-25 mt-auto">
+                  <p
+                    className="small no-margin"
+                    onClick={e => {
+                      this.loadMoreBlocks(e);
+                    }}
+                  >
+                    <i className="fa fs-16 fa-arrow-circle-o-down text-success m-r-10" />
+                    <span className="hint-text ">Show older blocks</span>
+                  </p>
                 </div>
               </div>
             </div>

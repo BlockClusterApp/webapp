@@ -428,9 +428,67 @@ Operations.explorerDetails = async ({ channelName, networkId }) => {
     organizations: organizationReq,
     chaincodes: chaincodesReq,
     latestBlock: latestBlockReq,
+    channelName,
   });
 
   return res;
+};
+
+Operations.fetchBlockOrTxn = async ({ networkId, value, channelName }) => {
+  if (!networkId) {
+    throw new Meteor.Error(400, 'Network ID required');
+  }
+  const userId = Meteor.userId();
+
+  const network = PrivatehivePeers.findOne({
+    instanceId: networkId,
+    userId,
+  });
+  if (!network) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+
+  const baseURL = `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}`;
+  let url;
+
+  if (String(value).length > 10) {
+    url = `${baseURL}/explore/getTransaction?txnId=${value}&channelName=${channelName}`;
+  } else if (!Number.isNaN(value)) {
+    url = `${baseURL}/explore/getBlock?blockNumber=${value}&channelName=${channelName}`;
+  } else {
+    throw new Meteor.Error(501, 'Invalid block or txn hash');
+  }
+
+  const res = await request({ uri: url, method: 'GET', json: true });
+
+  if (res.error) {
+    throw new Meteor.Error(400, res.message);
+  }
+
+  return res.message;
+};
+
+Operations.fetchMorePrivatehiveBlocks = async ({ networkId, channelName, startBlock, endBlock }) => {
+  if (!networkId) {
+    throw new Meteor.Error(400, 'Network ID required');
+  }
+  const userId = Meteor.userId();
+
+  const network = PrivatehivePeers.findOne({
+    instanceId: networkId,
+    userId,
+  });
+  if (!network) {
+    throw new Meteor.Error(403, 'Invalid network');
+  }
+  const url = `http://${Config.workerNodeIP(network.locationCode)}:${network.apiNodePort}/explore/getBlocks?channelName=${channelName}&start=${startBlock}&end=${endBlock}`;
+  const res = await request({ uri: url, method: 'GET', json: true });
+
+  if (res.error) {
+    throw new Meteor.Error(400, res.message);
+  }
+
+  return res.message;
 };
 
 Operations.fetchConnectionProfile = async ({ networkId }) => {
@@ -560,4 +618,6 @@ Meteor.methods({
   invokeOrQueryChaincode: Operations.invokeOrQueryChaincode,
   upgradeChaincode: Operations.upgradeChaincode,
   explorerDetails: Operations.explorerDetails,
+  fetchBlockOrTxn: Operations.fetchBlockOrTxn,
+  fetchMorePrivatehiveBlocks: Operations.fetchMorePrivatehiveBlocks,
 });
