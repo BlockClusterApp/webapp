@@ -24,6 +24,7 @@ class InvokeChaincode extends Component {
       channels: [],
       chaincodes: [],
       notifications: [],
+      errorMsg: '',
     };
   }
 
@@ -99,9 +100,7 @@ class InvokeChaincode extends Component {
       },
       (err, res) => {
         if (err) {
-          cb(err, null);
-          console.log(err);
-          return notifications.error(err.reason);
+          return cb(err, null);
         }
         cb(null, res);
       }
@@ -117,8 +116,16 @@ class InvokeChaincode extends Component {
       this.setState({
         invoking: false,
       });
-      if (res) {
-        return notifications.success('Invoked');
+
+      if (err) {
+        this.setState({
+          errorMsg: err.reason,
+        });
+      } else {
+        this.setState({
+          errorMsg: '',
+        });
+        notifications.success('Invoked');
       }
     });
   };
@@ -131,8 +138,14 @@ class InvokeChaincode extends Component {
       this.setState({
         querying: false,
       });
-      if (res) {
-        return this.setState({
+
+      if (err) {
+        this.setState({
+          errorMsg: err.reason,
+        });
+      } else {
+        this.setState({
+          errorMsg: '',
           queryRes: res,
         });
       }
@@ -219,6 +232,15 @@ class InvokeChaincode extends Component {
                                     </div>
                                   </div>
                                 </div>
+                                {this.state.errorMsg && (
+                                  <div className="row">
+                                    <div className="col-md-12">
+                                      <div className="m-b-10 alert alert-danger m-b-0" role="alert">
+                                        {this.state.errorMsg}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
                                 <LaddaButton
                                   loading={this.state.invoking}
                                   data-size={S}

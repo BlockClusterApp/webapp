@@ -69,6 +69,17 @@ class CreateChannelCode extends Component {
   };
 
   render() {
+    let directoryStructure = `
+    marbles
+    ├── META-INF
+    │   └── statedb
+    │       └── couchdb
+    │           ├── indexOwner.json
+    │           └── indexes
+    │               └── indexOwner.json
+    └── marbles_chaincode_private.go
+    `;
+
     return (
       <div className="assetsStats content">
         <div className="container-fluid container-fixed-lg m-t-20 p-l-25 p-r-25 p-t-25 p-b-25 sm-padding-10 bg-white">
@@ -85,7 +96,7 @@ class CreateChannelCode extends Component {
             <div className="col-md-6">
               <div className="card card-transparent">
                 <div className="card-block" style={{ padding: '0px' }}>
-                  <h3>Upload Your Chaincode on peer</h3>
+                  <h3>Upload Your Chaincode on Peer</h3>
                   <p>Upload a new chaincode on the peer. We support both Golang and Node.js chaincodes</p>
                   <ul>
                     <li>
@@ -95,10 +106,37 @@ class CreateChannelCode extends Component {
                       <i>Version</i>: When you upload a new chaincode we assign default version to be 1.0. While upgrading chaincode you can change the version.
                     </li>
                     <li>
-                      <i>ZIP File</i>: The .zip file should contain a directory with same name as the chaincode name. Inside the directory place the code files. For example: in
-                      case of golang, the directory should contain &#123;chaincodeName&#125;.go file.
+                      <i>ZIP File</i>: The .zip file should contain a directory with same name as the chaincode name. Inside the directory place the code files.
                     </li>
                   </ul>
+                  <p>
+                    <b>CouchDB Indexes</b>: You can place .json files for indexes inside <i>&lt;chaincode-node&gt;/META-INF/statedb/couchdb/indexes</i> directory. Similarly,
+                    indexes can also be applied to private data collections, by packaging indexes in a{' '}
+                    <i>&lt;chaincode-node&gt;/META-INF/statedb/couchdb/collections/&lt;collection-name&gt;/indexes directory</i>
+                  </p>
+                  <p
+                    style={{
+                      whiteSpace: 'pre-line',
+                    }}
+                  >
+                    <b>Example</b>: Here is the directory structure you need to follow to upload the marbles chaincode:
+                    <p>
+                      ├── META-INF
+                      <br />
+                      │&nbsp;&nbsp;&nbsp;&nbsp; └── statedb
+                      <br />
+                      │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └── couchdb
+                      <br />
+                      │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├── indexOwner.json
+                      <br />
+                      │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └── indexes
+                      <br />
+                      │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                      └── indexOwner.json
+                      <br />
+                      └── marbles_chaincode_private.go
+                    </p>
+                  </p>
                 </div>
               </div>
             </div>
