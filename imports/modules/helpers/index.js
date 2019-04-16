@@ -10,10 +10,6 @@ Array.prototype.remByVal = function(val) {
   return this;
 };
 
-String.prototype.toPascalCase = function() {
-  return this.charAt(0).toUpperCase() + this.slice(1);
-};
-
 const SupportTicketCodes = {
   1: 'Opened',
   2: 'BlockCluster Action Pending',

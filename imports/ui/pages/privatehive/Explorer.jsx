@@ -3,6 +3,7 @@ import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter, Link } from 'react-router-dom';
 import { PrivatehivePeers } from '../../../collections/privatehivePeers/privatehivePeers';
 import helpers from '../../../modules/helpers/index';
+const toPascalCase = require('to-pascal-case');
 
 import querystring from 'querystring';
 
@@ -335,7 +336,7 @@ class Explorer extends Component {
                             this.state.organizations.map((orgName, index) => {
                               return (
                                 <tr key={orgName}>
-                                  <td className="font-montserrat fs-14 break-word">{orgName.toPascalCase()}</td>
+                                  <td className="font-montserrat fs-14 break-word">{toPascalCase(orgName)}</td>
                                 </tr>
                               );
                             })}

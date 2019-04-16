@@ -2,6 +2,7 @@ import Config from '../../modules/config/server';
 import Bluebird from 'bluebird';
 var md5 = require('apache-md5');
 const Creators = {};
+const toPascalCase = require('to-pascal-case');
 
 Creators.createPersistentvolumeclaims = async ({ locationCode, namespace, instanceId, storage }) =>
   new Promise((resolve, reject) => {
@@ -286,7 +287,7 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                     env: [
                       {
                         name: 'ORG_NAME',
-                        value: `${orgName.toPascalCase()}`,
+                        value: `${toPascalCase(orgName)}`,
                       },
                       {
                         name: 'INSTANCE_ID',
@@ -314,7 +315,7 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                       },
                       {
                         name: 'CORE_PEER_LOCALMSPID',
-                        value: `${orgName.toPascalCase()}`,
+                        value: `${toPascalCase(orgName)}`,
                       },
                       {
                         name: 'CORE_PEER_MSPCONFIGPATH',
@@ -450,7 +451,7 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                       },
                       {
                         name: 'CORE_PEER_LOCALMSPID',
-                        value: `${orgName.toPascalCase()}`,
+                        value: `${toPascalCase(orgName)}`,
                       },
                       {
                         name: 'CORE_PEER_ADDRESS',
@@ -1267,7 +1268,7 @@ Creators.createOrdererDeployment = async function createDeployment({
                     env: [
                       {
                         name: 'ORG_NAME',
-                        value: `${orgName.toPascalCase()}`,
+                        value: `${toPascalCase(orgName)}`,
                       },
                       {
                         name: 'INSTANCE_ID',
@@ -1391,7 +1392,7 @@ Creators.createOrdererDeployment = async function createDeployment({
                       },
                       {
                         name: 'ORDERER_GENERAL_LOCALMSPID',
-                        value: `${orgName.toPascalCase()}`,
+                        value: `${toPascalCase(orgName)}`,
                       },
                       {
                         name: 'ORDERER_GENERAL_LOCALMSPDIR',

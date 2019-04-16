@@ -6,6 +6,7 @@ import { PrivatehiveOrderers } from '../../collections/privatehiveOrderers/priva
 import { PrivatehivePeers } from '../../collections/privatehivePeers/privatehivePeers.js';
 import Creators from './creators';
 import request from 'request-promise';
+const toPascalCase = require('to-pascal-case');
 
 function sleep(timeout) {
   return new Promise(r => {
@@ -262,7 +263,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
     let peerDetails = await PrivateHive.createPeer({ locationCode, orgName });
     PrivatehivePeers.insert({
       instanceId: peerDetails.instanceId,
-      orgName: orgName.toPascalCase(),
+      orgName: toPascalCase(orgName),
       apiNodePort: peerDetails.peerDetails.peerAPINodePort,
       anchorCommPort: peerDetails.peerDetails.peerGRPCAPINodePort,
       caNodePort: peerDetails.peerDetails.caNodePort,
@@ -309,7 +310,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       ordererNodePort: ordererDetails.ordererNodePort,
       workerNodeIP: Config.workerNodeIP(peerDetails.locationCode),
       ordererType,
-      orgName: orgName.toPascalCase(),
+      orgName: toPascalCase(orgName),
       ...commonData,
     });
     return ordererDetails.instanceId;
