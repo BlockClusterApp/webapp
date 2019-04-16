@@ -184,13 +184,10 @@ class UpgradeChaincode extends Component {
                       <i>Name</i>: A valid name for the chaincode.
                     </li>
                     <li>
-                      <i>Version</i>: When you upload a new chaincode we assign default version to be 1.0. While upgrading chaincode you can change the version.
+                      <i>Chaincode Version</i>: This should be different than any of the previous versions of the chaincode
                     </li>
                     <li>
                       <i>ZIP File</i>: The .zip file should contain a directory with same name as the chaincode name. Inside the directory place the code files.
-                    </li>
-                    <li>
-                      <i>Chaincode Version</i>: This should be different than any of the previous versions of the chaincode
                     </li>
                   </ul>
                   <p>
