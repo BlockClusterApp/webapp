@@ -81,6 +81,8 @@ function getNodeConfig(networkConfig, userId) {
 
     if (_voucher) {
       nodeConfig.voucherId = _voucher._id;
+      delete _voucher.voucher_claim_status;
+      delete _voucher.availability;
       nodeConfig.voucher = _voucher;
       finalNetworkConfig = _voucher.networkConfig;
       if (_voucher.isDiskChangeable) {
@@ -430,7 +432,7 @@ Meteor.methods({
                         containers: [
                           {
                             name: 'mongo',
-                            image: `mongo:3.4.18`,
+                            image: `mongo:3.6.9`,
                             imagePullPolicy: 'IfNotPresent',
                             ports: [
                               {
@@ -1392,8 +1394,8 @@ spec:
 
     return myFuture.wait();
   },
-  inviteUserToNetwork: async function(networkId, nodeType, email, userId) {
-    return UserFunctions.inviteUserToNetwork(networkId, nodeType, email, userId || Meteor.userId());
+  inviteUserToNetwork: async function({instanceId, nodeType, email, userId, type}) {
+    return UserFunctions.inviteUserToNetwork({instanceId, nodeType, email, userId: userId || Meteor.userId(), type});
   },
   createAssetType: function(instanceId, assetName, assetType, assetIssuer, reissuable, parts) {
     this.unblock();

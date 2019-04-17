@@ -311,7 +311,7 @@ class VoucherCreate extends Component {
               <div className="row">
                 <div className="col-md-12">
                   <div className="card-title">
-                    <h3>Create Network Voucher</h3>
+                    <h3>Dynamo Network Voucher</h3>
                   </div>
                 </div>
               </div>
@@ -552,7 +552,7 @@ class VoucherCreate extends Component {
 }
 export default withTracker(() => {
   return {
-    configs: NetworkConfiguration.find({ active: true }).fetch(),
+    configs: NetworkConfiguration.find({ active: true, for: 'dynamo' }).fetch(),
     campaigns: Campaign.find({}).fetch(),
     subscriptions: [Meteor.subscribe('vouchers.all', { page: 0 }), Meteor.subscribe('networkConfig.all'), Meteor.subscribe('campaign.all')],
   };

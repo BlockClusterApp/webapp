@@ -215,6 +215,10 @@ select {
     background: #222;
   }
 
+  .form-control:focus {
+    color: #fff !important;
+  }
+
   .nav-tabs-linetriangle > li > a.active:hover,
   .nav-tabs-linetriangle > li > a.active:focus,
   .nav-tabs-linetriangle > li > a.active:active {

@@ -393,7 +393,7 @@ InvoiceObj.settleInvoice = async ({ rzSubscriptionId, rzCustomerId, billingMonth
 
   if (invoice.previousPendingInvoiceIds && invoice.previousPendingInvoiceIds.length > 0 && rzPayment) {
     await Bluebird.map(
-      previousPendingInvoiceIds,
+      invoice.previousPendingInvoiceIds,
       async pid => {
         Invoice.update(
           { _id: pid },
