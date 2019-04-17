@@ -33,6 +33,9 @@ NetworkConfiguration.schema = new SimpleSchema({
   showInNetworkSelection: {
     type: Boolean,
   },
+  ordererType: {
+    type: String,
+  },
   cost: {
     type: {
       monthly: {

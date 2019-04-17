@@ -89,16 +89,19 @@ Apis.createPrivateHiveConfig = async ({ userId, params, type }) => {
   }
 
   const allowedFields = [
-    'kafka',
-    'orderer',
-    'peer',
     'cost.monthly',
     'cost.hourly',
     '_id',
     'name',
     'data',
     'for',
-    'fabric',
+    'cpu',
+    'ram',
+    'disk',
+    'kafka',
+    'zookeeper',
+    'ordererType',
+    'isDiskChangeable',
     'showInNetworkSelection',
     'locationMapping',
     'category',

@@ -11,6 +11,8 @@ export default class PrivateHiveConfigCard extends React.Component {
       ordererCount: 3,
       version: '1.1',
       isFolded: true,
+      category: props.config.category || 'peer',
+      ordererType: props.config.ordererType || 'solo',
     };
     this.locationMapping = {};
   }
@@ -26,36 +28,42 @@ export default class PrivateHiveConfigCard extends React.Component {
       loading: true,
     });
 
+    let cpu, ram, disk, isDiskChangeable, kafka, zookeeper;
+
+    const networkConfig = {};
+    // if (this.typeSelector.value === 'peer' || (this.state.category === 'orderer' && this.state.ordererType === 'solo')) {
+      cpu = this.peerCpu.value || 1;
+      ram = this.peerMemory.value || 1;
+      disk = this.peerDisk.value || 10;
+      isDiskChangeable = this.peerDiskChangeable;
+    // }
+
+    if (this.state.category === 'orderer' && this.state.ordererType === 'kafka') {
+      kafka = {
+        cpu: this.kafkaCpu.value || 1,
+        ram: this.kafkaMemory.value || 1,
+        disk: this.kafkaDisk.value || 10,
+      };
+      zookeeper = {
+        cpu: this.zkCpu.value || 1,
+        ram: this.zkMemory.value || 1,
+        disk: this.zkDisk.value || 10,
+      };
+    }
+
     Meteor.call(
       'upsertPrivateHiveNetworkConfig',
       {
         params: {
           _id: this.config._id,
-          // fabric: {
-          //   orderers: this.ordererCount.value,
-          //   peers: this.peerCount.value,
-          //   version: this.version.value,
-          // },
-          // kafka: {
-          //   cpu: this.kafkaCpu.value,
-          //   ram: this.kafkaRAM.value,
-          //   disk: this.kafkaDiskSpace.value,
-          //   isDiskChangeable: this.isKafkaDiskChangeable,
-          // },
-          // orderer: {
-          //   cpu: this.ordererCpu.value,
-          //   ram: this.ordererRAM.value,
-          //   disk: this.ordererDiskSpace.value,
-          //   isDiskChangeable: this.isOrdererDiskChangeable,
-          // },
-          // peer: {
-          //   cpu: this.peerCpu.value,
-          //   ram: this.peerRAM.value,
-          // },
-          // data: {
-          //   disk: this.dataDiskSpace.value,
-          //   isDiskChangeable: this.isDataDiskChangeable,
-          // },
+          cpu,
+          ram,
+          disk,
+          isDiskChangeable,
+          networkConfig,
+          kafka,
+          zookeeper,
+          ordererType: this.state.ordererType,
           name: this.configName.value,
           'cost.monthly': this.configMonthlyCost.value,
           'cost.hourly': this.state.costHourly,
@@ -107,8 +115,24 @@ export default class PrivateHiveConfigCard extends React.Component {
       config.cost = {};
     }
 
+    if (!config.kafka) {
+      config.kafka = {};
+    }
+
+    if (!config.zookeeper) {
+      config.zookeeper = {};
+    }
+
     const typeSelector = (
-      <select ref={input => (this.typeSelector = input)} className="form-control form-group-default">
+      <select
+        ref={input => (this.typeSelector = input)}
+        className="form-control form-group-default"
+        onChange={() => {
+          this.setState({
+            category: this.typeSelector.value,
+          });
+        }}
+      >
         <option value="peer" selected={config.category === 'peer'}>
           Peer
         </option>
@@ -195,94 +219,6 @@ export default class PrivateHiveConfigCard extends React.Component {
       </div>
     );
 
-    // const DisplayMode = (
-    //   <div className="card bg-white">
-    //     <div className="card-header ">
-    //       <div className="card-title full-width">
-    //         <h5 className="text-primary m-b-0 m-t-0" style={{ display: 'inline' }}>
-    //           {config.name}
-    //         </h5>
-
-    //         <i className="fa fa-close pull-right p-t-5 fs-16" style={{ cursor: 'pointer' }} onClick={() => this.setState({ isFolded: true, isInEditMode: false })} />
-    //         <i className="fa fa-pencil pull-right p-t-5 fs-16" style={{ cursor: 'pointer' }} onClick={() => this.setState({ isFolded: false, isInEditMode: true })} />
-    //       </div>
-    //     </div>
-    {
-      /* <div className="card-block">
-          <div className="row">
-            <div className="col-md-12" style={{ fontWeight: 'bold', fontSize: '16px', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
-              Fabric Core configs
-            </div>
-          </div>
-          <div className="row p-t-10">
-            <div className="col-md-4">
-              <i className="fa fa-joomla" />
-              &nbsp;<b>{config.fabric.orderers}</b> Orderers&nbsp;
-            </div>
-            <div className="col-md-4">
-              <i className="fa fa-keyboard-o" />
-              &nbsp;<b>{config.fabric.peers}</b> Peers&nbsp;
-            </div>
-            <div className="col-md-4">
-              <i className="fa fa-keyboard-o" />
-              &nbsp;Version <b>{config.fabric.version}</b>&nbsp;
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-md-12" style={{ fontWeight: 'bold', fontSize: '16px', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
-              Resource Allocation
-            </div>
-          </div>
-          <div className="row p-t-10">
-            <div className="col-md-12">
-              <i className="fa fa-save" />
-              &nbsp;Kafka: <b>{config.kafka.cpu}</b> vCPUs, <b>{config.kafka.ram}</b> GB RAM,{' '}
-              <b>
-                {config.kafka.disk}
-                {config.kafka.isDiskChangeable ? <sup>*</sup> : ''}
-              </b>{' '}
-              GB Disk
-            </div>
-            <div className="col-md-12">
-              <i className="fa fa-save" />
-              &nbsp;Orderer: <b>{config.orderer.cpu}</b> vCPUs, <b>{config.orderer.ram}</b> GB RAM,{' '}
-              <b>
-                {config.kafka.disk}
-                {config.orderer.isDiskChangeable ? <sup>*</sup> : ''}
-              </b>{' '}
-              GB Disk
-            </div>
-            <div className="col-md-12">
-              <i className="fa fa-save" />
-              &nbsp;Peer: <b>{config.peer.cpu}</b> vCPUs, <b>{config.peer.ram}</b> GB RAM
-            </div>
-            <div className="col-md-12">
-              <i className="fa fa-save" />
-              &nbsp;Data:{' '}
-              <b>
-                {config.kafka.disk}
-                {config.data.isDiskChangeable ? <sup>*</sup> : ''}
-              </b>{' '}
-              GB Disk
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-md-12">
-              <b>Available in: </b> {locationsEnabled.join(', ')}
-            </div>
-          </div>
-        </div> */
-    }
-    //     <div className="card-footer clearfix">
-    //       <h4 className="m-b-0 m-t-0" style={{ display: 'inline' }}>
-    //         $ {config.cost.monthly || 0}
-    //       </h4>{' '}
-    //       / month
-    //       <div className="clearfix" />
-    //     </div>
-    //   </div>
-    // );
-
     const EditMode = (
       <div className="card bg-white">
         <div className="card-header ">
@@ -325,14 +261,133 @@ export default class PrivateHiveConfigCard extends React.Component {
                 </div>
               )}
             </div>
-            <div className="row">
-              <div className="col-md-12">
-                <div className="form-group form-group-default ">
-                  <label>Node Type</label>
-                  {typeSelector}
-                </div>
+          </div>
+        </div>
+        <div className="card-block">
+          <div className="row">
+            <div className="col-md-12">
+              <div className="form-group form-group-default ">
+                <label>Node Type</label>
+                {typeSelector}
               </div>
             </div>
+          </div>
+
+          {this.state.category === 'orderer' && (
+            <div className="row p-t-10">
+              <div className="col-md-12">
+                <label>Orderer Type</label>
+                <select
+                  ref={input => (this.ordererTypeSelector = input)}
+                  className="form-control form-group-default"
+                  onChange={() => {
+                    this.setState({
+                      ordererType: this.ordererTypeSelector.value,
+                    });
+                  }}
+                >
+                  <option value="solo" selected={config.ordererType === 'solo'}>
+                    Solo
+                  </option>
+                  <option value="kafka" selected={config.ordererType === 'kafka'}>
+                    Kafka
+                  </option>
+                </select>
+              </div>
+            </div>
+          )}
+          <div className="row">
+            <div className="col-md-12" style={{ fontWeight: 'bold', fontSize: '14px', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+              Resource Allocation {this.state.category === 'orderer' && '- Orderer Pod'}
+            </div>
+          </div>
+
+          <div className="row p-t-10">
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;CPU&nbsp;
+              <input type="number" className="form-control" placeholder="Peer CPU" defaultValue={config.cpu} ref={input => (this.peerCpu = input)} />
+            </div>
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Memory&nbsp;
+              <input type="number" className="form-control" placeholder="Peer Memory" defaultValue={config.ram} ref={input => (this.peerMemory = input)} />
+            </div>
+            <div className="col-md-4">
+              <i className="fa fa-save" />
+              &nbsp;Disk Space &nbsp;
+              <input type="number" className="form-control" placeholder="Peer Disk" defaultValue={config.disk} ref={input => (this.peerDisk = input)} />
+              <br />
+              <label htmlFor="peerDiskChangeable fs-12">Disk Changeable?</label>&nbsp;
+              <input
+                type="checkbox"
+                name="peerDiskChangeable"
+                defaultChecked={config.isDiskChangeable}
+                onClick={e => {
+                  this.peerDiskChangeable = e.target.checked;
+                }}
+              />
+            </div>
+          </div>
+
+          {this.state.category === 'orderer' && this.state.ordererType === 'kafka' && (
+            <div className="row">
+              <div className="col-md-12" style={{ fontWeight: 'bold', fontSize: '14px', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+                Resource Allocation {this.state.category === 'orderer' && '- Kafka'}
+              </div>
+            </div>
+          )}
+
+          {this.state.category === 'orderer' && this.state.ordererType === 'kafka' && (
+            <div className="row p-t-10">
+              <div className="col-md-4">
+                <i className="fa fa-save" />
+                &nbsp;CPU&nbsp;
+                <input type="number" className="form-control" placeholder="Kafka CPU" defaultValue={config.kafka.cpu} ref={input => (this.kafkaCpu = input)} />
+              </div>
+              <div className="col-md-4">
+                <i className="fa fa-save" />
+                &nbsp;Memory&nbsp;
+                <input type="number" className="form-control" placeholder="Kafka Memory" defaultValue={config.kafka.ram} ref={input => (this.kafkaMemory = input)} />
+              </div>
+              <div className="col-md-4">
+                <i className="fa fa-save" />
+                &nbsp;Disk Space &nbsp;
+                <input type="number" className="form-control" placeholder="Kafka Disk" defaultValue={config.kafka.disk} ref={input => (this.kafkaDisk = input)} />
+              </div>
+            </div>
+          )}
+
+          {this.state.category === 'orderer' && this.state.ordererType === 'kafka' && (
+            <div className="row">
+              <div className="col-md-12" style={{ fontWeight: 'bold', fontSize: '14px', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+                Resource Allocation {this.state.category === 'orderer' && '- Zookeper'}
+              </div>
+            </div>
+          )}
+
+          {this.state.category === 'orderer' && this.state.ordererType === 'kafka' && (
+            <div className="row p-t-10">
+              <div className="col-md-4">
+                <i className="fa fa-save" />
+                &nbsp;CPU&nbsp;
+                <input type="number" className="form-control" placeholder="Zookeeper CPU" defaultValue={config.zookeeper.cpu} ref={input => (this.zkCpu = input)} />
+              </div>
+              <div className="col-md-4">
+                <i className="fa fa-save" />
+                &nbsp;Memory&nbsp;
+                <input type="number" className="form-control" placeholder="Zookeeper Memory" defaultValue={config.zookeeper.ram} ref={input => (this.zkMemory = input)} />
+              </div>
+              <div className="col-md-4">
+                <i className="fa fa-save" />
+                &nbsp;Disk Space &nbsp;
+                <input type="number" className="form-control" placeholder="Zookeeper Disk" defaultValue={config.zookeeper.disk} ref={input => (this.zkDisk = input)} />
+              </div>
+            </div>
+          )}
+          <div className="row">
+            <div className="col-md-12 bold">Availibility:</div>
+            {locationEditView}
           </div>
         </div>
         {/* <div className="card-block">
