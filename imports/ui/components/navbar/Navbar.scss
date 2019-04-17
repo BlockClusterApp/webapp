@@ -23,4 +23,9 @@
       color: #fff;
     }
   }
+
+  .sidebar-menu li.selected {
+    background: rgba(0, 0, 0, 0.04);
+    padding-top: 2px;
+  }
 }

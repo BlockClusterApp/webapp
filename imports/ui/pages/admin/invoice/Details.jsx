@@ -185,9 +185,7 @@ class InvoiceDetails extends Component {
             <td>
               $ {network.discount || '0.00'} {this.convertCostToTag(network.label)}
             </td>
-            <td>
-              $ {network.cost} {this.convertCostToTag(network.label)}{' '}
-            </td>
+            <td>$ {network.cost}</td>
           </tr>
         );
       });
@@ -410,7 +408,7 @@ class InvoiceDetails extends Component {
                   <td colSpan="4" style={{ textAlign: 'right' }}>
                     Total Amount
                   </td>
-                  <td>
+                  <td colSpan="2">
                     {invoice && invoice.totalAmount ? `$ ${Number(invoice.totalAmount).toFixed(2)}` : '0'} {this.getInvoicePaidStatus(invoice && invoice.paymentStatus)}
                   </td>
                 </tr>

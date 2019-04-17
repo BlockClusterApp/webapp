@@ -59,6 +59,18 @@ https://{{ .Values.ROOT_URL }}
 {{- end -}}
 {{- end -}}
 
+{{- define "envs.privatehiveServiceHost" -}}
+{{- if eq  .Values.NODE_ENV "production" -}}
+privatehive.blockcluster.io
+{{- else if eq  .Values.NODE_ENV "test" -}}
+privatehive-dev.blockcluster.io
+{{- else if eq  .Values.NODE_ENV "staging" -}}
+privatehive-staging.blockcluster.io
+{{- else -}}
+privatehive-dev.blockcluster.io
+{{- end -}}
+{{- end -}}
+
 {{- define "envs.redisHost" }}
 {{- if eq .Values.NODE_ENV "production" -}}
 web-production.vyqym8.ng.0001.aps1.cache.amazonaws.com

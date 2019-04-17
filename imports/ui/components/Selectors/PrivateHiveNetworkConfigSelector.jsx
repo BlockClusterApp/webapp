@@ -1,0 +1,310 @@
+import React, { Component } from 'react';
+import PrivateHiveNetworkSelector from './PrivatehiveNetworkSelector';
+import './NetworkConfigSelector.scss';
+class PrivateHiveNetworkConfigSelector extends Component {
+  constructor(props) {
+    super(props);
+
+    this.locationCode = props.locationCode;
+
+    this.ordererType = 'solo';
+    this.state = {
+      configs: {},
+      voucherLoading: false,
+      voucher: {
+        status: undefined,
+      },
+      remoteConfig: window.RemoteConfig,
+      isDiskChangeable: true,
+      networkType: 'peer',
+      networkConfig: {
+        kafka: {},
+        fabric: {},
+        orderer: {},
+        data: {},
+        peer: {},
+      },
+    };
+  }
+
+  componentDidMount() {
+    // Meteor.call('getConfigs', { type: 'privatehive' }, (err, res) => {
+    //   this.setState({
+    //     configs: res,
+    //   });
+    //   this.defaultConfig = Object.values(res).filter(i => (i.locations ? i.locations.includes(this.props.locationCode) : true))[0];
+    //   if (!this.defaultConfig) {
+    //     this.config.value = {};
+    //     return this.onConfigChange();
+    //   }
+    //   if (this.config) this.config.value = this.defaultConfig.name;
+    //   this.onConfigChange();
+    // });
+    this.onConfigChange(true);
+  }
+
+  onConfigChange(useDefault) {
+    // if (!this.config) {
+    //   return;
+    // }
+
+    let error;
+    // const config = this.state.configs[this.config.value];
+
+    // if (!this.voucherDetails) {
+    // if (!this.props.isJoin) {
+    //   if (!this.ordererDiskSpace.value) {
+    //     this.ordererDiskSpace.value = config.orderer.disk;
+    //     this.kafkaDiskSpace.value = config.kafka.disk;
+    //   } else {
+    //     config.orderer.disk = this.ordererDiskSpace.value;
+    //     config.kafka.disk = this.kafkaDiskSpace.value;
+    //     if (Number(config.orderer.disk) <= 0) {
+    //       error = 'Orderer Disk space should be greater than 0';
+    //     }
+    //     if (Number(config.kafka.disk) <= 0) {
+    //       error = 'Kafka disk space should be greater than 0';
+    //     }
+    //   }
+    // }
+
+    // if (!this.dataDiskSpace.value) {
+    //   this.dataDiskSpace.value = config.data.disk;
+    // } else {
+    //   config.data.disk = this.dataDiskSpace.value;
+    //   if (Number(config.data.disk) <= 0) {
+    //     error = 'Data disk space should be greater than 0';
+    //   }
+    // }
+
+    // const newState = { networkConfig: config };
+
+    //   if (error) {
+    //     newState.error = error;
+    //   } else {
+    //     newState.error = '';
+    //   }
+
+    //   this.setState(newState);
+    // }
+
+    if (!useDefault) {
+      this.setState({
+        networkType: this.networkType.value,
+        peerId: this.peerId,
+      });
+
+      const config = {
+        networkType: this.networkType.value,
+        peerId: this.peerId,
+        ordererType: this.ordererType,
+      };
+      if (this.props && this.props.configChangeListener) {
+        this.props.configChangeListener({ config, error: error ? true : false, voucher: this.voucherDetails });
+      }
+    } else {
+      if (this.props && this.props.configChangeListener) {
+        this.props.configChangeListener({
+          config: {
+            networkType: 'peer',
+            ordererType: 'solo',
+          },
+          error: error ? true : false,
+          voucher: this.voucherDetails,
+        });
+      }
+    }
+  }
+
+  validateVoucher = () => {
+    const voucherCode = this.voucher.value;
+    this.setState({
+      voucherLoading: true,
+      voucher: {
+        status: undefined,
+      },
+    });
+    Meteor.call('validateVoucher', { voucherCode, type: 'privatehive' }, (err, reply) => {
+      if (err) {
+        return this.setState({
+          voucherLoading: false,
+          voucher: {
+            status: 'error',
+            error: err.error,
+          },
+        });
+      }
+
+      this.voucherDetails = reply;
+      this.setState({
+        voucherLoading: false,
+        voucher: {
+          status: 'success',
+          networkConfig: reply.networkConfig,
+        },
+        networkConfig: reply.networkConfig,
+      });
+      this.dataDiskSpace.value = reply.networkConfig.data.disk;
+      if (!this.props.isJoin) {
+        this.ordererDiskSpace.value = reply.networkConfig.orderer.disk;
+        this.kafkaDiskSpace.value = reply.networkConfig.kafka.disk;
+      }
+
+      if (this.props && this.props.configChangeListener) {
+        this.props.configChangeListener({ config: reply.networkConfig, voucher: reply });
+      }
+    });
+  };
+
+  deleteVoucher = () => {
+    this.setState({
+      voucherLoading: false,
+      voucher: {
+        status: undefined,
+      },
+      networkConfig: this.defaultConfig,
+    });
+    this.voucher.value = '';
+
+    this.dataDiskSpace.value = this.defaultConfig.networkConfig.data.disk;
+    this.ordererDiskSpace.value = this.defaultConfig.networkConfig.orderer.disk;
+    this.kafkaDiskSpace.value = this.defaultConfig.networkConfig.kafka.disk;
+
+    this.voucherDetails = undefined;
+    this.onConfigChange();
+  };
+
+  render() {
+    const configList = [
+      <option value="peer" key="type_peer">
+        Peer
+      </option>,
+
+      <option value="orderer" key="type_orderer">
+        Orderer
+      </option>,
+    ];
+    const dropDown = (
+      <div className="form-group form-group-default ">
+        <label>Organisation Type</label>
+        <select
+          className="form-control form-group-default"
+          name="nodeType"
+          ref={input => (this.networkType = input)}
+          onChange={this.onConfigChange.bind(this, false)}
+          selected="peer"
+          disabled={this.state.voucher.status === 'success'}
+        >
+          {configList}
+        </select>
+      </div>
+    );
+
+    let voucherActionButton = undefined;
+    if (this.state.voucher.status === 'success') {
+      voucherActionButton = (
+        <button onClick={this.deleteVoucher} disabled={this.state.voucherLoading} className="btn btn-warning btn-cons voucher-btn">
+          <span>
+            <i className="fa fa-trash" aria-hidden="true" /> Remove
+          </span>
+        </button>
+      );
+    } else {
+      voucherActionButton = (
+        <button onClick={this.validateVoucher} disabled={this.state.voucherLoading} className="btn btn-primary btn-cons voucher-btn">
+          <span>
+            <i className="fa fa-gift" aria-hidden="true" /> Redeem
+          </span>
+        </button>
+      );
+    }
+
+    const FullView = (
+      <div className="network-config-selector ">
+        <div className="row">
+          <div className="col-md-12">
+            <div className="form-group-attached">
+              <div className="row clearfix">
+                <div className="col-md-12">{dropDown}</div>
+              </div>
+
+              {this.state.networkType === 'orderer' && (
+                <div className="row clearfix">
+                  <PrivateHiveNetworkSelector
+                    key={this.props.networks && this.props.networks.length}
+                    networks={this.props.networks}
+                    onValueChangeListener={network => {
+                      if (network) {
+                        this.peerId = network.instanceId;
+                      }
+                      this.onConfigChange();
+                    }}
+                    label="Peer Organization ID"
+                  />
+                </div>
+              )}
+              {this.state.networkType === 'orderer' && (
+                <div className="row clearfix">
+                  <div className="form-group form-group-default ">
+                    <label>Select orderer type</label>
+                    <select
+                      className="form-control"
+                      name="type"
+                      ref={input => (this.ordererTypeInput = input)}
+                      onChange={() => {
+                        this.ordererType = this.ordererTypeInput.value || 'solo';
+                        this.onConfigChange();
+                      }}
+                      selected={'solo'}
+                    >
+                      <option value="solo">Solo</option>
+                      <option value="kafka">Kafka</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {window.RemoteConfig && window.RemoteConfig.features && window.RemoteConfig.features.Vouchers && (
+                <div className="row clearfix">
+                  <div className="col-md-12">
+                    <div className="form-group form-group-default input-group">
+                      <div className="form-input-group">
+                        <label>
+                          Voucher Code&nbsp;
+                          {this.state.voucher && this.state.voucher.status === 'error' ? (
+                            <span className="error-message">{this.state.voucher.error}</span>
+                          ) : this.state.voucher.status === 'success' ? (
+                            <span className="success-message">Voucher Applied</span>
+                          ) : (
+                            undefined
+                          )}
+                        </label>
+                        <input type="text" className="form-control" name="projectName" ref={input => (this.voucher = input)} />
+                      </div>
+                      {voucherActionButton}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {this.state.error && (
+                <div className="row clearfix">
+                  <div className="col-md-12">
+                    <div className="form-group form-group-default">
+                      <div className="form-input-group">
+                        <span className="text-danger fs-14">{this.state.error}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    return FullView;
+  }
+}
+
+export default PrivateHiveNetworkConfigSelector;

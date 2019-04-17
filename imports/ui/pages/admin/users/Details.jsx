@@ -65,12 +65,14 @@ class UserDetails extends Component {
     window.removeEventListener('RemoteConfigChanged', this.RemoteConfigListener);
   }
 
+
+  RemoteConfigListener = () => {
+    this.setState({
+      remoteConfig: window.RemoteConfig,
+    });
+  };
+
   componentDidMount() {
-    this.RemoteConfigListener = () => {
-      this.setState({
-        remoteConfig: window.RemoteConfig,
-      });
-    };
     window.addEventListener('RemoteConfigChanged', this.RemoteConfigListener);
     this.setState({
       userId: this.props.match.params.id,

@@ -86,7 +86,7 @@ class ServiceLocation extends Component {
     });
     return (
       <div className="row">
-        <div className="card bg-white">
+        <div className="card bg-white m-l-10 m-r-10">
           <div className="card-header ">
             <h5 className="text-info bold m-b-0 m-t-0">Available in Locations:</h5>
           </div>

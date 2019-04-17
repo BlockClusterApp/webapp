@@ -244,7 +244,7 @@ class VoucherList extends Component {
                               <td>{this.state.loading ? <i className="fa fa-spin fa-circle-o-notch text-primary" /> : (this.page - 1) * PAGE_LIMIT + index + 1}</td>
                               <td>{voucher.code}</td>
                               <td>{voucher.voucher_claim_status ? voucher.voucher_claim_status.length : 0}</td>
-                              <td>{this.getNetworkType(voucher.networkConfig)}</td>
+                              <td>{voucher.type === 'privatehive' ? `Fabric: ${voucher.networkConfig.fabric.version}` : this.getNetworkType(voucher.networkConfig)}</td>
                               <td>{this.getActiveStatus(voucher.voucher_status, voucher.expiryDate)}</td>
                               <td>{moment(voucher.createdAt).format('DD-MMM-YYYY')}</td>
                             </tr>

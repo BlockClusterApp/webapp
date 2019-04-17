@@ -1,6 +1,6 @@
 module.exports = `
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Registration Successful</title>
+    <title>Invite</title>
     <style type="text/css">
       .ReadMsgBody {width: 100%; background-color: #ffffff;}
           .ExternalClass {width: 100%; background-color: #ffffff;}

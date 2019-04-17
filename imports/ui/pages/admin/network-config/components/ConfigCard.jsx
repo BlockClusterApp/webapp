@@ -38,6 +38,7 @@ export default class ConfigCard extends React.Component {
           locationMapping: this.locationMapping,
         },
         userId: Meteor.userId(),
+        type: 'dynamo',
       },
       () => {
         this.setState({
@@ -85,7 +86,7 @@ export default class ConfigCard extends React.Component {
     if (!config.locations) {
       locations.forEach(loc => {
         locationsEnabled.push(loc.locationCode);
-        this.locationMapping[loc.locationCode] = true;
+        this.locationMapping[loc.locationCode] = this.locationMapping[loc.locationCode] === false ? false : true;
         locationEditView.push(
           <div className="col-md-4 col-lg-3 col-sm-6">
             <label htmlFor={`label_${loc.locationCode}`} style={{ cursor: 'pointer' }}>
