@@ -55,12 +55,12 @@ class ConfigList extends Component {
     );
 
     return (
-      <div className="content networksList">
+      <div className="networksList">
         <div className="m-t-20 container-fluid container-fixed-lg">
           <ServiceLocation service="dynamo" />
           <div className="row">
             <div className="col-md-12">
-              <h3 className="pull-left">Network Configuration</h3>
+              <h3 className="pull-left">Dynamo Network Configuration</h3>
             </div>
           </div>
           {views}
@@ -72,7 +72,7 @@ class ConfigList extends Component {
 
 export default withTracker(() => {
   return {
-    configs: NetworkConfiguration.find({ active: true }).fetch(),
+    configs: NetworkConfiguration.find({ active: true, for: 'dynamo' }).fetch(),
     subscriptions: [Meteor.subscribe('networkConfig.all')],
   };
 })(withRouter(ConfigList));

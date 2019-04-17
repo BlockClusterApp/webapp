@@ -23,7 +23,7 @@ class NetworkConfigSelector extends Component {
   }
 
   componentDidMount() {
-    Meteor.call('getConfigs', (err, res) => {
+    Meteor.call('getConfigs', { type: 'dynamo' }, (err, res) => {
       this.setState({
         configs: res,
       });

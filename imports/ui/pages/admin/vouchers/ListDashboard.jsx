@@ -58,7 +58,15 @@ class VoucherDashboard extends Component {
                 <Link to={'/app/admin/vouchers/networks'}>
                   <span className="title">
                     <i className="fa fa-cube" />
-                    Networks
+                    Dynamo
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link to={'/app/admin/vouchers/privatehive'}>
+                  <span className="title">
+                    <i className="fa fa-cube" />
+                    Private Hive
                   </span>
                 </Link>
               </li>
@@ -101,6 +109,7 @@ class VoucherDashboard extends Component {
             <Route exact path="/app/admin/vouchers/networks" render={() => <VoucherList type="network" />} />
             <Route exact path="/app/admin/vouchers/hyperion" render={() => <VoucherList type="hyperion" />} />
             <Route exact path="/app/admin/vouchers/paymeter" render={() => <VoucherList type="paymeter" />} />
+            <Route exact path="/app/admin/vouchers/privatehive" render={() => <VoucherList type="privatehive" />} />
           </div>
         </div>
       </div>

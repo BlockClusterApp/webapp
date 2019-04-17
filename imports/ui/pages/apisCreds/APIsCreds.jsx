@@ -38,7 +38,7 @@ class APIsCreds extends Component {
       rpcLoading: true,
     });
 
-    Meteor.call('rpcPasswordUpdate', this.networkNameRPCUpdate.value, this.rpcPassword.value, this.state.locationCode, error => {
+    Meteor.call('rpcPasswordUpdate', this.networkNameRPCUpdate.value, this.rpcPassword.value, this.props.network[0].locationCode, error => {
       if (!error) {
         this.setState({
           updateRPCFormSubmitError: '',
@@ -211,7 +211,7 @@ export default withTracker(props => {
             props.history.push('/app/networks');
           }
         },
-      })
+      }),
     ],
   };
 })(withRouter(APIsCreds));

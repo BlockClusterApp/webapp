@@ -113,7 +113,7 @@ class RazorPay extends React.Component {
       this.setState({
         loading: false
       });
-      console.log("Razorpay error", err);
+      // console.log("Razorpay error", err);
     }finally{
       // alert("Payment gateway error. Please try again");
     }

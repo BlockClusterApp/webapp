@@ -37,11 +37,11 @@ export default {
     return str.charAt(0).toUpperCase() + str.slice(1);
   },
   convertStatusToTag: function(status, text) {
-    if (status === 'initializing' || status === 'pending') {
+    if (status === 'initializing' || status === 'pending' || status === 'testing') {
       return `<span class="label label-inverse">${text}</span>`;
     } else if (status === 'running' || status === 'completed') {
       return `<span class="label label-success">${text}</span>`;
-    } else if (status === 'down' || status === 'cancelled') {
+    } else if (status === 'down' || status === 'cancelled' || status.includes('delete')) {
       return `<span class="label label-important">${text}</span>`;
     } else {
       return `<span class="label">${text}</span>`;
@@ -88,7 +88,7 @@ export default {
   },
   instanceIDGenerate() {
     var ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
-    var ID_LENGTH = 8;
+    var ID_LENGTH = 10;
 
     var rtn = '';
     for (var i = 0; i < ID_LENGTH; i++) {
@@ -121,6 +121,8 @@ export default {
       return 'down';
     } else if (status === 'running') {
       return 'running';
+    } else if (status === 'testing') {
+      return 'testing';
     } else {
       return 'unknown';
     }

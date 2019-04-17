@@ -20,6 +20,15 @@ const OperationMapping = {
     interval: 1 * 60 * 1000,
     rate: 180,
   },
+  // 20 requests per 5 minutes
+  'privatehive-api': {
+    interval: 5 * 60 * 1000,
+    rate: 20,
+  },
+  'privatehive-create': {
+    interval: 1 * 60 * 1000,
+    rate: 3,
+  },
   default: {
     // 200 operations per minute
     interval: 1 * 60 * 1000,

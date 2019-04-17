@@ -64,7 +64,16 @@ class Navbar extends Component {
 
     adminItems.push(
       <li key="admin-networks" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/networks') ? 'selected' : ''}>
-        <Link to="/app/admin/networks">Networks</Link>
+        <Link to="/app/admin/networks">Dynamo</Link>
+        <span className="icon-thumbnail">
+          <i className="fa fa-desktop" />
+        </span>
+      </li>
+    );
+
+    adminItems.push(
+      <li key="admin-privatehive" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/privatehive') ? 'selected' : ''}>
+        <Link to="/app/admin/privatehive">Private Hive</Link>
         <span className="icon-thumbnail">
           <i className="fa fa-desktop" />
         </span>
@@ -80,14 +89,14 @@ class Navbar extends Component {
           </span>
         </li>
       );
-    adminItems.push(
-      <li key="admin-configs" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/network-configs') ? 'selected' : ''}>
-        <Link to="/app/admin/network-configs">Network Configs</Link>
-        <span className="icon-thumbnail">
-          <i className="fa fa-sliders" />
-        </span>
-      </li>
-    );
+    // adminItems.push(
+    //   <li key="admin-configs" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/network-configs') ? 'selected' : ''}>
+    //     <Link to="/app/admin/network-configs">Network Configs</Link>
+    //     <span className="icon-thumbnail">
+    //       <i className="fa fa-sliders" />
+    //     </span>
+    //   </li>
+    // );
     features.Vouchers &&
       adminItems.push(
         <li key="admin-vouchers" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/vouchers') ? 'selected' : ''}>
@@ -168,19 +177,30 @@ class Navbar extends Component {
             {!window.isAdminWindow && (
               <li className="m-t-30 ">
                 <Link to={'/app/networks'} className="detailed">
-                  <span className="title">Networks</span>
-                  <span className="details">Dynamo Management</span>
+                  <span className="title">Dynamo</span>
+                  <span className="details">Manage Networks</span>
                 </Link>
                 <span className="icon-thumbnail">
                   <i className="fa fa-list" />
                 </span>
               </li>
             )}
+            {!window.isAdminWindow && (
+              <li>
+                <Link to="/app/privatehive" className="detailed">
+                  <span className="title">Private Hive</span>
+                  <span className="details">Hyperledger Fabric</span>
+                </Link>
+                <span className="icon-thumbnail">
+                  <i className="fa fa-snowflake-o" />
+                </span>
+              </li>
+            )}
             {features.Paymeter && !window.isAdminWindow && (
               <li>
                 <Link to={'/app/paymeter'} className="detailed">
-                  <span className="title">Wallets</span>
-                  <span className="details">Manage Paymeter</span>
+                  <span className="title">Paymeter</span>
+                  <span className="details">Manage Wallets</span>
                 </Link>
                 <span className="icon-thumbnail">
                   <i className="fa fa-cube" />
@@ -190,8 +210,8 @@ class Navbar extends Component {
             {features.Hyperion && !window.isAdminWindow && (
               <li>
                 <Link to={'/app/hyperion'} className="detailed">
-                  <span className="title">Files</span>
-                  <span className="details">Upload on Hyperion</span>
+                  <span className="title">Hyperion</span>
+                  <span className="details">Upload Files</span>
                 </Link>
                 <span className="icon-thumbnail">
                   <i className="fa fa-file" />

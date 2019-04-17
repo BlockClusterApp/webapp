@@ -12,7 +12,7 @@ export default class KubeDashboard extends Component {
   }
 
   componentDidMount() {
-    Meteor.call('fetchPodStatus', this.props.networkId, (err, res) => {
+    Meteor.call('fetchPodStatus', { id: this.props.networkId, selector: `labelSelector=app%3Ddynamo-node-${this.props.instanceId}` }, (err, res) => {
       if (err) {
         return console.log(err);
       }
@@ -20,7 +20,7 @@ export default class KubeDashboard extends Component {
         pod: res,
       });
     });
-    Meteor.call('fetchServiceStatus', this.props.networkId, (err, res) => {
+    Meteor.call('fetchServiceStatus', { id: this.props.networkId }, (err, res) => {
       if (err) {
         return console.log(err);
       }
@@ -29,7 +29,7 @@ export default class KubeDashboard extends Component {
       });
     });
 
-    Meteor.call('fetchDeploymentStatus', this.props.networkId, (err, res) => {
+    Meteor.call('fetchDeploymentStatus', { id: this.props.networkId }, (err, res) => {
       if (err) {
         return console.log(err);
       }
@@ -38,7 +38,7 @@ export default class KubeDashboard extends Component {
       });
     });
 
-    Meteor.call('fetchPVCStatus', this.props.networkId, (err, res) => {
+    Meteor.call('fetchPVCStatus', { id: this.props.networkId }, (err, res) => {
       if (err) {
         return console.log(err);
       }
@@ -47,7 +47,7 @@ export default class KubeDashboard extends Component {
       });
     });
 
-    Meteor.call('fetchIngressStatus', this.props.networkId, (err, res) => {
+    Meteor.call('fetchIngressStatus', { id: this.props.networkId }, (err, res) => {
       if (err) {
         return console.log(err);
       }
