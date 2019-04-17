@@ -88,7 +88,21 @@ Apis.createPrivateHiveConfig = async ({ userId, params, type }) => {
     throw new Meteor.Error('Unauthorized to create network config');
   }
 
-  const allowedFields = ['kafka', 'orderer', 'peer', 'cost.monthly', 'cost.hourly', '_id', 'name', 'data', 'for', 'fabric', 'showInNetworkSelection', 'locationMapping'];
+  const allowedFields = [
+    'kafka',
+    'orderer',
+    'peer',
+    'cost.monthly',
+    'cost.hourly',
+    '_id',
+    'name',
+    'data',
+    'for',
+    'fabric',
+    'showInNetworkSelection',
+    'locationMapping',
+    'category',
+  ];
 
   Object.keys(params).forEach(key => {
     if (!allowedFields.includes(key)) {

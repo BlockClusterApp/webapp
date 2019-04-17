@@ -159,7 +159,7 @@ class Explorer extends Component {
       });
     }
 
-    Meteor.call('fetchBlockOrTxn', { networkId: network.instanceId, value, channelName: this.state.channel.name }, (err, res) => {
+    Meteor.call('fetchBlockOrTxn', { networkId: this.props.match.params.id, value, channelName: this.state.channel.name }, (err, res) => {
       if (err) {
         setTimeout(() => this.fetchBlockOrTxn(value), 3000);
         if (err.error === 501) {
@@ -197,7 +197,7 @@ class Explorer extends Component {
         });
 
         this.setState({
-          blocks: [...new Set([...this.state.blocks, ...blocks])].sort((b, c) => b.blockNumber - c.blockNumber),
+          blocks: [...new Set([...this.state.blocks, ...blocks])],
         });
       }
     );
@@ -412,25 +412,27 @@ class Explorer extends Component {
                     <tbody>
                       {this.state.blocks &&
                         Array.isArray(this.state.blocks) &&
-                        this.state.blocks.map((item, index) => {
-                          return (
-                            <tr
-                              key={item.blockNumber}
-                              onClick={() => {
-                                this.txnBlock.value = item.blockNumber;
-                                this.fetchBlockOrTxn(item.blockNumber);
-                              }}
-                            >
-                              <td className="font-montserrat all-caps fs-12 w-75">Block #{item.blockNumber}</td>
-                              <td className="text-right hidden-lg">
-                                <span className="hint-text small">dewdrops</span>
-                              </td>
-                              <td className="text-right b-r b-dashed b-grey w-25">
-                                <span className="hint-text small">{item.totalTxns} Txns</span>
-                              </td>
-                            </tr>
-                          );
-                        })}
+                        this.state.blocks
+                          .sort((b, c) => c.blockNumber - b.blockNumber)
+                          .map((item, index) => {
+                            return (
+                              <tr
+                                key={item.blockNumber}
+                                onClick={() => {
+                                  this.txnBlock.value = item.blockNumber;
+                                  this.fetchBlockOrTxn(item.blockNumber);
+                                }}
+                              >
+                                <td className="font-montserrat all-caps fs-12 w-75">Block #{item.blockNumber}</td>
+                                <td className="text-right hidden-lg">
+                                  <span className="hint-text small">dewdrops</span>
+                                </td>
+                                <td className="text-right b-r b-dashed b-grey w-25">
+                                  <span className="hint-text small">{item.totalTxns} Txns</span>
+                                </td>
+                              </tr>
+                            );
+                          })}
                       {this.state.blocks && !Array.isArray(this.state.blocks) && (
                         <tr className="break-word">
                           <td title={this.state.blocks}>{this.state.blocks}</td>

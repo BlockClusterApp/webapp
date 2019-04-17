@@ -23,9 +23,13 @@
       color: #fff;
     }
   }
+}
 
-  .sidebar-menu li.selected {
-    background: rgba(0, 0, 0, 0.04);
-    padding-top: 2px;
-  }
+.page-sidebar .sidebar-menu .menu-items > li {
+  padding-top: 5px;
+}
+
+.sidebar-menu li.selected {
+  background: rgba(0, 0, 0, 0.04);
+  padding-top: 2px;
 }

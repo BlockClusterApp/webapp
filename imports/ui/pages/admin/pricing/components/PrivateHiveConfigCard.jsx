@@ -61,6 +61,7 @@ export default class PrivateHiveConfigCard extends React.Component {
           'cost.hourly': this.state.costHourly,
           showInNetworkSelection: this.showInNetworkSelection,
           locationMapping: this.locationMapping,
+          category: this.typeSelector.value,
         },
         userId: Meteor.userId(),
         type: 'privatehive',
@@ -106,74 +107,85 @@ export default class PrivateHiveConfigCard extends React.Component {
       config.cost = {};
     }
 
+    const typeSelector = (
+      <select ref={input => (this.typeSelector = input)} className="form-control form-group-default">
+        <option value="peer" selected={config.category === 'peer'}>
+          Peer
+        </option>
+        <option value="orderer" selected={config.category === 'orderer'}>
+          Orderer
+        </option>
+      </select>
+    );
+
     this.config = config;
 
-    // let locationEditView = [];
-    // let locationsEnabled = [];
-    // if (!config.locations) {
-    //   locations.forEach(loc => {
-    //     locationsEnabled.push(loc.locationCode);
-    //     this.locationMapping[loc.locationCode] = this.locationMapping[loc.locationCode] === false ? false : true;
-    //     locationEditView.push(
-    //       <div className="col-md-4 col-lg-3 col-sm-6">
-    //         <label htmlFor={`label_${loc.locationCode}`} style={{ cursor: 'pointer' }}>
-    //           {loc.locationCode}
-    //         </label>
-    //         &nbsp;
-    //         <input
-    //           type="checkbox"
-    //           id={`label_${loc.locationCode}`}
-    //           defaultChecked={true}
-    //           onClick={e => {
-    //             this.locationMapping[loc.locationCode] = e.target.checked;
-    //           }}
-    //         />
-    //       </div>
-    //     );
-    //   });
-    // } else {
-    //   locations.forEach(loc => {
-    //     const isChecked = config.locations.includes(loc.locationCode);
-    //     this.locationMapping[loc.locationCode] = isChecked;
-    //     if (isChecked) {
-    //       locationsEnabled.push(loc.locationCode);
-    //     }
-    //     locationEditView.push(
-    //       <div className="col-md-4 col-lg-3 col-sm-6">
-    //         <label htmlFor={`label_${loc.locationCode}`} style={{ cursor: 'pointer' }}>
-    //           {loc.locationCode}
-    //         </label>
-    //         &nbsp;
-    //         <input
-    //           type="checkbox"
-    //           id={`label_${loc.locationCode}`}
-    //           defaultChecked={isChecked}
-    //           onClick={e => {
-    //             this.locationMapping[loc.locationCode] = e.target.checked;
-    //           }}
-    //         />
-    //       </div>
-    //     );
-    //   });
-    // }
+    let locationEditView = [];
+    let locationsEnabled = [];
+    if (!config.locations) {
+      locations.forEach(loc => {
+        locationsEnabled.push(loc.locationCode);
+        this.locationMapping[loc.locationCode] = this.locationMapping[loc.locationCode] === false ? false : true;
+        locationEditView.push(
+          <div className="col-md-4 col-lg-3 col-sm-6">
+            <label htmlFor={`label_${loc.locationCode}`} style={{ cursor: 'pointer' }}>
+              {loc.locationCode}
+            </label>
+            &nbsp;
+            <input
+              type="checkbox"
+              id={`label_${loc.locationCode}`}
+              defaultChecked={true}
+              onClick={e => {
+                this.locationMapping[loc.locationCode] = e.target.checked;
+              }}
+            />
+          </div>
+        );
+      });
+    } else {
+      locations.forEach(loc => {
+        const isChecked = config.locations.includes(loc.locationCode);
+        this.locationMapping[loc.locationCode] = isChecked;
+        if (isChecked) {
+          locationsEnabled.push(loc.locationCode);
+        }
+        locationEditView.push(
+          <div className="col-md-4 col-lg-3 col-sm-6">
+            <label htmlFor={`label_${loc.locationCode}`} style={{ cursor: 'pointer' }}>
+              {loc.locationCode}
+            </label>
+            &nbsp;
+            <input
+              type="checkbox"
+              id={`label_${loc.locationCode}`}
+              defaultChecked={isChecked}
+              onClick={e => {
+                this.locationMapping[loc.locationCode] = e.target.checked;
+              }}
+            />
+          </div>
+        );
+      });
+    }
 
     const FoldedMode = (
       <div className="card bg-white" onClick={() => this.setState({ isFolded: false })}>
         <div className="card-header">
           <div className="card-title full-width">
             <h5 className="text-primary m-b-0 m-t-0" style={{ display: 'inline' }}>
-              {config.name}
+              {config.name} | {config.category}
             </h5>
             <i className="fa fa-close pull-right p-t-5 fs-16" style={{ cursor: 'pointer' }} onClick={() => this.setState({ isFolded: true })} />
             <i className="fa fa-pencil pull-right p-t-5 fs-16" style={{ cursor: 'pointer' }} onClick={() => this.setState({ isFolded: false, isInEditMode: true })} />
           </div>
         </div>
         <div className="card-block">
-          {/* <div className="row">
+          <div className="row">
             <div className="col-md-12">
               <b>Available in: </b> {locationsEnabled.join(', ')}
             </div>
-          </div> */}
+          </div>
           <div className="row">
             <div className="col-md-12 fs-16">
               <b>$ {config.cost.monthly} / month</b>
@@ -312,6 +324,14 @@ export default class PrivateHiveConfigCard extends React.Component {
                   />
                 </div>
               )}
+            </div>
+            <div className="row">
+              <div className="col-md-12">
+                <div className="form-group form-group-default ">
+                  <label>Node Type</label>
+                  {typeSelector}
+                </div>
+              </div>
             </div>
           </div>
         </div>

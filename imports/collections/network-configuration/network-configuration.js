@@ -99,6 +99,9 @@ NetworkConfiguration.schema = new SimpleSchema({
   for: {
     type: String,
   },
+  category: {
+    type: String, // Used in privatehive to store peer or orderer info
+  },
   locations: {
     type: Array,
   },
