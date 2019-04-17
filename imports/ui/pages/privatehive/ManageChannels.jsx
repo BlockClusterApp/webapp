@@ -83,7 +83,7 @@ class ManageChannels extends Component {
                               <thead>
                                 <tr>
                                   <th style={{ width: '30%' }}>Channel Name</th>
-                                  <th style={{ width: '30%' }}>Orderer Org Name</th>
+                                  <th style={{ width: '30%' }}>Orderer Domain</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -96,7 +96,7 @@ class ManageChannels extends Component {
                                           {channel.name}
                                         </td>
                                         <td className="v-align-middle " style={{ cursor: 'pointer' }}>
-                                          {channel.ordererOrgName}
+                                          {channel.ordererDomain}
                                         </td>
                                       </tr>
                                     );

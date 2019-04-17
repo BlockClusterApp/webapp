@@ -346,13 +346,6 @@ class Explorer extends Component {
                       <div className="pull-left">
                         <h2 className="text-success no-margin">Organizations</h2>
                       </div>
-                      <h3 className="pull-right semi-bold">
-                        <sup>
-                          <small className="semi-bold">#</small>
-                        </sup>
-                        &nbsp;
-                        {this.state.organizations && this.state.organizations.length}
-                      </h3>
                       <div className="clearfix" />
                     </div>
                     <div className="auto-overflow widget-11-2-table-2">

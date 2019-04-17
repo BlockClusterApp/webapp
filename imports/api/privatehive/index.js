@@ -178,7 +178,7 @@ PrivateHive.deleteNetwork = async ({ userId, instanceId }) => {
   return true;
 };
 
-PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererOrg, ordererConnectionDetails }) => {
+PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererDomain, ordererConnectionDetails }) => {
   // PlaceHolder function
   const peer = PrivatehivePeers.findOne({ _id: peerId, userId });
   if (!peer) {
@@ -221,7 +221,7 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererOrg, 
   console.log({
     name: channelName,
     ordererURL: ordererConnectionDetails.substring(7),
-    ordererOrgName: ordererOrg,
+    ordererDomain,
   });
 
   const res = await request({
@@ -230,7 +230,7 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererOrg, 
     body: {
       name: channelName,
       ordererURL: ordererConnectionDetails.substring(7),
-      ordererOrgName: ordererOrg,
+      ordererDomain,
     },
     json: true,
   });
@@ -352,7 +352,7 @@ Meteor.methods({
         console.log({
           name: channelName,
           ordererURL: `${Config.workerNodeIP(ordererDetails.locationCode)}:${ordererDetails.ordererNodePort}`,
-          ordererOrgName: ordererDetails.orgName,
+          ordererDomain: `orderer.${ordererDetails.orgName.toLowerCase()}.com`,
         });
         HTTP.call(
           'POST',
@@ -361,7 +361,7 @@ Meteor.methods({
             data: {
               name: channelName,
               ordererURL: `${Config.workerNodeIP(ordererDetails.locationCode)}:${ordererDetails.ordererNodePort}`,
-              ordererOrgName: ordererDetails.orgName,
+              ordererDomain: `orderer.${ordererDetails.orgName.toLowerCase()}.com`,
             },
           },
           (error, response) => {
@@ -441,7 +441,7 @@ Meteor.methods({
             data: {
               name: channelName,
               ordererURL: `${Config.workerNodeIP(ordererDetails.locationCode)}:${ordererDetails.ordererNodePort}`,
-              ordererOrgName: ordererDetails.orgName,
+              ordererDomain: `orderer.${ordererDetails.orgName.toLowerCase()}.com`,
             },
           },
           (error, response) => {
