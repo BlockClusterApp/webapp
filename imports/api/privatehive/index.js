@@ -10,6 +10,7 @@ import request from 'request-promise';
 import NetworkConfiguration from '../../collections/network-configuration/network-configuration';
 import LocationConfiguration from '../../collections/locations';
 import RateLimiter from '../../modules/helpers/server/rate-limiter';
+import Webhook from '../communication/webhook';
 
 import Voucher from '../network/voucher';
 
@@ -164,6 +165,16 @@ PrivateHive.deleteNetwork = async ({ userId, instanceId }) => {
   try {
     await Creators.deleteIngress({ locationCode, namespace, name: `${instanceId}-privatehive` });
   } catch (err) {}
+
+  Webhook.queue({
+    userId,
+    payload: Webhook.generatePayload({
+      event: 'privatehive-network-deleted',
+      networkId: network.instanceId,
+      type: 'privatehive',
+      nodeType: type,
+    }),
+  });
 
   if (type === 'peer') {
     PrivatehivePeers.update(
@@ -401,6 +412,16 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       }
     );
   }
+
+  Webhook.queue({
+    userId,
+    payload: Webhook.generatePayload({
+      event: 'privatehive-network-created',
+      networkId: result,
+      type: 'privatehive',
+      nodeType: networkConfig.category,
+    }),
+  });
 
   return result;
 };
