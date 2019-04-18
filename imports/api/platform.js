@@ -21,7 +21,7 @@ async function authMiddleware(req, res, next) {
 
   const userId = await validateToken(token);
   if (!userId) {
-    JsonRoutes.sendResult(res, {
+    return JsonRoutes.sendResult(res, {
       code: 401,
       data: {
         success: false,
@@ -64,10 +64,43 @@ JsonRoutes.add('get', '/api/platform/networks/types', async function(req, res) {
     data: Object.values(configs),
   });
 });
+// Fetch Network Types for this user
+JsonRoutes.add('get', '/api/platform/network-types', async function(req, res) {
+  const service = req.query.service || 'dynamo';
+  if (!['dynamo', 'privatehive'].includes(service)) {
+    return JsonRoutes.sendResult(res, {
+      code: '403',
+      data: 'Invalid service type',
+    });
+  }
+  const configs = await NetworkConfig.getConfigs({ type: service });
+  return JsonRoutes.sendResult(res, {
+    code: 200,
+    data: Object.values(configs),
+  });
+});
 
 // Fetch All locations for this user
 JsonRoutes.add('get', '/api/platform/networks/locations', async function(req, res) {
   const locations = await LocationApi.getLocations({ service: 'dynamo', userId: req.userId });
+  locations.forEach(loc => {
+    delete loc.workerNodeIP;
+  });
+  return JsonRoutes.sendResult(res, {
+    code: 200,
+    data: locations,
+  });
+});
+// Fetch All locations for this user
+JsonRoutes.add('get', '/api/platform/locations', async function(req, res) {
+  const service = req.query.service || 'dynamo';
+  if (!['dynamo', 'privatehive'].includes(service)) {
+    return JsonRoutes.sendResult(res, {
+      code: '403',
+      data: 'Invalid service type',
+    });
+  }
+  const locations = await LocationApi.getLocations({ service, userId: req.userId });
   locations.forEach(loc => {
     delete loc.workerNodeIP;
   });

@@ -305,6 +305,10 @@ Meteor.methods({
     if (!isAllowed) {
       throw new Meteor.Error(429, 'Rate limit exceeded. Try after 1 minute');
     }
+    const locationConfig = LocationConfiguration.findOne({service: 'dynamo'});
+    if(!locationConfig.locations.includes(locationCode)) {
+      throw new Meteor.Error(403, 'Not available in this location');
+    }
     var myFuture = new Future();
     const nodeConfig = getNodeConfig(networkConfig);
 
@@ -831,6 +835,10 @@ Meteor.methods({
     networkConfig,
     userId
   ) {
+    const locationConfig = LocationConfiguration.findOne({service: 'dynamo'});
+    if(!locationConfig.locations.includes(locationCode)) {
+      throw new Meteor.Error(403, 'Not available in this location');
+    }
     const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(userId);
     const nodeConfig = getNodeConfig(networkConfig);
     const need_VerifiedPaymnt = nodeConfig.voucher && !nodeConfig.voucher.availability.card_vfctn_needed ? nodeConfig.voucher.availability.card_vfctn_needed : true;

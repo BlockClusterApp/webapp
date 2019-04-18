@@ -8,6 +8,10 @@ import NetworkConfig from '../../collections/network-configuration/network-confi
 import Creators from './creators';
 import request from 'request-promise';
 import NetworkConfiguration from '../../collections/network-configuration/network-configuration';
+import LocationConfiguration from '../../collections/locations';
+import RateLimiter from '../../modules/helpers/server/rate-limiter';
+
+import Voucher from '../network/voucher';
 
 const EXTRA_STORAGE_COST = 0.3;
 const toPascalCase = require('to-pascal-case');
@@ -186,9 +190,14 @@ PrivateHive.deleteNetwork = async ({ userId, instanceId }) => {
   return true;
 };
 
-PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererDomain, ordererConnectionDetails }) => {
+PrivateHive.join = async ({ networkId, channelName, peerId, peerInstanceId, userId, ordererDomain, ordererConnectionDetails }) => {
   // PlaceHolder function
-  const peer = PrivatehivePeers.findOne({ _id: peerId, userId });
+  const query = { _id: peerId, userId };
+  if (peerInstanceId) {
+    query.instanceId = peerInstanceId;
+    delete query._id;
+  }
+  const peer = PrivatehivePeers.findOne(query);
   if (!peer) {
     throw new Meteor.Error(403, 'Invalid network');
   }
@@ -205,12 +214,6 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererDomai
     uri: `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/config/orgDetails`,
     method: 'GET',
     json: true,
-  });
-
-  console.log({
-    name: channelName,
-    newOrgName: peer.orgName,
-    newOrgConf: newOrgConf.message,
   });
 
   const addOrgRes = await request({
@@ -237,15 +240,23 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererDomai
     json: true,
   });
 
-  console.log('Join res', res);
-
   return peerId.instanceId;
 };
 
 PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, type, voucherId, name, orgName, ordererType, networkConfig }) => {
+  const locationConfig = LocationConfiguration.findOne({ service: 'privatehive' });
+  if (!locationConfig.locations.includes(locationCode)) {
+    throw new Meteor.Error(403, 'Not available in this location');
+  }
+  if (!orgName) {
+    throw new Meteor.Error(400, 'Org Name is required');
+  }
+  if (!['peer', 'orderer'].includes(type)) {
+    throw new Meteor.Error(400, 'Type should be peer or orderer');
+  }
   let voucher;
   if (voucherId) {
-    voucher = Voucher.find({ _id: voucherId }).fetch()[0];
+    voucher = await Voucher.validate({ type: 'privatehive', userId, voucherId });
 
     if (!voucher) {
       throw new Meteor.Error(400, 'Invalid voucher');
@@ -308,6 +319,12 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
 
   ElasticLogger.log('Creating Privatehive network', { userId, networkConfig, locationCode, voucher, name, type, ordererType });
 
+  const isAllowed = await RateLimiter.isAllowed('privatehive-create', userId);
+  if (!isAllowed) {
+    throw new Meteor.Error(429, 'Rate limit exceeded. Try after 1 minute');
+  }
+
+  let result;
   if (networkConfig.category === 'peer') {
     let peerDetails = await PrivateHive.createPeer({ locationCode, orgName, networkConfig });
     PrivatehivePeers.insert({
@@ -319,7 +336,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       workerNodeIP: Config.workerNodeIP(peerDetails.locationCode),
       ...commonData,
     });
-    return peerDetails.instanceId;
+    result = peerDetails.instanceId;
   } else if (networkConfig.category === 'orderer') {
     let peerDetails = PrivatehivePeers.findOne({
       instanceId: peerId,
@@ -327,6 +344,10 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
 
     if (!peerDetails) {
       throw new Meteor.Error(403, 'Invalid peer');
+    }
+
+    if (peerDetails.status !== 'running') {
+      throw new Meteor.Error(400, 'Peer not ready');
     }
 
     async function getCerts(peer) {
@@ -361,10 +382,27 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       orgName: toPascalCase(orgName),
       ...commonData,
     });
-    return ordererDetails.instanceId;
+    result = ordererDetails.instanceId;
   } else {
     throw new Meteor.Error(400, 'Invalid network type');
   }
+
+  if (voucherId) {
+    Vouchers.update(
+      { _id: nodeConfig.voucherId },
+      {
+        $push: {
+          voucher_claim_status: {
+            claimedBy: userId,
+            claimedOn: new Date(),
+            claimed: true,
+          },
+        },
+      }
+    );
+  }
+
+  return result;
 };
 
 PrivateHive.getPrivateHiveNetworkCount = async () => {
