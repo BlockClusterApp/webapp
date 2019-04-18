@@ -70,13 +70,19 @@ class VoucherDetails extends Component {
             const config = i.networkConfig;
             formattedData['Network Config'] = `
               Config Name: ${config.name} (${config._id})<br />
-              Fabric: Version <b>${config.fabric.version}</b> | <b>${config.fabric.orderers}</b> Orderers | <b>${config.fabric.peers}</b> Peers<br />
-              Orderers: <b>${config.orderer.cpu}</b> vCPUs | <b>${config.orderer.ram}</b> GB RAM | <b>${config.orderer.disk}${
-              config.orderer.isDiskChangeable ? '*' : ''
-            }</b> GB Disk<br />
-              Kafka: <b>${config.kafka.cpu}</b> vCPUs | <b>${config.kafka.ram}</b> GB RAM | <b>${config.kafka.disk}${config.kafka.isDiskChangeable ? '*' : ''}</b> GB Disk<br />
-              Peer: <b>${config.orderer.cpu}</b> vCPUs | <b>${config.orderer.ram}</b> GB RAM<br />
-              Data: <b>${config.data.disk}${config.data.isDiskChangeable ? '*' : ''}</b> GB Disk
+              Network Type <b>${config.category}</b><br />
+              Orderer Type: <b>${config.ordererType}</b><br />
+              Resources: <b>${config.cpu}</b> vCPUs | <b>${config.ram}</b> GB RAM | <b>${config.disk}${config.isDiskChangeable ? '*' : ''}</b> GB Disk<br
+              ${config.kafka &&
+                `Kafka: <b>${config.kafka.cpu}</b> vCPUs | <b>${config.kafka.ram}</b> GB RAM | <b>${config.kafka.disk}${
+                  config.kafka.isDiskChangeable ? '*' : ''
+                }</b> GB Disk<br />`}
+              ${config.zookeeper &&
+                `Kafka: <b>${config.zookeeper.cpu}</b> vCPUs | <b>${config.zookeeper.ram}</b> GB RAM | <b>${config.zookeeper.disk}${
+                  config.zookeeper.isDiskChangeable ? '*' : ''
+                }</b> GB Disk<br />`}
+              />
+
             `;
           }
           if (i.campaignId && i.campaignId !== 'None') {
