@@ -1147,7 +1147,6 @@ Creators.deployKafka = async function({ locationCode, namespace, instanceId, net
                       app: kafka-${instanceId}
                   spec:
                     terminationGracePeriodSeconds: 300
-                    serviceAccountName: dev-webapp
                     containers:
                     - name: k8skafka
                       imagePullPolicy: Always
