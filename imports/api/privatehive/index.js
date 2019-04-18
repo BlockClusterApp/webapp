@@ -7,6 +7,9 @@ import { PrivatehivePeers } from '../../collections/privatehivePeers/privatehive
 import NetworkConfig from '../../collections/network-configuration/network-configuration';
 import Creators from './creators';
 import request from 'request-promise';
+import NetworkConfiguration from '../../collections/network-configuration/network-configuration';
+
+const EXTRA_STORAGE_COST = 0.3;
 const toPascalCase = require('to-pascal-case');
 
 function sleep(timeout) {
@@ -508,6 +511,15 @@ Meteor.methods({
   },
 });
 
+function convertMilliseconds(ms) {
+  const seconds = Math.round(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  return { seconds, minutes, hours, days };
+}
+
 PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
   month = month === undefined ? moment().month() : month;
   year = year || moment().year();
@@ -562,7 +574,8 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
       .map(m => ({ ...m, type: 'peer' })),
   ];
 
-  result.networks = /* userNetworks */ []
+  result.networks = userNetworks
+    .filter(n => !!n.networkConfig)
     .map(network => {
       let thisCalculationEndDate = calculationEndDate;
       if (network.deletedAt && moment(network.deletedAt).isBefore(calculationEndDate.getTime())) {
@@ -660,7 +673,11 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
         //so that we can track record how many times he used.
         //and also helps to validate if next time need to consider voucher or not.
         if (!isFromFrontend) {
-          PrivateHiveCollection.update(
+          let Model = PrivatehiveOrderers;
+          if (network.type === 'peer') {
+            Model = PrivatehivePeers;
+          }
+          Model.update(
             { _id: network._id },
             {
               $push: {
@@ -677,18 +694,11 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
 
       let extraDiskStorage = 0;
 
-      const actualNetworkConfig = NetworkConfiguration.find({ _id: network.networkConfig._id, active: { $in: [true, false, null] } }).fetch()[0];
+      const actualNetworkConfig = NetworkConfiguration.findOne({ _id: network.networkConfig._id, active: { $in: [true, false, null] } });
 
-      if (network.networkConfig.orderer.disk > actualNetworkConfig.orderer.disk) {
-        extraDiskStorage += Math.max(network.networkConfig.orderer.disk - actualNetworkConfig.orderer.disk, 0);
+      if (network.networkConfig.disk > actualNetworkConfig.disk) {
+        extraDiskStorage += Math.max(network.networkConfig.disk - actualNetworkConfig.disk, 0);
       }
-      if (network.networkConfig.kafka.disk > actualNetworkConfig.kafka.disk) {
-        extraDiskStorage += Math.max(network.networkConfig.kafka.disk - actualNetworkConfig.kafka.disk, 0);
-      }
-      if (network.networkConfig.data.disk > actualNetworkConfig.data.disk) {
-        extraDiskStorage += Math.max(network.networkConfig.data.disk - actualNetworkConfig.data.disk, 0);
-      }
-
       const extraDiskAmount = extraDiskStorage * (EXTRA_STORAGE_COST * time.hours);
 
       // Just a precaution
@@ -728,12 +738,3 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
 };
 
 export default PrivateHive;
-
-//Note: At application layer we have to maintain a unique id for every network. Otherwise when inviting to channel we don't
-//know which network to send invite to.
-//When creating network or joining network, just create a peer node. Orderers will be added dynamically.
-
-//Meteor.call('createPrivatehivePeer');
-//Meteor.call('createPrivatehiveOrderer', 'cvmdruiu');
-//Meteor.call('privatehiveCreateChannel', 'wosrhjfg', 'xgnwmbwk', 'channelsample');
-//Meteor.call('privatehiveJoinChannel', 'muoygwak', 'moyxsmta', 'djtveuib', 'channelsample');

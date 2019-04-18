@@ -79,7 +79,7 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       result.totalAmount = prevMonthInvoice.totalAmount;
       result.invoiceStatus = prevMonthInvoice.paymentStatus;
       result.invoiceId = prevMonthInvoice._id;
-      result.creditClaims = prevMonthInvoice.creditClaims;
+      result.creditClaims = prevMonthInvoice.creditClaims || [];
       return result;
     }
   }
@@ -463,11 +463,11 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       result.creditClaims = [];
       result.notGenerated = true;
     } else {
-      result.networks = prevMonthInvoice.items;
+      result.networks = prevMonthInvoice.items || [];
       result.totalAmount = prevMonthInvoice.totalAmount;
       result.invoiceStatus = prevMonthInvoice.paymentStatus;
       result.invoiceId = prevMonthInvoice._id;
-      result.creditClaims = prevMonthInvoice.creditClaims;
+      result.creditClaims = prevMonthInvoice.creditClaims || [];
     }
   }
 
