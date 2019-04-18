@@ -10,7 +10,7 @@ NetworkConfig.getConfigs = async function({ type, fetchRaw }) {
   }
   const result = {};
   configs.forEach(config => {
-    result[config.name] = config3;
+    result[config.name] = config;
   });
 
   return result;
