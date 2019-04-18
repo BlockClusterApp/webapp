@@ -20,9 +20,9 @@ class Navbar extends Component {
       });
     });
     this.props.history.listen((location, action) => {
-      if (location.pathname.includes('/app/admin')) {
-        this.setState({});
-      }
+      // if (location.pathname.includes('/app/admin')) {
+      this.setState({});
+      // }
     });
   }
 
@@ -172,10 +172,10 @@ class Navbar extends Component {
             </button>
           </div>
         </div>
-        <div className="sidebar-menu">
+        <div className="sidebar-menu m-t-30">
           <ul className="menu-items">
             {!window.isAdminWindow && (
-              <li className="m-t-30 ">
+              <li className="m-t-30 " className={this.props.history.location.pathname.includes('/app/networks') ? 'selected' : ''}>
                 <Link to={'/app/networks'} className="detailed">
                   <span className="title">Dynamo</span>
                   <span className="details">Manage Networks</span>
@@ -186,7 +186,7 @@ class Navbar extends Component {
               </li>
             )}
             {!window.isAdminWindow && (
-              <li>
+              <li className={this.props.history.location.pathname.includes('/app/privatehive') ? 'selected' : ''}>
                 <Link to="/app/privatehive" className="detailed">
                   <span className="title">Private Hive</span>
                   <span className="details">Hyperledger Fabric</span>
@@ -197,7 +197,7 @@ class Navbar extends Component {
               </li>
             )}
             {features.Paymeter && !window.isAdminWindow && (
-              <li>
+              <li className={this.props.history.location.pathname.includes('/app/paymeter') ? 'selected' : ''}>
                 <Link to={'/app/paymeter'} className="detailed">
                   <span className="title">Paymeter</span>
                   <span className="details">Manage Wallets</span>
@@ -208,7 +208,7 @@ class Navbar extends Component {
               </li>
             )}
             {features.Hyperion && !window.isAdminWindow && (
-              <li>
+              <li className={this.props.history.location.pathname.includes('/app/hyperion') ? 'selected' : ''}>
                 <Link to={'/app/hyperion'} className="detailed">
                   <span className="title">Hyperion</span>
                   <span className="details">Upload Files</span>
@@ -219,7 +219,7 @@ class Navbar extends Component {
               </li>
             )}
             {!window.isAdminWindow && (
-              <li>
+              <li className={this.props.history.location.pathname.includes('/app/notifications') ? 'selected' : ''}>
                 <Link to={'/app/notifications'}>Notifications</Link>
                 <span className="icon-thumbnail">
                   <i className="fa fa-bell" />
@@ -227,7 +227,7 @@ class Navbar extends Component {
               </li>
             )}
             {!window.isAdminWindow && (
-              <li>
+              <li className={this.props.history.location.pathname.includes('/app/platform-apis') ? 'selected' : ''}>
                 <Link to={'/app/platform-apis'}>API Keys</Link>
                 <span className="icon-thumbnail">
                   <i className="fa fa-key" />
@@ -245,7 +245,7 @@ class Navbar extends Component {
                 </span>
                 <ul className="sub-menu">
                   {features.Payments && (
-                    <li>
+                    <li className={this.props.history.location.pathname.includes('/app/payments') ? 'selected' : ''}>
                       <Link to="/app/payments">Payments</Link>
                       <span className="icon-thumbnail">
                         <i className="fa fa-money" />
@@ -253,7 +253,7 @@ class Navbar extends Component {
                     </li>
                   )}
                   {features.Invoice && (
-                    <li>
+                    <li className={this.props.history.location.pathname.includes('/app/credits') ? 'selected' : ''}>
                       <Link to="/app/credits">Credits</Link>
                       <span className="icon-thumbnail">
                         <i className="fa fa-money" />
@@ -261,7 +261,7 @@ class Navbar extends Component {
                     </li>
                   )}
                   {features.Invoice && (
-                    <li>
+                    <li className={this.props.history.location.pathname.includes('/app/billing') ? 'selected' : ''}>
                       <Link to="/app/billing">Bills</Link>
                       <span className="icon-thumbnail">
                         <i className="fa fa-list-alt" />
@@ -269,7 +269,7 @@ class Navbar extends Component {
                     </li>
                   )}
                   {features.SupportTicket && (
-                    <li>
+                    <li className={this.props.history.location.pathname.includes('/app/support') ? 'selected' : ''}>
                       <Link to="/app/support">Support</Link>
                       <span className="icon-thumbnail">
                         <i className="fa fa-ticket" />

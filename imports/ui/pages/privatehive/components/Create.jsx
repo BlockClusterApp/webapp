@@ -51,11 +51,21 @@ class PaymentDashboard extends Component {
         loading: false,
       });
     }
+    if (config.networkType === 'peer') {
+      if (!config.networkConfig) {
+        return this.setState({
+          formSubmitError: 'Invalid Configuration',
+          loading: false,
+        });
+      }
+    }
+
     Meteor.call(
       'initializePrivateHiveNetwork',
       {
         name,
         orgName,
+        networkConfig: config.networkConfig,
         ordererType: config.ordererType,
         type: config.networkType,
         peerId: config.peerId,

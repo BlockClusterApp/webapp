@@ -17,102 +17,77 @@ class PrivateHiveNetworkConfigSelector extends Component {
       remoteConfig: window.RemoteConfig,
       isDiskChangeable: true,
       networkType: 'peer',
-      networkConfig: {
-        kafka: {},
-        fabric: {},
-        orderer: {},
-        data: {},
-        peer: {},
-      },
+      networkConfig: {},
+      filteredConfigs: [],
     };
+    this.config = {};
   }
 
   componentDidMount() {
-    // Meteor.call('getConfigs', { type: 'privatehive' }, (err, res) => {
-    //   this.setState({
-    //     configs: res,
-    //   });
-    //   this.defaultConfig = Object.values(res).filter(i => (i.locations ? i.locations.includes(this.props.locationCode) : true))[0];
-    //   if (!this.defaultConfig) {
-    //     this.config.value = {};
-    //     return this.onConfigChange();
-    //   }
-    //   if (this.config) this.config.value = this.defaultConfig.name;
-    //   this.onConfigChange();
-    // });
-    this.onConfigChange(true);
+    this.fetchConfigs();
   }
 
-  onConfigChange(useDefault) {
-    // if (!this.config) {
-    //   return;
-    // }
-
-    let error;
-    // const config = this.state.configs[this.config.value];
-
-    // if (!this.voucherDetails) {
-    // if (!this.props.isJoin) {
-    //   if (!this.ordererDiskSpace.value) {
-    //     this.ordererDiskSpace.value = config.orderer.disk;
-    //     this.kafkaDiskSpace.value = config.kafka.disk;
-    //   } else {
-    //     config.orderer.disk = this.ordererDiskSpace.value;
-    //     config.kafka.disk = this.kafkaDiskSpace.value;
-    //     if (Number(config.orderer.disk) <= 0) {
-    //       error = 'Orderer Disk space should be greater than 0';
-    //     }
-    //     if (Number(config.kafka.disk) <= 0) {
-    //       error = 'Kafka disk space should be greater than 0';
-    //     }
-    //   }
-    // }
-
-    // if (!this.dataDiskSpace.value) {
-    //   this.dataDiskSpace.value = config.data.disk;
-    // } else {
-    //   config.data.disk = this.dataDiskSpace.value;
-    //   if (Number(config.data.disk) <= 0) {
-    //     error = 'Data disk space should be greater than 0';
-    //   }
-    // }
-
-    // const newState = { networkConfig: config };
-
-    //   if (error) {
-    //     newState.error = error;
-    //   } else {
-    //     newState.error = '';
-    //   }
-
-    //   this.setState(newState);
-    // }
-
-    if (!useDefault) {
-      this.setState({
-        networkType: this.networkType.value,
-        peerId: this.peerId,
+  fetchConfigs = () => {
+    Meteor.call('getConfigs', { type: 'privatehive', fetchRaw: true }, (err, res) => {
+      if (err) {
+        return setTimeout(this.fetchConfigs, 3000);
+      }
+      const configs = {};
+      res.forEach(config => {
+        configs[config._id] = config;
       });
+      const filteredConfigs = res.filter(c => c.category === this.state.networkType);
+      this.setState(
+        {
+          allConfigs: configs,
+          filteredConfigs,
+        },
+        () => {
+          this.defaultConfig = Object.values(filteredConfigs).filter(i => (i.locations ? i.locations.includes(this.props.locationCode) : true))[0];
+          if (!this.defaultConfig) {
+            this.networkConfig = {};
+            return this.onConfigChange();
+          }
+          this.networkConfigId = this.defaultConfig._id;
+          this.onConfigChange();
+        }
+      );
+    });
+    this.onConfigChange(true);
+  };
 
-      const config = {
-        networkType: this.networkType.value,
-        peerId: this.peerId,
-        ordererType: this.ordererType,
-      };
-      if (this.props && this.props.configChangeListener) {
-        this.props.configChangeListener({ config, error: error ? true : false, voucher: this.voucherDetails });
-      }
-    } else {
-      if (this.props && this.props.configChangeListener) {
-        this.props.configChangeListener({
-          config: {
-            networkType: 'peer',
-            ordererType: 'solo',
-          },
-          error: error ? true : false,
-          voucher: this.voucherDetails,
-        });
-      }
+  onConfigChange(skipDefault) {
+    let error;
+    const networkConfig = this.state.filteredConfigs.find(config => config._id === this.networkConfigId);
+
+    if (!networkConfig) {
+      return;
+    }
+
+    if (this.diskSpace && this.diskSpace.value > 16000) {
+      this.diskSpace.value = 16000;
+    }
+
+    this.setState({
+      networkType: this.networkType ? this.networkType.value : this.state.networkType,
+      peerId: this.peerId,
+      networkConfig,
+    });
+
+    if (skipDefault && this.diskSpace) {
+      networkConfig.disk = this.diskSpace.value || networkConfig.disk;
+    } else if (this.diskSpace) {
+      this.diskSpace.value = networkConfig.disk;
+    }
+
+    const config = {
+      networkType: this.networkType ? this.networkType.value : this.state.networkType,
+      peerId: this.peerId,
+      ordererType: this.ordererType,
+      networkConfig,
+    };
+    if (this.props && this.props.configChangeListener) {
+      this.props.configChangeListener({ config, error: error ? true : false, voucher: this.voucherDetails });
     }
   }
 
@@ -166,10 +141,6 @@ class PrivateHiveNetworkConfigSelector extends Component {
     });
     this.voucher.value = '';
 
-    this.dataDiskSpace.value = this.defaultConfig.networkConfig.data.disk;
-    this.ordererDiskSpace.value = this.defaultConfig.networkConfig.orderer.disk;
-    this.kafkaDiskSpace.value = this.defaultConfig.networkConfig.kafka.disk;
-
     this.voucherDetails = undefined;
     this.onConfigChange();
   };
@@ -186,7 +157,7 @@ class PrivateHiveNetworkConfigSelector extends Component {
     ];
     const dropDown = (
       <div className="form-group form-group-default ">
-        <label>Organisation Type</label>
+        <label>Organization Type</label>
         <select
           className="form-control form-group-default"
           name="nodeType"
@@ -263,6 +234,62 @@ class PrivateHiveNetworkConfigSelector extends Component {
                   </div>
                 </div>
               )}
+              {this.state.networkType === 'peer' && (
+                <div className="row clearfix">
+                  <div className="form-group form-group-default">
+                    <label>Select Configuration</label>
+                    <select
+                      className="form-control"
+                      name="peerNetworkConfig"
+                      ref={i => (this.peerNetworkConfig = i)}
+                      onChange={() => {
+                        this.networkConfigId = this.peerNetworkConfig.value;
+                        this.onConfigChange();
+                      }}
+                    >
+                      {this.state.filteredConfigs.map(config => {
+                        return (
+                          <option value={config._id} key={config._id} selected={config._id === this.state.networkConfig._id}>
+                            {config.name}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {this.state.networkType === 'peer' && this.state.networkConfig && (
+                <div className="row clearfix">
+                  <div className="col-md-4">
+                    <div className="form-group form-group-default">
+                      <label>CPU (vCPUs)</label>
+                      <input type="text" className="form-control" name="projectName" value={this.state.networkConfig.cpu} disabled />
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="form-group form-group-default ">
+                      <label>RAM (GB)</label>
+                      <input type="text" className="form-control" name="firstName" value={this.state.networkConfig.ram} disabled />
+                    </div>
+                  </div>
+
+                  <div className="col-md-4">
+                    <div className="form-group form-group-default ">
+                      <label>Disk Space (GB)</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="firstName"
+                        required
+                        ref={input => (this.diskSpace = input)}
+                        disabled={!this.state.networkConfig.isDiskChangeable}
+                        onChange={this.onConfigChange.bind(this, true)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {window.RemoteConfig && window.RemoteConfig.features && window.RemoteConfig.features.Vouchers && (
                 <div className="row clearfix">
@@ -306,5 +333,4 @@ class PrivateHiveNetworkConfigSelector extends Component {
     return FullView;
   }
 }
-
 export default PrivateHiveNetworkConfigSelector;

@@ -4,6 +4,7 @@ import helpers from '../../modules/helpers';
 import Config from '../../modules/config/server';
 import { PrivatehiveOrderers } from '../../collections/privatehiveOrderers/privatehiveOrderers.js';
 import { PrivatehivePeers } from '../../collections/privatehivePeers/privatehivePeers.js';
+import NetworkConfig from '../../collections/network-configuration/network-configuration';
 import Creators from './creators';
 import request from 'request-promise';
 const toPascalCase = require('to-pascal-case');
@@ -16,13 +17,13 @@ function sleep(timeout) {
 
 let PrivateHive = {};
 
-PrivateHive.createPeer = async ({ locationCode, orgName }) => {
+PrivateHive.createPeer = async ({ locationCode, orgName, networkConfig }) => {
   const instanceId = helpers.instanceIDGenerate();
   const workerNodeIP = Config.workerNodeIP(locationCode);
   const namespace = Config.namespace;
 
   try {
-    await Creators.createPersistentvolumeclaims({ locationCode, namespace: Config.namespace, instanceId, storage: 50 });
+    await Creators.createPersistentvolumeclaims({ locationCode, namespace: Config.namespace, instanceId, storage: networkConfig.disk });
     peerDetails = await Creators.createPeerService({ locationCode, namespace: Config.namespace, instanceId });
 
     await Creators.createPeerDeployment({
@@ -31,6 +32,7 @@ PrivateHive.createPeer = async ({ locationCode, orgName }) => {
       instanceId,
       workerNodeIP,
       orgName,
+      networkConfig,
       anchorCommPort: peerDetails.peerGRPCAPINodePort,
       chaincodePort: peerDetails.chaincodeListenNodePort,
       caPort: peerDetails.caNodePort,
@@ -49,7 +51,7 @@ PrivateHive.createPeer = async ({ locationCode, orgName }) => {
   }
 };
 
-PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, peerWorkerNodeIP, anchorCommPort, locationCode, type, orgName }) => {
+PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, peerWorkerNodeIP, anchorCommPort, locationCode, type, orgName, networkConfig }) => {
   const workerNodeIP = Config.workerNodeIP(locationCode);
   const instanceId = helpers.instanceIDGenerate();
   const namespace = Config.namespace;
@@ -58,11 +60,11 @@ PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, pee
     type = type || 'solo';
 
     if (type === 'kafka') {
-      await Creators.deployZookeeper({ locationCode, instanceId, namespace: Config.namespace });
-      await Creators.deployKafka({ locationCode, namespace: Config.namespace, instanceId });
+      await Creators.deployZookeeper({ locationCode, instanceId, namespace: Config.namespace, networkConfig });
+      await Creators.deployKafka({ locationCode, namespace: Config.namespace, instanceId, networkConfig });
     }
 
-    await Creators.createPersistentvolumeclaims({ locationCode, namespace: Config.namespace, instanceId, storage: 50 });
+    await Creators.createPersistentvolumeclaims({ locationCode, namespace: Config.namespace, instanceId, storage: networkConfig.disk });
     ordererNodePort = await Creators.createOrdererService({ locationCode, namespace: Config.namespace, instanceId });
 
     await Creators.createOrdererDeployment({
@@ -78,12 +80,15 @@ PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, pee
       ordererNodePort,
       type,
       orgName,
+      networkConfig,
     });
     await Creators.createAPIIngress({ locationCode, namespace, instanceId });
   } catch (err) {
     ElasticLogger.log('Error creating privatehive orderer', { locationCode, err });
-    await Creators.destroyZookeper({ locationCode, namespace, instanceId });
-    await Creators.destroyKafka({ locationCode, namespace, instanceId });
+    if (type === 'kafka') {
+      await Creators.destroyZookeper({ locationCode, namespace, instanceId });
+      await Creators.destroyKafka({ locationCode, namespace, instanceId });
+    }
     await Creators.deletePersistentVolumeClaim({ locationCode, namespace, name: `${instanceId}-pvc` });
     await Creators.deleteService({ locationCode, namespace, name: `${instanceId}-privatehive` });
     await Creators.deleteDeployment({ locationCode, namespace, name: `${instanceId}-privatehive` });
@@ -218,12 +223,6 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererDomai
 
   await sleep(5000);
 
-  console.log({
-    name: channelName,
-    ordererURL: ordererConnectionDetails.substring(7),
-    ordererDomain,
-  });
-
   const res = await request({
     uri: `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/channel/join`,
     method: 'POST',
@@ -240,7 +239,7 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererDomai
   return peerId.instanceId;
 };
 
-PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, type, voucherId, name, orgName, ordererType }) => {
+PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, type, voucherId, name, orgName, ordererType, networkConfig }) => {
   let voucher;
   if (voucherId) {
     voucher = Voucher.find({ _id: voucherId }).fetch()[0];
@@ -257,10 +256,57 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
     voucher = tempVoucher;
   }
 
-  const commonData = { userId, locationCode, voucher, name };
+  if (!networkConfig && type === 'peer') {
+    throw new Meteor.Error(403, 'Network config not provided');
+  }
+
+  let originalNetworkConfig;
 
   if (type === 'peer') {
-    let peerDetails = await PrivateHive.createPeer({ locationCode, orgName });
+    originalNetworkConfig = NetworkConfig.findOne({ _id: networkConfig._id, for: 'privatehive' });
+  } else if (type === 'orderer') {
+    originalNetworkConfig = NetworkConfig.findOne({ for: 'privatehive', active: true, ordererType, category: 'orderer' });
+    networkConfig = JSON.parse(JSON.stringify(originalNetworkConfig));
+  }
+
+  if (!originalNetworkConfig) {
+    throw new Meteor.Error(403, 'Invalid config not provided');
+  }
+
+  if (originalNetworkConfig.category === 'peer') {
+  } else if (originalNetworkConfig.category === 'orderer') {
+    if (originalNetworkConfig.ordererType !== ordererType) {
+      throw new Meteor.Error(403, 'Orderer type - network config mismatch');
+    }
+    networkConfig.disk = originalNetworkConfig.isDiskChangeable ? networkConfig.disk : originalNetworkConfig.disk;
+    if (originalNetworkConfig.ordererType === 'kafka') {
+      // Check and assign disk space
+      networkConfig.kafka.disk = originalNetworkConfig.kafka.isDiskChangeable ? networkConfig.kafka.disk || originalNetworkConfig.kafka.disk : originalNetworkConfig.kafka.disk;
+      networkConfig.zookeeper.disk = originalNetworkConfig.zookeeper.isDiskChangeable
+        ? networkConfig.zookeeper.disk || originalNetworkConfig.zookeeper.disk
+        : originalNetworkConfig.zookeeper.disk;
+
+      networkConfig.kafka.cpu = originalNetworkConfig.kafka.cpu;
+      networkConfig.kafka.ram = originalNetworkConfig.kafka.ram;
+      networkConfig.zookeeper.cpu = originalNetworkConfig.zookeeper.cpu;
+      networkConfig.zookeeper.ram = originalNetworkConfig.zookeeper.ram;
+    }
+    networkConfig.ordererType = originalNetworkConfig.ordererType;
+  } else {
+    throw new Meteor.Error(403, 'Invalid config category');
+  }
+
+  networkConfig.disk = originalNetworkConfig.isDiskChangeable ? networkConfig.disk || originalNetworkConfig.disk : originalNetworkConfig.disk;
+  networkConfig.cpu = originalNetworkConfig.cpu;
+  networkConfig.ram = originalNetworkConfig.ram;
+  networkConfig.cost = originalNetworkConfig.cost;
+
+  const commonData = { userId, locationCode, voucher, name, networkConfig };
+
+  ElasticLogger.log('Creating Privatehive network', { userId, networkConfig, locationCode, voucher, name, type, ordererType });
+
+  if (networkConfig.category === 'peer') {
+    let peerDetails = await PrivateHive.createPeer({ locationCode, orgName, networkConfig });
     PrivatehivePeers.insert({
       instanceId: peerDetails.instanceId,
       orgName: toPascalCase(orgName),
@@ -271,7 +317,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       ...commonData,
     });
     return peerDetails.instanceId;
-  } else if (type === 'orderer') {
+  } else if (networkConfig.category === 'orderer') {
     let peerDetails = PrivatehivePeers.findOne({
       instanceId: peerId,
     });
@@ -292,8 +338,6 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       });
     }
 
-    console.log('Orderer type', ordererType);
-
     let certs = await getCerts(peerDetails);
     let ordererDetails = await PrivateHive.createOrderer({
       peerOrgName: peerDetails.orgName,
@@ -303,6 +347,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       anchorCommPort: peerDetails.anchorCommPort,
       locationCode,
       orgName,
+      networkConfig,
       type: ordererType,
     });
     PrivatehiveOrderers.insert({
@@ -325,8 +370,8 @@ PrivateHive.getPrivateHiveNetworkCount = async () => {
 };
 
 Meteor.methods({
-  initializePrivateHiveNetwork: async ({ peerId, locationCode, type, name, orgName, voucherId, ordererType }) => {
-    const res = await PrivateHive.createPrivateHiveNetwork({ userId: Meteor.userId(), peerId, locationCode, type, name, orgName, voucherId, ordererType });
+  initializePrivateHiveNetwork: async ({ peerId, locationCode, type, name, orgName, voucherId, ordererType, networkConfig }) => {
+    const res = await PrivateHive.createPrivateHiveNetwork({ userId: Meteor.userId(), peerId, locationCode, type, name, orgName, voucherId, ordererType, networkConfig });
     return res;
   },
   getPrivateHiveNetworkCount: PrivateHive.getPrivateHiveNetworkCount,

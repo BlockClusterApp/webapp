@@ -33,6 +33,9 @@ NetworkConfiguration.schema = new SimpleSchema({
   showInNetworkSelection: {
     type: Boolean,
   },
+  ordererType: {
+    type: String,
+  },
   cost: {
     type: {
       monthly: {
@@ -98,6 +101,9 @@ NetworkConfiguration.schema = new SimpleSchema({
   // },
   for: {
     type: String,
+  },
+  category: {
+    type: String, // Used in privatehive to store peer or orderer info
   },
   locations: {
     type: Array,

@@ -37,7 +37,7 @@ class ManageChaincode extends Component {
   getAssetTypes() {
     this.getChannels();
     const { network } = this.props;
-    Meteor.call('fetchChaincodes', { networkId: network.instanceId }, (err, res) => {
+    Meteor.call('fetchChaincodes', { networkId: this.props.match.params.id }, (err, res) => {
       if (err) {
         return notifications.error(err.reason);
       }

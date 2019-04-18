@@ -4,6 +4,155 @@ var md5 = require('apache-md5');
 const Creators = {};
 const toPascalCase = require('to-pascal-case');
 
+function fetchPeerContainerResources(networkConfig) {
+  return {
+    api: {
+      cpu: `${Math.round(Number(networkConfig.cpu) * 0.3 * 1000)}m`,
+      ram: `${(Number(networkConfig.ram) * 0.3).toFixed(2)}Gi`,
+    },
+    ca: {
+      cpu: `${Math.round(Number(networkConfig.cpu) * 0.2 * 1000)}m`,
+      ram: `${(Number(networkConfig.ram) * 0.2).toFixed(2)}Gi`,
+    },
+    couchdb: {
+      cpu: `${Math.round(Number(networkConfig.cpu) * 0.1 * 1000)}m`,
+      ram: `${(Number(networkConfig.ram) * 0.1).toFixed(2)}Gi`,
+    },
+    peer: {
+      cpu: `${Math.round(Number(networkConfig.cpu) * 0.4 * 1000)}m`,
+      ram: `${(Number(networkConfig.ram) * 0.4).toFixed(2)}Gi`,
+    },
+  };
+}
+
+function fetchOrdererContainerResources(networkConfig) {
+  const obj = {
+    api: {
+      cpu: `${Math.round(Number(networkConfig.cpu) * 0.5 * 1000)}m`,
+      ram: `${(Number(networkConfig.ram) * 0.5).toFixed(2)}Gi`,
+    },
+    orderer: {
+      cpu: `${Math.round(Number(networkConfig.cpu) * 0.5 * 1000)}m`,
+      ram: `${(Number(networkConfig.ram) * 0.5).toFixed(2)}Gi`,
+    },
+  };
+  if (networkConfig.kafka) {
+    (obj.kafka = {
+      cpu: `${Math.round(Number(networkConfig.kafka.cpu) * 1000)}m`,
+      ram: `${Number(networkConfig.kafka.ram).toFixed(2)}Gi`,
+    }),
+      (obj.zookeeper = {
+        cpu: `${Math.round(Number(networkConfig.zookeeper.cpu) * 1000)}m`,
+        ram: `${Number(networkConfig.zookeeper.ram).toFixed(2)}Gi`,
+      });
+  }
+  return obj;
+}
+
+Creators.deleteService = function({ locationCode, namespace, name }) {
+  return new Promise((resolve, reject) => {
+    HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/services/${name}`, (err, res) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve();
+    });
+  });
+};
+
+Creators.deleteReplicaSet = function({ locationCode, namespace, name, selfLink }) {
+  return new Promise((resolve, reject) => {
+    let url;
+    if (selfLink) {
+      url = `${Config.kubeRestApiHost(locationCode)}${selfLink}`;
+    } else {
+      url = `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${namespace}/replicasets/${name}`;
+    }
+    HTTP.call('DELETE', url, (err, data) => {
+      if (err) {
+        return reject(err);
+      }
+      return resolve(data);
+    });
+  });
+};
+
+Creators.deletePrivatehiveReplicaSets = function({ locationCode, namespace, instanceId }) {
+  return new Promise((resolve, reject) => {
+    HTTP.call(
+      'GET',
+      `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent(`${instanceId}-privatehive`),
+      async (err, data) => {
+        if (err) {
+          return reject(err);
+        }
+        const res = JSON.parse(data.content);
+        if (res.items.length > 0) {
+          const promises = [];
+          res.items.forEach(rs => {
+            promises.push(Creators.deleteReplicaSet({ locationCode, selfLink: rs.metadata.selfLink }));
+          });
+          await Bluebird.all(promises);
+        }
+        await Creators.deletePrivatehivePods({ locationCode, namespace, instanceId });
+        return resolve();
+      }
+    );
+  });
+};
+
+Creators.deletePod = function({ locationCode, namespace, name, selfLink }) {
+  return new Promise((resolve, reject) => {
+    let url;
+    if (selfLink) {
+      url = `${Config.kubeRestApiHost(locationCode)}${selfLink}`;
+    } else {
+      url = `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/pods/${name}`;
+    }
+    HTTP.call('DELETE', url, (err, data) => {
+      if (err) {
+        return reject(err);
+      }
+      return resolve(data);
+    });
+  });
+};
+
+Creators.deletePrivatehivePods = function({ locationCode, namespace, instanceId }) {
+  return new Promise((resolve, reject) => {
+    HTTP.call(
+      'GET',
+      `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/pods?labelSelector=app%3D` + encodeURIComponent(`${instanceId}-privatehive`),
+      async (err, data) => {
+        if (err) {
+          return reject(err);
+        }
+        const res = JSON.parse(data.content);
+        if (res.items.length > 0) {
+          const promises = [];
+          res.items.forEach(rs => {
+            promises.push(Creators.deletePod({ locationCode, selfLink: rs.metadata.selfLink }));
+          });
+          await Bluebird.all(promises);
+        }
+        return resolve();
+      }
+    );
+  });
+};
+
+Creators.deleteDeployment = function({ locationCode, namespace, name }) {
+  return new Promise((resolve, reject) => {
+    HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${namespace}/deployments/${name}`, (err, res) => {
+      if (err) {
+        return reject(err);
+      }
+      Creators.deleteVolumesByLabel({ locationCode, namespace, label: `app%3D${name.split('-')[0]}-privatehive` });
+      resolve();
+    });
+  });
+};
+
 Creators.createPersistentvolumeclaims = async ({ locationCode, namespace, instanceId, storage }) =>
   new Promise((resolve, reject) => {
     HTTP.call(
@@ -130,112 +279,8 @@ Creators.createPeerService = async function({ locationCode, namespace, instanceI
   });
 };
 
-Creators.deleteService = function({ locationCode, namespace, name }) {
-  return new Promise((resolve, reject) => {
-    HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/services/${name}`, (err, res) => {
-      if (err) {
-        return reject(err);
-      }
-      resolve();
-    });
-  });
-};
-
-Creators.deleteReplicaSet = function({ locationCode, namespace, name, selfLink }) {
-  return new Promise((resolve, reject) => {
-    let url;
-    if (selfLink) {
-      url = `${Config.kubeRestApiHost(locationCode)}${selfLink}`;
-    } else {
-      url = `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${namespace}/replicasets/${name}`;
-    }
-    HTTP.call('DELETE', url, (err, data) => {
-      if (err) {
-        return reject(err);
-      }
-      return resolve(data);
-    });
-  });
-};
-
-Creators.deletePrivatehiveReplicaSets = function({ locationCode, namespace, instanceId }) {
-  return new Promise((resolve, reject) => {
-    HTTP.call(
-      'GET',
-      `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${namespace}/replicasets?labelSelector=app%3D` + encodeURIComponent(`${instanceId}-privatehive`),
-      async (err, data) => {
-        if (err) {
-          return reject(err);
-        }
-        const res = JSON.parse(data.content);
-        if (res.items.length > 0) {
-          const promises = [];
-          res.items.forEach(rs => {
-            promises.push(Creators.deleteReplicaSet({ locationCode, selfLink: rs.metadata.selfLink }));
-          });
-          await Bluebird.all(promises);
-        }
-        await Creators.deletePrivatehivePods({ locationCode, namespace, instanceId });
-        return resolve();
-      }
-    );
-  });
-};
-
-Creators.deletePod = function({ locationCode, namespace, name, selfLink }) {
-  return new Promise((resolve, reject) => {
-    let url;
-    if (selfLink) {
-      url = `${Config.kubeRestApiHost(locationCode)}${selfLink}`;
-    } else {
-      url = `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/pods/${name}`;
-    }
-    HTTP.call('DELETE', url, (err, data) => {
-      if (err) {
-        return reject(err);
-      }
-      return resolve(data);
-    });
-  });
-};
-
-Creators.deletePrivatehivePods = function({ locationCode, namespace, instanceId }) {
-  return new Promise((resolve, reject) => {
-    HTTP.call(
-      'GET',
-      `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/pods?labelSelector=app%3D` + encodeURIComponent(`${instanceId}-privatehive`),
-      async (err, data) => {
-        if (err) {
-          return reject(err);
-        }
-        const res = JSON.parse(data.content);
-        if (res.items.length > 0) {
-          const promises = [];
-          res.items.forEach(rs => {
-            promises.push(Creators.deletePod({ locationCode, selfLink: rs.metadata.selfLink }));
-          });
-          await Bluebird.all(promises);
-        }
-        return resolve();
-      }
-    );
-  });
-};
-
-Creators.deleteDeployment = function({ locationCode, namespace, name }) {
-  return new Promise((resolve, reject) => {
-    HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/apps/v1beta1/namespaces/${namespace}/deployments/${name}`, (err, res) => {
-      if (err) {
-        return reject(err);
-      }
-      Creators.deleteVolumesByLabel({ locationCode, namespace, label: `app%3D${name.split('-')[0]}-privatehive` });
-      resolve();
-    });
-  });
-};
-
-Creators.createPeerDeployment = async function({ locationCode, namespace, instanceId, anchorCommPort, caPort, chaincodePort, workerNodeIP, orgName }) {
-  console.log(chaincodePort);
+Creators.createPeerDeployment = async function({ locationCode, namespace, instanceId, anchorCommPort, caPort, chaincodePort, workerNodeIP, orgName, networkConfig }) {
+  const resources = fetchPeerContainerResources(networkConfig);
   return new Promise((resolve, reject) => {
     HTTP.call(
       'POST',
@@ -272,18 +317,31 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                       },
                     ],
                     command: ['/bin/sh'],
-                    args: ['-c', 'mkdir -p /etc/hyperledger/privatehive/ledgerData; mkdir -p /etc/hyperledger/privatehive/couchdb;'],
+                    args: [
+                      '-c',
+                      'mkdir -p /etc/hyperledger/privatehive/ledgerData; mkdir -p /etc/hyperledger/privatehive/couchdb; chmod 0777 /etc/hyperledger/privatehive/couchdb/',
+                    ],
                   },
                 ],
                 containers: [
                   {
                     name: 'privatehive-api',
-                    image: `402432300121.dkr.ecr.ap-south-1.amazonaws.com/privatehive-peer-api:${process.env.NODE_ENV}`, //
+                    image: Config.getImageRepository('privatehive-peer'),
                     ports: [
                       {
                         containerPort: 3000,
                       },
                     ],
+                    resources: {
+                      requests: {
+                        cpu: resources.api.cpu,
+                        memory: resources.api.ram,
+                      },
+                      limits: {
+                        cpu: resources.api.cpu,
+                        memory: resources.api.ram,
+                      },
+                    },
                     env: [
                       {
                         name: 'ORG_NAME',
@@ -375,12 +433,22 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                   },
                   {
                     name: 'couchdb',
-                    image: 'hyperledger/fabric-couchdb',
+                    image: 'blockcluster/privatehive-couchdb',
                     ports: [
                       {
                         containerPort: 5984,
                       },
                     ],
+                    resources: {
+                      requests: {
+                        cpu: resources.couchdb.cpu,
+                        memory: resources.couchdb.ram,
+                      },
+                      limits: {
+                        cpu: resources.couchdb.cpu,
+                        memory: resources.couchdb.ram,
+                      },
+                    },
                     env: [
                       {
                         name: 'COUCHDB_USER',
@@ -420,6 +488,16 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                         containerPort: 7053,
                       },
                     ],
+                    resources: {
+                      requests: {
+                        cpu: resources.peer.cpu,
+                        memory: resources.peer.ram,
+                      },
+                      limits: {
+                        cpu: resources.peer.cpu,
+                        memory: resources.peer.ram,
+                      },
+                    },
                     env: [
                       {
                         name: 'CORE_VM_ENDPOINT',
@@ -531,6 +609,16 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                         containerPort: 7054,
                       },
                     ],
+                    resources: {
+                      requests: {
+                        cpu: resources.ca.cpu,
+                        memory: resources.ca.ram,
+                      },
+                      limits: {
+                        cpu: resources.ca.cpu,
+                        memory: resources.ca.ram,
+                      },
+                    },
                     env: [
                       {
                         name: 'FABRIC_CA_HOME',
@@ -646,14 +734,20 @@ Creators.createOrdererService = async ({ locationCode, namespace, instanceId }) 
         if (err) {
           reject(err);
         } else {
-          HTTP.call('GET', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/services/` + instanceId + '-privatehive', {}, (error, response) => {
-            if (error) {
-              reject();
-            } else {
-              const ordererNodePort = response.data.spec.ports[0].nodePort;
-              resolve(ordererNodePort);
-            }
-          });
+          setTimeout(
+            Meteor.bindEnvironment(() => {
+              HTTP.call('GET', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/services/` + instanceId + '-privatehive', {}, (error, response) => {
+                if (error) {
+                  console.log('Error getting orderer service', error);
+                  reject(error);
+                } else {
+                  const ordererNodePort = response.data.spec.ports[0].nodePort;
+                  resolve(ordererNodePort);
+                }
+              });
+            }),
+            1000
+          );
         }
       }
     );
@@ -714,7 +808,8 @@ Creators.destroyZookeper = async function({ locationCode, namespace, instanceId 
   return true;
 };
 
-Creators.deployZookeeper = async function deployZookeeper({ locationCode, instanceId, namespace }) {
+Creators.deployZookeeper = async function deployZookeeper({ locationCode, instanceId, namespace, networkConfig }) {
+  const resources = fetchOrdererContainerResources(networkConfig);
   async function createService() {
     return new Promise((resolve, reject) => {
       HTTP.call(
@@ -804,8 +899,12 @@ Creators.deployZookeeper = async function deployZookeeper({ locationCode, instan
                       image: 'gcr.io/google_samples/k8szk:v3',
                       resources: {
                         requests: {
-                          memory: '2Gi',
-                          cpu: '500m',
+                          memory: resources.zookeeper.ram,
+                          cpu: resources.zookeeper.cpu,
+                        },
+                        limits: {
+                          memory: resources.zookeeper.ram,
+                          cpu: resources.zookeeper.cpu,
                         },
                       },
                       ports: [
@@ -946,7 +1045,8 @@ Creators.destroyKafka = async function({ locationCode, namespace, instanceId }) 
   return true;
 };
 
-Creators.deployKafka = async function({ locationCode, namespace, instanceId }) {
+Creators.deployKafka = async function({ locationCode, namespace, instanceId, networkConfig }) {
+  const resources = fetchOrdererContainerResources(networkConfig);
   try {
     async function createConfigMap() {
       return new Promise((resolve, reject) => {
@@ -1054,8 +1154,11 @@ Creators.deployKafka = async function({ locationCode, namespace, instanceId }) {
                       image: gcr.io/google_samples/k8skafka:v1
                       resources:
                         requests:
-                          memory: "1Gi"
-                          cpu: 500m
+                          memory: ${resources.kafka.ram}
+                          cpu: ${resources.kafka.cpu}
+                        limits:
+                          memory: ${resources.kafka.ram}
+                          cpu: ${resources.kafka.cpu}
                       ports:
                       - containerPort: 9093
                         name: server
@@ -1216,7 +1319,9 @@ Creators.createOrdererDeployment = async function createDeployment({
   ordererNodePort,
   type,
   orgName,
+  networkConfig,
 }) {
+  const resources = fetchOrdererContainerResources(networkConfig);
   return new Promise((resolve, reject) => {
     HTTP.call(
       'POST',
@@ -1259,12 +1364,22 @@ Creators.createOrdererDeployment = async function createDeployment({
                 containers: [
                   {
                     name: 'privatehive-api',
-                    image: `402432300121.dkr.ecr.ap-south-1.amazonaws.com/privatehive-orderer-api:${process.env.NODE_ENV}`,
+                    image: Config.getImageRepository('privatehive-orderer'),
                     ports: [
                       {
                         containerPort: 3000,
                       },
                     ],
+                    resources: {
+                      requests: {
+                        memory: resources.api.ram,
+                        cpu: resources.api.cpu,
+                      },
+                      limits: {
+                        memory: resources.api.ram,
+                        cpu: resources.api.cpu,
+                      },
+                    },
                     env: [
                       {
                         name: 'ORG_NAME',
@@ -1373,6 +1488,16 @@ Creators.createOrdererDeployment = async function createDeployment({
                         containerPort: 7050,
                       },
                     ],
+                    resources: {
+                      requests: {
+                        memory: resources.orderer.ram,
+                        cpu: resources.orderer.cpu,
+                      },
+                      limits: {
+                        memory: resources.orderer.ram,
+                        cpu: resources.orderer.cpu,
+                      },
+                    },
                     env: [
                       {
                         name: 'ORDERER_GENERAL_LOGLEVEL',
