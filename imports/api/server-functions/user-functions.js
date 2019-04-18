@@ -308,7 +308,16 @@ NetworkInvitation.inviteUserToNetwork = async function({ instanceId, nodeType, e
 
 NetworkInvitation.inviteUserToChannel = async ({ channelName, networkId, email, userId, ordererDomain, ordererConnectionDetails }) => {
   if (!email) {
-    throw new Meteor.Error(403, 'Email missing');
+    throw new Meteor.Error(400, 'Email missing');
+  }
+  if (!networkId) {
+    throw new Meteor.Error(400, 'NetworkID is required');
+  }
+  if (!ordererDomain) {
+    throw new Meteor.Error(400, 'Orderer Domain is required');
+  }
+  if (!ordererConnectionDetails) {
+    throw new Meteor.Error(400, 'Orderer connection details is required');
   }
   userId = userId || Meteor.userId();
   const network = PrivatehivePeers.findOne({
@@ -431,7 +440,7 @@ NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
   };
 };
 
-NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkConfig, userId, type, peerId }) {
+NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkConfig, userId, type, peerId, peerInstanceId }) {
   return new Promise(async (resolve, reject) => {
     userId = userId || Meteor.userId();
     const invitation = UserInvitation.find({
@@ -482,6 +491,7 @@ NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkC
         channelName: invitation.metadata.channel.name,
         peerId,
         userId,
+        peerInstanceId,
         ordererDomain: invitation.metadata.channel.ordererDomain,
         ordererConnectionDetails: invitation.metadata.channel.ordererConnectionDetails,
       });

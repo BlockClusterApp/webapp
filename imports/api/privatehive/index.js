@@ -7,6 +7,14 @@ import { PrivatehivePeers } from '../../collections/privatehivePeers/privatehive
 import NetworkConfig from '../../collections/network-configuration/network-configuration';
 import Creators from './creators';
 import request from 'request-promise';
+import NetworkConfiguration from '../../collections/network-configuration/network-configuration';
+import LocationConfiguration from '../../collections/locations';
+import RateLimiter from '../../modules/helpers/server/rate-limiter';
+import Webhook from '../communication/webhook';
+
+import Voucher from '../network/voucher';
+
+const EXTRA_STORAGE_COST = 0.3;
 const toPascalCase = require('to-pascal-case');
 
 function sleep(timeout) {
@@ -158,6 +166,16 @@ PrivateHive.deleteNetwork = async ({ userId, instanceId }) => {
     await Creators.deleteIngress({ locationCode, namespace, name: `${instanceId}-privatehive` });
   } catch (err) {}
 
+  Webhook.queue({
+    userId,
+    payload: Webhook.generatePayload({
+      event: 'privatehive-network-deleted',
+      networkId: network.instanceId,
+      type: 'privatehive',
+      nodeType: type,
+    }),
+  });
+
   if (type === 'peer') {
     PrivatehivePeers.update(
       { _id: network._id },
@@ -183,9 +201,14 @@ PrivateHive.deleteNetwork = async ({ userId, instanceId }) => {
   return true;
 };
 
-PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererDomain, ordererConnectionDetails }) => {
+PrivateHive.join = async ({ networkId, channelName, peerId, peerInstanceId, userId, ordererDomain, ordererConnectionDetails }) => {
   // PlaceHolder function
-  const peer = PrivatehivePeers.findOne({ _id: peerId, userId });
+  const query = { _id: peerId, userId };
+  if (peerInstanceId) {
+    query.instanceId = peerInstanceId;
+    delete query._id;
+  }
+  const peer = PrivatehivePeers.findOne(query);
   if (!peer) {
     throw new Meteor.Error(403, 'Invalid network');
   }
@@ -202,12 +225,6 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererDomai
     uri: `http://${Config.workerNodeIP(peer.locationCode)}:${peer.apiNodePort}/config/orgDetails`,
     method: 'GET',
     json: true,
-  });
-
-  console.log({
-    name: channelName,
-    newOrgName: peer.orgName,
-    newOrgConf: newOrgConf.message,
   });
 
   const addOrgRes = await request({
@@ -234,15 +251,23 @@ PrivateHive.join = async ({ networkId, channelName, peerId, userId, ordererDomai
     json: true,
   });
 
-  console.log('Join res', res);
-
   return peerId.instanceId;
 };
 
 PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, type, voucherId, name, orgName, ordererType, networkConfig }) => {
+  const locationConfig = LocationConfiguration.findOne({ service: 'privatehive' });
+  if (!locationConfig.locations.includes(locationCode)) {
+    throw new Meteor.Error(403, 'Not available in this location');
+  }
+  if (!orgName) {
+    throw new Meteor.Error(400, 'Org Name is required');
+  }
+  if (!['peer', 'orderer'].includes(type)) {
+    throw new Meteor.Error(400, 'Type should be peer or orderer');
+  }
   let voucher;
   if (voucherId) {
-    voucher = Voucher.find({ _id: voucherId }).fetch()[0];
+    voucher = await Voucher.validate({ type: 'privatehive', userId, voucherId });
 
     if (!voucher) {
       throw new Meteor.Error(400, 'Invalid voucher');
@@ -305,6 +330,12 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
 
   ElasticLogger.log('Creating Privatehive network', { userId, networkConfig, locationCode, voucher, name, type, ordererType });
 
+  const isAllowed = await RateLimiter.isAllowed('privatehive-create', userId);
+  if (!isAllowed) {
+    throw new Meteor.Error(429, 'Rate limit exceeded. Try after 1 minute');
+  }
+
+  let result;
   if (networkConfig.category === 'peer') {
     let peerDetails = await PrivateHive.createPeer({ locationCode, orgName, networkConfig });
     PrivatehivePeers.insert({
@@ -316,7 +347,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       workerNodeIP: Config.workerNodeIP(peerDetails.locationCode),
       ...commonData,
     });
-    return peerDetails.instanceId;
+    result = peerDetails.instanceId;
   } else if (networkConfig.category === 'orderer') {
     let peerDetails = PrivatehivePeers.findOne({
       instanceId: peerId,
@@ -324,6 +355,10 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
 
     if (!peerDetails) {
       throw new Meteor.Error(403, 'Invalid peer');
+    }
+
+    if (peerDetails.status !== 'running') {
+      throw new Meteor.Error(400, 'Peer not ready');
     }
 
     async function getCerts(peer) {
@@ -358,10 +393,37 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       orgName: toPascalCase(orgName),
       ...commonData,
     });
-    return ordererDetails.instanceId;
+    result = ordererDetails.instanceId;
   } else {
     throw new Meteor.Error(400, 'Invalid network type');
   }
+
+  if (voucherId) {
+    Vouchers.update(
+      { _id: nodeConfig.voucherId },
+      {
+        $push: {
+          voucher_claim_status: {
+            claimedBy: userId,
+            claimedOn: new Date(),
+            claimed: true,
+          },
+        },
+      }
+    );
+  }
+
+  Webhook.queue({
+    userId,
+    payload: Webhook.generatePayload({
+      event: 'privatehive-network-created',
+      networkId: result,
+      type: 'privatehive',
+      nodeType: networkConfig.category,
+    }),
+  });
+
+  return result;
 };
 
 PrivateHive.getPrivateHiveNetworkCount = async () => {
@@ -508,6 +570,15 @@ Meteor.methods({
   },
 });
 
+function convertMilliseconds(ms) {
+  const seconds = Math.round(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  return { seconds, minutes, hours, days };
+}
+
 PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
   month = month === undefined ? moment().month() : month;
   year = year || moment().year();
@@ -562,7 +633,8 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
       .map(m => ({ ...m, type: 'peer' })),
   ];
 
-  result.networks = /* userNetworks */ []
+  result.networks = userNetworks
+    .filter(n => !!n.networkConfig)
     .map(network => {
       let thisCalculationEndDate = calculationEndDate;
       if (network.deletedAt && moment(network.deletedAt).isBefore(calculationEndDate.getTime())) {
@@ -660,7 +732,11 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
         //so that we can track record how many times he used.
         //and also helps to validate if next time need to consider voucher or not.
         if (!isFromFrontend) {
-          PrivateHiveCollection.update(
+          let Model = PrivatehiveOrderers;
+          if (network.type === 'peer') {
+            Model = PrivatehivePeers;
+          }
+          Model.update(
             { _id: network._id },
             {
               $push: {
@@ -677,18 +753,11 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
 
       let extraDiskStorage = 0;
 
-      const actualNetworkConfig = NetworkConfiguration.find({ _id: network.networkConfig._id, active: { $in: [true, false, null] } }).fetch()[0];
+      const actualNetworkConfig = NetworkConfiguration.findOne({ _id: network.networkConfig._id, active: { $in: [true, false, null] } });
 
-      if (network.networkConfig.orderer.disk > actualNetworkConfig.orderer.disk) {
-        extraDiskStorage += Math.max(network.networkConfig.orderer.disk - actualNetworkConfig.orderer.disk, 0);
+      if (network.networkConfig.disk > actualNetworkConfig.disk) {
+        extraDiskStorage += Math.max(network.networkConfig.disk - actualNetworkConfig.disk, 0);
       }
-      if (network.networkConfig.kafka.disk > actualNetworkConfig.kafka.disk) {
-        extraDiskStorage += Math.max(network.networkConfig.kafka.disk - actualNetworkConfig.kafka.disk, 0);
-      }
-      if (network.networkConfig.data.disk > actualNetworkConfig.data.disk) {
-        extraDiskStorage += Math.max(network.networkConfig.data.disk - actualNetworkConfig.data.disk, 0);
-      }
-
       const extraDiskAmount = extraDiskStorage * (EXTRA_STORAGE_COST * time.hours);
 
       // Just a precaution
@@ -728,12 +797,3 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
 };
 
 export default PrivateHive;
-
-//Note: At application layer we have to maintain a unique id for every network. Otherwise when inviting to channel we don't
-//know which network to send invite to.
-//When creating network or joining network, just create a peer node. Orderers will be added dynamically.
-
-//Meteor.call('createPrivatehivePeer');
-//Meteor.call('createPrivatehiveOrderer', 'cvmdruiu');
-//Meteor.call('privatehiveCreateChannel', 'wosrhjfg', 'xgnwmbwk', 'channelsample');
-//Meteor.call('privatehiveJoinChannel', 'muoygwak', 'moyxsmta', 'djtveuib', 'channelsample');

@@ -264,7 +264,7 @@ Creators.createPeerService = async function({ locationCode, namespace, instanceI
         } else {
           HTTP.call('GET', `${Config.kubeRestApiHost(locationCode)}/api/v1/namespaces/${namespace}/services/` + instanceId + '-privatehive', {}, (error, response) => {
             if (error) {
-              reject();
+              reject(error);
             } else {
               const peerAPINodePort = response.data.spec.ports[0].nodePort;
               const peerGRPCAPINodePort = response.data.spec.ports[1].nodePort;
@@ -281,6 +281,7 @@ Creators.createPeerService = async function({ locationCode, namespace, instanceI
 
 Creators.createPeerDeployment = async function({ locationCode, namespace, instanceId, anchorCommPort, caPort, chaincodePort, workerNodeIP, orgName, networkConfig }) {
   const resources = fetchPeerContainerResources(networkConfig);
+
   return new Promise((resolve, reject) => {
     HTTP.call(
       'POST',
@@ -332,6 +333,7 @@ Creators.createPeerDeployment = async function({ locationCode, namespace, instan
                         containerPort: 3000,
                       },
                     ],
+                    imagePullPolicy: 'Always',
                     resources: {
                       requests: {
                         cpu: resources.api.cpu,
@@ -1147,7 +1149,6 @@ Creators.deployKafka = async function({ locationCode, namespace, instanceId, net
                       app: kafka-${instanceId}
                   spec:
                     terminationGracePeriodSeconds: 300
-                    serviceAccountName: dev-webapp
                     containers:
                     - name: k8skafka
                       imagePullPolicy: Always
@@ -1370,6 +1371,7 @@ Creators.createOrdererDeployment = async function createDeployment({
                         containerPort: 3000,
                       },
                     ],
+                    imagePullPolicy: 'Always',
                     resources: {
                       requests: {
                         memory: resources.api.ram,
