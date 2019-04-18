@@ -64,27 +64,29 @@ class PrivateHiveNetworkConfigSelector extends Component {
       this.diskSpace.value = 16000;
     }
 
-    this.setState({
-      networkType: this.networkType ? this.networkType.value : this.state.networkType,
-      peerId: this.peerId,
-      networkConfig,
-    });
-
-    if (skipDefault && this.diskSpace) {
-      networkConfig.disk = this.diskSpace.value || networkConfig.disk;
-    } else if (this.diskSpace) {
-      this.diskSpace.value = networkConfig.disk;
-    }
-
-    const config = {
-      networkType: this.networkType ? this.networkType.value : this.state.networkType,
-      peerId: this.peerId,
-      ordererType: this.ordererType,
-      networkConfig,
-    };
-    if (this.props && this.props.configChangeListener) {
-      this.props.configChangeListener({ config, error: error ? true : false, voucher: this.voucherDetails });
-    }
+    this.setState(
+      {
+        networkType: this.networkType ? this.networkType.value : this.state.networkType,
+        peerId: this.peerId,
+        networkConfig,
+      },
+      () => {
+        if (skipDefault && this.diskSpace) {
+          networkConfig.disk = this.diskSpace.value || networkConfig.disk;
+        } else if (this.diskSpace) {
+          this.diskSpace.value = networkConfig.disk;
+        }
+        const config = {
+          networkType: this.networkType ? this.networkType.value : this.state.networkType,
+          peerId: this.peerId,
+          ordererType: this.ordererType,
+          networkConfig,
+        };
+        if (this.props && this.props.configChangeListener) {
+          this.props.configChangeListener({ config, error: error ? true : false, voucher: this.voucherDetails });
+        }
+      }
+    );
   }
 
   validateVoucher = () => {
