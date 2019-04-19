@@ -288,10 +288,14 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
   let originalNetworkConfig;
 
   if (type === 'peer') {
-    originalNetworkConfig = NetworkConfig.findOne({ _id: networkConfig._id, for: 'privatehive' });
+    originalNetworkConfig = NetworkConfig.findOne({ _id: networkConfig._id, for: 'privatehive', category: 'peer' });
   } else if (type === 'orderer') {
-    originalNetworkConfig = NetworkConfig.findOne({ for: 'privatehive', active: true, ordererType, category: 'orderer' });
-    networkConfig = JSON.parse(JSON.stringify(originalNetworkConfig));
+    if (!networkConfig) {
+      originalNetworkConfig = NetworkConfig.findOne({ for: 'privatehive', active: true, ordererType, category: 'orderer' });
+      networkConfig = JSON.parse(JSON.stringify(originalNetworkConfig));
+    } else {
+      originalNetworkConfig = NetworkConfig.findOne({ _id: networkConfig._id, for: 'privatehive', category: 'orderer' });
+    }
   }
 
   if (!originalNetworkConfig) {
@@ -325,6 +329,9 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
   networkConfig.cpu = originalNetworkConfig.cpu;
   networkConfig.ram = originalNetworkConfig.ram;
   networkConfig.cost = originalNetworkConfig.cost;
+
+  // console.log('FInal network config', networkConfig);
+  // return true;
 
   const commonData = { userId, locationCode, voucher, name, networkConfig };
 
