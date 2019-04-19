@@ -54,7 +54,7 @@ class PrivateHiveNetworkConfigSelector extends Component {
 
   onConfigChange(skipDefault) {
     let error;
-    const networkConfig = this.state.filteredConfigs.find(config => config._id === this.networkConfigId);
+    let networkConfig = this.state.filteredConfigs.find(config => config._id === this.networkConfigId);
 
     if (!networkConfig) {
       return;
@@ -64,27 +64,29 @@ class PrivateHiveNetworkConfigSelector extends Component {
       this.diskSpace.value = 16000;
     }
 
-    this.setState({
-      networkType: this.networkType ? this.networkType.value : this.state.networkType,
-      peerId: this.peerId,
-      networkConfig,
-    });
-
-    if (skipDefault && this.diskSpace) {
-      networkConfig.disk = this.diskSpace.value || networkConfig.disk;
-    } else if (this.diskSpace) {
-      this.diskSpace.value = networkConfig.disk;
-    }
-
-    const config = {
-      networkType: this.networkType ? this.networkType.value : this.state.networkType,
-      peerId: this.peerId,
-      ordererType: this.ordererType,
-      networkConfig,
-    };
-    if (this.props && this.props.configChangeListener) {
-      this.props.configChangeListener({ config, error: error ? true : false, voucher: this.voucherDetails });
-    }
+    this.setState(
+      {
+        networkType: this.networkType ? this.networkType.value : this.state.networkType,
+        peerId: this.peerId,
+        networkConfig,
+      },
+      () => {
+        if (skipDefault && this.diskSpace) {
+          networkConfig.disk = this.diskSpace.value || networkConfig.disk;
+        } else if (this.diskSpace) {
+          this.diskSpace.value = networkConfig.disk;
+        }
+        const config = {
+          networkType: this.networkType ? this.networkType.value : this.state.networkType,
+          peerId: this.peerId,
+          ordererType: this.ordererType,
+          networkConfig,
+        };
+        if (this.props && this.props.configChangeListener) {
+          this.props.configChangeListener({ config, error: error ? true : false, voucher: this.voucherDetails });
+        }
+      }
+    );
   }
 
   validateVoucher = () => {
@@ -142,6 +144,23 @@ class PrivateHiveNetworkConfigSelector extends Component {
     this.onConfigChange();
   };
 
+  networkTypeChangeHandler = () => {
+    if (this.networkType.value === 'orderer') {
+      this.networkConfigId = this.state.allConfigs.find(c => c.category === 'orderer' && c.ordererType === 'solo')._id;
+    } else {
+      this.networkConfigId = this.state.allConfigs.find(c => c.category === 'peer')._id;
+    }
+    this.setState(
+      {
+        networkType: this.networkType.value,
+        filteredConfigs: this.state.allConfigs.filter(c => c.category === this.networkType.value),
+      },
+      () => {
+        this.onConfigChange(false);
+      }
+    );
+  };
+
   render() {
     const configList = [
       <option value="peer" key="type_peer" selected={this.state.networkConfig.category === 'peer'}>
@@ -159,7 +178,7 @@ class PrivateHiveNetworkConfigSelector extends Component {
           className="form-control form-group-default"
           name="nodeType"
           ref={input => (this.networkType = input)}
-          onChange={this.onConfigChange.bind(this, false)}
+          onChange={this.networkTypeChangeHandler}
           selected="peer"
           disabled={this.state.voucher.status === 'success'}
         >
@@ -221,6 +240,7 @@ class PrivateHiveNetworkConfigSelector extends Component {
                       ref={input => (this.ordererTypeInput = input)}
                       onChange={() => {
                         this.ordererType = this.ordererTypeInput.value || 'solo';
+                        this.networkConfigId = this.state.allConfigs.find(c => c.category === 'orderer' && c.ordererType === this.ordererType)._id;
                         this.onConfigChange();
                       }}
                       disabled={this.state.voucher.status === 'success'}
@@ -229,7 +249,7 @@ class PrivateHiveNetworkConfigSelector extends Component {
                       <option value="solo" selected={this.state.networkConfig && this.state.networkConfig.ordererType === 'solo'}>
                         Solo
                       </option>
-                      <option value="kafka" selected={this.state.networkConfig && this.state.networkConfig.ordererType === 'solo'}>
+                      <option value="kafka" selected={this.state.networkConfig && this.state.networkConfig.ordererType === 'kafka'}>
                         Kafka
                       </option>
                     </select>
@@ -262,7 +282,7 @@ class PrivateHiveNetworkConfigSelector extends Component {
                 </div>
               )}
 
-              {this.state.networkType === 'peer' && this.state.networkConfig && (
+              {this.state.networkConfig && (
                 <div className="row clearfix">
                   <div className="col-md-4">
                     <div className="form-group form-group-default">

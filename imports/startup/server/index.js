@@ -105,9 +105,9 @@ JsonRoutes.Middleware.use(
     if (logObject && ['/ping', '/api/config-client'].includes(logObject.url)) {
       return undefined;
     }
-    // if (process.env.NODE_ENV === 'development') {
-    //   return undefined;
-    // }
+    if (process.env.NODE_ENV === 'development') {
+      return undefined;
+    }
     ElasticLogger.log('ApiRequest', logObject);
 
     return undefined;
