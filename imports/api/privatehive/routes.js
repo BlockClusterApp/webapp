@@ -99,7 +99,7 @@ JsonRoutes.add('post', '/api/platform/privatehive/invite', async (req, res) => {
   const { channelName, networkId, email, ordererDomain, ordererConnectionDetails } = req.body;
 
   try {
-    const result = await Invites.inviteUserToChannel({ channelName, networkInstanceId, email, userId: req.userId, ordererDomain, ordererConnectionDetails });
+    const result = await Invites.inviteUserToChannel({ channelName, networkInstanceId: networkId, email, userId: req.userId, ordererDomain, ordererConnectionDetails });
     sendSuccess(res, { inviteId: result });
   } catch (err) {
     sendError(res, 400, err.toString());
@@ -118,7 +118,7 @@ JsonRoutes.add('post', '/api/platform/privatehive/invite/accept/:inviteId', asyn
   }
 
   try {
-    const result = await Invites.acceptInvitation({ inviteId, userId: req.userId, peerInstanceId: peerId });
+    const result = await Invites.acceptInvitation({ inviteId, userId: req.userId, peerInstanceId: peerId, type: 'privatehive-channel' });
     sendSuccess(res, { instanceId: result });
   } catch (err) {
     sendError(res, 400, err.toString());

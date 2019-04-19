@@ -300,7 +300,7 @@ PrivateHive.join = async ({ networkId, channelName, peerId, peerInstanceId, user
     json: true,
   });
 
-  return peerId.instanceId;
+  return peer.instanceId;
 };
 
 PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, type, voucherId, name, orgName, ordererType, networkConfig }) => {

@@ -323,7 +323,7 @@ NetworkInvitation.inviteUserToChannel = async ({ channelName, networkId, email, 
   if (!email) {
     throw new Meteor.Error(400, 'Email missing');
   }
-  if (!networkId) {
+  if (!(networkId || networkInstanceId)) {
     throw new Meteor.Error(400, 'NetworkID is required');
   }
   if (!ordererDomain) {
@@ -520,7 +520,7 @@ NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkC
         },
         {
           $set: {
-            joinedNetwork: peerId,
+            joinedNetwork: res,
             joinedLocation: locationCode,
             invitationStatus: UserInvitation.StatusMapping.Accepted,
             inviteStatusUpdatedAt: new Date(),
