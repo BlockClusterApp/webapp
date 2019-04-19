@@ -39,13 +39,6 @@ function sendSuccess(res, data) {
 }
 
 JsonRoutes.Middleware.use('/api/platform/privatehive/', authMiddleware);
-JsonRoutes.Middleware.use('/api/platform/privatehive/', async (req, res, next) => {
-  const isAllowed = await RateLimiter.isAllowed('privatehive-api', req.userId);
-  if (!isAllowed) {
-    return sendError(res, 429, 'You are being rate limited. Try in some time');
-  }
-  next();
-});
 
 JsonRoutes.add('post', '/api/platform/privatehive', async (req, res) => {
   const { peerId, locationCode, type, voucherCode, name, orgName, ordererType, networkConfigId, diskSpace } = req.body;
