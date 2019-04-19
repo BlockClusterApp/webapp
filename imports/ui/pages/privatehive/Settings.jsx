@@ -159,7 +159,7 @@ class ViewEditNetwork extends Component {
                       <label className="col-md-3 control-label">Orderer URL</label>
                       <div className="col-md-9">
                         <b className="value-valign-middle">
-                          grpc://{network.workerNodeIP}:{network.ordererNodePort}
+                          grpc://{window.RemoteConfig.workerNodeIPs[network.locationCode]}:{network.ordererNodePort}
                         </b>
                       </div>
                     </div>
@@ -169,7 +169,7 @@ class ViewEditNetwork extends Component {
                       <label className="col-md-3 control-label">Peer URL</label>
                       <div className="col-md-9">
                         <b className="value-valign-middle">
-                          grpc://{network.workerNodeIP}:{network.anchorCommPort}
+                          grpc://{window.RemoteConfig.workerNodeIPs[network.locationCode]}:{network.anchorCommPort}
                         </b>
                       </div>
                     </div>
@@ -179,7 +179,7 @@ class ViewEditNetwork extends Component {
                       <label className="col-md-3 control-label">CA URL</label>
                       <div className="col-md-9">
                         <b className="value-valign-middle">
-                          http://{network.workerNodeIP}:{network.caNodePort}
+                          http://{window.RemoteConfig.workerNodeIPs[network.locationCode]}:{network.caNodePort}
                         </b>
                       </div>
                     </div>
@@ -193,14 +193,14 @@ class ViewEditNetwork extends Component {
                     </div>
                   )}
 
-                  {network.type === 'orderer' && (
+                  {network.type === 'orderer' && network.ordererType === 'kafka' && (
                     <div className="form-group row">
                       <label className="col-md-3 control-label">Zookeeper Nodes</label>
                       <div className="col-md-9">3</div>
                     </div>
                   )}
 
-                  {network.type === 'orderer' && (
+                  {network.type === 'orderer' && network.ordererType === 'kafka' && (
                     <div className="form-group row">
                       <label className="col-md-3 control-label">Kafka Nodes</label>
                       <div className="col-md-9">3</div>

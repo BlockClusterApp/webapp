@@ -146,7 +146,6 @@ WebHookApis.queue = async ({ payload, userId, id, delay, type }) => {
 WebHookApis.send = async ({ id }) => {
   const webhook = WebHook.find({ id }).fetch()[0];
   if (!webhook) {
-    console.log('Sending webhook to null id', id);
     return true;
   }
 
@@ -167,7 +166,6 @@ WebHookApis.send = async ({ id }) => {
   };
 
   try {
-    console.log('Sending');
     const response = await request(reqOptions);
     if (response.statusCode >= 200 && response.statusCode < 300) {
       WebHook.update(
@@ -183,7 +181,6 @@ WebHookApis.send = async ({ id }) => {
           },
         }
       );
-      console.log('Response', response.statusCode);
       ElasticLogger.log('Webhook Successful', {
         url,
         responseCode: response.statusCode,

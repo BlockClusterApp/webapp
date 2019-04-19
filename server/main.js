@@ -26,6 +26,7 @@ import moment from 'moment';
 import fs from 'fs';
 import agenda from '../imports/modules/schedulers/agenda';
 import Webhook from '../imports/api/communication/webhook';
+import LocationConfiguration from '../imports/collections/locations/index';
 import RateLimiter from '../imports/modules/helpers/server/rate-limiter';
 var md5 = require('apache-md5');
 var base64 = require('base-64');
@@ -305,8 +306,8 @@ Meteor.methods({
     if (!isAllowed) {
       throw new Meteor.Error(429, 'Rate limit exceeded. Try after 1 minute');
     }
-    const locationConfig = LocationConfiguration.findOne({service: 'dynamo'});
-    if(!locationConfig.locations.includes(locationCode)) {
+    const locationConfig = LocationConfiguration.findOne({ service: 'dynamo' });
+    if (!locationConfig.locations.includes(locationCode)) {
       throw new Meteor.Error(403, 'Not available in this location');
     }
     var myFuture = new Future();
@@ -835,8 +836,8 @@ Meteor.methods({
     networkConfig,
     userId
   ) {
-    const locationConfig = LocationConfiguration.findOne({service: 'dynamo'});
-    if(!locationConfig.locations.includes(locationCode)) {
+    const locationConfig = LocationConfiguration.findOne({ service: 'dynamo' });
+    if (!locationConfig.locations.includes(locationCode)) {
       throw new Meteor.Error(403, 'Not available in this location');
     }
     const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(userId);
@@ -1402,8 +1403,8 @@ spec:
 
     return myFuture.wait();
   },
-  inviteUserToNetwork: async function({instanceId, nodeType, email, userId, type}) {
-    return UserFunctions.inviteUserToNetwork({instanceId, nodeType, email, userId: userId || Meteor.userId(), type});
+  inviteUserToNetwork: async function({ instanceId, nodeType, email, userId, type }) {
+    return UserFunctions.inviteUserToNetwork({ instanceId, nodeType, email, userId: userId || Meteor.userId(), type });
   },
   createAssetType: function(instanceId, assetName, assetType, assetIssuer, reissuable, parts) {
     this.unblock();

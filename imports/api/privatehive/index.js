@@ -109,6 +109,55 @@ PrivateHive.createOrderer = async ({ peerOrgName, peerAdminCert, peerCACert, pee
   return { instanceId, ordererNodePort };
 };
 
+PrivateHive.listNetworks = async ({ userId, showDeleted, instanceId, nodeType, locationCode, createdAfter, createdBefore }) => {
+  if (!userId) {
+    throw new Meteor.Error(401, 'Unauthenticated');
+  }
+  const query = { userId, active: true, deletedAt: null };
+  if (showDeleted) {
+    delete query.deletedAt;
+  }
+  if (locationCode) {
+    query.locationCode = locationCode;
+  }
+  if (createdAfter) {
+    query.createdAt = {
+      $gt: new Date(createdAfter),
+    };
+  }
+  if (createdBefore) {
+    query.createdAt = query.createdAt || {};
+    query.createdAt = {
+      ...query.createdAt,
+      $lt: new Date(createdBefore),
+    };
+  }
+  if (instanceId) {
+    query.instanceId = instanceId;
+  }
+
+  if (nodeType) {
+    if (nodeType === 'peer') {
+      return PrivatehivePeers.find(query)
+        .fetch()
+        .map(n => delete n.workerNodeIP && { ...n, nodeType: 'peer' });
+    } else if (nodeType === 'orderer') {
+      return PrivatehiveOrderers.find(query)
+        .fetch()
+        .map(n => delete n.workerNodeIP && { ...n, nodeType: 'orderer' });
+    }
+  }
+
+  return [
+    ...PrivatehivePeers.find(query)
+      .fetch()
+      .map(n => delete n.workerNodeIP && { ...n, nodeType: 'peer' }),
+    ...PrivatehiveOrderers.find(query)
+      .fetch()
+      .map(n => delete n.workerNodeIP && { ...n, nodeType: 'orderer' }),
+  ];
+};
+
 PrivateHive.changeNetworkPassword = async ({ instanceId, password }) => {
   let network;
   const userId = Meteor.userId();
@@ -251,7 +300,7 @@ PrivateHive.join = async ({ networkId, channelName, peerId, peerInstanceId, user
     json: true,
   });
 
-  return peerId.instanceId;
+  return peer.instanceId;
 };
 
 PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, type, voucherId, name, orgName, ordererType, networkConfig }) => {
@@ -351,7 +400,6 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       apiNodePort: peerDetails.peerDetails.peerAPINodePort,
       anchorCommPort: peerDetails.peerDetails.peerGRPCAPINodePort,
       caNodePort: peerDetails.peerDetails.caNodePort,
-      workerNodeIP: Config.workerNodeIP(peerDetails.locationCode),
       ...commonData,
     });
     result = peerDetails.instanceId;
@@ -385,17 +433,17 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
       peerOrgName: peerDetails.orgName,
       peerAdminCert: certs.adminCert,
       peerCACert: certs.caCert,
-      peerWorkerNodeIP: Config.workerNodeIP(peerDetails.locationCode),
       anchorCommPort: peerDetails.anchorCommPort,
       locationCode,
       orgName,
+      workerNodeIP: Config.workerNodeIP(peerDetails.locationCode),
       networkConfig,
       type: ordererType,
     });
     PrivatehiveOrderers.insert({
       instanceId: ordererDetails.instanceId,
       ordererNodePort: ordererDetails.ordererNodePort,
-      workerNodeIP: Config.workerNodeIP(peerDetails.locationCode),
+
       ordererType,
       orgName: toPascalCase(orgName),
       ...commonData,
