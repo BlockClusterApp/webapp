@@ -73,6 +73,15 @@ JsonRoutes.add('post', '/api/platform/privatehive', async (req, res) => {
   }
 });
 
+JsonRoutes.add('get', '/api/platform/privatehive/:instanceId', async (req, res) => {
+  try {
+    const networks = await PrivatehiveApis.listNetworks({ userId: req.userId, showDeleted: req.query.showDeleted, instanceId: req.params.instanceId });
+    sendSuccess(res, networks);
+  } catch (err) {
+    sendError(res, 400, err.toString());
+  }
+});
+
 JsonRoutes.add('delete', '/api/platform/privatehive/:instanceId', async (req, res) => {
   if (!req.params.instanceId) {
     return sendError(res, 400, 'InstanceID missing');
@@ -90,8 +99,8 @@ JsonRoutes.add('post', '/api/platform/privatehive/invite', async (req, res) => {
   const { channelName, networkId, email, ordererDomain, ordererConnectionDetails } = req.body;
 
   try {
-    const result = await Invites.inviteUserToChannel({ channelName, networkId, email, userId: req.userId, ordererDomain, ordererConnectionDetails });
-    sendSuccess(res, { instanceId: result });
+    const result = await Invites.inviteUserToChannel({ channelName, networkInstanceId, email, userId: req.userId, ordererDomain, ordererConnectionDetails });
+    sendSuccess(res, { inviteId: result });
   } catch (err) {
     sendError(res, 400, err.toString());
   }
@@ -116,11 +125,30 @@ JsonRoutes.add('post', '/api/platform/privatehive/invite/accept/:inviteId', asyn
   }
 });
 
+JsonRoutes.add('get', '/api/platform/privatehive/invite', async (req, res) => {
+  try {
+    const result = await Invites.listPendingInvites({ userId: req.userId, type: 'privatehive-channel' });
+    sendSuccess(res, result);
+  } catch (err) {
+    sendError(res, 400, err.toString());
+  }
+});
+
 JsonRoutes.add('delete', '/api/platform/privatehive/invite/:inviteId', async (req, res) => {
   const { inviteId } = req.params;
   try {
     const result = await Invites.cancelInvitation({ inviteId, userId: req.userId });
     sendSuccess(res, { instanceId: result });
+  } catch (err) {
+    sendError(res, 400, err.toString());
+  }
+});
+
+JsonRoutes.add('get', '/api/platform/privatehive', async (req, res) => {
+  const { nodeType, locationCode, createdAfter, createdBefore, showDeleted } = req.query;
+  try {
+    const networks = await PrivatehiveApis.listNetworks({ userId: req.userId, nodeType, locationCode, createdAfter, createdBefore, showDeleted });
+    sendSuccess(res, networks);
   } catch (err) {
     sendError(res, 400, err.toString());
   }
