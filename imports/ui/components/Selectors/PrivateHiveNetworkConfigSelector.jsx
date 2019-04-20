@@ -81,9 +81,10 @@ class PrivateHiveNetworkConfigSelector extends Component {
           peerId: this.peerId,
           ordererType: this.ordererType,
           networkConfig,
+          voucher: this.voucherDetails,
         };
         if (this.props && this.props.configChangeListener) {
-          this.props.configChangeListener({ config, error: error ? true : false, voucher: this.voucherDetails });
+          this.props.configChangeListener({ config, error: error ? true : false });
         }
       }
     );
@@ -120,10 +121,8 @@ class PrivateHiveNetworkConfigSelector extends Component {
         networkType: reply.networkConfig.category,
       });
       this.networkConfigId = reply.networkConfig._id;
-      this.diskSpace.value = reply.networkConfig.data.disk;
-      if (this.props && this.props.configChangeListener) {
-        this.props.configChangeListener({ config: reply.networkConfig, voucher: reply });
-      }
+      this.diskSpace.value = reply.networkConfig.disk;
+      this.onConfigChange();
     });
   };
 

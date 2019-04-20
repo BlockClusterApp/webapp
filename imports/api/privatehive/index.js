@@ -11,6 +11,8 @@ import NetworkConfiguration from '../../collections/network-configuration/networ
 import LocationConfiguration from '../../collections/locations';
 import RateLimiter from '../../modules/helpers/server/rate-limiter';
 import Webhook from '../communication/webhook';
+import Billing from '../billing';
+import Vouchers from '../../collections/vouchers/voucher';
 
 import Voucher from '../network/voucher';
 
@@ -315,11 +317,15 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
     throw new Meteor.Error(400, 'Type should be peer or orderer');
   }
   let voucher;
+  const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(userId);
   if (voucherId) {
     voucher = await Voucher.validate({ type: 'privatehive', userId, voucherId });
 
     if (!voucher) {
       throw new Meteor.Error(400, 'Invalid voucher');
+    }
+    if (!isPaymentMethodVerified && voucher.availability.card_vfctn_needed) {
+      throw new Meteor.Error('unauthorized', 'Payment method not verified');
     }
 
     const tempVoucher = { ...voucher };
@@ -328,6 +334,10 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
     delete tempVoucher.availability;
 
     voucher = tempVoucher;
+  } else {
+    if (!isPaymentMethodVerified) {
+      throw new Meteor.Error('unauthorized', 'Payment method not verified');
+    }
   }
 
   if (!networkConfig && type === 'peer') {
@@ -455,7 +465,7 @@ PrivateHive.createPrivateHiveNetwork = async ({ userId, peerId, locationCode, ty
 
   if (voucherId) {
     Vouchers.update(
-      { _id: nodeConfig.voucherId },
+      { _id: voucherId },
       {
         $push: {
           voucher_claim_status: {
