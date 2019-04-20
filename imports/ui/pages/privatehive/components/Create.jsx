@@ -24,7 +24,23 @@ class PaymentDashboard extends Component {
     });
   }
 
+  cardVerificationListener = isVerified => {
+    this.setState({
+      cardVerified: isVerified,
+      loading: false,
+    });
+  };
+
   createPrivateHiveNetwork = () => {
+    const { config } = this.config;
+    if (!(config && config.voucher && config.voucher.availability && !config.voucher.availability.card_vfctn_needed)) {
+      if (!this.state.cardVerified) {
+        return this.setState({
+          showCreditCardAlert: true,
+        });
+      }
+    }
+
     const name = this.networkName.value;
     const orgName = this.orgName.value;
     this.setState({
@@ -44,7 +60,6 @@ class PaymentDashboard extends Component {
       });
     }
 
-    const { config } = this.config;
     if (config.networkType === 'orderer' && !config.peerId) {
       return this.setState({
         formSubmitError: 'Cannot create orderer without peer',
@@ -70,7 +85,7 @@ class PaymentDashboard extends Component {
         type: config.networkType,
         peerId: config.peerId,
         locationCode: this.locationCode,
-        voucherId: this.selectedVoucher ? this.selectedVoucher._id : undefined,
+        voucherId: config.voucher && config.voucher._id,
       },
       (err, res) => {
         this.setState({
@@ -155,10 +170,7 @@ class PaymentDashboard extends Component {
                     key={`${this.locationCode}-${this.props.networks.length}`}
                     networks={this.props.networks}
                     configChangeListener={config => {
-                      const voucher = config.voucher;
-                      delete config.voucher;
                       this.config = config;
-                      this.selectedVoucher = voucher;
                       this.setState({
                         formSubmitError: '',
                         error: config.error,
