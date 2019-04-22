@@ -10,7 +10,7 @@ import UserCards from '../../../../collections/payments/user-cards';
 import notifications from '../../../../modules/notifications';
 import LoadButton from './components/LoadButton';
 import ConfirmationButton from '../../../components/Buttons/ConfirmationButton';
-
+import PaymentModal from './components/PaymentModal';
 import DynamoComponent from './components/Dynamo';
 import PrivatehiveComponent from './components/Privatehive';
 import HyperionComponent from './components/Hyperion';
@@ -225,9 +225,32 @@ class UserDetails extends Component {
     });
   };
 
+  modalEventFns = (open, close) => {
+    this.openPaymentModal = open;
+    this.closePaymentModal = close;
+  };
+
+  refundListener = () => {
+    this.setState({
+      showPaymentModal: false,
+    });
+  };
+
+  _openPaymentModal = (selectedPayment, paymentLinks) => {
+    this.setState(
+      {
+        selectedPayment,
+        paymentLinks,
+      },
+      () => {
+        this.openPaymentModal();
+      }
+    );
+  };
+
   render() {
     const { user } = this.props;
-    const { cards } = this.state;
+    const { cards, paymentLinks } = this.state;
 
     if (!(user && user.profile)) {
       const LoadingView = (
@@ -250,6 +273,13 @@ class UserDetails extends Component {
 
     return (
       <div className="page-content-wrapper user-admin-details">
+        <PaymentModal
+          payment={this.state.selectedPayment}
+          paymentLink={paymentLinks && this.state.selectedPayment && paymentLinks.find(link => link.paymentRequestId === this.state.selectedPayment._id)}
+          refundListener={this.refundListener}
+          modalEventFns={this.modalEventFns}
+        />
+
         <div className="content sm-gutter">
           <div data-pages="parallax">
             <div className="container-fluid p-l-25 p-r-25 sm-p-l-0 sm-p-r-0">
@@ -668,7 +698,7 @@ class UserDetails extends Component {
                           <Route exact path="/app/admin/users/:id/hyperion" component={HyperionComponent} />
                           <Route exact path="/app/admin/users/:id/paymeter" component={PaymeterComponent} />
                           <Route exact path="/app/admin/users/:id/invoices" component={InvoiceComponent} />
-                          <Route exact path="/app/admin/users/:id/payments" component={PaymentsComponent} />
+                          <Route exact path="/app/admin/users/:id/payments" render={props => <PaymentsComponent {...props} openModal={this._openPaymentModal} />} />
                           <Route exact path="/app/admin/users/:id/credits" component={CreditsComponent} />
                           <Route exact path="/app/admin/users/:id/invitations" component={InvitationComponent} />
                         </div>
