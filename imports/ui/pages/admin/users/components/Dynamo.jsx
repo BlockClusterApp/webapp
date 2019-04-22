@@ -5,6 +5,13 @@ import { withRouter, Link } from 'react-router-dom';
 import { Networks } from '../../../../../collections/networks/networks';
 
 class DynamoDetails extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      selectedNetwork: {},
+    };
+  }
+
   getNetworkType = network => {
     if (!network.metadata) {
       return null;
@@ -59,7 +66,7 @@ class DynamoDetails extends React.Component {
               <h3 className="pull-right semi-bold">{networks && networks.length}</h3>
               <div className="clearfix" />
             </div>
-            <div className="auto-overflow -table" style={{ maxHeight: '275px' }}>
+            <div className="auto-overflow -table" style={{ maxHeight: '750px' }}>
               <table className="table table-condensed table-hover">
                 <tbody>
                   {networks &&
@@ -67,7 +74,7 @@ class DynamoDetails extends React.Component {
                       .sort((a, b) => b.createdOn - a.createdOn)
                       .map((network, index) => {
                         return (
-                          <tr key={index + 1}>
+                          <tr key={index + 1} onClick={() => this.setState({ selectedNetwork: network })}>
                             <td className="font-montserrat all-caps fs-12 w-40">
                               <Link to={`/app/admin/networks/${network._id}`}>{network.name}</Link>
                             </td>
@@ -91,17 +98,14 @@ class DynamoDetails extends React.Component {
           </div>
         </div>
         <div className="col-lg-6 m-b-10 d-flex">
-          <div className=" card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
-            <div className="card-header top-right">
+          <div className="card no-border  align-self-stretch d-flex flex-column">
+            <div className="card-header">
               <div className="card-controls">
-                <ul>
-                  <li>
-                    <a data-toggle="refresh" className="portlet-refresh text-black" href="#">
-                      <i className="portlet-icon portlet-icon-refresh" />
-                    </a>
-                  </li>
-                </ul>
+                <h4>Details</h4>
               </div>
+            </div>
+            <div className="card-block">
+              <pre style={{ background: '#eee', padding: '5px' }}>{JSON.stringify(this.state.selectedNetwork, null, 2)}</pre>
             </div>
           </div>
         </div>

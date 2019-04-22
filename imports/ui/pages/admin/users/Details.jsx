@@ -664,7 +664,7 @@ class UserDetails extends Component {
                         <div className="tab-pane slide-left active">
                           <Route exact path="/app/admin/users/:id" render={() => <Redirect to={`/app/admin/users/${this.props.match.params.id}/dynamo`} />} />
                           <Route exact path="/app/admin/users/:id/dynamo" component={DynamoComponent} />
-                          {/* <Route exact path="/app/admin/users/:id/privatehive" component={PrivatehiveComponent} /> */}
+                          <Route exact path="/app/admin/users/:id/privatehive" component={PrivatehiveComponent} />
                           <Route exact path="/app/admin/users/:id/hyperion" component={HyperionComponent} />
                           <Route exact path="/app/admin/users/:id/paymeter" component={PaymeterComponent} />
                           <Route exact path="/app/admin/users/:id/invoices" component={InvoiceComponent} />
