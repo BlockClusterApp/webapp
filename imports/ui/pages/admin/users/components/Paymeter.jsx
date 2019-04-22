@@ -3,9 +3,32 @@ import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
 import moment from 'moment';
 
+import ConfirmationButton from '../../../../components/Buttons/ConfirmationButton';
+import notifications from '../../../../../modules/notifications';
 import { Paymeter } from '../../../../../collections/paymeter/paymeter';
 
 class PaymeterDetails extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {};
+  }
+
+  unSubscribe = () => {
+    this.setState({
+      loading: true,
+    });
+    Meteor.call('adminUnsubscribePaymeter', this.props.match.params.id, (err, res) => {
+      this.setState({
+        loading: false,
+      });
+      if (err) {
+        return notifications.error(err.reason);
+      }
+      notifications.success('Unsubscribed');
+    });
+  };
+
   render() {
     const { paymeter } = this.props;
 
@@ -75,6 +98,23 @@ class PaymeterDetails extends React.Component {
               <div className="row">
                 <div className="col-md-12 font-montserrat p-l-30 p-b-10">Not subscribed yet</div>
               </div>
+            )}
+          </div>
+        </div>
+        <div className="col-md-6">
+          <div className=" card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
+            {paymeter && (
+              <ConfirmationButton
+                onConfirm={this.unSubscribe.bind(this)}
+                className="btn btn-danger col-sm-4"
+                completed={!paymeter.subscribed || paymeter.unsubscribeNextMonth}
+                completedText="Not Subscribed"
+                loadingText="Unsubscribing"
+                confirmationText="Are you sure?"
+                loading={this.state.loading}
+                actionText="Unsubscribe user"
+                style={{ margin: '250px auto' }}
+              />
             )}
           </div>
         </div>

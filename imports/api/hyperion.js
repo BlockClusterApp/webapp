@@ -121,14 +121,15 @@ Meteor.methods({
       throw new Meteor.Error('Please add card', 'Please add card');
     }
   },
-  unsubscribeFromHyperion: async () => {
-    const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(Meteor.userId());
+  unsubscribeFromHyperion: async userId => {
+    userId = userId || Meteor.userId();
+    const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(userId);
 
-    if (Meteor.userId()) {
+    if (userId) {
       if (isPaymentMethodVerified) {
         Hyperion.upsert(
           {
-            userId: Meteor.userId(),
+            userId,
           },
           {
             $set: {
@@ -151,6 +152,32 @@ Meteor.methods({
     } else {
       throw new Meteor.Error('Please login', 'Please login');
     }
+  },
+  adminUnsubscribeHyperion: userId => {
+    if (Meteor.user().admin < 2) {
+      throw new Meteor.Error(401, 'Unauthorized');
+    }
+    ElasticLogger.log('Admin hyperion unsubscribe', { userId, adminId: Meteor.userId() });
+    Hyperion.upsert(
+      {
+        userId,
+      },
+      {
+        $set: {
+          unsubscribeNextMonth: true,
+          subscriptionTill: moment()
+            .endOf('month')
+            .toDate(),
+        },
+        $push: {
+          subscriptions: {
+            action: 'unsubscribe',
+            at: new Date(),
+          },
+        },
+      }
+    );
+    return true;
   },
 });
 
