@@ -3,7 +3,6 @@ import { withTracker } from 'meteor/react-meteor-data';
 import { withRouter } from 'react-router-dom';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
 
-import PaymentModal from './PaymentModal';
 import PaymentRequests from '../../../../../collections/payments/payment-requests';
 import notifications from '../../../../../modules/notifications';
 import { RZPaymentLink } from '../../../../../collections/razorpay';
@@ -16,12 +15,6 @@ class Payments extends React.Component {
       selectedPayment: {},
     };
   }
-
-  refundListener = () => {
-    this.setState({
-      showPaymentModal: false,
-    });
-  };
 
   createPaymentLink = () => {
     this.setState({
@@ -102,21 +95,14 @@ class Payments extends React.Component {
     }
   };
 
-  modalEventFns = (open, close) => {
-    this.openPaymentModal = open;
-    this.closePaymentModal = close;
+  openPaymentModal = () => {
+    this.props.openModal && this.props.openModal(this.state.selectedPayment, this.props.paymentLinks);
   };
 
   render() {
     const { payments, paymentLinks } = this.props;
     return (
       <div className="row">
-        <PaymentModal
-          payment={this.state.selectedPayment}
-          paymentLink={paymentLinks && this.state.selectedPayment && paymentLinks.find(link => link.paymentRequestId === this.state.selectedPayment._id)}
-          refundListener={this.refundListener}
-          modalEventFns={this.modalEventFns}
-        />
         <div className="col-md-6 col-sm-12">
           <div className=" card no-border card-condensed no-margin widget-loader-circle align-self-stretch d-flex flex-column">
             <div className="card-header top-right">
@@ -149,10 +135,14 @@ class Payments extends React.Component {
                           <tr
                             key={index + 1}
                             onClick={() => {
-                              this.setState({
-                                selectedPayment: payment,
-                              });
-                              this.openPaymentModal();
+                              this.setState(
+                                {
+                                  selectedPayment: payment,
+                                },
+                                () => {
+                                  this.openPaymentModal();
+                                }
+                              );
                             }}
                           >
                             <td className="font-montserrat all-caps fs-12 w-40">{payment.reason}</td>
@@ -315,7 +305,7 @@ class Payments extends React.Component {
 
 export default withTracker(props => {
   return {
-    credits: PaymentRequests.find({ userId: props.match.params.id }).fetch(),
+    payments: PaymentRequests.find({ userId: props.match.params.id }).fetch(),
     paymentLinks: RZPaymentLink.find({ userId: props.match.params.id }).fetch(),
     subscriptions: [Meteor.subscribe('user.details.payments', { userId: props.match.params.id }), Meteor.subscribe('user.details.paymentLinks', { userId: props.match.params.id })],
   };
