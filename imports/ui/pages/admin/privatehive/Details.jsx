@@ -103,19 +103,6 @@ class NetworkList extends Component {
   };
 
   deleteNode = () => {
-    if (!this.state.deleteConfirmAsked) {
-      this.timer = setTimeout(() => {
-        if (this.state && !this.unmounted) {
-          this.setState({
-            deleteConfirmAsked: false,
-          });
-        }
-      }, 5 * 1000);
-
-      return this.setState({
-        deleteConfirmAsked: true,
-      });
-    }
     this.setState({
       deleteDisabled: true,
       loading: true,

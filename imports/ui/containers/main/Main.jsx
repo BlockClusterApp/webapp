@@ -198,11 +198,11 @@ export default withRouter(
               )}
 
               {features.Admin && (
-                <div>
+                <Switch>
                   <Route exact path="/app/admin" render={() => <Redirect to="/app/admin/users" />} />
                   <Route exact path="/app/admin/overview" component={Overview} />
                   <Route exact path="/app/admin/users" component={UserList} />
-                  <Route exact path="/app/admin/users/:id" component={UserDetails} />
+                  <Route path="/app/admin/users/:id" component={UserDetails} />
                   <Route exact path="/app/admin/networks" component={NetworkList} />
                   <Route exact path="/app/admin/networks/:id" component={NetworkDetails} />
 
@@ -227,7 +227,7 @@ export default withRouter(
                   {features.ClientDashboard && <Route exact path="/app/admin/clients/details/:id" component={ClientDetails} />}
                   {features.ClientDashboard && <Route exact path="/app/admin/clients/details/:id/metrics" component={ClientMetrics} />}
                   {features.ClientDashboard && <Route exact path="/app/admin/clients/create" component={ClientCreate} />}
-                </div>
+                </Switch>
               )}
             </div>
           </div>

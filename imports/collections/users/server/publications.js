@@ -76,7 +76,7 @@ Meteor.publish('user.details.networks', ({ userId }) => {
   if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
     return [];
   }
-  return Networks.find({ user: userId, deletedAt: null });
+  return Networks.find({ user: userId });
 });
 Meteor.publish('user.details.oldNetworks', ({ userId }) => {
   if (Meteor.user().admin <= MIN_ADMIN_LEVEL) {
