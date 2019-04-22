@@ -1,0 +1,12 @@
+.user-admin-details {
+  .nav-tabs-fillup > li > a span {
+    font-weight: 100 !important;
+    font-size: 12px;
+    transform: none;
+    color: #000;
+  }
+
+  .nav-tabs-fillup > li > a.active span {
+    color: #fff;
+  }
+}

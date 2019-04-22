@@ -1420,6 +1420,32 @@ Meteor.methods({
       throw new Meteor.Error('Please login', 'Please login');
     }
   },
+  adminUnsubscribePaymeter: async userId => {
+    if (Meteor.user().admin < 2) {
+      throw new Meteor.Error(401, 'Unauthorized');
+    }
+    ElasticLogger.log('Admin paymeter unsubscribe', { userId, adminId: Meteor.userId() });
+    PaymeterCollection.upsert(
+      {
+        userId,
+      },
+      {
+        $set: {
+          unsubscribeNextMonth: true,
+          subscriptionTill: moment()
+            .endOf('month')
+            .toDate(),
+        },
+        $push: {
+          subscriptions: {
+            action: 'unsubscribe',
+            at: new Date(),
+          },
+        },
+      }
+    );
+    return true;
+  },
   updateCallbackURLPayment: async notifyURL => {
     PaymeterCollection.upsert(
       {

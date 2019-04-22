@@ -23,6 +23,13 @@ select {
   color: #37b0e9;
 }
 
+.b-transparent-background {
+  border-color: #f0f0f0;
+}
+.b-t-15 {
+  border-top: solid 15px;
+}
+
 .theme-mixed {
   .header {
     background: #000 !important;
@@ -33,6 +40,9 @@ select {
         color: #fff;
       }
     }
+  }
+  .b-transparent-background {
+    border-color: #f0f0f0;
   }
 
   .page-sidebar {
@@ -83,6 +93,10 @@ select {
         color: #fff;
       }
     }
+  }
+
+  .b-transparent-background {
+    border-color: #555;
   }
 
   .content {

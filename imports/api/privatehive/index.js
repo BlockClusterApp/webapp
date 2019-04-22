@@ -189,10 +189,16 @@ PrivateHive.deleteNetwork = async ({ userId, instanceId }) => {
     throw new Meteor.Error(401, 'Invalid network');
   }
 
+  ElasticLogger.log('Delete Privatehive network', {
+    userId,
+    instanceId,
+    type,
+  });
+
   const { locationCode } = network;
   const namespace = Config.namespace;
 
-  if (type === 'orderer') {
+  if (type === 'orderer' && network.ordererType === 'kafka') {
     try {
       await Creators.destroyZookeper({ locationCode, namespace, instanceId });
     } catch (err) {}
@@ -250,6 +256,25 @@ PrivateHive.deleteNetwork = async ({ userId, instanceId }) => {
   }
 
   return true;
+};
+
+PrivateHive.adminDeleteNetwork = async (instanceId) => {
+  if (Meteor.user().admin < 2) {
+    throw new Meteor.Error(401, 'Unauthorized');
+  }
+
+
+  let network = PrivatehivePeers.findOne({ instanceId });
+  if (!network) {
+    network = PrivatehiveOrderers.findOne({ instanceId });
+  }
+
+  ElasticLogger.log('Admin delete privatehive network', {
+    adminId: Meteor.userId(),
+    instanceId,
+  });
+
+  return PrivateHive.deleteNetwork({ userId: network.userId, instanceId });
 };
 
 PrivateHive.join = async ({ networkId, channelName, peerId, peerInstanceId, userId, ordererDomain, ordererConnectionDetails }) => {
@@ -502,6 +527,7 @@ Meteor.methods({
     return res;
   },
   getPrivateHiveNetworkCount: PrivateHive.getPrivateHiveNetworkCount,
+  adminDeletePrivatehiveNetwork: PrivateHive.adminDeleteNetwork,
   deletePrivateHiveNetwork: async ({ instanceId }) => {
     return PrivateHive.deleteNetwork({ userId: Meteor.userId(), instanceId });
   },
