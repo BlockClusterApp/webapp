@@ -68,7 +68,7 @@ JsonRoutes.add('post', '/api/platform/privatehive', async (req, res) => {
 
 JsonRoutes.add('get', '/api/platform/privatehive/:instanceId', async (req, res) => {
   try {
-    const networks = await PrivatehiveApis.listNetworks({ userId: req.userId, showDeleted: req.query.showDeleted, instanceId: req.params.instanceId });
+    const networks = await PrivatehiveApis.listNetworks({ userId: req.userId, instanceId: req.params.instanceId });
     sendSuccess(res, networks);
   } catch (err) {
     sendError(res, 400, err.toString());

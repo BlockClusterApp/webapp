@@ -116,48 +116,71 @@ PrivateHive.listNetworks = async ({ userId, showDeleted, instanceId, nodeType, l
     throw new Meteor.Error(401, 'Unauthenticated');
   }
   const query = { userId, active: true, deletedAt: null };
-  if (showDeleted) {
-    delete query.deletedAt;
-  }
-  if (locationCode) {
-    query.locationCode = locationCode;
-  }
-  if (createdAfter) {
-    query.createdAt = {
-      $gt: new Date(createdAfter),
-    };
-  }
-  if (createdBefore) {
-    query.createdAt = query.createdAt || {};
-    query.createdAt = {
-      ...query.createdAt,
-      $lt: new Date(createdBefore),
-    };
-  }
+
   if (instanceId) {
     query.instanceId = instanceId;
-  }
-
-  if (nodeType) {
-    if (nodeType === 'peer') {
-      return PrivatehivePeers.find(query)
-        .fetch()
-        .map(n => delete n.workerNodeIP && { ...n, nodeType: 'peer' });
-    } else if (nodeType === 'orderer') {
-      return PrivatehiveOrderers.find(query)
-        .fetch()
-        .map(n => delete n.workerNodeIP && { ...n, nodeType: 'orderer' });
+  } else {
+    if (showDeleted) {
+      delete query.deletedAt;
+    }
+    if (locationCode) {
+      query.locationCode = locationCode;
+    }
+    if (createdAfter) {
+      query.createdAt = {
+        $gt: new Date(createdAfter),
+      };
+    }
+    if (createdBefore) {
+      query.createdAt = query.createdAt || {};
+      query.createdAt = {
+        ...query.createdAt,
+        $lt: new Date(createdBefore),
+      };
     }
   }
 
-  return [
-    ...PrivatehivePeers.find(query)
-      .fetch()
-      .map(n => delete n.workerNodeIP && { ...n, nodeType: 'peer' }),
-    ...PrivatehiveOrderers.find(query)
-      .fetch()
-      .map(n => delete n.workerNodeIP && { ...n, nodeType: 'orderer' }),
-  ];
+  let result = [];
+  if (nodeType) {
+    if (nodeType === 'peer') {
+      result = PrivatehivePeers.find(query)
+        .fetch()
+        .map(n => {
+          delete n.workerNodeIP;
+          return { ...n, nodeType: 'peer' };
+        });
+    } else if (nodeType === 'orderer') {
+      result = PrivatehiveOrderers.find(query)
+        .fetch()
+        .map(n => {
+          delete n.workerNodeIP;
+          return { ...n, nodeType: 'orderer' };
+        });
+    }
+  } else {
+    result = [
+      ...PrivatehivePeers.find(query)
+        .fetch()
+        .map(n => {
+          delete n.workerNodeIP;
+          return { ...n, nodeType: 'peer' };
+        }),
+      ...PrivatehiveOrderers.find(query)
+        .fetch()
+        .map(n => {
+          delete n.workerNodeIP;
+          return { ...n, nodeType: 'orderer' };
+        }),
+    ];
+  }
+
+  return result.map(n => {
+    return {
+      ...n,
+      workerNodeIP: Config.workerNodeIP(n.locationCode),
+      domain: process.env.ROOT_URL.includes('localhost') ? 'https://dev.blockcluster.io' : process.env.ROOT_URL.substring(0, process.env.ROOT_URL.length - 1),
+    };
+  });
 };
 
 PrivateHive.changeNetworkPassword = async ({ instanceId, password }) => {
@@ -258,11 +281,10 @@ PrivateHive.deleteNetwork = async ({ userId, instanceId }) => {
   return true;
 };
 
-PrivateHive.adminDeleteNetwork = async (instanceId) => {
+PrivateHive.adminDeleteNetwork = async instanceId => {
   if (Meteor.user().admin < 2) {
     throw new Meteor.Error(401, 'Unauthorized');
   }
-
 
   let network = PrivatehivePeers.findOne({ instanceId });
   if (!network) {
