@@ -174,11 +174,21 @@ PrivateHive.listNetworks = async ({ userId, showDeleted, instanceId, nodeType, l
     ];
   }
 
+  const rootURL = (() => {
+    if (process.env.ROOT_URL.includes('localhost')) {
+      return 'https://dev.blockcluster.io';
+    }
+    if (process.env.ROOT_URL[process.env.ROOT_URL.length - 1] === '/') {
+      return process.env.ROOT_URL.substring(0, process.env.ROOT_URL.length - 1);
+    }
+    return process.env.ROOT_URL;
+  })();
+
   return result.map(n => {
     return {
       ...n,
       workerNodeIP: Config.workerNodeIP(n.locationCode),
-      domain: process.env.ROOT_URL.includes('localhost') ? 'https://dev.blockcluster.io' : process.env.ROOT_URL.substring(0, process.env.ROOT_URL.length - 1),
+      domain: rootURL,
     };
   });
 };
