@@ -601,23 +601,32 @@ Operations.fetchCryptoConfig = async ({ networkId }) => {
   return new Buffer(res).toString('base64');
 };
 
+async function checkLicense(fn) {
+  if (!(RemoteConfig.features && RemoteConfig.features.Privatehive)) {
+    return () => {
+      throw new Meteor.Error(401, 'Not in license');
+    };
+  }
+  return fn;
+}
+
 Meteor.methods({
-  addChaincode: Operations.addChaincode,
-  fetchChaincodes: Operations.fetchChaincodes,
-  installChaincode: Operations.installChaincode,
-  instantiateChaincode: Operations.instantiateChaincode,
-  fetchChannels: Operations.fetchChannels,
-  fetchConnectionProfile: Operations.fetchConnectionProfile,
-  fetchOrgDetails: Operations.fetchOrgDetails,
-  fetchChannelInviteCerts: Operations.fetchChannelInviteCerts,
-  fetchCryptoConfig: Operations.fetchCryptoConfig,
-  addChaincodeNotification: Operations.addNotificationURL,
-  updateChaincodeNotification: Operations.updateNotificationURL,
-  removeChaincodeNotification: Operations.removeNotificationURL,
-  listChaincodeNotifications: Operations.listNotificationURLs,
-  invokeOrQueryChaincode: Operations.invokeOrQueryChaincode,
-  upgradeChaincode: Operations.upgradeChaincode,
-  explorerDetails: Operations.explorerDetails,
-  fetchBlockOrTxn: Operations.fetchBlockOrTxn,
-  fetchMorePrivatehiveBlocks: Operations.fetchMorePrivatehiveBlocks,
+  addChaincode: checkLicense.bind({}, Operations.addChaincode),
+  fetchChaincodes: checkLicense.bind({}, Operations.fetchChaincodes),
+  installChaincode: checkLicense.bind({}, Operations.installChaincode),
+  instantiateChaincode: checkLicense.bind({}, Operations.instantiateChaincode),
+  fetchChannels: checkLicense.bind({}, Operations.fetchChannels),
+  fetchConnectionProfile: checkLicense.bind({}, Operations.fetchConnectionProfile),
+  fetchOrgDetails: checkLicense.bind({}, Operations.fetchOrgDetails),
+  fetchChannelInviteCerts: checkLicense.bind({}, Operations.fetchChannelInviteCerts),
+  fetchCryptoConfig: checkLicense.bind({}, Operations.fetchCryptoConfig),
+  addChaincodeNotification: checkLicense.bind({}, Operations.addNotificationURL),
+  updateChaincodeNotification: checkLicense.bind({}, Operations.updateNotificationURL),
+  removeChaincodeNotification: checkLicense.bind({}, Operations.removeNotificationURL),
+  listChaincodeNotifications: checkLicense.bind({}, Operations.listNotificationURLs),
+  invokeOrQueryChaincode: checkLicense.bind({}, Operations.invokeOrQueryChaincode),
+  upgradeChaincode: checkLicense.bind({}, Operations.upgradeChaincode),
+  explorerDetails: checkLicense.bind({}, Operations.explorerDetails),
+  fetchBlockOrTxn: checkLicense.bind({}, Operations.fetchBlockOrTxn),
+  fetchMorePrivatehiveBlocks: checkLicense.bind({}, Operations.fetchMorePrivatehiveBlocks),
 });
