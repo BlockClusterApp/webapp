@@ -127,11 +127,22 @@ class Navbar extends Component {
       );
     features.ClientDashboard &&
       adminItems.push(
-        <li key="admin-clients" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/clients') ? 'selected' : ''}>
-          <Link to="/app/admin/clients">Clients</Link>
+        <li key="admin-clients">
+          <a href="javascript:;">
+            <span className="title">Clients</span>
+            <span className="arrow" />
+          </a>
           <span className="icon-thumbnail">
             <i className="fa fa-users" />
           </span>
+          <ul className="sub-menu">
+            <li className={this.props.history.location.pathname.includes('/app/admin/clients/list') ? 'selected' : ''}>
+              <Link to="/app/admin/clients/list">List</Link>
+            </li>
+            <li className={this.props.history.location.pathname.includes('/app/admin/clients/features') ? 'selected' : ''}>
+              <Link to="/app/admin/clients/features">Features</Link>
+            </li>
+          </ul>
         </li>
       );
     return (
@@ -280,7 +291,7 @@ class Navbar extends Component {
                 </ul>
               </li>
             )}
-            {features.Admin && this.props.user && this.props.user.admin >= 1 && !window.isAdminWindow && (
+            {this.props.user && this.props.user.admin >= 1 && !window.isAdminWindow && (
               <li>
                 <a href="javascript:;">
                   <span className="title">Admin</span>
@@ -292,7 +303,7 @@ class Navbar extends Component {
                 <ul className="sub-menu">{adminItems}</ul>
               </li>
             )}
-            {features.Admin && this.props.user && this.props.user.admin >= 1 && window.isAdminWindow && adminItems}
+            {this.props.user && this.props.user.admin >= 1 && window.isAdminWindow && adminItems}
           </ul>
           <div className="clearfix" />
         </div>
