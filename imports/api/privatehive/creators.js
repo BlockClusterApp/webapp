@@ -1652,7 +1652,6 @@ Creators.createAPIIngress = async ({ locationCode, namespace, instanceId, passwo
   if (RemoteConfig.Ingress.tlsSecret) {
     tlsConfig.secretName = RemoteConfig.Ingress.tlsSecret;
   }
-  console.log('Creating ingress', instanceId);
   return new Promise((resolve, reject) => {
     HTTP.call('DELETE', `${Config.kubeRestApiHost(locationCode)}/apis/extensions/v1beta1/namespaces/${namespace}/ingresses/` + `${instanceId}-privatehive`, async function(
       error,

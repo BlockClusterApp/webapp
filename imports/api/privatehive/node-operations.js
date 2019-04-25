@@ -601,13 +601,13 @@ Operations.fetchCryptoConfig = async ({ networkId }) => {
   return new Buffer(res).toString('base64');
 };
 
-async function checkLicense(fn) {
+async function checkLicense(fn, ...args) {
   if (!(RemoteConfig.features && RemoteConfig.features.Privatehive)) {
     return () => {
       throw new Meteor.Error(401, 'Not in license');
     };
   }
-  return fn;
+  return fn(...args);
 }
 
 Meteor.methods({

@@ -193,7 +193,7 @@ class PaymentDashboard extends Component {
                     <CardVerification cardVerificationListener={this.cardVerificationListener} />
                   </div>
                   <LaddaButton
-                    disabled={(this.state.showCreditCardAlert && !this.state.cardVerified) || this.state.error || this.state.formSubmitError || this.state.loading}
+                    disabled={(this.state.showCreditCardAlert && !this.state.cardVerified) || this.state.loading}
                     loading={this.state.loading}
                     data-size={S}
                     data-style={SLIDE_UP}
