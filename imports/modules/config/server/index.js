@@ -258,20 +258,9 @@ module.exports = {
     }
 
     // TODO: Make this enterprise compatible
-    if (imageType === 'privatehive-peer') {
-      if (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
-        return `402432300121.dkr.ecr.ap-south-1.amazonaws.com/privatehive-peer-api:dev`;
-      } else {
-        return `402432300121.dkr.ecr.ap-south-1.amazonaws.com/privatehive-peer-api:${process.env.NODE_ENV}`;
-      }
-    }
-
-    if (imageType === 'privatehive-orderer') {
-      if (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
-        return `402432300121.dkr.ecr.ap-south-1.amazonaws.com/privatehive-orderer-api:dev`;
-      } else {
-        return `402432300121.dkr.ecr.ap-south-1.amazonaws.com/privatehive-orderer-api:${process.env.NODE_ENV}`;
-      }
+    if (['privatehive-peer', 'privatehive-orderer'].includes(imageType)) {
+      debug('Image', RemoteConfig.repositories.privatehive.url[getNamespace()][imageType.split('-')[1]]);
+      return RemoteConfig.repositories.privatehive.url[getNamespace()][imageType.split('-')[1]];
     }
 
     return `${RemoteConfig.repositories[imageType].url[getNamespace()]}`;

@@ -16,6 +16,8 @@ import Vouchers from '../../collections/vouchers/voucher';
 
 import Voucher from '../network/voucher';
 
+const debug = require('debug')('api:privatehive')
+
 const EXTRA_STORAGE_COST = 0.3;
 const toPascalCase = require('to-pascal-case');
 
@@ -543,11 +545,12 @@ PrivateHive.getPrivateHiveNetworkCount = async () => {
   return PrivatehiveOrderers.find({ active: true, deletedAt: null, userId }).count() + PrivatehivePeers.find({ active: true, deletedAt: null, userId }).count();
 };
 
-async function checkLicense(fn) {
+async function checkLicense(fn, ...args) {
   if (!(RemoteConfig.features && RemoteConfig.features.Privatehive)) {
     throw new Meteor.Error(401, 'Not available in license');
   }
-  return fn();
+  debug(...args);
+  return fn(...args);
 }
 
 Meteor.methods({
