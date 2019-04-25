@@ -82,6 +82,7 @@ import PrivateHiveNotifications from '../../pages/privatehive/Notifications';
 import PrivateHiveChaincodeInvoke from '../../pages/privatehive/Invoke';
 import PrivateHiveChaincodeUpgrade from '../../pages/privatehive/UpgradeChaincode';
 import Downloads from '../../pages/privatehive/Downloads';
+import ClientFeatures from '../../pages/admin/clients/Features';
 
 export default withRouter(
   class Main extends Component {
@@ -223,10 +224,13 @@ export default withRouter(
                   {features.Paymeter && <Route exact path="/app/admin/paymeter" component={PaymeterAdminDashboard} />}
                   {features.Paymeter && <Route exact path="/app/admin/paymeter/:id" component={PaymeterAdminDetails} />}
 
-                  {features.ClientDashboard && <Route exact path="/app/admin/clients" component={ClientList} />}
+                  {features.ClientDashboard && <Route exact path="/app/admin/clients" render={() => <Redirect to={`/app/admin/clients/list`} />} />}
+
+                  {features.ClientDashboard && <Route exact path="/app/admin/clients/list" component={ClientList} />}
                   {features.ClientDashboard && <Route exact path="/app/admin/clients/details/:id" component={ClientDetails} />}
                   {features.ClientDashboard && <Route exact path="/app/admin/clients/details/:id/metrics" component={ClientMetrics} />}
                   {features.ClientDashboard && <Route exact path="/app/admin/clients/create" component={ClientCreate} />}
+                  {features.ClientDashboard && <Route path="/app/admin/clients/features" component={ClientFeatures} />}
                 </Switch>
               )}
             </div>

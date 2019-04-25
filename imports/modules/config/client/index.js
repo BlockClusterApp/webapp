@@ -40,20 +40,7 @@ function getMicroServiceBase() {
     case 'dev.blockcluster.io':
       return 'https://enterprise-api-dev.blockcluster.io';
     default:
-      return 'http://localhost:4000';
-  }
-}
-function getMicroServiceBase() {
-  switch (window.location.host) {
-    case 'app.blockcluster.io':
-      return 'https://enterprise-api.blockcluster.io';
-    case 'staging.blockcluster.io':
-      return 'https://enterprise-api-staging.blockcluster.io';
-    case 'test.blockcluster.io':
-      return 'https://enterprise-api-dev.blockcluster.io';
-    case 'dev.blockcluster.io':
-      return 'https://enterprise-api-dev.blockcluster.io';
-    default:
+      // return 'https://enterprise-api-dev.blockcluster.io';
       return 'http://localhost:4000';
   }
 }
