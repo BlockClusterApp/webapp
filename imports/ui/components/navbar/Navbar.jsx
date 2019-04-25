@@ -71,14 +71,15 @@ class Navbar extends Component {
       </li>
     );
 
-    adminItems.push(
-      <li key="admin-privatehive" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/privatehive') ? 'selected' : ''}>
-        <Link to="/app/admin/privatehive">Private Hive</Link>
-        <span className="icon-thumbnail">
-          <i className="fa fa-desktop" />
-        </span>
-      </li>
-    );
+    features.Privatehive &&
+      adminItems.push(
+        <li key="admin-privatehive" className={window.isAdminWindow && this.props.history.location.pathname.includes('/app/admin/privatehive') ? 'selected' : ''}>
+          <Link to="/app/admin/privatehive">Private Hive</Link>
+          <span className="icon-thumbnail">
+            <i className="fa fa-desktop" />
+          </span>
+        </li>
+      );
 
     features.Paymeter &&
       adminItems.push(
@@ -196,7 +197,7 @@ class Navbar extends Component {
                 </span>
               </li>
             )}
-            {!window.isAdminWindow && (
+            {!window.isAdminWindow && features.Privatehive && (
               <li className={this.props.history.location.pathname.includes('/app/privatehive') ? 'selected' : ''}>
                 <Link to="/app/privatehive" className="detailed">
                   <span className="title">Private Hive</span>

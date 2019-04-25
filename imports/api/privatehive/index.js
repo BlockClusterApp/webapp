@@ -543,18 +543,25 @@ PrivateHive.getPrivateHiveNetworkCount = async () => {
   return PrivatehiveOrderers.find({ active: true, deletedAt: null, userId }).count() + PrivatehivePeers.find({ active: true, deletedAt: null, userId }).count();
 };
 
+async function checkLicense(fn) {
+  if (!(RemoteConfig.features && RemoteConfig.features.Privatehive)) {
+    throw new Meteor.Error(401, 'Not available in license');
+  }
+  return fn();
+}
+
 Meteor.methods({
-  initializePrivateHiveNetwork: async ({ peerId, locationCode, type, name, orgName, voucherId, ordererType, networkConfig }) => {
+  initializePrivateHiveNetwork: checkLicense.bind({}, async ({ peerId, locationCode, type, name, orgName, voucherId, ordererType, networkConfig }) => {
     const res = await PrivateHive.createPrivateHiveNetwork({ userId: Meteor.userId(), peerId, locationCode, type, name, orgName, voucherId, ordererType, networkConfig });
     return res;
-  },
-  getPrivateHiveNetworkCount: PrivateHive.getPrivateHiveNetworkCount,
-  adminDeletePrivatehiveNetwork: PrivateHive.adminDeleteNetwork,
-  deletePrivateHiveNetwork: async ({ instanceId }) => {
+  }),
+  getPrivateHiveNetworkCount: checkLicense.bind({}, PrivateHive.getPrivateHiveNetworkCount),
+  adminDeletePrivatehiveNetwork: checkLicense.bind({}, PrivateHive.adminDeleteNetwork),
+  deletePrivateHiveNetwork: checkLicense.bind({}, async ({ instanceId }) => {
     return PrivateHive.deleteNetwork({ userId: Meteor.userId(), instanceId });
-  },
-  privatehiveRpcPasswordUpdate: PrivateHive.changeNetworkPassword,
-  privatehiveCreateChannel: async ({ peerId, ordererId, channelName, userId }) => {
+  }),
+  privatehiveRpcPasswordUpdate: checkLicense.bind({}, PrivateHive.changeNetworkPassword),
+  privatehiveCreateChannel: checkLicense.bind({}, async ({ peerId, ordererId, channelName, userId }) => {
     userId = userId || Meteor.userId();
 
     let peerDetails = PrivatehivePeers.findOne({
@@ -603,84 +610,7 @@ Meteor.methods({
     }
 
     return channelName;
-  },
-  privatehiveJoinChannel: async (peerId, ordererId, newPeerId, channelName) => {
-    let peerDetails = PrivatehivePeers.findOne({
-      instanceId: peerId,
-    });
-
-    let newPeerDetails = PrivatehivePeers.findOne({
-      instanceId: newPeerId,
-    });
-
-    let ordererDetails = PrivatehiveOrderers.findOne({
-      instanceId: ordererId,
-    });
-
-    async function getDetails() {
-      return new Promise((resolve, reject) => {
-        HTTP.call('GET', `http://${newConfig.workerNodeIP(peerDetails.locationCode)}:${newPeerDetails.apiNodePort}/config/orgDetails`, {}, (error, response) => {
-          if (error) {
-            reject();
-          } else {
-            resolve(response.data);
-          }
-        });
-      });
-    }
-
-    async function addNewOrgToChannel(details) {
-      return new Promise((resolve, reject) => {
-        HTTP.call(
-          'POST',
-          `http://${Config.workerNodeIP(peerDetails.locationCode)}:${peerDetails.apiNodePort}/addOrgToChannel`,
-          {
-            data: {
-              name: channelName,
-              newOrgName: newPeerDetails.instanceId,
-              newOrgConf: details.message,
-            },
-          },
-          (error, response) => {
-            if (error) {
-              reject();
-            } else {
-              resolve(response.data);
-            }
-          }
-        );
-      });
-    }
-
-    async function joinChannel() {
-      return new Promise((resolve, reject) => {
-        HTTP.call(
-          'POST',
-          `http://${newConfig.workerNodeIP(peerDetails.locationCode)}:${newPeerDetails.apiNodePort}/joinChannel`,
-          {
-            data: {
-              name: channelName,
-              ordererURL: `${Config.workerNodeIP(ordererDetails.locationCode)}:${ordererDetails.ordererNodePort}`,
-              ordererDomain: `orderer.${ordererDetails.orgName.toLowerCase()}.com`,
-            },
-          },
-          (error, response) => {
-            if (error) {
-              reject();
-            } else {
-              resolve(response.data);
-            }
-          }
-        );
-      });
-    }
-
-    let details = await getDetails();
-    await addNewOrgToChannel(details);
-    await joinChannel();
-
-    return channelName;
-  },
+  }),
 });
 
 function convertMilliseconds(ms) {

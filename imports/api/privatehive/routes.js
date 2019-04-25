@@ -1,18 +1,17 @@
 import AuthMiddleware from '../middleware/auth';
-import RateLimiter from '../../modules/helpers/server/rate-limiter';
 import PrivatehiveApis from './index';
 import NetworkConfiguration from '../../collections/network-configuration/network-configuration';
 import Invites from '../server-functions/user-functions';
 
 function authMiddleware(req, res, next) {
-  // if (!(RemoteConfig.features && RemoteConfig.features.Privatehive)) {
-  //   return JsonRoutes.sendResult(res, {
-  //     code: 401,
-  //     data: {
-  //       error: 'Not available in this licence',
-  //     },
-  //   });
-  // }
+  if (!(RemoteConfig.features && RemoteConfig.features.Privatehive)) {
+    return JsonRoutes.sendResult(res, {
+      code: 403,
+      data: {
+        error: 'Not available in this licence',
+      },
+    });
+  }
 
   AuthMiddleware(req, res, next);
 }

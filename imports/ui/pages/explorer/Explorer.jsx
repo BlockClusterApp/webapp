@@ -594,7 +594,7 @@ class Explorer extends Component {
                         </div>
                       </form>
                     </div>
-                    <div className="padding-15 json-output">
+                    <div className="padding-15 dynamo json-output">
                       <pre>{this.state.blockOrTxnOutput}</pre>
                     </div>
                   </div>
