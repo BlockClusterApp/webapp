@@ -16,7 +16,7 @@ import Vouchers from '../../collections/vouchers/voucher';
 
 import Voucher from '../network/voucher';
 
-const debug = require('debug')('api:privatehive')
+const debug = require('debug')('api:privatehive');
 
 const EXTRA_STORAGE_COST = 0.3;
 const toPascalCase = require('to-pascal-case');
@@ -830,7 +830,7 @@ PrivateHive.generateBill = async ({ userId, month, year, isFromFrontend }) => {
         networkConfig: network.networkConfig,
         discount: Number(discountValue || 0).toFixed(2),
         label,
-        timeperiod: `Started at: ${moment(network.createdOn).format('DD-MMM-YYYY kk:mm')} ${
+        timeperiod: `Started at: ${moment(network.createdAt).format('DD-MMM-YYYY kk:mm')} ${
           network.deletedAt ? ` to ${moment(network.deletedAt).format('DD-MMM-YYYY kk:mm:ss')}` : 'and still running'
         }`,
       };
