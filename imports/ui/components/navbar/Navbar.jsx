@@ -238,6 +238,12 @@ class Navbar extends Component {
                 </span>
               </li>
             )}
+            <li className={this.props.history.location.pathname.includes('/app/enterprise') ? 'selected' : ''}>
+              <Link to="/app/enterprise">Enterprise setup</Link>
+              <span className="icon-thumbnail">
+                <i className="fa fa-ticket" />
+              </span>
+            </li>
             {!window.isAdminWindow && (
               <li className={this.props.history.location.pathname.includes('/app/platform-apis') ? 'selected' : ''}>
                 <Link to={'/app/platform-apis'}>API Keys</Link>

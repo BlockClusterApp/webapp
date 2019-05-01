@@ -83,6 +83,7 @@ import PrivateHiveChaincodeInvoke from '../../pages/privatehive/Invoke';
 import PrivateHiveChaincodeUpgrade from '../../pages/privatehive/UpgradeChaincode';
 import Downloads from '../../pages/privatehive/Downloads';
 import ClientFeatures from '../../pages/admin/clients/Features';
+import Enterprise from '../../pages/enterprise/Enterprise.jsx';
 
 export default withRouter(
   class Main extends Component {
@@ -167,6 +168,7 @@ export default withRouter(
                   <Route exact path="/app/networks/:id/security/apis" render={props => this.showFailedBillingWarning(APIsCreds, props)} />
                   <Route exact path="/app/networks/:id/sc/management" render={props => this.showFailedBillingWarning(SmartContractsManagement, props)} />
                   <Route exact path="/app/platform-apis" render={props => this.showFailedBillingWarning(PlatformAPIKeys, props)} />
+                  <Route exact path="/app/enterprise" render={props => this.showFailedBillingWarning(Enterprise, props)} />
 
                   {features.Privatehive && <Route exact path="/app/privatehive/:id/details" render={props => this.showFailedBillingWarning(PrivateHiveNetworkManage, props)} />}
                   {features.Privatehive && <Route exact path="/app/privatehive/:id/settings" render={props => this.showFailedBillingWarning(PrivateHiveNetworkSettings, props)} />}
