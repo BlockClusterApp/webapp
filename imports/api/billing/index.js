@@ -217,7 +217,15 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend, ski
       let extraDiskStorage = 0;
       if (isMicroNode) {
         // calculate hours
-        let endTime = network.deletedAt ? network.deletedAt : new Date();
+        let endTime = network.deletedAt
+          ? network.deletedAt
+          : skipHistory
+          ? selectedMonth
+              .endOf('month')
+              .add(1, 'hour')
+              .add(30, 'minutes')
+              .toDate()
+          : new Date();
         if (moment(endTime).isBefore(moment(network.createdAt))) {
           return undefined;
         }
