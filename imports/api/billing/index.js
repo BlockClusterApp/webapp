@@ -40,7 +40,7 @@ function convertMilliseconds(ms) {
   return { seconds, minutes, hours, days };
 }
 
-Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
+Billing.generateBill = async function({ userId, month, year, isFromFrontend, skipHistory }) {
   month = month === undefined ? moment().month() : month;
   year = year || moment().year();
 
@@ -69,17 +69,21 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
     hyperions: [],
     paymeters: [],
   };
-  if (!(selectedMonth.month() === moment().month() && selectedMonth.year() === moment().year()) && isFromFrontend) {
+  if (!(selectedMonth.month() === moment().month() && selectedMonth.year() === moment().year()) && isFromFrontend && !skipHistory) {
     const prevMonthInvoice = Invoice.find({
       userId: userId,
       billingPeriodLabel: selectedMonth.format('MMM-YYYY'),
     }).fetch()[0];
-    if (prevMonthInvoice) {
+    if (prevMonthInvoice && (prevMonthInvoice.dynamos || prevMonthInvoice.privateHives || prevMonthInvoice.hyperions || prevMonthInvoice.paymeters)) {
       result.networks = prevMonthInvoice.items;
       result.totalAmount = prevMonthInvoice.totalAmount;
       result.invoiceStatus = prevMonthInvoice.paymentStatus;
       result.invoiceId = prevMonthInvoice._id;
       result.creditClaims = prevMonthInvoice.creditClaims || [];
+      result.dynamos = prevMonthInvoice.dynamo || [];
+      result.privateHives = prevMonthInvoice.privateHives || [];
+      result.hyperions = prevMonthInvoice.hyperions || [];
+      result.paymeters = prevMonthInvoice.paymeters || [];
       return result;
     }
   }
@@ -213,7 +217,15 @@ Billing.generateBill = async function({ userId, month, year, isFromFrontend }) {
       let extraDiskStorage = 0;
       if (isMicroNode) {
         // calculate hours
-        let endTime = network.deletedAt ? network.deletedAt : new Date();
+        let endTime = network.deletedAt
+          ? network.deletedAt
+          : skipHistory
+          ? selectedMonth
+              .endOf('month')
+              .add(1, 'hour')
+              .add(30, 'minutes')
+              .toDate()
+          : new Date();
         if (moment(endTime).isBefore(moment(network.createdAt))) {
           return undefined;
         }

@@ -9,4 +9,5 @@ require('./2018-10-invoice-mail');
 require('./razorpay');
 require('./2019-02-01-jan-bill-generation');
 require('./2019-02-06-network-config-type');
+require('./2019-05-01-attach-new-items');
 // require('./zoho');
