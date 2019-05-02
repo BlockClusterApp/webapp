@@ -9,6 +9,9 @@ import moment from 'moment';
 
 import './ClientDetails.scss';
 
+import AddConfig from './components/AddConfig';
+import AddClusterModal from './components/AddClusterModal';
+
 class ClientDetails extends Component {
   constructor(props) {
     super(props);
@@ -226,6 +229,12 @@ class ClientDetails extends Component {
     }
     return (
       <div className="page-content-wrapper">
+        <AddClusterModal
+          modalEventFns={(open, close) => {
+            this.openAddClusterModal = open;
+            this.closeAddClusterModal = close;
+          }}
+        />
         <div className="content sm-gutter" style={{ paddingBottom: '0' }}>
           <div data-pages="parallax">
             {/* <div className="container-fluid p-l-25 p-r-25 sm-p-l-0 sm-p-r-0"> */}
@@ -241,38 +250,30 @@ class ClientDetails extends Component {
               </ol>
               {/* </div> */}
             </div>
-            {this.state.rawData &&
-              (!this.state.rawData.licenseDetails || !this.state.rawData.licenseDetails.licenseKey) && (
-                <div>
-                  <label className="semi-bold">&nbsp;&nbsp; Generate License</label>
-                  <p className="hint-text">&nbsp;&nbsp; number in months </p>
-                  <div className="row">
-                    &nbsp;&nbsp;
-                    <input
-                      name="expire"
-                      type="number"
-                      placeholder="in months"
-                      className="form-control col-md-3"
-                      onChange={this.handleChanges.bind(this)}
-                      value={this.state.expire}
-                      required
-                    />
-                    &nbsp;&nbsp;
-                    <LaddaButton
-                      data-size={S}
-                      data-style={SLIDE_UP}
-                      data-spinner-size={30}
-                      data-spinner-lines={12}
-                      className="btn btn-success "
-                      onClick={this.genLicense.bind(this)}
-                    >
-                      <i className="pg-form" aria-hidden="true" />
-                      &nbsp;&nbsp;Generate
-                    </LaddaButton>
-                    <br />
-                  </div>
+            {this.state.rawData && (!this.state.rawData.licenseDetails || !this.state.rawData.licenseDetails.licenseKey) && (
+              <div>
+                <label className="semi-bold">&nbsp;&nbsp; Generate License</label>
+                <p className="hint-text">&nbsp;&nbsp; number in months </p>
+                <div className="row">
+                  &nbsp;&nbsp;
+                  <input
+                    name="expire"
+                    type="number"
+                    placeholder="in months"
+                    className="form-control col-md-3"
+                    onChange={this.handleChanges.bind(this)}
+                    value={this.state.expire}
+                    required
+                  />
+                  &nbsp;&nbsp;
+                  <LaddaButton data-size={S} data-style={SLIDE_UP} data-spinner-size={30} data-spinner-lines={12} className="btn btn-success " onClick={this.genLicense.bind(this)}>
+                    <i className="pg-form" aria-hidden="true" />
+                    &nbsp;&nbsp;Generate
+                  </LaddaButton>
+                  <br />
                 </div>
-              )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -358,6 +359,37 @@ class ClientDetails extends Component {
                       </tr>
                     </tbody>
                   </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="row">
+            <div className="col-md-12">
+              <div className="m-t-20 container-fluid container-fixed-lg bg-white">
+                <div className="row">
+                  <div className="col-md-12">
+                    <div className="m-t-20">
+                      <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
+                        <h4 className="text-primary pull-left">Cluster Configurations</h4>
+                        <LaddaButton
+                          data-size={S}
+                          data-style={SLIDE_UP}
+                          data-spinner-size={30}
+                          data-spinner-lines={12}
+                          className="btn btn-success pull-right "
+                          onClick={() => {
+                            this.openAddClusterModal();
+                          }}
+                          style={{ marginTop: '10px' }}
+                        >
+                          <i className="fa fa-plus-circle" /> &nbsp;&nbsp;Add Cluster
+                        </LaddaButton>
+                        <div className="clearfix" />
+                      </div>
+                      <AddConfig clusterConfig={client.clusterConfig} />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
