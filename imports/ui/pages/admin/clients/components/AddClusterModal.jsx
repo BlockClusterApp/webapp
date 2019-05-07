@@ -1,5 +1,8 @@
 import React, { Component } from 'react';
 import LaddaButton, { S, SLIDE_UP } from 'react-ladda';
+import axios from 'axios';
+
+import notifications from '../../../../../modules/notifications';
 
 export default class PaymentModal extends Component {
   constructor(props) {
@@ -15,6 +18,37 @@ export default class PaymentModal extends Component {
   close = () => {
     $('#modalAddCluster').modal('hide');
     this.isModalShowing = true;
+  };
+
+  addModal = () => {
+    this.setState({
+      loading: true,
+    });
+    axios
+      .post(`/client/${this.props.clientId}/cluster-configs`, {
+        masterAPIHost: this.masterAPIHost.value,
+        namespace: this.namespace.value,
+        workerNodeIP: this.workerNodeIP.value,
+        ingressDomain: this.ingress.value,
+        identifier: this.identifier.value,
+        locationName: this.locationName.value,
+        apiHost: this.apiHost.value,
+      })
+      .then(res => {
+        this.setState({
+          loading: false,
+        });
+        this.props.completeListener && this.props.completeListener(res.data.data);
+        notifications.success('Cluster added');
+        this.close();
+      })
+      .catch(error => {
+        this.setState({
+          loading: false,
+        });
+        console.log(error);
+        notifications.error('cant reach server');
+      });
   };
 
   componentDidMount = () => {
@@ -126,7 +160,22 @@ export default class PaymentModal extends Component {
                         }}
                       />
                     </div>
-
+                    <LaddaButton
+                      data-size={S}
+                      loading={this.state.loading}
+                      disabled={this.state.loading}
+                      data-style={SLIDE_UP}
+                      data-spinner-size={30}
+                      data-spinner-lines={12}
+                      className="btn btn-success pull-right "
+                      onClick={() => {
+                        this.addModal();
+                      }}
+                      style={{ marginTop: '10px' }}
+                    >
+                      <i className="fa fa-plus-circle" /> &nbsp;&nbsp;Add Cluster
+                    </LaddaButton>
+                    &nbsp;&nbsp;
                     <button
                       type="button"
                       className="btn btn-default m-t-15"

@@ -11,6 +11,7 @@ import './ClientDetails.scss';
 
 import AddConfig from './components/AddConfig';
 import AddClusterModal from './components/AddClusterModal';
+import ClusterConfigCard from './components/ClusterConfigCard';
 
 class ClientDetails extends Component {
   constructor(props) {
@@ -227,12 +228,26 @@ class ClientDetails extends Component {
     if (!clientDetails) {
       clientDetails = {};
     }
+
+    const clusters = [];
+    if (client && client.clusterConfig && client.clusterConfig.clusters) {
+      Object.keys(client.clusterConfig.clusters).forEach(namespace => {
+        Object.values(client.clusterConfig.clusters[namespace]).forEach(cluster => {
+          clusters.push(<ClusterConfigCard key={`${namespace}_${cluster.identifier}`} config={{ ...cluster, namespace }} />);
+        });
+      });
+    }
+
     return (
       <div className="page-content-wrapper">
         <AddClusterModal
           modalEventFns={(open, close) => {
             this.openAddClusterModal = open;
             this.closeAddClusterModal = close;
+          }}
+          clientId={this.props.match.params.id}
+          completeListener={() => {
+            this.getClientDetails();
           }}
         />
         <div className="content sm-gutter" style={{ paddingBottom: '0' }}>
@@ -387,7 +402,7 @@ class ClientDetails extends Component {
                         </LaddaButton>
                         <div className="clearfix" />
                       </div>
-                      <AddConfig clusterConfig={client.clusterConfig} />
+                      <div className="card-block">{clusters}</div>
                     </div>
                   </div>
                 </div>

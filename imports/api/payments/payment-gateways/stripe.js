@@ -174,7 +174,7 @@ Stripe.chargeCustomer = async ({ customerId, amountInDollars, idempotencyKey, de
 
   const response = await stripe.charges.create(
     {
-      amount: amountInDollars * 100,
+      amount: Math.round(amountInDollars * 100),
       currency: 'usd',
       customer: customerId,
       description,
