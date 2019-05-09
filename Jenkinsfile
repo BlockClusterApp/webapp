@@ -7,16 +7,31 @@ pipeline {
       }
     }
     stage('Build Image') {
+      when {
+        not {
+          branch 'master'
+        }
+      }
       steps {
         sh './.circleci/docker-build.sh'
       }
     }
     stage('Docker Push') {
+      when {
+        not {
+          branch 'master'
+        }
+      }
       steps {
         sh './.circleci/docker-push.sh'
       }
     }
     stage('Helm Apply') {
+      when {
+        not {
+          branch 'master'
+        }
+      }
       steps {
         sh './.circleci/helm-apply.sh'
       }
