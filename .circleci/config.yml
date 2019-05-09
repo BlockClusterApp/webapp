@@ -234,43 +234,43 @@ workflows:
           requires:
             - docker_push
           context: aws-creds
-  build-and-test:
-    jobs:
-      - checkout_code:
-          <<: *build_tags
-      - docker_push_for_test:
-          <<: *build_tags
-          requires:
-            - checkout_code
-          context: aws-creds
-      - fetch_testing_module:
-          <<: *build_tags
-      - apply_kube_config_for_test:
-          <<: *build_tags
-          requires:
-            - docker_push_for_test
-          context: aws-creds
-      - wait_for_deployment:
-          <<: *build_tags
-          requires:
-            - apply_kube_config_for_test
-      - run_ui_tests:
-          <<: *build_tags
-          requires:
-            - wait_for_deployment
-      - hyperion_tests:
-          <<: *build_tags
-          requires:
-            - fetch_testing_module
-            - wait_for_deployment
-      - paymeter_tests:
-          <<: *build_tags
-          requires:
-            - fetch_testing_module
-            - wait_for_deployment
-      - notify_github_bot:
-          <<: *build_tags
-          requires:
-            - hyperion_tests
-            - paymeter_tests
-            - run_ui_tests
+  # build-and-test:
+  #   jobs:
+  #     - checkout_code:
+  #         <<: *build_tags
+  #     - docker_push_for_test:
+  #         <<: *build_tags
+  #         requires:
+  #           - checkout_code
+  #         context: aws-creds
+  #     - fetch_testing_module:
+  #         <<: *build_tags
+  #     - apply_kube_config_for_test:
+  #         <<: *build_tags
+  #         requires:
+  #           - docker_push_for_test
+  #         context: aws-creds
+  #     - wait_for_deployment:
+  #         <<: *build_tags
+  #         requires:
+  #           - apply_kube_config_for_test
+  #     - run_ui_tests:
+  #         <<: *build_tags
+  #         requires:
+  #           - wait_for_deployment
+  #     - hyperion_tests:
+  #         <<: *build_tags
+  #         requires:
+  #           - fetch_testing_module
+  #           - wait_for_deployment
+  #     - paymeter_tests:
+  #         <<: *build_tags
+  #         requires:
+  #           - fetch_testing_module
+  #           - wait_for_deployment
+  #     - notify_github_bot:
+  #         <<: *build_tags
+  #         requires:
+  #           - hyperion_tests
+  #           - paymeter_tests
+  #           - run_ui_tests
