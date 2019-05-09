@@ -38,7 +38,6 @@ pipeline {
         }
       }
       steps {
-        sh 'mkdir ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config'
         sh 'git clone git@github.com:BlockClusterApp/circleci-webapp-tests.git'
       }
     }
