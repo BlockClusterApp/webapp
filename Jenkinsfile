@@ -53,9 +53,7 @@ pipeline {
         }
       }
       steps {
-        git branch: 'master'
-            credentialsId: 'cdecb67a-dd28-49d8-b1c5-3060c2bc8a79'
-            url: 'git@github.com:BlockClusterApp/circleci-webapp-tests.git'
+        git branch: 'master', credentialsId: 'cdecb67a-dd28-49d8-b1c5-3060c2bc8a79', url: 'git@github.com:BlockClusterApp/circleci-webapp-tests.git'
       }
     }
     stage('Tests') {
