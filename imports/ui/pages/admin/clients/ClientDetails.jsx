@@ -10,6 +10,7 @@ import moment from 'moment';
 import './ClientDetails.scss';
 
 import AddConfig from './components/AddConfig';
+import AddEditWebappConfig from './components/AddEditWebappConfig';
 import AddClusterModal from './components/AddClusterModal';
 import ClusterConfigCard from './components/ClusterConfigCard';
 
@@ -250,6 +251,14 @@ class ClientDetails extends Component {
             this.getClientDetails();
           }}
         />
+        <AddEditWebappConfig
+          modalEventFns={(open, close) => {
+            this.openWebappModal = open;
+            this.closeWebppModal = close;
+          }}
+          config={this.state.config}
+        />
+        ;
         <div className="content sm-gutter" style={{ paddingBottom: '0' }}>
           <div data-pages="parallax">
             {/* <div className="container-fluid p-l-25 p-r-25 sm-p-l-0 sm-p-r-0"> */}
@@ -291,7 +300,6 @@ class ClientDetails extends Component {
             )}
           </div>
         </div>
-
         <div className="m-l-10 m-r-10 content ClientDetails" style={{ paddingTop: '0' }}>
           <div className="row">
             <div className="m-l-20 m-r-20 container-fluid container-fixed-lg bg-white">
@@ -410,6 +418,36 @@ class ClientDetails extends Component {
             </div>
           </div>
 
+          <div className="row">
+            <div className="col-md-12">
+              <div className="m-t-20 container-fluid container-fixed-lg bg-white">
+                <div className="row">
+                  <div className="col-md-12">
+                    <div className="m-t-20">
+                      <div className="card-header clearfix" style={{ backgroundColor: '#fff' }}>
+                        <h4 className="text-primary pull-left">Webapp Configurations</h4>
+                        <LaddaButton
+                          data-size={S}
+                          data-style={SLIDE_UP}
+                          data-spinner-size={30}
+                          data-spinner-lines={12}
+                          className="btn btn-success pull-right "
+                          onClick={() => {
+                            this.openWebappModal();
+                          }}
+                          style={{ marginTop: '10px' }}
+                        >
+                          <i className="fa fa-plus-circle" /> &nbsp;&nbsp;Add Webapp config
+                        </LaddaButton>
+                        <div className="clearfix" />
+                      </div>
+                      <div className="card-block">{clusters}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           <div className="row">
             <div className="m-t-20 m-l-20 m-r-20 container-fluid client-aws-table container-fixed-lg bg-white">
               <div className="row">
