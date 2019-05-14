@@ -250,6 +250,10 @@ class InvoiceDetails extends Component {
       });
     let billView = undefined;
 
+    if(!invoice.totals) {
+      invoice.totals = {};
+    }
+
     if (networks) {
       if (invoice && invoice.networks) {
         billView = invoice.networks.map((network, index) => {
