@@ -177,67 +177,77 @@ class InvoiceDetails extends Component {
     const { invoice } = this.props;
     const { dynamos, privateHives, hyperions, paymeters, creditClaims, networks } = this.props.invoice;
 
-    const dynamoView = dynamos.map((network, index) => {
-      return (
-        <tr title={network.timeperiod} key={index + 1}>
-          <td>{network.name}</td>
-          <td>{network.instanceId === 'BLOCKCLUSTER' ? 'Welcome Bonus' : network.instanceId}</td>
-          <td>{network.rate}</td>
-          <td>{network.runtime}</td>
-          <td>$ {network.discount}</td>
-          <td>
-            $ {network.cost} {network.deletedAt ? '' : this.convertCostToTag('Running')} {this.convertCostToTag(network.label)}{' '}
-          </td>
-        </tr>
-      );
-    });
+    const dynamoView =
+      dynamos &&
+      dynamos.map((network, index) => {
+        return (
+          <tr title={network.timeperiod} key={index + 1}>
+            <td>{network.name}</td>
+            <td>{network.instanceId === 'BLOCKCLUSTER' ? 'Welcome Bonus' : network.instanceId}</td>
+            <td>{network.rate}</td>
+            <td>{network.runtime}</td>
+            <td>$ {network.discount}</td>
+            <td>
+              $ {network.cost} {network.deletedAt ? '' : this.convertCostToTag('Running')} {this.convertCostToTag(network.label)}{' '}
+            </td>
+          </tr>
+        );
+      });
 
-    const privateHiveView = privateHives.map((network, index) => {
-      return (
-        <tr title={network.timeperiod} key={index + 1}>
-          <td>{network.name}</td>
-          <td>{network.instanceId}</td>
-          <td>{network.rate}</td>
-          <td>{network.runtime}</td>
-          <td>$ {network.discount}</td>
-          <td>
-            $ {network.cost} {this.convertCostToTag(network.label)}{' '}
-          </td>
-        </tr>
-      );
-    });
+    const privateHiveView =
+      privateHives &&
+      privateHives.map((network, index) => {
+        return (
+          <tr title={network.timeperiod} key={index + 1}>
+            <td>{network.name}</td>
+            <td>{network.instanceId}</td>
+            <td>{network.rate}</td>
+            <td>{network.runtime}</td>
+            <td>$ {network.discount}</td>
+            <td>
+              $ {network.cost} {this.convertCostToTag(network.label)}{' '}
+            </td>
+          </tr>
+        );
+      });
 
-    const hyperionView = hyperions.map((hyperion, index) => {
-      return (
-        <tr key={index + 1}>
-          <td>{hyperion.name}</td>
-          <td>{hyperion.rate}</td>
-          <td>$ {hyperion.discount}</td>
-          <td>$ {hyperion.cost}</td>
-        </tr>
-      );
-    });
+    const hyperionView =
+      hyperions &&
+      hyperions.map((hyperion, index) => {
+        return (
+          <tr key={index + 1}>
+            <td>{hyperion.name}</td>
+            <td>{hyperion.rate}</td>
+            <td>$ {hyperion.discount}</td>
+            <td>$ {hyperion.cost}</td>
+          </tr>
+        );
+      });
 
-    const paymeterView = paymeters.map((pm, index) => {
-      return (
-        <tr key={index + 1}>
-          <td>{pm.name}</td>
-          <td>{pm.rate}</td>
-          <td>$ {pm.discount}</td>
-          <td>$ {pm.cost}</td>
-        </tr>
-      );
-    });
+    const paymeterView =
+      paymeters &&
+      paymeters.map((pm, index) => {
+        return (
+          <tr key={index + 1}>
+            <td>{pm.name}</td>
+            <td>{pm.rate}</td>
+            <td>$ {pm.discount}</td>
+            <td>$ {pm.cost}</td>
+          </tr>
+        );
+      });
 
-    let creditsView = creditClaims.map((claim, index) => {
-      return (
-        <tr key={`p${index + 1}`}>
-          <td>{claim.instanceId === 'BLOCKCLUSTER' ? 'Welcome Bonus' : claim.instanceId}</td>
-          <td>{claim.rate}</td>
-          <td>$ -{Number(claim.cost).toFixed(2)}</td>
-        </tr>
-      );
-    });
+    let creditsView =
+      creditClaims &&
+      creditClaims.map((claim, index) => {
+        return (
+          <tr key={`p${index + 1}`}>
+            <td>{claim.instanceId === 'BLOCKCLUSTER' ? 'Welcome Bonus' : claim.instanceId}</td>
+            <td>{claim.rate}</td>
+            <td>$ -{Number(claim.cost).toFixed(2)}</td>
+          </tr>
+        );
+      });
     let billView = undefined;
 
     if (networks) {
