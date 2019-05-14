@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 
 export COMMIT_HASH=${CIRCLE_SHA1}
+
+set -x;
+
+if [ ! -z "$JENKINS_HOME" ];
+then
+  export CIRCLE_BRANCH="$BRANCH_NAME"
+  export COMMIT_HASH="$GIT_COMMIT"
+fi
+
 if [ "$CIRCLE_TAG" = "production" ] || [ "$CIRCLE_BRANCH" = "master" ] || [ "$CIRCLE_BRANCH" = "hot-fix" ];
 then
   export NODE_ENV=production
@@ -15,18 +24,17 @@ then
   export ROOT_URL="staging.blockcluster.io";
   export API_HOST ="https://enterprise-api-staging.blockcluster.io";
   export MONGO_URL="${STAGING_MONGO_URL}"
-elif [ "$CIRCLE_TAG" = "test" ] || [ "$CIRCLE_BRANCH" = "test" ] || [ "$IS_TEST" = "1" ];
-then
-  export NODE_ENV=test
-  export CLUSTER_PREFIX="dev";
-  export ROOT_URL="test.blockcluster.io";
-  export API_HOST="https://enterprise-api-dev.blockcluster.io";
-  export MONGO_URL="${DEV_MONGO_URL}"
 elif [ "$CIRCLE_TAG" = "dev" ] ||  [ "$CIRCLE_BRANCH" = "dev" ];
 then
   export NODE_ENV=dev
   export CLUSTER_PREFIX="dev";
   export ROOT_URL="dev.blockcluster.io";
+  export API_HOST="https://enterprise-api-dev.blockcluster.io";
+  export MONGO_URL="${DEV_MONGO_URL}"
+else
+  export NODE_ENV=test
+  export CLUSTER_PREFIX="dev";
+  export ROOT_URL="test.blockcluster.io";
   export API_HOST="https://enterprise-api-dev.blockcluster.io";
   export MONGO_URL="${DEV_MONGO_URL}"
 fi
