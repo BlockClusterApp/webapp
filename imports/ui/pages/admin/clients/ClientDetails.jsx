@@ -11,6 +11,7 @@ import './ClientDetails.scss';
 
 import AddConfig from './components/AddConfig';
 import AddEditWebappConfig from './components/AddEditWebappConfig';
+import WebappConfigCard from './components/WebappConfigCard';
 import AddClusterModal from './components/AddClusterModal';
 import ClusterConfigCard from './components/ClusterConfigCard';
 
@@ -212,6 +213,14 @@ class ClientDetails extends Component {
     });
   };
 
+  webappConfigChanged = license => {
+    if (license) {
+      this.setState({
+        rawData: license,
+      });
+    }
+  };
+
   render() {
     const { awsMetaData } = this.state.rawData;
     let client = this.state.rawData;
@@ -239,6 +248,36 @@ class ClientDetails extends Component {
       });
     }
 
+    const webappConfigs = [];
+    if (client && client.clusterConfig && client.clusterConfig.webapp) {
+      const { webapp } = client.clusterConfig;
+      const config = {};
+      Object.keys(webapp.dynamo).forEach(namespace => {
+        config[namespace] = {
+          namespace,
+          dynamo: webapp.dynamo[namespace],
+          impulse: webapp.impulse[namespace],
+          privatehive: webapp.privatehive[namespace],
+          mongoURL: webapp.mongoURL[namespace],
+          redis: webapp.redis[namespace],
+          rootUrl: webapp.rootUrl[namespace],
+          Ingress: webapp.Ingress[namespace],
+          paymeter: webapp.paymeter[namespace],
+        };
+        webappConfigs.push(
+          <WebappConfigCard
+            config={config[namespace]}
+            key={namespace}
+            onEdit={() =>
+              this.setState({ config: config[namespace] }, () => {
+                this.openWebappModal();
+              })
+            }
+          />
+        );
+      });
+    }
+
     return (
       <div className="page-content-wrapper">
         <AddClusterModal
@@ -256,7 +295,9 @@ class ClientDetails extends Component {
             this.openWebappModal = open;
             this.closeWebppModal = close;
           }}
+          clientId={this.props.match.params.id}
           config={this.state.config}
+          completeListener={this.webappConfigChanged}
         />
         ;
         <div className="content sm-gutter" style={{ paddingBottom: '0' }}>
@@ -441,7 +482,7 @@ class ClientDetails extends Component {
                         </LaddaButton>
                         <div className="clearfix" />
                       </div>
-                      <div className="card-block">{clusters}</div>
+                      <div className="card-block">{webappConfigs}</div>
                     </div>
                   </div>
                 </div>

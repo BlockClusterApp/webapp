@@ -26,7 +26,7 @@ export default class PaymentModal extends Component {
       this.mongo.value = config.mongoURL;
       this.redisHost.value = config.redis.host;
       this.redisPort.value = config.redis.port;
-      this.webapp.value = config.webapp;
+      this.webapp.value = config.πwebapp;
       this.root.value = config.rootUrl;
       this.ingressAnnotations.value = JSON.stringify(config.Ingress.Annotations, null, 2);
       this.ingressSecret.value = config.Ingress.secretName;
@@ -61,7 +61,7 @@ export default class PaymentModal extends Component {
         webapp: this.webapp.value,
         rootUrl: this.root.value,
         ingress: {
-          Annotations: JSON.parse(this.ingressAnnotations.value),
+          Annotations: JSON.parse(this.ingressAnnotations.value || '{}'),
           secretName: this.ingressSecret.value,
         },
         paymeter: {
