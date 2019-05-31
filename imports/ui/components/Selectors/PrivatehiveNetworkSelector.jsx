@@ -32,6 +32,7 @@ class NetworkSelector extends Component {
         <select
           className="form-control"
           name="location"
+          disabled={this.props.disabled}
           ref={input => (this.location = input)}
           onChange={this.onValueChange.bind(this)}
           selected={JSON.stringify(this.props.networks[0])}

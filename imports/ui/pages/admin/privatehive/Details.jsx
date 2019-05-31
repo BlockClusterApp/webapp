@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import moment from 'moment';
 import notifications from '../../../../modules/notifications';
 import KubeDashboard from './components/KubeDashboard';
+import ConfirmationButton from '../../../components/Buttons/ConfirmationButton';
 
 class NetworkList extends Component {
   constructor(props) {
@@ -102,34 +103,20 @@ class NetworkList extends Component {
   };
 
   deleteNode = () => {
-    if (!this.state.deleteConfirmAsked) {
-      this.timer = setTimeout(() => {
-        if (this.state && !this.unmounted) {
-          this.setState({
-            deleteConfirmAsked: false,
-          });
-        }
-      }, 5 * 1000);
-
-      return this.setState({
-        deleteConfirmAsked: true,
-      });
-    }
     this.setState({
       deleteDisabled: true,
+      loading: true,
     });
 
-    Meteor.call('adminPrivateHiveDeleteNetwork', this.state.network.network.instanceId, (err, res) => {
+    Meteor.call('adminDeletePrivatehiveNetwork', this.state.network.network.instanceId, (err, res) => {
+      this.setState({
+        deleteDisabled: true,
+        loading: false,
+      });
       if (!err) {
-        this.setState({
-          deleteDisabled: true,
-        });
         this.fetchNetwork();
         notifications.success('Network deleted successfully');
       } else {
-        this.setState({
-          deleteDisabled: false,
-        });
         notifications.error(err.reason);
       }
     });
@@ -292,9 +279,14 @@ class NetworkList extends Component {
                     <div className="clearfix" />
                   </div>
                   <div className="card-description">
-                    <button className="btn btn-danger" style={{ marginBottom: '5px' }} onClick={this.deleteNode} disabled={!!network.deletedAt || this.state.deleteDisabled}>
-                      {!!network.deletedAt ? 'Already deleted' : this.state.deleteConfirmAsked ? 'Are you sure? This is irreversible' : 'Delete Node'}
-                    </button>
+                    <ConfirmationButton
+                      loading={this.state.loading}
+                      completed={!!network.deletedAt}
+                      onConfirm={this.deleteNode}
+                      loadingText="Deleting"
+                      completedText={'Already deleted'}
+                      actionText="Delete Node"
+                    />
                     &nbsp;
                     {/* <button className="btn btn-danger" style={{ marginBottom: '5px' }} onClick={this.restartPod} disabled={this.state.restartingPod}>
                       {this.state.restartingPod && <i className="fa fa-spinner fa-spin" />}&nbsp;
@@ -313,7 +305,9 @@ class NetworkList extends Component {
                   <div className="card-description">
                     Location: <b>{thisLocation.locationCode}</b> <span style={{ color: '#777', fontSize: '11px' }}>&nbsp;{thisLocation.locationName} </span>
                     <br />
-                    Type: {network.type}
+                    Type: {network.type} | {network.networkConfig.name}
+                    <br />
+                    {network.networkConfig.cpu} | {network.networkConfig.ram} | {network.networkConfig.disk}
                   </div>
                   <div className="clearfix" />
                 </div>

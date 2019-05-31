@@ -138,6 +138,12 @@ InvoiceObj.generateInvoice = async ({ billingMonth, bill, userId, rzSubscription
 
   invoiceObject.items = items;
 
+  invoiceObject.dynamos = bill.dynamos;
+  invoiceObject.privateHives = bill.privateHives;
+  invoiceObject.hyperions = bill.hyperions;
+  invoiceObject.paymeters = bill.paymeters;
+  invoiceObject.totals = bill.totals;
+
   const conversion = await Payment.getConversionToINRRate({});
 
   invoiceObject.conversionRate = conversion;

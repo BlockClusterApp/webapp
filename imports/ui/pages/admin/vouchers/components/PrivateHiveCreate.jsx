@@ -244,7 +244,7 @@ class VoucherCreate extends Component {
     if (configs && configs.length > 0) {
       const configList = configs.map(config => (
         <option value={JSON.stringify(config)} key={config._id}>
-          {config.name} - Version {config.fabric.version} | {config.orderer.cpu} Orderer vCPUs | {config.kafka.cpu} Kafka vCPUs | $ {config.cost.monthly} / month
+          {config.name}
         </option>
       ));
       networks = (

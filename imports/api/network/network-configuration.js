@@ -2,9 +2,12 @@ import NetworkConfiguration from '../../collections/network-configuration/networ
 
 const NetworkConfig = {};
 
-NetworkConfig.getConfigs = async function({ type }) {
-  const configs = NetworkConfiguration.find({ active: true, showInNetworkSelection: true, for: type });
+NetworkConfig.getConfigs = async function({ type, fetchRaw }) {
+  const configs = NetworkConfiguration.find({ active: true, showInNetworkSelection: true, for: type }).fetch();
 
+  if (fetchRaw) {
+    return configs;
+  }
   const result = {};
   configs.forEach(config => {
     result[config.name] = config;

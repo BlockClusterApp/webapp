@@ -26,6 +26,7 @@ import moment from 'moment';
 import fs from 'fs';
 import agenda from '../imports/modules/schedulers/agenda';
 import Webhook from '../imports/api/communication/webhook';
+import LocationConfiguration from '../imports/collections/locations/index';
 import RateLimiter from '../imports/modules/helpers/server/rate-limiter';
 var md5 = require('apache-md5');
 var base64 = require('base-64');
@@ -304,6 +305,10 @@ Meteor.methods({
     const isAllowed = await RateLimiter.isAllowed('create-network', userId);
     if (!isAllowed) {
       throw new Meteor.Error(429, 'Rate limit exceeded. Try after 1 minute');
+    }
+    const locationConfig = LocationConfiguration.findOne({ service: 'dynamo' });
+    if (!locationConfig.locations.includes(locationCode)) {
+      throw new Meteor.Error(403, 'Not available in this location');
     }
     var myFuture = new Future();
     const nodeConfig = getNodeConfig(networkConfig);
@@ -831,6 +836,10 @@ Meteor.methods({
     networkConfig,
     userId
   ) {
+    const locationConfig = LocationConfiguration.findOne({ service: 'dynamo' });
+    if (!locationConfig.locations.includes(locationCode)) {
+      throw new Meteor.Error(403, 'Not available in this location');
+    }
     const isPaymentMethodVerified = await Billing.isPaymentMethodVerified(userId);
     const nodeConfig = getNodeConfig(networkConfig);
     const need_VerifiedPaymnt = nodeConfig.voucher && !nodeConfig.voucher.availability.card_vfctn_needed ? nodeConfig.voucher.availability.card_vfctn_needed : true;
@@ -1394,8 +1403,8 @@ spec:
 
     return myFuture.wait();
   },
-  inviteUserToNetwork: async function({instanceId, nodeType, email, userId, type}) {
-    return UserFunctions.inviteUserToNetwork({instanceId, nodeType, email, userId: userId || Meteor.userId(), type});
+  inviteUserToNetwork: async function({ instanceId, nodeType, email, userId, type }) {
+    return UserFunctions.inviteUserToNetwork({ instanceId, nodeType, email, userId: userId || Meteor.userId(), type });
   },
   createAssetType: function(instanceId, assetName, assetType, assetIssuer, reissuable, parts) {
     this.unblock();

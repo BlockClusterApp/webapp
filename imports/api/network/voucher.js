@@ -171,10 +171,10 @@ Voucher.fetchBalanceCredits = async ({ userId }) => {
   return Number(balance).toFixed(2);
 };
 
-Voucher.validate = async function({ voucherCode, type, userId }) {
+Voucher.validate = async function({ voucherCode, type, userId, voucherId }) {
   userId = userId || Meteor.userId();
   const user = Meteor.users.find({ _id: userId }).fetch()[0];
-  const voucher = Vouchers.find({
+  const query = {
     code: voucherCode,
     type,
     active: true,
@@ -182,7 +182,13 @@ Voucher.validate = async function({ voucherCode, type, userId }) {
     expiryDate: {
       $gt: new Date(),
     },
-  }).fetch()[0];
+  };
+
+  if (voucherId) {
+    query._id = voucherId;
+    delete query.code;
+  }
+  const voucher = Vouchers.find(query).fetch()[0];
 
   if (!voucher) {
     throw new Meteor.Error(400, 'Invalid voucher');

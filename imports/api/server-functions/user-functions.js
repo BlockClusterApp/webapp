@@ -306,15 +306,42 @@ NetworkInvitation.inviteUserToNetwork = async function({ instanceId, nodeType, e
   return result;
 };
 
-NetworkInvitation.inviteUserToChannel = async ({ channelName, networkId, email, userId, ordererDomain, ordererConnectionDetails }) => {
+NetworkInvitation.listPendingInvites = async ({ userId, type }) => {
+  const query = {
+    inviteTo: userId,
+    invitationStatus: {
+      $in: [UserInvitation.StatusMapping.Pending],
+    },
+  };
+  if (type === 'privatehive-channel') {
+    query.type = type;
+  }
+  return UserInvitation.find(query).fetch();
+};
+
+NetworkInvitation.inviteUserToChannel = async ({ channelName, networkId, email, userId, ordererDomain, ordererConnectionDetails, networkInstanceId }) => {
   if (!email) {
-    throw new Meteor.Error(403, 'Email missing');
+    throw new Meteor.Error(400, 'Email missing');
+  }
+  if (!(networkId || networkInstanceId)) {
+    throw new Meteor.Error(400, 'NetworkID is required');
+  }
+  if (!ordererDomain) {
+    throw new Meteor.Error(400, 'Orderer Domain is required');
+  }
+  if (!ordererConnectionDetails) {
+    throw new Meteor.Error(400, 'Orderer connection details is required');
   }
   userId = userId || Meteor.userId();
-  const network = PrivatehivePeers.findOne({
+  const query = {
     _id: networkId,
     userId,
-  });
+  };
+  if (networkInstanceId) {
+    delete query._id;
+    query.instanceId = networkInstanceId;
+  }
+  const network = PrivatehivePeers.findOne(query);
   if (!network) {
     throw new Meteor.Error(403, 'Invalid network');
   }
@@ -431,11 +458,12 @@ NetworkInvitation.verifyInvitationLink = async function(invitationKey) {
   };
 };
 
-NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkConfig, userId, type, peerId }) {
+NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkConfig, userId, type, peerId, peerInstanceId }) {
   return new Promise(async (resolve, reject) => {
     userId = userId || Meteor.userId();
     const invitation = UserInvitation.find({
       _id: inviteId,
+      inviteTo: userId,
     }).fetch()[0];
 
     if (!invitation) {
@@ -482,6 +510,7 @@ NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkC
         channelName: invitation.metadata.channel.name,
         peerId,
         userId,
+        peerInstanceId,
         ordererDomain: invitation.metadata.channel.ordererDomain,
         ordererConnectionDetails: invitation.metadata.channel.ordererConnectionDetails,
       });
@@ -491,7 +520,7 @@ NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkC
         },
         {
           $set: {
-            joinedNetwork: peerId,
+            joinedNetwork: res,
             joinedLocation: locationCode,
             invitationStatus: UserInvitation.StatusMapping.Accepted,
             inviteStatusUpdatedAt: new Date(),
@@ -505,7 +534,7 @@ NetworkInvitation.acceptInvitation = function({ inviteId, locationCode, networkC
         network.name,
         invitation.nodeType || 'authority',
         network.genesisBlock.toString(),
-        ['enode://' + network.nodeId + '@' + network.workerNodeIP + ':' + network.ethNodePort].concat(network.totalENodes),
+        ['enode://' + network.nodeId + '@' + Config.workerNodeIP(network.locationCode) + ':' + network.ethNodePort].concat(network.totalENodes),
         network.impulseURL,
         network.assetsContractAddress,
         network.atomicSwapContractAddress,

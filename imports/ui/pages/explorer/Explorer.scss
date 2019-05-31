@@ -1,49 +1,49 @@
 .explorer {
-    .card-refresh {
-        position: relative;
-        left: 7px;
-    }
+  .card-refresh {
+    position: relative;
+    left: 7px;
+  }
 
-    .widget-9 {
-        height: auto !important;
-    }
+  .widget-9 {
+    height: auto !important;
+  }
 
-    .json-output {
-        height: 488px;
-        background: #272727;
-        opacity: 0.8;
-        color: white;
-        overflow-y: scroll;
-        word-wrap: break-word;
-        word-break: break-all;
+  .dynamo.json-output {
+    height: 488px !important;
+    background: #272727;
+    opacity: 0.8;
+    color: white;
+    overflow-y: scroll;
+    word-wrap: break-word;
+    word-break: break-all;
 
-        pre {
-            color: white;
-        }
+    pre {
+      color: white;
     }
+  }
 
-    .widget-11-2 .widget-11-2-table {
-        height: 484px;
-    }
+  .widget-11-2 .widget-11-2-table {
+    height: 484px;
+  }
 
-    .details .form-group-default {
-        border-width: 0px;
-    }
+  .details .form-group-default {
+    border-width: 0px;
+  }
 
-    .widget-11-2-table-2 {
-        height: 429px;
-    }
+  .widget-11-2-table-2 {
+    height: 429px;
+  }
 
-    .break-word {
-        white-space: normal !important;
-        word-wrap: break-word;
-    }
+  .break-word {
+    white-space: normal !important;
+    word-wrap: break-word;
+  }
 
-    .w-0 {
-        width: 0 !important;
-    }
+  .w-0 {
+    width: 0 !important;
+  }
 
-    .card-header a:not(.btn) .text-white {
-        color: white !important;
-    }
+  .card-header a:not(.btn) .text-white {
+    color: white !important;
+  }
 }

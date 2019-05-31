@@ -3,7 +3,7 @@ const request = require('request-promise');
 const debug = require('debug')('RemoteConfig');
 
 const WEB_APP_VERSION = '1.0';
-const MIGRATION_VERSION = 11;
+const MIGRATION_VERSION = 12;
 
 global.RemoteConfig = {};
 global.LicenceError = 0;
@@ -255,6 +255,12 @@ module.exports = {
   getImageRepository(imageType = 'dynamo') {
     if (!RemoteConfig.repositories) {
       return '';
+    }
+
+    // TODO: Make this enterprise compatible
+    if (['privatehive-peer', 'privatehive-orderer'].includes(imageType)) {
+      debug('Image', RemoteConfig.repositories.privatehive.url[getNamespace()][imageType.split('-')[1]]);
+      return RemoteConfig.repositories.privatehive.url[getNamespace()][imageType.split('-')[1]];
     }
 
     return `${RemoteConfig.repositories[imageType].url[getNamespace()]}`;

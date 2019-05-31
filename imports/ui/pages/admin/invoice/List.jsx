@@ -156,6 +156,8 @@ class InvoiceList extends Component {
         return <span className="label label-danger">Waived Off</span>;
       case 6:
         return <span className="label label-danger">Refunded</span>;
+      case 7:
+        return <span className="label label-danger">Charge next month</span>;
       default:
         return null;
     }
@@ -266,6 +268,9 @@ class InvoiceList extends Component {
                           </option>
                           <option value="6" selected={this.query.paymentStatus === 6}>
                             Refunded
+                          </option>
+                          <option value="8" selected={this.query.paymentStatus === 6}>
+                            Charge Next Month
                           </option>
                         </select>
                       </div>

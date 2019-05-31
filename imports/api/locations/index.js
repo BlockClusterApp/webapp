@@ -88,8 +88,10 @@ JsonRoutes.add('get', '/api/config-client', function(req, res, next) {
   const config = {};
   config.features = RemoteConfig.features;
   config.workerDomainName = {};
+  config.workerNodeIPs = {};
   Object.keys(RemoteConfig.clusters[Config.namespace]).forEach(locationCode => {
     config.workerDomainName[locationCode] = RemoteConfig.clusters[Config.namespace][locationCode].dynamoDomainName;
+    config.workerNodeIPs[locationCode] = RemoteConfig.clusters[Config.namespace][locationCode].workerNodeIP;
   });
   config.NAMESPACE = Config.namespace;
   JsonRoutes.sendResult(res, {

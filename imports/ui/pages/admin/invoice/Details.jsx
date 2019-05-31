@@ -6,6 +6,8 @@ import ConfirmationButton from '../../../components/Buttons/ConfirmationButton';
 import notifications from '../../../../modules/notifications';
 import moment from 'moment';
 
+import '../../billing/Dashboard.scss';
+
 const EmailsMapping = {
   1: 'Invoice Created',
   2: 'Reminder',
@@ -25,6 +27,7 @@ class InvoiceDetails extends Component {
       deleteConfirmAsked: false,
       disableReminder: false,
       loading: false,
+      expand: {},
     };
   }
 
@@ -61,6 +64,8 @@ class InvoiceDetails extends Component {
         return <span className="label label-danger">Waived Off</span>;
       case 6:
         return <span className="label label-danger">Refunded</span>;
+      case 8:
+        return <span className="label label-danger">Addon Attached</span>;
       default:
         return null;
     }
@@ -84,6 +89,12 @@ class InvoiceDetails extends Component {
         notifications.error(err.reason);
       }
     });
+  };
+
+  toggleSection = sectionName => {
+    const { expand } = this.state;
+    expand[sectionName] = !expand[sectionName];
+    this.setState({ expand });
   };
 
   waiveOffReasonAction = invoiceId => {
@@ -160,46 +171,106 @@ class InvoiceDetails extends Component {
   };
 
   render() {
-    let billView = null;
-    let creditsView = null;
-
-    const { invoice } = this.props;
-    if (!invoice) {
+    if (!this.props.invoice) {
       return null;
     }
+    const { invoice } = this.props;
+    const { dynamos, privateHives, hyperions, paymeters, creditClaims, networks } = this.props.invoice;
 
-    const { user } = invoice;
-
-    if (invoice && invoice.items) {
-      billView = invoice.items.map((network, index) => {
+    const dynamoView =
+      dynamos &&
+      dynamos.map((network, index) => {
         return (
           <tr title={network.timeperiod} key={index + 1}>
+            <td>{network.name}</td>
+            <td>{network.instanceId === 'BLOCKCLUSTER' ? 'Welcome Bonus' : network.instanceId}</td>
+            <td>{network.rate}</td>
+            <td>{network.runtime}</td>
+            <td>$ {network.discount}</td>
             <td>
-              <Link to={`/app/admin/networks/${network.instanceId}`}>{network.name}</Link>
+              $ {network.cost} {network.deletedAt ? '' : this.convertCostToTag('Running')} {this.convertCostToTag(network.label)}{' '}
             </td>
+          </tr>
+        );
+      });
+
+    const privateHiveView =
+      privateHives &&
+      privateHives.map((network, index) => {
+        return (
+          <tr title={network.timeperiod} key={index + 1}>
+            <td>{network.name}</td>
             <td>{network.instanceId}</td>
             <td>{network.rate}</td>
             <td>{network.runtime}</td>
+            <td>$ {network.discount}</td>
             <td>
-              $ {network.discount || '0.00'} {this.convertCostToTag(network.label)}
+              $ {network.cost} {this.convertCostToTag(network.label)}{' '}
             </td>
-            <td>$ {network.cost}</td>
           </tr>
         );
       });
-    }
-    if (invoice && invoice.creditClaims) {
-      creditsView = invoice.creditClaims.map((claim, index) => {
+
+    const hyperionView =
+      hyperions &&
+      hyperions.map((hyperion, index) => {
+        return (
+          <tr key={index + 1}>
+            <td>{hyperion.name}</td>
+            <td>{hyperion.rate}</td>
+            <td>$ {hyperion.discount}</td>
+            <td>$ {hyperion.cost}</td>
+          </tr>
+        );
+      });
+
+    const paymeterView =
+      paymeters &&
+      paymeters.map((pm, index) => {
+        return (
+          <tr key={index + 1}>
+            <td>{pm.name}</td>
+            <td>{pm.rate}</td>
+            <td>$ {pm.discount}</td>
+            <td>$ {pm.cost}</td>
+          </tr>
+        );
+      });
+
+    let creditsView =
+      creditClaims &&
+      creditClaims.map((claim, index) => {
         return (
           <tr key={`p${index + 1}`}>
-            <td>Promotional Credit Redemption</td>
-            <td>{claim.code}</td>
-            <td />
-            <td />
-            <td>$ -{Number(claim.amount).toFixed(2)}</td>
+            <td>{claim.instanceId === 'BLOCKCLUSTER' ? 'Welcome Bonus' : claim.instanceId}</td>
+            <td>{claim.rate}</td>
+            <td>$ -{Number(claim.cost).toFixed(2)}</td>
           </tr>
         );
       });
+    let billView = undefined;
+
+    if(!invoice.totals) {
+      invoice.totals = {};
+    }
+
+    if (networks) {
+      if (invoice && invoice.networks) {
+        billView = invoice.networks.map((network, index) => {
+          return (
+            <tr title={network.timeperiod} key={index + 1}>
+              <td>{network.name}</td>
+              <td>{network.instanceId}</td>
+              <td>{network.rate}</td>
+              <td>{network.runtime}</td>
+              <td>$ {network.discount || '0.00'}</td>
+              <td>
+                $ {network.cost} {this.convertCostToTag(network.label)}{' '}
+              </td>
+            </tr>
+          );
+        });
+      }
     }
 
     return (
@@ -385,39 +456,208 @@ class InvoiceDetails extends Component {
               <div className="clearfix" />
             </div>
           </div>
-          <div className="row bg-white">
-            <table className="table table-hover" id="basicTable">
-              <thead>
-                <tr>
-                  <th style={{ width: '18%' }}>Network Name</th>
-                  <th style={{ width: '15%' }}>Instance ID</th>
-                  <th style={{ width: '15%' }}>Rate</th>
-                  <th style={{ width: '18%' }}>Runtime</th>
-                  <th style={{ width: '20%' }}>Discount</th>
-                  <th style={{ width: '14%' }}>Cost</th>
-                </tr>
-              </thead>
-              <tbody>
-                {billView}
-                {creditsView}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colSpan="4" style={{ textAlign: 'right' }}>
-                    Total Amount
-                  </td>
-                  <td colSpan="2">
-                    {invoice && invoice.totalAmount ? `$ ${Number(invoice.totalAmount).toFixed(2)}` : '0'} {this.getInvoicePaidStatus(invoice && invoice.paymentStatus)}
-                  </td>
-                </tr>
-                <tr>
-                  <td colSpan="4" style={{ textAlign: 'right' }}>
-                    &nbsp;
-                  </td>
-                  <td>{/* <RazorPay amountDisplay={`$ ${}`} /> */}</td>
-                </tr>
-              </tfoot>
-            </table>
+          <div className="row bg-white billingList">
+            <div className="table-responsive">
+              {networks || invoice.notGenerated ? (
+                <table className="table table-hover" id="basicTable">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '18%' }}>Network Name</th>
+                      <th style={{ width: '15%' }}>Instance ID</th>
+                      <th style={{ width: '15%' }}>Rate</th>
+                      <th style={{ width: '18%' }}>Runtime</th>
+                      <th style={{ width: '20%' }}>Discount</th>
+                      <th style={{ width: '14%' }}>Cost</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {billView}
+                    {creditsView}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: 'right' }}>
+                        Total Amount
+                      </td>
+                      <td>
+                        {invoice && invoice.totalAmount ? `$ ${Number(invoice.totalAmount).toFixed(2)}` : '0'} {this.getInvoicePaidStatus(invoice && invoice.invoiceStatus)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: 'right' }}>
+                        &nbsp;
+                      </td>
+                      <td>{/* <RazorPay amountDisplay={`$ ${}`} /> */}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              ) : (
+                <div>
+                  <div className="bill-section">
+                    <div className="section-header" onClick={this.toggleSection.bind(this, 'dynamo')}>
+                      {this.state.expand.dynamo ? (
+                        <span className="title">
+                          <i className="fa fa-minus-circle" />
+                        </span>
+                      ) : (
+                        <span className="title">
+                          <i className="fa fa-plus-circle" />
+                        </span>
+                      )}
+                      <span className="title">&nbsp;&nbsp;Dynamo</span>
+                      <span className="pull-right">$ {Number(invoice.totals.dynamo).toFixed(2)} </span>
+                    </div>
+                    {this.state.expand.dynamo && (
+                      <div className="section-content">
+                        <table className="table table-hover" id="basicTable">
+                          <thead>
+                            <tr>
+                              <th style={{ width: '18%' }}>Network Name</th>
+                              <th style={{ width: '15%' }}>Instance ID</th>
+                              <th style={{ width: '15%' }}>Rate</th>
+                              <th style={{ width: '18%' }}>Runtime</th>
+                              <th style={{ width: '20%' }}>Discount</th>
+                              <th style={{ width: '14%' }}>Cost</th>
+                            </tr>
+                          </thead>
+                          <tbody>{dynamoView}</tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                  <div className="bill-section">
+                    <div className="section-header" onClick={this.toggleSection.bind(this, 'privatehive')}>
+                      {this.state.expand.privatehive ? (
+                        <span className="title">
+                          <i className="fa fa-minus-circle" />
+                        </span>
+                      ) : (
+                        <span className="title">
+                          <i className="fa fa-plus-circle" />
+                        </span>
+                      )}
+                      <span className="title">&nbsp;&nbsp;Private Hive</span>
+                      <span className="pull-right">$ {Number(invoice.totals.privatehive).toFixed(2)} </span>
+                    </div>
+                    {this.state.expand.privatehive && (
+                      <div className="section-content">
+                        <table className="table table-hover" id="basicTable">
+                          <thead>
+                            <tr>
+                              <th style={{ width: '18%' }}>Network Name</th>
+                              <th style={{ width: '15%' }}>Instance ID</th>
+                              <th style={{ width: '15%' }}>Rate</th>
+                              <th style={{ width: '18%' }}>Runtime</th>
+                              <th style={{ width: '20%' }}>Discount</th>
+                              <th style={{ width: '14%' }}>Cost</th>
+                            </tr>
+                          </thead>
+                          <tbody>{privateHiveView}</tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                  <div className="bill-section">
+                    <div className="section-header" onClick={this.toggleSection.bind(this, 'hyperion')}>
+                      {this.state.expand.hyperion ? (
+                        <span className="title">
+                          <i className="fa fa-minus-circle" />
+                        </span>
+                      ) : (
+                        <span className="title">
+                          <i className="fa fa-plus-circle" />
+                        </span>
+                      )}
+                      <span className="title">&nbsp;&nbsp;Hyperion</span>
+                      <span className="pull-right">$ {Number(invoice.totals.hyperion).toFixed(2)} </span>
+                    </div>
+                    {this.state.expand.hyperion && (
+                      <div className="section-content">
+                        <table className="table table-hover" id="basicTable">
+                          <thead>
+                            <tr>
+                              <th style={{ width: '35%' }}>Charge Name</th>
+                              <th style={{ width: '20%' }}>Rate</th>
+                              <th style={{ width: '20%' }}>Discount</th>
+                              <th style={{ width: '25%' }}>Cost</th>
+                            </tr>
+                          </thead>
+                          <tbody>{hyperionView}</tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                  <div className="bill-section">
+                    <div className="section-header" onClick={this.toggleSection.bind(this, 'paymeter')}>
+                      {this.state.expand.paymeter ? (
+                        <span className="title">
+                          <i className="fa fa-minus-circle" />
+                        </span>
+                      ) : (
+                        <span className="title">
+                          <i className="fa fa-plus-circle" />
+                        </span>
+                      )}
+                      <span className="title">&nbsp;&nbsp;Paymeter</span>
+                      <span className="pull-right">$ {Number(invoice.totals.paymeter).toFixed(2)} </span>
+                    </div>
+                    {this.state.expand.paymeter && (
+                      <div className="section-content">
+                        <table className="table table-hover" id="basicTable">
+                          <thead>
+                            <tr>
+                              <th style={{ width: '35%' }}>Charge Name</th>
+                              <th style={{ width: '20%' }}>Rate</th>
+                              <th style={{ width: '20%' }}>Discount</th>
+                              <th style={{ width: '25%' }}>Cost</th>
+                            </tr>
+                          </thead>
+                          <tbody>{paymeterView}</tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                  <div className="bill-section">
+                    <div className="section-header" onClick={this.toggleSection.bind(this, 'credits')}>
+                      {' '}
+                      {this.state.expand.credits ? (
+                        <span className="title">
+                          <i className="fa fa-minus-circle" />
+                        </span>
+                      ) : (
+                        <span className="title">
+                          <i className="fa fa-plus-circle" />
+                        </span>
+                      )}
+                      <span className="title">&nbsp;&nbsp;Credits</span>
+                      <span className="pull-right">- $ {Number(invoice.totals.credits).toFixed(2)} </span>
+                    </div>
+                    {this.state.expand.credits && (
+                      <div className="section-content">
+                        <table className="table table-hover" id="basicTable">
+                          <thead>
+                            <tr>
+                              <th style={{ width: '50%' }}>Credit Code</th>
+                              <th style={{ width: '25%' }}>Face value</th>
+                              <th style={{ width: '25%' }}>Used</th>
+                            </tr>
+                          </thead>
+                          <tbody>{creditsView}</tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                  <div className="bill-section m-b-50">
+                    <div className="section-header total">
+                      <span className="title">Total</span>
+                      <span className="pull-right">
+                        $ {Number(invoice.totalAmount).toFixed(2)} {this.getInvoicePaidStatus(invoice && invoice.invoiceStatus)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
